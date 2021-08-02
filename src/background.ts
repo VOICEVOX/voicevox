@@ -163,10 +163,10 @@ async function createHelpWindow() {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await child.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/help"
+      (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/help/policy"
     );
   } else {
-    child.loadURL("app://./index.html#/help");
+    child.loadURL("app://./index.html#/help/policy");
   }
   if (isDevelopment) child.webContents.openDevTools();
 }
