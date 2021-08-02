@@ -25,4 +25,4 @@ jobs:
             node-
       - run: npm ci
       - run: npm run lint
-      - run: npm run electron:build
+      - run: npm run electron:build_pnever
