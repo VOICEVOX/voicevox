@@ -118,7 +118,6 @@ export const useStore = () => {
   return baseUseStore(storeKey);
 };
 
-
 const PROJECT_VERSION = [0, 1, 0];
 
 // projectValidationCheck(text: string) -> void;
@@ -150,10 +149,10 @@ const projectValidationCheck = (text: string) => {
 
   const attributeValidationCheck =
     (attrName: string, type: string, optional = false) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (obj: any) => {
       assert(
-        typeof obj === type ||
-          optional && obj == null,
+        typeof obj === type || (optional && obj == null),
         `The attribute ${attrName} should be ${type}${
           optional ? "|undefined" : ""
         }.`
@@ -161,14 +160,16 @@ const projectValidationCheck = (text: string) => {
     };
 
   const arrayWrapper =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (attrName: string, checker: (obj: any) => void) => (obj: any) => {
       if (Array.isArray(obj)) {
-        obj.map((child)=>checker(child));
+        obj.map((child) => checker(child));
       } else {
         throw new AssertionError(`${attrName} should be Array.`);
       }
     };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const moraValidationCheck = (mora: any) => {
     const moraAttributes = {
       text: attributeValidationCheck("text", "string"),
@@ -180,10 +181,12 @@ const projectValidationCheck = (text: string) => {
       checker(mora[attr]);
     }
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accentPhraseValidationCheck = (accentPhrase: any) => {
     const accentPhraseAttributes = {
       moras: arrayWrapper("moras", moraValidationCheck),
       accent: attributeValidationCheck("accent", "number"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pauseMora: (pauseMora: any) =>
         pauseMora == null || moraValidationCheck(pauseMora),
     };
@@ -191,6 +194,7 @@ const projectValidationCheck = (text: string) => {
       checker(accentPhrase[attr]);
     }
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const audioQueryValidationCheck = (query: any) => {
     const audioQueryAttributes = {
       accentPhrases: arrayWrapper("accentPhrases", accentPhraseValidationCheck),
@@ -202,6 +206,7 @@ const projectValidationCheck = (text: string) => {
       checker(query[attr]);
     }
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const audioItemValidationCheck = (item: any) => {
     const audioItemAttributes = {
       text: attributeValidationCheck("text", "string"),
@@ -210,14 +215,15 @@ const projectValidationCheck = (text: string) => {
         "number",
         true
       ),
-      query: (obj: any) => obj == null || audioQueryValidationCheck(obj),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      query: (query: any) => query == null || audioQueryValidationCheck(query),
     };
     for (const [attr, checker] of Object.entries(audioItemAttributes)) {
       checker(item[attr]);
     }
   };
 
-  audioKeys.map((key: any) => {
+  audioKeys.map((key: string) => {
     assert(
       key in audioItems,
       "AudioItems should contain the elements contained in AudioKeys."
