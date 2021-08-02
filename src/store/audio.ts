@@ -450,12 +450,19 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
-        const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
-        filePath ??= await window.electron.showSaveDialog({ title: "Save" });
+        const blobPromise = dispatch(GENERATE_AUDIO, { audioKey });
+        if (!filePath) {
+          const index = state.audioKeys.indexOf(audioKey);
+          const audioItem = state.audioItems[audioKey];
+          const character = state.charactorInfos![audioItem.charactorIndex!];
+          const name = (index + 1).toString().padStart(3, "0") + "_" + buildFileName(character, audioItem.text);
+          filePath = await window.electron.showSaveDialog({ title: "Save", defaultPath: name });
+        }
         if (filePath) {
+          const blob: Blob = await blobPromise;
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
