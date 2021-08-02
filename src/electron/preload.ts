@@ -5,11 +5,13 @@ import path from "path";
 import { Sandbox } from "@/type/preload";
 import {
   GET_TEMP_DIR,
-  SHOW_SAVE_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
   SHOW_OPEN_DIRECOTRY_DIALOG,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
   CREATE_HELP_WINDOW,
+  SHOW_PROJECT_SAVE_DIALOG,
+  SHOW_PROJECT_LOAD_DIALOG,
 } from "./ipc";
 
 let tempDir: string;
@@ -38,12 +40,20 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
-  showSaveDialog: ({ title }) => {
-    return ipcRenderer.invoke(SHOW_SAVE_DIALOG, { title });
+  showAudioSaveDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_AUDIO_SAVE_DIALOG, { title });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRenderer.invoke(SHOW_OPEN_DIRECOTRY_DIALOG, { title });
+  },
+
+  showProjectSaveDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_PROJECT_SAVE_DIALOG, { title });
+  },
+
+  showProjectLoadDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_PROJECT_LOAD_DIALOG, { title });
   },
 
   writeFile: ({ filePath, buffer }) => {

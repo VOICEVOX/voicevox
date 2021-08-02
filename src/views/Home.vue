@@ -25,6 +25,14 @@
           unelevated
           >書き出し</mcw-button
         >
+
+        <mcw-button @click="saveProjectFile" :disabled="uiLocked" unelevated
+          >プロジェクト保存</mcw-button
+        >
+
+        <mcw-button @click="loadProjectFile" :disabled="uiLocked" unelevated
+          >プロジェクト読み込み</mcw-button
+        >
       </section>
 
       <section
@@ -91,7 +99,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, onBeforeUpdate, onMounted } from "vue";
-import { useStore } from "@/store";
+import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioDetailPaneSeparator from "@/components/AudioDetailPaneSeparator.vue";
@@ -148,6 +156,12 @@ export default defineComponent({
     };
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+    };
+    const saveProjectFile = () => {
+      store.dispatch(SAVE_PROJECT_FILE, {});
+    };
+    const loadProjectFile = () => {
+      store.dispatch(LOAD_PROJECT_FILE, {});
     };
 
     // view
@@ -239,6 +253,8 @@ export default defineComponent({
       playContinuously,
       stopContinuously,
       generateAndSaveAllAudio,
+      saveProjectFile,
+      loadProjectFile,
       audioInfoPaneWidth,
       audioDetailPaneHeight,
       isEngineReady,

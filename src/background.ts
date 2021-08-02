@@ -24,7 +24,9 @@ import {
   GET_OSS_LICENSES,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
-  SHOW_SAVE_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
+  SHOW_PROJECT_SAVE_DIALOG,
+  SHOW_PROJECT_LOAD_DIALOG,
 } from "./electron/ipc";
 
 import fs from "fs";
@@ -182,7 +184,7 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
 });
 
-ipcMain.handle(SHOW_SAVE_DIALOG, (event, { title }: { title: string }) => {
+ipcMain.handle(SHOW_AUDIO_SAVE_DIALOG, (event, { title }: { title: string }) => {
   return dialog.showSaveDialogSync(win, {
     title,
     filters: [{ name: "Wave File", extensions: ["wav"] }],
@@ -197,6 +199,27 @@ ipcMain.handle(
       title,
       properties: ["openDirectory", "createDirectory"],
     })?.[0];
+  }
+);
+
+ipcMain.handle(
+  SHOW_PROJECT_SAVE_DIALOG, (event, { title }: { title: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
+      properties: ["showOverwriteConfirmation",]
+    });
+  }
+);
+
+
+ipcMain.handle(
+  SHOW_PROJECT_LOAD_DIALOG, (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
+      properties: ["openFile",]
+    });
   }
 );
 
