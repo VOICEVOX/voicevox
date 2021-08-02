@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
+      cache-version: v2
     steps:
       - uses: actions/checkout@master
       - id: node-version
@@ -18,9 +21,9 @@ jobs:
       - uses: actions/cache@master
         with:
           path: ~/.npm
-          key: node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            node-
+            ${{ env.cache-version }}-node-
       - run: npm ci
       - run: npm run lint
       - run: npm run electron:build_pnever
