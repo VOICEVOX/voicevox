@@ -1,8 +1,6 @@
 name: test
 on:
   push:
-    branches:
-      - main
   pull_request:
     branches:
       - '**'
@@ -17,6 +15,12 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+      - uses: actions/cache@master
+        with:
+          path: ~/.npm
+          key: node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            node-
       - run: npm ci
       - run: npm run lint
-      - run: npm run electron:build
+      - run: npm run electron:build_pnever
