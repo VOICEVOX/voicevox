@@ -17,7 +17,6 @@ pnpm-debug.log*
 
 # Editor directories and files
 .idea
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
@@ -38,3 +37,10 @@ data/
 
 # release
 electron-builder.yml
+
+# vscode
+.vscode/*
+# !.vscode/settings.json
+# !.vscode/tasks.json
+# !.vscode/launch.json
+!.vscode/extensions.json
