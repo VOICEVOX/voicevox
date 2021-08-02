@@ -184,13 +184,16 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
 });
 
-ipcMain.handle(SHOW_AUDIO_SAVE_DIALOG, (event, { title }: { title: string }) => {
-  return dialog.showSaveDialogSync(win, {
-    title,
-    filters: [{ name: "Wave File", extensions: ["wav"] }],
-    properties: ["createDirectory"],
-  });
-});
+ipcMain.handle(
+  SHOW_AUDIO_SAVE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      filters: [{ name: "Wave File", extensions: ["wav"] }],
+      properties: ["createDirectory"],
+    });
+  }
+);
 
 ipcMain.handle(
   SHOW_OPEN_DIRECOTRY_DIALOG,
@@ -203,22 +206,23 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
-  SHOW_PROJECT_SAVE_DIALOG, (event, { title }: { title: string }) => {
+  SHOW_PROJECT_SAVE_DIALOG,
+  (event, { title }: { title: string }) => {
     return dialog.showSaveDialogSync(win, {
       title,
       filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
-      properties: ["showOverwriteConfirmation",]
+      properties: ["showOverwriteConfirmation"],
     });
   }
 );
 
-
 ipcMain.handle(
-  SHOW_PROJECT_LOAD_DIALOG, (event, { title }: { title: string }) => {
+  SHOW_PROJECT_LOAD_DIALOG,
+  (event, { title }: { title: string }) => {
     return dialog.showOpenDialogSync(win, {
       title,
       filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
-      properties: ["openFile",]
+      properties: ["openFile"],
     });
   }
 );

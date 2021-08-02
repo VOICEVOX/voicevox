@@ -186,15 +186,13 @@ export const audioStore = {
         delete draft.audioStates[audioKey];
       }
     ),
-    [REMOVE_ALL_AUDIO_ITEM]: createCommandAction(
-      (draft) => {
-        for (const audioKey of draft.audioKeys) {
-          delete draft.audioItems[audioKey];
-          delete draft.audioStates[audioKey];
-        }
-        draft.audioKeys.splice(0, draft.audioKeys.length);
+    [REMOVE_ALL_AUDIO_ITEM]: createCommandAction((draft) => {
+      for (const audioKey of draft.audioKeys) {
+        delete draft.audioItems[audioKey];
+        delete draft.audioStates[audioKey];
       }
-    ),
+      draft.audioKeys.splice(0, draft.audioKeys.length);
+    }),
     [REGISTER_AUDIO_ITEM](
       { state, dispatch },
       {
