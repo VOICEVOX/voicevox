@@ -53,6 +53,7 @@
               :key="audioKey"
               :audioKey="audioKey"
               @focusCell="focusCell"
+              @click.right="removeAudioItem"
               :ref="addAudioCellRef"
             />
           </div>
@@ -105,6 +106,7 @@ import {
   LOAD_CHARACTOR,
   PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
+  REMOVE_AUDIO_ITEM,
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
@@ -203,6 +205,18 @@ export default defineComponent({
       audioCellRefs[newAudioKey].focusTextField();
     };
 
+    // セルを削除して移動
+    const removeAudioItem = async ({
+      audioKey,
+    }: {
+      audioKey: string;
+    }) => {
+      const index = await store.dispatch(REMOVE_AUDIO_ITEM, {
+        audioKey: activeAudioKey.value,
+      });
+      audioCellRefs[index].focusTextField();
+    };
+
     // セルをフォーカス
     const focusCell = ({ audioKey }: { audioKey: string }) => {
       audioCellRefs[audioKey].focusTextField();
@@ -235,6 +249,7 @@ export default defineComponent({
       addAudioCellRef,
       addAudioItem,
       addAndMoveCell,
+      removeAudioItem,
       focusCell,
       playContinuously,
       stopContinuously,
@@ -335,6 +350,7 @@ body {
     overflow-x: hidden;
     overflow-y: scroll;
 
+    user-select: none;
     position: absolute;
     top: 0;
     bottom: 0;
