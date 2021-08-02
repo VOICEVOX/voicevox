@@ -21,6 +21,25 @@ async function generateUniqueId(audioItem: AudioItem) {
     .join("");
 }
 
+function parseTextFile(body: string, charactorInfos?: CharactorInfo[]): AudioItem[] {
+  const charactors = new Map(charactorInfos?.map((info, index) => [info.metas.name, index]));
+  if(!charactors.size) return [];
+
+  const audioItems: AudioItem[] = [];
+  const seps = [',', '\n'];
+  let lastCharactorIndex: number | undefined = 0;
+  for(const splittedText of body.split(new RegExp(`${seps.join('|')}`, 'g'))) {
+    const charactorIndex = charactors.get(splittedText);
+    if(typeof charactorIndex !== 'undefined') {
+      lastCharactorIndex = charactorIndex;
+      continue;
+    }
+
+    audioItems.push({ text: splittedText, charactorIndex: lastCharactorIndex })
+  }
+  return audioItems;
+}
+
 export const SET_ENGINE_READY = "SET_ENGINE_READY";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
@@ -52,6 +71,7 @@ export const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
 export const GENERATE_AUDIO = "GENERATE_AUDIO";
 export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
 export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
+export const IMPORT_FROM_FILE = "IMPORT_FROM_FILE";
 export const PLAY_AUDIO = "PLAY_AUDIO";
 export const STOP_AUDIO = "STOP_AUDIO";
 export const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
@@ -466,6 +486,16 @@ export const audioStore = {
             });
           });
           return Promise.all(promises);
+        }
+      }
+    ),
+    [IMPORT_FROM_FILE]: createUILockAction(
+      async ({ state, dispatch  }) => {
+        const filePath = await window.electron.showImportFileDialog({ title: "Import" });
+        if (filePath) {
+          const body = new TextDecoder('utf-8').decode(await window.electron.readFile({ filePath }));
+          const audioItems = parseTextFile(body, state.charactorInfos);
+          audioItems.forEach(item => dispatch(REGISTER_AUDIO_ITEM, { audioItem: item }))
         }
       }
     ),

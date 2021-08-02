@@ -25,6 +25,12 @@
           unelevated
           >書き出し</mcw-button
         >
+        <mcw-button
+          @click="importFromFile"
+          :disabled="uiLocked"
+          unelevated
+          >読み込み</mcw-button
+        >
       </section>
 
       <section
@@ -102,6 +108,7 @@ import { AudioItem } from "@/store/type";
 import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
   LOAD_CHARACTOR,
   PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
@@ -148,6 +155,9 @@ export default defineComponent({
     };
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+    };
+    const importFromFile = () => {
+      store.dispatch(IMPORT_FROM_FILE, {});
     };
 
     // view
@@ -239,6 +249,7 @@ export default defineComponent({
       playContinuously,
       stopContinuously,
       generateAndSaveAllAudio,
+      importFromFile,
       audioInfoPaneWidth,
       audioDetailPaneHeight,
       isEngineReady,

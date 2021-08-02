@@ -24,6 +24,7 @@ import {
   GET_OSS_LICENSES,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
+  SHOW_IMPORT_FILE_DIALOG,
   SHOW_SAVE_DIALOG,
 } from "./electron/ipc";
 
@@ -198,6 +199,17 @@ ipcMain.handle(
       properties: ["openDirectory", "createDirectory"],
     })?.[0];
   }
+);
+
+ipcMain.handle(
+   SHOW_IMPORT_FILE_DIALOG,
+   (event, { title }: { title: string }) => {
+     return dialog.showOpenDialogSync(win, {
+       title,
+       filters: [{name: 'Text', extensions: ['txt']}],
+       properties: ["openFile", "createDirectory"],
+     })?.[0];
+   }
 );
 
 ipcMain.handle(CREATE_HELP_WINDOW, (event) => {
