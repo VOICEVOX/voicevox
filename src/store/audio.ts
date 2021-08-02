@@ -439,7 +439,7 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
         const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
@@ -448,6 +448,12 @@ export const audioStore = {
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
+          });
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {type: 'text/plain'});
+          window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
           });
         }
       }
