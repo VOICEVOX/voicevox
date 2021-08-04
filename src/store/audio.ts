@@ -23,7 +23,7 @@ async function generateUniqueId(audioItem: AudioItem) {
 
 function buildFileName(state: State, audioKey: string) {
   // eslint-disable-next-line no-control-regex
-  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x7c\x7f]/g;
+  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   const character = state.charactorInfos![audioItem.charactorIndex!];
