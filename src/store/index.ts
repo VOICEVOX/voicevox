@@ -7,6 +7,7 @@ import {
   audioStore,
   REMOVE_ALL_AUDIO_ITEM,
   REGISTER_AUDIO_ITEM,
+  REMOVE_AUDIO_ITEM,
 } from "./audio";
 import { uiStore, createUILockAction } from "./ui";
 
@@ -66,7 +67,11 @@ export const store = createStore<State>({
         const buf = await window.electron.readFile({ filePath });
         const text = new TextDecoder("utf-8").decode(buf).trim();
         projectValidationCheck(text);
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+
+        for (const audioKey of context.state.audioKeys.slice().reverse()) {
+          await context.dispatch(REMOVE_AUDIO_ITEM, { audioKey });
+        }
+        // await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
 
         const {
           audioItems,
@@ -86,11 +91,8 @@ export const store = createStore<State>({
         }
       } catch (err) {
         console.error(err);
-        console.error(
-          `Voice Vox Project file "${filePath}" is a invalid file.`
-        );
+        console.error(`VOICEVOX Project file "${filePath}" is a invalid file.`);
       }
-      return;
     }),
     [SAVE_PROJECT_FILE]: createUILockAction(async (context) => {
       // Write the current status to a project file.

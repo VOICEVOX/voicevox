@@ -211,7 +211,7 @@ ipcMain.handle(
   (event, { title }: { title: string }) => {
     return dialog.showSaveDialogSync(win, {
       title,
-      filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
       properties: ["showOverwriteConfirmation"],
     });
   }
@@ -222,7 +222,7 @@ ipcMain.handle(
   (event, { title }: { title: string }) => {
     return dialog.showOpenDialogSync(win, {
       title,
-      filters: [{ name: "Voice Vox Project file", extensions: ["vvproj"] }],
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
       properties: ["openFile"],
     });
   }
