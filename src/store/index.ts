@@ -125,8 +125,9 @@ const PROJECT_VERSION = [0, 1, 0];
 const projectValidationCheck = (text: string) => {
   const projectData = JSON.parse(text);
   const projectVersionText = projectData.projectVersion ?? "0.0.0";
-  const projectVersion = projectVersionText.split(".");
+  const projectVersion = projectVersionText.split(".").map(Number);
   assert(projectVersion <= PROJECT_VERSION);
+
   const projectAttributes = [
     "projectVersion",
     "audioKeys",
@@ -159,7 +160,15 @@ const projectValidationCheck = (text: string) => {
       );
     };
 
-  const arrayWrapper =
+  const optionalCheck =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (checker: (obj: any) => void) => (obj: any) => {
+      if (obj != null) {
+        checker(obj);
+      }
+    };
+
+  const arrayCheck =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (attrName: string, checker: (obj: any) => void) => (obj: any) => {
       if (Array.isArray(obj)) {
@@ -184,11 +193,9 @@ const projectValidationCheck = (text: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const accentPhraseValidationCheck = (accentPhrase: any) => {
     const accentPhraseAttributes = {
-      moras: arrayWrapper("moras", moraValidationCheck),
+      moras: arrayCheck("moras", moraValidationCheck),
       accent: attributeValidationCheck("accent", "number"),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pauseMora: (pauseMora: any) =>
-        pauseMora == null || moraValidationCheck(pauseMora),
+      pauseMora: optionalCheck(moraValidationCheck),
     };
     for (const [attr, checker] of Object.entries(accentPhraseAttributes)) {
       checker(accentPhrase[attr]);
@@ -197,7 +204,7 @@ const projectValidationCheck = (text: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const audioQueryValidationCheck = (query: any) => {
     const audioQueryAttributes = {
-      accentPhrases: arrayWrapper("accentPhrases", accentPhraseValidationCheck),
+      accentPhrases: arrayCheck("accentPhrases", accentPhraseValidationCheck),
       speedScale: attributeValidationCheck("speedScale", "number"),
       pitchScale: attributeValidationCheck("pitchScale", "number"),
       intonationScale: attributeValidationCheck("intonationScale", "number"),
@@ -216,7 +223,7 @@ const projectValidationCheck = (text: string) => {
         true
       ),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      query: (query: any) => query == null || audioQueryValidationCheck(query),
+      query: optionalCheck(audioQueryValidationCheck),
     };
     for (const [attr, checker] of Object.entries(audioItemAttributes)) {
       checker(item[attr]);
