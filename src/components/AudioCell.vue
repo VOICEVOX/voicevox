@@ -1,5 +1,8 @@
 <template>
-  <div class="audio-cell">
+  <div
+    class="audio-cell"
+    v-on:mouseover="mouseOverAction"
+    v-on:mouseleave="mouseLeaveAction">
     <mcw-menu-anchor>
       <button class="charactor-button" @click="isOpenedCharactorList = true">
         <img
@@ -35,6 +38,11 @@
       @keydown.prevent.down.exact="moveDownCell"
       :disabled="uiLocked"
     />
+      <span
+        v-show="hoverFlag"
+        @click="removeCell"
+      >🗑 削除</span
+      >
   </div>
 </template>
 
@@ -187,6 +195,16 @@ export default defineComponent({
         URL.createObjectURL(charactorInfo.iconBlob)
     );
 
+    const hoverFlag = ref(false);
+
+    const mouseOverAction = () => {
+      hoverFlag.value = true;
+    };
+
+    const mouseLeaveAction = () => {
+      hoverFlag.value = false;
+    };
+
     // 初期化
     onMounted(() => {
       store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
@@ -216,6 +234,9 @@ export default defineComponent({
       focusTextField,
       isOpenedCharactorList,
       getCharactorIconUrl,
+      hoverFlag,
+      mouseOverAction,
+      mouseLeaveAction,
     };
   },
 });

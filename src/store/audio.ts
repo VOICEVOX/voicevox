@@ -178,13 +178,19 @@ export const audioStore = {
         };
       }
     ),
-    [REMOVE_AUDIO_ITEM]: createCommandAction(
-      (draft, { audioKey }: { audioKey: string }) => {
-        draft.audioKeys.splice(draft.audioKeys.indexOf(audioKey), 1);
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
-      }
-    ),
+    [REMOVE_AUDIO_ITEM](
+      { state, dispatch },
+      { audioKey }: { audioKey: string | undefined }
+    ) {
+      const index =
+        audioKey !== undefined
+          ? state.audioKeys.indexOf(audioKey)
+          : state.audioKeys.length;
+      state.audioKeys.splice(index, 1);
+      delete state.audioItems[index];
+      delete state.audioStates[index];
+      return state.audioKeys[index];
+    },
     [REGISTER_AUDIO_ITEM](
       { state, dispatch },
       {
