@@ -21,6 +21,27 @@ async function generateUniqueId(audioItem: AudioItem) {
     .join("");
 }
 
+function buildFileName(state: State, audioKey: string) {
+  // eslint-disable-next-line no-control-regex
+  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
+  const index = state.audioKeys.indexOf(audioKey);
+  const audioItem = state.audioItems[audioKey];
+  const character = state.charactorInfos![audioItem.charactorIndex!];
+  const characterName = character.metas.name.replace(sanitizer, "");
+  let text = audioItem.text.replace(sanitizer, "");
+  if (text.length > 10) {
+    text = text.substring(0, 9) + "…";
+  }
+  return (
+    (index + 1).toString().padStart(3, "0") +
+    "_" +
+    characterName +
+    "_" +
+    text +
+    ".wav"
+  );
+}
+
 export const SET_ENGINE_READY = "SET_ENGINE_READY";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
@@ -447,15 +468,26 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
         const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
-        filePath ??= await window.electron.showAudioSaveDialog({ title: "Save" });
+        filePath ??= await window.electron.showAudioSaveDialog({
+          title: "Save",
+          defaultPath: buildFileName(state, audioKey),
+        });
         if (filePath) {
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
+          });
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {
+            type: "text/plain",
+          });
+          window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
           });
         }
       }
@@ -467,7 +499,7 @@ export const audioStore = {
         });
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
-            const name = (index + 1).toString().padStart(3, "0") + ".wav";
+            const name = buildFileName(state, audioKey);
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
               audioKey,
               filePath: path.join(dirPath!, name),

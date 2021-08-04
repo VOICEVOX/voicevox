@@ -186,9 +186,10 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
 
 ipcMain.handle(
   SHOW_AUDIO_SAVE_DIALOG,
-  (event, { title }: { title: string }) => {
+  (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
     return dialog.showSaveDialogSync(win, {
       title,
+      defaultPath,
       filters: [{ name: "Wave File", extensions: ["wav"] }],
       properties: ["createDirectory"],
     });

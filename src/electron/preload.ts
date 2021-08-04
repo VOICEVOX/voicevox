@@ -40,8 +40,8 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
-  showAudioSaveDialog: ({ title }) => {
-    return ipcRenderer.invoke(SHOW_AUDIO_SAVE_DIALOG, { title });
+  showAudioSaveDialog: ({ title, defaultPath }) => {
+    return ipcRenderer.invoke(SHOW_AUDIO_SAVE_DIALOG, { title, defaultPath });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
