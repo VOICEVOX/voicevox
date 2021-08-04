@@ -27,6 +27,7 @@ import {
   SHOW_AUDIO_SAVE_DIALOG,
   SHOW_PROJECT_SAVE_DIALOG,
   SHOW_PROJECT_LOAD_DIALOG,
+  SHOW_CONFIRM_DIALOG,
 } from "./electron/ipc";
 
 import fs from "fs";
@@ -225,6 +226,22 @@ ipcMain.handle(
       filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
       properties: ["openFile"],
     });
+  }
+);
+
+ipcMain.handle(
+  SHOW_CONFIRM_DIALOG,
+  (event, { title, message }: { title: string; message: string }) => {
+    return dialog
+      .showMessageBox(win, {
+        type: "info",
+        buttons: ["OK", "Cancel"],
+        title: title,
+        message: message,
+      })
+      .then((value) => {
+        return value.response == 0;
+      });
   }
 );
 

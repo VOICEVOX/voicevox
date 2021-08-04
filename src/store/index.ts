@@ -7,7 +7,6 @@ import {
   audioStore,
   REMOVE_ALL_AUDIO_ITEM,
   REGISTER_AUDIO_ITEM,
-  REMOVE_AUDIO_ITEM,
 } from "./audio";
 import { uiStore, createUILockAction } from "./ui";
 
@@ -62,16 +61,22 @@ export const store = createStore<State>({
         return;
       }
       const filePath = ret[0];
-      // todo: Add confirm window to break current state.
+
       try {
         const buf = await window.electron.readFile({ filePath });
         const text = new TextDecoder("utf-8").decode(buf).trim();
         projectValidationCheck(text);
-
-        for (const audioKey of context.state.audioKeys.slice().reverse()) {
-          await context.dispatch(REMOVE_AUDIO_ITEM, { audioKey });
+        if (
+          !(await window.electron.showConfirmDialog({
+            title: "警告",
+            message:
+              "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
+              "宜しいですか？",
+          }))
+        ) {
+          return;
         }
-        // await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+        await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
 
         const {
           audioItems,
