@@ -31,7 +31,7 @@
         >
 
         <mcw-button @click="loadProjectFile" :disabled="uiLocked" unelevated
-          >プロジェクト読み込み</mcw-button
+          >プロジェクト読込</mcw-button
         >
       </section>
 
