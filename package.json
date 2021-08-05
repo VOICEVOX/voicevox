@@ -17,14 +17,15 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@quasar/extras": "^1.10.9",
     "core-js": "^3.6.5",
     "electron-store": "^8.0.0",
     "immer": "^9.0.2",
+    "quasar": "^2.0.3",
     "rfc6902": "^4.0.2",
     "tree-kill": "^1.2.2",
     "uuid": "^3.4.0",
     "vue": "^3.0.0",
-    "vue-material-adapter": "^2.0.3",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0"
   },
