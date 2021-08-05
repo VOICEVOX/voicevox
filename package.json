@@ -17,6 +17,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "ajv": "^8.6.2",
     "core-js": "^3.6.5",
     "electron-store": "^8.0.0",
     "immer": "^9.0.2",

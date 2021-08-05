@@ -1,5 +1,6 @@
 import { InjectionKey } from "vue";
 import { createStore, Store, useStore as baseUseStore } from "vuex";
+import Ajv from "ajv";
 
 import { State, AudioItem } from "./type";
 import { commandStore } from "./command";
@@ -9,8 +10,6 @@ import {
   REGISTER_AUDIO_ITEM,
 } from "./audio";
 import { uiStore, createUILockAction } from "./ui";
-
-import { assert, AssertionError } from "chai";
 
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
@@ -65,7 +64,11 @@ export const store = createStore<State>({
       try {
         const buf = await window.electron.readFile({ filePath });
         const text = new TextDecoder("utf-8").decode(buf).trim();
-        await projectValidationCheck(text);
+        const obj = JSON.parse(text);
+        if (!(await projectValidationCheck(obj, true))) {
+          return;
+        }
+        const projectData = obj as ProjectData;
         if (
           !(await window.electron.showConfirmDialog({
             title: "警告",
@@ -78,13 +81,7 @@ export const store = createStore<State>({
         }
         await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
 
-        const {
-          audioItems,
-          audioKeys,
-        }: {
-          audioItems: Record<string, AudioItem>;
-          audioKeys: string[];
-        } = JSON.parse(text);
+        const { audioItems, audioKeys } = projectData;
 
         let prevAudioKey = undefined;
         for (const audioKey of audioKeys) {
@@ -127,27 +124,28 @@ export const useStore = () => {
   return baseUseStore(storeKey);
 };
 
+type ProjectData = {
+  appVersion: string;
+  audioKeys: string[];
+  audioItems: Record<string, AudioItem>;
+};
+
+// https://githubmemory.com/repo/ajv-validator/ajv/issues/1652
 const projectSchema = {
   title: "VOICEVOX Project",
   type: "object",
   properties: {
     appVersion: { type: "string" },
     audioKeys: {
-      discription: "Attribute keys of audioItems.",
+      // discription: "Attribute keys of audioItems.",
       type: "array",
       items: { type: "string" },
     },
     audioItems: {
-      discription: "VOICEVOX states per cell",
+      // discription: "VOICEVOX states per cell",
       type: "object",
       additionalProperties: {
-        type: "object",
-        properties: {
-          text: { type: "string" },
-          characterIndex: { type: "number" },
-          query: { $ref: "#/$defs/AudioQuery" },
-        },
-        required: ["text"],
+        $ref: "#/$defs/AudioItem",
       },
     },
   },
@@ -168,6 +166,7 @@ const projectSchema = {
       properties: {
         moras: {
           type: "array",
+          nullable: true,
           items: { $ref: "#/$defs/Mora" },
         },
         accent: { type: "number" },
@@ -180,6 +179,7 @@ const projectSchema = {
       properties: {
         accentPhrases: {
           type: "array",
+          nullable: true,
           items: { $ref: "#/$defs/AccentPhrase" },
         },
         speedScale: { type: "number" },
@@ -193,124 +193,52 @@ const projectSchema = {
         "intonationScale",
       ],
     },
+    AudioItem: {
+      type: "object",
+      properties: {
+        text: { type: "string" },
+        charactorIndex: { type: "number" },
+        query: { $ref: "#/$defs/AudioQuery" },
+      },
+      required: ["text"],
+    },
   },
 };
 
 // projectValidationCheck(text: string) -> void;
 // Check for validation using the given text as project data.
-const projectValidationCheck = async (text: string) => {
-  const projectData = JSON.parse(text);
-  const appVersionText = projectData.appVersion ?? "0.0.0";
+const projectValidationCheck = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  obj: any,
+  showError = false
+): Promise<boolean> => {
+  const ajv = new Ajv();
+  const validate = ajv.compile<ProjectData>(projectSchema);
+  if (!validate(obj)) {
+    if (showError) console.error(validate.errors);
+    return false;
+  }
+  const projectData = obj;
+  const appVersionText = projectData.appVersion;
   const appVersion = appVersionText.split(".").map(Number);
 
   const appInfos = await window.electron.getAppInfos();
   const APP_VERSION = appInfos.version.split(".").map(Number);
-  assert(appVersion <= APP_VERSION);
-
-  const projectAttributes = ["appVersion", "audioKeys", "audioItems"] as const;
-
-  for (const attribute of projectAttributes) {
-    assert(
-      attribute in projectData,
-      `Project should have attribute "${attribute}".`
-    );
+  if (appVersion > APP_VERSION) {
+    if (showError)
+      console.error(
+        `project propertie "appVersion" should be lower than ${appInfos.version}`
+      );
+    return false;
   }
 
   const { audioItems, audioKeys } = projectData;
-  assert(
-    Array.isArray(audioKeys) &&
-      audioKeys.every((item) => typeof item === "string"),
-    'The attribute "audioKeys" should be string[]'
-  );
-
-  const attributeValidationCheck =
-    (attrName: string, type: string, optional = false) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (obj: any) => {
-      assert(
-        typeof obj === type || (optional && obj == null),
-        `The attribute ${attrName} should be ${type}${
-          optional ? "|undefined" : ""
-        }.`
+  if (!audioKeys.every((audioKey) => audioKey in audioItems)) {
+    if (showError)
+      console.error(
+        "All audioKeys contained in audioKeys should be attributes of audioItems."
       );
-    };
-
-  const optionalCheck =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (checker: (obj: any) => void) => (obj: any) => {
-      if (obj != null) {
-        checker(obj);
-      }
-    };
-
-  const arrayCheck =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (attrName: string, checker: (obj: any) => void) => (obj: any) => {
-      if (Array.isArray(obj)) {
-        obj.map((child) => checker(child));
-      } else {
-        throw new AssertionError(`${attrName} should be Array.`);
-      }
-    };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const moraValidationCheck = (mora: any) => {
-    const moraAttributes = {
-      text: attributeValidationCheck("text", "string"),
-      consonant: attributeValidationCheck("consonant", "string", true),
-      vowel: attributeValidationCheck("vowel", "string"),
-      pitch: attributeValidationCheck("pitch", "number"),
-    };
-    for (const [attr, checker] of Object.entries(moraAttributes)) {
-      checker(mora[attr]);
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const accentPhraseValidationCheck = (accentPhrase: any) => {
-    const accentPhraseAttributes = {
-      moras: arrayCheck("moras", moraValidationCheck),
-      accent: attributeValidationCheck("accent", "number"),
-      pauseMora: optionalCheck(moraValidationCheck),
-    };
-    for (const [attr, checker] of Object.entries(accentPhraseAttributes)) {
-      checker(accentPhrase[attr]);
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const audioQueryValidationCheck = (query: any) => {
-    const audioQueryAttributes = {
-      accentPhrases: arrayCheck("accentPhrases", accentPhraseValidationCheck),
-      speedScale: attributeValidationCheck("speedScale", "number"),
-      pitchScale: attributeValidationCheck("pitchScale", "number"),
-      intonationScale: attributeValidationCheck("intonationScale", "number"),
-    };
-    for (const [attr, checker] of Object.entries(audioQueryAttributes)) {
-      checker(query[attr]);
-    }
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const audioItemValidationCheck = (item: any) => {
-    const audioItemAttributes = {
-      text: attributeValidationCheck("text", "string"),
-      charactorIndex: attributeValidationCheck(
-        "charactorIndex",
-        "number",
-        true
-      ),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      query: optionalCheck(audioQueryValidationCheck),
-    };
-    for (const [attr, checker] of Object.entries(audioItemAttributes)) {
-      checker(item[attr]);
-    }
-  };
-
-  audioKeys.map((key: string) => {
-    assert(
-      key in audioItems,
-      "AudioItems should contain the elements contained in AudioKeys."
-    );
-    const audioItem = audioItems[key];
-    audioItemValidationCheck(audioItem);
-  });
+    return false;
+  }
+  return true;
 };
