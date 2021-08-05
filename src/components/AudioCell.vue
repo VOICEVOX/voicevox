@@ -1,5 +1,9 @@
 <template>
-  <div class="audio-cell">
+  <div
+    class="audio-cell"
+    v-on:mouseover="mouseOverAction"
+    v-on:mouseleave="mouseLeaveAction"
+  >
     <mcw-menu-anchor>
       <button class="charactor-button" @click="isOpenedCharactorList = true">
         <img
@@ -35,6 +39,9 @@
       @keydown.prevent.down.exact="moveDownCell"
       :disabled="uiLocked"
     />
+    <mcw-button v-show="hoverFlag" @click="removeCell" class="delete-button">
+      <mcw-material-icon icon="delete" />
+    </mcw-button>
   </div>
 </template>
 
@@ -224,6 +231,8 @@ export default defineComponent({
 <style lang="scss">
 @use '@/styles' as global;
 
+@use "@material/button";
+
 .audio-cell {
   display: flex;
   margin: 1rem 1rem;
@@ -263,6 +272,9 @@ export default defineComponent({
         }
       }
     }
+  }
+  .delete-button {
+    @include button.ink-color(global.$on-primary);
   }
 }
 </style>

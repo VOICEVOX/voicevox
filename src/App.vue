@@ -7,7 +7,7 @@
 
 @use '@material/theme' with (
   $primary: global.$primary,
-  $on-primary: #212121,
+  $on-primary: global.$on-primary,
 );
 
 @use '@material/button/styles' as buttonStyles;
