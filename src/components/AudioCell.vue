@@ -2,45 +2,55 @@
   <div
     class="audio-cell"
     v-on:mouseover="mouseOverAction"
-    v-on:mouseleave="mouseLeaveAction">
-    <mcw-menu-anchor>
-      <button class="charactor-button" @click="isOpenedCharactorList = true">
-        <img
-          :src="
-            selectedCharactorInfo
-              ? getCharactorIconUrl(selectedCharactorInfo)
-              : undefined
-          "
-        />
-      </button>
-      <mcw-menu
-        v-model="isOpenedCharactorList"
-        @select="({ index }) => changeCharactorIndex(index)"
-        single-selection
-        fixed
-      >
-        <mcw-list-item
-          v-for="(charactorInfo, index) in charactorInfos"
-          :key="index"
-          ><img :src="getCharactorIconUrl(charactorInfo)" /><span>{{
-            charactorInfo.metas.name
-          }}</span></mcw-list-item
-        >
-      </mcw-menu>
-    </mcw-menu-anchor>
-    <mcw-textfield
+    v-on:mouseleave="mouseLeaveAction"
+  >
+    <q-btn flat class="q-pa-none charactor-button">
+      <q-img
+        :ratio="1"
+        :src="
+          selectedCharactorInfo
+            ? getCharactorIconUrl(selectedCharactorInfo)
+            : undefined
+        "
+      />
+      <q-menu class="charactor-menu">
+        <q-list>
+          <q-item
+            v-for="(charactorInfo, index) in charactorInfos"
+            :key="index"
+            clickable
+            v-close-popup
+            active-class="selected-charactor-item"
+            :active="index === selectedCharactorInfo.metas.speaker"
+            @click="changeCharactorIndex(index)"
+          >
+            <q-item-section avatar>
+              <q-avatar rounded size="2rem">
+                <q-img :ratio="1" :src="getCharactorIconUrl(charactorInfo)" />
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+    <q-input
       ref="textfield"
+      filled
+      class="full-width"
+      style="height: 32px"
       v-model="audioItem.text"
-      @change="willRemove || setAudioText($event.target.value)"
+      @change="willRemove || setAudioText($event)"
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      :disabled="uiLocked"
-    />
-    <mcw-button v-show="hoverFlag" @click="removeCell" raised>
-      <mcw-material-icon icon="delete"></mcw-material-icon>削除
-    </mcw-button>
+      :disable="uiLocked"
+    >
+      <template #after v-if="hoverFlag">
+        <q-btn round flat icon="delete" size="0.8rem" @click="removeCell" />
+      </template>
+    </q-input>
   </div>
 </template>
 
@@ -248,40 +258,37 @@ export default defineComponent({
   margin: 1rem 1rem;
   gap: 0px 1rem;
   .charactor-button {
-    border: solid 1.5px;
+    border: solid 1px;
     border-color: global.$primary;
-    padding: 0;
-    margin: 0;
-    background: none;
     font-size: 0;
-    line-height: 0;
-    overflow: visible;
-    cursor: pointer;
-    img {
+    .q-img {
       width: 2rem;
       height: 2rem;
       object-fit: scale-down;
     }
   }
-  .mdc-list-item__text {
-    height: 100%;
-    img {
-      height: 100%;
-    }
-  }
-  .textfield-container {
-    flex: auto;
-    label {
-      width: 100%;
-      height: 2rem !important;
-      background-color: transparent !important;
-      .mdc-line-ripple {
-        &::before,
-        &::after {
-          border-bottom-color: global.$primary !important;
-        }
+  .q-input {
+    .q-field__control {
+      height: 2rem;
+      background: none;
+      border-bottom: 1px solid global.$primary;
+      &::before {
+        border-bottom: none;
       }
     }
+    .q-field__after {
+      height: 2rem;
+      padding-left: 5px;
+    }
+  }
+}
+
+.charactor-menu {
+  .q-item {
+    color: global.$secondary;
+  }
+  .selected-charactor-item {
+    background-color: rgba(global.$primary, 0.2);
   }
 }
 </style>

@@ -1,21 +1,26 @@
 <template>
-  <div v-show="activeAudioKey" class="root relarive-absolute-wrapper">
+  <div
+    v-show="activeAudioKey"
+    class="full-height root relarive-absolute-wrapper"
+  >
     <div>
       <div class="side">
         <div class="detail-selector">
-          <mcw-tab-bar active-tab-index="1" @update:modelValue="selectDetail">
-            <mcw-tab>ｱｸｾﾝﾄ</mcw-tab>
-            <mcw-tab>ｲﾝﾄﾈｰｼｮﾝ</mcw-tab>
-          </mcw-tab-bar>
+          <q-tabs vertical class="text-primary" v-model="selectedDetail">
+            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
+            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+          </q-tabs>
         </div>
         <div class="play-button-wrapper">
           <template v-if="!nowPlayingContinuously">
-            <mcw-fab
+            <q-btn
               v-if="!nowPlaying && !nowGenerating"
+              fab
+              color="primary"
               icon="play_arrow"
               @click="play"
-            ></mcw-fab>
-            <mcw-fab v-else icon="stop" @click="stop"></mcw-fab
+            ></q-btn>
+            <q-btn v-else fab color="primary" icon="stop" @click="stop"></q-btn
           ></template>
         </div>
       </div>
@@ -34,27 +39,21 @@
             >
               <!-- div for input width -->
               <div>
-                <input
-                  v-if="accentPhrase.moras.length > 1"
-                  type="range"
-                  min="1"
-                  :max="accentPhrase.moras.length"
-                  step="1"
-                  :value="accentPhrase.accent"
-                  @change="
-                    changeAccent(
-                      accentPhraseIndex,
-                      parseInt($event.target.value)
-                    )
-                  "
-                  @input="
-                    changePreviewAccent(
-                      accentPhraseIndex,
-                      parseInt($event.target.value)
-                    )
-                  "
-                  :disabled="uiLocked"
-                />
+                <div>
+                  <q-slider
+                    v-if="accentPhrase.moras.length > 1"
+                    snap
+                    :min="1"
+                    :max="accentPhrase.moras.length"
+                    :step="1"
+                    :disable="uiLocked"
+                    v-model="accentPhrase.accent"
+                    @change="changeAccent(accentPhraseIndex, parseInt($event))"
+                    @input="
+                      changePreviewAccent(accentPhraseIndex, parseInt($event))
+                    "
+                  />
+                </div>
               </div>
             </div>
             <div
@@ -114,20 +113,22 @@
             >
               <!-- div for input width -->
               <div>
-                <input
-                  type="range"
-                  min="3"
-                  max="6.5"
-                  step="0.01"
-                  :value="mora.pitch"
+                <q-slider
+                  vertical
+                  reverse
+                  snap
+                  :min="3"
+                  :max="6.5"
+                  :step="0.01"
+                  :disable="uiLocked || mora.pitch == 0"
+                  v-model="mora.pitch"
                   @change="
                     setAudioMoraPitch(
                       accentPhraseIndex,
                       moraIndex,
-                      parseFloat($event.target.value)
+                      parseFloat($event)
                     )
                   "
-                  :disabled="uiLocked || mora.pitch == 0"
                 />
               </div>
             </div>
@@ -311,8 +312,6 @@ export default defineComponent({
 <style scoped lang="scss">
 @use '@/styles' as global;
 
-@use "@material/fab";
-
 .root > div {
   display: flex;
   flex-direction: row;
@@ -327,18 +326,16 @@ export default defineComponent({
     .play-button-wrapper {
       align-self: flex-end;
       margin-right: 10px;
-      margin-bottom: 21px;
-
-      .mdc-fab {
-        @include fab.accessible(global.$primary);
-      }
+      margin-bottom: 10px;
     }
   }
 
   .accent-phrase-table {
     flex-grow: 1;
     align-self: stretch;
-    margin-bottom: 20px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
 
     display: flex;
     overflow-x: scroll;
@@ -357,13 +354,14 @@ export default defineComponent({
           margin-left: 5px;
           margin-right: 10px;
           position: relative;
-          div {
+          > div {
             position: absolute;
             left: 0;
             right: 0;
             bottom: 0;
-            input[type="range"] {
-              width: 100%;
+            > div {
+              padding-left: 10px;
+              padding-right: 5px;
             }
           }
         }
@@ -432,11 +430,10 @@ export default defineComponent({
             position: absolute;
             top: 8px;
             bottom: 8px;
-            input[type="range"] {
+            .q-slider {
               height: 100%;
               min-width: 30px;
               max-width: 30px;
-              -webkit-appearance: slider-vertical;
             }
           }
         }

@@ -1,46 +1,41 @@
 <template>
   <div class="root">
-    <mcw-top-app-bar class="main-toolbar">
-      <div class="mdc-top-app-bar__row">
-        <section
-          class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
-        >
-          <mcw-button
-            @click="selectCharactorInfIndex(undefined)"
-            :disabled="detailIndex === undefined"
-            unelevated
-            >戻る</mcw-button
-          >
-          <span class="mdc-top-app-bar__title">{{
-            detailIndex === undefined
-              ? "音声ライブラリの利用規約"
-              : charactorInfos[detailIndex].metas.name
-          }}</span>
-        </section>
-      </div>
-    </mcw-top-app-bar>
-    <div
-      ref="scroller"
-      class="scroller mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper"
-    >
-      <div>
-        <mcw-list
-          v-if="detailIndex === undefined"
-          @update:modelValue="selectCharactorInfIndex"
-        >
-          <mcw-list-item
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-btn
+          unelevated
+          label="戻る"
+          color="white"
+          text-color="secondary"
+          :disable="detailIndex === undefined"
+          @click="selectCharactorInfIndex(undefined)"
+        />
+        <q-toolbar-title>{{
+          detailIndex === undefined
+            ? "音声ライブラリの利用規約"
+            : charactorInfos[detailIndex].metas.name
+        }}</q-toolbar-title>
+      </q-toolbar>
+    </q-header>
+    <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+      <div class="q-pa-md">
+        <q-list v-if="detailIndex === undefined">
+          <q-item
             v-for="(charactorInfo, index) in charactorInfos"
             :key="index"
-            >{{ charactorInfo.metas.name }}</mcw-list-item
+            clickable
+            @click="selectCharactorInfIndex(index)"
           >
-        </mcw-list>
+            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+          </q-item>
+        </q-list>
         <div v-else>
           <p
             v-html="convertTextToHtml(charactorInfos[detailIndex].metas.policy)"
           ></p>
         </div>
       </div>
-    </div>
+    </q-page>
   </div>
 </template>
 
@@ -83,16 +78,12 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.scroller {
-  width: 100%;
-  overflow: auto;
-  > div {
-    margin: 1rem;
+  .scroller {
+    width: 100%;
+    overflow: auto;
+    > div {
+      overflow-wrap: break-word;
+    }
   }
 }
 </style>
