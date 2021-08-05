@@ -194,6 +194,16 @@ export default defineComponent({
         URL.createObjectURL(charactorInfo.iconBlob)
     );
 
+    const hoverFlag = ref(false);
+
+    const mouseOverAction = () => {
+      hoverFlag.value = true;
+    };
+
+    const mouseLeaveAction = () => {
+      hoverFlag.value = false;
+    };
+
     // 初期化
     onMounted(() => {
       store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
@@ -223,6 +233,9 @@ export default defineComponent({
       focusTextField,
       isOpenedCharactorList,
       getCharactorIconUrl,
+      hoverFlag,
+      mouseOverAction,
+      mouseLeaveAction,
     };
   },
 });
