@@ -38,11 +38,9 @@
       @keydown.prevent.down.exact="moveDownCell"
       :disabled="uiLocked"
     />
-      <span
-        v-show="hoverFlag"
-        @click="removeCell"
-      >🗑 削除</span
-      >
+    <mcw-button v-show="hoverFlag" @click="removeCell" raised>
+      <mcw-material-icon icon="delete"></mcw-material-icon>削除
+    </mcw-button>
   </div>
 </template>
 
