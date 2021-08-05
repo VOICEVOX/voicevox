@@ -20,6 +20,7 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import {
   CREATE_HELP_WINDOW,
+  GET_APP_INFOS,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
   GET_TEMP_DIR,
@@ -171,6 +172,15 @@ async function createHelpWindow() {
   }
   if (isDevelopment) child.webContents.openDevTools();
 }
+
+ipcMain.handle(GET_APP_INFOS, (event) => {
+  const appName = app.getName();
+  const appVersion = app.getVersion();
+  return {
+    appName,
+    appVersion,
+  };
+});
 
 // プロセス間通信
 ipcMain.handle(GET_TEMP_DIR, (event) => {

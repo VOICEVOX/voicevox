@@ -4,6 +4,7 @@ import path from "path";
 
 import { Sandbox } from "@/type/preload";
 import {
+  GET_APP_INFOS,
   GET_TEMP_DIR,
   SHOW_AUDIO_SAVE_DIALOG,
   SHOW_OPEN_DIRECOTRY_DIALOG,
@@ -18,6 +19,10 @@ import {
 let tempDir: string;
 
 const api: Sandbox = {
+  getAppInfos: async () => {
+    return await ipcRenderer.invoke(GET_APP_INFOS);
+  },
+
   getCharactorInfos: async () => {
     return await ipcRenderer.invoke(GET_CHARACTOR_INFOS);
   },

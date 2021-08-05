@@ -1,4 +1,5 @@
 export interface Sandbox {
+  getAppInfos(): Promise<AppInfos>;
   getCharactorInfos(): Promise<CharactorInfo[]>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
@@ -15,6 +16,11 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
 }
+
+export type AppInfos = {
+  name: string;
+  version: string;
+};
 
 export type CharactorInfo = {
   dirPath: string;

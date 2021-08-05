@@ -1,3 +1,4 @@
+export const GET_APP_INFOS = "GET_APP_INFOS";
 export const GET_TEMP_DIR = "GET_TEMP_DIR";
 export const GET_CHARACTOR_INFOS = "GET_CHARACTOR_INFOS";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";

@@ -65,13 +65,13 @@ export const store = createStore<State>({
       try {
         const buf = await window.electron.readFile({ filePath });
         const text = new TextDecoder("utf-8").decode(buf).trim();
-        projectValidationCheck(text);
+        await projectValidationCheck(text);
         if (
           !(await window.electron.showConfirmDialog({
             title: "警告",
             message:
               "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-              "宜しいですか？",
+              "よろしいですか？",
           }))
         ) {
           return;
@@ -108,9 +108,11 @@ export const store = createStore<State>({
         return;
       }
       const filePath = ret;
+
+      const appInfos = await window.electron.getAppInfos();
       const { audioItems, audioKeys } = context.state;
       const projectData = {
-        projectVersion: PROJECT_VERSION.map(String).join("."),
+        appVersion: appInfos.version,
         audioKeys,
         audioItems,
       };
@@ -125,21 +127,18 @@ export const useStore = () => {
   return baseUseStore(storeKey);
 };
 
-const PROJECT_VERSION = [0, 1, 0];
-
 // projectValidationCheck(text: string) -> void;
 // Check for validation using the given text as project data.
-const projectValidationCheck = (text: string) => {
+const projectValidationCheck = async (text: string) => {
   const projectData = JSON.parse(text);
-  const projectVersionText = projectData.projectVersion ?? "0.0.0";
-  const projectVersion = projectVersionText.split(".").map(Number);
-  assert(projectVersion <= PROJECT_VERSION);
+  const appVersionText = projectData.appVersion ?? "0.0.0";
+  const appVersion = appVersionText.split(".").map(Number);
 
-  const projectAttributes = [
-    "projectVersion",
-    "audioKeys",
-    "audioItems",
-  ] as const;
+  const appInfos = await window.electron.getAppInfos();
+  const APP_VERSION = appInfos.version.split(".").map(Number);
+  assert(appVersion <= APP_VERSION);
+
+  const projectAttributes = ["appVersion", "audioKeys", "audioItems"] as const;
 
   for (const attribute of projectAttributes) {
     assert(
