@@ -21,21 +21,26 @@ async function generateUniqueId(audioItem: AudioItem) {
     .join("");
 }
 
-function parseTextFile(body: string, charactorInfos?: CharactorInfo[]): AudioItem[] {
-  const charactors = new Map(charactorInfos?.map((info, index) => [info.metas.name, index]));
-  if(!charactors.size) return [];
+function parseTextFile(
+  body: string,
+  charactorInfos?: CharactorInfo[]
+): AudioItem[] {
+  const charactors = new Map(
+    charactorInfos?.map((info, index) => [info.metas.name, index])
+  );
+  if (!charactors.size) return [];
 
   const audioItems: AudioItem[] = [];
-  const seps = [',', '\n'];
-  let lastCharactorIndex: number = 0;
-  for(const splittedText of body.split(new RegExp(`${seps.join('|')}`, 'g'))) {
+  const seps = [",", "\n"];
+  let lastCharactorIndex = 0;
+  for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const charactorIndex = charactors.get(splittedText);
-    if(charactorIndex !== undefined) {
+    if (charactorIndex !== undefined) {
       lastCharactorIndex = charactorIndex;
       continue;
     }
 
-    audioItems.push({ text: splittedText, charactorIndex: lastCharactorIndex })
+    audioItems.push({ text: splittedText, charactorIndex: lastCharactorIndex });
   }
   return audioItems;
 }
@@ -489,16 +494,22 @@ export const audioStore = {
         }
       }
     ),
-    [IMPORT_FROM_FILE]: createUILockAction(
-      async ({ state, dispatch  }) => {
-        const filePath = await window.electron.showImportFileDialog({ title: "セリフ読み込み" });
-        if (filePath) {
-          const body = new TextDecoder('utf-8').decode(await window.electron.readFile({ filePath }));
-          const audioItems = parseTextFile(body, state.charactorInfos);
-          return Promise.all(audioItems.map(item => dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })))
-        }
+    [IMPORT_FROM_FILE]: createUILockAction(async ({ state, dispatch }) => {
+      const filePath = await window.electron.showImportFileDialog({
+        title: "セリフ読み込み",
+      });
+      if (filePath) {
+        const body = new TextDecoder("utf-8").decode(
+          await window.electron.readFile({ filePath })
+        );
+        const audioItems = parseTextFile(body, state.charactorInfos);
+        return Promise.all(
+          audioItems.map((item) =>
+            dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })
+          )
+        );
       }
-    ),
+    }),
     [PLAY_AUDIO]: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];

@@ -202,14 +202,14 @@ ipcMain.handle(
 );
 
 ipcMain.handle(
-   SHOW_IMPORT_FILE_DIALOG,
-   (event, { title }: { title: string }) => {
-     return dialog.showOpenDialogSync(win, {
-       title,
-       filters: [{name: 'Text', extensions: ['txt']}],
-       properties: ["openFile", "createDirectory"],
-     })?.[0];
-   }
+  SHOW_IMPORT_FILE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "Text", extensions: ["txt"] }],
+      properties: ["openFile", "createDirectory"],
+    })?.[0];
+  }
 );
 
 ipcMain.handle(CREATE_HELP_WINDOW, (event) => {

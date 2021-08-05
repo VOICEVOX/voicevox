@@ -25,10 +25,7 @@
           unelevated
           >書き出し</mcw-button
         >
-        <mcw-button
-          @click="importFromFile"
-          :disabled="uiLocked"
-          unelevated
+        <mcw-button @click="importFromFile" :disabled="uiLocked" unelevated
           >読み込み</mcw-button
         >
       </section>
