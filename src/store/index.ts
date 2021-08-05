@@ -127,6 +127,75 @@ export const useStore = () => {
   return baseUseStore(storeKey);
 };
 
+const projectSchema = {
+  title: "VOICEVOX Project",
+  type: "object",
+  properties: {
+    appVersion: { type: "string" },
+    audioKeys: {
+      discription: "Attribute keys of audioItems.",
+      type: "array",
+      items: { type: "string" },
+    },
+    audioItems: {
+      discription: "VOICEVOX states per cell",
+      type: "object",
+      additionalProperties: {
+        type: "object",
+        properties: {
+          text: { type: "string" },
+          characterIndex: { type: "number" },
+          query: { $ref: "#/$defs/AudioQuery" },
+        },
+        required: ["text"],
+      },
+    },
+  },
+  required: ["appVersion", "audioKeys", "audioItems"],
+  $defs: {
+    Mora: {
+      type: "object",
+      properties: {
+        text: { type: "string" },
+        consonant: { type: "string" },
+        vowel: { type: "string" },
+        pitch: { type: "number" },
+      },
+      required: ["text", "vowel", "pitch"],
+    },
+    AccentPhrase: {
+      type: "object",
+      properties: {
+        moras: {
+          type: "array",
+          items: { $ref: "#/$defs/Mora" },
+        },
+        accent: { type: "number" },
+        pauseMora: { $ref: "#/$defs/Mora" },
+      },
+      required: ["moras", "accent"],
+    },
+    AudioQuery: {
+      type: "object",
+      properties: {
+        accentPhrases: {
+          type: "array",
+          items: { $ref: "#/$defs/AccentPhrase" },
+        },
+        speedScale: { type: "number" },
+        pitchScale: { type: "number" },
+        intonationScale: { type: "number" },
+      },
+      required: [
+        "accentPhrases",
+        "speedScale",
+        "pitchScale",
+        "intonationScale",
+      ],
+    },
+  },
+};
+
 // projectValidationCheck(text: string) -> void;
 // Check for validation using the given text as project data.
 const projectValidationCheck = async (text: string) => {
