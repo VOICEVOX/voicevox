@@ -25,6 +25,7 @@
 @use "@material/menu-surface/mdc-menu-surface";
 @use "@material/circular-progress/mdc-circular-progress";
 @use "@material/drawer/mdc-drawer";
+@use "@material/icon-button/mdc-icon-button";
 
 #app {
   display: flex;
