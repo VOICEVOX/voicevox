@@ -29,6 +29,7 @@ import {
   SHOW_PROJECT_SAVE_DIALOG,
   SHOW_PROJECT_LOAD_DIALOG,
   SHOW_CONFIRM_DIALOG,
+  SHOW_IMPORT_FILE_DIALOG,
 } from "./electron/ipc";
 
 import fs from "fs";
@@ -252,6 +253,17 @@ ipcMain.handle(
       .then((value) => {
         return value.response == 0;
       });
+  }
+);
+
+ipcMain.handle(
+  SHOW_IMPORT_FILE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "Text", extensions: ["txt"] }],
+      properties: ["openFile", "createDirectory"],
+    })?.[0];
   }
 );
 

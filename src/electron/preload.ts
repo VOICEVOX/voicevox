@@ -14,6 +14,7 @@ import {
   SHOW_PROJECT_SAVE_DIALOG,
   SHOW_PROJECT_LOAD_DIALOG,
   SHOW_CONFIRM_DIALOG,
+  SHOW_IMPORT_FILE_DIALOG,
 } from "./ipc";
 
 let tempDir: string;
@@ -64,6 +65,10 @@ const api: Sandbox = {
 
   showConfirmDialog: ({ title, message }) => {
     return ipcRenderer.invoke(SHOW_CONFIRM_DIALOG, { title, message });
+  },
+
+  showImportFileDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_IMPORT_FILE_DIALOG, { title });
   },
 
   writeFile: ({ filePath, buffer }) => {

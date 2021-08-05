@@ -12,6 +12,7 @@ export interface Sandbox {
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showConfirmDialog(obj: { title: string; message: string }): Primise<boolean>;
+  showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer });
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
