@@ -27,10 +27,10 @@ function parseTextFile(body: string, charactorInfos?: CharactorInfo[]): AudioIte
 
   const audioItems: AudioItem[] = [];
   const seps = [',', '\n'];
-  let lastCharactorIndex: number | undefined = 0;
+  let lastCharactorIndex: number = 0;
   for(const splittedText of body.split(new RegExp(`${seps.join('|')}`, 'g'))) {
     const charactorIndex = charactors.get(splittedText);
-    if(typeof charactorIndex !== 'undefined') {
+    if(charactorIndex !== undefined) {
       lastCharactorIndex = charactorIndex;
       continue;
     }
@@ -495,7 +495,7 @@ export const audioStore = {
         if (filePath) {
           const body = new TextDecoder('utf-8').decode(await window.electron.readFile({ filePath }));
           const audioItems = parseTextFile(body, state.charactorInfos);
-          audioItems.forEach(item => dispatch(REGISTER_AUDIO_ITEM, { audioItem: item }))
+          return Promise.all(audioItems.map(item => dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })))
         }
       }
     ),
