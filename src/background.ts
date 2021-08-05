@@ -174,11 +174,11 @@ async function createHelpWindow() {
 }
 
 ipcMain.handle(GET_APP_INFOS, (event) => {
-  const appName = app.getName();
-  const appVersion = app.getVersion();
+  const name = app.getName();
+  const version = app.getVersion();
   return {
-    appName,
-    appVersion,
+    name,
+    version,
   };
 });
 
