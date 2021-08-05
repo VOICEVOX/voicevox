@@ -10,6 +10,7 @@ import {
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
   CREATE_HELP_WINDOW,
+  SHOW_IMPORT_FILE_DIALOG,
 } from "./ipc";
 
 let tempDir: string;
@@ -44,6 +45,10 @@ const api: Sandbox = {
 
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRenderer.invoke(SHOW_OPEN_DIRECOTRY_DIALOG, { title });
+  },
+
+  showImportFileDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_IMPORT_FILE_DIALOG, { title });
   },
 
   writeFile: ({ filePath, buffer }) => {

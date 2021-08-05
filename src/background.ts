@@ -24,6 +24,7 @@ import {
   GET_OSS_LICENSES,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
+  SHOW_IMPORT_FILE_DIALOG,
   SHOW_SAVE_DIALOG,
 } from "./electron/ipc";
 
@@ -182,14 +183,17 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
 });
 
-ipcMain.handle(SHOW_SAVE_DIALOG, (event, { title, defaultPath }: { title: string, defaultPath?: string }) => {
-  return dialog.showSaveDialogSync(win, {
-    title,
-    defaultPath,
-    filters: [{ name: "Wave File", extensions: ["wav"] }],
-    properties: ["createDirectory"],
-  });
-});
+ipcMain.handle(
+  SHOW_SAVE_DIALOG,
+  (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      defaultPath,
+      filters: [{ name: "Wave File", extensions: ["wav"] }],
+      properties: ["createDirectory"],
+    });
+  }
+);
 
 ipcMain.handle(
   SHOW_OPEN_DIRECOTRY_DIALOG,
@@ -197,6 +201,17 @@ ipcMain.handle(
     return dialog.showOpenDialogSync(win, {
       title,
       properties: ["openDirectory", "createDirectory"],
+    })?.[0];
+  }
+);
+
+ipcMain.handle(
+  SHOW_IMPORT_FILE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "Text", extensions: ["txt"] }],
+      properties: ["openFile", "createDirectory"],
     })?.[0];
   }
 );
