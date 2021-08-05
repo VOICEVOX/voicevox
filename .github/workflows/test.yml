@@ -1,8 +1,6 @@
 name: test
 on:
   push:
-    branches:
-      - main
   pull_request:
     branches:
       - '**'
@@ -10,6 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_CACHE: .cache/electron-builder
+      cache-version: v2
     steps:
       - uses: actions/checkout@master
       - id: node-version
@@ -17,6 +20,27 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+      - uses: actions/cache@master
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-node-
+      - name: Cache Electron
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+
+      - name: Cache Electron-Builder
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
       - run: npm ci
       - run: npm run lint
-      - run: npm run electron:build
+      - run: npm run electron:build_pnever

@@ -39,8 +39,8 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
-  showSaveDialog: ({ title }) => {
-    return ipcRenderer.invoke(SHOW_SAVE_DIALOG, { title });
+  showSaveDialog: ({ title, defaultPath }) => {
+    return ipcRenderer.invoke(SHOW_SAVE_DIALOG, { title, defaultPath });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
