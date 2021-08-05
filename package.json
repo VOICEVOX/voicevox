@@ -8,7 +8,7 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "lint": "vue-cli-service lint",
+    "lint": "vue-cli-service lint --max-warnings 0",
     "electron:build": "vue-cli-service electron:build",
     "electron:build_pnever": "vue-cli-service electron:build --publish never",
     "electron:serve": "vue-cli-service electron:serve",
