@@ -51,12 +51,19 @@ function buildFileName(state: State, audioKey: string) {
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   const character = state.charactorInfos![audioItem.charactorIndex!];
-  const characterName = character.metas.name.replace(sanitizer, '');
-  let text = audioItem.text.replace(sanitizer, '');
+  const characterName = character.metas.name.replace(sanitizer, "");
+  let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
-  return (index + 1).toString().padStart(3, "0") + "_" + characterName + "_" + text + ".wav";
+  return (
+    (index + 1).toString().padStart(3, "0") +
+    "_" +
+    characterName +
+    "_" +
+    text +
+    ".wav"
+  );
 }
 
 export const SET_ENGINE_READY = "SET_ENGINE_READY";
@@ -482,14 +489,19 @@ export const audioStore = {
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
         const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
-        filePath ??= await window.electron.showSaveDialog({ title: "Save", defaultPath: buildFileName(state, audioKey) });
+        filePath ??= await window.electron.showSaveDialog({
+          title: "Save",
+          defaultPath: buildFileName(state, audioKey),
+        });
         if (filePath) {
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
           });
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {type: 'text/plain'});
+          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {
+            type: "text/plain",
+          });
           window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),

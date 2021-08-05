@@ -183,14 +183,17 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
 });
 
-ipcMain.handle(SHOW_SAVE_DIALOG, (event, { title, defaultPath }: { title: string, defaultPath?: string }) => {
-  return dialog.showSaveDialogSync(win, {
-    title,
-    defaultPath,
-    filters: [{ name: "Wave File", extensions: ["wav"] }],
-    properties: ["createDirectory"],
-  });
-});
+ipcMain.handle(
+  SHOW_SAVE_DIALOG,
+  (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      defaultPath,
+      filters: [{ name: "Wave File", extensions: ["wav"] }],
+      properties: ["createDirectory"],
+    });
+  }
+);
 
 ipcMain.handle(
   SHOW_OPEN_DIRECOTRY_DIALOG,
