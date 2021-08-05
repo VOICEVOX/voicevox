@@ -28,6 +28,7 @@ import {
   SHOW_IMPORT_FILE_DIALOG,
   SHOW_SAVE_DIALOG,
 } from "./electron/ipc";
+import { MenuBuilder } from "./electron/menu";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -120,10 +121,24 @@ const updateInfos = JSON.parse(
   })
 );
 
+// initialize menu
+const menu = MenuBuilder()
+  .setOnLaunchModeItemClicked((useGpu) => {
+    store.set("useGpu", useGpu);
+
+    dialog.showMessageBoxSync(win, {
+      message: "音声合成エンジン起動モードの変更が完了しました",
+      detail: "起動モード変更の反映は次回のソフトウェア起動時に行われます。",
+    });
+
+    menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+  })
+  .build();
+Menu.setApplicationMenu(menu.instance);
+
+menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+
 // create window
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
-}
 async function createWindow() {
   win = new BrowserWindow({
     width: 800,
