@@ -491,7 +491,7 @@ export const audioStore = {
     ),
     [IMPORT_FROM_FILE]: createUILockAction(
       async ({ state, dispatch  }) => {
-        const filePath = await window.electron.showImportFileDialog({ title: "Import" });
+        const filePath = await window.electron.showImportFileDialog({ title: "セリフ読み込み" });
         if (filePath) {
           const body = new TextDecoder('utf-8').decode(await window.electron.readFile({ filePath }));
           const audioItems = parseTextFile(body, state.charactorInfos);
