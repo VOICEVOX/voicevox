@@ -29,6 +29,9 @@
       ref="textfield"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event.target.value)"
+      @paste.prevent.exact="
+        pasteOnAudioCell($event.clipboardData.getData('text/plain'))
+      "
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
@@ -64,7 +67,7 @@ export default defineComponent({
     audioKey: { type: String, required: true },
   },
 
-  emits: ["focusCell"],
+  emits: ["focusCell", "addAudioItem"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -124,6 +127,27 @@ export default defineComponent({
 
     const stop = () => {
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
+    };
+
+    //長い文章をコピペしたときに句点（。）で自動区切りする
+    //https://github.com/Hiroshiba/voicevox/issues/25
+    const pasteOnAudioCell = async (text: string) => {
+      //文句を句点（。）で区切り
+      let SplittedStringArr = text.split("。");
+      let ArrLen = SplittedStringArr.length;
+      for (let i = 0; i < ArrLen; i++) {
+        if (SplittedStringArr[i] != "") {
+          let currElem = document.activeElement as HTMLInputElement;
+          currElem.value += SplittedStringArr[i];
+          currElem.dispatchEvent(new Event("change"));
+          if (i < ArrLen - 1) {
+            //セルの追加が非同期処理で直接ループを走ると追加処理の前に記入処理が走る可能性がある為、セルを追加ごとに50msのSleepを行う
+            //セル追加が完了の時にPromiseを返すといいですが…
+            emit("addAudioItem");
+            await new Promise((resolve, reject) => setTimeout(resolve, 50));
+          }
+        }
+      }
     };
 
     // 選択されている
@@ -212,6 +236,7 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      pasteOnAudioCell,
       textfield,
       focusTextField,
       isOpenedCharactorList,
