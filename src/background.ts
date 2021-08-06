@@ -26,7 +26,9 @@ import {
   SHOW_OPEN_DIRECOTRY_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
   SHOW_SAVE_DIALOG,
+  CREATE_TEXT_EDIT_CONTEXT_MENU,
 } from "./electron/ipc";
+import { textEditContextMenu } from "./electron/contextMenu";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -218,6 +220,10 @@ ipcMain.handle(
 
 ipcMain.handle(CREATE_HELP_WINDOW, (event) => {
   createHelpWindow();
+});
+
+ipcMain.handle(CREATE_TEXT_EDIT_CONTEXT_MENU, () => {
+  textEditContextMenu.popup({ window: win });
 });
 
 // app callback
