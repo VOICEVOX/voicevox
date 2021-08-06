@@ -131,7 +131,7 @@
           </template>
         </q-splitter>
 
-        <q-resize-observer @resize="pageOnResize" />
+        <q-resize-observer ref="resizeObserverRef" @resize="pageOnResize" />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -146,6 +146,7 @@ import {
   ref,
   watch,
 } from "vue";
+import { QResizeObserver } from "quasar";
 import { useStore } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -218,18 +219,18 @@ export default defineComponent({
     const audioDetailPaneMinHeight = ref(0);
     const audioDetailPaneMaxHeight = ref(0);
 
-    const pageOnResize = (size: { width: number; height: number }) => {
+    const pageOnResize = ({ height }: { height: number }) => {
       if (!activeAudioKey.value) return;
 
-      const height = size.height - 200;
-      if (height > MAX_AUDIO_DETAIL_PANE_HEIGHT) {
+      const maxHeight = height - 200;
+      if (maxHeight > MAX_AUDIO_DETAIL_PANE_HEIGHT) {
         // 最大値以上なら最大値に設定
         audioDetailPaneMaxHeight.value = MAX_AUDIO_DETAIL_PANE_HEIGHT;
-      } else if (size.height < 200 + MIN_AUDIO_DETAIL_PANE_HEIGHT) {
+      } else if (height < 200 + MIN_AUDIO_DETAIL_PANE_HEIGHT) {
         // 最低値以下になってしまう場合は無制限に
         audioDetailPaneMaxHeight.value = Infinity;
       } else {
-        audioDetailPaneMaxHeight.value = height;
+        audioDetailPaneMaxHeight.value = maxHeight;
       }
     };
 
@@ -243,6 +244,8 @@ export default defineComponent({
     onBeforeUpdate(() => {
       audioCellRefs = {};
     });
+
+    const resizeObserverRef = ref<any>(undefined);
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
@@ -266,7 +269,9 @@ export default defineComponent({
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
         audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
-        audioDetailPaneMaxHeight.value = MAX_AUDIO_DETAIL_PANE_HEIGHT;
+        pageOnResize({
+          height: resizeObserverRef.value.$el.parentElement.clientHeight,
+        });
       } else {
         audioInfoPaneWidth.value = 0;
         audioInfoPaneMinWidth.value = 0;
@@ -328,6 +333,7 @@ export default defineComponent({
       addAndMoveCell,
       focusCell,
       pageOnResize,
+      resizeObserverRef,
       playContinuously,
       stopContinuously,
       generateAndSaveAllAudio,
