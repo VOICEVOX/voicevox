@@ -31,6 +31,8 @@ import {
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
 
+import { detectNvidia } from "./utils";
+
 let win: BrowserWindow;
 
 // 多重起動防止
@@ -57,16 +59,35 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 function runEngine() {
   if (!store.has("useGpu")) {
-    const useGpu =
-      dialog.showMessageBoxSync(win, {
-        message: "エンジンをCPUモード・GPUモードどちらで起動しますか？",
-        detail:
-          "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。",
-        title: "エンジンの起動モード選択",
-        type: "question",
-        buttons: ["CPUモード", "GPUモード"],
-      }) == 1;
-    store.set("useGpu", useGpu);
+    detectNvidia().then((result: boolean): void => {
+      if (result) {
+        const useGpu =
+          dialog.showMessageBoxSync(win, {
+            message: "エンジンをCPUモード・GPUモードどちらで起動しますか？",
+            detail:
+              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。",
+            title: "エンジンの起動モード選択",
+            type: "question",
+            buttons: ["CPUモード", "GPUモード"],
+          }) == 1;
+        store.set("useGpu", useGpu);
+      } else {
+        dialog.showMessageBoxSync(win, {
+          message:
+            "Nvidiaのグラフィックボードを検出出来ませんでした。なので自動的にCPUモードで実行されます。",
+          title: "CPUモードへのフォールバック",
+          type: "info",
+          buttons: ["閉じる"],
+        });
+        store.set("useGpu", false);
+      }
+    });
+  } else if (store.get("useGpu")) {
+    detectNvidia().then((result: boolean): void => {
+      if (!result) {
+        store.set("useGpu", false);
+      }
+    });
   }
 
   const args = store.get("useGpu") ? ["--use_gpu"] : null;

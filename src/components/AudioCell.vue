@@ -2,7 +2,8 @@
   <div
     class="audio-cell"
     v-on:mouseover="mouseOverAction"
-    v-on:mouseleave="mouseLeaveAction">
+    v-on:mouseleave="mouseLeaveAction"
+  >
     <mcw-menu-anchor>
       <button class="charactor-button" @click="isOpenedCharactorList = true">
         <img

@@ -21,6 +21,7 @@
     "electron-store": "^8.0.0",
     "immer": "^9.0.2",
     "rfc6902": "^4.0.2",
+    "systeminformation": "^5.8.0",
     "tree-kill": "^1.2.2",
     "uuid": "^3.4.0",
     "vue": "^3.0.0",
