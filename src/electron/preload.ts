@@ -11,6 +11,7 @@ import {
   GET_OSS_LICENSES,
   CREATE_HELP_WINDOW,
   SHOW_IMPORT_FILE_DIALOG,
+  CREATE_TEXT_EDIT_CONTEXT_MENU,
 } from "./ipc";
 
 let tempDir: string;
@@ -61,6 +62,10 @@ const api: Sandbox = {
 
   createHelpWindow: () => {
     ipcRenderer.invoke(CREATE_HELP_WINDOW);
+  },
+
+  openTextEditContextMenu: () => {
+    return ipcRenderer.invoke(CREATE_TEXT_EDIT_CONTEXT_MENU);
   },
 };
 
