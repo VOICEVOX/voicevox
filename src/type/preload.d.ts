@@ -1,6 +1,7 @@
 export interface Sandbox {
   getCharactorInfos(): Promise<CharactorInfo[]>;
   getOssLicenses(): Promise<Record<string, string>[]>;
+  getUpdateInfos(): Promise<Record<string, any>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   showSaveDialog(obj: {

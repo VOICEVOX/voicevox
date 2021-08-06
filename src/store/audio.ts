@@ -57,16 +57,7 @@ function buildFileName(state: State, audioKey: string) {
     text = text.substring(0, 9) + "…";
   }
   return (
-<<<<<<< HEAD
     (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
-=======
-    (index + 1).toString().padStart(3, "0") +
-    "_" +
-    characterName +
-    "_" +
-    text +
-    ".wav"
->>>>>>> origin/main
   );
 }
 

@@ -7,6 +7,7 @@ import { audioStore } from "./audio";
 import { uiStore } from "./ui";
 
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
+export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 
 export const storeKey: InjectionKey<Store<State>> = Symbol();
 
@@ -43,6 +44,9 @@ export const store = createStore<State>({
 
     [GET_OSS_LICENSES]: async () => {
       return await window.electron.getOssLicenses();
+    },
+    [GET_UPDATE_INFOS]: async () => {
+      return await window.electron.getUpdateInfos();
     },
   },
 });
