@@ -48,7 +48,13 @@
       :disable="uiLocked"
     >
       <template #after v-if="hoverFlag">
-        <q-btn round flat icon="delete" size="0.8rem" @click="removeCell" />
+        <q-btn
+          round
+          flat
+          icon="delete_outline"
+          size="0.8rem"
+          @click="removeCell"
+        />
       </template>
     </q-input>
   </div>

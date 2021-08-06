@@ -25,6 +25,9 @@
           <q-item clickable to="/help/oss-license" active-class="selected-item">
             <q-item-section>OSSライセンス情報</q-item-section>
           </q-item>
+          <q-item clickable to="/help/update-info" active-class="selected-item">
+            <q-item-section>アップデート情報</q-item-section>
+          </q-item>
         </q-list>
       </q-drawer>
 

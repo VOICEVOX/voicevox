@@ -146,7 +146,6 @@ import {
   ref,
   watch,
 } from "vue";
-import { QResizeObserver } from "quasar";
 import { useStore } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
