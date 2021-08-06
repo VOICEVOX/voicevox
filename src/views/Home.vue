@@ -56,7 +56,6 @@
               :key="audioKey"
               :audioKey="audioKey"
               @focusCell="focusCell"
-              @addAudioItem="addAudioItem"
               :ref="addAudioCellRef"
             />
           </div>

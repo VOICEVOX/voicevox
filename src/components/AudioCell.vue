@@ -56,6 +56,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  SET_ON_PASTE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
@@ -67,7 +68,7 @@ export default defineComponent({
     audioKey: { type: String, required: true },
   },
 
-  emits: ["focusCell", "addAudioItem"],
+  emits: ["focusCell"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -134,20 +135,14 @@ export default defineComponent({
     const pasteOnAudioCell = async (text: string) => {
       //文句を句点（。）で区切り
       let SplittedStringArr = text.split("。");
-      let ArrLen = SplittedStringArr.length;
-      for (let i = 0; i < ArrLen; i++) {
-        if (SplittedStringArr[i] != "") {
-          let currElem = document.activeElement as HTMLInputElement;
-          currElem.value += SplittedStringArr[i];
-          currElem.dispatchEvent(new Event("change"));
-          if (i < ArrLen - 1) {
-            //セルの追加が非同期処理で直接ループを走ると追加処理の前に記入処理が走る可能性がある為、セルを追加ごとに50msのSleepを行う
-            //セル追加が完了の時にPromiseを返すといいですが…
-            emit("addAudioItem");
-            await new Promise((resolve, reject) => setTimeout(resolve, 50));
-          }
-        }
-      }
+
+      //最初の一行目は普段通りでしょりする
+      let currElem = document.activeElement as HTMLInputElement;
+      currElem.value += SplittedStringArr.shift();
+      currElem.dispatchEvent(new Event("change"));
+
+      //それ以降はStoreで処理
+      store.dispatch(SET_ON_PASTE, { text: SplittedStringArr });
     };
 
     // 選択されている
