@@ -36,6 +36,7 @@
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
+      @mouseup.right="onRightClickTextField"
       :disabled="uiLocked"
     />
     <mcw-button v-show="hoverFlag" @click="removeCell" raised>
@@ -59,6 +60,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
@@ -179,6 +181,11 @@ export default defineComponent({
       removeCell();
     };
 
+    // テキスト編集エリアの右クリック
+    const onRightClickTextField = () => {
+      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
+    };
+
     // フォーカス
     const textfield = ref<Component | any>();
     const focusTextField = () => {
@@ -228,6 +235,7 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      onRightClickTextField,
       textfield,
       focusTextField,
       isOpenedCharactorList,
