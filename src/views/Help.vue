@@ -7,6 +7,7 @@
       >
       <mcw-list-item to="/help/how-to-use">使い方</mcw-list-item>
       <mcw-list-item to="/help/oss-license">OSSライセンス情報</mcw-list-item>
+      <mcw-list-item to="/help/update-info">アップデート情報</mcw-list-item>
     </mcw-drawer>
     <router-view />
   </div>

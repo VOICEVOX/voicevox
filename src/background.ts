@@ -22,6 +22,7 @@ import {
   CREATE_HELP_WINDOW,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
+  GET_UPDATE_INFOS,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
@@ -112,6 +113,13 @@ const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
 );
 
+// アップデート情報の読み込み
+const updateInfos = JSON.parse(
+  fs.readFileSync(path.join(__static, "updateInfos.json"), {
+    encoding: "utf-8",
+  })
+);
+
 // create window
 if (!isDevelopment) {
   Menu.setApplicationMenu(null);
@@ -181,6 +189,10 @@ ipcMain.handle(GET_CHARACTOR_INFOS, (event) => {
 
 ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
+});
+
+ipcMain.handle(GET_UPDATE_INFOS, (event) => {
+  return updateInfos;
 });
 
 ipcMain.handle(
