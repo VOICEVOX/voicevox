@@ -38,6 +38,7 @@
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
+      @keydown.shift.enter.exact="addCellBellow"
       :disabled="uiLocked"
     />
     <mcw-icon-button
@@ -68,12 +69,14 @@ import {
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
   CHANGE_CHARACTOR_INDEX,
+  REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
   PUT_TEXTS,
 } from "@/store/audio";
+import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
 
@@ -218,6 +221,16 @@ export default defineComponent({
       removeCell();
     };
 
+    // 下にセルを追加
+    const addCellBellow = async () => {
+      const audioItem: AudioItem = { text: "", charactorIndex: 0 };
+      await store.dispatch(REGISTER_AUDIO_ITEM, {
+        audioItem,
+        prevAudioKey: props.audioKey,
+      });
+      moveDownCell();
+    };
+
     // フォーカス
     const textfield = ref<Component | any>();
     const focusTextField = () => {
@@ -244,7 +257,9 @@ export default defineComponent({
 
     // 初期化
     onMounted(() => {
-      store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      if (audioItem.value.query == undefined) {
+        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      }
     });
 
     return {
@@ -264,6 +279,7 @@ export default defineComponent({
       willRemove,
       removeCell,
       tryToRemoveCell,
+      addCellBellow,
       isActive,
       moveUpCell,
       moveDownCell,

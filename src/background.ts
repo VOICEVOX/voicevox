@@ -20,13 +20,17 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import {
   CREATE_HELP_WINDOW,
+  GET_APP_INFOS,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
   GET_UPDATE_INFOS,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
+  SHOW_PROJECT_SAVE_DIALOG,
+  SHOW_PROJECT_LOAD_DIALOG,
+  SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
-  SHOW_SAVE_DIALOG,
 } from "./electron/ipc";
 
 import fs from "fs";
@@ -178,6 +182,15 @@ async function createHelpWindow() {
   if (isDevelopment) child.webContents.openDevTools();
 }
 
+ipcMain.handle(GET_APP_INFOS, (event) => {
+  const name = app.getName();
+  const version = app.getVersion();
+  return {
+    name,
+    version,
+  };
+});
+
 // プロセス間通信
 ipcMain.handle(GET_TEMP_DIR, (event) => {
   return tempDir;
@@ -196,7 +209,7 @@ ipcMain.handle(GET_UPDATE_INFOS, (event) => {
 });
 
 ipcMain.handle(
-  SHOW_SAVE_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
   (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
     return dialog.showSaveDialogSync(win, {
       title,
@@ -214,6 +227,44 @@ ipcMain.handle(
       title,
       properties: ["openDirectory", "createDirectory"],
     })?.[0];
+  }
+);
+
+ipcMain.handle(
+  SHOW_PROJECT_SAVE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+      properties: ["showOverwriteConfirmation"],
+    });
+  }
+);
+
+ipcMain.handle(
+  SHOW_PROJECT_LOAD_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+      properties: ["openFile"],
+    });
+  }
+);
+
+ipcMain.handle(
+  SHOW_CONFIRM_DIALOG,
+  (event, { title, message }: { title: string; message: string }) => {
+    return dialog
+      .showMessageBox(win, {
+        type: "info",
+        buttons: ["OK", "Cancel"],
+        title: title,
+        message: message,
+      })
+      .then((value) => {
+        return value.response == 0;
+      });
   }
 );
 
