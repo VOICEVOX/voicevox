@@ -40,9 +40,13 @@
       @keydown.prevent.down.exact="moveDownCell"
       :disabled="uiLocked"
     />
-    <mcw-button v-show="hoverFlag" @click="removeCell" raised>
-      <mcw-material-icon icon="delete"></mcw-material-icon>削除
-    </mcw-button>
+    <mcw-icon-button
+      v-show="hoverFlag"
+      @click="removeCell"
+      class="delete-button"
+    >
+      <mcw-material-icon icon="delete_outline" />
+    </mcw-icon-button>
   </div>
 </template>
 
@@ -279,6 +283,8 @@ export default defineComponent({
 <style lang="scss">
 @use '@/styles' as global;
 
+@use "@material/icon-button/mixins" as icon-button;
+
 .audio-cell {
   display: flex;
   margin: 1rem 1rem;
@@ -318,6 +324,9 @@ export default defineComponent({
         }
       }
     }
+  }
+  .delete-button {
+    @include icon-button.density(-3); // -3は丁度いい高さになるマジックナンバー
   }
 }
 </style>
