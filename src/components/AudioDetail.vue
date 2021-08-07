@@ -21,7 +21,14 @@
               icon="play_arrow"
               @click="play"
             ></q-btn>
-            <q-btn v-else fab color="primary" icon="stop" @click="stop"></q-btn
+            <q-btn
+              v-else
+              fab
+              color="primary"
+              text-color="secondary"
+              icon="stop"
+              @click="stop"
+            ></q-btn
           ></template>
         </div>
       </div>
