@@ -158,11 +158,11 @@ export default defineComponent({
     // 消去
     const willRemove = ref(false);
     const removeCell = async () => {
-      // フォーカスを外したりREMOVEしたりすると、
-      // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
-      // エラー防止のためにまずwillRemoveフラグを建てる
-
+      // 1つだけの時は削除せず
       if (audioKeys.value.length > 1) {
+        // フォーカスを外したりREMOVEしたりすると、
+        // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
+        // エラー防止のためにまずwillRemoveフラグを建てる
         willRemove.value = true;
 
         const index = audioKeys.value.indexOf(props.audioKey);
