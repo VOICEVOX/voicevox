@@ -161,18 +161,19 @@ export default defineComponent({
       // フォーカスを外したりREMOVEしたりすると、
       // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
       // エラー防止のためにまずwillRemoveフラグを建てる
-      willRemove.value = true;
 
       if (audioKeys.value.length > 1) {
+        willRemove.value = true;
+
         const index = audioKeys.value.indexOf(props.audioKey);
         if (index > 0) {
           emit("focusCell", { audioKey: audioKeys.value[index - 1] });
         } else {
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
-      }
 
-      store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+      }
     };
 
     // テキストが空白なら消去
