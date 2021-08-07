@@ -25,7 +25,25 @@ npm run electron:build
 
 ## Lint
 
+コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
+
 ```
+npm run lint
+```
+
+## OpenAPI generator
+
+音声合成エンジンが起動している状態で以下のコマンドを実行してください。
+
+```bash
+curl http://127.0.0.1:50021/openapi.json >openapi.json
+
+$(npm bin)/openapi-generator-cli generate \
+    -i openapi.json \
+    -g typescript-fetch \
+    -o src/openapi/ \
+    --additional-properties=modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true
+
 npm run lint
 ```
 

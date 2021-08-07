@@ -4,23 +4,37 @@ import path from "path";
 
 import { Sandbox } from "@/type/preload";
 import {
+  GET_APP_INFOS,
   GET_TEMP_DIR,
-  SHOW_SAVE_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
   SHOW_OPEN_DIRECOTRY_DIALOG,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
+  GET_UPDATE_INFOS,
   CREATE_HELP_WINDOW,
+  SHOW_PROJECT_SAVE_DIALOG,
+  SHOW_PROJECT_LOAD_DIALOG,
+  SHOW_CONFIRM_DIALOG,
+  SHOW_IMPORT_FILE_DIALOG,
 } from "./ipc";
 
 let tempDir: string;
 
 const api: Sandbox = {
+  getAppInfos: async () => {
+    return await ipcRenderer.invoke(GET_APP_INFOS);
+  },
+
   getCharactorInfos: async () => {
     return await ipcRenderer.invoke(GET_CHARACTOR_INFOS);
   },
 
   getOssLicenses: async () => {
     return await ipcRenderer.invoke(GET_OSS_LICENSES);
+  },
+
+  getUpdateInfos: async () => {
+    return await ipcRenderer.invoke(GET_UPDATE_INFOS);
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {
@@ -38,12 +52,28 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
-  showSaveDialog: ({ title }) => {
-    return ipcRenderer.invoke(SHOW_SAVE_DIALOG, { title });
+  showAudioSaveDialog: ({ title, defaultPath }) => {
+    return ipcRenderer.invoke(SHOW_AUDIO_SAVE_DIALOG, { title, defaultPath });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRenderer.invoke(SHOW_OPEN_DIRECOTRY_DIALOG, { title });
+  },
+
+  showProjectSaveDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_PROJECT_SAVE_DIALOG, { title });
+  },
+
+  showProjectLoadDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_PROJECT_LOAD_DIALOG, { title });
+  },
+
+  showConfirmDialog: ({ title, message }) => {
+    return ipcRenderer.invoke(SHOW_CONFIRM_DIALOG, { title, message });
+  },
+
+  showImportFileDialog: ({ title }) => {
+    return ipcRenderer.invoke(SHOW_IMPORT_FILE_DIALOG, { title });
   },
 
   writeFile: ({ filePath, buffer }) => {

@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "scripts": {
@@ -10,12 +10,14 @@
     "test:e2e": "vue-cli-service test:e2e",
     "lint": "vue-cli-service lint",
     "electron:build": "vue-cli-service electron:build",
+    "electron:build_pnever": "vue-cli-service electron:build --publish never",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
   "main": "background.js",
   "dependencies": {
+    "ajv": "^8.6.2",
     "core-js": "^3.6.5",
     "electron-store": "^8.0.0",
     "immer": "^9.0.2",

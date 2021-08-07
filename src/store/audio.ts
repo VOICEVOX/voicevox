@@ -21,6 +21,46 @@ async function generateUniqueId(audioItem: AudioItem) {
     .join("");
 }
 
+function parseTextFile(
+  body: string,
+  charactorInfos?: CharactorInfo[]
+): AudioItem[] {
+  const charactors = new Map(
+    charactorInfos?.map((info, index) => [info.metas.name, index])
+  );
+  if (!charactors.size) return [];
+
+  const audioItems: AudioItem[] = [];
+  const seps = [",", "\n"];
+  let lastCharactorIndex = 0;
+  for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
+    const charactorIndex = charactors.get(splittedText);
+    if (charactorIndex !== undefined) {
+      lastCharactorIndex = charactorIndex;
+      continue;
+    }
+
+    audioItems.push({ text: splittedText, charactorIndex: lastCharactorIndex });
+  }
+  return audioItems;
+}
+
+function buildFileName(state: State, audioKey: string) {
+  // eslint-disable-next-line no-control-regex
+  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
+  const index = state.audioKeys.indexOf(audioKey);
+  const audioItem = state.audioItems[audioKey];
+  const character = state.charactorInfos![audioItem.charactorIndex!];
+  const characterName = character.metas.name.replace(sanitizer, "");
+  let text = audioItem.text.replace(sanitizer, "");
+  if (text.length > 10) {
+    text = text.substring(0, 9) + "…";
+  }
+  return (
+    (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
+  );
+}
+
 export const SET_ENGINE_READY = "SET_ENGINE_READY";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
@@ -33,6 +73,7 @@ export const SET_AUDIO_CHARACTOR_INDEX = "SET_AUDIO_CHARACTOR_INDEX";
 export const CHANGE_CHARACTOR_INDEX = "CHANGE_CHARACTOR_INDEX";
 export const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
 export const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
+export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
@@ -52,6 +93,7 @@ export const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
 export const GENERATE_AUDIO = "GENERATE_AUDIO";
 export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
 export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
+export const IMPORT_FROM_FILE = "IMPORT_FROM_FILE";
 export const PLAY_AUDIO = "PLAY_AUDIO";
 export const STOP_AUDIO = "STOP_AUDIO";
 export const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
@@ -185,6 +227,13 @@ export const audioStore = {
         delete draft.audioStates[audioKey];
       }
     ),
+    [REMOVE_ALL_AUDIO_ITEM]: createCommandAction((draft) => {
+      for (const audioKey of draft.audioKeys) {
+        delete draft.audioItems[audioKey];
+        delete draft.audioStates[audioKey];
+      }
+      draft.audioKeys.splice(0, draft.audioKeys.length);
+    }),
     [REGISTER_AUDIO_ITEM](
       { state, dispatch },
       {
@@ -439,15 +488,26 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
         const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
-        filePath ??= await window.electron.showSaveDialog({ title: "Save" });
+        filePath ??= await window.electron.showAudioSaveDialog({
+          title: "Save",
+          defaultPath: buildFileName(state, audioKey),
+        });
         if (filePath) {
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
+          });
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {
+            type: "text/plain",
+          });
+          window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
           });
         }
       }
@@ -459,7 +519,7 @@ export const audioStore = {
         });
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
-            const name = (index + 1).toString().padStart(3, "0") + ".wav";
+            const name = buildFileName(state, audioKey);
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
               audioKey,
               filePath: path.join(dirPath!, name),
@@ -469,6 +529,22 @@ export const audioStore = {
         }
       }
     ),
+    [IMPORT_FROM_FILE]: createUILockAction(async ({ state, dispatch }) => {
+      const filePath = await window.electron.showImportFileDialog({
+        title: "セリフ読み込み",
+      });
+      if (filePath) {
+        const body = new TextDecoder("utf-8").decode(
+          await window.electron.readFile({ filePath })
+        );
+        const audioItems = parseTextFile(body, state.charactorInfos);
+        return Promise.all(
+          audioItems.map((item) =>
+            dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })
+          )
+        );
+      }
+    }),
     [PLAY_AUDIO]: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];
