@@ -182,6 +182,7 @@ async function createHelpWindow() {
     },
     icon: path.join(__static, "icon.png"),
   });
+  child.removeMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await child.loadURL(
