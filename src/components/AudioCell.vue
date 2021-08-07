@@ -1,5 +1,9 @@
 <template>
-  <div class="audio-cell">
+  <div
+    class="audio-cell"
+    v-on:mouseover="mouseOverAction"
+    v-on:mouseleave="mouseLeaveAction"
+  >
     <mcw-menu-anchor>
       <button class="charactor-button" @click="isOpenedCharactorList = true">
         <img
@@ -35,6 +39,13 @@
       @keydown.prevent.down.exact="moveDownCell"
       :disabled="uiLocked"
     />
+    <mcw-icon-button
+      v-show="hoverFlag"
+      @click="removeCell"
+      class="delete-button"
+    >
+      <mcw-material-icon icon="delete_outline" />
+    </mcw-icon-button>
   </div>
 </template>
 
@@ -187,6 +198,16 @@ export default defineComponent({
         URL.createObjectURL(charactorInfo.iconBlob)
     );
 
+    const hoverFlag = ref(false);
+
+    const mouseOverAction = () => {
+      hoverFlag.value = true;
+    };
+
+    const mouseLeaveAction = () => {
+      hoverFlag.value = false;
+    };
+
     // 初期化
     onMounted(() => {
       if (audioItem.value.query == undefined) {
@@ -218,6 +239,9 @@ export default defineComponent({
       focusTextField,
       isOpenedCharactorList,
       getCharactorIconUrl,
+      hoverFlag,
+      mouseOverAction,
+      mouseLeaveAction,
     };
   },
 });
@@ -225,6 +249,8 @@ export default defineComponent({
 
 <style lang="scss">
 @use '@/styles' as global;
+
+@use "@material/icon-button/mixins" as icon-button;
 
 .audio-cell {
   display: flex;
@@ -265,6 +291,9 @@ export default defineComponent({
         }
       }
     }
+  }
+  .delete-button {
+    @include icon-button.density(-3); // -3は丁度いい高さになるマジックナンバー
   }
 }
 </style>

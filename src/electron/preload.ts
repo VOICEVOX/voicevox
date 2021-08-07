@@ -10,6 +10,7 @@ import {
   SHOW_OPEN_DIRECOTRY_DIALOG,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
+  GET_UPDATE_INFOS,
   CREATE_HELP_WINDOW,
   SHOW_PROJECT_SAVE_DIALOG,
   SHOW_PROJECT_LOAD_DIALOG,
@@ -30,6 +31,10 @@ const api: Sandbox = {
 
   getOssLicenses: async () => {
     return await ipcRenderer.invoke(GET_OSS_LICENSES);
+  },
+
+  getUpdateInfos: async () => {
+    return await ipcRenderer.invoke(GET_UPDATE_INFOS);
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {

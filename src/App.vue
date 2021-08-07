@@ -7,7 +7,7 @@
 
 @use '@material/theme' with (
   $primary: global.$primary,
-  $on-primary: #212121,
+  $on-primary: global.$on-primary,
 );
 
 @use '@material/button/styles' as buttonStyles;
@@ -25,6 +25,7 @@
 @use "@material/menu-surface/mdc-menu-surface";
 @use "@material/circular-progress/mdc-circular-progress";
 @use "@material/drawer/mdc-drawer";
+@use "@material/icon-button/mdc-icon-button";
 
 #app {
   display: flex;
