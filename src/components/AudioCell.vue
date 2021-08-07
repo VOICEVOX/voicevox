@@ -33,7 +33,7 @@
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @keydown.prevent.enter.exact="addCellBellow"
+      @keydown.shift.enter.exact="addCellBellow"
       :disabled="uiLocked"
     />
   </div>
