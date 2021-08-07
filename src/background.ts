@@ -128,7 +128,7 @@ const menu = MenuBuilder()
 
     dialog.showMessageBoxSync(win, {
       message: "エンジンの起動モードを変更しました",
-      detail: "起動モード変更の反映は次回のソフトウェア起動時に行われます。",
+      detail: "変更を適用するためにVOICEVOXを再起動してください。",
     });
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
