@@ -32,7 +32,7 @@
           ></template>
         </div>
       </div>
-      <div class="accent-phrase-table">
+      <div class="overflow-hidden-y accent-phrase-table">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -116,7 +116,7 @@
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
               :key="moraIndex"
-              class="pitch-cell"
+              class="q-mb-sm pitch-cell"
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
             >
               <!-- div for input width -->
