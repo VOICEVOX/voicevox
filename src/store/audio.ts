@@ -105,7 +105,7 @@ export const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
 export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
-export const SET_ON_PASTE = "SET_ON_PASTE";
+export const PUT_TEXTS = "PUT_TEXTS";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -611,14 +611,17 @@ export const audioStore = {
         }
       }
     },
-    [SET_ON_PASTE]: createUILockAction(
-      async ({ dispatch }, { text }: { text: string[] }) => {
-        //文句を句点（。）で区切り
-        const ArrLen = text.length;
+    [PUT_TEXTS]: createUILockAction(
+      async (
+        { dispatch },
+        { texts, charIdx }: { texts: string[]; charIdx: number | undefined }
+      ) => {
+        const arrLen = texts.length;
         const audioItems: AudioItem[] = [];
-        for (let i = 0; i < ArrLen; i++) {
-          if (text[i] != "") {
-            audioItems.push({ text: text[i], charactorIndex: 0 });
+        charIdx == undefined ? 0 : charIdx;
+        for (let i = 0; i < arrLen; i++) {
+          if (texts[i] != "") {
+            audioItems.push({ text: texts[i], charactorIndex: charIdx });
           }
         }
         return Promise.all(

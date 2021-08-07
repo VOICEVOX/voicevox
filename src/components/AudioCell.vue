@@ -2,7 +2,8 @@
   <div
     class="audio-cell"
     v-on:mouseover="mouseOverAction"
-    v-on:mouseleave="mouseLeaveAction">
+    v-on:mouseleave="mouseLeaveAction"
+  >
     <mcw-menu-anchor>
       <button class="charactor-button" @click="isOpenedCharactorList = true">
         <img
@@ -32,9 +33,7 @@
       ref="textfield"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event.target.value)"
-      @paste.prevent.exact="
-        pasteOnAudioCell($event.clipboardData.getData('text/plain'))
-      "
+      @paste="pasteOnAudioCell($event)"
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
@@ -48,7 +47,14 @@
 </template>
 
 <script lang="ts">
-import { Component, computed, defineComponent, onMounted, ref } from "vue";
+import {
+  Component,
+  computed,
+  defineComponent,
+  onMounted,
+  ref,
+  Events,
+} from "vue";
 import { useStore } from "@/store";
 import {
   FETCH_ACCENT_PHRASES,
@@ -62,7 +68,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
-  SET_ON_PASTE,
+  PUT_TEXTS,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
@@ -138,17 +144,27 @@ export default defineComponent({
 
     //長い文章をコピペしたときに句点（。）で自動区切りする
     //https://github.com/Hiroshiba/voicevox/issues/25
-    const pasteOnAudioCell = async (text: string) => {
-      //文句を句点（。）で区切り
-      let SplittedStringArr = text.split("。");
-
-      //最初の一行目は普段通りでしょりする
-      let currElem = document.activeElement as HTMLInputElement;
-      currElem.value += SplittedStringArr.shift();
-      currElem.dispatchEvent(new Event("change"));
-
-      //それ以降はStoreで処理
-      store.dispatch(SET_ON_PASTE, { text: SplittedStringArr });
+    const pasteOnAudioCell = async (evt: ClipboardEvent) => {
+      if (evt.clipboardData) {
+        //"。"で区切り
+        let splittedStringArr = evt.clipboardData
+          .getData("text/plain")
+          .split("。");
+        //区切りがある場合だけ別処理
+        if (splittedStringArr.length > 1) {
+          evt.preventDefault();
+          //現在の欄が空欄の場合、最初の行だけ別処理
+          let currElem = document.activeElement as HTMLInputElement;
+          if (currElem.value == "") {
+            currElem.value += splittedStringArr.shift();
+            currElem.dispatchEvent(new Event("change"));
+          }
+          store.dispatch(PUT_TEXTS, {
+            texts: splittedStringArr,
+            charIdx: audioItem.value.charactorIndex,
+          });
+        }
+      }
     };
 
     // 選択されている
