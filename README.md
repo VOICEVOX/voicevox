@@ -28,7 +28,7 @@ npm run electron:build
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
 
 ```
-npm run lint
+npm run fmt
 ```
 
 ## ライセンス
