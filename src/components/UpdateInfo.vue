@@ -2,7 +2,9 @@
   <div class="root">
     <q-header class="q-py-sm">
       <q-toolbar>
-        <q-toolbar-title>アップデート情報</q-toolbar-title>
+        <q-toolbar-title class="text-secondary"
+          >アップデート情報</q-toolbar-title
+        >
       </q-toolbar>
     </q-header>
     <q-page ref="scroller" class="relarive-absolute-wrapper scroller">

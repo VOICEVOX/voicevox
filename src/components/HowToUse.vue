@@ -2,7 +2,7 @@
   <div class="root">
     <q-header class="q-py-sm">
       <q-toolbar>
-        <q-toolbar-title>使い方</q-toolbar-title>
+        <q-toolbar-title class="text-secondary">使い方</q-toolbar-title>
       </q-toolbar>
     </q-header>
     <q-page class="relarive-absolute-wrapper scroller">

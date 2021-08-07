@@ -10,7 +10,7 @@
           :disable="detailIndex === undefined"
           @click="selectLicenseIndex(undefined)"
         />
-        <q-toolbar-title>{{
+        <q-toolbar-title class="text-secondary">{{
           detailIndex === undefined
             ? "OSSライセンス情報"
             : licenses[detailIndex].name

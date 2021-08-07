@@ -1,8 +1,8 @@
 <template>
   <div class="root full-height q-py-sm" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
-      <q-badge class="text-body2 q-mb-xs"
-        >話速 {{ query.speedScale.toFixed(1) }}</q-badge
+      <span class="text-body1 q-mb-xs"
+        >話速 {{ query.speedScale.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -15,8 +15,8 @@
       />
     </div>
     <div class="q-px-md">
-      <q-badge class="text-body2 q-mb-xs"
-        >音高 {{ query.pitchScale.toFixed(2) }}</q-badge
+      <span class="text-body1 q-mb-xs"
+        >音高 {{ query.pitchScale.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -29,8 +29,8 @@
       />
     </div>
     <div class="q-px-md">
-      <q-badge class="text-body2 q-mb-xs"
-        >抑揚 {{ query.intonationScale.toFixed(1) }}</q-badge
+      <span class="text-body1 q-mb-xs"
+        >抑揚 {{ query.intonationScale.toFixed(1) }}</span
       >
       <q-slider
         dense

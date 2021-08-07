@@ -6,7 +6,7 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical class="text-primary" v-model="selectedDetail">
+          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab label="ｱｸｾﾝﾄ" name="accent" />
             <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
           </q-tabs>
@@ -17,6 +17,7 @@
               v-if="!nowPlaying && !nowGenerating"
               fab
               color="primary"
+              text-color="secondary"
               icon="play_arrow"
               @click="play"
             ></q-btn>
@@ -323,6 +324,12 @@ export default defineComponent({
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    .detail-selector .q-tab--active {
+      background-color: rgba(global.$primary, 0.3);
+      ::v-deep .q-tab__indicator {
+        background-color: global.$primary;
+      }
+    }
     .play-button-wrapper {
       align-self: flex-end;
       margin-right: 10px;

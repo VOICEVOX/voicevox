@@ -10,7 +10,7 @@
           :disable="detailIndex === undefined"
           @click="selectCharactorInfIndex(undefined)"
         />
-        <q-toolbar-title>{{
+        <q-toolbar-title class="text-secondary">{{
           detailIndex === undefined
             ? "音声ライブラリの利用規約"
             : charactorInfos[detailIndex].metas.name

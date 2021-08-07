@@ -116,6 +116,7 @@
                       fab
                       icon="add"
                       color="primary"
+                      text-color="secondary"
                       @click="addAudioItem"
                     ></q-btn>
                   </div>
