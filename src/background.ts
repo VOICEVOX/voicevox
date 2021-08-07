@@ -127,7 +127,7 @@ const menu = MenuBuilder()
     store.set("useGpu", useGpu);
 
     dialog.showMessageBoxSync(win, {
-      message: "音声合成エンジン起動モードの変更が完了しました",
+      message: "エンジンの起動モードを変更しました",
       detail: "起動モード変更の反映は次回のソフトウェア起動時に行われます。",
     });
 
