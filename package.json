@@ -18,6 +18,7 @@
   "main": "background.js",
   "dependencies": {
     "@quasar/extras": "^1.10.9",
+    "ajv": "^8.6.2",
     "core-js": "^3.6.5",
     "electron-store": "^8.0.0",
     "immer": "^9.0.2",

@@ -221,7 +221,9 @@ export default defineComponent({
 
     // 初期化
     onMounted(() => {
-      store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      if (audioItem.value.query == undefined) {
+        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      }
     });
 
     return {

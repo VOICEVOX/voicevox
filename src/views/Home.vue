@@ -35,6 +35,7 @@
           @click="generateAndSaveAllAudio"
           >書き出し</q-btn
         >
+
         <q-btn
           unelevated
           color="white"
@@ -44,6 +45,26 @@
           @click="importFromFile"
           >読み込み</q-btn
         >
+
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="saveProjectFile"
+          >プロジェクト保存</q-btn
+        >
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="loadProjectFile"
+          >プロジェクト読込</q-btn
+        >
+
         <q-space />
 
         <!-- <q-btn
@@ -147,7 +168,7 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore } from "@/store";
+import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
@@ -201,6 +222,12 @@ export default defineComponent({
     };
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+    };
+    const saveProjectFile = () => {
+      store.dispatch(SAVE_PROJECT_FILE, {});
+    };
+    const loadProjectFile = () => {
+      store.dispatch(LOAD_PROJECT_FILE, {});
     };
     const importFromFile = () => {
       store.dispatch(IMPORT_FROM_FILE, {});
@@ -337,6 +364,8 @@ export default defineComponent({
       playContinuously,
       stopContinuously,
       generateAndSaveAllAudio,
+      saveProjectFile,
+      loadProjectFile,
       importFromFile,
       audioInfoPaneWidth,
       audioInfoPaneMinWidth,
