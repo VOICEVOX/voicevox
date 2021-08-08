@@ -178,7 +178,7 @@ export default defineComponent({
 
     // 削除ボタンの有効／無効判定
     const deleteButtonEnable = computed(() => {
-      return 1 < audioKeys.value.length ? true : false;
+      return 1 < audioKeys.value.length;
     });
 
     // テキストが空白なら消去
@@ -299,9 +299,6 @@ export default defineComponent({
   }
   .delete-button {
     @include icon-button.density(-3); // -3は丁度いい高さになるマジックナンバー
-  }
-  :disabled .material-icons {
-    color: #aaa;
   }
 }
 </style>
