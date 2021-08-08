@@ -1,18 +1,12 @@
 <template>
   <div class="root">
-    <mcw-top-app-bar>
-      <div class="mdc-top-app-bar__row">
-        <section
-          class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
-        >
-          <span class="mdc-top-app-bar__title">使い方</span>
-        </section>
-      </div>
-    </mcw-top-app-bar>
-    <div
-      class="scroller mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper"
-    >
-      <div>
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-toolbar-title class="text-secondary">使い方</q-toolbar-title>
+      </q-toolbar>
+    </q-header>
+    <q-page class="relarive-absolute-wrapper scroller">
+      <div class="q-pa-md">
         <section>
           <p>ソフトウェアの使い方は以下をご参照ください。</p>
           <p>
@@ -24,7 +18,7 @@
           </p>
         </section>
       </div>
-    </div>
+    </q-page>
   </div>
 </template>
 
@@ -32,16 +26,9 @@
 
 <style scoped lang="scss">
 .root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.scroller {
-  width: 100%;
-  overflow: auto;
-  > div {
-    margin: 1rem;
+  .scroller {
+    width: 100%;
+    overflow: auto;
   }
 }
 </style>

@@ -4,8 +4,6 @@ import { State } from "./type";
 export const UI_LOCKED = "UI_LOCKED";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
-export const SET_AUDIO_DETAIL_PANE_OFFSET = "SET_AUDIO_DETAIL_PANE_OFFSET";
-export const SET_AUDIO_INFO_PANE_OFFSET = "SET_AUDIO_INFO_PANE_OFFSET";
 export const CREATE_HELP_WINDOW = "CREATE_HELP_WINDOW";
 
 export function createUILockAction<S, P>(
@@ -32,12 +30,6 @@ export const uiStore = {
     },
     [UNLOCK_UI](state) {
       state.uiLockCount--;
-    },
-    [SET_AUDIO_DETAIL_PANE_OFFSET](state, { offset }: { offset: number }) {
-      state.audioDetailPaneOffset = offset;
-    },
-    [SET_AUDIO_INFO_PANE_OFFSET](state, { offset }: { offset: number }) {
-      state.audioInfoPaneOffset = offset;
     },
   },
 

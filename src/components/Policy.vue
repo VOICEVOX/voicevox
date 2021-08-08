@@ -1,18 +1,14 @@
 <template>
   <div class="root">
-    <mcw-top-app-bar>
-      <div class="mdc-top-app-bar__row">
-        <section
-          class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-toolbar-title class="text-secondary"
+          >ソフトウェアの利用規約</q-toolbar-title
         >
-          <span class="mdc-top-app-bar__title">ソフトウェアの利用規約</span>
-        </section>
-      </div>
-    </mcw-top-app-bar>
-    <div
-      class="scroller mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper"
-    >
-      <div>
+      </q-toolbar>
+    </q-header>
+    <q-page class="relarive-absolute-wrapper scroller">
+      <div class="q-pa-md">
         <section>
           <p>ダミー利用規約</p>
         </section>
@@ -35,7 +31,7 @@
           <p>ダミー謝辞</p>
         </section>
       </div>
-    </div>
+    </q-page>
   </div>
 </template>
 
@@ -43,16 +39,14 @@
 
 <style scoped lang="scss">
 .root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.scroller {
-  width: 100%;
-  overflow: auto;
-  > div {
-    margin: 1rem;
+  .scroller {
+    width: 100%;
+    overflow: auto;
+    h3 {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin: 0;
+    }
   }
 }
 </style>
