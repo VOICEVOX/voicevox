@@ -40,10 +40,9 @@
       :disabled="uiLocked"
     />
     <mcw-icon-button
-      v-show="hoverFlag"
+      v-show="hoverFlag && deleteButtonEnable"
       @click="removeCell"
       class="delete-button"
-      :disabled="!deleteButtonEnable"
     >
       <mcw-material-icon icon="delete_outline" />
     </mcw-icon-button>
@@ -179,8 +178,8 @@ export default defineComponent({
 
     // 削除ボタンの有効／無効判定
     const deleteButtonEnable = computed(() => {
-        return 1 < audioKeys.value.length ? true : false;
-    })
+      return 1 < audioKeys.value.length ? true : false;
+    });
 
     // テキストが空白なら消去
     const tryToRemoveCell = async (e: Event) => {
@@ -302,7 +301,7 @@ export default defineComponent({
     @include icon-button.density(-3); // -3は丁度いい高さになるマジックナンバー
   }
   :disabled .material-icons {
-      color: #aaa;
+    color: #aaa;
   }
 }
 </style>
