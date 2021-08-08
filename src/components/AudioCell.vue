@@ -48,7 +48,7 @@
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
     >
-      <template #after v-if="hoverFlag">
+      <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
           round
           flat
