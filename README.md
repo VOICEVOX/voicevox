@@ -23,12 +23,12 @@ npm run electron:serve
 npm run electron:build
 ```
 
-## Lint
+## コードフォーマット
 
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
 
 ```
-npm run lint
+npm run fmt
 ```
 
 ## OpenAPI generator
