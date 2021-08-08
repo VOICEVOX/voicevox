@@ -1,43 +1,42 @@
 <template>
   <div class="root">
-    <mcw-top-app-bar class="main-toolbar">
-      <div class="mdc-top-app-bar__row">
-        <section
-          class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
-        >
-          <mcw-button
-            @click="selectLicenseIndex(undefined)"
-            :disabled="detailIndex === undefined"
-            unelevated
-            >戻る</mcw-button
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-btn
+          unelevated
+          label="戻る"
+          color="white"
+          text-color="secondary"
+          :disable="detailIndex === undefined"
+          @click="selectLicenseIndex(undefined)"
+        />
+        <q-toolbar-title class="text-secondary">{{
+          detailIndex === undefined
+            ? "OSSライセンス情報"
+            : licenses[detailIndex].name
+        }}</q-toolbar-title>
+      </q-toolbar>
+    </q-header>
+    <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+      <div class="q-pa-md">
+        <q-list v-if="detailIndex === undefined">
+          <q-item
+            v-for="(license, index) in licenses"
+            :key="index"
+            clickable
+            dense
+            @click="selectLicenseIndex(index)"
           >
-          <span class="mdc-top-app-bar__title">{{
-            detailIndex === undefined
-              ? "OSSライセンス情報"
-              : licenses[detailIndex].name
-          }}</span>
-        </section>
-      </div>
-    </mcw-top-app-bar>
-    <div
-      ref="scroller"
-      class="scroller mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper"
-    >
-      <div>
-        <mcw-list
-          v-if="detailIndex === undefined"
-          @update:modelValue="selectLicenseIndex"
-          dense
-        >
-          <mcw-list-item v-for="(license, index) in licenses" :key="index">{{
-            license.name + (license.version ? " | " + license.version : "")
-          }}</mcw-list-item>
-        </mcw-list>
+            <q-item-section>{{
+              license.name + (license.version ? " | " + license.version : "")
+            }}</q-item-section>
+          </q-item>
+        </q-list>
         <div v-else>
           <pre>{{ licenses[detailIndex].text }}</pre>
         </div>
       </div>
-    </div>
+    </q-page>
   </div>
 </template>
 
@@ -74,16 +73,9 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.scroller {
-  width: 100%;
-  overflow: auto;
-  > div {
-    margin: 1rem;
+  .scroller {
+    width: 100%;
+    overflow: auto;
   }
 }
 </style>
