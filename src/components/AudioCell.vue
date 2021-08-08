@@ -167,7 +167,7 @@ export default defineComponent({
         //"。"で区切り
         let splittedStringArr = evt.clipboardData
           .getData("text/plain")
-          .split("。");
+          .split(/[。\n\r]/);
         //区切りがある場合だけ別処理
         if (splittedStringArr.length > 1) {
           evt.preventDefault();
