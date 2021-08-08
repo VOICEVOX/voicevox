@@ -1,22 +1,17 @@
 <template>
   <div class="root">
-    <mcw-top-app-bar class="main-toolbar">
-      <div class="mdc-top-app-bar__row">
-        <section
-          class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-toolbar-title class="text-secondary"
+          >アップデート情報</q-toolbar-title
         >
-          <span class="mdc-top-app-bar__title">アップデート情報</span>
-        </section>
-      </div>
-    </mcw-top-app-bar>
-    <div
-      ref="scroller"
-      class="scroller mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper"
-    >
-      <div>
+      </q-toolbar>
+    </q-header>
+    <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+      <div class="q-pa-md">
         <div v-html="html"></div>
       </div>
-    </div>
+    </q-page>
   </div>
 </template>
 
@@ -64,16 +59,21 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.scroller {
-  width: 100%;
-  overflow: auto;
-  > div {
-    margin: 1rem;
+  .scroller {
+    width: 100%;
+    overflow: auto;
+    ::v-deep {
+      h3 {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin: 0;
+      }
+      h4 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        margin: 0;
+      }
+    }
   }
 }
 </style>

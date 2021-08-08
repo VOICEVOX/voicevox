@@ -1,15 +1,62 @@
 <template>
-  <div class="help">
-    <mcw-drawer ref="drawer" dismissible>
-      <mcw-list-item to="/help/policy">ソフトウェアの利用規約</mcw-list-item>
-      <mcw-list-item to="/help/library-policy"
-        >音声ライブラリの利用規約</mcw-list-item
+  <div class="full-height help">
+    <q-layout view="lHh Lpr lff" container>
+      <q-drawer
+        bordered
+        show-if-above
+        v-model="drawer"
+        :width="250"
+        :breakpoint="0"
       >
-      <mcw-list-item to="/help/how-to-use">使い方</mcw-list-item>
-      <mcw-list-item to="/help/oss-license">OSSライセンス情報</mcw-list-item>
-      <mcw-list-item to="/help/update-info">アップデート情報</mcw-list-item>
-    </mcw-drawer>
-    <router-view />
+        <q-list>
+          <q-item
+            clickable
+            v-ripple
+            to="/help/policy"
+            active-class="selected-item"
+          >
+            <q-item-section>ソフトウェアの利用規約</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            to="/help/library-policy"
+            active-class="selected-item"
+          >
+            <q-item-section>音声ライブラリの利用規約</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/help/how-to-use"
+            active-class="selected-item"
+          >
+            <q-item-section>使い方</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/help/oss-license"
+            active-class="selected-item"
+          >
+            <q-item-section>OSSライセンス情報</q-item-section>
+          </q-item>
+          <q-item
+            clickable
+            v-ripple
+            to="/help/update-info"
+            active-class="selected-item"
+          >
+            <q-item-section>アップデート情報</q-item-section>
+          </q-item>
+        </q-list>
+      </q-drawer>
+
+      <q-page-container>
+        <q-page>
+          <router-view />
+        </q-page>
+      </q-page-container>
+    </q-layout>
   </div>
 </template>
 
@@ -28,11 +75,8 @@ export default defineComponent({
       await store.dispatch(LOAD_CHARACTOR);
     });
 
-    // 最初からshowがない
-    const drawer = ref<any>();
-    onMounted(() => {
-      drawer.value!.show();
-    });
+    const drawer = ref(true);
+
     return { drawer };
   },
 });
@@ -40,11 +84,11 @@ export default defineComponent({
 
 <style lang="scss">
 // scopedにするとリリースビルド時に何故か効かなくなる
+@use '@/styles' as global;
+
 .help {
-  display: flex;
-  height: 100%;
-  > aside {
-    position: static !important;
+  .selected-item {
+    background-color: rgba(global.$primary, 0.4);
   }
 }
 </style>
