@@ -63,14 +63,7 @@
 </template>
 
 <script lang="ts">
-import {
-  Component,
-  computed,
-  defineComponent,
-  onMounted,
-  ref,
-  Events,
-} from "vue";
+import { Component, computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
   FETCH_ACCENT_PHRASES,
@@ -164,18 +157,16 @@ export default defineComponent({
     //https://github.com/Hiroshiba/voicevox/issues/25
     const pasteOnAudioCell = async (evt: ClipboardEvent) => {
       if (evt.clipboardData) {
-        //"。"で区切り
+        //"。"と改行コードで区切り
         let splittedStringArr = evt.clipboardData
           .getData("text/plain")
           .split(/[。\n\r]/);
-        //区切りがある場合だけ別処理
+        //区切りがある場合だけ普段のPasteと別処理
         if (splittedStringArr.length > 1) {
           evt.preventDefault();
           //現在の欄が空欄の場合、最初の行だけ別処理
-          let currElem = document.activeElement as HTMLInputElement;
-          if (currElem.value == "") {
-            currElem.value += splittedStringArr.shift();
-            currElem.dispatchEvent(new Event("change"));
+          if (audioItem.value.text == "") {
+            setAudioText(splittedStringArr.shift()!);
           }
           store.dispatch(PUT_TEXTS, {
             texts: splittedStringArr,
