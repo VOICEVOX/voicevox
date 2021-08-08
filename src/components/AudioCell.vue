@@ -4,44 +4,60 @@
     v-on:mouseover="mouseOverAction"
     v-on:mouseleave="mouseLeaveAction"
   >
-    <mcw-menu-anchor>
-      <button class="charactor-button" @click="isOpenedCharactorList = true">
-        <img
-          :src="
-            selectedCharactorInfo
-              ? getCharactorIconUrl(selectedCharactorInfo)
-              : undefined
-          "
-        />
-      </button>
-      <mcw-menu
-        v-model="isOpenedCharactorList"
-        @select="({ index }) => changeCharactorIndex(index)"
-        single-selection
-        fixed
-      >
-        <mcw-list-item
-          v-for="(charactorInfo, index) in charactorInfos"
-          :key="index"
-          ><img :src="getCharactorIconUrl(charactorInfo)" /><span>{{
-            charactorInfo.metas.name
-          }}</span></mcw-list-item
-        >
-      </mcw-menu>
-    </mcw-menu-anchor>
-    <mcw-textfield
+    <q-btn flat class="q-pa-none charactor-button">
+      <q-img
+        :ratio="1"
+        :src="
+          selectedCharactorInfo
+            ? getCharactorIconUrl(selectedCharactorInfo)
+            : undefined
+        "
+      />
+      <q-menu class="charactor-menu">
+        <q-list>
+          <q-item
+            v-for="(charactorInfo, index) in charactorInfos"
+            :key="index"
+            clickable
+            v-close-popup
+            active-class="selected-charactor-item"
+            :active="index === selectedCharactorInfo.metas.speaker"
+            @click="changeCharactorIndex(index)"
+          >
+            <q-item-section avatar>
+              <q-avatar rounded size="2rem">
+                <q-img :ratio="1" :src="getCharactorIconUrl(charactorInfo)" />
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+    <q-input
       ref="textfield"
+      filled
+      class="full-width"
+      style="height: 32px"
+      :disable="uiLocked"
       v-model="audioItem.text"
-      @change="willRemove || setAudioText($event.target.value)"
+      @change="willRemove || setAudioText($event)"
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      :disabled="uiLocked"
-    />
-    <mcw-button v-show="hoverFlag" @click="removeCell" raised>
-      <mcw-material-icon icon="delete"></mcw-material-icon>削除
-    </mcw-button>
+      @keydown.shift.enter.exact="addCellBellow"
+    >
+      <template #after v-if="hoverFlag">
+        <q-btn
+          round
+          flat
+          icon="delete_outline"
+          size="0.8rem"
+          @click="removeCell"
+        />
+      </template>
+    </q-input>
   </div>
 </template>
 
@@ -56,11 +72,13 @@ import {
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
   CHANGE_CHARACTOR_INDEX,
+  REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
 } from "@/store/audio";
+import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
 
@@ -180,6 +198,16 @@ export default defineComponent({
       removeCell();
     };
 
+    // 下にセルを追加
+    const addCellBellow = async () => {
+      const audioItem: AudioItem = { text: "", charactorIndex: 0 };
+      await store.dispatch(REGISTER_AUDIO_ITEM, {
+        audioItem,
+        prevAudioKey: props.audioKey,
+      });
+      moveDownCell();
+    };
+
     // フォーカス
     const textfield = ref<Component | any>();
     const focusTextField = () => {
@@ -206,7 +234,9 @@ export default defineComponent({
 
     // 初期化
     onMounted(() => {
-      store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      if (audioItem.value.query == undefined) {
+        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      }
     });
 
     return {
@@ -226,6 +256,7 @@ export default defineComponent({
       willRemove,
       removeCell,
       tryToRemoveCell,
+      addCellBellow,
       isActive,
       moveUpCell,
       moveDownCell,
@@ -249,40 +280,37 @@ export default defineComponent({
   margin: 1rem 1rem;
   gap: 0px 1rem;
   .charactor-button {
-    border: solid 1.5px;
+    border: solid 1px;
     border-color: global.$primary;
-    padding: 0;
-    margin: 0;
-    background: none;
     font-size: 0;
-    line-height: 0;
-    overflow: visible;
-    cursor: pointer;
-    img {
+    .q-img {
       width: 2rem;
       height: 2rem;
       object-fit: scale-down;
     }
   }
-  .mdc-list-item__text {
-    height: 100%;
-    img {
-      height: 100%;
-    }
-  }
-  .textfield-container {
-    flex: auto;
-    label {
-      width: 100%;
-      height: 2rem !important;
-      background-color: transparent !important;
-      .mdc-line-ripple {
-        &::before,
-        &::after {
-          border-bottom-color: global.$primary !important;
-        }
+  .q-input {
+    .q-field__control {
+      height: 2rem;
+      background: none;
+      border-bottom: 1px solid global.$primary;
+      &::before {
+        border-bottom: none;
       }
     }
+    .q-field__after {
+      height: 2rem;
+      padding-left: 5px;
+    }
+  }
+}
+
+.charactor-menu {
+  .q-item {
+    color: global.$secondary;
+  }
+  .selected-charactor-item {
+    background-color: rgba(global.$primary, 0.2);
   }
 }
 </style>
