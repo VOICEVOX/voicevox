@@ -9,7 +9,12 @@
         :breakpoint="0"
       >
         <q-list>
-          <q-item clickable to="/help/policy" active-class="selected-item">
+          <q-item
+            clickable
+            v-ripple
+            to="/help/policy"
+            active-class="selected-item"
+          >
             <q-item-section>ソフトウェアの利用規約</q-item-section>
           </q-item>
           <q-item
@@ -19,13 +24,28 @@
           >
             <q-item-section>音声ライブラリの利用規約</q-item-section>
           </q-item>
-          <q-item clickable to="/help/how-to-use" active-class="selected-item">
+          <q-item
+            clickable
+            v-ripple
+            to="/help/how-to-use"
+            active-class="selected-item"
+          >
             <q-item-section>使い方</q-item-section>
           </q-item>
-          <q-item clickable to="/help/oss-license" active-class="selected-item">
+          <q-item
+            clickable
+            v-ripple
+            to="/help/oss-license"
+            active-class="selected-item"
+          >
             <q-item-section>OSSライセンス情報</q-item-section>
           </q-item>
-          <q-item clickable to="/help/update-info" active-class="selected-item">
+          <q-item
+            clickable
+            v-ripple
+            to="/help/update-info"
+            active-class="selected-item"
+          >
             <q-item-section>アップデート情報</q-item-section>
           </q-item>
         </q-list>

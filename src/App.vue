@@ -10,6 +10,27 @@
   flex-direction: column;
 }
 
+// ホバー色
+.q-hoverable {
+  &:hover > .q-focus-helper {
+    background-color: global.$primary !important;
+    opacity: 0.3 !important;
+  }
+  &.bg-primary:hover > .q-focus-helper {
+    background-color: white !important;
+    opacity: 0.2 !important;
+  }
+}
+
+// リプル色
+.q-ripple > .q-ripple__inner {
+  background-color: global.$primary;
+}
+.bg-primary > .q-ripple > .q-ripple__inner {
+  background-color: white;
+}
+
+// スクロールバーのデザイン
 ::-webkit-scrollbar {
   width: 15px;
   height: 15px;
