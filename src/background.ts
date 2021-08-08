@@ -66,7 +66,6 @@ let engineProcess: ChildProcess;
 function runEngine() {
   if (!store.has("useGpu")) {
 
-    const detailMessage = "エンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。";
     detectNvidia().then((result: boolean): void => {
       if (result) {
         dialog.showMessageBoxSync(win, {
