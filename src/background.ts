@@ -32,6 +32,7 @@ import {
   SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
 } from "./electron/ipc";
+import { MenuBuilder } from "./electron/menu";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -124,10 +125,24 @@ const updateInfos = JSON.parse(
   })
 );
 
+// initialize menu
+const menu = MenuBuilder()
+  .setOnLaunchModeItemClicked((useGpu) => {
+    store.set("useGpu", useGpu);
+
+    dialog.showMessageBoxSync(win, {
+      message: "エンジンの起動モードを変更しました",
+      detail: "変更を適用するためにVOICEVOXを再起動してください。",
+    });
+
+    menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+  })
+  .build();
+Menu.setApplicationMenu(menu.instance);
+
+menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+
 // create window
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
-}
 async function createWindow() {
   win = new BrowserWindow({
     width: 800,
@@ -171,6 +186,7 @@ async function createHelpWindow() {
     },
     icon: path.join(__static, "icon.png"),
   });
+  child.removeMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await child.loadURL(
