@@ -184,8 +184,7 @@ import {
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
-import { UI_LOCKED } from "@/store/ui";
-import { CREATE_HELP_WINDOW } from "@/electron/ipc";
+import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
 
 export default defineComponent({
   name: "Home",
