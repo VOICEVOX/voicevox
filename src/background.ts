@@ -65,35 +65,28 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 function runEngine() {
   if (!store.has("useGpu")) {
+
+    const detailMessage = "エンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。";
     detectNvidia().then((result: boolean): void => {
       if (result) {
-        const useGpu =
-          dialog.showMessageBoxSync(win, {
-            message: "エンジンをCPUモード・GPUモードどちらで起動しますか？",
-            detail:
-              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。",
-            title: "エンジンの起動モード選択",
-            type: "question",
-            buttons: ["CPUモード", "GPUモード"],
-          }) == 1;
-        store.set("useGpu", useGpu);
+        dialog.showMessageBoxSync(win, {
+          message: "「GPUモード」で起動します。",
+          detail: "エンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
+          title: "GPUモードで起動します",
+          type: "info",
+        });
+        store.set("useGpu", true);
       } else {
         dialog.showMessageBoxSync(win, {
-          message:
-            "Nvidiaのグラフィックボードを検出出来ませんでした。なので自動的にCPUモードで実行されます。",
-          title: "CPUモードへのフォールバック",
+          message: "「CPUモード」で起動します。",
+          detail: "「GPUモード」はNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。\nエンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
+          title: "CPUモードへで起動します",
           type: "info",
-          buttons: ["閉じる"],
         });
         store.set("useGpu", false);
       }
     });
-  } else if (store.get("useGpu")) {
-    detectNvidia().then((result: boolean): void => {
-      if (!result) {
-        store.set("useGpu", false);
-      }
-    });
+
   }
 
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
@@ -149,12 +142,32 @@ const updateInfos = JSON.parse(
 // initialize menu
 const menu = MenuBuilder()
   .setOnLaunchModeItemClicked((useGpu) => {
-    store.set("useGpu", useGpu);
 
-    dialog.showMessageBoxSync(win, {
-      message: "エンジンの起動モードを変更しました",
-      detail: "変更を適用するためにVOICEVOXを再起動してください。",
-    });
+    const changeProcess = () => {
+
+      store.set("useGpu", useGpu);
+
+      dialog.showMessageBoxSync(win, {
+        message: "エンジンの起動モードを変更しました",
+        detail: "変更を適用するためにVOICEVOXを再起動してください。",
+      });
+
+    };
+
+    if(useGpu) {
+      detectNvidia().then((result: boolean) => {
+        if(result) {
+          changeProcess();
+        } else {
+          dialog.showMessageBoxSync(win, {
+            message: "この環境では変更出来ません。",
+            detail: "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。",
+          });
+        }
+      });
+    } else {
+      changeProcess();
+    }
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
   })
