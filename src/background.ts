@@ -80,7 +80,7 @@ function runEngine() {
           message: "「CPUモード」で起動します。",
           detail:
             "「GPUモード」はNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。\nエンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
-          title: "CPUモードへで起動します",
+          title: "CPUモードで起動します",
           type: "info",
         });
         store.set("useGpu", false);
