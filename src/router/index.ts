@@ -10,6 +10,7 @@ import Policy from "../components/Policy.vue";
 import LibraryPolicy from "../components/LibraryPolicy.vue";
 import HowToUse from "../components/HowToUse.vue";
 import OssLicense from "../components/OssLicense.vue";
+import UpdateInfo from "../components/UpdateInfo.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -35,6 +36,10 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: "/help/oss-license",
         component: OssLicense,
+      },
+      {
+        path: "/help/update-info",
+        component: UpdateInfo,
       },
     ],
   },

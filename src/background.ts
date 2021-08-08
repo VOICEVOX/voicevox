@@ -20,13 +20,19 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import {
   CREATE_HELP_WINDOW,
+  GET_APP_INFOS,
   GET_CHARACTOR_INFOS,
   GET_OSS_LICENSES,
+  GET_UPDATE_INFOS,
   GET_TEMP_DIR,
   SHOW_OPEN_DIRECOTRY_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
+  SHOW_PROJECT_SAVE_DIALOG,
+  SHOW_PROJECT_LOAD_DIALOG,
+  SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
-  SHOW_SAVE_DIALOG,
 } from "./electron/ipc";
+import { MenuBuilder } from "./electron/menu";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -133,10 +139,31 @@ const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
 );
 
+// アップデート情報の読み込み
+const updateInfos = JSON.parse(
+  fs.readFileSync(path.join(__static, "updateInfos.json"), {
+    encoding: "utf-8",
+  })
+);
+
+// initialize menu
+const menu = MenuBuilder()
+  .setOnLaunchModeItemClicked((useGpu) => {
+    store.set("useGpu", useGpu);
+
+    dialog.showMessageBoxSync(win, {
+      message: "エンジンの起動モードを変更しました",
+      detail: "変更を適用するためにVOICEVOXを再起動してください。",
+    });
+
+    menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+  })
+  .build();
+Menu.setApplicationMenu(menu.instance);
+
+menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
+
 // create window
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
-}
 async function createWindow() {
   win = new BrowserWindow({
     width: 800,
@@ -180,6 +207,7 @@ async function createHelpWindow() {
     },
     icon: path.join(__static, "icon.png"),
   });
+  child.removeMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await child.loadURL(
@@ -190,6 +218,15 @@ async function createHelpWindow() {
   }
   if (isDevelopment) child.webContents.openDevTools();
 }
+
+ipcMain.handle(GET_APP_INFOS, (event) => {
+  const name = app.getName();
+  const version = app.getVersion();
+  return {
+    name,
+    version,
+  };
+});
 
 // プロセス間通信
 ipcMain.handle(GET_TEMP_DIR, (event) => {
@@ -204,8 +241,12 @@ ipcMain.handle(GET_OSS_LICENSES, (event) => {
   return ossLicenses;
 });
 
+ipcMain.handle(GET_UPDATE_INFOS, (event) => {
+  return updateInfos;
+});
+
 ipcMain.handle(
-  SHOW_SAVE_DIALOG,
+  SHOW_AUDIO_SAVE_DIALOG,
   (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
     return dialog.showSaveDialogSync(win, {
       title,
@@ -223,6 +264,44 @@ ipcMain.handle(
       title,
       properties: ["openDirectory", "createDirectory"],
     })?.[0];
+  }
+);
+
+ipcMain.handle(
+  SHOW_PROJECT_SAVE_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+      properties: ["showOverwriteConfirmation"],
+    });
+  }
+);
+
+ipcMain.handle(
+  SHOW_PROJECT_LOAD_DIALOG,
+  (event, { title }: { title: string }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+      properties: ["openFile"],
+    });
+  }
+);
+
+ipcMain.handle(
+  SHOW_CONFIRM_DIALOG,
+  (event, { title, message }: { title: string; message: string }) => {
+    return dialog
+      .showMessageBox(win, {
+        type: "info",
+        buttons: ["OK", "Cancel"],
+        title: title,
+        message: message,
+      })
+      .then((value) => {
+        return value.response == 0;
+      });
   }
 );
 

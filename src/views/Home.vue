@@ -1,105 +1,177 @@
 <template>
   <div v-if="!isEngineReady" class="waiting-engine">
     <div>
-      <mcw-circular-progress indeterminate></mcw-circular-progress>
+      <q-spinner color="primary" size="2.5rem" />
       <div>エンジン起動中・・・</div>
     </div>
   </div>
-  <mcw-top-app-bar>
-    <div class="mdc-top-app-bar__row">
-      <section
-        class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start"
-      >
-        <mcw-button @click="playContinuously" :disabled="uiLocked" unelevated
-          >連続再生</mcw-button
+  <q-layout reveal elevated>
+    <q-header class="q-py-sm">
+      <q-toolbar>
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="playContinuously"
+          >連続再生</q-btn
         >
-        <mcw-button
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="!nowPlayingContinuously"
           @click="stopContinuously"
-          :disabled="!nowPlayingContinuously"
-          unelevated
-          >停止</mcw-button
+          >停止</q-btn
         >
-        <mcw-button
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
           @click="generateAndSaveAllAudio"
-          :disabled="uiLocked"
-          unelevated
-          >書き出し</mcw-button
+          >書き出し</q-btn
         >
-        <mcw-button @click="importFromFile" :disabled="uiLocked" unelevated
-          >読み込み</mcw-button
-        >
-      </section>
 
-      <section
-        class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end"
-      >
-        <!-- 
-        <mcw-button @click="undo" :disabled="!canUndo || uiLocked" unelevated
-          >元に戻す</mcw-button
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="importFromFile"
+          >読み込み</q-btn
         >
-        <mcw-button @click="redo" :disabled="!canRedo || uiLocked" unelevated
-          >やり直す</mcw-button
+
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="saveProjectFile"
+          >プロジェクト保存</q-btn
+        >
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="uiLocked"
+          @click="loadProjectFile"
+          >プロジェクト読込</q-btn
+        >
+
+        <q-space />
+
+        <!-- <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="!canUndo || uiLocked"
+          @click="undo"
+          >元に戻す</q-btn
+        >
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="!canRedo || uiLocked"
+          @click="redo"
+          >やり直す</q-btn
         > -->
-        <mcw-button @click="createHelpWindow" :disabled="uiLocked" unelevated
-          >ヘルプ</mcw-button
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold"
+          :disable="uiLocked"
+          @click="createHelpWindow"
+          >ヘルプ</q-btn
         >
-      </section>
-    </div>
-  </mcw-top-app-bar>
-  <div class="mdc-top-app-bar--fixed-adjust relarive-absolute-wrapper">
-    <div>
-      <div class="main-row-panes">
-        <div id="audio-cell-pane">
-          <div class="audio-cells">
-            <audio-cell
-              v-for="audioKey in audioKeys"
-              :key="audioKey"
-              :audioKey="audioKey"
-              @focusCell="focusCell"
-              :ref="addAudioCellRef"
-            />
-          </div>
-          <div class="add-button-wrapper">
-            <mcw-fab
-              v-if="!uiLocked"
-              icon="add"
-              @click="addAudioItem"
-            ></mcw-fab>
-          </div>
-        </div>
-        <audio-info-pane-separator />
-        <audio-info
-          id="audio-info-pane"
-          :style="{
-            width:
-              audioInfoPaneWidth !== undefined
-                ? `${audioInfoPaneWidth}px`
-                : '100px',
-          }"
-        />
-      </div>
-      <audio-detail-pane-separator />
-      <audio-detail
-        id="audio-detail-pane"
-        :style="{
-          height:
-            audioDetailPaneHeight !== undefined
-              ? `${audioDetailPaneHeight}px`
-              : '100px',
-        }"
-      />
-    </div>
-  </div>
+      </q-toolbar>
+    </q-header>
+
+    <q-page-container>
+      <q-page class="main-row-panes">
+        <q-splitter
+          horizontal
+          reverse
+          unit="px"
+          :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
+          separator-class="bg-primary"
+          separator-style="height: 3px"
+          class="full-width"
+          before-class="overflow-hidden"
+          v-model="audioDetailPaneHeight"
+        >
+          <template #before>
+            <q-splitter
+              reverse
+              unit="px"
+              :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+              separator-class="bg-primary"
+              separator-style="width: 3px"
+              class="full-width"
+              v-model="audioInfoPaneWidth"
+            >
+              <template #before>
+                <div id="audio-cell-pane">
+                  <div class="audio-cells">
+                    <audio-cell
+                      v-for="audioKey in audioKeys"
+                      :key="audioKey"
+                      :audioKey="audioKey"
+                      @focusCell="focusCell"
+                      :ref="addAudioCellRef"
+                    />
+                  </div>
+                  <div class="add-button-wrapper">
+                    <q-btn
+                      v-if="!uiLocked"
+                      fab
+                      icon="add"
+                      color="primary"
+                      text-color="secondary"
+                      @click="addAudioItem"
+                    ></q-btn>
+                  </div>
+                </div>
+              </template>
+              <template #after>
+                <audio-info id="audio-info-pane" />
+              </template>
+            </q-splitter>
+          </template>
+          <template #after>
+            <audio-detail id="audio-detail-pane" />
+          </template>
+        </q-splitter>
+
+        <q-resize-observer ref="resizeObserverRef" @resize="pageOnResize" />
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onBeforeUpdate, onMounted } from "vue";
-import { useStore } from "@/store";
+import {
+  computed,
+  defineComponent,
+  onBeforeUpdate,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
+import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
-import AudioDetailPaneSeparator from "@/components/AudioDetailPaneSeparator.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
-import AudioInfoPaneSeparator from "@/components/AudioInfoPaneSeparator.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
 import {
@@ -121,9 +193,7 @@ export default defineComponent({
   components: {
     AudioCell,
     AudioDetail,
-    AudioDetailPaneSeparator,
     AudioInfo,
-    AudioInfoPaneSeparator,
   },
 
   setup() {
@@ -153,21 +223,43 @@ export default defineComponent({
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
     };
+    const saveProjectFile = () => {
+      store.dispatch(SAVE_PROJECT_FILE, {});
+    };
+    const loadProjectFile = () => {
+      store.dispatch(LOAD_PROJECT_FILE, {});
+    };
     const importFromFile = () => {
       store.dispatch(IMPORT_FROM_FILE, {});
     };
 
     // view
-    const audioInfoPaneWidth = computed(() => {
-      return store.state.audioInfoPaneOffset !== undefined
-        ? document.body.clientWidth - store.state.audioInfoPaneOffset
-        : undefined;
-    });
-    const audioDetailPaneHeight = computed(() => {
-      return store.state.audioDetailPaneOffset !== undefined
-        ? document.body.clientHeight - store.state.audioDetailPaneOffset
-        : undefined;
-    });
+    const MIN_AUDIO_INFO_PANE_WIDTH = 130;
+    const MAX_AUDIO_INFO_PANE_WIDTH = 250;
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170;
+    const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
+
+    const audioInfoPaneWidth = ref(0);
+    const audioInfoPaneMinWidth = ref(0);
+    const audioInfoPaneMaxWidth = ref(0);
+    const audioDetailPaneHeight = ref(0);
+    const audioDetailPaneMinHeight = ref(0);
+    const audioDetailPaneMaxHeight = ref(0);
+
+    const pageOnResize = ({ height }: { height: number }) => {
+      if (!activeAudioKey.value) return;
+
+      const maxHeight = height - 200;
+      if (maxHeight > MAX_AUDIO_DETAIL_PANE_HEIGHT) {
+        // 最大値以上なら最大値に設定
+        audioDetailPaneMaxHeight.value = MAX_AUDIO_DETAIL_PANE_HEIGHT;
+      } else if (height < 200 + MIN_AUDIO_DETAIL_PANE_HEIGHT) {
+        // 最低値以下になってしまう場合は無制限に
+        audioDetailPaneMaxHeight.value = Infinity;
+      } else {
+        audioDetailPaneMaxHeight.value = maxHeight;
+      }
+    };
 
     // component
     let audioCellRefs: Record<string, typeof AudioCell> = {};
@@ -179,6 +271,8 @@ export default defineComponent({
     onBeforeUpdate(() => {
       audioCellRefs = {};
     });
+
+    const resizeObserverRef = ref<any>(undefined);
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
@@ -192,6 +286,28 @@ export default defineComponent({
       });
       audioCellRefs[newAudioKey].focusTextField();
     };
+
+    watch(activeAudioKey, (val, old) => {
+      if (!!val === !!old) return;
+
+      if (val) {
+        audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+        audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+        audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
+        audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
+        audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
+        pageOnResize({
+          height: resizeObserverRef.value.$el.parentElement.clientHeight,
+        });
+      } else {
+        audioInfoPaneWidth.value = 0;
+        audioInfoPaneMinWidth.value = 0;
+        audioInfoPaneMaxWidth.value = 0;
+        audioDetailPaneHeight.value = 0;
+        audioDetailPaneMinHeight.value = 0;
+        audioDetailPaneMaxHeight.value = 0;
+      }
+    });
 
     // セルを追加して移動
     const addAndMoveCell = async ({
@@ -243,12 +359,20 @@ export default defineComponent({
       addAudioItem,
       addAndMoveCell,
       focusCell,
+      pageOnResize,
+      resizeObserverRef,
       playContinuously,
       stopContinuously,
       generateAndSaveAllAudio,
+      saveProjectFile,
+      loadProjectFile,
       importFromFile,
       audioInfoPaneWidth,
+      audioInfoPaneMinWidth,
+      audioInfoPaneMaxWidth,
       audioDetailPaneHeight,
+      audioDetailPaneMinHeight,
+      audioDetailPaneMaxHeight,
       isEngineReady,
       createHelpWindow,
     };
@@ -271,17 +395,6 @@ body {
 </style>
 
 <style lang="scss">
-@use '@/styles' as global;
-
-@use '@material/theme' with (
-  $primary: global.$primary,
-  $on-primary: #212121,
-);
-
-@use '@material/button';
-@use "@material/fab";
-@use "@material/top-app-bar/mdc-top-app-bar";
-
 .waiting-engine {
   background-color: #0002;
   position: absolute;
@@ -299,36 +412,16 @@ body {
   }
 }
 
-.mdc-top-app-bar__section--align-start,
-.mdc-top-app-bar__section--align-end {
-  button {
-    @include button.filled-accessible(white);
-
-    @extend .mdc-top-app-bar__action-item;
-    font-weight: bold;
-    margin-right: 0.5rem;
-  }
-}
-
-.mdc-top-app-bar {
-  position: static !important;
-}
-
-.mdc-top-app-bar--fixed-adjust {
-  flex-grow: 1;
-  padding-top: 0 !important;
-  > div {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
 .main-row-panes {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
 
   display: flex;
+
+  .q-splitter--horizontal {
+    height: calc(100vh - 66px);
+  }
 }
 
 #audio-cell-pane {
@@ -356,20 +449,6 @@ body {
 
     margin-right: 26px;
     margin-bottom: 10px;
-
-    .mdc-fab {
-      @include fab.accessible(global.$primary);
-    }
   }
-}
-
-#audio-info-pane {
-  max-width: 250px;
-  min-width: 130px;
-}
-
-#audio-detail-pane {
-  max-height: 500px;
-  min-height: 170px;
 }
 </style>
