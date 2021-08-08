@@ -32,12 +32,17 @@ interface ISysteminformationGraphics {
 }
 
 export function detectNvidia(): Promise<boolean> {
-  return si.graphics().then((data: ISysteminformationGraphics) => {
-    return data.controllers.some(
-      (a: ISysteminformationGraphicsControllers) =>
-        a.vendor.indexOf("NVIDIA") !== -1 && a.vram >= 3072
-    )
-      ? true
-      : false;
-  });
+  return si
+    .graphics()
+    .then((data: ISysteminformationGraphics) => {
+      return data.controllers.some(
+        (a: ISysteminformationGraphicsControllers) =>
+          a.vendor.indexOf("NVIDIA") !== -1 && a.vram >= 3072
+      )
+        ? true
+        : false;
+    })
+    .catch(() => {
+      return false;
+    });
 }
