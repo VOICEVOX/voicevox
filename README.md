@@ -4,6 +4,7 @@
 
 ```
 npm install
+npx husky install
 ```
 
 ## 実行
