@@ -615,9 +615,17 @@ export const audioStore = {
       }
     },
     [PUT_TEXTS]: createUILockAction(
-      async (
+      (
         { dispatch },
-        { texts, charIdx }: { texts: string[]; charIdx: number | undefined }
+        {
+          texts,
+          charIdx,
+          prevAudioKey,
+        }: {
+          texts: string[];
+          charIdx: number | undefined;
+          prevAudioKey: string | undefined;
+        }
       ) => {
         const arrLen = texts.length;
         const audioItems: AudioItem[] = [];
@@ -628,8 +636,12 @@ export const audioStore = {
           }
         }
         return Promise.all(
-          audioItems.map((item) =>
-            dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })
+          audioItems.map(
+            async (item) =>
+              (prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
+                audioItem: item,
+                prevAudioKey: prevAudioKey,
+              }))
           )
         );
       }
