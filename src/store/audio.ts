@@ -31,7 +31,7 @@ function parseTextFile(
   if (!charactors.size) return [];
 
   const audioItems: AudioItem[] = [];
-  const seps = [",", "\n"];
+  const seps = [",", "\r\n", "\n"];
   let lastCharactorIndex = 0;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const charactorIndex = charactors.get(splittedText);
@@ -57,12 +57,7 @@ function buildFileName(state: State, audioKey: string) {
     text = text.substring(0, 9) + "…";
   }
   return (
-    (index + 1).toString().padStart(3, "0") +
-    "_" +
-    characterName +
-    "_" +
-    text +
-    ".wav"
+    (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
   );
 }
 
@@ -78,6 +73,7 @@ export const SET_AUDIO_CHARACTOR_INDEX = "SET_AUDIO_CHARACTOR_INDEX";
 export const CHANGE_CHARACTOR_INDEX = "CHANGE_CHARACTOR_INDEX";
 export const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
 export const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
+export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
@@ -232,6 +228,13 @@ export const audioStore = {
         delete draft.audioStates[audioKey];
       }
     ),
+    [REMOVE_ALL_AUDIO_ITEM]: createCommandAction((draft) => {
+      for (const audioKey of draft.audioKeys) {
+        delete draft.audioItems[audioKey];
+        delete draft.audioStates[audioKey];
+      }
+      draft.audioKeys.splice(0, draft.audioKeys.length);
+    }),
     [REGISTER_AUDIO_ITEM](
       { state, dispatch },
       {
@@ -490,7 +493,7 @@ export const audioStore = {
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
         const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
-        filePath ??= await window.electron.showSaveDialog({
+        filePath ??= await window.electron.showAudioSaveDialog({
           title: "Save",
           defaultPath: buildFileName(state, audioKey),
         });
