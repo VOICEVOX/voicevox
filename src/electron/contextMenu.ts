@@ -7,4 +7,3 @@ export const textEditContextMenu = Menu.buildFromTemplate([
   { type: "separator" },
   { label: "全選択", role: "selectAll" },
 ]);
-
