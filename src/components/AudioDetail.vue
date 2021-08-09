@@ -211,6 +211,31 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    // add playback hotkeys
+    async function handleKeyPress(event: KeyboardEvent) {
+      if (document.activeElement instanceof HTMLInputElement) {
+        switch (event.key) {
+          case "Enter":
+            document.activeElement.blur();
+            break;
+          default:
+            break;
+        }
+      } else {
+        switch (event.key) {
+          case " ":
+            if (!nowPlaying.value && !nowGenerating.value) {
+              play();
+            } else {
+              stop();
+            }
+            break;
+        }
+      }
+    }
+
+    window.addEventListener("keyup", handleKeyPress);
+
     // detail selector
     type DetailTypes = "accent" | "intonation";
     const selectedDetail = ref<DetailTypes>("accent");
