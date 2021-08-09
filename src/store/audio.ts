@@ -615,7 +615,7 @@ export const audioStore = {
       }
     },
     [PUT_TEXTS]: createUILockAction(
-      (
+      async (
         { dispatch },
         {
           texts,
@@ -628,22 +628,16 @@ export const audioStore = {
         }
       ) => {
         const arrLen = texts.length;
-        const audioItems: AudioItem[] = [];
         charIdx == undefined ? 0 : charIdx;
         for (let i = 0; i < arrLen; i++) {
           if (texts[i] != "") {
-            audioItems.push({ text: texts[i], charactorIndex: charIdx });
+            const audioItem = { text: texts[i], charactorIndex: charIdx };
+            prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
+              audioItem: audioItem,
+              prevAudioKey: prevAudioKey,
+            });
           }
         }
-        return Promise.all(
-          audioItems.map(
-            async (item) =>
-              (prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
-                audioItem: item,
-                prevAudioKey: prevAudioKey,
-              }))
-          )
-        );
       }
     ),
   },
