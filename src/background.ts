@@ -31,7 +31,9 @@ import {
   SHOW_PROJECT_LOAD_DIALOG,
   SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "./electron/ipc";
+import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
 
 import fs from "fs";
@@ -297,6 +299,10 @@ ipcMain.handle(
 
 ipcMain.handle(CREATE_HELP_WINDOW, (event) => {
   createHelpWindow();
+});
+
+ipcMain.handle(OPEN_TEXT_EDIT_CONTEXT_MENU, () => {
+  textEditContextMenu.popup({ window: win });
 });
 
 // app callback

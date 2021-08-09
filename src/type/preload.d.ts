@@ -17,6 +17,7 @@ export interface Sandbox {
   writeFile(obj: { filePath: string; buffer: ArrayBuffer });
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
+  openTextEditContextMenu(): Promise<void>;
 }
 
 export type AppInfos = {
