@@ -31,7 +31,7 @@ function parseTextFile(
   if (!charactors.size) return [];
 
   const audioItems: AudioItem[] = [];
-  const seps = [",", "\n"];
+  const seps = [",", "\r\n", "\n"];
   let lastCharactorIndex = 0;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const charactorIndex = charactors.get(splittedText);
@@ -101,6 +101,7 @@ export const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
 export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
+export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -612,6 +613,9 @@ export const audioStore = {
           dispatch(STOP_AUDIO, { audioKey });
         }
       }
+    },
+    [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
+      window.electron.openTextEditContextMenu();
     },
   },
 } as StoreOptions<State>;

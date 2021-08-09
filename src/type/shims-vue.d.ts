@@ -2,17 +2,10 @@
 declare module "*.vue" {
   import type { DefineComponent } from "vue";
   const component: DefineComponent<{}, {}, any>;
-  export default component;
 
-  declare global {
-    interface Window {
-      readonly electron: import("./preload").Sandbox;
-    }
-  }
+  export default component;
 }
 
-declare global {
-  interface Window {
-    readonly electron: import("./preload").Sandbox;
-  }
+interface Window {
+  readonly electron: import("./preload").Sandbox;
 }

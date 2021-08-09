@@ -47,8 +47,9 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
+      @mouseup.right="onRightClickTextField"
     >
-      <template #after v-if="hoverFlag">
+      <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
           round
           flat
@@ -77,6 +78,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
@@ -172,22 +174,28 @@ export default defineComponent({
     // 消去
     const willRemove = ref(false);
     const removeCell = async () => {
-      // フォーカスを外したりREMOVEしたりすると、
-      // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
-      // エラー防止のためにまずwillRemoveフラグを建てる
-      willRemove.value = true;
-
+      // 1つだけの時は削除せず
       if (audioKeys.value.length > 1) {
+        // フォーカスを外したりREMOVEしたりすると、
+        // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
+        // エラー防止のためにまずwillRemoveフラグを建てる
+        willRemove.value = true;
+
         const index = audioKeys.value.indexOf(props.audioKey);
         if (index > 0) {
           emit("focusCell", { audioKey: audioKeys.value[index - 1] });
         } else {
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
-      }
 
-      store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+      }
     };
+
+    // 削除ボタンの有効／無効判定
+    const deleteButtonEnable = computed(() => {
+      return 1 < audioKeys.value.length;
+    });
 
     // テキストが空白なら消去
     const tryToRemoveCell = async (e: Event) => {
@@ -196,6 +204,11 @@ export default defineComponent({
       }
       e.preventDefault();
       removeCell();
+    };
+
+    // テキスト編集エリアの右クリック
+    const onRightClickTextField = () => {
+      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
     };
 
     // 下にセルを追加
@@ -242,6 +255,7 @@ export default defineComponent({
     return {
       charactorInfos,
       audioItem,
+      deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
@@ -260,6 +274,7 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      onRightClickTextField,
       textfield,
       focusTextField,
       isOpenedCharactorList,
