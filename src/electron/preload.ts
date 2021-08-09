@@ -92,6 +92,10 @@ const api: Sandbox = {
   openTextEditContextMenu: () => {
     return ipcRenderer.invoke(OPEN_TEXT_EDIT_CONTEXT_MENU);
   },
+
+  on: (channel, callback) => {
+    return ipcRenderer.on(channel, (event, argv) => callback(event, argv));
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

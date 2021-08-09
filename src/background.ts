@@ -32,6 +32,10 @@ import {
   SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE,
 } from "./electron/ipc";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
@@ -140,6 +144,16 @@ const menu = MenuBuilder()
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
   })
+  .setOnSaveAllAudioItemClicked(() =>
+    win.webContents.send(GENERATE_AND_SAVE_ALL_AUDIO)
+  )
+  .setOnImportFromFileItemClicked(() => win.webContents.send(IMPORT_FROM_FILE))
+  .setOnSaveProjectFileItemClicked(() =>
+    win.webContents.send(SAVE_PROJECT_FILE)
+  )
+  .setOnLoadProjectFileItemClicked(() =>
+    win.webContents.send(LOAD_PROJECT_FILE)
+  )
   .build();
 Menu.setApplicationMenu(menu.instance);
 

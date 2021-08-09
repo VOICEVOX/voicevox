@@ -1,3 +1,6 @@
+import { IpcRenderer } from "electron";
+import { IpcRendererEvent } from "electron/main";
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getCharactorInfos(): Promise<CharactorInfo[]>;
@@ -18,6 +21,10 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
+  on(
+    channel: string,
+    callback: (event: IpcRendererEvent, ...argv) => void
+  ): IpcRenderer;
 }
 
 export type AppInfos = {

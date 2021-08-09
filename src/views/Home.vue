@@ -185,6 +185,12 @@ import {
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO as IPC_GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE as IPC_IMPORT_FROM_FILE,
+  SAVE_PROJECT_FILE as IPC_SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE as IPC_LOAD_PROJECT_FILE,
+} from "@/electron/ipc";
 
 export default defineComponent({
   name: "Home",
@@ -344,6 +350,14 @@ export default defineComponent({
     const createHelpWindow = () => {
       store.dispatch(CREATE_HELP_WINDOW);
     };
+
+    window.electron.on(
+      IPC_GENERATE_AND_SAVE_ALL_AUDIO,
+      generateAndSaveAllAudio
+    );
+    window.electron.on(IPC_IMPORT_FROM_FILE, importFromFile);
+    window.electron.on(IPC_SAVE_PROJECT_FILE, saveProjectFile);
+    window.electron.on(IPC_LOAD_PROJECT_FILE, loadProjectFile);
 
     return {
       audioItems,
