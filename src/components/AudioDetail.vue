@@ -229,6 +229,7 @@ export default defineComponent({
 
     // add hotkeys
     const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Shift") shiftKeyFlag = false;
       if (document.activeElement instanceof HTMLInputElement) {
         switch (event.key) {
           case "Enter":
@@ -258,6 +259,15 @@ export default defineComponent({
 
     window.addEventListener("keyup", handleKeyPress);
 
+    // detect shift key and set flag, preventing changes in intonation while scrolling around
+    let shiftKeyFlag = false;
+
+    function setShiftKeyFlag(event: KeyboardEvent) {
+      if (event.shiftKey) shiftKeyFlag = true;
+    }
+
+    window.addEventListener("keydown", setShiftKeyFlag);
+
     // detail selector
     type DetailTypes = "accent" | "intonation";
     const selectedDetail = ref<DetailTypes>("accent");
@@ -286,7 +296,6 @@ export default defineComponent({
         accentPhraseIndex,
         accent,
       });
-      console.log(accent);
     };
 
     const changeAccentByScroll = (
@@ -295,16 +304,16 @@ export default defineComponent({
       accent: number,
       delta_y: number
     ) => {
-      console.log(delta_y);
+      console.log(shiftKeyFlag);
+      if (shiftKeyFlag) return;
       let currentAccent = accent - delta_y;
-      if (currentAccent < 0) {
-        currentAccent = 0;
+      if (currentAccent < 1) {
+        currentAccent = 1;
       }
       if (currentAccent > length) {
         currentAccent = length;
       }
       changeAccent(accentPhraseIndex, currentAccent);
-      console.log(currentAccent);
     };
 
     const toggleAccentPhraseSplit = (
@@ -339,6 +348,7 @@ export default defineComponent({
       moraPitch: number,
       delta_y: number
     ) => {
+      if (shiftKeyFlag) return;
       let current_pitch = moraPitch - delta_y / 1000;
       if (current_pitch < 3) {
         current_pitch = 3;

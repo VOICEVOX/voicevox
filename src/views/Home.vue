@@ -207,6 +207,27 @@ export default defineComponent({
     const canUndo = computed(() => store.getters[CAN_UNDO]);
     const canRedo = computed(() => store.getters[CAN_REDO]);
 
+    // add hotkeys
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!(document.activeElement instanceof HTMLInputElement)) {
+        if (event.ctrlKey) {
+          switch (event.key) {
+            case "s":
+              generateAndSaveAllAudio();
+              break;
+          }
+        } else {
+          switch (event.key) {
+            case "+":
+              addAudioItem();
+              break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keyup", handleKeyPress);
+
     const undo = () => {
       store.dispatch(UNDO);
     };
