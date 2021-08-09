@@ -16,7 +16,7 @@ import {
   SHOW_PROJECT_LOAD_DIALOG,
   SHOW_CONFIRM_DIALOG,
   SHOW_IMPORT_FILE_DIALOG,
-  CREATE_TEXT_EDIT_CONTEXT_MENU,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "./ipc";
 
 let tempDir: string;
@@ -90,7 +90,7 @@ const api: Sandbox = {
   },
 
   openTextEditContextMenu: () => {
-    return ipcRenderer.invoke(CREATE_TEXT_EDIT_CONTEXT_MENU);
+    return ipcRenderer.invoke(OPEN_TEXT_EDIT_CONTEXT_MENU);
   },
 };
 
