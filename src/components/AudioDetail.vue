@@ -60,6 +60,14 @@
                     @input="
                       changePreviewAccent(accentPhraseIndex, parseInt($event))
                     "
+                    @wheel="
+                      changeAccentByScroll(
+                        accentPhraseIndex,
+                        accentPhrase.moras.length,
+                        accentPhrase.accent,
+                        parseInt($event.deltaY / 100)
+                      )
+                    "
                   />
                 </div>
               </div>
@@ -137,6 +145,14 @@
                       parseFloat($event)
                     )
                   "
+                  @wheel="
+                    setAudioMoraPitchbyScroll(
+                      accentPhraseIndex,
+                      moraIndex,
+                      mora.pitch,
+                      parseFloat($event.deltaY)
+                    )
+                  "
                 />
               </div>
             </div>
@@ -211,8 +227,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    // add playback hotkeys
-    async function handleKeyPress(event: KeyboardEvent) {
+    // add hotkeys
+    const handleKeyPress = (event: KeyboardEvent) => {
       if (document.activeElement instanceof HTMLInputElement) {
         switch (event.key) {
           case "Enter":
@@ -230,9 +246,15 @@ export default defineComponent({
               stop();
             }
             break;
+          case "1":
+            selectedDetail.value = "accent";
+            break;
+          case "2":
+            selectedDetail.value = "intonation";
+            break;
         }
       }
-    }
+    };
 
     window.addEventListener("keyup", handleKeyPress);
 
@@ -264,6 +286,25 @@ export default defineComponent({
         accentPhraseIndex,
         accent,
       });
+      console.log(accent);
+    };
+
+    const changeAccentByScroll = (
+      accentPhraseIndex: number,
+      length: number,
+      accent: number,
+      delta_y: number
+    ) => {
+      console.log(delta_y);
+      let currentAccent = accent - delta_y;
+      if (currentAccent < 0) {
+        currentAccent = 0;
+      }
+      if (currentAccent > length) {
+        currentAccent = length;
+      }
+      changeAccent(accentPhraseIndex, currentAccent);
+      console.log(currentAccent);
     };
 
     const toggleAccentPhraseSplit = (
@@ -290,6 +331,22 @@ export default defineComponent({
         moraIndex,
         pitch,
       });
+    };
+
+    const setAudioMoraPitchbyScroll = (
+      accentPhraseIndex: number,
+      moraIndex: number,
+      moraPitch: number,
+      delta_y: number
+    ) => {
+      let current_pitch = moraPitch - delta_y / 1000;
+      if (current_pitch < 3) {
+        current_pitch = 3;
+      }
+      if (current_pitch > 6.5) {
+        current_pitch = 6.5;
+      }
+      setAudioMoraPitch(accentPhraseIndex, moraIndex, current_pitch);
     };
 
     const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {
@@ -329,8 +386,10 @@ export default defineComponent({
       previewAccent,
       previewAccentPhraseIndex,
       changeAccent,
+      changeAccentByScroll,
       toggleAccentPhraseSplit,
       setAudioMoraPitch,
+      setAudioMoraPitchbyScroll,
       changePreviewAccent,
       play,
       stop,
