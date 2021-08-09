@@ -58,6 +58,11 @@ type IpcData = {
     args: [obj: { title: string; message: string }];
     return: boolean;
   };
+
+  OPEN_TEXT_EDIT_CONTEXT_MENU: {
+    args: [];
+    return: void;
+  };
 };
 
 declare namespace Electron {

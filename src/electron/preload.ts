@@ -73,6 +73,10 @@ const api: Sandbox = {
   createHelpWindow: () => {
     ipcRenderer.invoke("CREATE_HELP_WINDOW");
   },
+
+  openTextEditContextMenu: () => {
+    return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

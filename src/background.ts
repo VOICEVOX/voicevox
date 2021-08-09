@@ -18,6 +18,7 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
+import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
 
 import fs from "fs";
@@ -113,6 +114,7 @@ const updateInfos = JSON.parse(
 
 // initialize menu
 const menu = MenuBuilder()
+  .configure(isDevelopment)
   .setOnLaunchModeItemClicked((useGpu) => {
     store.set("useGpu", useGpu);
 
@@ -265,6 +267,10 @@ ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
 
 ipcMain.handle("CREATE_HELP_WINDOW", (event) => {
   createHelpWindow();
+});
+
+ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
+  textEditContextMenu.popup({ window: win });
 });
 
 // app callback
