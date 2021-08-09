@@ -127,6 +127,7 @@ const updateInfos = JSON.parse(
 
 // initialize menu
 const menu = MenuBuilder()
+  .configure(isDevelopment)
   .setOnLaunchModeItemClicked((useGpu) => {
     store.set("useGpu", useGpu);
 
