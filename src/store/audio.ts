@@ -31,7 +31,7 @@ function parseTextFile(
   if (!charactors.size) return [];
 
   const audioItems: AudioItem[] = [];
-  const seps = [",", "\n"];
+  const seps = [",", "\r\n", "\n"];
   let lastCharactorIndex = 0;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const charactorIndex = charactors.get(splittedText);
