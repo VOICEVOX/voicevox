@@ -246,7 +246,6 @@ export default defineComponent({
     });
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
-    // the blurring part is handled by native code
     let shiftKeyFlag = false;
 
     function handleKeyPress(event: KeyboardEvent) {
