@@ -155,36 +155,34 @@ const updateInfos = JSON.parse(
 // initialize menu
 const menu = MenuBuilder()
   .configure(isDevelopment)
-  .setOnLaunchModeItemClicked((useGpu) => {
-    const updateProcess = () => {
+  .setOnLaunchModeItemClicked(async (useGpu) => {
+    let isChangeable = true;
+
+    if (useGpu) {
+      const isAvaiableGPUMode = await detectNvidia();
+      if (!isAvaiableGPUMode) {
+        const response = dialog.showMessageBoxSync(win, {
+          message: "警告",
+          detail:
+            "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要ですがお使いのPCからは条件を満たすGPUが検出できませんでした。\n\nGPUモードに変更しますと起動時にエンジンエラーが発生する可能性があります。\n\nその際はエラーメッセージウィンドウを閉じて、メニューからCPUモードへの変更をしてVOICEVOXの再起動をしてください。\n\n以上の警告メッセージを了解した上で変更をしたい場合は「変更する」を止める場合は「変更しない」を押してください。",
+          title: "警告",
+          type: "warning",
+          buttons: ["変更しない", "変更する"],
+          cancelId: 0,
+        });
+
+        if (response !== 1) {
+          isChangeable = false;
+        }
+      }
+    }
+
+    if (isChangeable) {
       store.set("useGpu", useGpu);
       dialog.showMessageBoxSync(win, {
         message: "エンジンの起動モードを変更しました",
         detail: "変更を適用するためにVOICEVOXを再起動してください。",
       });
-    };
-
-    if (useGpu) {
-      detectNvidia().then((result: boolean) => {
-        if (!result) {
-          const response = dialog.showMessageBoxSync(win, {
-            message: "警告",
-            detail:
-              "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要ですがお使いのPCからは条件を満たすGPUが検出できませんでした。\nGPUモードに変更しますと起動時にエンジンエラーが発生する可能性があります。\nその際はエラーメッセージウィンドウを閉じて、メニューからCPUモードへの変更をしてVOICEVOXの再起動をしてください。\n\n以上の警告メッセージを了解した上で変更をしたい場合は「はい」を止める場合は「いいえ」を押してください。",
-            title: "警告",
-            type: "question",
-            buttons: ["はい", "いいえ"],
-          });
-
-          if (response === 0) {
-            updateProcess();
-          }
-        } else {
-          updateProcess();
-        }
-      });
-    } else {
-      updateProcess();
     }
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);

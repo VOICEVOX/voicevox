@@ -74,7 +74,7 @@ const createMenu = () => {
 
   return {
     menuInstance: menu,
-    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => void) =>
+    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => Promise<void>) =>
       (onLaunchModeItemClickedImpl = cb),
     setActiveLaunchMode,
   };
