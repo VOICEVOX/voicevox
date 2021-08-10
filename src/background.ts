@@ -20,6 +20,12 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  LOAD_PROJECT_FILE,
+  SAVE_PROJECT_FILE,
+} from "./electron/ipc";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";

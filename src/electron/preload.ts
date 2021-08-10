@@ -78,7 +78,7 @@ const api: Sandbox = {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  on: (channel, callback) => {
+  onReceivedIPCMsg: (channel, callback) => {
     return ipcRenderer.on(channel, (event, argv) => callback(event, argv));
   },
 };
