@@ -492,11 +492,14 @@ export const audioStore = {
         { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
-        const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
+        const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
+          audioKey,
+        });
         filePath ??= await window.electron.showAudioSaveDialog({
           title: "Save",
           defaultPath: buildFileName(state, audioKey),
         });
+        const blob = await blobPromise;
         if (filePath) {
           window.electron.writeFile({
             filePath,

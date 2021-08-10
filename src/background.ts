@@ -18,25 +18,6 @@ import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
-import {
-  CREATE_HELP_WINDOW,
-  GET_APP_INFOS,
-  GET_CHARACTOR_INFOS,
-  GET_OSS_LICENSES,
-  GET_UPDATE_INFOS,
-  GET_TEMP_DIR,
-  SHOW_OPEN_DIRECOTRY_DIALOG,
-  SHOW_AUDIO_SAVE_DIALOG,
-  SHOW_PROJECT_SAVE_DIALOG,
-  SHOW_PROJECT_LOAD_DIALOG,
-  SHOW_CONFIRM_DIALOG,
-  SHOW_IMPORT_FILE_DIALOG,
-  OPEN_TEXT_EDIT_CONTEXT_MENU,
-  GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
-  SAVE_PROJECT_FILE,
-  LOAD_PROJECT_FILE,
-} from "./electron/ipc";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
 
@@ -215,7 +196,7 @@ async function createHelpWindow() {
   if (isDevelopment) child.webContents.openDevTools();
 }
 
-ipcMain.handle(GET_APP_INFOS, (event) => {
+ipcMain.handle("GET_APP_INFOS", (event) => {
   const name = app.getName();
   const version = app.getVersion();
   return {
@@ -225,98 +206,80 @@ ipcMain.handle(GET_APP_INFOS, (event) => {
 });
 
 // プロセス間通信
-ipcMain.handle(GET_TEMP_DIR, (event) => {
+ipcMain.handle("GET_TEMP_DIR", (event) => {
   return tempDir;
 });
 
-ipcMain.handle(GET_CHARACTOR_INFOS, (event) => {
+ipcMain.handle("GET_CHARACTOR_INFOS", (event) => {
   return charactorInfos;
 });
 
-ipcMain.handle(GET_OSS_LICENSES, (event) => {
+ipcMain.handle("GET_OSS_LICENSES", (event) => {
   return ossLicenses;
 });
 
-ipcMain.handle(GET_UPDATE_INFOS, (event) => {
+ipcMain.handle("GET_UPDATE_INFOS", (event) => {
   return updateInfos;
 });
 
-ipcMain.handle(
-  SHOW_AUDIO_SAVE_DIALOG,
-  (event, { title, defaultPath }: { title: string; defaultPath?: string }) => {
-    return dialog.showSaveDialogSync(win, {
-      title,
-      defaultPath,
-      filters: [{ name: "Wave File", extensions: ["wav"] }],
-      properties: ["createDirectory"],
+ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
+  return dialog.showSaveDialogSync(win, {
+    title,
+    defaultPath,
+    filters: [{ name: "Wave File", extensions: ["wav"] }],
+    properties: ["createDirectory"],
+  });
+});
+
+ipcMain.handle("SHOW_OPEN_DIRECOTRY_DIALOG", (event, { title }) => {
+  return dialog.showOpenDialogSync(win, {
+    title,
+    properties: ["openDirectory", "createDirectory"],
+  })?.[0];
+});
+
+ipcMain.handle("SHOW_PROJECT_SAVE_DIALOG", (event, { title }) => {
+  return dialog.showSaveDialogSync(win, {
+    title,
+    filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+    properties: ["showOverwriteConfirmation"],
+  });
+});
+
+ipcMain.handle("SHOW_PROJECT_LOAD_DIALOG", (event, { title }) => {
+  return dialog.showOpenDialogSync(win, {
+    title,
+    filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+    properties: ["openFile"],
+  });
+});
+
+ipcMain.handle("SHOW_CONFIRM_DIALOG", (event, { title, message }) => {
+  return dialog
+    .showMessageBox(win, {
+      type: "info",
+      buttons: ["OK", "Cancel"],
+      title: title,
+      message: message,
+    })
+    .then((value) => {
+      return value.response == 0;
     });
-  }
-);
+});
 
-ipcMain.handle(
-  SHOW_OPEN_DIRECOTRY_DIALOG,
-  (event, { title }: { title: string }) => {
-    return dialog.showOpenDialogSync(win, {
-      title,
-      properties: ["openDirectory", "createDirectory"],
-    })?.[0];
-  }
-);
+ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
+  return dialog.showOpenDialogSync(win, {
+    title,
+    filters: [{ name: "Text", extensions: ["txt"] }],
+    properties: ["openFile", "createDirectory"],
+  })?.[0];
+});
 
-ipcMain.handle(
-  SHOW_PROJECT_SAVE_DIALOG,
-  (event, { title }: { title: string }) => {
-    return dialog.showSaveDialogSync(win, {
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["showOverwriteConfirmation"],
-    });
-  }
-);
-
-ipcMain.handle(
-  SHOW_PROJECT_LOAD_DIALOG,
-  (event, { title }: { title: string }) => {
-    return dialog.showOpenDialogSync(win, {
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["openFile"],
-    });
-  }
-);
-
-ipcMain.handle(
-  SHOW_CONFIRM_DIALOG,
-  (event, { title, message }: { title: string; message: string }) => {
-    return dialog
-      .showMessageBox(win, {
-        type: "info",
-        buttons: ["OK", "Cancel"],
-        title: title,
-        message: message,
-      })
-      .then((value) => {
-        return value.response == 0;
-      });
-  }
-);
-
-ipcMain.handle(
-  SHOW_IMPORT_FILE_DIALOG,
-  (event, { title }: { title: string }) => {
-    return dialog.showOpenDialogSync(win, {
-      title,
-      filters: [{ name: "Text", extensions: ["txt"] }],
-      properties: ["openFile", "createDirectory"],
-    })?.[0];
-  }
-);
-
-ipcMain.handle(CREATE_HELP_WINDOW, (event) => {
+ipcMain.handle("CREATE_HELP_WINDOW", (event) => {
   createHelpWindow();
 });
 
-ipcMain.handle(OPEN_TEXT_EDIT_CONTEXT_MENU, () => {
+ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
