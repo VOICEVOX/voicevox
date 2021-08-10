@@ -1,5 +1,5 @@
 <template>
-  <router-view ref="a" />
+  <router-view />
 </template>
 
 <script type="ts">
