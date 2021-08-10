@@ -1,4 +1,4 @@
-import { Menu, MenuItem } from "electron";
+import { Menu, MenuItem, MenuItemConstructorOptions } from "electron";
 
 const MENU_ROOT_ITEM_ENGINE_ID = "engine";
 const MENU_SUBMENU_ITEM_LAUNCHMODE_ID = "launchMode";
@@ -74,7 +74,7 @@ const createMenu = () => {
 
   return {
     menuInstance: menu,
-    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => void) =>
+    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => Promise<void>) =>
       (onLaunchModeItemClickedImpl = cb),
     setActiveLaunchMode,
   };
@@ -85,6 +85,21 @@ class MenuBuilderImpl {
 
   constructor() {
     this._menu = createMenu();
+  }
+
+  configure(isDevelopment: boolean): MenuBuilderImpl {
+    if (isDevelopment) {
+      const defaultMenuItemOptions: MenuItemConstructorOptions[] = [
+        { role: "fileMenu" },
+        { role: "editMenu" },
+        { role: "viewMenu" },
+        { role: "windowMenu" },
+      ];
+      defaultMenuItemOptions.forEach((option) =>
+        this._menu.menuInstance.append(new MenuItem(option))
+      );
+    }
+    return this;
   }
 
   setOnLaunchModeItemClicked(cb: (useGpu: boolean) => void): MenuBuilderImpl {
