@@ -28,8 +28,16 @@
               text-color="secondary"
               icon="stop"
               @click="stop"
-            ></q-btn
-          ></template>
+            ></q-btn>
+            <q-btn
+              round
+              aria-label="音声ファイルとして保存"
+              size="small"
+              icon="file_download"
+              @click="save"
+              :disable="nowPlaying || nowGenerating"
+            ></q-btn>
+          </template>
         </div>
       </div>
       <div class="overflow-hidden-y accent-phrase-table">
@@ -202,6 +210,7 @@ import {
   CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
+  GENERATE_AND_SAVE_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 
@@ -281,6 +290,13 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: activeAudioKey.value! });
     };
 
+    // save
+    const save = () => {
+      store.dispatch(GENERATE_AND_SAVE_AUDIO, {
+        audioKey: activeAudioKey.value!,
+      });
+    };
+
     const nowPlaying = computed(
       () => store.state.audioStates[activeAudioKey.value!]?.nowPlaying
     );
@@ -309,6 +325,7 @@ export default defineComponent({
       changePreviewAccent,
       play,
       stop,
+      save,
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
@@ -339,8 +356,13 @@ export default defineComponent({
     }
     .play-button-wrapper {
       align-self: flex-end;
-      margin-right: 10px;
-      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: nowrap;
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      margin: 10px;
+      gap: 0 5px;
     }
   }
 
