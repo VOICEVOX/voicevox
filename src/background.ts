@@ -39,7 +39,19 @@ import { MenuBuilder } from "./electron/menu";
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
 
-import { detectNvidia } from "./utils";
+import si from "systeminformation";
+function detectNvidia(): Promise<boolean> {
+  return si
+    .graphics()
+    .then((data) =>
+      data.controllers.some(
+        (datum) =>
+          datum.vendor.toUpperCase().indexOf("NVIDIA") !== -1 &&
+          datum.vram >= 3072
+      )
+    )
+    .catch(() => false);
+}
 
 let win: BrowserWindow;
 
@@ -144,9 +156,8 @@ const updateInfos = JSON.parse(
 const menu = MenuBuilder()
   .configure(isDevelopment)
   .setOnLaunchModeItemClicked((useGpu) => {
-    const changeProcess = () => {
+    const updateProcess = () => {
       store.set("useGpu", useGpu);
-
       dialog.showMessageBoxSync(win, {
         message: "エンジンの起動モードを変更しました",
         detail: "変更を適用するためにVOICEVOXを再起動してください。",
@@ -155,18 +166,25 @@ const menu = MenuBuilder()
 
     if (useGpu) {
       detectNvidia().then((result: boolean) => {
-        if (result) {
-          changeProcess();
-        } else {
-          dialog.showMessageBoxSync(win, {
-            message: "この環境では変更出来ません。",
+        if (!result) {
+          const response = dialog.showMessageBoxSync(win, {
+            message: "警告",
             detail:
-              "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。",
+              "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要ですがお使いのPCからは条件を満たすGPUが検出できませんでした。\nGPUモードに変更しますと起動時にエンジンエラーが発生する可能性があります。\nその際はエラーメッセージウィンドウを閉じて、メニューからCPUモードへの変更をしてVOICEVOXの再起動をしてください。\n\n以上の警告メッセージを了解した上で変更をしたい場合は「はい」を止める場合は「いいえ」を押してください。",
+            title: "警告",
+            type: "question",
+            buttons: ["はい", "いいえ"],
           });
+
+          if (response === 0) {
+            updateProcess();
+          }
+        } else {
+          updateProcess();
         }
       });
     } else {
-      changeProcess();
+      updateProcess();
     }
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
