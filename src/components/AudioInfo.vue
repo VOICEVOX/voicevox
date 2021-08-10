@@ -12,6 +12,7 @@
         :step="0.1"
         :disable="uiLocked"
         v-model="query.speedScale"
+        @wheel="setAudioInfoByScroll(query, $event.deltaY, 'speed')"
       />
     </div>
     <div class="q-px-md">
@@ -26,6 +27,7 @@
         :step="0.01"
         :disable="uiLocked"
         v-model="query.pitchScale"
+        @wheel="setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
       />
     </div>
     <div class="q-px-md">
@@ -40,6 +42,7 @@
         :step="0.01"
         :disable="uiLocked"
         v-model="query.intonationScale"
+        @wheel="setAudioInfoByScroll(query, $event.deltaY, 'into')"
       />
     </div>
   </div>
@@ -55,6 +58,7 @@ import {
   SET_AUDIO_SPEED_SCALE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
+import { AudioQuery } from "@/openapi";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -80,6 +84,41 @@ export default defineComponent({
       });
     };
 
+    const setAudioInfoByScroll = (
+      query: AudioQuery,
+      delta_y: number,
+      type: string
+    ) => {
+      switch (type) {
+        case "speed": {
+          let curSpeed = query.speedScale - delta_y / 1000;
+          curSpeed = Math.round(curSpeed * 1e2) / 1e2;
+          if (2 >= curSpeed && curSpeed >= 0.5) {
+            query.speedScale = curSpeed;
+          }
+          break;
+        }
+        case "pitch": {
+          let curPitch = query.pitchScale - delta_y / 10000;
+          curPitch = Math.round(curPitch * 1e2) / 1e2;
+          if (0.15 >= curPitch && curPitch >= -0.15) {
+            query.pitchScale = curPitch;
+          }
+          break;
+        }
+        case "into": {
+          let curInto = query.intonationScale - delta_y / 1000;
+          curInto = Math.round(curInto * 1e2) / 1e2;
+          if (2 >= curInto && curInto >= 0) {
+            query.intonationScale = curInto;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    };
+
     const setAudioPitchScale = (pitchScale: number) => {
       store.dispatch(SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
@@ -102,6 +141,7 @@ export default defineComponent({
       setAudioSpeedScale,
       setAudioPitchScale,
       setAudioIntonationScale,
+      setAudioInfoByScroll,
     };
   },
 });
