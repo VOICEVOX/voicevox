@@ -161,14 +161,13 @@ export default defineComponent({
         let splittedStringArr = evt.clipboardData
           .getData("text/plain")
           .split(/[。\n\r]/);
-        let prevAudioKey;
         //区切りがある場合、普段のPasteと別処理
         if (splittedStringArr.length > 1) {
           evt.preventDefault();
+          let prevAudioKey = props.audioKey;
           //現在の欄が空欄の場合、最初の行だけ別処理
           if (audioItem.value.text == "") {
             setAudioText(splittedStringArr.shift()!);
-            prevAudioKey = props.audioKey;
           }
           store.dispatch(PUT_TEXTS, {
             texts: splittedStringArr,
