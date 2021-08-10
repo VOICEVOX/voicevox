@@ -16,6 +16,21 @@ module.exports = {
             to: "",
           },
         ],
+        // electron-builder installer
+        productName: "VOICEVOX",
+        appId: "jp.hiroshiba.voicevox",
+        copyright: "Hiroshiba Kazuyuki",
+        compression: "maximum",
+        extends: null,
+        win: {
+          icon: "public/icon.png",
+          target: [
+            {
+              target: "nsis",
+              arch: ["x64"],
+            },
+          ],
+        },
       },
     },
   },
