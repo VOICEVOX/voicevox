@@ -185,6 +185,7 @@ import {
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
+import Mousetrap from "mousetrap";
 
 export default defineComponent({
   name: "Home",
@@ -208,25 +209,18 @@ export default defineComponent({
     const canRedo = computed(() => store.getters[CAN_REDO]);
 
     // add hotkeys
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (!(document.activeElement instanceof HTMLInputElement)) {
-        if (event.ctrlKey) {
-          switch (event.key) {
-            case "s":
-              generateAndSaveAllAudio();
-              break;
-          }
-        } else {
-          switch (event.key) {
-            case "+":
-              addAudioItem();
-              break;
-          }
-        }
-      }
-    };
+    Mousetrap.bind(["ctrl+s"], () => {
+      generateAndSaveAllAudio();
+    });
 
-    window.addEventListener("keyup", handleKeyPress);
+    Mousetrap.bind(
+      ["+"],
+      () => {
+        addAudioItem();
+        return false;
+      },
+      "keypress"
+    );
 
     const undo = () => {
       store.dispatch(UNDO);

@@ -146,7 +146,7 @@
                     )
                   "
                   @wheel="
-                    setAudioMoraPitchbyScroll(
+                    setAudioMoraPitchByScroll(
                       accentPhraseIndex,
                       moraIndex,
                       mora.pitch,
@@ -220,6 +220,7 @@ import {
   STOP_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
+import Mousetrap from "mousetrap";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -227,45 +228,35 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    // add hotkeys
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === "Shift") shiftKeyFlag = false;
-      if (document.activeElement instanceof HTMLInputElement) {
-        switch (event.key) {
-          case "Enter":
-            document.activeElement.blur();
-            break;
-          default:
-            break;
-        }
+    // add hotkeys with mousetrap
+    Mousetrap.bind("space", () => {
+      if (!nowPlaying.value && !nowGenerating.value) {
+        play();
       } else {
-        switch (event.key) {
-          case " ":
-            if (!nowPlaying.value && !nowGenerating.value) {
-              play();
-            } else {
-              stop();
-            }
-            break;
-          case "1":
-            selectedDetail.value = "accent";
-            break;
-          case "2":
-            selectedDetail.value = "intonation";
-            break;
-        }
+        stop();
       }
-    };
+    });
 
-    window.addEventListener("keyup", handleKeyPress);
+    Mousetrap.bind("1", () => {
+      selectedDetail.value = "accent";
+    });
+
+    Mousetrap.bind("2", () => {
+      selectedDetail.value = "intonation";
+    });
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
+    // the blurring part is handled by native code
     let shiftKeyFlag = false;
+
+    function handleKeyPress(event: KeyboardEvent) {
+      if (event.key === "Shift") shiftKeyFlag = false;
+    }
+    window.addEventListener("keyup", handleKeyPress);
 
     function setShiftKeyFlag(event: KeyboardEvent) {
       if (event.shiftKey) shiftKeyFlag = true;
     }
-
     window.addEventListener("keydown", setShiftKeyFlag);
 
     // detail selector
@@ -304,16 +295,14 @@ export default defineComponent({
       accent: number,
       delta_y: number
     ) => {
-      console.log(shiftKeyFlag);
-      if (shiftKeyFlag) return;
       let currentAccent = accent - delta_y;
-      if (currentAccent < 1) {
-        currentAccent = 1;
-      }
-      if (currentAccent > length) {
-        currentAccent = length;
-      }
-      changeAccent(accentPhraseIndex, currentAccent);
+      if (
+        !uiLocked.value &&
+        !shiftKeyFlag &&
+        length >= currentAccent &&
+        currentAccent >= 1
+      )
+        changeAccent(accentPhraseIndex, currentAccent);
     };
 
     const toggleAccentPhraseSplit = (
@@ -342,21 +331,20 @@ export default defineComponent({
       });
     };
 
-    const setAudioMoraPitchbyScroll = (
+    const setAudioMoraPitchByScroll = (
       accentPhraseIndex: number,
       moraIndex: number,
       moraPitch: number,
       delta_y: number
     ) => {
-      if (shiftKeyFlag) return;
       let current_pitch = moraPitch - delta_y / 1000;
-      if (current_pitch < 3) {
-        current_pitch = 3;
-      }
-      if (current_pitch > 6.5) {
-        current_pitch = 6.5;
-      }
-      setAudioMoraPitch(accentPhraseIndex, moraIndex, current_pitch);
+      if (
+        !uiLocked.value &&
+        !shiftKeyFlag &&
+        6.5 >= current_pitch &&
+        current_pitch >= 3
+      )
+        setAudioMoraPitch(accentPhraseIndex, moraIndex, current_pitch);
     };
 
     const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {
@@ -399,7 +387,7 @@ export default defineComponent({
       changeAccentByScroll,
       toggleAccentPhraseSplit,
       setAudioMoraPitch,
-      setAudioMoraPitchbyScroll,
+      setAudioMoraPitchByScroll,
       changePreviewAccent,
       play,
       stop,
