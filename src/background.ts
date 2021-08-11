@@ -76,11 +76,12 @@ async function runEngine() {
   menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
   // エンジンプロセスの起動
+  const enginePath = process.env.ENGINE_PATH ?? "run.exe";
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
-    process.env.ENGINE_PATH!,
+    enginePath,
     args,
-    { cwd: path.dirname(process.env.ENGINE_PATH!) },
+    { cwd: path.dirname(enginePath) },
     () => {
       if (!willQuitEngine) {
         dialog.showErrorBox(
@@ -233,7 +234,7 @@ async function createHelpWindow() {
   if (isDevelopment) child.webContents.openDevTools();
 }
 
-ipcMain.handle("GET_APP_INFOS", (event) => {
+ipcMain.handle("GET_APP_INFOS", () => {
   const name = app.getName();
   const version = app.getVersion();
   return {
@@ -243,19 +244,19 @@ ipcMain.handle("GET_APP_INFOS", (event) => {
 });
 
 // プロセス間通信
-ipcMain.handle("GET_TEMP_DIR", (event) => {
+ipcMain.handle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMain.handle("GET_CHARACTOR_INFOS", (event) => {
+ipcMain.handle("GET_CHARACTOR_INFOS", () => {
   return charactorInfos;
 });
 
-ipcMain.handle("GET_OSS_LICENSES", (event) => {
+ipcMain.handle("GET_OSS_LICENSES", () => {
   return ossLicenses;
 });
 
-ipcMain.handle("GET_UPDATE_INFOS", (event) => {
+ipcMain.handle("GET_UPDATE_INFOS", () => {
   return updateInfos;
 });
 
@@ -312,7 +313,7 @@ ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
   })?.[0];
 });
 
-ipcMain.handle("CREATE_HELP_WINDOW", (event) => {
+ipcMain.handle("CREATE_HELP_WINDOW", () => {
   createHelpWindow();
 });
 
@@ -345,7 +346,7 @@ app.on("window-all-closed", () => {
 app.on("quit", () => {
   willQuitEngine = true;
   try {
-    treeKill(engineProcess.pid!);
+    engineProcess.pid != undefined && treeKill(engineProcess.pid);
   } catch {
     console.error("engine kill error");
   }
