@@ -209,12 +209,12 @@ export default defineComponent({
     const canRedo = computed(() => store.getters[CAN_REDO]);
 
     // add hotkeys
-    Mousetrap.bind(["ctrl+s"], () => {
+    Mousetrap.bind(["ctrl+e"], () => {
       generateAndSaveAllAudio();
     });
 
     Mousetrap.bind(
-      ["+"],
+      ["enter"],
       () => {
         addAudioItem();
         return false;
