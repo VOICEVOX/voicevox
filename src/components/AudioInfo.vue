@@ -84,14 +84,16 @@ export default defineComponent({
       });
     };
 
+    type InfoType = "speed" | "pitch" | "into";
+
     const setAudioInfoByScroll = (
       query: AudioQuery,
       delta_y: number,
-      type: string
+      type: InfoType
     ) => {
       switch (type) {
         case "speed": {
-          let curSpeed = query.speedScale - delta_y / 1000;
+          let curSpeed = query.speedScale - (delta_y > 0 ? 0.1 : -0.1);
           curSpeed = Math.round(curSpeed * 1e2) / 1e2;
           if (2 >= curSpeed && curSpeed >= 0.5) {
             query.speedScale = curSpeed;
@@ -99,7 +101,7 @@ export default defineComponent({
           break;
         }
         case "pitch": {
-          let curPitch = query.pitchScale - delta_y / 10000;
+          let curPitch = query.pitchScale - (delta_y > 0 ? 0.01 : -0.01);
           curPitch = Math.round(curPitch * 1e2) / 1e2;
           if (0.15 >= curPitch && curPitch >= -0.15) {
             query.pitchScale = curPitch;
@@ -107,8 +109,8 @@ export default defineComponent({
           break;
         }
         case "into": {
-          let curInto = query.intonationScale - delta_y / 1000;
-          curInto = Math.round(curInto * 1e2) / 1e2;
+          let curInto = query.intonationScale - (delta_y > 0 ? 0.1 : -0.1);
+          curInto = Math.round(curInto * 1e1) / 1e1;
           if (2 >= curInto && curInto >= 0) {
             query.intonationScale = curInto;
           }

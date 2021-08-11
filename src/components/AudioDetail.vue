@@ -65,7 +65,7 @@
                         accentPhraseIndex,
                         accentPhrase.moras.length,
                         accentPhrase.accent,
-                        parseInt($event.deltaY / 100)
+                        $event.deltaY
                       )
                     "
                   />
@@ -150,7 +150,7 @@
                       accentPhraseIndex,
                       moraIndex,
                       mora.pitch,
-                      parseFloat($event.deltaY)
+                      $event.deltaY
                     )
                   "
                 />
@@ -294,7 +294,7 @@ export default defineComponent({
       accent: number,
       delta_y: number
     ) => {
-      let currentAccent = accent - delta_y;
+      let currentAccent = accent - (delta_y > 0 ? 1 : -1);
       if (
         !uiLocked.value &&
         !shiftKeyFlag &&
@@ -336,7 +336,8 @@ export default defineComponent({
       moraPitch: number,
       delta_y: number
     ) => {
-      let current_pitch = moraPitch - delta_y / 1000;
+      let current_pitch = moraPitch - (delta_y > 0 ? 0.1 : -0.1);
+      current_pitch = Math.round(current_pitch * 1e2) / 1e2;
       if (
         !uiLocked.value &&
         !shiftKeyFlag &&
