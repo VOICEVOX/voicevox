@@ -213,12 +213,9 @@ export default defineComponent({
       generateAndSaveAllAudio();
     });
 
-    Mousetrap.bind(
-      "shift+enter",
-      () => {
-        addAudioItem();
-      },
-    );
+    Mousetrap.bind("shift+enter", () => {
+      addAudioItem();
+    });
 
     const undo = () => {
       store.dispatch(UNDO);
