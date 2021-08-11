@@ -13,6 +13,7 @@ import {
   dialog,
   Menu,
   shell,
+  nativeTheme,
 } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
@@ -132,6 +133,7 @@ menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
 // create window
 async function createWindow() {
+  nativeTheme.themeSource = "light";
   win = new BrowserWindow({
     width: 800,
     height: 600,
