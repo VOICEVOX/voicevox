@@ -4,15 +4,9 @@
     v-on:mouseover="mouseOverAction"
     v-on:mouseleave="mouseLeaveAction"
   >
-    <q-btn flat class="q-pa-none charactor-button">
-      <q-img
-        :ratio="1"
-        :src="
-          selectedCharactorInfo
-            ? getCharactorIconUrl(selectedCharactorInfo)
-            : undefined
-        "
-      />
+    <q-btn flat class="q-pa-none charactor-button" :disable="uiLocked">
+      <!-- q-imgだとdisableのタイミングで点滅する -->
+      <img :src="charactorIconUrl" />
       <q-menu class="charactor-menu">
         <q-list>
           <q-item
@@ -57,6 +51,7 @@
           flat
           icon="delete_outline"
           size="0.8rem"
+          :disable="uiLocked"
           @click="removeCell"
         />
       </template>
@@ -124,6 +119,10 @@ export default defineComponent({
           value: charactorIndex,
         };
       })
+    );
+
+    const charactorIconUrl = computed(() =>
+      URL.createObjectURL(selectedCharactorInfo.value?.iconBlob)
     );
 
     // TODO: change audio textにしてvuexに載せ替える
@@ -270,6 +269,7 @@ export default defineComponent({
         URL.createObjectURL(charactorInfo.iconBlob)
     );
 
+    // ホバー
     const hoverFlag = ref(false);
 
     const mouseOverAction = () => {
@@ -296,6 +296,7 @@ export default defineComponent({
       nowGenerating,
       selectedCharactorInfo,
       selectorSpeakers,
+      charactorIconUrl,
       setAudioText,
       changeCharactorIndex,
       setActiveAudioKey,
@@ -335,7 +336,7 @@ export default defineComponent({
     border: solid 1px;
     border-color: global.$primary;
     font-size: 0;
-    .q-img {
+    img {
       width: 2rem;
       height: 2rem;
       object-fit: scale-down;

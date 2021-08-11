@@ -26,44 +26,6 @@
           @click="stopContinuously"
           >停止</q-btn
         >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="generateAndSaveAllAudio"
-          >書き出し</q-btn
-        >
-
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="importFromFile"
-          >読み込み</q-btn
-        >
-
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="saveProjectFile"
-          >プロジェクト保存</q-btn
-        >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="loadProjectFile"
-          >プロジェクト読込</q-btn
-        >
 
         <q-space />
 
