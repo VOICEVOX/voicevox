@@ -3,10 +3,12 @@
 ## 環境構築
 
 [.node-version](.node-version)に記載されているバージョンの Node.js をインストールしてください。
+またVOICEVOXでは依存ライブラリのバージョン管理に [yarn](https://classic.yarnpkg.com/lang/en/) を使用しています。
+yarnがインストールされていない場合は初めに[インストール手順](https://classic.yarnpkg.com/en/docs/install#windows-stable)を参考にyarnインストールしてください。
 インストール後、次のコマンドを実行してください。
 
 ```
-npm ci
+yarn install
 ```
 
 ## 実行
