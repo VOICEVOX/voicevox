@@ -101,6 +101,7 @@ export const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
 export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
+export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -617,6 +618,32 @@ export const audioStore = {
         }
       }
     },
+    [PUT_TEXTS]: createUILockAction(
+      async (
+        { dispatch },
+        {
+          texts,
+          charIdx,
+          prevAudioKey,
+        }: {
+          texts: string[];
+          charIdx: number | undefined;
+          prevAudioKey: string | undefined;
+        }
+      ) => {
+        const arrLen = texts.length;
+        charIdx == undefined ? 0 : charIdx;
+        for (let i = 0; i < arrLen; i++) {
+          if (texts[i] != "") {
+            const audioItem = { text: texts[i], charactorIndex: charIdx };
+            prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
+              audioItem: audioItem,
+              prevAudioKey: prevAudioKey,
+            });
+          }
+        }
+      }
+    ),
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
       window.electron.openTextEditContextMenu();
     },
