@@ -184,7 +184,7 @@ import {
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
-import { UI_LOCKED, CREATE_HELP_WINDOW, UPDATE_MENU } from "@/store/ui";
+import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
 import Mousetrap from "mousetrap";
 
 export default defineComponent({
@@ -354,15 +354,6 @@ export default defineComponent({
     const createHelpWindow = () => {
       store.dispatch(CREATE_HELP_WINDOW);
     };
-
-    const updateMenu = () => {
-      store.dispatch(UPDATE_MENU, {
-        uiLocked: uiLocked.value || !isEngineReady.value,
-      });
-    };
-    watch(uiLocked, updateMenu);
-    watch(isEngineReady, updateMenu);
-    updateMenu();
 
     return {
       audioItems,
