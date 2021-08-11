@@ -42,11 +42,13 @@
       :disable="uiLocked"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event)"
+      @paste="pasteOnAudioCell($event)"
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
+      @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
       <template #after v-if="hoverFlag && deleteButtonEnable">
@@ -78,6 +80,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  PUT_TEXTS,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
@@ -153,6 +156,31 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
     };
 
+    //長い文章をコピペしたときに句点（。）で自動区切りする
+    //https://github.com/Hiroshiba/voicevox/issues/25
+    const pasteOnAudioCell = async (evt: ClipboardEvent) => {
+      if (evt.clipboardData) {
+        //"。"と改行コードで区切り
+        let splittedStringArr = evt.clipboardData
+          .getData("text/plain")
+          .split(/[。\n\r]/);
+        //区切りがある場合、普段のPasteと別処理
+        if (splittedStringArr.length > 1) {
+          evt.preventDefault();
+          let prevAudioKey = props.audioKey;
+          //現在の欄が空欄の場合、最初の行だけ別処理
+          if (audioItem.value.text == "") {
+            setAudioText(splittedStringArr.shift()!);
+          }
+          store.dispatch(PUT_TEXTS, {
+            texts: splittedStringArr,
+            charIdx: audioItem.value.charactorIndex,
+            prevAudioKey: prevAudioKey,
+          });
+        }
+      }
+    };
+
     // 選択されている
     const isActive = computed(() => store.getters[IS_ACTIVE](props.audioKey));
 
@@ -221,6 +249,13 @@ export default defineComponent({
       moveDownCell();
     };
 
+    // blur cell on pressing escape key
+    const blurCell = () => {
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
+    };
+
     // フォーカス
     const textfield = ref<Component | any>();
     const focusTextField = () => {
@@ -274,9 +309,11 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      pasteOnAudioCell,
       onRightClickTextField,
       textfield,
       focusTextField,
+      blurCell,
       isOpenedCharactorList,
       getCharactorIconUrl,
       hoverFlag,

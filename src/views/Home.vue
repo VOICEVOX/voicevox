@@ -185,6 +185,7 @@ import {
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED, CREATE_HELP_WINDOW, UPDATE_MENU } from "@/store/ui";
+import Mousetrap from "mousetrap";
 
 export default defineComponent({
   name: "Home",
@@ -206,6 +207,15 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const canUndo = computed(() => store.getters[CAN_UNDO]);
     const canRedo = computed(() => store.getters[CAN_REDO]);
+
+    // add hotkeys
+    Mousetrap.bind(["ctrl+e"], () => {
+      generateAndSaveAllAudio();
+    });
+
+    Mousetrap.bind("shift+enter", () => {
+      addAudioItem();
+    });
 
     const undo = () => {
       store.dispatch(UNDO);

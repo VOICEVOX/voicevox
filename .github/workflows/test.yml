@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - id: node-version
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-verison)"
+        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
       - uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
