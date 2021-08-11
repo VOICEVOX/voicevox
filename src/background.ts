@@ -338,6 +338,10 @@ ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
+ipcMain.handle("UPDATE_MENU", (_, uiLocked) => {
+  menu.updateLockMenuItems(uiLocked);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
