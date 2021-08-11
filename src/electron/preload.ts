@@ -78,6 +78,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
+  updateMenu: (uiLocked: boolean) => {
+    ipcRenderer.invoke("UPDATE_MENU", uiLocked);
+  },
+
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRenderer.on(channel, (event, argv) => callback(event, argv));
   },

@@ -21,6 +21,7 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
+  updateMenu(uiLocked: boolean): void;
   onReceivedIPCMsg(
     channel: string,
     callback: (event: IpcRendererEvent, ...argv) => void
