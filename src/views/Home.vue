@@ -214,12 +214,10 @@ export default defineComponent({
     });
 
     Mousetrap.bind(
-      ["enter"],
+      "shift+enter",
       () => {
         addAudioItem();
-        return false;
       },
-      "keypress"
     );
 
     const undo = () => {
