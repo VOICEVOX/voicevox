@@ -30,7 +30,7 @@ jobs:
         uses: actions/cache@master
         with:
           path: ${{ env.ELECTRON_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
@@ -38,9 +38,9 @@ jobs:
         uses: actions/cache@master
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
-      - run: npm ci
+      - run: yarn install --frozen-lockfile
       - run: npm run lint
       - run: npm run electron:build_pnever
