@@ -47,6 +47,7 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
+      @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
       <template #after v-if="hoverFlag && deleteButtonEnable">
@@ -221,6 +222,13 @@ export default defineComponent({
       moveDownCell();
     };
 
+    // blur cell on pressing escape key
+    const blurCell = () => {
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
+    };
+
     // フォーカス
     const textfield = ref<Component | any>();
     const focusTextField = () => {
@@ -277,6 +285,7 @@ export default defineComponent({
       onRightClickTextField,
       textfield,
       focusTextField,
+      blurCell,
       isOpenedCharactorList,
       getCharactorIconUrl,
       hoverFlag,

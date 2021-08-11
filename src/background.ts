@@ -13,6 +13,7 @@ import {
   dialog,
   Menu,
   shell,
+  nativeTheme,
 } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
@@ -20,9 +21,29 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  LOAD_PROJECT_FILE,
+  SAVE_PROJECT_FILE,
+} from "./electron/ipc";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
+
+import si from "systeminformation";
+function detectNvidia(): Promise<boolean> {
+  return si
+    .graphics()
+    .then((data) =>
+      data.controllers.some(
+        (datum) =>
+          datum.vendor.toUpperCase().indexOf("NVIDIA") !== -1 &&
+          datum.vram >= 3072
+      )
+    )
+    .catch(() => false);
+}
 
 let win: BrowserWindow;
 
@@ -50,16 +71,27 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 function runEngine() {
   if (!store.has("useGpu")) {
-    const useGpu =
-      dialog.showMessageBoxSync(win, {
-        message: "エンジンをCPUモード・GPUモードどちらで起動しますか？",
-        detail:
-          "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。",
-        title: "エンジンの起動モード選択",
-        type: "question",
-        buttons: ["CPUモード", "GPUモード"],
-      }) == 1;
-    store.set("useGpu", useGpu);
+    detectNvidia().then((result: boolean): void => {
+      if (result) {
+        dialog.showMessageBoxSync(win, {
+          message: "「GPUモード」で起動します。",
+          detail:
+            "エンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
+          title: "GPUモードで起動します",
+          type: "info",
+        });
+        store.set("useGpu", true);
+      } else {
+        dialog.showMessageBoxSync(win, {
+          message: "「CPUモード」で起動します。",
+          detail:
+            "「GPUモード」はNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。\nエンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
+          title: "CPUモードで起動します",
+          type: "info",
+        });
+        store.set("useGpu", false);
+      }
+    });
   }
 
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
@@ -115,16 +147,48 @@ const updateInfos = JSON.parse(
 // initialize menu
 const menu = MenuBuilder()
   .configure(isDevelopment)
-  .setOnLaunchModeItemClicked((useGpu) => {
-    store.set("useGpu", useGpu);
+  .setOnLaunchModeItemClicked(async (useGpu) => {
+    let isChangeable = true;
 
-    dialog.showMessageBoxSync(win, {
-      message: "エンジンの起動モードを変更しました",
-      detail: "変更を適用するためにVOICEVOXを再起動してください。",
-    });
+    if (useGpu) {
+      const isAvaiableGPUMode = await detectNvidia();
+      if (!isAvaiableGPUMode) {
+        const response = dialog.showMessageBoxSync(win, {
+          message: "警告",
+          detail:
+            "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要ですがお使いのPCからは条件を満たすGPUが検出できませんでした。\n\nGPUモードに変更しますと起動時にエンジンエラーが発生する可能性があります。\n\nその際はエラーメッセージウィンドウを閉じて、メニューからCPUモードへの変更をしてVOICEVOXの再起動をしてください。\n\n以上の警告メッセージを了解した上で変更をしたい場合は「変更する」を止める場合は「変更しない」を押してください。",
+          title: "警告",
+          type: "warning",
+          buttons: ["変更しない", "変更する"],
+          cancelId: 0,
+        });
+
+        if (response !== 1) {
+          isChangeable = false;
+        }
+      }
+    }
+
+    if (isChangeable) {
+      store.set("useGpu", useGpu);
+      dialog.showMessageBoxSync(win, {
+        message: "エンジンの起動モードを変更しました",
+        detail: "変更を適用するためにVOICEVOXを再起動してください。",
+      });
+    }
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
   })
+  .setOnSaveAllAudioItemClicked(() =>
+    win.webContents.send(GENERATE_AND_SAVE_ALL_AUDIO)
+  )
+  .setOnImportFromFileItemClicked(() => win.webContents.send(IMPORT_FROM_FILE))
+  .setOnSaveProjectFileItemClicked(() =>
+    win.webContents.send(SAVE_PROJECT_FILE)
+  )
+  .setOnLoadProjectFileItemClicked(() =>
+    win.webContents.send(LOAD_PROJECT_FILE)
+  )
   .build();
 Menu.setApplicationMenu(menu.instance);
 
@@ -132,6 +196,7 @@ menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
 // create window
 async function createWindow() {
+  nativeTheme.themeSource = "light";
   win = new BrowserWindow({
     width: 800,
     height: 600,
