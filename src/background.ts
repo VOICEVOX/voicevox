@@ -21,6 +21,12 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  LOAD_PROJECT_FILE,
+  SAVE_PROJECT_FILE,
+} from "./electron/ipc";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -173,6 +179,16 @@ const menu = MenuBuilder()
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
   })
+  .setOnSaveAllAudioItemClicked(() =>
+    win.webContents.send(GENERATE_AND_SAVE_ALL_AUDIO)
+  )
+  .setOnImportFromFileItemClicked(() => win.webContents.send(IMPORT_FROM_FILE))
+  .setOnSaveProjectFileItemClicked(() =>
+    win.webContents.send(SAVE_PROJECT_FILE)
+  )
+  .setOnLoadProjectFileItemClicked(() =>
+    win.webContents.send(LOAD_PROJECT_FILE)
+  )
   .build();
 Menu.setApplicationMenu(menu.instance);
 
