@@ -19,12 +19,7 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
-      - uses: actions/cache@master
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: 'yarn'
       - name: Cache Electron
         uses: actions/cache@master
         with:
