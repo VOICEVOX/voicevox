@@ -48,6 +48,7 @@
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
       @keyup.escape.exact="blurCell"
+      @mouseup.right="onRightClickTextField"
     >
       <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
@@ -78,6 +79,7 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
@@ -205,6 +207,11 @@ export default defineComponent({
       removeCell();
     };
 
+    // テキスト編集エリアの右クリック
+    const onRightClickTextField = () => {
+      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
+    };
+
     // 下にセルを追加
     const addCellBellow = async () => {
       const audioItem: AudioItem = { text: "", charactorIndex: 0 };
@@ -275,6 +282,7 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      onRightClickTextField,
       textfield,
       focusTextField,
       blurCell,

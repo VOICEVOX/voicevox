@@ -1,5 +1,10 @@
-import { Menu, MenuItem } from "electron";
+import { Menu, MenuItem, MenuItemConstructorOptions } from "electron";
 
+const MENU_ROOT_ITEM_FILE_ID = "file";
+const MENU_SUBMENU_ITEM_SAVE_ALL_AUDIO_ID = "saveAllAudio";
+const MENU_SUBMENU_ITEM_IMPORT_FROM_FILE_ID = "importFromFile";
+const MENU_SUBMENU_ITEM_SAVE_PROJECT_FILE_ID = "saveProjectFile";
+const MENU_SUBMENU_ITEM_LOAD_PROJECT_FILE_ID = "loadProjectFile";
 const MENU_ROOT_ITEM_ENGINE_ID = "engine";
 const MENU_SUBMENU_ITEM_LAUNCHMODE_ID = "launchMode";
 const MENU_SUBMENU_CHILD_CPU_ID = "cpu";
@@ -34,16 +39,58 @@ const setActiveLaunchMode = (useGpu: boolean) => {
 const createMenu = () => {
   // 外部から設定するCallback
   let onLaunchModeItemClickedImpl: (useGpu: boolean) => void;
+  let onSaveAllAudioItemClickedImpl: () => void;
+  let onImportFromFileItemClickedImpl: () => void;
+  let onSaveProjectFileItemClickedImpl: () => void;
+  let onLoadProjectFileItemClickedImpl: () => void;
 
   // Callback Wrapper
   const onLaunchModeItemClicked = (item: MenuItem) => {
     const useGpu = item.id === MENU_SUBMENU_CHILD_GPU_ID;
     onLaunchModeItemClickedImpl?.(useGpu);
   };
+  const onSaveAllAudioItemClicked = () => {
+    onSaveAllAudioItemClickedImpl?.();
+  };
+  const onImportFromFileItemClicked = () => {
+    onImportFromFileItemClickedImpl?.();
+  };
+  const onSaveProjectFileItemClicked = () => {
+    onSaveProjectFileItemClickedImpl?.();
+  };
+  const onLoadProjectFileItemClicked = () => {
+    onLoadProjectFileItemClickedImpl?.();
+  };
 
   type ElectronMenuTemplate = Parameters<typeof Menu.buildFromTemplate>[0];
 
   const menuTemplate: ElectronMenuTemplate = [
+    {
+      id: MENU_ROOT_ITEM_FILE_ID,
+      label: "ファイル",
+      submenu: [
+        {
+          id: MENU_SUBMENU_ITEM_SAVE_ALL_AUDIO_ID,
+          label: "書き出し",
+          click: onSaveAllAudioItemClicked,
+        },
+        {
+          id: MENU_SUBMENU_ITEM_IMPORT_FROM_FILE_ID,
+          label: "読み込み",
+          click: onImportFromFileItemClicked,
+        },
+        {
+          id: MENU_SUBMENU_ITEM_SAVE_PROJECT_FILE_ID,
+          label: "プロジェクト保存",
+          click: onSaveProjectFileItemClicked,
+        },
+        {
+          id: MENU_SUBMENU_ITEM_LOAD_PROJECT_FILE_ID,
+          label: "プロジェクト読込",
+          click: onLoadProjectFileItemClicked,
+        },
+      ],
+    },
     {
       id: MENU_ROOT_ITEM_ENGINE_ID,
       label: "エンジン",
@@ -74,8 +121,16 @@ const createMenu = () => {
 
   return {
     menuInstance: menu,
-    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => void) =>
+    setOnLaunchModeItemClicked: (cb: (useGpu: boolean) => Promise<void>) =>
       (onLaunchModeItemClickedImpl = cb),
+    setOnSaveAllAudioItemClicked: (cb: () => void) =>
+      (onSaveAllAudioItemClickedImpl = cb),
+    setOnImportFromFileItemClicked: (cb: () => void) =>
+      (onImportFromFileItemClickedImpl = cb),
+    setOnSaveProjectFileItemClicked: (cb: () => void) =>
+      (onSaveProjectFileItemClickedImpl = cb),
+    setOnLoadProjectFileItemClicked: (cb: () => void) =>
+      (onLoadProjectFileItemClickedImpl = cb),
     setActiveLaunchMode,
   };
 };
@@ -87,8 +142,43 @@ class MenuBuilderImpl {
     this._menu = createMenu();
   }
 
+  configure(isDevelopment: boolean): MenuBuilderImpl {
+    if (isDevelopment) {
+      const defaultMenuItemOptions: MenuItemConstructorOptions[] = [
+        { role: "fileMenu" },
+        { role: "editMenu" },
+        { role: "viewMenu" },
+        { role: "windowMenu" },
+      ];
+      defaultMenuItemOptions.forEach((option) =>
+        this._menu.menuInstance.append(new MenuItem(option))
+      );
+    }
+    return this;
+  }
+
   setOnLaunchModeItemClicked(cb: (useGpu: boolean) => void): MenuBuilderImpl {
     this._menu.setOnLaunchModeItemClicked(cb);
+    return this;
+  }
+
+  setOnSaveAllAudioItemClicked(cb: () => void): MenuBuilderImpl {
+    this._menu.setOnSaveAllAudioItemClicked(cb);
+    return this;
+  }
+
+  setOnImportFromFileItemClicked(cb: () => void): MenuBuilderImpl {
+    this._menu.setOnImportFromFileItemClicked(cb);
+    return this;
+  }
+
+  setOnSaveProjectFileItemClicked(cb: () => void): MenuBuilderImpl {
+    this._menu.setOnSaveProjectFileItemClicked(cb);
+    return this;
+  }
+
+  setOnLoadProjectFileItemClicked(cb: () => void): MenuBuilderImpl {
+    this._menu.setOnLoadProjectFileItemClicked(cb);
     return this;
   }
 
