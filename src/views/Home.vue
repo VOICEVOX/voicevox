@@ -148,6 +148,7 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import { QResizeObserver } from "quasar";
 
 export default defineComponent({
   name: "Home",
@@ -243,7 +244,7 @@ export default defineComponent({
       audioCellRefs = {};
     });
 
-    const resizeObserverRef = ref<any>(undefined);
+    const resizeObserverRef = ref<QResizeObserver>();
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
@@ -268,7 +269,7 @@ export default defineComponent({
         audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         pageOnResize({
-          height: resizeObserverRef.value.$el.parentElement.clientHeight,
+          height: resizeObserverRef.value?.$el.parentElement.clientHeight,
         });
       } else {
         audioInfoPaneWidth.value = 0;

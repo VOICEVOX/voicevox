@@ -65,7 +65,7 @@
 </template>
 
 <script lang="ts">
-import { Component, computed, defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
   FETCH_ACCENT_PHRASES,
@@ -86,6 +86,7 @@ import {
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharactorInfo } from "@/type/preload";
+import { QInput } from "quasar";
 
 export default defineComponent({
   name: "AudioCell",
@@ -98,7 +99,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const charactorInfos = computed(() => store.state.charactorInfos!);
+    const charactorInfos = computed(() => store.state.charactorInfos);
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -113,17 +114,10 @@ export default defineComponent({
     );
 
     const selectedCharactorInfo = computed(() =>
-      audioItem.value.charactorIndex !== undefined
+      charactorInfos.value != undefined &&
+      audioItem.value.charactorIndex != undefined
         ? charactorInfos.value[audioItem.value.charactorIndex]
         : undefined
-    );
-    const selectorSpeakers = computed(() =>
-      charactorInfos.value.map((charactorInfo, charactorIndex) => {
-        return {
-          text: "JVS" + charactorInfo.metas.name,
-          value: charactorIndex,
-        };
-      })
     );
 
     const charactorIconUrl = computed(() =>
@@ -173,7 +167,9 @@ export default defineComponent({
 
           const prevAudioKey = props.audioKey;
           if (audioItem.value.text == "") {
-            setAudioText(texts.shift()!);
+            const text = texts.shift();
+            if (text == undefined) return;
+            setAudioText(text);
           }
 
           store.dispatch(PUT_TEXTS, {
@@ -252,9 +248,10 @@ export default defineComponent({
     };
 
     // フォーカス
-    const textfield = ref<Component | any>();
+    const textfield = ref<QInput>();
     const focusTextField = () => {
-      textfield.value!.focus();
+      if (textfield.value == undefined) return;
+      textfield.value.focus();
     };
 
     // キャラクター選択
@@ -291,7 +288,6 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       selectedCharactorInfo,
-      selectorSpeakers,
       charactorIconUrl,
       setAudioText,
       changeCharactorIndex,
