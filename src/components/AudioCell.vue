@@ -41,7 +41,7 @@
       :disable="uiLocked"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event)"
-      @paste="pasteOnAudioCell($event)"
+      @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
@@ -160,26 +160,26 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
     };
 
-    //長い文章をコピペしたときに句点（。）で自動区切りする
-    //https://github.com/Hiroshiba/voicevox/issues/25
-    const pasteOnAudioCell = async (evt: ClipboardEvent) => {
-      if (evt.clipboardData) {
-        //"。"と改行コードで区切り
-        let splittedStringArr = evt.clipboardData
+    // コピペしたときに句点と改行で区切る
+    const pasteOnAudioCell = async (event: ClipboardEvent) => {
+      if (event.clipboardData) {
+        const texts = event.clipboardData
           .getData("text/plain")
           .split(/[。\n\r]/);
-        //区切りがある場合、普段のPasteと別処理
-        if (splittedStringArr.length > 1) {
-          evt.preventDefault();
-          let prevAudioKey = props.audioKey;
-          //現在の欄が空欄の場合、最初の行だけ別処理
+
+        if (texts.length > 1) {
+          event.preventDefault();
+          blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
+
+          const prevAudioKey = props.audioKey;
           if (audioItem.value.text == "") {
-            setAudioText(splittedStringArr.shift()!);
+            setAudioText(texts.shift()!);
           }
+
           store.dispatch(PUT_TEXTS, {
-            texts: splittedStringArr,
-            charIdx: audioItem.value.charactorIndex,
-            prevAudioKey: prevAudioKey,
+            texts,
+            charactorIndex: audioItem.value.charactorIndex,
+            prevAudioKey,
           });
         }
       }
