@@ -20,7 +20,12 @@
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
-                <q-img :ratio="1" :src="getCharactorIconUrl(charactorInfo)" />
+                <q-img
+                  no-spinner
+                  no-transition
+                  :ratio="1"
+                  :src="getCharactorIconUrl(charactorInfo)"
+                />
               </q-avatar>
             </q-item-section>
             <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>

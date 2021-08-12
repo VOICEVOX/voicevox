@@ -11,7 +11,8 @@
         :max="2"
         :step="0.1"
         :disable="uiLocked"
-        v-model="query.speedScale"
+        :model-value="query.speedScale"
+        @update:model-value="setAudioSpeedScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
       />
     </div>
@@ -26,7 +27,8 @@
         :max="0.15"
         :step="0.01"
         :disable="uiLocked"
-        v-model="query.pitchScale"
+        :model-value="query.pitchScale"
+        @update:model-value="setAudioPitchScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
       />
     </div>
@@ -41,7 +43,8 @@
         :max="2"
         :step="0.01"
         :disable="uiLocked"
-        v-model="query.intonationScale"
+        :model-value="query.intonationScale"
+        @update:model-value="setAudioIntonationScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'into')"
       />
     </div>
@@ -84,43 +87,6 @@ export default defineComponent({
       });
     };
 
-    type InfoType = "speed" | "pitch" | "into";
-
-    const setAudioInfoByScroll = (
-      query: AudioQuery,
-      delta_y: number,
-      type: InfoType
-    ) => {
-      switch (type) {
-        case "speed": {
-          let curSpeed = query.speedScale - (delta_y > 0 ? 0.1 : -0.1);
-          curSpeed = Math.round(curSpeed * 1e2) / 1e2;
-          if (2 >= curSpeed && curSpeed >= 0.5) {
-            query.speedScale = curSpeed;
-          }
-          break;
-        }
-        case "pitch": {
-          let curPitch = query.pitchScale - (delta_y > 0 ? 0.01 : -0.01);
-          curPitch = Math.round(curPitch * 1e2) / 1e2;
-          if (0.15 >= curPitch && curPitch >= -0.15) {
-            query.pitchScale = curPitch;
-          }
-          break;
-        }
-        case "into": {
-          let curInto = query.intonationScale - (delta_y > 0 ? 0.1 : -0.1);
-          curInto = Math.round(curInto * 1e1) / 1e1;
-          if (2 >= curInto && curInto >= 0) {
-            query.intonationScale = curInto;
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    };
-
     const setAudioPitchScale = (pitchScale: number) => {
       store.dispatch(SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
@@ -133,6 +99,43 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         intonationScale,
       });
+    };
+
+    type InfoType = "speed" | "pitch" | "into";
+
+    const setAudioInfoByScroll = (
+      query: AudioQuery,
+      delta_y: number,
+      type: InfoType
+    ) => {
+      switch (type) {
+        case "speed": {
+          let curSpeed = query.speedScale - (delta_y > 0 ? 0.1 : -0.1);
+          curSpeed = Math.round(curSpeed * 1e2) / 1e2;
+          if (2 >= curSpeed && curSpeed >= 0.5) {
+            setAudioSpeedScale(curSpeed);
+          }
+          break;
+        }
+        case "pitch": {
+          let curPitch = query.pitchScale - (delta_y > 0 ? 0.01 : -0.01);
+          curPitch = Math.round(curPitch * 1e2) / 1e2;
+          if (0.15 >= curPitch && curPitch >= -0.15) {
+            setAudioPitchScale(curPitch);
+          }
+          break;
+        }
+        case "into": {
+          let curInto = query.intonationScale - (delta_y > 0 ? 0.1 : -0.1);
+          curInto = Math.round(curInto * 1e1) / 1e1;
+          if (2 >= curInto && curInto >= 0) {
+            setAudioIntonationScale(curInto);
+          }
+          break;
+        }
+        default:
+          break;
+      }
     };
 
     return {
