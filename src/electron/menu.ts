@@ -13,7 +13,15 @@ const MENU_SUBMENU_CHILD_GPU_ID = "gpu";
 type BuiltMenu = {
   instance: Menu;
   setActiveLaunchMode: (useGpu: boolean) => void;
+  updateLockMenuItems: (uiLocked: boolean) => void;
 };
+
+const lockableMenuIds = [
+  MENU_SUBMENU_ITEM_SAVE_ALL_AUDIO_ID,
+  MENU_SUBMENU_ITEM_IMPORT_FROM_FILE_ID,
+  MENU_SUBMENU_ITEM_SAVE_PROJECT_FILE_ID,
+  MENU_SUBMENU_ITEM_LOAD_PROJECT_FILE_ID,
+];
 
 const setActiveLaunchMode = (useGpu: boolean) => {
   const applicationMenu = Menu.getApplicationMenu();
@@ -33,6 +41,15 @@ const setActiveLaunchMode = (useGpu: boolean) => {
           launchModeItem.id === MENU_SUBMENU_CHILD_GPU_ID ? useGpu : !useGpu;
       });
     });
+  });
+};
+
+const updateLockMenuItems = (uiLocked: boolean) => {
+  const menu = Menu.getApplicationMenu();
+  if (!menu) return;
+  lockableMenuIds.forEach((id) => {
+    const menuItem = menu.getMenuItemById(id);
+    if (menuItem) menuItem.enabled = !uiLocked;
   });
 };
 
@@ -132,6 +149,7 @@ const createMenu = () => {
     setOnLoadProjectFileItemClicked: (cb: () => void) =>
       (onLoadProjectFileItemClickedImpl = cb),
     setActiveLaunchMode,
+    updateLockMenuItems,
   };
 };
 
@@ -186,6 +204,7 @@ class MenuBuilderImpl {
     return {
       instance: this._menu.menuInstance,
       setActiveLaunchMode: this._menu.setActiveLaunchMode,
+      updateLockMenuItems: this._menu.updateLockMenuItems,
     };
   }
 }
