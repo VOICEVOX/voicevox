@@ -95,11 +95,11 @@
                   </div>
                   <div class="add-button-wrapper">
                     <q-btn
-                      v-if="!uiLocked"
                       fab
                       icon="add"
                       color="primary"
                       text-color="secondary"
+                      :disable="uiLocked"
                       @click="addAudioItem"
                     ></q-btn>
                   </div>

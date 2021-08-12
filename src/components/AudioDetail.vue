@@ -59,6 +59,7 @@
                   <q-slider
                     v-if="accentPhrase.moras.length > 1"
                     snap
+                    dense
                     :min="1"
                     :max="accentPhrase.moras.length"
                     :step="1"
@@ -158,7 +159,8 @@
                       accentPhraseIndex,
                       moraIndex,
                       mora.pitch,
-                      $event.deltaY
+                      $event.deltaY,
+                      $event.ctrlKey
                     )
                   "
                 />
@@ -301,9 +303,9 @@ export default defineComponent({
       accentPhraseIndex: number,
       length: number,
       accent: number,
-      delta_y: number
+      deltaY: number
     ) => {
-      let currentAccent = accent - (delta_y > 0 ? 1 : -1);
+      let currentAccent = accent - (deltaY > 0 ? 1 : -1);
       if (
         !uiLocked.value &&
         !shiftKeyFlag &&
@@ -343,17 +345,14 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number,
       moraPitch: number,
-      delta_y: number
+      deltaY: number,
+      withDetailedStep: boolean
     ) => {
-      let current_pitch = moraPitch - (delta_y > 0 ? 0.1 : -0.1);
-      current_pitch = Math.round(current_pitch * 1e2) / 1e2;
-      if (
-        !uiLocked.value &&
-        !shiftKeyFlag &&
-        6.5 >= current_pitch &&
-        current_pitch >= 3
-      )
-        setAudioMoraPitch(accentPhraseIndex, moraIndex, current_pitch);
+      const step = withDetailedStep ? 0.01 : 0.1;
+      let pitch = moraPitch - (deltaY > 0 ? step : -step);
+      pitch = Math.round(pitch * 1e2) / 1e2;
+      if (!uiLocked.value && !shiftKeyFlag && 6.5 >= pitch && pitch >= 3)
+        setAudioMoraPitch(accentPhraseIndex, moraIndex, pitch);
     };
 
     const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {
@@ -552,6 +551,10 @@ export default defineComponent({
               height: 100%;
               min-width: 30px;
               max-width: 30px;
+              ::v-deep(.q-slider__track-container--v) {
+                margin-left: -1.5px;
+                width: 3px;
+              }
             }
           }
         }
