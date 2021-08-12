@@ -360,6 +360,9 @@ export default defineComponent({
       height: 2rem;
       padding-left: 5px;
     }
+    &.q-field--filled.q-field--highlighted .q-field__control:before {
+      background-color: #0001;
+    }
   }
 }
 
