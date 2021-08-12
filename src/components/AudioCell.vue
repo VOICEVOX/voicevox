@@ -1,8 +1,8 @@
 <template>
   <div
     class="audio-cell"
-    v-on:mouseover="mouseOverAction"
-    v-on:mouseleave="mouseLeaveAction"
+    @mouseover="mouseOverAction"
+    @mouseleave="mouseLeaveAction"
   >
     <q-btn flat class="q-pa-none charactor-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
@@ -43,7 +43,7 @@
       @change="willRemove || setAudioText($event)"
       @paste="pasteOnAudioCell($event)"
       @focus="setActiveAudioKey()"
-      @keydown.delete.exact="tryToRemoveCell"
+      @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
@@ -229,15 +229,6 @@ export default defineComponent({
       return 1 < audioKeys.value.length;
     });
 
-    // テキストが空白なら消去
-    const tryToRemoveCell = async (e: Event) => {
-      if (audioItem.value.text.length > 0) {
-        return;
-      }
-      e.preventDefault();
-      removeCell();
-    };
-
     // テキスト編集エリアの右クリック
     const onRightClickTextField = () => {
       store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
@@ -310,7 +301,6 @@ export default defineComponent({
       stop,
       willRemove,
       removeCell,
-      tryToRemoveCell,
       addCellBellow,
       isActive,
       moveUpCell,
