@@ -40,7 +40,11 @@
       hide-bottom-space
       class="full-width"
       :disable="uiLocked"
-      :error="audioItem.text.length > 79"
+      :rules="[
+        (val) =>
+          val.length < 80 ||
+          '文章が長いため正常に動作しない可能性があります。分割して出力することを推奨します。',
+      ]"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event)"
       @paste="pasteOnAudioCell"
@@ -52,10 +56,6 @@
       @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
-      <template v-slot:error>
-        文章が長いため正常に動作しない可能性があります。
-        分割して出力することを推奨します。
-      </template>
       <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
           round
