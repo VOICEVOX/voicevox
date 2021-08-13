@@ -539,9 +539,14 @@ export const audioStore = {
         title: "セリフ読み込み",
       });
       if (filePath) {
-        const body = new TextDecoder("utf-8").decode(
+        let body = new TextDecoder("utf-8").decode(
           await window.electron.readFile({ filePath })
         );
+        if (body.indexOf("\ufffd") > -1) {
+          body = new TextDecoder("shift-jis").decode(
+            await window.electron.readFile({ filePath })
+          );
+        }
         const audioItems = parseTextFile(body, state.charactorInfos);
         return Promise.all(
           audioItems.map((item) =>
@@ -623,19 +628,22 @@ export const audioStore = {
         { dispatch },
         {
           texts,
-          charIdx,
+          charactorIndex,
           prevAudioKey,
         }: {
           texts: string[];
-          charIdx: number | undefined;
+          charactorIndex: number | undefined;
           prevAudioKey: string | undefined;
         }
       ) => {
         const arrLen = texts.length;
-        charIdx == undefined ? 0 : charIdx;
+        charactorIndex == undefined ? 0 : charactorIndex;
         for (let i = 0; i < arrLen; i++) {
           if (texts[i] != "") {
-            const audioItem = { text: texts[i], charactorIndex: charIdx };
+            const audioItem = {
+              text: texts[i],
+              charactorIndex: charactorIndex,
+            };
             prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
               audioItem: audioItem,
               prevAudioKey: prevAudioKey,

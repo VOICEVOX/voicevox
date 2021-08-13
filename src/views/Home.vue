@@ -26,44 +26,6 @@
           @click="stopContinuously"
           >停止</q-btn
         >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="generateAndSaveAllAudio"
-          >書き出し</q-btn
-        >
-
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="importFromFile"
-          >読み込み</q-btn
-        >
-
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="saveProjectFile"
-          >プロジェクト保存</q-btn
-        >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="loadProjectFile"
-          >プロジェクト読込</q-btn
-        >
 
         <q-space />
 
@@ -133,11 +95,11 @@
                   </div>
                   <div class="add-button-wrapper">
                     <q-btn
-                      v-if="!uiLocked"
                       fab
                       icon="add"
                       color="primary"
                       text-color="secondary"
+                      :disable="uiLocked"
                       @click="addAudioItem"
                     ></q-btn>
                   </div>
@@ -186,6 +148,7 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import { QResizeObserver } from "quasar";
 
 export default defineComponent({
   name: "Home",
@@ -281,7 +244,7 @@ export default defineComponent({
       audioCellRefs = {};
     });
 
-    const resizeObserverRef = ref<any>(undefined);
+    const resizeObserverRef = ref<QResizeObserver>();
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
@@ -306,7 +269,7 @@ export default defineComponent({
         audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         pageOnResize({
-          height: resizeObserverRef.value.$el.parentElement.clientHeight,
+          height: resizeObserverRef.value?.$el.parentElement.clientHeight,
         });
       } else {
         audioInfoPaneWidth.value = 0;
