@@ -63,6 +63,11 @@ type IpcData = {
     args: [];
     return: void;
   };
+
+  UPDATE_MENU: {
+    args: [boolean];
+    return: void;
+  };
 };
 
 declare namespace Electron {

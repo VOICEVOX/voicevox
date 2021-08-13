@@ -5,6 +5,7 @@ export const UI_LOCKED = "UI_LOCKED";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
 export const CREATE_HELP_WINDOW = "CREATE_HELP_WINDOW";
+export const UPDATE_MENU = "UPDATE_MENU";
 
 export function createUILockAction<S, P>(
   action: (context: ActionContext<S, S>, payload: P) => Promise<any>
@@ -42,6 +43,9 @@ export const uiStore = {
     },
     [CREATE_HELP_WINDOW]() {
       window.electron.createHelpWindow();
+    },
+    [UPDATE_MENU](_, { uiLocked }: { uiLocked: boolean }) {
+      window.electron.updateMenu(uiLocked);
     },
   },
 } as StoreOptions<State>;
