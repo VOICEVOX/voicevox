@@ -534,9 +534,14 @@ export const audioStore = {
         title: "セリフ読み込み",
       });
       if (filePath) {
-        const body = new TextDecoder("utf-8").decode(
+        let body = new TextDecoder("utf-8").decode(
           await window.electron.readFile({ filePath })
         );
+        if (body.indexOf("\ufffd") > -1) {
+          body = new TextDecoder("shift-jis").decode(
+            await window.electron.readFile({ filePath })
+          );
+        }
         const audioItems = parseTextFile(body, state.charactorInfos);
         return Promise.all(
           audioItems.map((item) =>
