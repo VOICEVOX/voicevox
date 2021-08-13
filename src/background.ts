@@ -13,6 +13,7 @@ import {
   dialog,
   Menu,
   shell,
+  nativeTheme,
 } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
@@ -20,6 +21,12 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { MenuBuilder } from "./electron/menu";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  LOAD_PROJECT_FILE,
+  SAVE_PROJECT_FILE,
+} from "./electron/ipc";
 
 import fs from "fs";
 import { CharactorInfo } from "./type/preload";
@@ -172,6 +179,16 @@ const menu = MenuBuilder()
 
     menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
   })
+  .setOnSaveAllAudioItemClicked(() =>
+    win.webContents.send(GENERATE_AND_SAVE_ALL_AUDIO)
+  )
+  .setOnImportFromFileItemClicked(() => win.webContents.send(IMPORT_FROM_FILE))
+  .setOnSaveProjectFileItemClicked(() =>
+    win.webContents.send(SAVE_PROJECT_FILE)
+  )
+  .setOnLoadProjectFileItemClicked(() =>
+    win.webContents.send(LOAD_PROJECT_FILE)
+  )
   .build();
 Menu.setApplicationMenu(menu.instance);
 
@@ -179,6 +196,7 @@ menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
 // create window
 async function createWindow() {
+  nativeTheme.themeSource = "light";
   win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -318,6 +336,10 @@ ipcMain.handle("CREATE_HELP_WINDOW", (event) => {
 
 ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
+});
+
+ipcMain.handle("UPDATE_MENU", (_, uiLocked) => {
+  menu.updateLockMenuItems(uiLocked);
 });
 
 // app callback

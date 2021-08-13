@@ -68,6 +68,14 @@
                     @input="
                       changePreviewAccent(accentPhraseIndex, parseInt($event))
                     "
+                    @wheel="
+                      changeAccentByScroll(
+                        accentPhraseIndex,
+                        accentPhrase.moras.length,
+                        accentPhrase.accent,
+                        $event.deltaY
+                      )
+                    "
                   />
                 </div>
               </div>
@@ -145,6 +153,14 @@
                       parseFloat($event)
                     )
                   "
+                  @wheel="
+                    setAudioMoraPitchByScroll(
+                      accentPhraseIndex,
+                      moraIndex,
+                      mora.pitch,
+                      $event.deltaY
+                    )
+                  "
                 />
               </div>
             </div>
@@ -213,12 +229,43 @@ import {
   GENERATE_AND_SAVE_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
+import Mousetrap from "mousetrap";
 
 export default defineComponent({
   name: "AudioDetail",
 
   setup() {
     const store = useStore();
+
+    // add hotkeys with mousetrap
+    Mousetrap.bind("space", () => {
+      if (!nowPlaying.value && !nowGenerating.value) {
+        play();
+      } else {
+        stop();
+      }
+    });
+
+    Mousetrap.bind("1", () => {
+      selectedDetail.value = "accent";
+    });
+
+    Mousetrap.bind("2", () => {
+      selectedDetail.value = "intonation";
+    });
+
+    // detect shift key and set flag, preventing changes in intonation while scrolling around
+    let shiftKeyFlag = false;
+
+    function handleKeyPress(event: KeyboardEvent) {
+      if (event.key === "Shift") shiftKeyFlag = false;
+    }
+    window.addEventListener("keyup", handleKeyPress);
+
+    function setShiftKeyFlag(event: KeyboardEvent) {
+      if (event.shiftKey) shiftKeyFlag = true;
+    }
+    window.addEventListener("keydown", setShiftKeyFlag);
 
     // detail selector
     type DetailTypes = "accent" | "intonation";
@@ -250,6 +297,22 @@ export default defineComponent({
       });
     };
 
+    const changeAccentByScroll = (
+      accentPhraseIndex: number,
+      length: number,
+      accent: number,
+      delta_y: number
+    ) => {
+      let currentAccent = accent - (delta_y > 0 ? 1 : -1);
+      if (
+        !uiLocked.value &&
+        !shiftKeyFlag &&
+        length >= currentAccent &&
+        currentAccent >= 1
+      )
+        changeAccent(accentPhraseIndex, currentAccent);
+    };
+
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       moraIndex: number | null,
@@ -274,6 +337,23 @@ export default defineComponent({
         moraIndex,
         pitch,
       });
+    };
+
+    const setAudioMoraPitchByScroll = (
+      accentPhraseIndex: number,
+      moraIndex: number,
+      moraPitch: number,
+      delta_y: number
+    ) => {
+      let current_pitch = moraPitch - (delta_y > 0 ? 0.1 : -0.1);
+      current_pitch = Math.round(current_pitch * 1e2) / 1e2;
+      if (
+        !uiLocked.value &&
+        !shiftKeyFlag &&
+        6.5 >= current_pitch &&
+        current_pitch >= 3
+      )
+        setAudioMoraPitch(accentPhraseIndex, moraIndex, current_pitch);
     };
 
     const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {
@@ -320,8 +400,10 @@ export default defineComponent({
       previewAccent,
       previewAccentPhraseIndex,
       changeAccent,
+      changeAccentByScroll,
       toggleAccentPhraseSplit,
       setAudioMoraPitch,
+      setAudioMoraPitchByScroll,
       changePreviewAccent,
       play,
       stop,

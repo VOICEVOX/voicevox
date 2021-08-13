@@ -3,7 +3,7 @@
 ## 環境構築
 
 ```
-npm install
+npm ci
 ```
 
 ## 実行
