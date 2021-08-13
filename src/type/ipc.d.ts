@@ -64,9 +64,14 @@ type IpcData = {
     return: void;
   };
 
-  UPDATE_MENU: {
-    args: [boolean];
-    return: void;
+  USE_GPU: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
+  IS_AVAIABLE_GPU_MODE: {
+    args: [];
+    return: boolean;
   };
 };
 

@@ -78,12 +78,12 @@ const api: Sandbox = {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  updateMenu: (uiLocked: boolean) => {
-    ipcRenderer.invoke("UPDATE_MENU", uiLocked);
+  useGPU: (newValue) => {
+    return ipcRenderer.invoke("USE_GPU", { newValue });
   },
 
-  onReceivedIPCMsg: (channel, callback) => {
-    return ipcRenderer.on(channel, (event, argv) => callback(event, argv));
+  isAvailableGPUMode: () => {
+    return ipcRenderer.invoke("IS_AVAIABLE_GPU_MODE");
   },
 };
 

@@ -30,6 +30,7 @@ export const store = createStore<State>({
     nowPlayingContinuously: false,
     undoCommands: [],
     redoCommands: [],
+    useGPU: false,
   },
 
   getters: {
