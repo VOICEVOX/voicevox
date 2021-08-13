@@ -4,49 +4,63 @@
     v-on:mouseover="mouseOverAction"
     v-on:mouseleave="mouseLeaveAction"
   >
-    <mcw-menu-anchor>
-      <button class="charactor-button" @click="isOpenedCharactorList = true">
-        <img
-          :src="
-            selectedCharactorInfo
-              ? getCharactorIconUrl(selectedCharactorInfo)
-              : undefined
-          "
-        />
-      </button>
-      <mcw-menu
-        v-model="isOpenedCharactorList"
-        @select="({ index }) => changeCharactorIndex(index)"
-        single-selection
-        fixed
-      >
-        <mcw-list-item
-          v-for="(charactorInfo, index) in charactorInfos"
-          :key="index"
-          ><img :src="getCharactorIconUrl(charactorInfo)" /><span>{{
-            charactorInfo.metas.name
-          }}</span></mcw-list-item
-        >
-      </mcw-menu>
-    </mcw-menu-anchor>
-    <mcw-textfield
+    <q-btn flat class="q-pa-none charactor-button">
+      <q-img
+        :ratio="1"
+        :src="
+          selectedCharactorInfo
+            ? getCharactorIconUrl(selectedCharactorInfo)
+            : undefined
+        "
+      />
+      <q-menu class="charactor-menu">
+        <q-list>
+          <q-item
+            v-for="(charactorInfo, index) in charactorInfos"
+            :key="index"
+            clickable
+            v-close-popup
+            active-class="selected-charactor-item"
+            :active="index === selectedCharactorInfo.metas.speaker"
+            @click="changeCharactorIndex(index)"
+          >
+            <q-item-section avatar>
+              <q-avatar rounded size="2rem">
+                <q-img :ratio="1" :src="getCharactorIconUrl(charactorInfo)" />
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+          </q-item>
+        </q-list>
+      </q-menu>
+    </q-btn>
+    <q-input
       ref="textfield"
+      filled
+      class="full-width"
+      style="height: 32px"
+      :disable="uiLocked"
       v-model="audioItem.text"
-      @change="willRemove || setAudioText($event.target.value)"
+      @change="willRemove || setAudioText($event)"
+      @paste="pasteOnAudioCell($event)"
       @focus="setActiveAudioKey()"
       @keydown.delete.exact="tryToRemoveCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
-      :disabled="uiLocked"
-    />
-    <mcw-icon-button
-      v-show="hoverFlag"
-      @click="removeCell"
-      class="delete-button"
+      @keyup.escape.exact="blurCell"
+      @mouseup.right="onRightClickTextField"
     >
-      <mcw-material-icon icon="delete_outline" />
-    </mcw-icon-button>
+      <template #after v-if="hoverFlag && deleteButtonEnable">
+        <q-btn
+          round
+          flat
+          icon="delete_outline"
+          size="0.8rem"
+          @click="removeCell"
+        />
+      </template>
+    </q-input>
   </div>
 </template>
 
@@ -66,6 +80,8 @@ import {
   STOP_AUDIO,
   REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
+  PUT_TEXTS,
+  OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
@@ -140,6 +156,31 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
     };
 
+    //長い文章をコピペしたときに句点（。）で自動区切りする
+    //https://github.com/Hiroshiba/voicevox/issues/25
+    const pasteOnAudioCell = async (evt: ClipboardEvent) => {
+      if (evt.clipboardData) {
+        //"。"と改行コードで区切り
+        let splittedStringArr = evt.clipboardData
+          .getData("text/plain")
+          .split(/[。\n\r]/);
+        //区切りがある場合、普段のPasteと別処理
+        if (splittedStringArr.length > 1) {
+          evt.preventDefault();
+          let prevAudioKey = props.audioKey;
+          //現在の欄が空欄の場合、最初の行だけ別処理
+          if (audioItem.value.text == "") {
+            setAudioText(splittedStringArr.shift()!);
+          }
+          store.dispatch(PUT_TEXTS, {
+            texts: splittedStringArr,
+            charIdx: audioItem.value.charactorIndex,
+            prevAudioKey: prevAudioKey,
+          });
+        }
+      }
+    };
+
     // 選択されている
     const isActive = computed(() => store.getters[IS_ACTIVE](props.audioKey));
 
@@ -161,22 +202,28 @@ export default defineComponent({
     // 消去
     const willRemove = ref(false);
     const removeCell = async () => {
-      // フォーカスを外したりREMOVEしたりすると、
-      // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
-      // エラー防止のためにまずwillRemoveフラグを建てる
-      willRemove.value = true;
-
+      // 1つだけの時は削除せず
       if (audioKeys.value.length > 1) {
+        // フォーカスを外したりREMOVEしたりすると、
+        // テキストフィールドのchangeイベントが非同期に飛んでundefinedエラーになる
+        // エラー防止のためにまずwillRemoveフラグを建てる
+        willRemove.value = true;
+
         const index = audioKeys.value.indexOf(props.audioKey);
         if (index > 0) {
           emit("focusCell", { audioKey: audioKeys.value[index - 1] });
         } else {
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
-      }
 
-      store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+      }
     };
+
+    // 削除ボタンの有効／無効判定
+    const deleteButtonEnable = computed(() => {
+      return 1 < audioKeys.value.length;
+    });
 
     // テキストが空白なら消去
     const tryToRemoveCell = async (e: Event) => {
@@ -187,6 +234,11 @@ export default defineComponent({
       removeCell();
     };
 
+    // テキスト編集エリアの右クリック
+    const onRightClickTextField = () => {
+      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
+    };
+
     // 下にセルを追加
     const addCellBellow = async () => {
       const audioItem: AudioItem = { text: "", charactorIndex: 0 };
@@ -195,6 +247,13 @@ export default defineComponent({
         prevAudioKey: props.audioKey,
       });
       moveDownCell();
+    };
+
+    // blur cell on pressing escape key
+    const blurCell = () => {
+      if (document.activeElement instanceof HTMLInputElement) {
+        document.activeElement.blur();
+      }
     };
 
     // フォーカス
@@ -231,6 +290,7 @@ export default defineComponent({
     return {
       charactorInfos,
       audioItem,
+      deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
@@ -249,8 +309,11 @@ export default defineComponent({
       isActive,
       moveUpCell,
       moveDownCell,
+      pasteOnAudioCell,
+      onRightClickTextField,
       textfield,
       focusTextField,
+      blurCell,
       isOpenedCharactorList,
       getCharactorIconUrl,
       hoverFlag,
@@ -264,50 +327,42 @@ export default defineComponent({
 <style lang="scss">
 @use '@/styles' as global;
 
-@use "@material/icon-button/mixins" as icon-button;
-
 .audio-cell {
   display: flex;
   margin: 1rem 1rem;
   gap: 0px 1rem;
   .charactor-button {
-    border: solid 1.5px;
+    border: solid 1px;
     border-color: global.$primary;
-    padding: 0;
-    margin: 0;
-    background: none;
     font-size: 0;
-    line-height: 0;
-    overflow: visible;
-    cursor: pointer;
-    img {
+    .q-img {
       width: 2rem;
       height: 2rem;
       object-fit: scale-down;
     }
   }
-  .mdc-list-item__text {
-    height: 100%;
-    img {
-      height: 100%;
-    }
-  }
-  .textfield-container {
-    flex: auto;
-    label {
-      width: 100%;
-      height: 2rem !important;
-      background-color: transparent !important;
-      .mdc-line-ripple {
-        &::before,
-        &::after {
-          border-bottom-color: global.$primary !important;
-        }
+  .q-input {
+    .q-field__control {
+      height: 2rem;
+      background: none;
+      border-bottom: 1px solid global.$primary;
+      &::before {
+        border-bottom: none;
       }
     }
+    .q-field__after {
+      height: 2rem;
+      padding-left: 5px;
+    }
   }
-  .delete-button {
-    @include icon-button.density(-3); // -3は丁度いい高さになるマジックナンバー
+}
+
+.charactor-menu {
+  .q-item {
+    color: global.$secondary;
+  }
+  .selected-charactor-item {
+    background-color: rgba(global.$primary, 0.2);
   }
 }
 </style>

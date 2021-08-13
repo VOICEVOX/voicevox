@@ -31,7 +31,7 @@ function parseTextFile(
   if (!charactors.size) return [];
 
   const audioItems: AudioItem[] = [];
-  const seps = [",", "\n"];
+  const seps = [",", "\r\n", "\n"];
   let lastCharactorIndex = 0;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const charactorIndex = charactors.get(splittedText);
@@ -101,6 +101,8 @@ export const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
 export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
+export const PUT_TEXTS = "PUT_TEXTS";
+export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -491,11 +493,14 @@ export const audioStore = {
         { state, dispatch },
         { audioKey, filePath }: { audioKey: string; filePath?: string }
       ) => {
-        const blob: Blob = await dispatch(GENERATE_AUDIO, { audioKey });
+        const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
+          audioKey,
+        });
         filePath ??= await window.electron.showAudioSaveDialog({
           title: "Save",
           defaultPath: buildFileName(state, audioKey),
         });
+        const blob = await blobPromise;
         if (filePath) {
           window.electron.writeFile({
             filePath,
@@ -612,6 +617,35 @@ export const audioStore = {
           dispatch(STOP_AUDIO, { audioKey });
         }
       }
+    },
+    [PUT_TEXTS]: createUILockAction(
+      async (
+        { dispatch },
+        {
+          texts,
+          charIdx,
+          prevAudioKey,
+        }: {
+          texts: string[];
+          charIdx: number | undefined;
+          prevAudioKey: string | undefined;
+        }
+      ) => {
+        const arrLen = texts.length;
+        charIdx == undefined ? 0 : charIdx;
+        for (let i = 0; i < arrLen; i++) {
+          if (texts[i] != "") {
+            const audioItem = { text: texts[i], charactorIndex: charIdx };
+            prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
+              audioItem: audioItem,
+              prevAudioKey: prevAudioKey,
+            });
+          }
+        }
+      }
+    ),
+    [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
+      window.electron.openTextEditContextMenu();
     },
   },
 } as StoreOptions<State>;
