@@ -33,7 +33,7 @@ module.exports = {
           icon: "public/icon.png",
           target: [
             {
-              target: "nsis",
+              target: "nsis-web",
               arch: ["x64"],
             },
           ],
