@@ -1,5 +1,7 @@
 <template>
+  <q-separator v-if="menudata.type === 'separator'" />
   <q-item
+    v-else
     dense
     clickable
     v-ripple

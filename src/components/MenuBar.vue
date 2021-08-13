@@ -32,8 +32,10 @@ import MenuItem from "@/components/MenuItem.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
-  label: string;
+  label?: string;
 };
+
+export type MenuItemSeparator = MenuItemBase<"separator">;
 
 export type MenuItemRoot = MenuItemBase<"root"> & {
   subMenu: MenuItemData[];
@@ -48,7 +50,11 @@ export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
   onClick: () => void;
 };
 
-export type MenuItemData = MenuItemRoot | MenuItemButton | MenuItemCheckbox;
+export type MenuItemData =
+  | MenuItemSeparator
+  | MenuItemRoot
+  | MenuItemButton
+  | MenuItemCheckbox;
 
 export type MenuItemType = MenuItemData["type"];
 
@@ -133,6 +139,7 @@ export default defineComponent({
               store.dispatch(IMPORT_FROM_FILE, {});
             },
           },
+          { type: "separator" },
           {
             type: "button",
             label: "プロジェクト保存",
