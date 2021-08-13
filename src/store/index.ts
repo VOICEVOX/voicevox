@@ -201,7 +201,7 @@ const projectSchema = {
       type: "object",
       properties: {
         text: { type: "string" },
-        charactorIndex: { type: "number" },
+        characterIndex: { type: "number" },
         query: { $ref: "#/$defs/AudioQuery" },
       },
       required: ["text"],

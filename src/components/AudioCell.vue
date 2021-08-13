@@ -4,19 +4,19 @@
     @mouseover="mouseOverAction"
     @mouseleave="mouseLeaveAction"
   >
-    <q-btn flat class="q-pa-none charactor-button" :disable="uiLocked">
+    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img :src="charactorIconUrl" />
-      <q-menu class="charactor-menu">
+      <img :src="characterIconUrl" />
+      <q-menu class="character-menu">
         <q-list>
           <q-item
-            v-for="(charactorInfo, index) in charactorInfos"
+            v-for="(characterInfo, index) in characterInfos"
             :key="index"
             clickable
             v-close-popup
-            active-class="selected-charactor-item"
-            :active="index === selectedCharactorInfo.metas.speaker"
-            @click="changeCharactorIndex(index)"
+            active-class="selected-character-item"
+            :active="index === selectedCharacterInfo.metas.speaker"
+            @click="changeCharacterIndex(index)"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
@@ -24,11 +24,11 @@
                   no-spinner
                   no-transition
                   :ratio="1"
-                  :src="getCharactorIconUrl(charactorInfo)"
+                  :src="getCharacterIconUrl(characterInfo)"
                 />
               </q-avatar>
             </q-item-section>
-            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
           </q-item>
         </q-list>
       </q-menu>
@@ -74,7 +74,7 @@ import {
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
-  CHANGE_CHARACTOR_INDEX,
+  CHANGE_CHARACTER_INDEX,
   REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -85,7 +85,7 @@ import {
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
-import { CharactorInfo } from "@/type/preload";
+import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
 
 export default defineComponent({
@@ -99,7 +99,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const charactorInfos = computed(() => store.state.charactorInfos);
+    const characterInfos = computed(() => store.state.characterInfos);
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -113,15 +113,15 @@ export default defineComponent({
       store.getters[HAVE_AUDIO_QUERY](props.audioKey)
     );
 
-    const selectedCharactorInfo = computed(() =>
-      charactorInfos.value != undefined &&
-      audioItem.value.charactorIndex != undefined
-        ? charactorInfos.value[audioItem.value.charactorIndex]
+    const selectedCharacterInfo = computed(() =>
+      characterInfos.value != undefined &&
+      audioItem.value.characterIndex != undefined
+        ? characterInfos.value[audioItem.value.characterIndex]
         : undefined
     );
 
-    const charactorIconUrl = computed(() =>
-      URL.createObjectURL(selectedCharactorInfo.value?.iconBlob)
+    const characterIconUrl = computed(() =>
+      URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
     // TODO: change audio textにしてvuexに載せ替える
@@ -133,10 +133,10 @@ export default defineComponent({
         store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
       }
     };
-    const changeCharactorIndex = (charactorIndex: number) => {
-      store.dispatch(CHANGE_CHARACTOR_INDEX, {
+    const changeCharacterIndex = (characterIndex: number) => {
+      store.dispatch(CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
-        charactorIndex,
+        characterIndex,
       });
     };
     const setActiveAudioKey = () => {
@@ -174,7 +174,7 @@ export default defineComponent({
 
           store.dispatch(PUT_TEXTS, {
             texts,
-            charactorIndex: audioItem.value.charactorIndex,
+            characterIndex: audioItem.value.characterIndex,
             prevAudioKey,
           });
         }
@@ -232,7 +232,7 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const audioItem: AudioItem = { text: "", charactorIndex: 0 };
+      const audioItem: AudioItem = { text: "", characterIndex: 0 };
       await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
@@ -255,11 +255,11 @@ export default defineComponent({
     };
 
     // キャラクター選択
-    const isOpenedCharactorList = ref(false);
+    const isOpenedCharacterList = ref(false);
 
-    const getCharactorIconUrl = computed(
-      () => (charactorInfo: CharactorInfo) =>
-        URL.createObjectURL(charactorInfo.iconBlob)
+    const getCharacterIconUrl = computed(
+      () => (characterInfo: CharacterInfo) =>
+        URL.createObjectURL(characterInfo.iconBlob)
     );
 
     // ホバー
@@ -281,16 +281,16 @@ export default defineComponent({
     });
 
     return {
-      charactorInfos,
+      characterInfos,
       audioItem,
       deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
-      selectedCharactorInfo,
-      charactorIconUrl,
+      selectedCharacterInfo,
+      characterIconUrl,
       setAudioText,
-      changeCharactorIndex,
+      changeCharacterIndex,
       setActiveAudioKey,
       save,
       play,
@@ -306,8 +306,8 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
-      isOpenedCharactorList,
-      getCharactorIconUrl,
+      isOpenedCharacterList,
+      getCharacterIconUrl,
       hoverFlag,
       mouseOverAction,
       mouseLeaveAction,
@@ -323,7 +323,7 @@ export default defineComponent({
   display: flex;
   margin: 1rem 1rem;
   gap: 0px 1rem;
-  .charactor-button {
+  .character-button {
     border: solid 1px;
     border-color: global.$primary;
     font-size: 0;
@@ -352,11 +352,11 @@ export default defineComponent({
   }
 }
 
-.charactor-menu {
+.character-menu {
   .q-item {
     color: global.$secondary;
   }
-  .selected-charactor-item {
+  .selected-character-item {
     background-color: rgba(global.$primary, 0.2);
   }
 }
