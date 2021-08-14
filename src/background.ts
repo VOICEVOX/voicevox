@@ -38,7 +38,8 @@ let win: BrowserWindow;
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
-const envPath = path.join(path.dirname(app.getPath("exe")), ".env");
+const appDirPath = path.dirname(app.getPath("exe"));
+const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
 const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
@@ -77,7 +78,10 @@ async function runEngine() {
   menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
   // エンジンプロセスの起動
-  const enginePath = process.env.ENGINE_PATH ?? "run.exe";
+  const enginePath = path.resolve(
+    appDirPath,
+    process.env.ENGINE_PATH ?? "run.exe"
+  );
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
     enginePath,
