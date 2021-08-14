@@ -36,7 +36,8 @@ export default defineComponent({
     window.electron.onReceivedIPCMsg(IPC_GENERATE_AND_SAVE_ALL_AUDIO, () => store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {}));
     window.electron.onReceivedIPCMsg(IPC_IMPORT_FROM_FILE, () => store.dispatch(IMPORT_FROM_FILE, {}));
     window.electron.onReceivedIPCMsg(IPC_SAVE_PROJECT_FILE, () => store.dispatch(SAVE_PROJECT_FILE, {}));
-    window.electron.onReceivedIPCMsg(IPC_LOAD_PROJECT_FILE, () => store.dispatch(LOAD_PROJECT_FILE, {}));
+    window.electron.onReceivedIPCMsg(IPC_LOAD_PROJECT_FILE,
+      (event, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }
 });
 </script>

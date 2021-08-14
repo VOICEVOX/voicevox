@@ -38,7 +38,8 @@ let win: BrowserWindow;
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
-dotenv.config();
+const envPath = path.join(path.dirname(app.getPath("exe")), ".env");
+dotenv.config({ path: envPath });
 const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -203,6 +204,13 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.webContents.once("did-finish-load", () => {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      win.webContents.send(LOAD_PROJECT_FILE, { filePath, confirm: false });
+    }
+  });
 }
 
 // create help window
