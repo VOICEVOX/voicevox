@@ -22,15 +22,13 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const isEngineReady = computed(() => store.state.isEngineReady);
 
     const updateMenu = () => {
       store.dispatch(UPDATE_MENU, {
-        uiLocked: uiLocked.value || !isEngineReady.value,
+        uiLocked: uiLocked.value,
       });
     };
     watch(uiLocked, updateMenu);
-    watch(isEngineReady, updateMenu);
     updateMenu();
 
     window.electron.onReceivedIPCMsg(IPC_GENERATE_AND_SAVE_ALL_AUDIO, () => store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {}));
