@@ -258,7 +258,7 @@ ipcMain.handle("USE_GPU", (_, { newValue }) => {
   return store.get("useGpu", false) as boolean;
 });
 
-ipcMain.handle("IS_AVAIABLE_GPU_MODE", () => {
+ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 

@@ -69,7 +69,7 @@ type IpcData = {
     return: boolean;
   };
 
-  IS_AVAIABLE_GPU_MODE: {
+  IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;
   };

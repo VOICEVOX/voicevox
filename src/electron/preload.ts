@@ -83,7 +83,7 @@ const api: Sandbox = {
   },
 
   isAvailableGPUMode: () => {
-    return ipcRenderer.invoke("IS_AVAIABLE_GPU_MODE");
+    return ipcRenderer.invoke("IS_AVAILABLE_GPU_MODE");
   },
 };
 
