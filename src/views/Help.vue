@@ -62,7 +62,7 @@
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { LOAD_CHARACTOR } from "@/store/audio";
+import { LOAD_CHARACTER } from "@/store/audio";
 import { defineComponent, onMounted, ref } from "vue";
 
 export default defineComponent({
@@ -72,7 +72,7 @@ export default defineComponent({
     // 初期化
     onMounted(async () => {
       // TODO: 別ウィンドウなので再読み込みしないといけない。設計が良くないので直したい。
-      await store.dispatch(LOAD_CHARACTOR);
+      await store.dispatch(LOAD_CHARACTER);
     });
 
     const drawer = ref(true);

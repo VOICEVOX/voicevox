@@ -3,7 +3,7 @@ import { IpcRendererEvent } from "electron/main";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharactorInfos(): Promise<CharactorInfo[]>;
+  getCharacterInfos(): Promise<CharacterInfo[]>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<Record<string, any>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
@@ -33,7 +33,7 @@ export type AppInfos = {
   version: string;
 };
 
-export type CharactorInfo = {
+export type CharacterInfo = {
   dirPath: string;
   iconPath: string;
   iconBlob?: Blob;

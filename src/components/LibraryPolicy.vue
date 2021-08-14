@@ -8,12 +8,12 @@
           color="white"
           text-color="secondary"
           :disable="detailIndex === undefined"
-          @click="selectCharactorInfIndex(undefined)"
+          @click="selectCharacterInfIndex(undefined)"
         />
         <q-toolbar-title class="text-secondary">{{
           detailIndex === undefined
             ? "音声ライブラリの利用規約"
-            : charactorInfos[detailIndex].metas.name
+            : characterInfos[detailIndex].metas.name
         }}</q-toolbar-title>
       </q-toolbar>
     </q-header>
@@ -21,17 +21,17 @@
       <div class="q-pa-md">
         <q-list v-if="detailIndex === undefined">
           <q-item
-            v-for="(charactorInfo, index) in charactorInfos"
+            v-for="(characterInfo, index) in characterInfos"
             :key="index"
             clickable
-            @click="selectCharactorInfIndex(index)"
+            @click="selectCharacterInfIndex(index)"
           >
-            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
           </q-item>
         </q-list>
         <div v-else>
           <p
-            v-html="convertTextToHtml(charactorInfos[detailIndex].metas.policy)"
+            v-html="convertTextToHtml(characterInfos[detailIndex].metas.policy)"
           ></p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const charactorInfos = computed(() => store.state.charactorInfos);
+    const characterInfos = computed(() => store.state.characterInfos);
 
     const convertTextToHtml = (text: string) => {
       text = text.replaceAll("\n", "<br>");
@@ -60,15 +60,15 @@ export default defineComponent({
     const detailIndex = ref<number | undefined>(undefined);
 
     const scroller = ref<any>();
-    const selectCharactorInfIndex = (index: number | undefined) => {
+    const selectCharacterInfIndex = (index: number | undefined) => {
       scroller.value!.scrollTop = 0;
       detailIndex.value = index;
     };
 
     return {
-      charactorInfos,
+      characterInfos,
       convertTextToHtml,
-      selectCharactorInfIndex,
+      selectCharacterInfIndex,
       detailIndex,
       scroller,
     };
