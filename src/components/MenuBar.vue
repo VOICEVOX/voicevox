@@ -5,6 +5,7 @@
       :key="i"
       dense
       flat
+      no-caps
       class="no-border-radius"
       :disable="uiLocked"
     >
