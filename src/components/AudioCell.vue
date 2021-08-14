@@ -53,8 +53,8 @@
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
-        文章が長いため正常に動作しない可能性があります。
-        文章を分割することを推奨します。
+        文章が長いと正常に動作しない可能性があります。
+        句読点の位置で文章を分割してください。
       </template>
       <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
