@@ -38,7 +38,9 @@ let win: BrowserWindow;
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
-dotenv.config();
+const appDirPath = path.dirname(app.getPath("exe"));
+const envPath = path.join(appDirPath, ".env");
+dotenv.config({ path: envPath });
 const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -76,7 +78,10 @@ async function runEngine() {
   menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
   // エンジンプロセスの起動
-  const enginePath = process.env.ENGINE_PATH ?? "run.exe";
+  const enginePath = path.resolve(
+    appDirPath,
+    process.env.ENGINE_PATH ?? "run.exe"
+  );
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
     enginePath,
@@ -203,6 +208,13 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.webContents.once("did-finish-load", () => {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      win.webContents.send(LOAD_PROJECT_FILE, { filePath, confirm: false });
+    }
+  });
 }
 
 // create help window
