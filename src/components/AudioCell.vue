@@ -6,7 +6,7 @@
   >
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img :src="characterIconUrl" />
+      <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
       <q-menu class="character-menu">
         <q-list>
           <q-item
@@ -36,9 +36,11 @@
     <q-input
       ref="textfield"
       filled
+      dense
+      hide-bottom-space
       class="full-width"
-      style="height: 32px"
       :disable="uiLocked"
+      :error="audioItem.text.length >= 80"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event)"
       @paste="pasteOnAudioCell"
@@ -50,6 +52,10 @@
       @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
+      <template v-slot:error>
+        文章が長いと正常に動作しない可能性があります。
+        句読点の位置で文章を分割してください。
+      </template>
       <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
           round
@@ -327,6 +333,7 @@ export default defineComponent({
     border: solid 1px;
     border-color: global.$primary;
     font-size: 0;
+    height: fit-content;
     img {
       width: 2rem;
       height: 2rem;
