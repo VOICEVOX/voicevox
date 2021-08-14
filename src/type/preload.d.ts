@@ -1,6 +1,3 @@
-import { IpcRenderer } from "electron";
-import { IpcRendererEvent } from "electron/main";
-
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getCharactorInfos(): Promise<CharactorInfo[]>;
