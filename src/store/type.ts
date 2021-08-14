@@ -1,6 +1,6 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
-import { CharactorInfo } from "@/type/preload";
+import { CharacterInfo } from "@/type/preload";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -9,7 +9,7 @@ export interface ICommand<S> {
 
 export type State = {
   isEngineReady: boolean;
-  charactorInfos?: CharactorInfo[];
+  characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -24,7 +24,7 @@ export type State = {
 
 export type AudioItem = {
   text: string;
-  charactorIndex?: number;
+  characterIndex?: number;
   query?: AudioQuery;
 };
 

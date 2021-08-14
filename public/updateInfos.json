@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.3.1",
+    "descriptions": ["読点でエラーが出る問題を修正"],
+    "contributors": []
+  },
+  {
     "version": "0.3.0",
     "descriptions": [
       "プロジェクト保存機能",

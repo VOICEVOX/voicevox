@@ -9,9 +9,9 @@ type IpcData = {
     return: string;
   };
 
-  GET_CHARACTOR_INFOS: {
+  GET_CHARACTER_INFOS: {
     args: [];
-    return: import("@/type/preload").CharactorInfo[];
+    return: import("@/type/preload").CharacterInfo[];
   };
 
   GET_OSS_LICENSES: {
@@ -29,7 +29,7 @@ type IpcData = {
     return?: string;
   };
 
-  SHOW_OPEN_DIRECOTRY_DIALOG: {
+  SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
   };

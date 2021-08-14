@@ -11,8 +11,8 @@ const api: Sandbox = {
     return await ipcRenderer.invoke("GET_APP_INFOS");
   },
 
-  getCharactorInfos: async () => {
-    return await ipcRenderer.invoke("GET_CHARACTOR_INFOS");
+  getCharacterInfos: async () => {
+    return await ipcRenderer.invoke("GET_CHARACTER_INFOS");
   },
 
   getOssLicenses: async () => {
@@ -43,7 +43,7 @@ const api: Sandbox = {
   },
 
   showOpenDirectoryDialog: ({ title }) => {
-    return ipcRenderer.invoke("SHOW_OPEN_DIRECOTRY_DIALOG", { title });
+    return ipcRenderer.invoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
 
   showProjectSaveDialog: ({ title }) => {

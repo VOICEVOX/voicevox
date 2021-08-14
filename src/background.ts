@@ -30,7 +30,7 @@ import {
 import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
-import { CharactorInfo } from "./type/preload";
+import { CharacterInfo } from "./type/preload";
 
 let win: BrowserWindow;
 
@@ -101,10 +101,10 @@ if (!fs.existsSync(tempDir)) {
 
 // キャラクター情報の読み込み
 declare let __static: string;
-const charactorInfos = fs
-  .readdirSync(path.join(__static, "charactors"))
-  .map((dirRelPath): CharactorInfo => {
-    const dirPath = path.join(__static, "charactors", dirRelPath);
+const characterInfos = fs
+  .readdirSync(path.join(__static, "characters"))
+  .map((dirRelPath): CharacterInfo => {
+    const dirPath = path.join(__static, "characters", dirRelPath);
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
@@ -137,8 +137,8 @@ const menu = MenuBuilder()
     let isChangeable = true;
 
     if (useGpu) {
-      const isAvaiableGPUMode = await hasSupportedGpu();
-      if (!isAvaiableGPUMode) {
+      const isAvailableGPUMode = await hasSupportedGpu();
+      if (!isAvailableGPUMode) {
         const response = dialog.showMessageBoxSync(win, {
           message: "対応するGPUデバイスが見つかりません",
           detail:
@@ -248,8 +248,8 @@ ipcMain.handle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMain.handle("GET_CHARACTOR_INFOS", () => {
-  return charactorInfos;
+ipcMain.handle("GET_CHARACTER_INFOS", () => {
+  return characterInfos;
 });
 
 ipcMain.handle("GET_OSS_LICENSES", () => {
@@ -269,7 +269,7 @@ ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
   });
 });
 
-ipcMain.handle("SHOW_OPEN_DIRECOTRY_DIALOG", (event, { title }) => {
+ipcMain.handle("SHOW_OPEN_DIRECTORY_DIALOG", (event, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
