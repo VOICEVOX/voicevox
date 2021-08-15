@@ -140,7 +140,12 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
+import {
+  useStore,
+  SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE,
+  SHOW_WARNING_DIALOG,
+} from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
@@ -341,7 +346,7 @@ export default defineComponent({
           store.dispatch(LOAD_PROJECT_FILE, { filePath: file.path });
           break;
         default:
-          window.electron.showWarningDialog({
+          store.dispatch(SHOW_WARNING_DIALOG, {
             title: "警告",
             message: "対応していない拡張子です。",
           });
