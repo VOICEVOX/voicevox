@@ -5,6 +5,7 @@
       :key="i"
       v-model:selected="isMenuOpen[i]"
       :menudata="root"
+      :disable="uiLocked"
       @mouseover="menuBtnOnMouseOver(i)"
     />
   </q-bar>

@@ -1,5 +1,14 @@
 <template>
   <q-badge
+    v-if="disable"
+    transparent
+    color="transparent"
+    text-color="secondary"
+    class="full-height cursor-not-allowed no-border-radius menu-disable"
+    >{{ menudata.label }}</q-badge
+  >
+  <q-badge
+    v-else
     text-color="secondary"
     class="full-height cursor-pointer no-border-radius"
     :class="selected ? 'active-menu' : 'bg-transparent'"
@@ -40,6 +49,10 @@ export default defineComponent({
     selected: {
       type: Boolean,
       required: true,
+    },
+    disable: {
+      type: Boolean,
+      required: false,
     },
     menudata: {
       type: Object as PropType<MenuItemData>,
@@ -94,7 +107,7 @@ export default defineComponent({
 
 .q-badge {
   font-size: 0.8rem !important;
-  &:hover {
+  &:not(.menu-disable):hover {
     background-color: rgba(global.$primary, 0.3) !important;
   }
 }
