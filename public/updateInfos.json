@@ -1,5 +1,43 @@
 [
   {
+    "version": "0.3.1",
+    "descriptions": ["読点でエラーが出る問題を修正"],
+    "contributors": []
+  },
+  {
+    "version": "0.3.0",
+    "descriptions": [
+      "プロジェクト保存機能",
+      "エンジンの起動モードの変更",
+      "UIライブラリの変更",
+      "日本語が含まれるパスに対応",
+      "テキスト欄を１つ残す",
+      "右クリックでテキスト編集メニューを表示",
+      "音声の単一書き出し機能",
+      "対応するGPUの有無でデフォルトの起動モードを変更",
+      "テキスト貼り付け時に改行と句点で自動的に改行",
+      "スライダーをマウスホイールで操作",
+      "再生などのショートカットキーの追加",
+      "開発環境の向上"
+    ],
+    "contributors": [
+      "17number",
+      "aruneko",
+      "Hiroshiba",
+      "isnot",
+      "kaji-hiro",
+      "k-kuroguro",
+      "madosuki",
+      "mkgask",
+      "MT224244",
+      "oov",
+      "Patchethium",
+      "scarletdango1204",
+      "sousuke0422",
+      "yamachu"
+    ]
+  },
+  {
     "version": "0.2.0",
     "descriptions": [
       "ヘルプ画面を微修正",
@@ -11,6 +49,7 @@
       "音声合成エンジンのHOST引数追加"
     ],
     "contributors": [
+      "Hiroshiba",
       "k-kuroguro",
       "masarakki",
       "MT224244 ",

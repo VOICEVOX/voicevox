@@ -2,8 +2,11 @@
 
 ## 環境構築
 
+[.node-version](.node-version)に記載されているバージョンの Node.js をインストールしてください。
+インストール後、次のコマンドを実行してください。
+
 ```
-npm install
+npm ci
 ```
 
 ## 実行

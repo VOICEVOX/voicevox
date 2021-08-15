@@ -9,6 +9,13 @@ module.exports = {
     electronBuilder: {
       preload: "src/electron/preload.ts",
       builderOptions: {
+        fileAssociations: [
+          {
+            ext: "vvproj",
+            name: "VOICEVOX Project file",
+            role: "Editor",
+          },
+        ],
         extraFiles: [
           { from: ".env.production", to: ".env" },
           {
