@@ -1,4 +1,7 @@
-type IpcData = {
+/**
+ * invoke, handle
+ */
+type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
     return: import("@/type/preload").AppInfos;
@@ -9,9 +12,9 @@ type IpcData = {
     return: string;
   };
 
-  GET_CHARACTOR_INFOS: {
+  GET_CHARACTER_INFOS: {
     args: [];
-    return: import("@/type/preload").CharactorInfo[];
+    return: import("@/type/preload").CharacterInfo[];
   };
 
   GET_OSS_LICENSES: {
@@ -29,7 +32,7 @@ type IpcData = {
     return?: string;
   };
 
-  SHOW_OPEN_DIRECOTRY_DIALOG: {
+  SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
   };
@@ -75,21 +78,46 @@ type IpcData = {
   };
 };
 
+/**
+ * send, on
+ */
+type IpcSOData = {
+  LOAD_PROJECT_FILE: {
+    args: [obj: { filePath?: string; confirm?: boolean }];
+    return: void;
+  };
+};
+
 declare namespace Electron {
   interface IpcMain {
-    handle<T extends keyof IpcData>(
+    handle<T extends keyof IpcIHData>(
       channel: T,
       listener: (
         event: IpcMainInvokeEvent,
-        ...args: IpcData[T]["args"]
-      ) => IpcData[T]["return"] | Promise<IpcData[T]["return"]>
+        ...args: IpcIHData[T]["args"]
+      ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>
     ): void;
   }
 
   interface IpcRenderer {
-    invoke<T extends keyof IpcData>(
+    invoke<T extends keyof IpcIHData>(
       channel: T,
-      ...args: IpcData[T]["args"]
-    ): Promise<IpcData[T]["return"]>;
+      ...args: IpcIHData[T]["args"]
+    ): Promise<IpcIHData[T]["return"]>;
+
+    on<T extends keyof IpcSOData>(
+      channel: T,
+      listener: (
+        event: import("electron").IpcRendererEvent,
+        ...args: IpcSOData[T]
+      ) => void
+    ): this;
+  }
+
+  interface WebContents {
+    send<T extends keyof IpcSOData>(
+      channel: T,
+      ...args: IpcSOData[T]["args"]
+    ): void;
   }
 }

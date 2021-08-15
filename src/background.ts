@@ -14,7 +14,7 @@ import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
-import { CharactorInfo } from "./type/preload";
+import { CharacterInfo } from "./type/preload";
 
 let win: BrowserWindow;
 
@@ -22,7 +22,9 @@ let win: BrowserWindow;
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
-dotenv.config();
+const appDirPath = path.dirname(app.getPath("exe"));
+const envPath = path.join(appDirPath, ".env");
+dotenv.config({ path: envPath });
 const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -58,7 +60,10 @@ async function runEngine() {
   }
 
   // エンジンプロセスの起動
-  const enginePath = process.env.ENGINE_PATH ?? "run.exe";
+  const enginePath = path.resolve(
+    appDirPath,
+    process.env.ENGINE_PATH ?? "run.exe"
+  );
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
     enginePath,
@@ -83,10 +88,10 @@ if (!fs.existsSync(tempDir)) {
 
 // キャラクター情報の読み込み
 declare let __static: string;
-const charactorInfos = fs
-  .readdirSync(path.join(__static, "charactors"))
-  .map((dirRelPath): CharactorInfo => {
-    const dirPath = path.join(__static, "charactors", dirRelPath);
+const characterInfos = fs
+  .readdirSync(path.join(__static, "characters"))
+  .map((dirRelPath): CharacterInfo => {
+    const dirPath = path.join(__static, "characters", dirRelPath);
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
@@ -133,6 +138,13 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.webContents.once("did-finish-load", () => {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      win.webContents.send("LOAD_PROJECT_FILE", { filePath, confirm: false });
+    }
+  });
 }
 
 // create help window
@@ -177,8 +189,8 @@ ipcMain.handle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMain.handle("GET_CHARACTOR_INFOS", () => {
-  return charactorInfos;
+ipcMain.handle("GET_CHARACTER_INFOS", () => {
+  return characterInfos;
 });
 
 ipcMain.handle("GET_OSS_LICENSES", () => {
@@ -198,7 +210,7 @@ ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
   });
 });
 
-ipcMain.handle("SHOW_OPEN_DIRECOTRY_DIALOG", (event, { title }) => {
+ipcMain.handle("SHOW_OPEN_DIRECTORY_DIALOG", (event, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     properties: ["openDirectory", "createDirectory"],

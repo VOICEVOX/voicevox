@@ -1,6 +1,8 @@
+import { IpcRenderer, IpcRendererEvent } from "electron";
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharactorInfos(): Promise<CharactorInfo[]>;
+  getCharacterInfos(): Promise<CharacterInfo[]>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<Record<string, any>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
@@ -20,6 +22,10 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGPU(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
+  onReceivedIPCMsg: <T extends keyof IpcSOData>(
+    channel: T,
+    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]) => void
+  ) => IpcRenderer;
 }
 
 export type AppInfos = {
@@ -27,7 +33,7 @@ export type AppInfos = {
   version: string;
 };
 
-export type CharactorInfo = {
+export type CharacterInfo = {
   dirPath: string;
   iconPath: string;
   iconBlob?: Blob;

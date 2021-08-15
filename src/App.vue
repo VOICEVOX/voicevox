@@ -4,7 +4,7 @@
 
 <script type="ts">
 import { defineComponent } from "vue";
-import { useStore } from "@/store";
+import { useStore, LOAD_PROJECT_FILE } from "@/store";
 import { USE_GPU } from "@/store/ui";
 
 export default defineComponent({
@@ -16,6 +16,8 @@ export default defineComponent({
     window.electron.useGPU().then(useGPU => {
       store.dispatch(USE_GPU, { useGPU });
     });
+    window.electron.onReceivedIPCMsg("LOAD_PROJECT_FILE",
+      (_, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }
 });
 </script>
