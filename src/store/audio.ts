@@ -534,11 +534,14 @@ export const audioStore = {
         }
       }
     ),
-    [IMPORT_FROM_FILE]: createUILockAction(async ({ state, dispatch }) => {
-      const filePath = await window.electron.showImportFileDialog({
-        title: "セリフ読み込み",
-      });
-      if (filePath) {
+    [IMPORT_FROM_FILE]: createUILockAction(
+      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
+        if (!filePath) {
+          filePath = await window.electron.showImportFileDialog({
+            title: "セリフ読み込み",
+          });
+          if (!filePath) return;
+        }
         let body = new TextDecoder("utf-8").decode(
           await window.electron.readFile({ filePath })
         );
@@ -554,7 +557,7 @@ export const audioStore = {
           )
         );
       }
-    }),
+    ),
     [PLAY_AUDIO]: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];

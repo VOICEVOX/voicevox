@@ -317,6 +317,14 @@ ipcMain.handle("SHOW_CONFIRM_DIALOG", (event, { title, message }) => {
     });
 });
 
+ipcMain.handle("SHOW_WARNING_DIALOG", (event, { title, message }) => {
+  return dialog.showMessageBox(win, {
+    type: "warning",
+    title: title,
+    message: message,
+  });
+});
+
 ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,

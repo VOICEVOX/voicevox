@@ -59,6 +59,11 @@ type IpcData = {
     return: boolean;
   };
 
+  SHOW_WARNING_DIALOG: {
+    args: [obj: { title: string; message: string }];
+    return: void;
+  };
+
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     args: [];
     return: void;

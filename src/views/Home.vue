@@ -83,7 +83,17 @@
               v-model="audioInfoPaneWidth"
             >
               <template #before>
-                <div id="audio-cell-pane">
+                <div
+                  id="audio-cell-pane"
+                  @dragenter="dragEventCounter++"
+                  @dragleave="dragEventCounter--"
+                  @dragover.prevent
+                  @drop.prevent="
+                    dragEventCounter = 0;
+                    loadDraggedFile($event);
+                  "
+                  :class="{ isDragging: dragEventCounter > 0 }"
+                >
                   <div class="audio-cells">
                     <audio-cell
                       v-for="audioKey in audioKeys"
@@ -149,6 +159,7 @@ import {
 import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
+import path from "path";
 
 export default defineComponent({
   name: "Home",
@@ -318,6 +329,25 @@ export default defineComponent({
       store.dispatch(CREATE_HELP_WINDOW);
     };
 
+    const dragEventCounter = ref(0);
+    const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
+      if (!event || event.dataTransfer.files.length === 0) return;
+      const file = event.dataTransfer.files[0];
+      switch (path.extname(file.name)) {
+        case ".txt":
+          store.dispatch(IMPORT_FROM_FILE, { filePath: file.path });
+          break;
+        case ".vvproj":
+          store.dispatch(LOAD_PROJECT_FILE, { filePath: file.path });
+          break;
+        default:
+          window.electron.showWarningDialog({
+            title: "警告",
+            message: "対応していない拡張子です。",
+          });
+      }
+    };
+
     return {
       audioItems,
       audioKeys,
@@ -347,6 +377,8 @@ export default defineComponent({
       audioDetailPaneMaxHeight,
       isEngineReady,
       createHelpWindow,
+      dragEventCounter,
+      loadDraggedFile,
     };
   },
 });
@@ -403,6 +435,10 @@ body {
 
   position: relative;
   height: 100%;
+
+  &.isDragging {
+    background-color: #0002;
+  }
 
   .audio-cells {
     overflow-x: hidden;

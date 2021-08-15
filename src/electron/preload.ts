@@ -58,6 +58,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("SHOW_CONFIRM_DIALOG", { title, message });
   },
 
+  showWarningDialog: ({ title, message }) => {
+    return ipcRenderer.invoke("SHOW_WARNING_DIALOG", { title, message });
+  },
+
   showImportFileDialog: ({ title }) => {
     return ipcRenderer.invoke("SHOW_IMPORT_FILE_DIALOG", { title });
   },
