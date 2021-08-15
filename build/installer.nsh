@@ -1,6 +1,6 @@
 !macro customInit
     ; define download url
-    !define DOWNLOAD_URL "https://github.com/HyodaKazuaki/voicevox/releases/download/${VERSION}"
+    !define DOWNLOAD_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
 
     ; download files
     download:
