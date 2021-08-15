@@ -4,7 +4,8 @@
 
 <script type="ts">
 import { computed, defineComponent, watch } from "vue";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
+import { useStore } from "@/store";
+import {  SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project"
 import { UI_LOCKED, UPDATE_MENU } from "@/store/ui";
 import {
   GENERATE_AND_SAVE_ALL_AUDIO,

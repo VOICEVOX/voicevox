@@ -130,12 +130,13 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
+import { useStore } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
+import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
 import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
