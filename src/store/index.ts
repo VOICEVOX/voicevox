@@ -214,7 +214,7 @@ const projectSchema = {
         characterIndex: { type: "number" },
         query: { $ref: "#/$defs/AudioQuery" },
       },
-      required: ["text"],
+      required: ["text", "characterIndex"],
     },
   },
 };
