@@ -1,25 +1,12 @@
 <template>
   <q-bar class="bg-white q-pa-none">
-    <q-btn
+    <menu-button
       v-for="(root, i) of menudata"
       :key="i"
-      dense
-      flat
-      no-caps
-      class="no-border-radius"
-      :disable="uiLocked"
-    >
-      {{ root.label }}
-      <q-menu v-if="root.subMenu">
-        <q-list dense>
-          <menu-item
-            v-for="(menu, i) of root.subMenu"
-            :key="i"
-            :menudata="menu"
-          ></menu-item>
-        </q-list>
-      </q-menu>
-    </q-btn>
+      v-model:selected="isMenuOpen[i]"
+      :menudata="root"
+      @mouseover="menuBtnOnMouseOver(i)"
+    />
   </q-bar>
 </template>
 
@@ -29,7 +16,7 @@ import { useQuasar } from "quasar";
 import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import { UI_LOCKED, USE_GPU } from "@/store/ui";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
-import MenuItem from "@/components/MenuItem.vue";
+import MenuButton from "@/components/MenuButton.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -63,7 +50,7 @@ export default defineComponent({
   name: "MenuBar",
 
   components: {
-    MenuItem,
+    MenuButton,
   },
 
   setup() {
@@ -83,7 +70,6 @@ export default defineComponent({
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
           message: "変更を適用するためにVOICEVOXを再起動してください。",
-          persistent: true,
           ok: {
             flat: true,
             textColor: "secondary",
@@ -183,10 +169,40 @@ export default defineComponent({
       },
     ]);
 
+    const isMenuOpen = ref([...Array(menudata.value.length)].map(() => false));
+
+    const menuBtnOnMouseOver = (i: number) => {
+      if (isMenuOpen.value[i]) return;
+      if (isMenuOpen.value.find((x) => x)) {
+        const arr = [...Array(menudata.value.length)].map(() => false);
+        arr[i] = true;
+        isMenuOpen.value = arr;
+      }
+    };
+
     return {
       uiLocked,
+      isMenuOpen,
+      menuBtnOnMouseOver,
       menudata,
     };
   },
 });
 </script>
+
+<style lang="scss">
+@use '@/styles' as global;
+
+.active-menu {
+  background-color: rgba(global.$primary, 0.3) !important;
+}
+</style>
+
+<style lang="scss" scoped>
+.q-bar {
+  min-height: 24px;
+  > .q-badge {
+    margin-left: 0;
+  }
+}
+</style>

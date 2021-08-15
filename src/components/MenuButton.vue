@@ -1,59 +1,45 @@
 <template>
-  <q-separator v-if="menudata.type === 'separator'" />
-  <q-item
-    v-else-if="menudata.type === 'root'"
-    dense
-    :class="selected && 'active-menu'"
+  <q-badge
+    text-color="secondary"
+    class="full-height cursor-pointer no-border-radius"
+    :class="selected ? 'active-menu' : 'bg-transparent'"
   >
-    <q-item-section>{{ menudata.label }}</q-item-section>
-
-    <q-item-section side>
-      <q-icon name="keyboard_arrow_right" />
-    </q-item-section>
-
+    {{ menudata.label }}
     <q-menu
-      anchor="top end"
+      v-if="menudata.subMenu"
       transition-show="none"
       transition-hide="none"
       v-model="selectedComputed"
     >
-      <menu-item
-        v-for="(menu, i) of menudata.subMenu"
-        :key="i"
-        v-model:selected="isMenuOpen[i]"
-        :menudata="menu"
-        @mouseover="onMouseOver(i)"
-      />
+      <q-list dense>
+        <menu-item
+          v-for="(menu, i) of menudata.subMenu"
+          :key="i"
+          v-model:selected="isMenuOpen[i]"
+          :menudata="menu"
+          @mouseover="menuBtnOnMouseOver(i)"
+        />
+      </q-list>
     </q-menu>
-  </q-item>
-  <q-item
-    v-else
-    dense
-    clickable
-    v-ripple
-    v-close-popup
-    @click="menudata.onClick"
-  >
-    <q-item-section v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
-      <q-icon v-if="menudata.checked" name="check" />
-      <q-icon v-else />
-    </q-item-section>
-
-    <q-item-section>{{ menudata.label }}</q-item-section>
-  </q-item>
+  </q-badge>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, PropType, computed, watch } from "vue";
-import type { MenuItemData } from "@/components/MenuBar.vue";
+import { defineComponent, computed, ref, PropType, watch } from "vue";
+import MenuItem from "@/components/MenuItem.vue";
+import { MenuItemData } from "@/components/MenuBar.vue";
 
 export default defineComponent({
-  name: "MenuItem",
+  name: "MenuButton",
+
+  components: {
+    MenuItem,
+  },
 
   props: {
     selected: {
       type: Boolean,
-      required: false,
+      required: true,
     },
     menudata: {
       type: Object as PropType<MenuItemData>,
@@ -72,7 +58,7 @@ export default defineComponent({
         [...Array(props.menudata.subMenu.length)].map(() => false)
       );
 
-      const onMouseOver = (i: number) => {
+      const menuBtnOnMouseOver = (i: number) => {
         if (isMenuOpen.value[i]) return;
         if (props.menudata.type !== "root") return;
 
@@ -96,9 +82,20 @@ export default defineComponent({
       return {
         selectedComputed,
         isMenuOpen,
-        onMouseOver,
+        menuBtnOnMouseOver,
       };
     }
   },
 });
 </script>
+
+<style lang="scss" scoped>
+@use '@/styles' as global;
+
+.q-badge {
+  font-size: 0.8rem !important;
+  &:hover {
+    background-color: rgba(global.$primary, 0.3) !important;
+  }
+}
+</style>
