@@ -1,4 +1,5 @@
 <template>
+  <menu-bar />
   <div v-if="!isEngineReady" class="waiting-engine">
     <div>
       <q-spinner color="primary" size="2.5rem" />
@@ -134,6 +135,7 @@ import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
+import MenuBar from "@/components/MenuBar.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
 import {
@@ -154,6 +156,7 @@ export default defineComponent({
   name: "Home",
 
   components: {
+    MenuBar,
     AudioCell,
     AudioDetail,
     AudioInfo,
@@ -367,6 +370,12 @@ body {
 </style>
 
 <style lang="scss">
+@use '@/styles' as global;
+
+.q-header {
+  height: global.$header-height;
+}
+
 .waiting-engine {
   background-color: #0002;
   position: absolute;
@@ -392,7 +401,7 @@ body {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(100vh - 66px);
+    height: calc(100vh - #{global.$menubar-height} - #{global.$header-height});
   }
 }
 

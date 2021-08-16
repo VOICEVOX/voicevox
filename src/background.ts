@@ -5,28 +5,12 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import {
-  app,
-  protocol,
-  BrowserWindow,
-  ipcMain,
-  dialog,
-  Menu,
-  shell,
-  nativeTheme,
-} from "electron";
+import { app, protocol, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
-import { MenuBuilder } from "./electron/menu";
-import {
-  GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
-  LOAD_PROJECT_FILE,
-  SAVE_PROJECT_FILE,
-} from "./electron/ipc";
 import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
@@ -74,8 +58,6 @@ async function runEngine() {
       type: "info",
     });
   }
-
-  menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -131,60 +113,8 @@ const updateInfos = JSON.parse(
   })
 );
 
-// initialize menu
-const menu = MenuBuilder()
-  .configure(isDevelopment)
-  .setOnLaunchModeItemClicked(async (useGpu) => {
-    if ((store.get("useGpu", false) as boolean) == useGpu) {
-      return;
-    }
-
-    let isChangeable = true;
-
-    if (useGpu) {
-      const isAvailableGPUMode = await hasSupportedGpu();
-      if (!isAvailableGPUMode) {
-        const response = dialog.showMessageBoxSync(win, {
-          message: "対応するGPUデバイスが見つかりません",
-          detail:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。\nこのままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          type: "warning",
-          buttons: ["変更しない", "変更する"],
-          cancelId: 0,
-        });
-
-        if (response !== 1) {
-          isChangeable = false;
-        }
-      }
-    }
-
-    if (isChangeable) {
-      store.set("useGpu", useGpu);
-      dialog.showMessageBoxSync(win, {
-        message: "エンジンの起動モードを変更しました",
-        detail: "変更を適用するためにVOICEVOXを再起動してください。",
-      });
-    }
-
-    menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
-  })
-  .setOnSaveAllAudioItemClicked(() =>
-    win.webContents.send(GENERATE_AND_SAVE_ALL_AUDIO)
-  )
-  .setOnImportFromFileItemClicked(() => win.webContents.send(IMPORT_FROM_FILE))
-  .setOnSaveProjectFileItemClicked(() =>
-    win.webContents.send(SAVE_PROJECT_FILE)
-  )
-  .setOnLoadProjectFileItemClicked(() =>
-    win.webContents.send(LOAD_PROJECT_FILE)
-  )
-  .build();
-Menu.setApplicationMenu(menu.instance);
-
 // create window
 async function createWindow() {
-  nativeTheme.themeSource = "light";
   win = new BrowserWindow({
     width: 800,
     height: 600,
@@ -212,7 +142,7 @@ async function createWindow() {
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
       const filePath = process.argv[1];
-      win.webContents.send(LOAD_PROJECT_FILE, { filePath, confirm: false });
+      win.webContents.send("LOAD_PROJECT_FILE", { filePath, confirm: false });
     }
   });
 }
@@ -234,7 +164,6 @@ async function createHelpWindow() {
     },
     icon: path.join(__static, "icon.png"),
   });
-  child.removeMenu();
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await child.loadURL(
@@ -341,8 +270,16 @@ ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMain.handle("UPDATE_MENU", (_, uiLocked) => {
-  menu.updateLockMenuItems(uiLocked);
+ipcMain.handle("USE_GPU", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("useGpu", newValue);
+  }
+
+  return store.get("useGpu", false) as boolean;
+});
+
+ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
+  return hasSupportedGpu();
 });
 
 // app callback
