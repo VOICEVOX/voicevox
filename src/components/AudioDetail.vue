@@ -143,6 +143,7 @@
               >
                 <q-badge
                   class="pitch-label"
+                  text-color="secondary"
                   v-if="
                     (pitchLabel.visible || pitchLabel.panning) &&
                     pitchLabel.accentPhraseIndex == accentPhraseIndex &&
