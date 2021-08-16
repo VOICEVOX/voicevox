@@ -165,7 +165,8 @@ export default defineComponent({
       if (event.clipboardData) {
         const texts = event.clipboardData
           .getData("text/plain")
-          .split(/[。\n\r]/);
+          .replaceAll("。", "。\n\r")
+          .split(/[\n\r]/);
 
         if (texts.length > 1) {
           event.preventDefault();
