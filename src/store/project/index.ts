@@ -125,6 +125,10 @@ export const projectActions = {
       } catch (err) {
         console.error(err);
         console.error(`VOICEVOX Project file "${filePath}" is a invalid file.`);
+        await window.electron.showErrorDialog({
+          title: "エラー",
+          message: "ファイルフォーマットが正しくありません。",
+        });
       }
     }
   ),
@@ -352,11 +356,7 @@ class FailedControllerChain<S extends ProjectBaseType>
     this.collectable = false;
   }
 
-  updateVersion<T extends ProjectBaseType>(
-    version: VersionType,
-    updater: (obj: S) => ProjectBaseType,
-    validater: (obj: ProjectBaseType) => obj is T
-  ): FailedControllerChain<T> {
+  updateVersion<T extends ProjectBaseType>(): FailedControllerChain<T> {
     return new FailedControllerChain<T>(this._message);
   }
 
