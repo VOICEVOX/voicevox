@@ -5,7 +5,8 @@ export const UI_LOCKED = "UI_LOCKED";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
 export const CREATE_HELP_WINDOW = "CREATE_HELP_WINDOW";
-export const UPDATE_MENU = "UPDATE_MENU";
+export const GET_USE_GPU = "GET_USE_GPU";
+export const SET_USE_GPU = "SET_USE_GPU";
 
 export function createUILockAction<S, P>(
   action: (context: ActionContext<S, S>, payload: P) => Promise<any>
@@ -32,6 +33,9 @@ export const uiStore = {
     [UNLOCK_UI](state) {
       state.uiLockCount--;
     },
+    [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
+      state.useGpu = useGpu;
+    },
   },
 
   actions: {
@@ -44,8 +48,15 @@ export const uiStore = {
     [CREATE_HELP_WINDOW]() {
       window.electron.createHelpWindow();
     },
-    [UPDATE_MENU](_, { uiLocked }: { uiLocked: boolean }) {
-      window.electron.updateMenu(uiLocked);
+    async [GET_USE_GPU]({ commit }) {
+      commit(SET_USE_GPU, {
+        useGpu: await window.electron.useGpu(),
+      });
+    },
+    async [SET_USE_GPU]({ commit }, { useGpu }: { useGpu: boolean }) {
+      commit(SET_USE_GPU, {
+        useGpu: await window.electron.useGpu(useGpu),
+      });
     },
   },
 } as StoreOptions<State>;
