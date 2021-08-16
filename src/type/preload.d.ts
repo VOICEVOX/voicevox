@@ -1,5 +1,4 @@
-import { IpcRenderer } from "electron";
-import { IpcRendererEvent } from "electron/main";
+import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
@@ -16,17 +15,19 @@ export interface Sandbox {
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showConfirmDialog(obj: { title: string; message: string }): Promise<boolean>;
+  showWarningDialog(obj: { title: string; message: string }): Promise<void>;
   showErrorDialog(obj: { title: string; message: string }): Promise<void>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
-  updateMenu(uiLocked: boolean): void;
-  onReceivedIPCMsg(
-    channel: string,
-    callback: (event: IpcRendererEvent, ...argv) => void
-  ): IpcRenderer;
+  useGpu(newValue?: boolean): Promise<boolean>;
+  isAvailableGPUMode(): Promise<boolean>;
+  onReceivedIPCMsg: <T extends keyof IpcSOData>(
+    channel: T,
+    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]) => void
+  ) => IpcRenderer;
 }
 
 export type AppInfos = {

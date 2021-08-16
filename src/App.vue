@@ -3,39 +3,20 @@
 </template>
 
 <script type="ts">
-import { computed, defineComponent, watch } from "vue";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
-import { UI_LOCKED, UPDATE_MENU } from "@/store/ui";
-import {
-  GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
-} from "@/store/audio";
-import {
-  GENERATE_AND_SAVE_ALL_AUDIO as IPC_GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE as IPC_IMPORT_FROM_FILE,
-  SAVE_PROJECT_FILE as IPC_SAVE_PROJECT_FILE,
-  LOAD_PROJECT_FILE as IPC_LOAD_PROJECT_FILE,
-} from "@/electron/ipc";
+import { defineComponent } from "vue";
+import { useStore, LOAD_PROJECT_FILE } from "@/store";
+import { GET_USE_GPU } from "@/store/ui";
 
 export default defineComponent({
   name: "App",
+
   setup() {
     const store = useStore();
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
 
-    const updateMenu = () => {
-      store.dispatch(UPDATE_MENU, {
-        uiLocked: uiLocked.value,
-      });
-    };
-    watch(uiLocked, updateMenu);
-    updateMenu();
+    store.dispatch(GET_USE_GPU);
 
-    window.electron.onReceivedIPCMsg(IPC_GENERATE_AND_SAVE_ALL_AUDIO, () => store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {}));
-    window.electron.onReceivedIPCMsg(IPC_IMPORT_FROM_FILE, () => store.dispatch(IMPORT_FROM_FILE, {}));
-    window.electron.onReceivedIPCMsg(IPC_SAVE_PROJECT_FILE, () => store.dispatch(SAVE_PROJECT_FILE, {}));
-    window.electron.onReceivedIPCMsg(IPC_LOAD_PROJECT_FILE,
-      (event, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
+    window.electron.onReceivedIPCMsg("LOAD_PROJECT_FILE",
+      (_, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }
 });
 </script>

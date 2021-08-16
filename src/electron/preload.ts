@@ -58,6 +58,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("SHOW_CONFIRM_DIALOG", { title, message });
   },
 
+  showWarningDialog: ({ title, message }) => {
+    return ipcRenderer.invoke("SHOW_WARNING_DIALOG", { title, message });
+  },
+
   showErrorDialog: ({ title, message }) => {
     return ipcRenderer.invoke("SHOW_ERROR_DIALOG", { title, message });
   },
@@ -82,12 +86,16 @@ const api: Sandbox = {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  updateMenu: (uiLocked: boolean) => {
-    ipcRenderer.invoke("UPDATE_MENU", uiLocked);
+  useGpu: (newValue) => {
+    return ipcRenderer.invoke("USE_GPU", { newValue });
+  },
+
+  isAvailableGPUMode: () => {
+    return ipcRenderer.invoke("IS_AVAILABLE_GPU_MODE");
   },
 
   onReceivedIPCMsg: (channel, callback) => {
-    return ipcRenderer.on(channel, (event, argv) => callback(event, argv));
+    return ipcRenderer.on(channel, callback);
   },
 };
 
