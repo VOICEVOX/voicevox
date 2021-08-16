@@ -62,6 +62,11 @@ type IpcIHData = {
     return: boolean;
   };
 
+  SHOW_WARNING_DIALOG: {
+    args: [obj: { title: string; message: string }];
+    return: void;
+  };
+
   SHOW_ERROR_DIALOG: {
     args: [obj: { title: string; message: string }];
     return: void;

@@ -15,6 +15,7 @@ export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
+export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
 
 export const storeKey: InjectionKey<Store<State>> = Symbol();
 
@@ -135,6 +136,12 @@ export const store = createStore<State>({
     }),
     [GET_UPDATE_INFOS]: async () => {
       return await window.electron.getUpdateInfos();
+    },
+    [SHOW_WARNING_DIALOG]: async (
+      context,
+      { title, message }: { title: string; message: string }
+    ) => {
+      return await window.electron.showWarningDialog({ title, message });
     },
   },
 });
