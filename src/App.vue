@@ -5,7 +5,7 @@
 <script type="ts">
 import { defineComponent } from "vue";
 import { useStore, LOAD_PROJECT_FILE } from "@/store";
-import { USE_GPU } from "@/store/ui";
+import { GET_USE_GPU } from "@/store/ui";
 
 export default defineComponent({
   name: "App",
@@ -13,9 +13,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    window.electron.useGPU().then(useGPU => {
-      store.dispatch(USE_GPU, { useGPU });
-    });
+    store.dispatch(GET_USE_GPU);
+
     window.electron.onReceivedIPCMsg("LOAD_PROJECT_FILE",
       (_, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }

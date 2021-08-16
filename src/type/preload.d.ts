@@ -20,7 +20,7 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
-  useGPU(newValue?: boolean): Promise<boolean>;
+  useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg: <T extends keyof IpcSOData>(
     channel: T,

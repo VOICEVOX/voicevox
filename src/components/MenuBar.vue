@@ -3,10 +3,10 @@
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
-      v-model:selected="isMenuOpen[i]"
       :menudata="root"
       :disable="uiLocked"
-      @mouseover="menuBtnOnMouseOver(i)"
+      v-model:selected="subMenuOpenFlags[i]"
+      @mouseover="reassignSubMenuOpen(i)"
     />
   </q-bar>
 </template>
@@ -15,7 +15,7 @@
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useQuasar } from "quasar";
 import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
-import { UI_LOCKED, USE_GPU } from "@/store/ui";
+import { UI_LOCKED, SET_USE_GPU } from "@/store/ui";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 
@@ -60,14 +60,11 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
 
-    const changeUseGPU = async (value: boolean) => {
-      const beforeValue = store.getters[USE_GPU];
-      if (beforeValue === value) return;
+    const changeUseGPU = async (useGpu: boolean) => {
+      if (store.state.useGpu === useGpu) return;
 
       const change = async () => {
-        await store.dispatch(USE_GPU, {
-          useGPU: await window.electron.useGPU(value),
-        });
+        await store.dispatch(SET_USE_GPU, { useGpu });
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
           message: "変更を適用するためにVOICEVOXを再起動してください。",
@@ -78,10 +75,15 @@ export default defineComponent({
         });
       };
 
-      $q.loading.show({ spinnerColor: "primary" });
+      $q.loading.show({
+        spinnerColor: "primary",
+        spinnerSize: 50,
+        boxClass: "bg-white text-secondary",
+        message: "起動モードを変更中です",
+      });
       const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
       $q.loading.hide();
-      if (value && !isAvailableGPUMode) {
+      if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
           title: "対応するGPUデバイスが見つかりません",
           message:
@@ -155,13 +157,13 @@ export default defineComponent({
               {
                 type: "checkbox",
                 label: "CPU",
-                checked: computed(() => !store.getters[USE_GPU]),
+                checked: computed(() => !store.state.useGpu),
                 onClick: async () => changeUseGPU(false),
               },
               {
                 type: "checkbox",
                 label: "GPU",
-                checked: computed(() => store.getters[USE_GPU]),
+                checked: computed(() => store.state.useGpu),
                 onClick: async () => changeUseGPU(true),
               },
             ],
@@ -170,21 +172,23 @@ export default defineComponent({
       },
     ]);
 
-    const isMenuOpen = ref([...Array(menudata.value.length)].map(() => false));
+    const subMenuOpenFlags = ref(
+      [...Array(menudata.value.length)].map(() => false)
+    );
 
-    const menuBtnOnMouseOver = (i: number) => {
-      if (isMenuOpen.value[i]) return;
-      if (isMenuOpen.value.find((x) => x)) {
+    const reassignSubMenuOpen = (i: number) => {
+      if (subMenuOpenFlags.value[i]) return;
+      if (subMenuOpenFlags.value.find((x) => x)) {
         const arr = [...Array(menudata.value.length)].map(() => false);
         arr[i] = true;
-        isMenuOpen.value = arr;
+        subMenuOpenFlags.value = arr;
       }
     };
 
     return {
       uiLocked,
-      isMenuOpen,
-      menuBtnOnMouseOver,
+      subMenuOpenFlags,
+      reassignSubMenuOpen,
       menudata,
     };
   },

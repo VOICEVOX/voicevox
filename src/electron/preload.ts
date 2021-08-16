@@ -78,7 +78,7 @@ const api: Sandbox = {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  useGPU: (newValue) => {
+  useGpu: (newValue) => {
     return ipcRenderer.invoke("USE_GPU", { newValue });
   },
 

@@ -20,7 +20,7 @@ export type State = {
   nowPlayingContinuously: boolean;
   undoCommands: ICommand<State>[];
   redoCommands: ICommand<State>[];
-  useGPU: boolean;
+  useGpu: boolean;
 };
 
 export type AudioItem = {

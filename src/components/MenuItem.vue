@@ -20,9 +20,9 @@
       <menu-item
         v-for="(menu, i) of menudata.subMenu"
         :key="i"
-        v-model:selected="isMenuOpen[i]"
         :menudata="menu"
-        @mouseover="onMouseOver(i)"
+        v-model:selected="subMenuOpenFlags[i]"
+        @mouseover="reassignSubMenuOpen(i)"
       />
     </q-menu>
   </q-item>
@@ -68,35 +68,37 @@ export default defineComponent({
         set: (val) => emit("update:selected", val),
       });
 
-      const isMenuOpen = ref(
+      const subMenuOpenFlags = ref(
         [...Array(props.menudata.subMenu.length)].map(() => false)
       );
 
-      const onMouseOver = (i: number) => {
-        if (isMenuOpen.value[i]) return;
+      const reassignSubMenuOpen = (i: number) => {
+        if (subMenuOpenFlags.value[i]) return;
         if (props.menudata.type !== "root") return;
 
         const len = props.menudata.subMenu.length;
         const arr = [...Array(len)].map(() => false);
         arr[i] = true;
 
-        isMenuOpen.value = arr;
+        subMenuOpenFlags.value = arr;
       };
 
       watch(
         () => props.selected,
         () => {
+          // 何もしないと自分の選択状態が変わっても子の選択状態は変わらないため、
+          // 選択状態でなくなった時に子の選択状態をリセットします
           if (props.menudata.type === "root" && !props.selected) {
             const len = props.menudata.subMenu.length;
-            isMenuOpen.value = [...Array(len)].map(() => false);
+            subMenuOpenFlags.value = [...Array(len)].map(() => false);
           }
         }
       );
 
       return {
         selectedComputed,
-        isMenuOpen,
-        onMouseOver,
+        subMenuOpenFlags,
+        reassignSubMenuOpen,
       };
     }
   },
