@@ -119,7 +119,7 @@ declare namespace Electron {
       channel: T,
       listener: (
         event: import("electron").IpcRendererEvent,
-        ...args: IpcSOData[T]
+        ...args: IpcSOData[T]["args"]
       ) => void
     ): this;
   }

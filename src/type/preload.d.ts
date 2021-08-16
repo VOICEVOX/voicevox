@@ -26,7 +26,7 @@ export interface Sandbox {
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg: <T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]) => void
+    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
   ) => IpcRenderer;
 }
 
