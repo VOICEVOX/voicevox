@@ -29,6 +29,7 @@ module.exports = {
         copyright: "Hiroshiba Kazuyuki",
         compression: "maximum",
         extends: null,
+        afterAllArtifactBuild: path.resolve(__dirname, "splitResources.js"),
         win: {
           icon: "public/icon.png",
           target: [
