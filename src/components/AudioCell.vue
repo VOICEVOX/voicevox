@@ -160,12 +160,13 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
     };
 
-    // コピペしたときに句点と改行で区切る
+    // コピペしたときに句点と改行で区切る(句点は直前の文字列に残す)
     const pasteOnAudioCell = async (event: ClipboardEvent) => {
       if (event.clipboardData) {
         const texts = event.clipboardData
           .getData("text/plain")
-          .split(/[。\n\r]/);
+          // 肯定的後読みで句点が残るようにする (`?`は句点と改行が連続した場合用)
+          .split(/(?<=。)\r?\n?|\r\n|\n/);
 
         if (texts.length > 1) {
           event.preventDefault();
