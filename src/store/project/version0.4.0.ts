@@ -1,5 +1,6 @@
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { VersionType, ProjectBaseType } from ".";
+import { ProjectType as PostType } from "./version0.3.0";
 
 const moraSchema = {
   properties: {
@@ -40,7 +41,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
-    charactorIndex: { type: "int32" },
+    characterIndex: { type: "int32" },
     query: audioQuerySchema,
   },
 } as const;
@@ -61,10 +62,20 @@ export const projectSchema = {
 
 export type ProjectType = JTDDataType<typeof projectSchema>;
 
-export const version: VersionType = [0, 3, 0];
+export const version: VersionType = [0, 4, 0];
 
 export const validater = (obj: ProjectBaseType): obj is ProjectType => {
   const ajv = new Ajv();
   const validate = ajv.compile(projectSchema);
   return validate(obj) && obj.audioKeys.every((item) => item in obj.audioItems);
+};
+
+export const updater = (obj: PostType): ProjectBaseType => {
+  const newObj = JSON.parse(JSON.stringify(obj));
+  for (const audioKey of obj.audioKeys) {
+    const characterIndex = obj.audioItems[audioKey].charactorIndex;
+    delete newObj.audioItems[audioKey].charactorIndex;
+    newObj.audioItems[audioKey].characterIndex = characterIndex;
+  }
+  return newObj as ProjectBaseType;
 };

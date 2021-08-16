@@ -1,5 +1,5 @@
-import { createUILockAction } from "../ui";
 import { ActionTree } from "vuex";
+import { createUILockAction } from "../ui";
 
 import { State, AudioItem } from "../type";
 import {
@@ -7,6 +7,13 @@ import {
   validater as validater_0_3_0,
   ProjectType as ProjectType_0_3_0,
 } from "./version0.3.0";
+
+import {
+  version as version_0_4_0,
+  validater as validater_0_4_0,
+  updater as updater_0_4_0,
+  ProjectType as ProjectType_0_4_0,
+} from "./version0.4.0";
 
 import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM } from "../audio";
 
@@ -17,7 +24,7 @@ export interface ProjectBaseType {
   appVersion: string;
 }
 
-type VersionType = [number, number, number];
+export type VersionType = [number, number, number];
 type IsExact<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
 function typeAssert<T extends true | false>(expectTrue: T) {
   return expectTrue;
@@ -66,20 +73,26 @@ export const projectActions = {
           );
         }
 
-        const chain = new ControllerChain<ProjectType_0_3_0, false>(
-          obj,
-          appVersionList,
-          validater_0_3_0,
-          version_0_3_0,
-          false
+        const chain = (
+          new ControllerChain<ProjectType_0_3_0, false>(
+            obj,
+            appVersionList,
+            validater_0_3_0,
+            version_0_3_0,
+            false
+          ) as Controller<ProjectType_0_3_0, false>
         )
           .minVersion(version_0_3_0)
-          // .updateVersion(version_0_x_x, updater_0_x_x, validater_0_x_x)
+          .updateVersion<ProjectType_0_4_0>(
+            version_0_4_0,
+            updater_0_4_0,
+            validater_0_4_0
+          )
           // .updateVersion(version_1_y_y, updater_1_y_y, validater_1_y_y)
           .maxVersion(nowAppVersionList)
           .validate();
 
-        if (chain.collectable == false) {
+        if (chain instanceof FailedControllerChain) {
           throw new Error(chain.message());
         }
 
@@ -232,7 +245,7 @@ interface Controller<S extends ProjectBaseType, F extends boolean> {
    * @returns If F is true, it returns an obj as ProjectType, otherwise
    * return {}.
    */
-  collectObj: () => F extends true ? S : Record<string, never>;
+  collectObj: () => F extends true ? S : never;
 }
 
 class ControllerChain<S extends ProjectBaseType, F extends boolean>
@@ -268,7 +281,9 @@ class ControllerChain<S extends ProjectBaseType, F extends boolean>
     if (this._dataVersion < version) {
       const obj = this._obj;
       if (!this._validater(obj)) {
-        return new FailedControllerChain<T>("Invalid project format");
+        return new FailedControllerChain<T>(
+          `Invalid project format in version ${this._validateVersion.join(".")}`
+        );
       }
       return new ControllerChain<T, false>(
         updater(obj),
@@ -320,10 +335,9 @@ class ControllerChain<S extends ProjectBaseType, F extends boolean>
     }
   }
 
-  collectObj = (): F extends true ? S : Record<string, never> => {
-    if (this._validated)
-      return this._obj as F extends true ? S : Record<string, never>;
-    return {} as F extends true ? S : Record<string, never>;
+  collectObj = (): F extends true ? S : never => {
+    if (this._validated) return this._obj as F extends true ? S : never;
+    return {} as F extends true ? S : never;
   };
 }
 
@@ -358,8 +372,8 @@ class FailedControllerChain<S extends ProjectBaseType>
     return this;
   }
 
-  collectObj = () => {
-    return {};
+  collectObj = (): never => {
+    throw new Error("Invalid call!");
   };
 
   /**
