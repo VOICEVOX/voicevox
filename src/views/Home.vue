@@ -370,6 +370,12 @@ body {
 </style>
 
 <style lang="scss">
+@use '@/styles' as global;
+
+.q-header {
+  height: global.$header-height;
+}
+
 .waiting-engine {
   background-color: #0002;
   position: absolute;
@@ -395,7 +401,7 @@ body {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(100vh - 24px - 66px);
+    height: calc(100vh - #{global.$menubar-height} - #{global.$header-height});
   }
 }
 

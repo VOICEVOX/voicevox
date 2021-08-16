@@ -204,8 +204,10 @@ export default defineComponent({
 </style>
 
 <style lang="scss" scoped>
+@use '@/styles' as global;
+
 .q-bar {
-  min-height: 24px;
+  min-height: global.$menubar-height;
   > .q-badge {
     margin-left: 0;
   }
