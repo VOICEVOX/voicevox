@@ -27,23 +27,10 @@ import {
   LOAD_PROJECT_FILE,
   SAVE_PROJECT_FILE,
 } from "./electron/ipc";
+import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
-import { CharactorInfo } from "./type/preload";
-
-import si from "systeminformation";
-function detectNvidia(): Promise<boolean> {
-  return si
-    .graphics()
-    .then((data) =>
-      data.controllers.some(
-        (datum) =>
-          datum.vendor.toUpperCase().indexOf("NVIDIA") !== -1 &&
-          datum.vram >= 3072
-      )
-    )
-    .catch(() => false);
-}
+import { CharacterInfo } from "./type/preload";
 
 let win: BrowserWindow;
 
@@ -51,7 +38,9 @@ let win: BrowserWindow;
 if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
-dotenv.config();
+const appDirPath = path.dirname(app.getPath("exe"));
+const envPath = path.join(appDirPath, ".env");
+dotenv.config({ path: envPath });
 const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -69,37 +58,35 @@ const store = new Store({
 // engine
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
-function runEngine() {
+async function runEngine() {
+  // 最初のエンジンモード
   if (!store.has("useGpu")) {
-    detectNvidia().then((result: boolean): void => {
-      if (result) {
-        dialog.showMessageBoxSync(win, {
-          message: "「GPUモード」で起動します。",
-          detail:
-            "エンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
-          title: "GPUモードで起動します",
-          type: "info",
-        });
-        store.set("useGpu", true);
-      } else {
-        dialog.showMessageBoxSync(win, {
-          message: "「CPUモード」で起動します。",
-          detail:
-            "「GPUモード」はNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要です。\nエンジンのモード変更は起動後、上部メニューの「エンジン」内にある「起動モード」からいつでも行えます。",
-          title: "CPUモードで起動します",
-          type: "info",
-        });
-        store.set("useGpu", false);
-      }
+    const hasGpu = await hasSupportedGpu();
+    store.set("useGpu", hasGpu);
+
+    dialog.showMessageBox(win, {
+      message: `音声合成エンジンを${
+        hasGpu ? "GPU" : "CPU"
+      }モードで起動しました`,
+      detail:
+        "エンジンの起動モードは、画面上部の「エンジン」メニューから変更できます。",
+      title: "エンジンの起動モード",
+      type: "info",
     });
   }
 
-  const args = store.get("useGpu") ? ["--use_gpu"] : null;
+  menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
 
+  // エンジンプロセスの起動
+  const enginePath = path.resolve(
+    appDirPath,
+    process.env.ENGINE_PATH ?? "run.exe"
+  );
+  const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
-    process.env.ENGINE_PATH!,
+    enginePath,
     args,
-    { cwd: path.dirname(process.env.ENGINE_PATH!) },
+    { cwd: path.dirname(enginePath) },
     () => {
       if (!willQuitEngine) {
         dialog.showErrorBox(
@@ -119,10 +106,10 @@ if (!fs.existsSync(tempDir)) {
 
 // キャラクター情報の読み込み
 declare let __static: string;
-const charactorInfos = fs
-  .readdirSync(path.join(__static, "charactors"))
-  .map((dirRelPath): CharactorInfo => {
-    const dirPath = path.join(__static, "charactors", dirRelPath);
+const characterInfos = fs
+  .readdirSync(path.join(__static, "characters"))
+  .map((dirRelPath): CharacterInfo => {
+    const dirPath = path.join(__static, "characters", dirRelPath);
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
@@ -148,16 +135,19 @@ const updateInfos = JSON.parse(
 const menu = MenuBuilder()
   .configure(isDevelopment)
   .setOnLaunchModeItemClicked(async (useGpu) => {
+    if ((store.get("useGpu", false) as boolean) == useGpu) {
+      return;
+    }
+
     let isChangeable = true;
 
     if (useGpu) {
-      const isAvaiableGPUMode = await detectNvidia();
-      if (!isAvaiableGPUMode) {
+      const isAvailableGPUMode = await hasSupportedGpu();
+      if (!isAvailableGPUMode) {
         const response = dialog.showMessageBoxSync(win, {
-          message: "警告",
+          message: "対応するGPUデバイスが見つかりません",
           detail:
-            "GPUモードはNVIDIAかつ3GB以上のVRAMを搭載したGPUが必要ですがお使いのPCからは条件を満たすGPUが検出できませんでした。\n\nGPUモードに変更しますと起動時にエンジンエラーが発生する可能性があります。\n\nその際はエラーメッセージウィンドウを閉じて、メニューからCPUモードへの変更をしてVOICEVOXの再起動をしてください。\n\n以上の警告メッセージを了解した上で変更をしたい場合は「変更する」を止める場合は「変更しない」を押してください。",
-          title: "警告",
+            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。\nこのままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
           type: "warning",
           buttons: ["変更しない", "変更する"],
           cancelId: 0,
@@ -192,8 +182,6 @@ const menu = MenuBuilder()
   .build();
 Menu.setApplicationMenu(menu.instance);
 
-menu.setActiveLaunchMode(store.get("useGpu", false) as boolean);
-
 // create window
 async function createWindow() {
   nativeTheme.themeSource = "light";
@@ -220,6 +208,13 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.webContents.once("did-finish-load", () => {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      win.webContents.send(LOAD_PROJECT_FILE, { filePath, confirm: false });
+    }
+  });
 }
 
 // create help window
@@ -251,7 +246,7 @@ async function createHelpWindow() {
   if (isDevelopment) child.webContents.openDevTools();
 }
 
-ipcMain.handle("GET_APP_INFOS", (event) => {
+ipcMain.handle("GET_APP_INFOS", () => {
   const name = app.getName();
   const version = app.getVersion();
   return {
@@ -261,19 +256,19 @@ ipcMain.handle("GET_APP_INFOS", (event) => {
 });
 
 // プロセス間通信
-ipcMain.handle("GET_TEMP_DIR", (event) => {
+ipcMain.handle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMain.handle("GET_CHARACTOR_INFOS", (event) => {
-  return charactorInfos;
+ipcMain.handle("GET_CHARACTER_INFOS", () => {
+  return characterInfos;
 });
 
-ipcMain.handle("GET_OSS_LICENSES", (event) => {
+ipcMain.handle("GET_OSS_LICENSES", () => {
   return ossLicenses;
 });
 
-ipcMain.handle("GET_UPDATE_INFOS", (event) => {
+ipcMain.handle("GET_UPDATE_INFOS", () => {
   return updateInfos;
 });
 
@@ -286,7 +281,7 @@ ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
   });
 });
 
-ipcMain.handle("SHOW_OPEN_DIRECOTRY_DIALOG", (event, { title }) => {
+ipcMain.handle("SHOW_OPEN_DIRECTORY_DIALOG", (event, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
@@ -322,6 +317,14 @@ ipcMain.handle("SHOW_CONFIRM_DIALOG", (event, { title, message }) => {
     });
 });
 
+ipcMain.handle("SHOW_ERROR_DIALOG", (event, { title, message }) => {
+  return dialog.showMessageBox(win, {
+    type: "error",
+    title: title,
+    message: message,
+  });
+});
+
 ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
@@ -330,7 +333,7 @@ ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
   })?.[0];
 });
 
-ipcMain.handle("CREATE_HELP_WINDOW", (event) => {
+ipcMain.handle("CREATE_HELP_WINDOW", () => {
   createHelpWindow();
 });
 
@@ -363,7 +366,7 @@ app.on("window-all-closed", () => {
 app.on("quit", () => {
   willQuitEngine = true;
   try {
-    treeKill(engineProcess.pid);
+    engineProcess.pid != undefined && treeKill(engineProcess.pid);
   } catch {
     console.error("engine kill error");
   }

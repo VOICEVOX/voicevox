@@ -43,8 +43,10 @@ export default defineComponent({
         }
         html += `</ul>`;
 
-        html += `<h4>貢献者リスト</h4>`;
-        html += `<p>${contributors.join(" / ")}</p>`;
+        if (contributors.length > 0) {
+          html += `<h4>貢献者リスト</h4>`;
+          html += `<p>${contributors.join(" / ")}</p>`;
+        }
       }
 
       return html;

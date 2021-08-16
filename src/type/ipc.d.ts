@@ -9,9 +9,9 @@ type IpcData = {
     return: string;
   };
 
-  GET_CHARACTOR_INFOS: {
+  GET_CHARACTER_INFOS: {
     args: [];
-    return: import("@/type/preload").CharactorInfo[];
+    return: import("@/type/preload").CharacterInfo[];
   };
 
   GET_OSS_LICENSES: {
@@ -29,7 +29,7 @@ type IpcData = {
     return?: string;
   };
 
-  SHOW_OPEN_DIRECOTRY_DIALOG: {
+  SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
   };
@@ -57,6 +57,11 @@ type IpcData = {
   SHOW_CONFIRM_DIALOG: {
     args: [obj: { title: string; message: string }];
     return: boolean;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [obj: { title: string; message: string }];
+    return: void;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {

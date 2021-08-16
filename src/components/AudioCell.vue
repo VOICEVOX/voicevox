@@ -1,35 +1,34 @@
 <template>
   <div
     class="audio-cell"
-    v-on:mouseover="mouseOverAction"
-    v-on:mouseleave="mouseLeaveAction"
+    @mouseover="mouseOverAction"
+    @mouseleave="mouseLeaveAction"
   >
-    <q-btn flat class="q-pa-none charactor-button">
-      <q-img
-        :ratio="1"
-        :src="
-          selectedCharactorInfo
-            ? getCharactorIconUrl(selectedCharactorInfo)
-            : undefined
-        "
-      />
-      <q-menu class="charactor-menu">
+    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
+      <!-- q-imgだとdisableのタイミングで点滅する -->
+      <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
+      <q-menu class="character-menu">
         <q-list>
           <q-item
-            v-for="(charactorInfo, index) in charactorInfos"
+            v-for="(characterInfo, index) in characterInfos"
             :key="index"
             clickable
             v-close-popup
-            active-class="selected-charactor-item"
-            :active="index === selectedCharactorInfo.metas.speaker"
-            @click="changeCharactorIndex(index)"
+            active-class="selected-character-item"
+            :active="index === selectedCharacterInfo.metas.speaker"
+            @click="changeCharacterIndex(index)"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
-                <q-img :ratio="1" :src="getCharactorIconUrl(charactorInfo)" />
+                <q-img
+                  no-spinner
+                  no-transition
+                  :ratio="1"
+                  :src="getCharacterIconUrl(characterInfo)"
+                />
               </q-avatar>
             </q-item-section>
-            <q-item-section>{{ charactorInfo.metas.name }}</q-item-section>
+            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
           </q-item>
         </q-list>
       </q-menu>
@@ -37,26 +36,33 @@
     <q-input
       ref="textfield"
       filled
+      dense
+      hide-bottom-space
       class="full-width"
-      style="height: 32px"
       :disable="uiLocked"
+      :error="audioItem.text.length >= 80"
       v-model="audioItem.text"
       @change="willRemove || setAudioText($event)"
-      @paste="pasteOnAudioCell($event)"
+      @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
-      @keydown.delete.exact="tryToRemoveCell"
+      @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
       @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
+      <template v-slot:error>
+        文章が長いと正常に動作しない可能性があります。
+        句読点の位置で文章を分割してください。
+      </template>
       <template #after v-if="hoverFlag && deleteButtonEnable">
         <q-btn
           round
           flat
           icon="delete_outline"
           size="0.8rem"
+          :disable="uiLocked"
           @click="removeCell"
         />
       </template>
@@ -65,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import { Component, computed, defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
   FETCH_ACCENT_PHRASES,
@@ -74,7 +80,7 @@ import {
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
-  CHANGE_CHARACTOR_INDEX,
+  CHANGE_CHARACTER_INDEX,
   REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -85,7 +91,8 @@ import {
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
-import { CharactorInfo } from "@/type/preload";
+import { CharacterInfo } from "@/type/preload";
+import { QInput } from "quasar";
 
 export default defineComponent({
   name: "AudioCell",
@@ -98,7 +105,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const charactorInfos = computed(() => store.state.charactorInfos!);
+    const characterInfos = computed(() => store.state.characterInfos);
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -112,18 +119,15 @@ export default defineComponent({
       store.getters[HAVE_AUDIO_QUERY](props.audioKey)
     );
 
-    const selectedCharactorInfo = computed(() =>
-      audioItem.value.charactorIndex !== undefined
-        ? charactorInfos.value[audioItem.value.charactorIndex]
+    const selectedCharacterInfo = computed(() =>
+      characterInfos.value != undefined &&
+      audioItem.value.characterIndex != undefined
+        ? characterInfos.value[audioItem.value.characterIndex]
         : undefined
     );
-    const selectorSpeakers = computed(() =>
-      charactorInfos.value.map((charactorInfo, charactorIndex) => {
-        return {
-          text: "JVS" + charactorInfo.metas.name,
-          value: charactorIndex,
-        };
-      })
+
+    const characterIconUrl = computed(() =>
+      URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
     // TODO: change audio textにしてvuexに載せ替える
@@ -135,10 +139,10 @@ export default defineComponent({
         store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
       }
     };
-    const changeCharactorIndex = (charactorIndex: number) => {
-      store.dispatch(CHANGE_CHARACTOR_INDEX, {
+    const changeCharacterIndex = (characterIndex: number) => {
+      store.dispatch(CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
-        charactorIndex,
+        characterIndex,
       });
     };
     const setActiveAudioKey = () => {
@@ -156,26 +160,28 @@ export default defineComponent({
       store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
     };
 
-    //長い文章をコピペしたときに句点（。）で自動区切りする
-    //https://github.com/Hiroshiba/voicevox/issues/25
-    const pasteOnAudioCell = async (evt: ClipboardEvent) => {
-      if (evt.clipboardData) {
-        //"。"と改行コードで区切り
-        let splittedStringArr = evt.clipboardData
+    // コピペしたときに句点と改行で区切る
+    const pasteOnAudioCell = async (event: ClipboardEvent) => {
+      if (event.clipboardData) {
+        const texts = event.clipboardData
           .getData("text/plain")
           .split(/[。\n\r]/);
-        //区切りがある場合、普段のPasteと別処理
-        if (splittedStringArr.length > 1) {
-          evt.preventDefault();
-          let prevAudioKey = props.audioKey;
-          //現在の欄が空欄の場合、最初の行だけ別処理
+
+        if (texts.length > 1) {
+          event.preventDefault();
+          blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
+
+          const prevAudioKey = props.audioKey;
           if (audioItem.value.text == "") {
-            setAudioText(splittedStringArr.shift()!);
+            const text = texts.shift();
+            if (text == undefined) return;
+            setAudioText(text);
           }
+
           store.dispatch(PUT_TEXTS, {
-            texts: splittedStringArr,
-            charIdx: audioItem.value.charactorIndex,
-            prevAudioKey: prevAudioKey,
+            texts,
+            characterIndex: audioItem.value.characterIndex,
+            prevAudioKey,
           });
         }
       }
@@ -225,15 +231,6 @@ export default defineComponent({
       return 1 < audioKeys.value.length;
     });
 
-    // テキストが空白なら消去
-    const tryToRemoveCell = async (e: Event) => {
-      if (audioItem.value.text.length > 0) {
-        return;
-      }
-      e.preventDefault();
-      removeCell();
-    };
-
     // テキスト編集エリアの右クリック
     const onRightClickTextField = () => {
       store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
@@ -241,7 +238,7 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const audioItem: AudioItem = { text: "", charactorIndex: 0 };
+      const audioItem: AudioItem = { text: "", characterIndex: 0 };
       await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
@@ -257,19 +254,21 @@ export default defineComponent({
     };
 
     // フォーカス
-    const textfield = ref<Component | any>();
+    const textfield = ref<QInput>();
     const focusTextField = () => {
-      textfield.value!.focus();
+      if (textfield.value == undefined) return;
+      textfield.value.focus();
     };
 
     // キャラクター選択
-    const isOpenedCharactorList = ref(false);
+    const isOpenedCharacterList = ref(false);
 
-    const getCharactorIconUrl = computed(
-      () => (charactorInfo: CharactorInfo) =>
-        URL.createObjectURL(charactorInfo.iconBlob)
+    const getCharacterIconUrl = computed(
+      () => (characterInfo: CharacterInfo) =>
+        URL.createObjectURL(characterInfo.iconBlob)
     );
 
+    // ホバー
     const hoverFlag = ref(false);
 
     const mouseOverAction = () => {
@@ -288,23 +287,22 @@ export default defineComponent({
     });
 
     return {
-      charactorInfos,
+      characterInfos,
       audioItem,
       deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
-      selectedCharactorInfo,
-      selectorSpeakers,
+      selectedCharacterInfo,
+      characterIconUrl,
       setAudioText,
-      changeCharactorIndex,
+      changeCharacterIndex,
       setActiveAudioKey,
       save,
       play,
       stop,
       willRemove,
       removeCell,
-      tryToRemoveCell,
       addCellBellow,
       isActive,
       moveUpCell,
@@ -314,8 +312,8 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
-      isOpenedCharactorList,
-      getCharactorIconUrl,
+      isOpenedCharacterList,
+      getCharacterIconUrl,
       hoverFlag,
       mouseOverAction,
       mouseLeaveAction,
@@ -331,11 +329,12 @@ export default defineComponent({
   display: flex;
   margin: 1rem 1rem;
   gap: 0px 1rem;
-  .charactor-button {
+  .character-button {
     border: solid 1px;
     border-color: global.$primary;
     font-size: 0;
-    .q-img {
+    height: fit-content;
+    img {
       width: 2rem;
       height: 2rem;
       object-fit: scale-down;
@@ -354,14 +353,17 @@ export default defineComponent({
       height: 2rem;
       padding-left: 5px;
     }
+    &.q-field--filled.q-field--highlighted .q-field__control:before {
+      background-color: #0001;
+    }
   }
 }
 
-.charactor-menu {
+.character-menu {
   .q-item {
     color: global.$secondary;
   }
-  .selected-charactor-item {
+  .selected-character-item {
     background-color: rgba(global.$primary, 0.2);
   }
 }

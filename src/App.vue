@@ -22,21 +22,20 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const isEngineReady = computed(() => store.state.isEngineReady);
 
     const updateMenu = () => {
       store.dispatch(UPDATE_MENU, {
-        uiLocked: uiLocked.value || !isEngineReady.value,
+        uiLocked: uiLocked.value,
       });
     };
     watch(uiLocked, updateMenu);
-    watch(isEngineReady, updateMenu);
     updateMenu();
 
     window.electron.onReceivedIPCMsg(IPC_GENERATE_AND_SAVE_ALL_AUDIO, () => store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {}));
     window.electron.onReceivedIPCMsg(IPC_IMPORT_FROM_FILE, () => store.dispatch(IMPORT_FROM_FILE, {}));
     window.electron.onReceivedIPCMsg(IPC_SAVE_PROJECT_FILE, () => store.dispatch(SAVE_PROJECT_FILE, {}));
-    window.electron.onReceivedIPCMsg(IPC_LOAD_PROJECT_FILE, () => store.dispatch(LOAD_PROJECT_FILE, {}));
+    window.electron.onReceivedIPCMsg(IPC_LOAD_PROJECT_FILE,
+      (event, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }
 });
 </script>

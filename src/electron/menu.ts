@@ -88,14 +88,15 @@ const createMenu = () => {
       submenu: [
         {
           id: MENU_SUBMENU_ITEM_SAVE_ALL_AUDIO_ID,
-          label: "書き出し",
+          label: "音声書き出し",
           click: onSaveAllAudioItemClicked,
         },
         {
           id: MENU_SUBMENU_ITEM_IMPORT_FROM_FILE_ID,
-          label: "読み込み",
+          label: "テキスト読み込み",
           click: onImportFromFileItemClicked,
         },
+        { type: "separator" },
         {
           id: MENU_SUBMENU_ITEM_SAVE_PROJECT_FILE_ID,
           label: "プロジェクト保存",
@@ -103,7 +104,7 @@ const createMenu = () => {
         },
         {
           id: MENU_SUBMENU_ITEM_LOAD_PROJECT_FILE_ID,
-          label: "プロジェクト読込",
+          label: "プロジェクト読み込み",
           click: onLoadProjectFileItemClicked,
         },
       ],

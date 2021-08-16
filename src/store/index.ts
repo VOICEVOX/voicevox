@@ -52,51 +52,65 @@ export const store = createStore<State>({
     [GET_OSS_LICENSES]: async () => {
       return await window.electron.getOssLicenses();
     },
-    [LOAD_PROJECT_FILE]: createUILockAction(async (context) => {
-      // Select and load a project File.
-      const ret = await window.electron.showProjectLoadDialog({
-        title: "プロジェクトファイルの選択",
-      });
-      if (ret == undefined || ret?.length == 0) {
-        return;
-      }
-      const filePath = ret[0];
-
-      try {
-        const buf = await window.electron.readFile({ filePath });
-        const text = new TextDecoder("utf-8").decode(buf).trim();
-        const obj = JSON.parse(text);
-        if (!(await projectValidationCheck(obj, true))) {
-          return;
-        }
-        const projectData = obj as ProjectData;
-        if (
-          !(await window.electron.showConfirmDialog({
-            title: "警告",
-            message:
-              "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-              "よろしいですか？",
-          }))
-        ) {
-          return;
-        }
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
-
-        const { audioItems, audioKeys } = projectData;
-
-        let prevAudioKey = undefined;
-        for (const audioKey of audioKeys) {
-          const audioItem = audioItems[audioKey];
-          prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
-            prevAudioKey,
-            audioItem,
+    [LOAD_PROJECT_FILE]: createUILockAction(
+      async (
+        context,
+        { filePath, confirm }: { filePath?: string; confirm?: boolean }
+      ) => {
+        if (!filePath) {
+          // Select and load a project File.
+          const ret = await window.electron.showProjectLoadDialog({
+            title: "プロジェクトファイルの選択",
           });
+          if (ret == undefined || ret?.length == 0) {
+            return;
+          }
+          filePath = ret[0];
         }
-      } catch (err) {
-        console.error(err);
-        console.error(`VOICEVOX Project file "${filePath}" is a invalid file.`);
+
+        try {
+          const buf = await window.electron.readFile({ filePath });
+          const text = new TextDecoder("utf-8").decode(buf).trim();
+          const obj = JSON.parse(text);
+          if (!(await projectValidationCheck(obj, true))) {
+            window.electron.showErrorDialog({
+              title: "エラー",
+              message: "ファイルフォーマットが正しくありません。",
+            });
+            return;
+          }
+          const projectData = obj as ProjectData;
+          if (
+            confirm !== false &&
+            !(await window.electron.showConfirmDialog({
+              title: "警告",
+              message:
+                "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
+                "よろしいですか？",
+            }))
+          ) {
+            return;
+          }
+          await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+
+          const { audioItems, audioKeys } = projectData;
+
+          let prevAudioKey = undefined;
+          for (const audioKey of audioKeys) {
+            const audioItem = audioItems[audioKey];
+            prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
+              prevAudioKey,
+              audioItem,
+            });
+          }
+        } catch (err) {
+          console.error(err);
+          console.error(
+            `VOICEVOX Project file "${filePath}" is a invalid file.`
+          );
+        }
       }
-    }),
+    ),
     [SAVE_PROJECT_FILE]: createUILockAction(async (context) => {
       // Write the current status to a project file.
       const ret = await window.electron.showProjectSaveDialog({
@@ -201,10 +215,10 @@ const projectSchema = {
       type: "object",
       properties: {
         text: { type: "string" },
-        charactorIndex: { type: "number" },
+        characterIndex: { type: "number" },
         query: { $ref: "#/$defs/AudioQuery" },
       },
-      required: ["text"],
+      required: ["text", "characterIndex"],
     },
   },
 };
