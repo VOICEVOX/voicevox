@@ -235,7 +235,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, reactive, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -251,19 +251,6 @@ import Mousetrap from "mousetrap";
 
 export default defineComponent({
   name: "AudioDetail",
-
-  data() {
-    return {
-      pitchLabel: {
-        visible: false,
-        // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
-        // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
-        panning: false,
-        accentPhraseIndex: -1,
-        moraIndex: -1,
-      },
-    };
-  },
 
   setup() {
     const store = useStore();
@@ -417,6 +404,30 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    const pitchLabel = reactive({
+      visible: false,
+      // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
+      // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
+      panning: false,
+      accentPhraseIndex: -1,
+      moraIndex: -1,
+    });
+
+    const setPitchLabel = (
+      visible: boolean,
+      accentPhraseIndex: number | undefined,
+      moraIndex: number | undefined
+    ) => {
+      pitchLabel.visible = visible;
+      pitchLabel.accentPhraseIndex =
+        accentPhraseIndex ?? pitchLabel.accentPhraseIndex;
+      pitchLabel.moraIndex = moraIndex ?? pitchLabel.moraIndex;
+    };
+
+    const setPitchPanning = (panningPhase: string) => {
+      pitchLabel.panning = panningPhase === "start";
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -439,24 +450,10 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      pitchLabel,
+      setPitchLabel,
+      setPitchPanning,
     };
-  },
-
-  methods: {
-    setPitchLabel(
-      visible: boolean,
-      accentPhraseIndex: number | undefined,
-      moraIndex: number | undefined
-    ) {
-      this.pitchLabel.visible = visible;
-      this.pitchLabel.accentPhraseIndex =
-        accentPhraseIndex ?? this.pitchLabel.accentPhraseIndex;
-      this.pitchLabel.moraIndex = moraIndex ?? this.pitchLabel.moraIndex;
-    },
-
-    setPitchPanning(panningPhase: string) {
-      this.pitchLabel.panning = panningPhase === "start";
-    },
   },
 });
 </script>
