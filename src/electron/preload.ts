@@ -78,10 +78,6 @@ const api: Sandbox = {
     return fs.promises.readFile(filePath);
   },
 
-  createHelpWindow: () => {
-    ipcRenderer.invoke("CREATE_HELP_WINDOW");
-  },
-
   openTextEditContextMenu: () => {
     return ipcRenderer.invoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },

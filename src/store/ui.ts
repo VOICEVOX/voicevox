@@ -4,9 +4,9 @@ import { State } from "./type";
 export const UI_LOCKED = "UI_LOCKED";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
-export const CREATE_HELP_WINDOW = "CREATE_HELP_WINDOW";
 export const GET_USE_GPU = "GET_USE_GPU";
 export const SET_USE_GPU = "SET_USE_GPU";
+export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
 
 export function createUILockAction<S, P>(
   action: (context: ActionContext<S, S>, payload: P) => Promise<any>
@@ -33,6 +33,12 @@ export const uiStore = {
     [UNLOCK_UI](state) {
       state.uiLockCount--;
     },
+    [IS_HELP_DIALOG_OPEN](
+      state,
+      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
+    ) {
+      state.isHelpDialogOpen = isHelpDialogOpen;
+    },
     [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
       state.useGpu = useGpu;
     },
@@ -45,8 +51,14 @@ export const uiStore = {
     [UNLOCK_UI]({ commit }) {
       commit(UNLOCK_UI);
     },
-    [CREATE_HELP_WINDOW]() {
-      window.electron.createHelpWindow();
+    [IS_HELP_DIALOG_OPEN](
+      { commit },
+      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
+    ) {
+      if (isHelpDialogOpen) commit(LOCK_UI);
+      else commit(UNLOCK_UI);
+
+      commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
     },
     async [GET_USE_GPU]({ commit }) {
       commit(SET_USE_GPU, {
