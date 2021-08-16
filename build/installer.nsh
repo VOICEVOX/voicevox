@@ -26,10 +26,13 @@
     ${endif}
 
     ; copy and concatenate files
-    ExecWait '"$SYSDIR\cmd.exe" /C COPY /B "$TEMP\voicevox-${VERSION}-x64.nsis.7z.0" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2" "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"' $0
-    
+    MessageBox MB_OK "Concatenate files. Please wait."
+    nsExec::ExecToStack '"$SYSDIR\cmd.exe" /C COPY /B "$TEMP\voicevox-${VERSION}-x64.nsis.7z.0" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2" "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"'
+    Pop $0
+    Pop $1
+
     ${If} $0 != "0"
-        MessageBox MB_OK|MB_ICONEXCLAMATION "Error happened concatenating files. Return value: $0"
+        MessageBox MB_OK|MB_ICONEXCLAMATION "Error happened concatenating files. $1($0)"
         Quit
     ${EndIf}
 
