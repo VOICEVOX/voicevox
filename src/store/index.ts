@@ -74,6 +74,10 @@ export const store = createStore<State>({
           const text = new TextDecoder("utf-8").decode(buf).trim();
           const obj = JSON.parse(text);
           if (!(await projectValidationCheck(obj, true))) {
+            window.electron.showErrorDialog({
+              title: "エラー",
+              message: "ファイルフォーマットが正しくありません。",
+            });
             return;
           }
           const projectData = obj as ProjectData;
@@ -221,7 +225,7 @@ const projectSchema = {
         characterIndex: { type: "number" },
         query: { $ref: "#/$defs/AudioQuery" },
       },
-      required: ["text"],
+      required: ["text", "characterIndex"],
     },
   },
 };
