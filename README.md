@@ -34,6 +34,20 @@ npm run electron:build
 npm run fmt
 ```
 
+## タイポチェック
+
+[typos](https://github.com/crate-ci/typos)を使ってタイポのチェックを行っています。
+[typosをインストール](https://github.com/crate-ci/typos#install)した後
+
+```bash
+typos
+```
+
+でタイポチェックを行えます。
+もし誤判定やチェックから除外すべきファイルがあれば
+[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives)に従って``_typos.toml``を編集してください．
+
+
 ## OpenAPI generator
 
 音声合成エンジンが起動している状態で以下のコマンドを実行してください。
