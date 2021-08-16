@@ -347,8 +347,9 @@ export default defineComponent({
           break;
         default:
           store.dispatch(SHOW_WARNING_DIALOG, {
-            title: "警告",
-            message: "対応していない拡張子です。",
+            title: "対応していないファイルです",
+            message:
+              "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
           });
       }
     };
