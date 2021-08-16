@@ -92,7 +92,7 @@
                     dragEventCounter = 0;
                     loadDraggedFile($event);
                   "
-                  :class="{ isDragging: dragEventCounter > 0 }"
+                  :class="{ 'is-dragging': dragEventCounter > 0 }"
                 >
                   <div class="audio-cells">
                     <audio-cell
@@ -442,7 +442,7 @@ body {
   position: relative;
   height: 100%;
 
-  &.isDragging {
+  &.is-dragging {
     background-color: #0002;
   }
 
