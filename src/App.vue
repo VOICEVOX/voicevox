@@ -3,9 +3,9 @@
 </template>
 
 <script type="ts">
-import { defineComponent } from "vue";
-import { useStore, LOAD_PROJECT_FILE } from "@/store";
+import { useStore } from "@/store";
 import { GET_USE_GPU } from "@/store/ui";
+import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "App",
@@ -14,9 +14,6 @@ export default defineComponent({
     const store = useStore();
 
     store.dispatch(GET_USE_GPU);
-
-    window.electron.onReceivedIPCMsg("LOAD_PROJECT_FILE",
-      (_, { filePath, confirm } = {}) => store.dispatch(LOAD_PROJECT_FILE, { filePath, confirm }));
   }
 });
 </script>
