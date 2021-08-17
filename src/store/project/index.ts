@@ -74,7 +74,7 @@ export const projectActions = {
         const pipe = new PipeChain<
           VersionType,
           ProjectBaseType,
-          [ProjectType_0_3_0]
+          ProjectType_0_3_0
         >(version_0_3_0, validater_0_3_0, null, null).update<ProjectType_0_4_0>(
           version_0_4_0,
           updater_0_4_0,
@@ -82,8 +82,8 @@ export const projectActions = {
         );
 
         const projectData: ProjectType_0_4_0 | null = pipe.flow(
-          obj,
-          appVersionList
+          appVersionList,
+          obj
         );
         if (projectData == null) {
           throw new Error("Invalid file format");
@@ -156,61 +156,53 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
   return appVersion;
 };
 
-class PipeChain<V, B, T extends B[]> {
-  private _version: V;
-  private _validater: T["length"] extends 0 ? never : (obj: B) => obj is T[0];
-  private _child: T extends [unknown, ...infer U]
-    ? U["length"] extends 0
-      ? null
-      : U extends B[]
-      ? PipeChain<V, B, U>
+class PipeChain<VER, BASE, RET extends BASE, RES extends BASE[] = []> {
+  private _version: VER;
+  private _validater: (obj: BASE) => obj is RET;
+  private _child: RES extends [infer T, ...infer U]
+    ? T extends BASE
+      ? U extends BASE[]
+        ? PipeChain<VER, BASE, T, U>
+        : never
       : never
-    : never;
-  private _updater: T extends [unknown, infer U, ...unknown[]]
-    ? (obj: U) => B
     : null;
+  private _updater: RES["length"] extends 0 ? null : (obj: RES[0]) => BASE;
 
   constructor(
-    version: V,
-    validater: PipeChain<V, B, T>["_validater"],
-    child: PipeChain<V, B, T>["_child"],
-    updater: PipeChain<V, B, T>["_updater"]
+    version: VER,
+    validater: PipeChain<VER, BASE, RET, RES>["_validater"],
+    child: PipeChain<VER, BASE, RET, RES>["_child"],
+    updater: PipeChain<VER, BASE, RET, RES>["_updater"]
   ) {
     this._version = version;
-
     this._validater = validater;
     this._child = child;
     this._updater = updater;
   }
 
-  public f(): T {
-    return null as unknown as T;
-  }
-
-  public update<N extends B>(
-    version: V,
-    updater: PipeChain<V, B, [N, ...T]>["_updater"],
-    validater: PipeChain<V, B, [N, ...T]>["_validater"]
-  ): PipeChain<V, B, [N, ...T]> {
-    return new PipeChain<V, B, [N, ...T]>(
+  public update<N extends BASE>(
+    version: VER,
+    updater: PipeChain<VER, BASE, N, [RET, ...RES]>["_updater"],
+    validater: PipeChain<VER, BASE, N, [RET, ...RES]>["_validater"]
+  ): PipeChain<VER, BASE, N, [RET, ...RES]> {
+    return new PipeChain<VER, BASE, N, [RET, ...RES]>(
       version,
       validater,
-      this as unknown as PipeChain<V, B, [N, ...T]>["_child"],
+      this as unknown as PipeChain<VER, BASE, N, [RET, ...RES]>["_child"],
       updater
     );
   }
 
-  public flow(obj: B, version: V): T[0] | null {
-    const child = this._child;
-    const updater = this._updater as ((obj: T[1]) => B) | null;
+  public flow(version: VER, obj: BASE): RET | null {
+    const child = this._child as unknown;
     if (version < this._version) {
       if (child instanceof PipeChain)
-        if (updater != null) {
-          const postObj = child.flow(obj, version) as B | null;
+        if (this._updater != null) {
+          const postObj = child.flow(version, obj) as BASE | null;
           if (postObj == null) {
             return null;
           }
-          const updatedObj = updater(postObj);
+          const updatedObj = this._updater(postObj);
           if (this._validater(updatedObj)) {
             return updatedObj;
           } else {
