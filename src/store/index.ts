@@ -7,6 +7,7 @@ import { audioStore } from "./audio";
 import { projectActions } from "./project";
 import { uiStore } from "./ui";
 
+export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
@@ -26,6 +27,7 @@ export const store = createStore<State>({
     undoCommands: [],
     redoCommands: [],
     useGpu: false,
+    isHelpDialogOpen: false,
   },
 
   getters: {
@@ -45,6 +47,9 @@ export const store = createStore<State>({
     ...audioStore.actions,
     ...commandStore.actions,
     ...projectActions,
+    [GET_POLICY_TEXT]: async () => {
+      return await window.electron.getPolicyText();
+    },
     [GET_OSS_LICENSES]: async () => {
       return await window.electron.getOssLicenses();
     },
