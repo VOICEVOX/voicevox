@@ -11,6 +11,7 @@ import {
 } from "./audio";
 import { uiStore, createUILockAction } from "./ui";
 
+export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
@@ -34,6 +35,7 @@ export const store = createStore<State>({
     undoCommands: [],
     redoCommands: [],
     useGpu: false,
+    isHelpDialogOpen: false,
     windowBoundsBeforeMaximize: { x: 0, y: 0, width: 800, height: 600 },
   },
 
@@ -54,6 +56,9 @@ export const store = createStore<State>({
     ...audioStore.actions,
     ...commandStore.actions,
 
+    [GET_POLICY_TEXT]: async () => {
+      return await window.electron.getPolicyText();
+    },
     [GET_OSS_LICENSES]: async () => {
       return await window.electron.getOssLicenses();
     },

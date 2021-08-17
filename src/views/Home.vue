@@ -54,7 +54,7 @@
           text-color="secondary"
           class="text-no-wrap text-bold"
           :disable="uiLocked"
-          @click="createHelpWindow"
+          @click="isHelpDialogOpenComputed = true"
           >ヘルプ</q-btn
         >
       </q-toolbar>
@@ -130,6 +130,7 @@
       </q-page>
     </q-page-container>
   </q-layout>
+  <help-dialog v-model="isHelpDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -151,6 +152,7 @@ import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
+import HelpDialog from "@/components/HelpDialog.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
 import {
@@ -163,7 +165,7 @@ import {
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
-import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
+import { UI_LOCKED, IS_HELP_DIALOG_OPEN } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -176,6 +178,7 @@ export default defineComponent({
     AudioCell,
     AudioDetail,
     AudioInfo,
+    HelpDialog,
   },
 
   setup() {
@@ -333,9 +336,11 @@ export default defineComponent({
     store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
-    const createHelpWindow = () => {
-      store.dispatch(CREATE_HELP_WINDOW);
-    };
+    const isHelpDialogOpenComputed = computed({
+      get: () => store.state.isHelpDialogOpen,
+      set: (val) =>
+        store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
+    });
 
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -385,7 +390,7 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       isEngineReady,
-      createHelpWindow,
+      isHelpDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
