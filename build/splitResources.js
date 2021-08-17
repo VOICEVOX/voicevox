@@ -6,7 +6,7 @@ const path = require("path");
 exports.default = async function (buildResult) {
   const segmentSize = 1 * 1024 ** 3; // 1GB
   const fileName = "voicevox-0.3.1-x64.nsis.7z"; // targe file name
-  const targetDirectory = path.resolve(buildResult["outDir"], "nsis-web"); // for nsis-web
+  const targetDirectory = path.resolve(buildResult.outDir, "nsis-web"); // for nsis-web
   const outputDirectory = path.resolve(targetDirectory, "out");
   const inputFile = path.resolve(targetDirectory, fileName);
 
