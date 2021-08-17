@@ -1,6 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require("fs");
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
 
 exports.default = async function (buildResult) {
@@ -24,6 +23,7 @@ exports.default = async function (buildResult) {
 
   let fileIndex = 0;
   inputStream.on("data", (chunk) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fs.stat(outputDirectory, (err, _) => {
       if (err) {
         if (err.code === "ENOENT") {
