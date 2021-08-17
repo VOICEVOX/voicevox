@@ -16,7 +16,7 @@ exports.default = async function (buildResult) {
     highWaterMark: segmentSize,
   });
 
-  let file_index = 0;
+  let fileIndex = 0;
   inputStream.on("data", (chunk) => {
     fs.stat(outputDirectory, (err, _) => {
       if (err) {
@@ -32,7 +32,7 @@ exports.default = async function (buildResult) {
 
       const outputFilePath = path
         .resolve(outputDirectory, fileName)
-        .concat(".", file_index.toString());
+        .concat(".", fileIndex.toString());
       const outputStream = fs.createWriteStream(outputFilePath, {
         flags: "w+",
         encoding: null,
@@ -41,7 +41,7 @@ exports.default = async function (buildResult) {
       outputStream.write(chunk);
       outputStream.end();
 
-      file_index += 1;
+      fileIndex += 1;
     });
   });
 
