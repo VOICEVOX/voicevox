@@ -4,8 +4,14 @@ const fs = require("fs");
 const path = require("path");
 
 exports.default = async function (buildResult) {
+  const projectVersion = process.env.npm_package_version;
+  if (projectVersion === undefined) {
+    const ErrorMessage = "Project version is undefined.";
+    console.error(ErrorMessage);
+    throw ErrorMessage;
+  }
   const segmentSize = 1 * 1024 ** 3; // 1GB
-  const fileName = "voicevox-0.3.1-x64.nsis.7z"; // targe file name
+  const fileName = "voicevox-{}-x64.nsis.7z".join(projectVersion); // targe file name
   const targetDirectory = path.resolve(buildResult.outDir, "nsis-web"); // for nsis-web
   const outputDirectory = path.resolve(targetDirectory, "out");
   const inputFile = path.resolve(targetDirectory, fileName);
