@@ -25,15 +25,15 @@ export interface ProjectBaseType {
 }
 
 export type VersionType = [number, number, number];
-type IsExact<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
-function typeAssert<T extends true | false>(expectTrue: T) {
-  return expectTrue;
-}
-
 interface ProjectType {
   appVersion: string;
   audioKeys: string[];
   audioItems: Record<string, AudioItem>;
+}
+
+type IsExact<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
+function typeAssert<T extends true | false>(expectTrue: T) {
+  return expectTrue;
 }
 
 export const projectActions = {
@@ -73,30 +73,25 @@ export const projectActions = {
           );
         }
 
-        const chain = (
-          new ControllerChain<ProjectType_0_3_0, false>(
-            obj,
-            appVersionList,
-            validater_0_3_0,
-            version_0_3_0,
-            false
-          ) as Controller<ProjectType_0_3_0, false>
-        )
-          .minVersion(version_0_3_0)
-          .updateVersion<ProjectType_0_4_0>(
-            version_0_4_0,
-            updater_0_4_0,
-            validater_0_4_0
-          )
-          // .updateVersion(version_1_y_y, updater_1_y_y, validater_1_y_y)
-          .maxVersion(nowAppVersionList)
-          .validate();
+        const pipe = new PipeChain<
+          VersionType,
+          ProjectBaseType,
+          [ProjectType_0_3_0]
+        >(version_0_3_0, validater_0_3_0, null, null).update<ProjectType_0_4_0>(
+          version_0_4_0,
+          updater_0_4_0,
+          validater_0_4_0
+        );
 
-        if (chain instanceof FailedControllerChain) {
-          throw new Error(chain.message());
+        const projectData: ProjectType_0_4_0 | null = pipe.flow(
+          obj,
+          appVersionList
+        );
+        if (projectData == null) {
+          throw new Error("Invalid file format");
         }
 
-        const projectData = chain.collectObj();
+        // Error when typeof projectData != ProjectType
         typeAssert<IsExact<typeof projectData, ProjectType>>(true);
 
         if (
@@ -163,231 +158,73 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
   return appVersion;
 };
 
-/**
- * @name Controller
- * @summary Manipulate obj in response to the version information entered.
- * @template S Collectable obj type.
- * @template F Flag whether the obj is collectible or not
- * @example
- * ```typescript
- * const controller = new ControllerChain(
- *   obj,
- *   appVersion,
- *   validate0,
- *   version0,
- *   false
- * )
- *   .minVersion(version0)
- *   .updateVersion(version1, updater1, validater1)
- *   .updateVersion(version2, updater2, validater2)
- *   .maxVersion(latestAppVersion)
- *   .validate()
- *
- * if(controller.collectable){
- *    console.log(controller.collectObj());
- * }
- * ```
- */
-interface Controller<S extends ProjectBaseType, F extends boolean> {
-  /**
-   * The variable for determining the type of generics.
-   * F indicates whether the obj is collectible.
-   * @memberof Controller
-   * @type F
-   */
-  collectable: F;
-
-  /**
-   * Update the object if it is older than the specified version
-   * Check the format of the current object before updating, and return a
-   * failure value if the format is invalid.
-   * @memberof Controller
-   * @param version The appVersion with updated project format
-   * @param updater Functions for compatibility with the previous format
-   * @param validater Validation checker for project
-   * @returns Return the next controller. If the object was in an invalid
-   * format, return FailedControllerChain.
-   */
-  updateVersion: <T extends ProjectBaseType>(
-    version: VersionType,
-    updater: (obj: S) => ProjectBaseType,
-    validater: (obj: ProjectBaseType) => obj is T
-  ) => Controller<T, false>;
-
-  /**
-   * Set the upper limits of the version.
-   * @memberof Controller
-   * @param maxVersion Allowed maximum version
-   * @returns If project version is lower than maxVersion, return FailedChain
-   */
-  maxVersion: (
-    maxVersion: VersionType
-  ) => Controller<S, F> | Controller<S, false>;
-
-  /**
-   * Set the lower limits of the version.
-   * @memberof Controller
-   * @param minVersion Allowed minimum version
-   * @returns If project version is higher than maxVersion, return FailedChain
-   */
-  minVersion: (
-    minVersion: VersionType
-  ) => Controller<S, F> | Controller<S, false>;
-
-  /**
-   * Validate and make the obj collectible.
-   * @memberof Controller
-   * @returns A controller that can collect obj. If the obj is in the invalid
-   * format, return Failded Chain.
-   */
-  validate: () => Controller<S, true> | Controller<S, false>;
-
-  /**
-   * Collect obj as specific ProjectType. If the obj is not collectable,
-   * return {}.
-   * @memberof Controller
-   * @returns If F is true, it returns an obj as ProjectType, otherwise
-   * return {}.
-   */
-  collectObj: () => F extends true ? S : never;
-}
-
-class ControllerChain<S extends ProjectBaseType, F extends boolean>
-  implements Controller<S, F>
-{
-  private _obj: ProjectBaseType;
-  private _dataVersion: VersionType;
-  private _validater: (obj: ProjectBaseType) => obj is S;
-  private _validateVersion: VersionType;
-  private _validated: F;
-  public collectable: F;
+class PipeChain<V, B, T extends B[]> {
+  private _versions: V[];
+  private _validater: T["length"] extends 0 ? never : (obj: B) => obj is T[0];
+  private _child: T extends [unknown, ...infer U]
+    ? U["length"] extends 0
+      ? null
+      : U extends B[]
+      ? PipeChain<V, B, U>
+      : never
+    : never;
+  private _updater: T extends [unknown, infer U, ...unknown[]]
+    ? (obj: U) => B
+    : null;
 
   constructor(
-    obj: ProjectBaseType,
-    dataVersion: VersionType,
-    validater: (obj: ProjectBaseType) => obj is S,
-    validateVersion: VersionType,
-    validated: F
+    version: V | V[],
+    validater: PipeChain<V, B, T>["_validater"],
+    child: PipeChain<V, B, T>["_child"],
+    updater: PipeChain<V, B, T>["_updater"]
   ) {
-    this._obj = obj;
-    this._dataVersion = dataVersion;
+    if (Array.isArray(version)) this._versions = version;
+    else this._versions = [version];
+
     this._validater = validater;
-    this._validateVersion = validateVersion;
-    this._validated = validated;
-    this.collectable = validated;
+    this._child = child;
+    this._updater = updater;
   }
 
-  updateVersion<T extends ProjectBaseType>(
-    version: VersionType,
-    updater: (obj: S) => ProjectBaseType,
-    validater: (obj: ProjectBaseType) => obj is T
-  ): ControllerChain<T, false> | FailedControllerChain<T> {
-    if (this._dataVersion < version) {
-      const obj = this._obj;
-      if (!this._validater(obj)) {
-        return new FailedControllerChain<T>(
-          `Invalid project format in version ${this._validateVersion.join(".")}`
-        );
-      }
-      return new ControllerChain<T, false>(
-        updater(obj),
-        this._dataVersion,
-        validater,
-        version,
-        false
-      );
+  public f(): T {
+    return null as unknown as T;
+  }
+
+  public update<N extends B>(
+    version: V,
+    updater: PipeChain<V, B, [N, ...T]>["_updater"],
+    validater: PipeChain<V, B, [N, ...T]>["_validater"]
+  ): PipeChain<V, B, [N, ...T]> {
+    return new PipeChain<V, B, [N, ...T]>(
+      [version, ...this._versions],
+      validater,
+      this as unknown as PipeChain<V, B, [N, ...T]>["_child"],
+      updater
+    );
+  }
+
+  public flow(obj: B, version: V): T[0] | null {
+    const child = this._child;
+    const updater = this._updater as ((obj: T[1]) => B) | null;
+    if (version < this._versions[0]) {
+      if (child instanceof PipeChain)
+        if (updater != null) {
+          const postObj = child.flow(obj, version) as B | null;
+          if (postObj == null) {
+            return null;
+          }
+          const updatedObj = updater(postObj);
+          if (this._validater(updatedObj)) {
+            return updatedObj;
+          } else {
+            return null;
+          }
+        }
+    }
+    if (this._validater(obj)) {
+      return obj;
     } else {
-      return new ControllerChain<T, false>(
-        this._obj,
-        this._dataVersion,
-        validater,
-        version,
-        false
-      );
+      return null;
     }
-  }
-
-  minVersion(minVersion: VersionType) {
-    if (this._dataVersion < minVersion) {
-      return new FailedControllerChain<S>(
-        `The appVersion should be ${minVersion.join(".")} or higher.`
-      );
-    }
-    return this;
-  }
-
-  maxVersion(maxVersion: VersionType) {
-    if (this._dataVersion > maxVersion) {
-      return new FailedControllerChain<S>(
-        `The appVersion should be ${maxVersion.join(".")} or lower.`
-      );
-    }
-    return this;
-  }
-
-  validate(): ControllerChain<S, true> | FailedControllerChain<S> {
-    if (this._validater(this._obj)) {
-      return new ControllerChain<S, true>(
-        this._obj,
-        this._dataVersion,
-        this._validater,
-        this._validateVersion,
-        true
-      );
-    } else {
-      return new FailedControllerChain<S>("Invalid project format");
-    }
-  }
-
-  collectObj = (): F extends true ? S : never => {
-    if (this._validated) return this._obj as F extends true ? S : never;
-    return {} as F extends true ? S : never;
-  };
-}
-
-class FailedControllerChain<S extends ProjectBaseType>
-  implements Controller<S, false>
-{
-  private _message: string;
-  public collectable: false;
-
-  constructor(message: string) {
-    this._message = message;
-    this.collectable = false;
-  }
-
-  updateVersion<T extends ProjectBaseType>(): FailedControllerChain<T> {
-    return new FailedControllerChain<T>(this._message);
-  }
-
-  minVersion(): FailedControllerChain<S> {
-    return this;
-  }
-
-  maxVersion(): FailedControllerChain<S> {
-    return this;
-  }
-
-  validate(): FailedControllerChain<S> {
-    return this;
-  }
-
-  collectObj = (): never => {
-    throw new Error("Invalid call!");
-  };
-
-  /**
-   * @memberof FailedControllerChain
-   * @returns Return error message.
-   * @example
-   * ```typescript
-   * const res = x.validate();
-   * if(res.collectable == false){
-   *   console.error(res.message());
-   * }
-   * ```
-   */
-  message() {
-    return this._message;
   }
 }
