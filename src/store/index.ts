@@ -9,6 +9,7 @@ import { uiStore } from "./ui";
 
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
+export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
 
 export const storeKey: InjectionKey<Store<State>> = Symbol();
 
@@ -24,6 +25,7 @@ export const store = createStore<State>({
     nowPlayingContinuously: false,
     undoCommands: [],
     redoCommands: [],
+    useGpu: false,
   },
 
   getters: {
@@ -48,6 +50,12 @@ export const store = createStore<State>({
     },
     [GET_UPDATE_INFOS]: async () => {
       return await window.electron.getUpdateInfos();
+    },
+    [SHOW_WARNING_DIALOG]: async (
+      context,
+      { title, message }: { title: string; message: string }
+    ) => {
+      return await window.electron.showWarningDialog({ title, message });
     },
   },
 });
