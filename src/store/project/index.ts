@@ -157,7 +157,7 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
 };
 
 class PipeChain<V, B, T extends B[]> {
-  private _versions: V[];
+  private _version: V;
   private _validater: T["length"] extends 0 ? never : (obj: B) => obj is T[0];
   private _child: T extends [unknown, ...infer U]
     ? U["length"] extends 0
@@ -171,13 +171,12 @@ class PipeChain<V, B, T extends B[]> {
     : null;
 
   constructor(
-    version: V | V[],
+    version: V,
     validater: PipeChain<V, B, T>["_validater"],
     child: PipeChain<V, B, T>["_child"],
     updater: PipeChain<V, B, T>["_updater"]
   ) {
-    if (Array.isArray(version)) this._versions = version;
-    else this._versions = [version];
+    this._version = version;
 
     this._validater = validater;
     this._child = child;
@@ -194,7 +193,7 @@ class PipeChain<V, B, T extends B[]> {
     validater: PipeChain<V, B, [N, ...T]>["_validater"]
   ): PipeChain<V, B, [N, ...T]> {
     return new PipeChain<V, B, [N, ...T]>(
-      [version, ...this._versions],
+      version,
       validater,
       this as unknown as PipeChain<V, B, [N, ...T]>["_child"],
       updater
@@ -204,7 +203,7 @@ class PipeChain<V, B, T extends B[]> {
   public flow(obj: B, version: V): T[0] | null {
     const child = this._child;
     const updater = this._updater as ((obj: T[1]) => B) | null;
-    if (version < this._versions[0]) {
+    if (version < this._version) {
       if (child instanceof PipeChain)
         if (updater != null) {
           const postObj = child.flow(obj, version) as B | null;
