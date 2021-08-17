@@ -29,7 +29,7 @@
       dense
       flat
       icon="close"
-      class="windowButtons"
+      class="windowButtons closeButton"
       @click="closeWindow()"
     ></q-btn>
   </q-bar>
