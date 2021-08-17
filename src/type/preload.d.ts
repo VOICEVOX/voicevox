@@ -3,6 +3,7 @@ import { IpcRenderer, IpcRendererEvent } from "electron";
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getCharacterInfos(): Promise<CharacterInfo[]>;
+  getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<Record<string, any>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
@@ -20,7 +21,6 @@ export interface Sandbox {
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
-  createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;

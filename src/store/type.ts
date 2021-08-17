@@ -21,6 +21,7 @@ export type State = {
   undoCommands: ICommand<State>[];
   redoCommands: ICommand<State>[];
   useGpu: boolean;
+  isHelpDialogOpen: boolean;
 };
 
 export type AudioItem = {

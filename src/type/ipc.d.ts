@@ -17,6 +17,11 @@ type IpcIHData = {
     return: import("@/type/preload").CharacterInfo[];
   };
 
+  GET_POLICY_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_OSS_LICENSES: {
     args: [];
     return: Record<string, string>[];
@@ -40,11 +45,6 @@ type IpcIHData = {
   SHOW_IMPORT_FILE_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
-  };
-
-  CREATE_HELP_WINDOW: {
-    args: [];
-    return: void;
   };
 
   SHOW_PROJECT_SAVE_DIALOG: {
