@@ -15,3 +15,5 @@
 ## 謝辞
 
 ダミー謝辞
+
+[ダミーリンク](https://voicevox.hiroshiba.jp/)
