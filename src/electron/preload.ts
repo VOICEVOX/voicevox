@@ -15,6 +15,10 @@ const api: Sandbox = {
     return await ipcRenderer.invoke("GET_CHARACTER_INFOS");
   },
 
+  getPolicyText: async () => {
+    return await ipcRenderer.invoke("GET_POLICY_TEXT");
+  },
+
   getOssLicenses: async () => {
     return await ipcRenderer.invoke("GET_OSS_LICENSES");
   },
@@ -76,10 +80,6 @@ const api: Sandbox = {
 
   readFile: ({ filePath }) => {
     return fs.promises.readFile(filePath);
-  },
-
-  createHelpWindow: () => {
-    ipcRenderer.invoke("CREATE_HELP_WINDOW");
   },
 
   openTextEditContextMenu: () => {

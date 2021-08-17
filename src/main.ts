@@ -7,6 +7,7 @@ import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { Quasar, Dialog, Loading } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import "@quasar/extras/material-icons/material-icons.css";
+import "quasar/dist/quasar.sass";
 import "./styles/_index.scss";
 
 createApp(App)

@@ -23,6 +23,25 @@ module.exports = {
             to: "",
           },
         ],
+        // electron-builder installer
+        productName: "VOICEVOX",
+        appId: "jp.hiroshiba.voicevox",
+        copyright: "Hiroshiba Kazuyuki",
+        compression: "maximum",
+        afterAllArtifactBuild: path.resolve(
+          __dirname,
+          "build",
+          "splitResources.js"
+        ),
+        win: {
+          icon: "public/icon.png",
+          target: [
+            {
+              target: "nsis-web",
+              arch: ["x64"],
+            },
+          ],
+        },
       },
     },
   },
