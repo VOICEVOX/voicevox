@@ -36,13 +36,7 @@
 
       <q-page-container>
         <q-page>
-          <q-tab-panels
-            animated
-            vertical
-            transition-prev="fade"
-            transition-next="fade"
-            v-model="selectedPage"
-          >
+          <q-tab-panels v-model="selectedPage">
             <q-tab-panel
               v-for="(page, i) of pagedata"
               :key="i"

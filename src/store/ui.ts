@@ -52,9 +52,11 @@ export const uiStore = {
       commit(UNLOCK_UI);
     },
     [IS_HELP_DIALOG_OPEN](
-      { commit },
+      { state, commit },
       { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
     ) {
+      if (state.isHelpDialogOpen === isHelpDialogOpen) return;
+
       if (isHelpDialogOpen) commit(LOCK_UI);
       else commit(UNLOCK_UI);
 
