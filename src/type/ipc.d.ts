@@ -47,11 +47,6 @@ type IpcIHData = {
     return?: string;
   };
 
-  CREATE_HELP_WINDOW: {
-    args: [];
-    return: void;
-  };
-
   SHOW_PROJECT_SAVE_DIALOG: {
     args: [obj: { title: string }];
     return?: string;

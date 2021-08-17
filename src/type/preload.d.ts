@@ -21,7 +21,6 @@ export interface Sandbox {
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
-  createHelpWindow(): void;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
