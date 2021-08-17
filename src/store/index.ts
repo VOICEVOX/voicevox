@@ -17,6 +17,8 @@ export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
 
+export const CLOSE_WINDOW = "CLOSE_WINDOW";
+
 export const storeKey: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
@@ -32,6 +34,7 @@ export const store = createStore<State>({
     undoCommands: [],
     redoCommands: [],
     useGpu: false,
+    windowBoundsBeforeMaximize: { x: 0, y: 0, width: 800, height: 600 },
   },
 
   getters: {

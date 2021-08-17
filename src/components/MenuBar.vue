@@ -8,6 +8,30 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
+    <q-space></q-space>
+    <div id="windowTitle">VOICEVOX</div>
+    <q-space></q-space>
+    <q-btn
+      dense
+      flat
+      icon="minimize"
+      class="windowButtons"
+      @click="minimizeWindow()"
+    ></q-btn>
+    <q-btn
+      dense
+      flat
+      icon="crop_square"
+      class="windowButtons"
+      @click="maximizeWindow()"
+    ></q-btn>
+    <q-btn
+      dense
+      flat
+      icon="close"
+      class="windowButtons"
+      @click="closeWindow()"
+    ></q-btn>
   </q-bar>
 </template>
 
@@ -185,11 +209,20 @@ export default defineComponent({
       }
     };
 
+    const closeWindow = () => window.electron.closeWindow();
+    const minimizeWindow = () => window.electron.minimizeWindow();
+    const maximizeWindow = () => {
+      window.electron.maximizeWindow();
+    };
+
     return {
       uiLocked,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
+      closeWindow,
+      minimizeWindow,
+      maximizeWindow,
     };
   },
 });
@@ -208,8 +241,13 @@ export default defineComponent({
 
 .q-bar {
   min-height: global.$menubar-height;
+  -webkit-app-region: drag;
   > .q-badge {
     margin-left: 0;
+    -webkit-app-region: no-drag;
   }
+}
+.windowButtons {
+  -webkit-app-region: no-drag;
 }
 </style>

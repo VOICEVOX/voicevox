@@ -1,6 +1,7 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
 import { CharacterInfo } from "@/type/preload";
+import { Rectangle } from "electron";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -21,6 +22,7 @@ export type State = {
   undoCommands: ICommand<State>[];
   redoCommands: ICommand<State>[];
   useGpu: boolean;
+  windowBoundsBeforeMaximize: Rectangle;
 };
 
 export type AudioItem = {
