@@ -117,9 +117,20 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "音声書き出し",
+            label: "音声・テキスト書き出し (UTF-8)",
             onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+                encoding: "UTF-8",
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "音声・テキスト書き出し (Shift_JIS)",
+            onClick: () => {
+              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+                encoding: "Shift_JIS",
+              });
             },
           },
           {
