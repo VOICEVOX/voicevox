@@ -28,7 +28,6 @@ module.exports = {
         appId: "jp.hiroshiba.voicevox",
         copyright: "Hiroshiba Kazuyuki",
         compression: "maximum",
-        extends: null,
         afterAllArtifactBuild: path.resolve(
           __dirname,
           "build",
