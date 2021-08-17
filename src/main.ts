@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
+import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 
 import { Quasar, Dialog, Loading } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
@@ -24,4 +25,5 @@ createApp(App)
       Loading,
     },
   })
+  .use(ipcMessageReceiver, { store: store })
   .mount("#app");
