@@ -71,7 +71,7 @@ export const projectActions = {
           }
         }
 
-        // Road project to store
+        // Load project obj to store
         if (
           confirm !== false &&
           !(await window.electron.showConfirmDialog({
