@@ -1,13 +1,13 @@
 import { ActionTree } from "vuex";
-import { createUILockAction } from "../ui";
+import { createUILockAction } from "@/store/ui";
+import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM } from "@/store/audio";
+import { State, AudioItem } from "@/store/type";
 
-import { State, AudioItem } from "../type";
 import {
   version as version_0_3_0,
   validater as validater_0_3_0,
   ProjectType as ProjectType_0_3_0,
 } from "./version0.3.0";
-
 import {
   version as version_0_4_0,
   validater as validater_0_4_0,
@@ -15,21 +15,19 @@ import {
   ProjectType as ProjectType_0_4_0,
 } from "./version0.4.0";
 
-import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM } from "../audio";
-
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 
 export interface ProjectBaseType {
   appVersion: string;
 }
-
-export type VersionType = [number, number, number];
 interface ProjectType {
   appVersion: string;
   audioKeys: string[];
   audioItems: Record<string, AudioItem>;
 }
+
+export type VersionType = [number, number, number];
 
 type IsExact<T, U> = [T] extends [U] ? ([U] extends [T] ? true : false) : false;
 function typeAssert<T extends true | false>(expectTrue: T) {
