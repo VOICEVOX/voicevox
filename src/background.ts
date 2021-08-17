@@ -101,6 +101,9 @@ const characterInfos = fs
     };
   });
 
+// 利用規約テキストの読み込み
+const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
+
 // OSSライセンス情報の読み込み
 const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
@@ -163,6 +166,10 @@ ipcMain.handle("GET_TEMP_DIR", () => {
 
 ipcMain.handle("GET_CHARACTER_INFOS", () => {
   return characterInfos;
+});
+
+ipcMain.handle("GET_POLICY_TEXT", () => {
+  return policyText;
 });
 
 ipcMain.handle("GET_OSS_LICENSES", () => {

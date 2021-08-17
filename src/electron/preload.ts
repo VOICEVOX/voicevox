@@ -15,6 +15,10 @@ const api: Sandbox = {
     return await ipcRenderer.invoke("GET_CHARACTER_INFOS");
   },
 
+  getPolicyText: async () => {
+    return await ipcRenderer.invoke("GET_POLICY_TEXT");
+  },
+
   getOssLicenses: async () => {
     return await ipcRenderer.invoke("GET_OSS_LICENSES");
   },
