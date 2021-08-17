@@ -147,34 +147,6 @@ async function createWindow() {
   });
 }
 
-// create help window
-async function createHelpWindow() {
-  const child = new BrowserWindow({
-    parent: win,
-    width: 700,
-    height: 500,
-    modal: true,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-
-      enableRemoteModule: !!process.env.IS_TEST,
-
-      nodeIntegration: true,
-      contextIsolation: true,
-    },
-    icon: path.join(__static, "icon.png"),
-  });
-
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await child.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/help/policy"
-    );
-  } else {
-    child.loadURL("app://./index.html#/help/policy");
-  }
-  if (isDevelopment) child.webContents.openDevTools();
-}
-
 ipcMain.handle("GET_APP_INFOS", () => {
   const name = app.getName();
   const version = app.getVersion();
@@ -268,10 +240,6 @@ ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
     filters: [{ name: "Text", extensions: ["txt"] }],
     properties: ["openFile", "createDirectory"],
   })?.[0];
-});
-
-ipcMain.handle("CREATE_HELP_WINDOW", () => {
-  createHelpWindow();
 });
 
 ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {

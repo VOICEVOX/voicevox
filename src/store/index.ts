@@ -32,6 +32,7 @@ export const store = createStore<State>({
     undoCommands: [],
     redoCommands: [],
     useGpu: false,
+    isHelpDialogOpen: false,
   },
 
   getters: {
