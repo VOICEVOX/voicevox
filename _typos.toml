@@ -5,6 +5,5 @@
 
 [default.extend-words]
 
-
 [files]
 extend-exclude = ["package-lock.json", "src/store/project.ts"]
