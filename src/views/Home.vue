@@ -1,4 +1,5 @@
 <template>
+  <menu-bar />
   <div v-if="!isEngineReady" class="waiting-engine">
     <div>
       <q-spinner color="primary" size="2.5rem" />
@@ -53,7 +54,7 @@
           text-color="secondary"
           class="text-no-wrap text-bold"
           :disable="uiLocked"
-          @click="createHelpWindow"
+          @click="isHelpDialogOpenComputed = true"
           >ヘルプ</q-btn
         >
       </q-toolbar>
@@ -83,7 +84,17 @@
               v-model="audioInfoPaneWidth"
             >
               <template #before>
-                <div id="audio-cell-pane">
+                <div
+                  id="audio-cell-pane"
+                  @dragenter="dragEventCounter++"
+                  @dragleave="dragEventCounter--"
+                  @dragover.prevent
+                  @drop.prevent="
+                    dragEventCounter = 0;
+                    loadDraggedFile($event);
+                  "
+                  :class="{ 'is-dragging': dragEventCounter > 0 }"
+                >
                   <div class="audio-cells">
                     <audio-cell
                       v-for="audioKey in audioKeys"
@@ -119,6 +130,7 @@
       </q-page>
     </q-page-container>
   </q-layout>
+  <help-dialog v-model="isHelpDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -130,12 +142,15 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
+import { useStore, SHOW_WARNING_DIALOG } from "@/store";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
+import MenuBar from "@/components/MenuBar.vue";
+import HelpDialog from "@/components/HelpDialog.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
+import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
 import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
@@ -146,17 +161,20 @@ import {
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
-import { UI_LOCKED, CREATE_HELP_WINDOW } from "@/store/ui";
+import { UI_LOCKED, IS_HELP_DIALOG_OPEN } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
+import path from "path";
 
 export default defineComponent({
   name: "Home",
 
   components: {
+    MenuBar,
     AudioCell,
     AudioDetail,
     AudioInfo,
+    HelpDialog,
   },
 
   setup() {
@@ -314,8 +332,30 @@ export default defineComponent({
     store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
-    const createHelpWindow = () => {
-      store.dispatch(CREATE_HELP_WINDOW);
+    const isHelpDialogOpenComputed = computed({
+      get: () => store.state.isHelpDialogOpen,
+      set: (val) =>
+        store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
+    });
+
+    const dragEventCounter = ref(0);
+    const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
+      if (!event || event.dataTransfer.files.length === 0) return;
+      const file = event.dataTransfer.files[0];
+      switch (path.extname(file.name)) {
+        case ".txt":
+          store.dispatch(IMPORT_FROM_FILE, { filePath: file.path });
+          break;
+        case ".vvproj":
+          store.dispatch(LOAD_PROJECT_FILE, { filePath: file.path });
+          break;
+        default:
+          store.dispatch(SHOW_WARNING_DIALOG, {
+            title: "対応していないファイルです",
+            message:
+              "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
+          });
+      }
     };
 
     return {
@@ -346,7 +386,9 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       isEngineReady,
-      createHelpWindow,
+      isHelpDialogOpenComputed,
+      dragEventCounter,
+      loadDraggedFile,
     };
   },
 });
@@ -367,6 +409,12 @@ body {
 </style>
 
 <style lang="scss">
+@use '@/styles' as global;
+
+.q-header {
+  height: global.$header-height;
+}
+
 .waiting-engine {
   background-color: #0002;
   position: absolute;
@@ -392,7 +440,7 @@ body {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(100vh - 66px);
+    height: calc(100vh - #{global.$menubar-height} - #{global.$header-height});
   }
 }
 
@@ -403,6 +451,10 @@ body {
 
   position: relative;
   height: 100%;
+
+  &.is-dragging {
+    background-color: #0002;
+  }
 
   .audio-cells {
     overflow-x: hidden;

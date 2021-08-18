@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -43,4 +43,5 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
       - run: npm ci
       - run: npm run lint
+      - run: npm run markdownlint
       - run: npm run electron:build_pnever

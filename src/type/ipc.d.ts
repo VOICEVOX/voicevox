@@ -1,4 +1,7 @@
-type IpcData = {
+/**
+ * invoke, handle
+ */
+type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
     return: import("@/type/preload").AppInfos;
@@ -12,6 +15,11 @@ type IpcData = {
   GET_CHARACTER_INFOS: {
     args: [];
     return: import("@/type/preload").CharacterInfo[];
+  };
+
+  GET_POLICY_TEXT: {
+    args: [];
+    return: string;
   };
 
   GET_OSS_LICENSES: {
@@ -39,11 +47,6 @@ type IpcData = {
     return?: string;
   };
 
-  CREATE_HELP_WINDOW: {
-    args: [];
-    return: void;
-  };
-
   SHOW_PROJECT_SAVE_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
@@ -59,32 +62,72 @@ type IpcData = {
     return: boolean;
   };
 
+  SHOW_WARNING_DIALOG: {
+    args: [obj: { title: string; message: string }];
+    return: void;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [obj: { title: string; message: string }];
+    return: void;
+  };
+
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     args: [];
     return: void;
   };
 
-  UPDATE_MENU: {
-    args: [boolean];
+  USE_GPU: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
+  IS_AVAILABLE_GPU_MODE: {
+    args: [];
+    return: boolean;
+  };
+};
+
+/**
+ * send, on
+ */
+type IpcSOData = {
+  LOAD_PROJECT_FILE: {
+    args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;
   };
 };
 
 declare namespace Electron {
   interface IpcMain {
-    handle<T extends keyof IpcData>(
+    handle<T extends keyof IpcIHData>(
       channel: T,
       listener: (
         event: IpcMainInvokeEvent,
-        ...args: IpcData[T]["args"]
-      ) => IpcData[T]["return"] | Promise<IpcData[T]["return"]>
+        ...args: IpcIHData[T]["args"]
+      ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>
     ): void;
   }
 
   interface IpcRenderer {
-    invoke<T extends keyof IpcData>(
+    invoke<T extends keyof IpcIHData>(
       channel: T,
-      ...args: IpcData[T]["args"]
-    ): Promise<IpcData[T]["return"]>;
+      ...args: IpcIHData[T]["args"]
+    ): Promise<IpcIHData[T]["return"]>;
+
+    on<T extends keyof IpcSOData>(
+      channel: T,
+      listener: (
+        event: import("electron").IpcRendererEvent,
+        ...args: IpcSOData[T]["args"]
+      ) => void
+    ): this;
+  }
+
+  interface WebContents {
+    send<T extends keyof IpcSOData>(
+      channel: T,
+      ...args: IpcSOData[T]["args"]
+    ): void;
   }
 }

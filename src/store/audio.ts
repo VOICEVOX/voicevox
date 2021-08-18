@@ -6,6 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 import { AudioItem, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo } from "@/type/preload";
+import Encoding from "encoding-japanese";
+
+type Encoding = "UTF-8" | "Shift_JIS";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -491,7 +494,11 @@ export const audioStore = {
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
         { state, dispatch },
-        { audioKey, filePath }: { audioKey: string; filePath?: string }
+        {
+          audioKey,
+          filePath,
+          encoding,
+        }: { audioKey: string; filePath?: string; encoding?: Encoding }
       ) => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
@@ -506,10 +513,21 @@ export const audioStore = {
             filePath,
             buffer: await blob.arrayBuffer(),
           });
-          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-          const textBlob = new Blob([bom, state.audioItems[audioKey].text], {
-            type: "text/plain",
-          });
+          const textBlob = ((): Blob => {
+            if (!encoding || encoding === "UTF-8") {
+              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+              return new Blob([bom, state.audioItems[audioKey].text], {
+                type: "text/plain;charset=UTF-8",
+              });
+            }
+            const sjisArray = Encoding.convert(
+              Encoding.stringToCode(state.audioItems[audioKey].text),
+              { to: "SJIS", type: "arraybuffer" }
+            );
+            return new Blob([new Uint8Array(sjisArray)], {
+              type: "text/plain;charset=Shift_JIS",
+            });
+          })();
           window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
@@ -518,7 +536,10 @@ export const audioStore = {
       }
     ),
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
-      async ({ state, dispatch }, { dirPath }: { dirPath?: string }) => {
+      async (
+        { state, dispatch },
+        { dirPath, encoding }: { dirPath?: string; encoding: Encoding }
+      ) => {
         dirPath ??= await window.electron.showOpenDirectoryDialog({
           title: "Save ALL",
         });
@@ -528,17 +549,21 @@ export const audioStore = {
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
               audioKey,
               filePath: path.join(dirPath!, name),
+              encoding,
             });
           });
           return Promise.all(promises);
         }
       }
     ),
-    [IMPORT_FROM_FILE]: createUILockAction(async ({ state, dispatch }) => {
-      const filePath = await window.electron.showImportFileDialog({
-        title: "セリフ読み込み",
-      });
-      if (filePath) {
+    [IMPORT_FROM_FILE]: createUILockAction(
+      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
+        if (!filePath) {
+          filePath = await window.electron.showImportFileDialog({
+            title: "セリフ読み込み",
+          });
+          if (!filePath) return;
+        }
         let body = new TextDecoder("utf-8").decode(
           await window.electron.readFile({ filePath })
         );
@@ -554,7 +579,7 @@ export const audioStore = {
           )
         );
       }
-    }),
+    ),
     [PLAY_AUDIO]: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];
