@@ -56,7 +56,6 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Mousetrap from "mousetrap";
-import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "WindowButtons",
@@ -67,8 +66,6 @@ export default defineComponent({
 
     Mousetrap.bind(["alt+f4", "ctrl+q"], closeWindow);
     Mousetrap.bind(["ctrl+m"], minimizeWindow);
-
-    const $q = useQuasar();
 
     return {
       closeWindow,
