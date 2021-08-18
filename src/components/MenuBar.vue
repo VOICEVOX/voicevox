@@ -1,6 +1,6 @@
 <template>
   <q-bar class="bg-white q-pa-none">
-    <img src="icon.png" id="windowLogo" />
+    <img src="icon.png" id="windowLogo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
