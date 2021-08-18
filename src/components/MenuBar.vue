@@ -15,7 +15,7 @@
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useQuasar } from "quasar";
 import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
-import { UI_LOCKED, SET_USE_GPU } from "@/store/ui";
+import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 
@@ -117,19 +117,10 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "音声・テキスト書き出し (UTF-8)",
+            label: "音声書き出し",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: "UTF-8",
-              });
-            },
-          },
-          {
-            type: "button",
-            label: "音声・テキスト書き出し (Shift_JIS)",
-            onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: "Shift_JIS",
+                encoding: store.state.fileEncoding,
               });
             },
           },
@@ -178,6 +169,30 @@ export default defineComponent({
                 onClick: async () => changeUseGPU(true),
               },
             ],
+          },
+        ],
+      },
+      {
+        type: "root",
+        label: "文字コード",
+        subMenu: [
+          {
+            type: "checkbox",
+            label: "UTF-8",
+            checked: computed(() => store.state.fileEncoding === "UTF-8"),
+            onClick: () =>
+              store.dispatch(SET_FILE_ENCODING, {
+                encoding: "UTF-8",
+              }),
+          },
+          {
+            type: "checkbox",
+            label: "Shift_JIS",
+            checked: computed(() => store.state.fileEncoding === "Shift_JIS"),
+            onClick: () =>
+              store.dispatch(SET_FILE_ENCODING, {
+                encoding: "Shift_JIS",
+              }),
           },
         ],
       },

@@ -22,6 +22,7 @@ export type State = {
   redoCommands: ICommand<State>[];
   useGpu: boolean;
   isHelpDialogOpen: boolean;
+  fileEncoding: Encoding;
 };
 
 export type AudioItem = {
@@ -34,3 +35,5 @@ export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
 };
+
+export type Encoding = "UTF-8" | "Shift_JIS";
