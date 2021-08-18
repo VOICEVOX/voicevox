@@ -10,7 +10,7 @@
       @mouseover="reassignSubMenuOpen(i)"
     />
     <q-space />
-    <div id="windowTitle">VOICEVOX</div>
+    <div id="windowTitle text-center">VOICEVOX</div>
     <q-space />
     <window-buttons />
   </q-bar>
