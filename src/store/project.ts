@@ -67,6 +67,15 @@ export const projectActions = {
             "Every audioKey in audioKeys should be a key of audioItems"
           );
         }
+        if (
+          !obj.audioKeys.every(
+            (audioKey) => obj.audioItems[audioKey].characterIndex != undefined
+          )
+        ) {
+          throw new Error(
+            'Every audioItem should have a "characterIndex" atrribute.'
+          );
+        }
 
         if (
           confirm !== false &&
