@@ -1,5 +1,6 @@
 import { Action, ActionContext, StoreOptions } from "vuex";
-import { State, Encoding } from "./type";
+import { State } from "./type";
+import { Encoding } from "@/type/preload";
 
 export const UI_LOCKED = "UI_LOCKED";
 export const LOCK_UI = "LOCK_UI";
@@ -7,6 +8,7 @@ export const UNLOCK_UI = "UNLOCK_UI";
 export const GET_USE_GPU = "GET_USE_GPU";
 export const SET_USE_GPU = "SET_USE_GPU";
 export const SET_FILE_ENCODING = "SET_FILE_ENCODING";
+export const GET_FILE_ENCODING = "GET_FILE_ENCODING";
 export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
 
 export function createUILockAction<S, P>(
@@ -76,11 +78,18 @@ export const uiStore = {
         useGpu: await window.electron.useGpu(useGpu),
       });
     },
+    async [GET_FILE_ENCODING]({ commit }) {
+      commit(SET_FILE_ENCODING, {
+        encoding: await window.electron.fileEncoding(),
+      });
+    },
     async [SET_FILE_ENCODING](
       { commit },
       { encoding }: { encoding: Encoding }
     ) {
-      commit(SET_FILE_ENCODING, { encoding });
+      commit(SET_FILE_ENCODING, {
+        encoding: await window.electron.fileEncoding(encoding),
+      });
     },
   },
 } as StoreOptions<State>;

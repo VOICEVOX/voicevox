@@ -3,9 +3,9 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, State, Encoding as EncodingType } from "./type";
+import { AudioItem, State } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo } from "@/type/preload";
+import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 const api = new DefaultApi(

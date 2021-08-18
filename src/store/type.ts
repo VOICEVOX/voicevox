@@ -1,6 +1,6 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
-import { CharacterInfo } from "@/type/preload";
+import { CharacterInfo, Encoding } from "@/type/preload";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -35,5 +35,3 @@ export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
 };
-
-export type Encoding = "UTF-8" | "Shift_JIS";
