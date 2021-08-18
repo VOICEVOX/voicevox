@@ -122,7 +122,7 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
-    frame: isDevelopment ? true : false,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
 
@@ -275,9 +275,8 @@ ipcMain.handle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMain.handle("MAXIMIZE_WINDOW", () => {
   if (win.isMaximized()) {
     const before = store.get("windowBoundsBeforeMaximize") as Rectangle;
-    win.setResizable(false);
     win.setBounds(before);
-    win.setResizable(true);
+    win.restore();
   } else {
     const currentBounds = win.getBounds();
     store.set("windowBoundsBeforeMaximize", currentBounds);

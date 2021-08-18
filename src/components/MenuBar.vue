@@ -1,5 +1,6 @@
 <template>
   <q-bar class="bg-white q-pa-none">
+    <img src="icon.png" id="windowLogo" />
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
@@ -8,30 +9,10 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
-    <q-space></q-space>
+    <q-space />
     <div id="windowTitle">VOICEVOX</div>
-    <q-space></q-space>
-    <q-btn
-      dense
-      flat
-      icon="minimize"
-      class="windowButtons"
-      @click="minimizeWindow()"
-    ></q-btn>
-    <q-btn
-      dense
-      flat
-      icon="crop_square"
-      class="windowButtons"
-      @click="maximizeWindow()"
-    ></q-btn>
-    <q-btn
-      dense
-      flat
-      icon="close"
-      class="windowButtons closeButton"
-      @click="closeWindow()"
-    ></q-btn>
+    <q-space />
+    <window-buttons />
   </q-bar>
 </template>
 
@@ -42,6 +23,7 @@ import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
 import { UI_LOCKED, SET_USE_GPU } from "@/store/ui";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
+import WindowButtons from "@/components/WindowButtons.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -76,6 +58,7 @@ export default defineComponent({
 
   components: {
     MenuButton,
+    WindowButtons,
   },
 
   setup() {
@@ -220,20 +203,11 @@ export default defineComponent({
       }
     };
 
-    const closeWindow = () => window.electron.closeWindow();
-    const minimizeWindow = () => window.electron.minimizeWindow();
-    const maximizeWindow = () => {
-      window.electron.maximizeWindow();
-    };
-
     return {
       uiLocked,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
-      closeWindow,
-      minimizeWindow,
-      maximizeWindow,
     };
   },
 });
@@ -258,7 +232,8 @@ export default defineComponent({
     -webkit-app-region: no-drag;
   }
 }
-.windowButtons {
-  -webkit-app-region: no-drag;
+
+#windowLogo {
+  max-height: global.$menubar-height;
 }
 </style>
