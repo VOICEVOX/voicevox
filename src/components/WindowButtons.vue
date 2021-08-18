@@ -35,6 +35,7 @@ export default defineComponent({
     const maximizeWindow = () => window.electron.maximizeWindow();
 
     Mousetrap.bind(["alt+f4", "ctrl+q"], closeWindow);
+    Mousetrap.bind(["ctrl+m"], minimizeWindow);
 
     return {
       closeWindow,
