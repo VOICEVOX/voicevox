@@ -56,14 +56,13 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Mousetrap from "mousetrap";
-import { ipcRenderer } from "electron/renderer";
 
 export default defineComponent({
   name: "WindowButtons",
   setup() {
-    const closeWindow = () => ipcRenderer.invoke("CLOSE_WINDOW");
-    const minimizeWindow = () => ipcRenderer.invoke("MINIMIZE_WINDOW");
-    const maximizeWindow = () => ipcRenderer.invoke("MAXIMIZE_WINDOW");
+    const closeWindow = () => window.electron.closeWindow();
+    const minimizeWindow = () => window.electron.minimizeWindow();
+    const maximizeWindow = () => window.electron.maximizeWindow();
 
     Mousetrap.bind(["alt+f4", "ctrl+q", "command+q"], closeWindow);
     Mousetrap.bind(["ctrl+m", "command+m"], minimizeWindow);
