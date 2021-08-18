@@ -14,8 +14,9 @@
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useQuasar } from "quasar";
-import { useStore, SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store";
+import { useStore } from "@/store";
 import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
+import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 
