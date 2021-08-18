@@ -47,11 +47,11 @@ export const projectActions = {
 
         // Migration
         if (appVersionList < [0, 4, 0]) {
-          for (const audioKey of obj.audioKeys) {
-            if ("charactorIndex" in obj.audioItems[audioKey]) {
-              obj.audioItems[audioKey].characterIndex =
-                obj.audioItems[audioKey].charactorIndex;
-              delete obj.audioItems[audioKey].charactorIndex;
+          for (const audioItemsKey in obj.audioItems) {
+            if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
+              obj.audioItems[audioItemsKey].characterIndex =
+                obj.audioItems[audioItemsKey].charactorIndex;
+              delete obj.audioItems[audioItemsKey].charactorIndex;
             }
           }
         }
@@ -61,6 +61,11 @@ export const projectActions = {
         const validate = ajv.compile(projectSchema);
         if (!validate(obj)) {
           throw validate.errors;
+        }
+        if (!obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)) {
+          throw new Error(
+            "Every audioKey in audioKeys should be a key of audioItems"
+          );
         }
 
         if (
