@@ -3,24 +3,10 @@ import { createUILockAction } from "@/store/ui";
 import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM } from "@/store/audio";
 import { State, AudioItem } from "@/store/type";
 
+import Ajv, { JTDDataType } from "ajv/dist/jtd";
+
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
-
-interface ProjectType {
-  appVersion: string;
-  audioKeys: string[];
-  audioItems: Record<string, AudioItem>;
-}
-
-export type VersionType = [number, number, number];
-
-const versionTextParse = (appVersionText: string): VersionType | undefined => {
-  const textArray = appVersionText.split(".");
-  if (textArray.length !== 3) return undefined;
-  const appVersion = textArray.map(Number) as VersionType;
-  if (!appVersion.every((item) => Number.isInteger(item))) return undefined;
-  return appVersion;
-};
 
 export const projectActions = {
   [LOAD_PROJECT_FILE]: createUILockAction(
@@ -44,13 +30,12 @@ export const projectActions = {
         const text = new TextDecoder("utf-8").decode(buf).trim();
         const obj = JSON.parse(text);
 
-        // Validation check
+        // appVersion Validation check
         if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
           throw new Error(
             "The appVersion of the project file should be string"
           );
         }
-
         const appVersionList = versionTextParse(obj.appVersion);
         const nowAppInfo = await window.electron.getAppInfos();
         const nowAppVersionList = versionTextParse(nowAppInfo.version);
@@ -71,7 +56,13 @@ export const projectActions = {
           }
         }
 
-        // Load project obj to store
+        // Validation check
+        const ajv = new Ajv();
+        const validate = ajv.compile(projectSchema);
+        if (!validate(obj)) {
+          throw validate.errors;
+        }
+
         if (
           confirm !== false &&
           !(await window.electron.showConfirmDialog({
@@ -127,3 +118,78 @@ export const projectActions = {
     return;
   }),
 } as ActionTree<State, State>;
+
+const moraSchema = {
+  properties: {
+    text: { type: "string" },
+    vowel: { type: "string" },
+    pitch: { type: "float32" },
+  },
+  optionalProperties: {
+    consonant: { type: "string" },
+  },
+} as const;
+
+const accentPhraseSchema = {
+  properties: {
+    moras: {
+      elements: moraSchema,
+    },
+    accent: { type: "int32" },
+  },
+  optionalProperties: {
+    pauseMora: moraSchema,
+  },
+} as const;
+
+const audioQuerySchema = {
+  properties: {
+    accentPhrases: {
+      elements: accentPhraseSchema,
+    },
+    speedScale: { type: "float32" },
+    pitchScale: { type: "float32" },
+    intonationScale: { type: "float32" },
+  },
+} as const;
+
+const audioItemSchema = {
+  properties: {
+    text: { type: "string" },
+  },
+  optionalProperties: {
+    characterIndex: { type: "int32" },
+    query: audioQuerySchema,
+  },
+} as const;
+
+export const projectSchema = {
+  properties: {
+    appVersion: { type: "string" },
+    audioKeys: {
+      // description: "Attribute keys of audioItems.",
+      elements: { type: "string" },
+    },
+    audioItems: {
+      // description: "VOICEVOX states per cell",
+      values: audioItemSchema,
+    },
+  },
+} as const;
+
+export type LatestProjectType = JTDDataType<typeof projectSchema>;
+interface ProjectType {
+  appVersion: string;
+  audioKeys: string[];
+  audioItems: Record<string, AudioItem>;
+}
+
+export type VersionType = [number, number, number];
+
+const versionTextParse = (appVersionText: string): VersionType | undefined => {
+  const textArray = appVersionText.split(".");
+  if (textArray.length !== 3) return undefined;
+  const appVersion = textArray.map(Number) as VersionType;
+  if (!appVersion.every((item) => Number.isInteger(item))) return undefined;
+  return appVersion;
+};
