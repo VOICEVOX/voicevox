@@ -41,7 +41,7 @@
       class="full-width"
       :disable="uiLocked"
       :error="audioItem.text.length >= 80"
-      v-model="audioItem.text"
+      :model-value="audioItem.text"
       @change="willRemove || setAudioText($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
