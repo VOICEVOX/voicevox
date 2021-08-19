@@ -663,6 +663,7 @@ export const audioStore = {
       ) => {
         const arrLen = texts.length;
         characterIndex == undefined ? 0 : characterIndex;
+        const addedAudioKeys = [];
         for (let i = 0; i < arrLen; i++) {
           if (texts[i] != "") {
             const audioItem = {
@@ -673,8 +674,15 @@ export const audioStore = {
               audioItem: audioItem,
               prevAudioKey: prevAudioKey,
             });
+            addedAudioKeys.push(prevAudioKey);
           }
         }
+
+        return Promise.all(
+          addedAudioKeys.map((audioKey) =>
+            dispatch(FETCH_AUDIO_QUERY, { audioKey })
+          )
+        );
       }
     ),
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {

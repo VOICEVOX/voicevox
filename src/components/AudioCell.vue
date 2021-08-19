@@ -280,13 +280,6 @@ export default defineComponent({
       hoverFlag.value = false;
     };
 
-    // 初期化
-    onMounted(() => {
-      if (audioItem.value.query == undefined) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      }
-    });
-
     return {
       characterInfos,
       audioItem,
