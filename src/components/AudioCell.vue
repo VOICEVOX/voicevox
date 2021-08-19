@@ -42,7 +42,7 @@
       :disable="uiLocked"
       :error="audioItem.text.length >= 80"
       :model-value="audioItem.text"
-      @change="willRemove || setAudioText($event)"
+      @update:model-value="willRemove || setAudioText($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -94,6 +94,16 @@ import { UI_LOCKED } from "@/store/ui";
 import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
 
+const throttle = (func: (...args: any[]) => any, interval: number) => {
+  let timerId: ReturnType<typeof setTimeout> | null = null;
+  return (...args: any[]) => {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+    timerId = setTimeout(() => func(...args), interval);
+  };
+};
+
 export default defineComponent({
   name: "AudioCell",
 
@@ -131,13 +141,16 @@ export default defineComponent({
     );
 
     // TODO: change audio textにしてvuexに載せ替える
-    const setAudioText = async (text: string) => {
-      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
+    const updateAccentQuery = throttle(() => {
       if (!haveAudioQuery.value) {
         store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
       } else {
         store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
       }
+    }, 300);
+    const setAudioText = async (text: string) => {
+      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
+      updateAccentQuery();
     };
     const changeCharacterIndex = (characterIndex: number) => {
       store.dispatch(CHANGE_CHARACTER_INDEX, {
