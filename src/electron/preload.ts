@@ -94,6 +94,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("IS_AVAILABLE_GPU_MODE");
   },
 
+  fileEncoding: (newValue) => {
+    return ipcRenderer.invoke("FILE_ENCODING", { newValue });
+  },
+
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRenderer.on(channel, callback);
   },

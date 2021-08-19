@@ -1,7 +1,11 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
+<<<<<<< HEAD
 import { CharacterInfo } from "@/type/preload";
 import { Rectangle } from "electron";
+=======
+import { CharacterInfo, Encoding } from "@/type/preload";
+>>>>>>> 63d4bca6f9ba2f043d6ea287ff9678b5312f0d80
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -24,6 +28,7 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   windowBoundsBeforeMaximize: Rectangle;
+  fileEncoding: Encoding;
 };
 
 export type AudioItem = {
