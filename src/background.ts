@@ -277,6 +277,14 @@ ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
+ipcMain.handle("FILE_ENCODING", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("fileEncoding", newValue);
+  }
+
+  return store.get("fileEncoding", "UTF-8") as Encoding;
+});
+
 ipcMain.handle("CLOSE_WINDOW", () => {
   app.emit("window-all-closed");
   win.destroy();
@@ -292,14 +300,6 @@ ipcMain.handle("MAXIMIZE_WINDOW", () => {
     store.set("windowBoundsBeforeMaximize", currentBounds);
     win.maximize();
   }
-});
-
-ipcMain.handle("FILE_ENCODING", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("fileEncoding", newValue);
-  }
-
-  return store.get("fileEncoding", "UTF-8") as Encoding;
 });
 
 // app callback
