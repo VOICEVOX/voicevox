@@ -6,7 +6,7 @@
       round
       icon="lens"
       color="green"
-      class="windowButtons"
+      class="titleBarButtons"
       @click="minimizeWindow()"
     ></q-btn>
     <q-btn
@@ -15,7 +15,7 @@
       round
       icon="lens"
       color="yellow"
-      class="windowButtons"
+      class="titleBarButtons"
       @click="maximizeWindow()"
     ></q-btn>
     <q-btn
@@ -23,7 +23,7 @@
       flat
       icon="lens"
       color="red"
-      class="windowButtons"
+      class="titleBarButtons"
       @click="closeWindow()"
     ></q-btn>
   </div>
@@ -32,21 +32,21 @@
       dense
       flat
       icon="minimize"
-      class="windowButtons"
+      class="titleBarButtons"
       @click="minimizeWindow()"
     ></q-btn>
     <q-btn
       dense
       flat
       icon="crop_square"
-      class="windowButtons"
+      class="titleBarButtons"
       @click="maximizeWindow()"
     ></q-btn>
     <q-btn
       dense
       flat
       icon="close"
-      class="windowButtons"
+      class="titleBarButtons"
       id="close"
       @click="closeWindow()"
     ></q-btn>
@@ -58,7 +58,7 @@ import { defineComponent } from "vue";
 import Mousetrap from "mousetrap";
 
 export default defineComponent({
-  name: "WindowButtons",
+  name: "TitleBarButtons",
   setup() {
     const closeWindow = () => window.electron.closeWindow();
     const minimizeWindow = () => window.electron.minimizeWindow();
@@ -79,7 +79,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-.windowButtons {
+.titleBarButtons {
   -webkit-app-region: no-drag;
 }
 

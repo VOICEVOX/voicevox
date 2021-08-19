@@ -12,7 +12,7 @@
     <q-space />
     <div id="windowTitle text-center">VOICEVOX</div>
     <q-space />
-    <window-buttons />
+    <title-bar-buttons />
   </q-bar>
 </template>
 
@@ -24,7 +24,7 @@ import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
-import WindowButtons from "@/components/WindowButtons.vue";
+import TitleBarButtons from "@/components/TitleBarButtons.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -59,7 +59,7 @@ export default defineComponent({
 
   components: {
     MenuButton,
-    WindowButtons,
+    TitleBarButtons,
   },
 
   setup() {
