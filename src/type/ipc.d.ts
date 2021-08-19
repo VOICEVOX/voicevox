@@ -86,6 +86,11 @@ type IpcIHData = {
     args: [];
     return: boolean;
   };
+
+  FILE_ENCODING: {
+    args: [obj: { newValue?: import("@/type/preload").Encoding }];
+    return: import("@/type/preload").Encoding;
+  };
 };
 
 /**

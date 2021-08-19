@@ -24,6 +24,7 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
+  fileEncoding(newValue?: Encoding): Promise<Encoding>;
   onReceivedIPCMsg: <T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
@@ -45,3 +46,5 @@ export type CharacterInfo = {
     policy: string;
   };
 };
+
+export type Encoding = "UTF-8" | "Shift_JIS";

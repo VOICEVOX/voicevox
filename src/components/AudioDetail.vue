@@ -394,6 +394,7 @@ export default defineComponent({
       } else {
         store.dispatch(GENERATE_AND_SAVE_AUDIO, {
           audioKey: activeAudioKey.value!,
+          encoding: store.state.fileEncoding,
         });
       }
     };
