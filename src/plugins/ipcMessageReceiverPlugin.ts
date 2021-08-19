@@ -1,4 +1,4 @@
-import { LOAD_PROJECT_FILE } from "@/store";
+import { LOAD_PROJECT_FILE } from "@/store/project";
 import { App } from "vue";
 import { Store } from "vuex";
 
