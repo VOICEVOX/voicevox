@@ -5,7 +5,15 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, ipcMain, dialog, shell } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  shell,
+  Rectangle,
+} from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
@@ -14,12 +22,7 @@ import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
-<<<<<<< HEAD
-import { CharacterInfo } from "./type/preload";
-import { Rectangle } from "electron/main";
-=======
 import { CharacterInfo, Encoding } from "./type/preload";
->>>>>>> 63d4bca6f9ba2f043d6ea287ff9678b5312f0d80
 
 let win: BrowserWindow;
 
@@ -274,7 +277,6 @@ ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-<<<<<<< HEAD
 ipcMain.handle("CLOSE_WINDOW", () => {
   app.emit("window-all-closed");
   win.destroy();
@@ -290,14 +292,14 @@ ipcMain.handle("MAXIMIZE_WINDOW", () => {
     store.set("windowBoundsBeforeMaximize", currentBounds);
     win.maximize();
   }
-=======
+});
+
 ipcMain.handle("FILE_ENCODING", (_, { newValue }) => {
   if (newValue !== undefined) {
     store.set("fileEncoding", newValue);
   }
 
   return store.get("fileEncoding", "UTF-8") as Encoding;
->>>>>>> 63d4bca6f9ba2f043d6ea287ff9678b5312f0d80
 });
 
 // app callback
