@@ -132,7 +132,7 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
-    frame: isDevelopment ? true : false,
+    frame: isDevelopment,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
 
