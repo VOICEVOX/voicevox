@@ -1,13 +1,5 @@
 <template>
   <menu-bar />
-  <!--
-  <div v-if="!isEngineReady" class="waiting-engine">
-    <div>
-      <q-spinner color="primary" size="2.5rem" />
-      <div>エンジン起動中・・・</div>
-    </div>
-  </div>
-  -->
 
   <q-layout reveal elevated>
     <q-header class="q-py-sm">
