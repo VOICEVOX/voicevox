@@ -21,7 +21,6 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
-  "packageManager": "npm@6.14.14",
   "main": "background.js",
   "dependencies": {
     "@quasar/extras": "^1.10.9",
