@@ -28,11 +28,8 @@ export const store = createStore<State>({
     redoCommands: [],
     useGpu: false,
     isHelpDialogOpen: false,
-<<<<<<< HEAD
-    windowBoundsBeforeMaximize: { x: 0, y: 0, width: 800, height: 600 },
-=======
     fileEncoding: "UTF-8",
->>>>>>> 63d4bca6f9ba2f043d6ea287ff9678b5312f0d80
+    windowBoundsBeforeMaximize: { x: 0, y: 0, width: 800, height: 600 },
   },
 
   getters: {
