@@ -14,7 +14,7 @@ import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 
 import fs from "fs";
-import { CharacterInfo } from "./type/preload";
+import { CharacterInfo, Encoding } from "./type/preload";
 
 let win: BrowserWindow;
 
@@ -35,6 +35,9 @@ const store = new Store({
   schema: {
     useGpu: {
       type: "boolean",
+    },
+    fileEncoding: {
+      type: "string",
     },
   },
 });
@@ -263,6 +266,14 @@ ipcMain.handle("USE_GPU", (_, { newValue }) => {
 
 ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
+});
+
+ipcMain.handle("FILE_ENCODING", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("fileEncoding", newValue);
+  }
+
+  return store.get("fileEncoding", "UTF-8") as Encoding;
 });
 
 // app callback
