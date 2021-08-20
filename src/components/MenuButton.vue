@@ -115,5 +115,8 @@ export default defineComponent({
   &:not(.menu-disable):hover {
     background-color: rgba(global.$primary, 0.3) !important;
   }
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

@@ -38,7 +38,12 @@
     transparent
     color="transparent"
     text-color="secondary"
-    class="full-height cursor-not-allowed no-border-radius"
+    class="
+      full-height
+      cursor-not-allowed
+      no-border-radius
+      title-bar-buttons-root
+    "
   >
     <q-btn
       dense
@@ -108,6 +113,10 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use '@/styles' as global;
+
+.title-bar-buttons-root {
+  z-index: 2000;
+}
 
 .title-bar-buttons {
   -webkit-app-region: no-drag;
