@@ -389,6 +389,7 @@ export default defineComponent({
     const save = () => {
       store.dispatch(GENERATE_AND_SAVE_AUDIO, {
         audioKey: activeAudioKey.value!,
+        encoding: store.state.fileEncoding,
       });
     };
 
