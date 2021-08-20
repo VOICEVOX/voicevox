@@ -11,7 +11,6 @@
     />
     <q-space />
     <div class="window-title">VOICEVOX</div>
-    <!-- q-badge class="absolute-center">VOICEVOX</q-badge> -->
     <q-space />
     <title-bar-buttons />
   </q-bar>

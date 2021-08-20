@@ -398,6 +398,9 @@ export default defineComponent({
 <style lang="scss">
 body {
   user-select: none;
+  border-left: solid 2px #a4d4b4;
+  border-right: solid 2px #a4d4b4;
+  border-bottom: solid 4px #a4d4b4;
 }
 
 .relarive-absolute-wrapper {
