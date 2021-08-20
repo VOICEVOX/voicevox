@@ -40,9 +40,9 @@
       hide-bottom-space
       class="full-width"
       :disable="uiLocked"
-      :error="audioItem.text.length >= 80"
-      :model-value="audioItem.text"
-      @update:model-value="willRemove || setAudioText($event)"
+      :error="inputAudioText.text.length >= 80"
+      v-model="inputAudioText.text"
+      @change="willRemove || setAudioText()"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -71,7 +71,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, reactive, ref, watch } from "vue";
 import { useStore } from "@/store";
 import {
   FETCH_ACCENT_PHRASES,
@@ -93,16 +93,6 @@ import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
-
-const throttle = (func: (...args: any[]) => any, interval: number) => {
-  let timerId: ReturnType<typeof setTimeout> | null = null;
-  return (...args: any[]) => {
-    if (timerId) {
-      clearTimeout(timerId);
-    }
-    timerId = setTimeout(() => func(...args), interval);
-  };
-};
 
 export default defineComponent({
   name: "AudioCell",
@@ -140,17 +130,28 @@ export default defineComponent({
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
+    const storedAudioText = computed(
+      () => store.state.audioItems[props.audioKey].text
+    );
+    const inputAudioText = reactive({
+      text: storedAudioText.value,
+    });
+    watch(storedAudioText, (current, prev) => {
+      if (current !== prev) {
+        inputAudioText.text = current;
+      }
+    });
     // TODO: change audio textにしてvuexに載せ替える
-    const updateAccentQuery = throttle(() => {
+    const setAudioText = async () => {
+      await store.dispatch(SET_AUDIO_TEXT, {
+        audioKey: props.audioKey,
+        text: inputAudioText.text,
+      });
       if (!haveAudioQuery.value) {
         store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
       } else {
         store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
       }
-    }, 300);
-    const setAudioText = async (text: string) => {
-      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
-      updateAccentQuery();
     };
     const changeCharacterIndex = (characterIndex: number) => {
       store.dispatch(CHANGE_CHARACTER_INDEX, {
@@ -189,7 +190,8 @@ export default defineComponent({
           if (audioItem.value.text == "") {
             const text = texts.shift();
             if (text == undefined) return;
-            setAudioText(text);
+            inputAudioText.text = text;
+            setAudioText();
           }
 
           store.dispatch(PUT_TEXTS, {
@@ -302,6 +304,8 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
+      storedAudioText,
+      inputAudioText,
       setAudioText,
       changeCharacterIndex,
       setActiveAudioKey,
