@@ -560,7 +560,7 @@ $pitch-label-height: 24px;
           min-width: 10px;
           max-width: 10px;
           grid-row: 3 / span 1;
-          z-index: global.$detail-veiw-splitter-cell-zindex;
+          z-index: global.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
           background-color: #cdf;
