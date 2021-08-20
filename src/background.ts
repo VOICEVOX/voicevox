@@ -132,7 +132,7 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
-    frame: isDevelopment,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
 
@@ -153,6 +153,9 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
+  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -292,12 +295,8 @@ ipcMain.handle("CLOSE_WINDOW", () => {
 ipcMain.handle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMain.handle("MAXIMIZE_WINDOW", () => {
   if (win.isMaximized()) {
-    const before = store.get("windowBoundsBeforeMaximize") as Rectangle;
-    win.setBounds(before);
-    win.restore();
+    win.unmaximize();
   } else {
-    const currentBounds = win.getBounds();
-    store.set("windowBoundsBeforeMaximize", currentBounds);
     win.maximize();
   }
 });

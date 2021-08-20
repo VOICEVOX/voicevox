@@ -6,7 +6,7 @@
       round
       icon="lens"
       color="green"
-      class="titleBarButtons"
+      class="title-bar-buttons"
       @click="minimizeWindow()"
     ></q-btn>
     <q-btn
@@ -15,7 +15,7 @@
       round
       icon="lens"
       color="yellow"
-      class="titleBarButtons"
+      class="title-bar-buttons"
       @click="maximizeWindow()"
     ></q-btn>
     <q-btn
@@ -23,7 +23,7 @@
       flat
       icon="lens"
       color="red"
-      class="titleBarButtons"
+      class="title-bar-buttons"
       @click="closeWindow()"
     ></q-btn>
   </div>
@@ -32,30 +32,43 @@
       dense
       flat
       icon="minimize"
-      class="titleBarButtons"
+      class="title-bar-buttons"
       @click="minimizeWindow()"
     ></q-btn>
+
     <q-btn
+      v-if="!isMaximized"
       dense
       flat
       icon="crop_square"
-      class="titleBarButtons"
+      class="title-bar-buttons"
       @click="maximizeWindow()"
     ></q-btn>
+    <q-btn
+      v-else
+      dense
+      flat
+      :icon="mdiWindowRestore"
+      class="title-bar-buttons"
+      @click="maximizeWindow()"
+    >
+    </q-btn>
+
     <q-btn
       dense
       flat
       icon="close"
-      class="titleBarButtons"
-      id="close"
+      class="title-bar-buttons close"
       @click="closeWindow()"
     ></q-btn>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, computed } from "vue";
+import { useStore } from "@/store";
 import Mousetrap from "mousetrap";
+import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
 
 export default defineComponent({
   name: "TitleBarButtons",
@@ -64,13 +77,18 @@ export default defineComponent({
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
 
-    Mousetrap.bind(["alt+f4", "ctrl+q", "command+q"], closeWindow);
-    Mousetrap.bind(["ctrl+m", "command+m"], minimizeWindow);
+    const store = useStore();
+
+    const isMaximized = computed(() => store.state.isMaximized);
+
+    Mousetrap.bind(["alt+f4", "command+q"], closeWindow);
 
     return {
       closeWindow,
       minimizeWindow,
       maximizeWindow,
+      mdiWindowRestore,
+      isMaximized,
     };
   },
 });
@@ -79,11 +97,11 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-.titleBarButtons {
+.title-bar-buttons {
   -webkit-app-region: no-drag;
 }
 
-#close:hover {
+.close:hover {
   background-color: red;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <q-bar class="bg-white q-pa-none">
-    <img src="icon.png" id="windowLogo" alt="application logo" />
+    <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
@@ -9,9 +9,7 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
-    <q-space />
-    <div id="windowTitle text-center">VOICEVOX</div>
-    <q-space />
+    <div class="text-center col text-weight-bold">VOICEVOX</div>
     <title-bar-buttons />
   </q-bar>
 </template>
@@ -249,7 +247,7 @@ export default defineComponent({
   }
 }
 
-#windowLogo {
+.window-logo {
   max-height: global.$menubar-height;
 }
 </style>
