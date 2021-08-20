@@ -34,8 +34,8 @@
               aria-label="音声ファイルとして保存"
               size="small"
               icon="file_download"
-              @click="save"
-              :disable="nowPlaying || nowGenerating"
+              @click="save()"
+              :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>
           </template>
         </div>
