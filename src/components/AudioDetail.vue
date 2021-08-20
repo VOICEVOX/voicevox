@@ -34,8 +34,8 @@
               aria-label="音声ファイルとして保存"
               size="small"
               icon="file_download"
-              @click="save($event)"
-              :disable="nowPlaying || nowGenerating"
+              @click="save()"
+              :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>
           </template>
         </div>
@@ -386,16 +386,10 @@ export default defineComponent({
     };
 
     // save
-    const save = (event: MouseEvent) => {
-      var x = event.x || event.clientX;
-      var y = event.y || event.clientY;
-      if (!x && !y) {
-        play();
-      } else {
-        store.dispatch(GENERATE_AND_SAVE_AUDIO, {
-          audioKey: activeAudioKey.value!,
-        });
-      }
+    const save = () => {
+      store.dispatch(GENERATE_AND_SAVE_AUDIO, {
+        audioKey: activeAudioKey.value!,
+      });
     };
 
     const nowPlaying = computed(
