@@ -1,5 +1,11 @@
 <template>
-  <div v-if="$q.platform.is.mac">
+  <q-badge
+    v-if="$q.platform.is.mac"
+    transparent
+    color="transparent"
+    text-color="secondary"
+    class="full-height cursor-not-allowed no-border-radius"
+  >
     <q-btn
       dense
       flat
@@ -26,8 +32,14 @@
       class="title-bar-buttons"
       @click="closeWindow()"
     ></q-btn>
-  </div>
-  <div v-else>
+  </q-badge>
+  <q-badge
+    v-else
+    transparent
+    color="transparent"
+    text-color="secondary"
+    class="full-height cursor-not-allowed no-border-radius"
+  >
     <q-btn
       dense
       flat
@@ -61,7 +73,7 @@
       class="title-bar-buttons close"
       @click="closeWindow()"
     ></q-btn>
-  </div>
+  </q-badge>
 </template>
 
 <script lang="ts">
@@ -99,6 +111,7 @@ export default defineComponent({
 
 .title-bar-buttons {
   -webkit-app-region: no-drag;
+  overflow: visible;
 }
 
 .close:hover {

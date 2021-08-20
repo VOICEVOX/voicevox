@@ -1,5 +1,5 @@
 <template>
-  <q-toolbar class="bg-white q-pa-none">
+  <q-bar class="bg-white q-pa-none relative-position">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
@@ -9,10 +9,12 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
-    <q-toolbar-title class="absolute-center">VOICEVOX</q-toolbar-title>
+    <q-space />
+    <div class="window-title">VOICEVOX</div>
+    <!-- q-badge class="absolute-center">VOICEVOX</q-badge> -->
     <q-space />
     <title-bar-buttons />
-  </q-toolbar>
+  </q-bar>
 </template>
 
 <script lang="ts">
@@ -239,7 +241,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-.q-toolbar {
+.q-bar {
   min-height: global.$menubar-height;
   -webkit-app-region: drag;
   > .q-badge {
@@ -250,5 +252,12 @@ export default defineComponent({
 
 .window-logo {
   height: global.$menubar-height;
+}
+
+.window-title {
+  height: global.$menubar-height;
+  margin-right: 10%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>
