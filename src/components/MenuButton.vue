@@ -20,6 +20,7 @@
       v-if="menudata.subMenu"
       transition-show="none"
       transition-hide="none"
+      :fit="true"
       v-model="selectedComputed"
     >
       <q-list dense>
