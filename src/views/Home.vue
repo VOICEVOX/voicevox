@@ -69,7 +69,7 @@
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
           separator-class="bg-primary"
-          separator-style="height: 3px"
+          :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
           v-model="audioDetailPaneHeight"
@@ -80,7 +80,7 @@
               unit="px"
               :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
               separator-class="bg-primary"
-              separator-style="width: 3px"
+              :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               class="full-width"
               v-model="audioInfoPaneWidth"
             >
@@ -162,7 +162,7 @@ import {
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
-import { UI_LOCKED, IS_HELP_DIALOG_OPEN } from "@/store/ui";
+import { UI_LOCKED, IS_HELP_DIALOG_OPEN, SHOULD_SHOW_PANES } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -278,8 +278,12 @@ export default defineComponent({
       audioCellRefs[newAudioKey].focusTextField();
     };
 
-    watch(activeAudioKey, (val, old) => {
-      if (!!val === !!old) return;
+    // Pane
+    const shouldShowPanes = computed<boolean>(
+      () => store.getters[SHOULD_SHOW_PANES]
+    );
+    watch(shouldShowPanes, (val, old) => {
+      if (val === old) return;
 
       if (val) {
         audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
@@ -370,6 +374,7 @@ export default defineComponent({
       redo,
       addAudioCellRef,
       addAudioItem,
+      shouldShowPanes,
       addAndMoveCell,
       focusCell,
       pageOnResize,

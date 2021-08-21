@@ -1,8 +1,10 @@
 import { Action, ActionContext, StoreOptions } from "vuex";
 import { State } from "./type";
 import { Encoding } from "@/type/preload";
+import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";
+export const SHOULD_SHOW_PANES = "SHOULD_SHOW_PANES";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
 export const GET_USE_GPU = "GET_USE_GPU";
@@ -28,6 +30,9 @@ export const uiStore = {
   getters: {
     [UI_LOCKED](state) {
       return state.uiLockCount > 0;
+    },
+    [SHOULD_SHOW_PANES](_, getters) {
+      return getters[ACTIVE_AUDIO_KEY] != undefined;
     },
   },
 
