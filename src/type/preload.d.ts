@@ -29,6 +29,9 @@ export interface Sandbox {
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
   ) => IpcRenderer;
+  closeWindow(): void;
+  minimizeWindow(): void;
+  maximizeWindow(): void;
 }
 
 export type AppInfos = {

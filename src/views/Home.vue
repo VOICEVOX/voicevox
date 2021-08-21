@@ -1,11 +1,6 @@
 <template>
   <menu-bar />
-  <div v-if="!isEngineReady" class="waiting-engine">
-    <div>
-      <q-spinner color="primary" size="2.5rem" />
-      <div>エンジン起動中・・・</div>
-    </div>
-  </div>
+
   <q-layout reveal elevated>
     <q-header class="q-py-sm">
       <q-toolbar>
@@ -61,7 +56,13 @@
     </q-header>
 
     <q-page-container>
-      <q-page class="main-row-panes">
+      <div v-if="!isEngineReady" class="waiting-engine">
+        <div>
+          <q-spinner color="primary" size="2.5rem" />
+          <div>エンジン起動中・・・</div>
+        </div>
+      </div>
+      <q-page v-else class="main-row-panes">
         <q-splitter
           horizontal
           reverse
@@ -395,8 +396,12 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@use '@/styles' as global;
 body {
   user-select: none;
+  border-left: solid 2px #{global.$primary};
+  border-right: solid 2px #{global.$primary};
+  border-bottom: solid 4px #{global.$primary};
 }
 
 .relarive-absolute-wrapper {
