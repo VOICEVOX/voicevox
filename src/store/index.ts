@@ -29,6 +29,7 @@ export const store = createStore<State>({
     useGpu: false,
     isHelpDialogOpen: false,
     fileEncoding: "UTF-8",
+    isMaximized: false,
   },
 
   getters: {

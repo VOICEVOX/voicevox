@@ -1,5 +1,6 @@
 <template>
-  <q-bar class="bg-white q-pa-none">
+  <q-bar class="bg-white q-pa-none relative-position">
+    <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
@@ -8,6 +9,10 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
+    <q-space />
+    <div class="window-title">VOICEVOX</div>
+    <q-space />
+    <title-bar-buttons />
   </q-bar>
 </template>
 
@@ -19,6 +24,7 @@ import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
+import TitleBarButtons from "@/components/TitleBarButtons.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -53,6 +59,7 @@ export default defineComponent({
 
   components: {
     MenuButton,
+    TitleBarButtons,
   },
 
   setup() {
@@ -235,8 +242,21 @@ export default defineComponent({
 
 .q-bar {
   min-height: global.$menubar-height;
+  -webkit-app-region: drag;
   > .q-badge {
     margin-left: 0;
+    -webkit-app-region: no-drag;
   }
+}
+
+.window-logo {
+  height: global.$menubar-height;
+}
+
+.window-title {
+  height: global.$menubar-height;
+  margin-right: 10%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

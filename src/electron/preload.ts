@@ -101,6 +101,18 @@ const api: Sandbox = {
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRenderer.on(channel, callback);
   },
+
+  closeWindow: () => {
+    ipcRenderer.invoke("CLOSE_WINDOW");
+  },
+
+  minimizeWindow: () => {
+    ipcRenderer.invoke("MINIMIZE_WINDOW");
+  },
+
+  maximizeWindow: () => {
+    ipcRenderer.invoke("MAXIMIZE_WINDOW");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
