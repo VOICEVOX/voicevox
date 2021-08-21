@@ -324,8 +324,6 @@ export default defineComponent({
     }
   }
   .q-input {
-    position: relative;
-
     .q-field__control {
       height: 2rem;
       background: none;
@@ -336,9 +334,7 @@ export default defineComponent({
     }
     .q-field__after {
       height: 2rem;
-      position: absolute;
-      right: 0;
-      background-color: white;
+      padding-left: 5px;
       display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
