@@ -125,6 +125,8 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
+    minWidth: 320,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -142,6 +144,9 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
+  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -272,6 +277,19 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
   }
 
   return store.get("fileEncoding", "UTF-8") as Encoding;
+});
+
+ipcMainHandle("CLOSE_WINDOW", () => {
+  app.emit("window-all-closed");
+  win.destroy();
+});
+ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
+ipcMainHandle("MAXIMIZE_WINDOW", () => {
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
 });
 
 // app callback

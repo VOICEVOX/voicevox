@@ -91,6 +91,21 @@ type IpcIHData = {
     args: [obj: { newValue?: import("@/type/preload").Encoding }];
     return: import("@/type/preload").Encoding;
   };
+
+  CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  MINIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  MAXIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
 };
 
 /**
@@ -99,6 +114,16 @@ type IpcIHData = {
 type IpcSOData = {
   LOAD_PROJECT_FILE: {
     args: [obj: { filePath?: string; confirm?: boolean }];
+    return: void;
+  };
+
+  DETECT_MAXIMIZED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNMAXIMIZED: {
+    args: [];
     return: void;
   };
 };
