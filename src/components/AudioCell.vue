@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="audio-cell"
-    @mouseover="mouseOverAction"
-    @mouseleave="mouseLeaveAction"
-  >
+  <div class="audio-cell">
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
@@ -57,7 +53,7 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template #after v-if="hoverFlag && deleteButtonEnable">
+      <template #after v-if="deleteButtonEnable">
         <q-btn
           round
           flat
@@ -273,17 +269,6 @@ export default defineComponent({
         URL.createObjectURL(characterInfo.iconBlob)
     );
 
-    // ホバー
-    const hoverFlag = ref(false);
-
-    const mouseOverAction = () => {
-      hoverFlag.value = true;
-    };
-
-    const mouseLeaveAction = () => {
-      hoverFlag.value = false;
-    };
-
     return {
       characterInfos,
       audioItem,
@@ -313,9 +298,6 @@ export default defineComponent({
       blurCell,
       isOpenedCharacterList,
       getCharacterIconUrl,
-      hoverFlag,
-      mouseOverAction,
-      mouseLeaveAction,
     };
   },
 });
@@ -351,10 +333,14 @@ export default defineComponent({
     .q-field__after {
       height: 2rem;
       padding-left: 5px;
+      display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
       background-color: #0001;
     }
+  }
+  &:hover > .q-input > .q-field__after {
+    display: flex;
   }
 }
 
