@@ -7,7 +7,7 @@ import Store from "electron-store";
 
 import { app, protocol, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
-import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
@@ -126,9 +126,6 @@ async function createWindow() {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-
-      enableRemoteModule: !!process.env.IS_TEST,
-
       nodeIntegration: true,
       contextIsolation: true,
     },
@@ -308,9 +305,9 @@ app.on("activate", () => {
 });
 
 app.on("ready", async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
+  if (isDevelopment) {
     try {
-      await installExtension(VUEJS_DEVTOOLS);
+      await installExtension(VUEJS3_DEVTOOLS);
     } catch (e) {
       console.error("Vue Devtools failed to install:", e.toString());
     }
