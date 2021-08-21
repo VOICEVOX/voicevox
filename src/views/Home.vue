@@ -396,11 +396,12 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+@use '@/styles' as global;
 body {
   user-select: none;
-  border-left: solid 2px #a4d4b4;
-  border-right: solid 2px #a4d4b4;
-  border-bottom: solid 4px #a4d4b4;
+  border-left: solid 2px #{global.$primary};
+  border-right: solid 2px #{global.$primary};
+  border-bottom: solid 4px #{global.$primary};
 }
 
 .relarive-absolute-wrapper {

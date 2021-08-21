@@ -114,6 +114,10 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
+.q-badge {
+  padding: 0;
+}
+
 .title-bar-buttons-root {
   z-index: 2000;
 }

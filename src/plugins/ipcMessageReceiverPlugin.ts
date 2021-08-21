@@ -1,7 +1,7 @@
 import { LOAD_PROJECT_FILE } from "@/store/project";
 import { App } from "vue";
 import { Store } from "vuex";
-import { DETECT_MAXIMIZED, DETECT_UNMAXIMIZED } from "@/store";
+import { DETECT_MAXIMIZED, DETECT_UNMAXIMIZED } from "@/store/ui";
 
 export const ipcMessageReceiver = {
   install: (_: App, options: { store: Store<unknown> }): void => {
