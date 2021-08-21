@@ -1,4 +1,4 @@
-import { Action, Mutation, StoreOptions } from "vuex";
+import { Store, Payload, ActionContext, StoreOptions, Action } from "vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
@@ -16,71 +16,133 @@ export const PUSH_COMMAND = "PUSH_COMMAND";
 export const UNDO = "UNDO";
 export const REDO = "REDO";
 
-export class Command<S> implements ICommand<S> {
-  undoOperations: Operation[];
-  redoOperations: Operation[];
+type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
+  draft: Draft<S>,
+  payload: P
+) => void;
+type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
+type PayloadMutation<S, P extends Record<string, unknown> | undefined> = (
+  state: S,
+  payload: P
+) => void;
+type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
+type PayloadAction<S, P extends Record<string, unknown> | undefined> = (
+  injectee: ActionContext<S, S>,
+  payload: P
+) => any;
+type PayloadActionTree<S> = Record<string, PayloadAction<S, any>>;
 
-  constructor(state: S, recipe: (draft: Draft<S>) => void) {
-    const [_, redoPatches, undoPatches] = immer.produceWithPatches(
-      state,
-      recipe
-    );
-    this.undoOperations = Command.convertPatches(undoPatches);
-    this.redoOperations = Command.convertPatches(redoPatches);
-  }
-
-  static redo<S>(state: S, command: Command<S>) {
-    applyPatch(state, command.redoOperations);
-  }
-  static undo<S>(state: S, command: Command<S>) {
-    applyPatch(state, command.undoOperations);
-  }
-
-  static convertPatches(patches: Patch[]) {
-    return patches.map((patch) => {
-      const operation: Operation = {
-        op: patch.op,
-        path: `/${patch.path.join("/")}`,
-        value: patch.value,
-      };
-      return operation;
-    });
-  }
-}
-
-type CommandFactory<S, P> = (state: S, payload: P) => Command<S>;
-
-const createCommandFactory =
-  <S, P>(
-    recipeWithPayload: (draft: Draft<S>, payload: P) => void
-  ): CommandFactory<S, P> =>
-  (state, payload) =>
-    new Command(state, (draft) => recipeWithPayload(draft, payload));
-
-export function createCommandAction<S, P>(
-  recipeWithPayload: (draft: Draft<S>, payload: P) => void
-): Action<S, S> {
-  const commandFactory = createCommandFactory(recipeWithPayload);
-  return ({ state, commit }, payload: P) => {
-    commit(PUSH_COMMAND, { command: commandFactory(state, payload) });
-  };
-}
-
-type UndoRedoState<S> = {
-  undoCommands: Command<S>[];
-  redoCommands: Command<S>[];
+type Command = {
+  doOperation: Operation[];
+  undoOperation: Operation[];
 };
-export function createCommandMutation<S extends UndoRedoState<S>, P>(
-  recipeWithPayload: (draft: Draft<S>, payload: P) => void
-): Mutation<S> {
-  const commandFactory = createCommandFactory(recipeWithPayload);
-  return (state, payload: P) => {
-    const command = commandFactory(state, payload);
-    Command.redo(state, command);
+
+interface UndoRedoState {
+  undoCommands: Command[];
+  redoCommands: Command[];
+}
+
+export const createPayloadActionTreeFromCommandMutationTree = <
+  S extends UndoRedoState,
+  Arg extends PayloadMutationTree<S>
+>(
+  arg: Arg
+): { [K in keyof Arg]: PayloadAction<S, Parameters<Arg[K]>[1]> } =>
+  Object.fromEntries(
+    Object.entries(arg).map(([key, commandMutation]) => [
+      key,
+      createPayloadActionFromCommandMutation(key, commandMutation),
+    ])
+  ) as { [K in keyof Arg]: PayloadAction<S, Parameters<Arg[K]>[1]> };
+
+export const createPayloadActionFromCommandMutation =
+  <
+    S extends UndoRedoState,
+    K extends string,
+    P extends Record<string, unknown> | undefined
+  >(
+    mutationType: K,
+    commandMutation: PayloadMutation<S, P>
+  ): PayloadAction<S, P> =>
+  (injectee: ActionContext<S, S>, payload: P): void => {
+    injectee.commit({ ...payload, type: mutationType });
+  };
+
+type FilterPrefixReturn<
+  Prefix extends string,
+  Arg extends Record<string, unknown>
+> = {
+  [K in keyof Arg as K extends `${Prefix}${infer Rest}` ? Rest : never]: Arg[K];
+};
+export const filterPrefix =
+  <Prefix extends string>(prefix: Prefix) =>
+  <Arg extends Record<string, unknown>>(
+    arg: Arg
+  ): FilterPrefixReturn<Prefix, Arg> =>
+    Object.fromEntries(
+      Object.entries(arg)
+        .filter(([key, val]) => key.substring(0, prefix.length) == prefix)
+        .map(([key, val]) => [key.substring(prefix.length), val])
+    ) as FilterPrefixReturn<Prefix, Arg>;
+
+type FilterNoPrefixReturn<
+  Prefix extends string,
+  Arg extends Record<string, unknown>
+> = {
+  [K in keyof Arg as K extends `${Prefix}${string}` ? never : K]: Arg[K];
+};
+export const filterNoPrefix =
+  <Prefix extends string>(prefix: Prefix) =>
+  <Arg extends Record<string, unknown>>(
+    arg: Arg
+  ): FilterNoPrefixReturn<Prefix, Arg> =>
+    Object.fromEntries(
+      Object.entries(arg).filter(
+        ([key, val]) => key.substring(0, prefix.length) != prefix
+      )
+    ) as FilterNoPrefixReturn<Prefix, Arg>;
+
+export const createCommandMutationTreeFromPayloadRecipeTree = <
+  S extends UndoRedoState,
+  Arg extends PayloadRecipeTree<S>
+>(
+  arg: Arg
+): { [K in keyof Arg]: PayloadMutation<S, Parameters<Arg[K]>[1]> } =>
+  Object.fromEntries(
+    Object.entries(arg).map(([key, val]) => [key, createCommandMutation(val)])
+  ) as { [K in keyof Arg]: PayloadMutation<S, Parameters<Arg[K]>[1]> };
+
+export const createCommandMutation =
+  <S extends UndoRedoState, P extends Record<string, unknown> | undefined>(
+    recipe: PayloadRecipe<S, P>
+  ): PayloadMutation<S, P> =>
+  (state: S, payload: P): void => {
+    const command = recordOperations(recipe)(state, payload);
+    applyPatch(state, command.doOperation);
     state.undoCommands.push(command);
     state.redoCommands.splice(0);
   };
-}
+
+const patchToOperation = (patch: Patch): Operation => ({
+  op: patch.op,
+  path: `/${patch.path.join("/")}`,
+  value: patch.value,
+});
+
+const recordOperations =
+  <S, P extends Record<string, unknown> | undefined>(
+    recipe: PayloadRecipe<S, P>
+  ) =>
+  (state: S, payload: P): Command => {
+    const [_, doPatches, undoPatches] = immer.produceWithPatches(
+      state,
+      (draft: Draft<S>) => recipe(draft, payload)
+    );
+    return {
+      doOperation: doPatches.map(patchToOperation),
+      undoOperation: undoPatches.map(patchToOperation),
+    };
+  };
 
 export const commandStore = {
   getters: {
@@ -93,23 +155,22 @@ export const commandStore = {
   },
 
   mutations: {
-    [PUSH_COMMAND](state, { command }: { command: Command<State> }) {
-      Command.redo(state, command);
-      state.undoCommands.push(command);
-      state.redoCommands.splice(0);
-    },
     [UNDO](state) {
       const command = state.undoCommands.pop();
       if (command != null) {
-        Command.undo(state, command);
         state.redoCommands.push(command);
+        if (command != null) {
+          applyPatch(state, command.undoOperation);
+        }
       }
     },
     [REDO](state) {
       const command = state.redoCommands.pop();
       if (command != null) {
-        Command.redo(state, command);
         state.undoCommands.push(command);
+        if (command != null) {
+          applyPatch(state, command.doOperation);
+        }
       }
     },
   },

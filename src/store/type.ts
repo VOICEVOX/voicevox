@@ -1,11 +1,17 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
 import { CharacterInfo, Encoding } from "@/type/preload";
+import { Command } from "./command";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
   redoOperations: Operation[];
 }
+
+type Command = {
+  doOperation: Operation[];
+  undoOperation: Operation[];
+};
 
 export type State = {
   isEngineReady: boolean;
@@ -18,8 +24,8 @@ export type State = {
   audioDetailPaneOffset?: number;
   audioInfoPaneOffset?: number;
   nowPlayingContinuously: boolean;
-  undoCommands: ICommand<State>[];
-  redoCommands: ICommand<State>[];
+  undoCommands: Command[];
+  redoCommands: Command[];
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   fileEncoding: Encoding;
