@@ -133,7 +133,6 @@ export default defineComponent({
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
-      console.log(text);
       await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
     };
     const updateAudioQuery = async () => {
