@@ -156,6 +156,14 @@ export default defineComponent({
               store.dispatch(LOAD_PROJECT_FILE, {});
             },
           },
+          { type: "separator" },
+          {
+            type: "button",
+            label: "オプション",
+            onClick: () => {
+              store.dispatch("IS_SETTING_WINDOW_OPEN", {});
+            },
+          },
         ],
       },
       {
