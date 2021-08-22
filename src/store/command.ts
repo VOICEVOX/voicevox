@@ -2,7 +2,7 @@ import { Store, Payload, ActionContext, StoreOptions, Action } from "vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
-import { ICommand, State } from "./type";
+import { State } from "./type";
 
 enablePatches();
 enableMapSet();
@@ -16,23 +16,21 @@ export const PUSH_COMMAND = "PUSH_COMMAND";
 export const UNDO = "UNDO";
 export const REDO = "REDO";
 
-type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
+export type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
   draft: Draft<S>,
   payload: P
 ) => void;
-type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
-type PayloadMutation<S, P extends Record<string, unknown> | undefined> = (
-  state: S,
-  payload: P
-) => void;
-type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
-type PayloadAction<S, P extends Record<string, unknown> | undefined> = (
+export type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
+export type PayloadMutation<S, P extends Record<string, unknown> | undefined> =
+  (state: S, payload: P) => void;
+export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
+export type PayloadAction<S, P extends Record<string, unknown> | undefined> = (
   injectee: ActionContext<S, S>,
   payload: P
 ) => any;
-type PayloadActionTree<S> = Record<string, PayloadAction<S, any>>;
+export type PayloadActionTree<S> = Record<string, PayloadAction<S, any>>;
 
-type Command = {
+export type Command = {
   doOperation: Operation[];
   undoOperation: Operation[];
 };
@@ -42,20 +40,20 @@ interface UndoRedoState {
   redoCommands: Command[];
 }
 
-export const createPayloadActionTreeFromCommandMutationTree = <
+export const createPayloadActionTree = <
   S extends UndoRedoState,
   Arg extends PayloadMutationTree<S>
 >(
-  arg: Arg
+  commandMutationTree: Arg
 ): { [K in keyof Arg]: PayloadAction<S, Parameters<Arg[K]>[1]> } =>
   Object.fromEntries(
-    Object.entries(arg).map(([key, commandMutation]) => [
+    Object.entries(commandMutationTree).map(([key, commandMutation]) => [
       key,
-      createPayloadActionFromCommandMutation(key, commandMutation),
+      createPayloadAction(key, commandMutation),
     ])
   ) as { [K in keyof Arg]: PayloadAction<S, Parameters<Arg[K]>[1]> };
 
-export const createPayloadActionFromCommandMutation =
+export const createPayloadAction =
   <
     S extends UndoRedoState,
     K extends string,
@@ -68,56 +66,25 @@ export const createPayloadActionFromCommandMutation =
     injectee.commit({ ...payload, type: mutationType });
   };
 
-type FilterPrefixReturn<
-  Prefix extends string,
-  Arg extends Record<string, unknown>
-> = {
-  [K in keyof Arg as K extends `${Prefix}${infer Rest}` ? Rest : never]: Arg[K];
-};
-export const filterPrefix =
-  <Prefix extends string>(prefix: Prefix) =>
-  <Arg extends Record<string, unknown>>(
-    arg: Arg
-  ): FilterPrefixReturn<Prefix, Arg> =>
-    Object.fromEntries(
-      Object.entries(arg)
-        .filter(([key, val]) => key.substring(0, prefix.length) == prefix)
-        .map(([key, val]) => [key.substring(prefix.length), val])
-    ) as FilterPrefixReturn<Prefix, Arg>;
-
-type FilterNoPrefixReturn<
-  Prefix extends string,
-  Arg extends Record<string, unknown>
-> = {
-  [K in keyof Arg as K extends `${Prefix}${string}` ? never : K]: Arg[K];
-};
-export const filterNoPrefix =
-  <Prefix extends string>(prefix: Prefix) =>
-  <Arg extends Record<string, unknown>>(
-    arg: Arg
-  ): FilterNoPrefixReturn<Prefix, Arg> =>
-    Object.fromEntries(
-      Object.entries(arg).filter(
-        ([key, val]) => key.substring(0, prefix.length) != prefix
-      )
-    ) as FilterNoPrefixReturn<Prefix, Arg>;
-
-export const createCommandMutationTreeFromPayloadRecipeTree = <
+export const createCommandMutationTree = <
   S extends UndoRedoState,
   Arg extends PayloadRecipeTree<S>
 >(
-  arg: Arg
+  payloadRecipeTree: Arg
 ): { [K in keyof Arg]: PayloadMutation<S, Parameters<Arg[K]>[1]> } =>
   Object.fromEntries(
-    Object.entries(arg).map(([key, val]) => [key, createCommandMutation(val)])
+    Object.entries(payloadRecipeTree).map(([key, val]) => [
+      key,
+      createCommandMutation(val),
+    ])
   ) as { [K in keyof Arg]: PayloadMutation<S, Parameters<Arg[K]>[1]> };
 
 export const createCommandMutation =
   <S extends UndoRedoState, P extends Record<string, unknown> | undefined>(
-    recipe: PayloadRecipe<S, P>
+    payloadRecipe: PayloadRecipe<S, P>
   ): PayloadMutation<S, P> =>
   (state: S, payload: P): void => {
-    const command = recordOperations(recipe)(state, payload);
+    const command = recordOperations(payloadRecipe)(state, payload);
     applyPatch(state, command.doOperation);
     state.undoCommands.push(command);
     state.redoCommands.splice(0);
