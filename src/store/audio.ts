@@ -628,15 +628,18 @@ export const audioStore = {
     },
     [PLAY_CONTINUOUSLY_AUDIO]: createUILockAction(
       async ({ state, commit, dispatch }) => {
+        const currentAudioKey = state._activeAudioKey;
         commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: true });
         try {
           for (const audioKey of state.audioKeys) {
+            commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
             const isEnded = await dispatch(PLAY_AUDIO, { audioKey });
             if (!isEnded) {
               break;
             }
           }
         } finally {
+          commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
           commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });
         }
       }
