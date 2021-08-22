@@ -206,9 +206,9 @@
               :class="[
                 'splitter-cell',
                 {
-                  'splitter-cell-splitted':
+                  'splitter-cell-be-split':
                     moraIndex == accentPhrase.moras.length - 1,
-                  'splitter-cell-splitted-pause': accentPhrase.pauseMora,
+                  'splitter-cell-be-split-pause': accentPhrase.pauseMora,
                 },
               ]"
               :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
@@ -223,8 +223,8 @@
               "
               class="
                 splitter-cell
-                splitter-cell-splitted
-                splitter-cell-splitted-pause
+                splitter-cell-be-split
+                splitter-cell-be-split-pause
               "
             />
           </template>
@@ -566,12 +566,12 @@ $pitch-label-height: 24px;
           background-color: #cdf;
           cursor: pointer;
         }
-        &.splitter-cell-splitted {
+        &.splitter-cell-be-split {
           min-width: 40px;
           max-width: 40px;
           grid-row: 1 / span 3;
         }
-        &.splitter-cell-splitted-pause {
+        &.splitter-cell-be-split-pause {
           min-width: 10px;
           max-width: 10px;
         }
