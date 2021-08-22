@@ -72,6 +72,7 @@
           :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
+          :disable="!shouldShowPanes"
           v-model="audioDetailPaneHeight"
         >
           <template #before>
@@ -80,6 +81,7 @@
               separator-class="bg-primary"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
+              :disable="!shouldShowPanes"
               v-model="portraitPaneWidth"
             >
               <template #before>
@@ -93,6 +95,7 @@
                   separator-class="bg-primary"
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
+                  :disable="!shouldShowPanes"
                   v-model="audioInfoPaneWidth"
                 >
                   <template #before>
