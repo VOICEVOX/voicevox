@@ -97,7 +97,7 @@
                 >
                   <template #before>
                     <div
-                      id="audio-cell-pane"
+                      class="audio-cell-pane"
                       :class="{ 'is-dragging': dragEventCounter > 0 }"
                       @dragenter="dragEventCounter++"
                       @dragleave="dragEventCounter--"
@@ -129,14 +129,14 @@
                     </div>
                   </template>
                   <template #after>
-                    <audio-info id="audio-info-pane" />
+                    <audio-info />
                   </template>
                 </q-splitter>
               </template>
             </q-splitter>
           </template>
           <template #after>
-            <audio-detail id="audio-detail-pane" />
+            <audio-detail />
           </template>
         </q-splitter>
 
@@ -477,7 +477,7 @@ body {
   }
 }
 
-#audio-cell-pane {
+.audio-cell-pane {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;
