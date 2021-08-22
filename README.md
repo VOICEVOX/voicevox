@@ -20,6 +20,11 @@ npm run electron:serve
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/Hiroshiba/voicevox_engine>
 
+## 貢献者の方へ
+
+Issueを解決するプルリクエストを作成される際は、別の方と同じIssueに取り組むことを避けるため、
+Issue側で取り組み始めたことを伝えるか、最初にDraftプルリクエストを作成してください。
+
 ## ビルド
 
 ```bash
