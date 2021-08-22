@@ -143,7 +143,10 @@
           </template>
         </q-splitter>
 
-        <q-resize-observer ref="resizeObserverRef" @resize="pageOnResize" />
+        <q-resize-observer
+          ref="resizeObserverRef"
+          @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
+        />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -259,7 +262,7 @@ export default defineComponent({
     const audioDetailPaneMinHeight = ref(0);
     const audioDetailPaneMaxHeight = ref(0);
 
-    const pageOnResize = ({ height }: { height: number }) => {
+    const changeAudioDetailPaneMaxHeight = (height: number) => {
       if (!activeAudioKey.value) return;
 
       const maxHeight = height - 200;
@@ -314,9 +317,9 @@ export default defineComponent({
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
         audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
-        pageOnResize({
-          height: resizeObserverRef.value?.$el.parentElement.clientHeight,
-        });
+        changeAudioDetailPaneMaxHeight(
+          resizeObserverRef.value?.$el.parentElement.clientHeight
+        );
       } else {
         audioInfoPaneWidth.value = 0;
         audioInfoPaneMinWidth.value = 0;
@@ -400,7 +403,7 @@ export default defineComponent({
       shouldShowPanes,
       addAndMoveCell,
       focusCell,
-      pageOnResize,
+      changeAudioDetailPaneMaxHeight,
       resizeObserverRef,
       playContinuously,
       stopContinuously,
