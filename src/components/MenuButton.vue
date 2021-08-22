@@ -20,6 +20,7 @@
       v-if="menudata.subMenu"
       transition-show="none"
       transition-hide="none"
+      :fit="true"
       v-model="selectedComputed"
     >
       <q-list dense>
@@ -114,5 +115,8 @@ export default defineComponent({
   &:not(.menu-disable):hover {
     background-color: rgba(global.$primary, 0.3) !important;
   }
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

@@ -1,5 +1,6 @@
 <template>
-  <q-bar class="bg-white q-pa-none">
+  <q-bar class="bg-white q-pa-none relative-position">
+    <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
       :key="i"
@@ -8,6 +9,10 @@
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
     />
+    <q-space />
+    <div class="window-title">VOICEVOX</div>
+    <q-space />
+    <title-bar-buttons />
   </q-bar>
 </template>
 
@@ -15,10 +20,11 @@
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
+import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
-import { UI_LOCKED, SET_USE_GPU } from "@/store/ui";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
+import TitleBarButtons from "@/components/TitleBarButtons.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -53,6 +59,7 @@ export default defineComponent({
 
   components: {
     MenuButton,
+    TitleBarButtons,
   },
 
   setup() {
@@ -118,19 +125,10 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "音声・テキスト書き出し (UTF-8)",
+            label: "音声書き出し",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: "UTF-8",
-              });
-            },
-          },
-          {
-            type: "button",
-            label: "音声・テキスト書き出し (Shift_JIS)",
-            onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: "Shift_JIS",
+                encoding: store.state.fileEncoding,
               });
             },
           },
@@ -182,6 +180,30 @@ export default defineComponent({
           },
         ],
       },
+      {
+        type: "root",
+        label: "文字コード",
+        subMenu: [
+          {
+            type: "checkbox",
+            label: "UTF-8",
+            checked: computed(() => store.state.fileEncoding === "UTF-8"),
+            onClick: () =>
+              store.dispatch(SET_FILE_ENCODING, {
+                encoding: "UTF-8",
+              }),
+          },
+          {
+            type: "checkbox",
+            label: "Shift_JIS",
+            checked: computed(() => store.state.fileEncoding === "Shift_JIS"),
+            onClick: () =>
+              store.dispatch(SET_FILE_ENCODING, {
+                encoding: "Shift_JIS",
+              }),
+          },
+        ],
+      },
     ]);
 
     const subMenuOpenFlags = ref(
@@ -220,8 +242,21 @@ export default defineComponent({
 
 .q-bar {
   min-height: global.$menubar-height;
+  -webkit-app-region: drag;
   > .q-badge {
     margin-left: 0;
+    -webkit-app-region: no-drag;
   }
+}
+
+.window-logo {
+  height: global.$menubar-height;
+}
+
+.window-title {
+  height: global.$menubar-height;
+  margin-right: 10%;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 </style>

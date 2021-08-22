@@ -5,10 +5,8 @@ import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
 import { AudioItem, State } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo } from "@/type/preload";
+import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-
-type Encoding = "UTF-8" | "Shift_JIS";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -498,7 +496,7 @@ export const audioStore = {
           audioKey,
           filePath,
           encoding,
-        }: { audioKey: string; filePath?: string; encoding?: Encoding }
+        }: { audioKey: string; filePath?: string; encoding?: EncodingType }
       ) => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
@@ -538,7 +536,7 @@ export const audioStore = {
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
       async (
         { state, dispatch },
-        { dirPath, encoding }: { dirPath?: string; encoding: Encoding }
+        { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
         dirPath ??= await window.electron.showOpenDirectoryDialog({
           title: "Save ALL",
@@ -663,6 +661,7 @@ export const audioStore = {
       ) => {
         const arrLen = texts.length;
         characterIndex == undefined ? 0 : characterIndex;
+        const addedAudioKeys = [];
         for (let i = 0; i < arrLen; i++) {
           if (texts[i] != "") {
             const audioItem = {
@@ -673,8 +672,15 @@ export const audioStore = {
               audioItem: audioItem,
               prevAudioKey: prevAudioKey,
             });
+            addedAudioKeys.push(prevAudioKey);
           }
         }
+
+        return Promise.all(
+          addedAudioKeys.map((audioKey) =>
+            dispatch(FETCH_AUDIO_QUERY, { audioKey })
+          )
+        );
       }
     ),
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {

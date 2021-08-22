@@ -16,18 +16,28 @@ export interface Sandbox {
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showConfirmDialog(obj: { title: string; message: string }): Promise<boolean>;
-  showWarningDialog(obj: { title: string; message: string }): Promise<void>;
-  showErrorDialog(obj: { title: string; message: string }): Promise<void>;
+  showWarningDialog(obj: {
+    title: string;
+    message: string;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  showErrorDialog(obj: {
+    title: string;
+    message: string;
+  }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
-  onReceivedIPCMsg: <T extends keyof IpcSOData>(
+  fileEncoding(newValue?: Encoding): Promise<Encoding>;
+  onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
-  ) => IpcRenderer;
+  ): IpcRenderer;
+  closeWindow(): void;
+  minimizeWindow(): void;
+  maximizeWindow(): void;
 }
 
 export type AppInfos = {
@@ -45,3 +55,5 @@ export type CharacterInfo = {
     policy: string;
   };
 };
+
+export type Encoding = "UTF-8" | "Shift_JIS";
