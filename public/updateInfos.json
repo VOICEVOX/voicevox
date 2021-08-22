@@ -1,5 +1,37 @@
 [
   {
+    "version": "0.4.0",
+    "descriptions": [
+      "文章が長い場合に警告文を表示",
+      "プロジェクトファイルの関連付け",
+      "ファイルのドラッグ＆ドロップ読み込み",
+      "イントネーション設定時に音高の値を表示",
+      "テキストコピペ時に句点が残るように変更",
+      "テキストのShift_JIS書き出し",
+      "UXの向上",
+      "音声合成エンジンの機能追加",
+      "開発環境の向上"
+    ],
+    "contributors": [
+      "bobonba",
+      "buckw6eat",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "k-kuroguro",
+      "madosuki",
+      "mes51",
+      "MT224244",
+      "Patchethium",
+      "raa0121",
+      "Segu-g",
+      "shirayu",
+      "tasteless0wash",
+      "yamachu",
+      "y-chan",
+      "Yosshi999"
+    ]
+  },
+  {
     "version": "0.3.1",
     "descriptions": ["読点でエラーが出る問題を修正"],
     "contributors": []
