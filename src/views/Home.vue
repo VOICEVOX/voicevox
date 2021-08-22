@@ -76,49 +76,62 @@
         >
           <template #before>
             <q-splitter
-              reverse
-              unit="px"
-              :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+              :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
               separator-class="bg-primary"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
-              class="full-width"
-              v-model="audioInfoPaneWidth"
+              before-class="overflow-hidden"
+              v-model="portraitPaneWidth"
             >
               <template #before>
-                <div
-                  id="audio-cell-pane"
-                  @dragenter="dragEventCounter++"
-                  @dragleave="dragEventCounter--"
-                  @dragover.prevent
-                  @drop.prevent="
-                    dragEventCounter = 0;
-                    loadDraggedFile($event);
-                  "
-                  :class="{ 'is-dragging': dragEventCounter > 0 }"
-                >
-                  <div class="audio-cells">
-                    <audio-cell
-                      v-for="audioKey in audioKeys"
-                      :key="audioKey"
-                      :audioKey="audioKey"
-                      @focusCell="focusCell"
-                      :ref="addAudioCellRef"
-                    />
-                  </div>
-                  <div class="add-button-wrapper">
-                    <q-btn
-                      fab
-                      icon="add"
-                      color="primary"
-                      text-color="secondary"
-                      :disable="uiLocked"
-                      @click="addAudioItem"
-                    ></q-btn>
-                  </div>
-                </div>
+                <character-portrait />
               </template>
               <template #after>
-                <audio-info id="audio-info-pane" />
+                <q-splitter
+                  reverse
+                  unit="px"
+                  :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+                  separator-class="bg-primary"
+                  :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
+                  class="full-width overflow-hidden"
+                  v-model="audioInfoPaneWidth"
+                >
+                  <template #before>
+                    <div
+                      id="audio-cell-pane"
+                      :class="{ 'is-dragging': dragEventCounter > 0 }"
+                      @dragenter="dragEventCounter++"
+                      @dragleave="dragEventCounter--"
+                      @dragover.prevent
+                      @drop.prevent="
+                        dragEventCounter = 0;
+                        loadDraggedFile($event);
+                      "
+                    >
+                      <div class="audio-cells">
+                        <audio-cell
+                          v-for="audioKey in audioKeys"
+                          :key="audioKey"
+                          :audioKey="audioKey"
+                          :ref="addAudioCellRef"
+                          @focusCell="focusCell"
+                        />
+                      </div>
+                      <div class="add-button-wrapper">
+                        <q-btn
+                          fab
+                          icon="add"
+                          color="primary"
+                          text-color="secondary"
+                          :disable="uiLocked"
+                          @click="addAudioItem"
+                        ></q-btn>
+                      </div>
+                    </div>
+                  </template>
+                  <template #after>
+                    <audio-info id="audio-info-pane" />
+                  </template>
+                </q-splitter>
               </template>
             </q-splitter>
           </template>
@@ -149,6 +162,7 @@ import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
+import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
 import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
@@ -176,6 +190,7 @@ export default defineComponent({
     AudioDetail,
     AudioInfo,
     HelpDialog,
+    CharacterPortrait,
   },
 
   setup() {
@@ -225,11 +240,15 @@ export default defineComponent({
     };
 
     // view
-    const MIN_AUDIO_INFO_PANE_WIDTH = 130;
+    const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
+    const MIN_PORTRAIT_PANE_WIDTH = 0;
+    const MAX_PORTRAIT_PANE_WIDTH = 40;
+    const MIN_AUDIO_INFO_PANE_WIDTH = 130; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170;
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
+    const portraitPaneWidth = ref(0);
     const audioInfoPaneWidth = ref(0);
     const audioInfoPaneMinWidth = ref(0);
     const audioInfoPaneMaxWidth = ref(0);
@@ -286,6 +305,7 @@ export default defineComponent({
       if (val === old) return;
 
       if (val) {
+        portraitPaneWidth.value = DEFAULT_PORTRAIT_PANE_WIDTH;
         audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
@@ -385,6 +405,9 @@ export default defineComponent({
       saveProjectFile,
       loadProjectFile,
       importFromFile,
+      MIN_PORTRAIT_PANE_WIDTH,
+      MAX_PORTRAIT_PANE_WIDTH,
+      portraitPaneWidth,
       audioInfoPaneWidth,
       audioInfoPaneMinWidth,
       audioInfoPaneMaxWidth,

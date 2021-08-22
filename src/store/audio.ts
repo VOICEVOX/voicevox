@@ -176,10 +176,12 @@ export const audioStore = {
 
       await Promise.all(
         characterInfos.map(async (characterInfo) => {
-          const buffer = await window.electron.readFile({
-            filePath: characterInfo.iconPath,
-          });
-          characterInfo.iconBlob = new Blob([buffer]);
+          const [iconBuf, portraitBuf] = await Promise.all([
+            window.electron.readFile({ filePath: characterInfo.iconPath }),
+            window.electron.readFile({ filePath: characterInfo.portraitPath }),
+          ]);
+          characterInfo.iconBlob = new Blob([iconBuf]);
+          characterInfo.portraitBlob = new Blob([portraitBuf]);
         })
       );
 
