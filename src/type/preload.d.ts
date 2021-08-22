@@ -34,11 +34,7 @@ export interface Sandbox {
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
-<<<<<<< HEAD
-  ) => IpcRenderer;
-=======
   ): IpcRenderer;
->>>>>>> 75ce99d893a58f183a1a6db3ba57425e76e69523
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;

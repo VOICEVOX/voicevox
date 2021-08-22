@@ -137,18 +137,6 @@ const api: Sandbox = {
   maximizeWindow: () => {
     ipcRenderer.invoke("MAXIMIZE_WINDOW");
   },
-
-  closeWindow: () => {
-    ipcRenderer.invoke("CLOSE_WINDOW");
-  },
-
-  minimizeWindow: () => {
-    ipcRenderer.invoke("MINIMIZE_WINDOW");
-  },
-
-  maximizeWindow: () => {
-    ipcRenderer.invoke("MAXIMIZE_WINDOW");
-  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
