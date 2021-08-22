@@ -23,6 +23,7 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   fileEncoding: Encoding;
+  isMaximized: boolean;
 };
 
 export type AudioItem = {

@@ -1,8 +1,10 @@
 import { Action, ActionContext, StoreOptions } from "vuex";
 import { State } from "./type";
 import { Encoding } from "@/type/preload";
+import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";
+export const SHOULD_SHOW_PANES = "SHOULD_SHOW_PANES";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
 export const GET_USE_GPU = "GET_USE_GPU";
@@ -10,6 +12,8 @@ export const SET_USE_GPU = "SET_USE_GPU";
 export const SET_FILE_ENCODING = "SET_FILE_ENCODING";
 export const GET_FILE_ENCODING = "GET_FILE_ENCODING";
 export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
+export const DETECT_UNMAXIMIZED = "DETECT_UNMAXIMIZED";
+export const DETECT_MAXIMIZED = "DETECT_MAXIMIZED";
 
 export function createUILockAction<S, P>(
   action: (context: ActionContext<S, S>, payload: P) => Promise<any>
@@ -26,6 +30,9 @@ export const uiStore = {
   getters: {
     [UI_LOCKED](state) {
       return state.uiLockCount > 0;
+    },
+    [SHOULD_SHOW_PANES](_, getters) {
+      return getters[ACTIVE_AUDIO_KEY] != undefined;
     },
   },
 
@@ -47,6 +54,12 @@ export const uiStore = {
     },
     [SET_FILE_ENCODING](state, { encoding }: { encoding: Encoding }) {
       state.fileEncoding = encoding;
+    },
+    [DETECT_UNMAXIMIZED](state) {
+      state.isMaximized = false;
+    },
+    [DETECT_MAXIMIZED](state) {
+      state.isMaximized = true;
     },
   },
 
@@ -90,6 +103,12 @@ export const uiStore = {
       commit(SET_FILE_ENCODING, {
         encoding: await window.electron.fileEncoding(encoding),
       });
+    },
+    async [DETECT_UNMAXIMIZED]({ commit }) {
+      commit(DETECT_UNMAXIMIZED);
+    },
+    async [DETECT_MAXIMIZED]({ commit }) {
+      commit(DETECT_MAXIMIZED);
     },
   },
 } as StoreOptions<State>;
