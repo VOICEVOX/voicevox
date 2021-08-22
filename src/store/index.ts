@@ -28,6 +28,8 @@ export const store = createStore<State>({
     redoCommands: [],
     useGpu: false,
     isHelpDialogOpen: false,
+    fileEncoding: "UTF-8",
+    isMaximized: false,
   },
 
   getters: {

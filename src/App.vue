@@ -4,7 +4,7 @@
 
 <script type="ts">
 import { useStore } from "@/store";
-import { GET_USE_GPU } from "@/store/ui";
+import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -14,6 +14,7 @@ export default defineComponent({
     const store = useStore();
 
     store.dispatch(GET_USE_GPU);
+    store.dispatch(GET_FILE_ENCODING);
   }
 });
 </script>

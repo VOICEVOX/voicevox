@@ -64,12 +64,12 @@ type IpcIHData = {
 
   SHOW_WARNING_DIALOG: {
     args: [obj: { title: string; message: string }];
-    return: void;
+    return: Electron.MessageBoxReturnValue;
   };
 
   SHOW_ERROR_DIALOG: {
     args: [obj: { title: string; message: string }];
-    return: void;
+    return: Electron.MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
@@ -86,6 +86,26 @@ type IpcIHData = {
     args: [];
     return: boolean;
   };
+
+  FILE_ENCODING: {
+    args: [obj: { newValue?: import("@/type/preload").Encoding }];
+    return: import("@/type/preload").Encoding;
+  };
+
+  CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  MINIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  MAXIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
 };
 
 /**
@@ -96,38 +116,14 @@ type IpcSOData = {
     args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;
   };
+
+  DETECT_MAXIMIZED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNMAXIMIZED: {
+    args: [];
+    return: void;
+  };
 };
-
-declare namespace Electron {
-  interface IpcMain {
-    handle<T extends keyof IpcIHData>(
-      channel: T,
-      listener: (
-        event: IpcMainInvokeEvent,
-        ...args: IpcIHData[T]["args"]
-      ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>
-    ): void;
-  }
-
-  interface IpcRenderer {
-    invoke<T extends keyof IpcIHData>(
-      channel: T,
-      ...args: IpcIHData[T]["args"]
-    ): Promise<IpcIHData[T]["return"]>;
-
-    on<T extends keyof IpcSOData>(
-      channel: T,
-      listener: (
-        event: import("electron").IpcRendererEvent,
-        ...args: IpcSOData[T]["args"]
-      ) => void
-    ): this;
-  }
-
-  interface WebContents {
-    send<T extends keyof IpcSOData>(
-      channel: T,
-      ...args: IpcSOData[T]["args"]
-    ): void;
-  }
-}
