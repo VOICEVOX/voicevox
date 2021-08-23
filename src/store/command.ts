@@ -12,23 +12,77 @@ immer.setAutoFreeze(false);
 
 export const CAN_UNDO = "CAN_UNDO";
 export const CAN_REDO = "CAN_REDO";
-export const PUSH_COMMAND = "PUSH_COMMAND";
+export const CLEAR_COMMAND = "CLEAR_COMMAND";
 export const UNDO = "UNDO";
 export const REDO = "REDO";
+
+export const commandStore = {
+  getters: {
+    [CAN_UNDO](state) {
+      return state.undoCommands.length > 0;
+    },
+    [CAN_REDO](state) {
+      return state.redoCommands.length > 0;
+    },
+  },
+
+  mutations: {
+    [UNDO](state) {
+      const command = state.undoCommands.pop();
+      if (command != null) {
+        state.redoCommands.push(command);
+        if (command != null) {
+          applyPatch(state, command.undoOperation);
+        }
+      }
+    },
+    [REDO](state) {
+      const command = state.redoCommands.pop();
+      if (command != null) {
+        state.undoCommands.push(command);
+        if (command != null) {
+          applyPatch(state, command.doOperation);
+        }
+      }
+    },
+    [CLEAR_COMMAND](state) {
+      state.redoCommands.splice(0);
+      state.undoCommands.splice(0);
+    },
+  },
+
+  actions: {
+    [UNDO]({ commit }) {
+      commit(UNDO);
+    },
+    [REDO]({ commit }) {
+      commit(REDO);
+    },
+  },
+} as StoreOptions<State>;
 
 export type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
   draft: Draft<S>,
   payload: P
 ) => void;
-export type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
+export type PayloadRecipeTree<S> = Record<
+  string,
+  PayloadRecipe<S, Record<string, unknown>>
+>;
 export type PayloadMutation<S, P extends Record<string, unknown> | undefined> =
   (state: S, payload: P) => void;
-export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
+export type PayloadMutationTree<S> = Record<
+  string,
+  PayloadMutation<S, Record<string, unknown>>
+>;
 export type PayloadAction<S, P extends Record<string, unknown> | undefined> = (
   injectee: ActionContext<S, S>,
   payload: P
-) => any;
-export type PayloadActionTree<S> = Record<string, PayloadAction<S, any>>;
+) => unknown;
+export type PayloadActionTree<S> = Record<
+  string,
+  PayloadAction<S, Record<string, unknown>>
+>;
 
 export type Command = {
   doOperation: Operation[];
@@ -60,7 +114,7 @@ export const createPayloadAction =
     P extends Record<string, unknown> | undefined
   >(
     mutationType: K,
-    commandMutation: PayloadMutation<S, P>
+    _commandMutation: PayloadMutation<S, P>
   ): PayloadAction<S, P> =>
   (injectee: ActionContext<S, S>, payload: P): void => {
     injectee.commit({ ...payload, type: mutationType });
@@ -110,44 +164,3 @@ const recordOperations =
       undoOperation: undoPatches.map(patchToOperation),
     };
   };
-
-export const commandStore = {
-  getters: {
-    [CAN_UNDO](state) {
-      return state.undoCommands.length > 0;
-    },
-    [CAN_REDO](state) {
-      return state.redoCommands.length > 0;
-    },
-  },
-
-  mutations: {
-    [UNDO](state) {
-      const command = state.undoCommands.pop();
-      if (command != null) {
-        state.redoCommands.push(command);
-        if (command != null) {
-          applyPatch(state, command.undoOperation);
-        }
-      }
-    },
-    [REDO](state) {
-      const command = state.redoCommands.pop();
-      if (command != null) {
-        state.undoCommands.push(command);
-        if (command != null) {
-          applyPatch(state, command.doOperation);
-        }
-      }
-    },
-  },
-
-  actions: {
-    [UNDO]({ commit }) {
-      commit(UNDO);
-    },
-    [REDO]({ commit }) {
-      commit(REDO);
-    },
-  },
-} as StoreOptions<State>;

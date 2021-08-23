@@ -1,9 +1,8 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
-import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, State } from "./type";
+import { AudioItem, State, typeAsStoreOptions } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -122,7 +121,7 @@ export const commandMutations = commandMutationsCreater({
   },
 } as const);
 
-export const audioStore = {
+export const audioStore = typeAsStoreOptions({
   getters: {
     [ACTIVE_AUDIO_KEY](state) {
       return state._activeAudioKey !== undefined &&
@@ -139,18 +138,6 @@ export const audioStore = {
   },
 
   mutations: {
-    [SET_AUDIO_TEXT]: (
-      state,
-      { audioKey, text }: { audioKey: string; text: string }
-    ) => {
-      state.audioItems[audioKey].text = text;
-    },
-    [SET_AUDIO_CHARACTER_INDEX]: (
-      state,
-      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
-    ) => {
-      state.audioItems[audioKey].characterIndex = characterIndex;
-    },
     [INSERT_AUDIO_ITEM]: (
       state,
       {
@@ -171,6 +158,24 @@ export const audioStore = {
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
     },
+    [SET_AUDIO_CHARACTER_INDEX]: (
+      state,
+      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
+    ) => {
+      state.audioItems[audioKey].characterIndex = characterIndex;
+    },
+    [SET_AUDIO_TEXT]: (
+      state,
+      { audioKey, text }: { audioKey: string; text: string }
+    ) => {
+      state.audioItems[audioKey].text = text;
+    },
+    [SET_AUDIO_QUERY]: (
+      state,
+      { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
+    ) => {
+      state.audioItems[audioKey].query = audioQuery;
+    },
     [SET_ACCENT_PHRASES]: (
       state,
       {
@@ -179,12 +184,6 @@ export const audioStore = {
       }: { audioKey: string; accentPhrases: AccentPhrase[] }
     ) => {
       state.audioItems[audioKey].query!.accentPhrases = accentPhrases;
-    },
-    [SET_AUDIO_QUERY]: (
-      state,
-      { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
-    ) => {
-      state.audioItems[audioKey].query = audioQuery;
     },
     [SET_AUDIO_SPEED_SCALE]: (
       state,
@@ -363,25 +362,13 @@ export const audioStore = {
 
       commit(SET_CHARACTER_INFOS, { characterInfos });
     }),
-
-    [CHANGE_CHARACTER_INDEX]: async (
-      { getters, dispatch },
-      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
-    ) => {
-      const haveAudioQuery = getters[HAVE_AUDIO_QUERY](audioKey);
-      await dispatch(SET_AUDIO_CHARACTER_INDEX, { audioKey, characterIndex });
-      if (haveAudioQuery) {
-        return dispatch(FETCH_MORA_PITCH, { audioKey });
-      }
-    },
-
-    [REGISTER_AUDIO_ITEM](
+    [REGISTER_AUDIO_ITEM]: (
       { state, dispatch },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey: string | undefined }
-    ) {
+    ) => {
       const audioKey = uuidv4();
       const index =
         prevAudioKey !== undefined
@@ -391,20 +378,12 @@ export const audioStore = {
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
-    [SET_ACTIVE_AUDIO_KEY]({ commit }, { audioKey }: { audioKey?: string }) {
+    [SET_ACTIVE_AUDIO_KEY]: (
+      { commit },
+      { audioKey }: { audioKey?: string }
+    ) => {
       commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
     },
-    async [GET_AUDIO_CACHE]({ state }, { audioKey }: { audioKey: string }) {
-      const audioItem = state.audioItems[audioKey];
-      const id = await generateUniqueId(audioItem);
-
-      if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
-        return audioBlobCache[id];
-      } else {
-        return null;
-      }
-    },
-
     [FETCH_ACCENT_PHRASES]: (
       { state, dispatch },
       { audioKey }: { audioKey: string }
@@ -416,10 +395,10 @@ export const audioStore = {
         speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
       });
     },
-    [FETCH_MORA_PITCH](
+    [FETCH_MORA_PITCH]: (
       { state, dispatch },
       { audioKey }: { audioKey: string }
-    ) {
+    ) => {
       const audioItem = state.audioItems[audioKey];
 
       return api.moraPitchMoraPitchPost({
@@ -438,7 +417,29 @@ export const audioStore = {
         speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
       });
     },
+    [CHANGE_CHARACTER_INDEX]: async (
+      { getters, dispatch },
+      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
+    ) => {
+      const haveAudioQuery = getters[HAVE_AUDIO_QUERY](audioKey);
+      await dispatch(SET_AUDIO_CHARACTER_INDEX, { audioKey, characterIndex });
+      if (haveAudioQuery) {
+        return dispatch(FETCH_MORA_PITCH, { audioKey });
+      }
+    },
+    [GET_AUDIO_CACHE]: async (
+      { state },
+      { audioKey }: { audioKey: string }
+    ) => {
+      const audioItem = state.audioItems[audioKey];
+      const id = await generateUniqueId(audioItem);
 
+      if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
+        return audioBlobCache[id];
+      } else {
+        return null;
+      }
+    },
     [CHANGE_ACCENT]: async (
       { dispatch },
       {
@@ -679,8 +680,8 @@ export const audioStore = {
         }
       }
     ),
-    [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
+    [OPEN_TEXT_EDIT_CONTEXT_MENU]: () => {
       window.electron.openTextEditContextMenu();
     },
   },
-} as StoreOptions<State>;
+} as const);

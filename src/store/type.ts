@@ -1,17 +1,17 @@
-import { Operation } from "rfc6902";
+import { StoreOptions, MutationTree, ActionTree } from "vuex";
 import { AudioQuery } from "@/openapi";
 import { CharacterInfo, Encoding } from "@/type/preload";
 import { Command } from "./command";
 
-export interface ICommand<S> {
-  undoOperations: Operation[];
-  redoOperations: Operation[];
-}
-
-type Command = {
-  doOperation: Operation[];
-  undoOperation: Operation[];
-};
+export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
+  arg: Arg
+): Arg => arg;
+export const typeAsMutationTree = <Arg extends MutationTree<State>>(
+  arg: Arg
+): Arg => arg;
+export const typeAsActionTree = <Arg extends ActionTree<State, State>>(
+  arg: Arg
+): Arg => arg;
 
 export type State = {
   isEngineReady: boolean;
