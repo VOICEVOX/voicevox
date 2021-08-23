@@ -25,6 +25,7 @@ import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
+import Mousetrap from "mousetrap";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -39,6 +40,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  shortCut?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -126,6 +128,7 @@ export default defineComponent({
           {
             type: "button",
             label: "音声書き出し",
+            shortCut: "Ctrl+E",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
                 encoding: store.state.fileEncoding,
@@ -143,6 +146,7 @@ export default defineComponent({
           {
             type: "button",
             label: "プロジェクト保存",
+            shortCut: "Ctrl+S",
             onClick: () => {
               store.dispatch(SAVE_PROJECT_FILE, {});
             },
@@ -150,6 +154,7 @@ export default defineComponent({
           {
             type: "button",
             label: "プロジェクト読み込み",
+            shortCut: "Ctrl+O",
             onClick: () => {
               store.dispatch(LOAD_PROJECT_FILE, {});
             },
@@ -218,6 +223,21 @@ export default defineComponent({
         subMenuOpenFlags.value = arr;
       }
     };
+
+    // メニューバー中のホットキー有効化
+    const _enableHotKey = (items: any) => {
+      items.forEach((item: MenuItemData) => {
+        if (item.type === "root") {
+          _enableHotKey(item.subMenu);
+          return;
+        }
+        if (item.type === "button" && item.shortCut) {
+          Mousetrap.bind(item.shortCut.toLowerCase(), item.onClick);
+          return;
+        }
+      });
+    };
+    _enableHotKey(menudata.value);
 
     return {
       uiLocked,
