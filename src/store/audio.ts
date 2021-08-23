@@ -694,8 +694,10 @@ export const audioStore = {
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
       window.electron.openTextEditContextMenu();
     },
-    [FAILED_START_ENGINE]({ commit }) {
-      commit(SET_ENGINE_STATUS, { engineStatus: "FAILED_START" });
+    [FAILED_START_ENGINE]({ state, commit }) {
+      if (state.engineStatus === "STARTING") {
+        commit(SET_ENGINE_STATUS, { engineStatus: "FAILED_START" });
+      }
     },
   },
 } as StoreOptions<State>;
