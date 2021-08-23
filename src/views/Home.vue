@@ -75,62 +75,81 @@
           :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
+          :disable="!shouldShowPanes"
           v-model="audioDetailPaneHeight"
         >
           <template #before>
             <q-splitter
-              reverse
-              unit="px"
-              :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+              :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
               separator-class="bg-primary"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
-              class="full-width"
-              v-model="audioInfoPaneWidth"
+              before-class="overflow-hidden"
+              :disable="!shouldShowPanes"
+              v-model="portraitPaneWidth"
             >
               <template #before>
-                <div
-                  id="audio-cell-pane"
-                  @dragenter="dragEventCounter++"
-                  @dragleave="dragEventCounter--"
-                  @dragover.prevent
-                  @drop.prevent="
-                    dragEventCounter = 0;
-                    loadDraggedFile($event);
-                  "
-                  :class="{ 'is-dragging': dragEventCounter > 0 }"
-                >
-                  <div class="audio-cells">
-                    <audio-cell
-                      v-for="audioKey in audioKeys"
-                      :key="audioKey"
-                      :audioKey="audioKey"
-                      @focusCell="focusCell"
-                      :ref="addAudioCellRef"
-                    />
-                  </div>
-                  <div class="add-button-wrapper">
-                    <q-btn
-                      fab
-                      icon="add"
-                      color="primary"
-                      text-color="secondary"
-                      :disable="uiLocked"
-                      @click="addAudioItem"
-                    ></q-btn>
-                  </div>
-                </div>
+                <character-portrait />
               </template>
               <template #after>
-                <audio-info id="audio-info-pane" />
+                <q-splitter
+                  reverse
+                  unit="px"
+                  :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+                  separator-class="bg-primary"
+                  :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
+                  class="full-width overflow-hidden"
+                  :disable="!shouldShowPanes"
+                  v-model="audioInfoPaneWidth"
+                >
+                  <template #before>
+                    <div
+                      class="audio-cell-pane"
+                      :class="{ 'is-dragging': dragEventCounter > 0 }"
+                      @dragenter="dragEventCounter++"
+                      @dragleave="dragEventCounter--"
+                      @dragover.prevent
+                      @drop.prevent="
+                        dragEventCounter = 0;
+                        loadDraggedFile($event);
+                      "
+                    >
+                      <div class="audio-cells">
+                        <audio-cell
+                          v-for="audioKey in audioKeys"
+                          :key="audioKey"
+                          :audioKey="audioKey"
+                          :ref="addAudioCellRef"
+                          @focusCell="focusCell"
+                        />
+                      </div>
+                      <div class="add-button-wrapper">
+                        <q-btn
+                          fab
+                          icon="add"
+                          color="primary"
+                          text-color="secondary"
+                          :disable="uiLocked"
+                          @click="addAudioItem"
+                        ></q-btn>
+                      </div>
+                    </div>
+                  </template>
+                  <template #after>
+                    <audio-info />
+                  </template>
+                </q-splitter>
               </template>
             </q-splitter>
           </template>
           <template #after>
-            <audio-detail id="audio-detail-pane" />
+            <audio-detail />
           </template>
         </q-splitter>
 
-        <q-resize-observer ref="resizeObserverRef" @resize="pageOnResize" />
+        <q-resize-observer
+          ref="resizeObserverRef"
+          @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
+        />
       </q-page>
     </q-page-container>
   </q-layout>
@@ -152,6 +171,7 @@ import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
+import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
 import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
@@ -179,6 +199,7 @@ export default defineComponent({
     AudioDetail,
     AudioInfo,
     HelpDialog,
+    CharacterPortrait,
   },
 
   setup() {
@@ -228,11 +249,15 @@ export default defineComponent({
     };
 
     // view
-    const MIN_AUDIO_INFO_PANE_WIDTH = 130;
+    const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
+    const MIN_PORTRAIT_PANE_WIDTH = 0;
+    const MAX_PORTRAIT_PANE_WIDTH = 40;
+    const MIN_AUDIO_INFO_PANE_WIDTH = 130; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170;
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
+    const portraitPaneWidth = ref(0);
     const audioInfoPaneWidth = ref(0);
     const audioInfoPaneMinWidth = ref(0);
     const audioInfoPaneMaxWidth = ref(0);
@@ -240,7 +265,7 @@ export default defineComponent({
     const audioDetailPaneMinHeight = ref(0);
     const audioDetailPaneMaxHeight = ref(0);
 
-    const pageOnResize = ({ height }: { height: number }) => {
+    const changeAudioDetailPaneMaxHeight = (height: number) => {
       if (!activeAudioKey.value) return;
 
       const maxHeight = height - 200;
@@ -289,14 +314,15 @@ export default defineComponent({
       if (val === old) return;
 
       if (val) {
+        portraitPaneWidth.value = DEFAULT_PORTRAIT_PANE_WIDTH;
         audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
         audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
-        pageOnResize({
-          height: resizeObserverRef.value?.$el.parentElement.clientHeight,
-        });
+        changeAudioDetailPaneMaxHeight(
+          resizeObserverRef.value?.$el.parentElement.clientHeight
+        );
       } else {
         audioInfoPaneWidth.value = 0;
         audioInfoPaneMinWidth.value = 0;
@@ -381,7 +407,7 @@ export default defineComponent({
       shouldShowPanes,
       addAndMoveCell,
       focusCell,
-      pageOnResize,
+      changeAudioDetailPaneMaxHeight,
       resizeObserverRef,
       playContinuously,
       stopContinuously,
@@ -389,6 +415,9 @@ export default defineComponent({
       saveProjectFile,
       loadProjectFile,
       importFromFile,
+      MIN_PORTRAIT_PANE_WIDTH,
+      MAX_PORTRAIT_PANE_WIDTH,
+      portraitPaneWidth,
       audioInfoPaneWidth,
       audioInfoPaneMinWidth,
       audioInfoPaneMaxWidth,
@@ -408,9 +437,9 @@ export default defineComponent({
 @use '@/styles' as global;
 body {
   user-select: none;
-  border-left: solid 2px #{global.$primary};
-  border-right: solid 2px #{global.$primary};
-  border-bottom: solid 4px #{global.$primary};
+  border-left: solid #{global.$window-border-width} #{global.$primary};
+  border-right: solid #{global.$window-border-width} #{global.$primary};
+  border-bottom: solid #{global.$window-border-width} #{global.$primary};
 }
 
 .relarive-absolute-wrapper {
@@ -454,11 +483,14 @@ body {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(100vh - #{global.$menubar-height} - #{global.$header-height});
+    height: calc(
+      100vh - #{global.$menubar-height + global.$header-height +
+        global.$window-border-width}
+    );
   }
 }
 
-#audio-cell-pane {
+.audio-cell-pane {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: 0;

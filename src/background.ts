@@ -103,6 +103,7 @@ const characterInfos = fs
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
+      portraitPath: path.join(dirPath, "portrait.png"),
       metas: JSON.parse(
         fs.readFileSync(path.join(dirPath, "metas.json"), { encoding: "utf-8" })
       ),
