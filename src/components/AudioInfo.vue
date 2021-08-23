@@ -48,6 +48,24 @@
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'into')"
       />
     </div>
+    <div class="q-px-md">
+      <span class="text-body1 q-mb-xs"
+        >音量 {{ query.volumeScale.toFixed(1) }}</span
+      >
+      <q-slider
+        dense
+        snap
+        :min="0"
+        :max="1"
+        :step="0.1"
+        :disable="uiLocked"
+        v-model="query.volumeScale"
+        @chaneg="setAudioVolumeScale"
+        @wheel="
+          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'volume')
+        "
+      />
+    </div>
   </div>
 </template>
 
@@ -59,6 +77,7 @@ import {
   SET_AUDIO_INTONATION_SCALE,
   SET_AUDIO_PITCH_SCALE,
   SET_AUDIO_SPEED_SCALE,
+  SET_AUDIO_VOLUME_SCALE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
@@ -101,7 +120,14 @@ export default defineComponent({
       });
     };
 
-    type InfoType = "speed" | "pitch" | "into";
+    const setAudioVolumeScale = (volumeScale: number) => {
+      store.dispatch(SET_AUDIO_VOLUME_SCALE, {
+        audioKey: activeAudioKey.value!,
+        volumeScale,
+      });
+    };
+
+    type InfoType = "speed" | "pitch" | "into" | "volume";
 
     const setAudioInfoByScroll = (
       query: AudioQuery,
@@ -133,6 +159,14 @@ export default defineComponent({
           }
           break;
         }
+        case "volume": {
+          let curVolume = query.volumeScale - (delta_y > 0 ? 0.1 : -0.1);
+          curVolume = Math.round(curVolume * 1e1) / 1e1;
+          if (1 >= curVolume && curVolume >= 0) {
+            setAudioVolumeScale(curVolume);
+          }
+          break;
+        }
         default:
           break;
       }
@@ -146,6 +180,7 @@ export default defineComponent({
       setAudioSpeedScale,
       setAudioPitchScale,
       setAudioIntonationScale,
+      setAudioVolumeScale,
       setAudioInfoByScroll,
     };
   },
