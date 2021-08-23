@@ -343,6 +343,7 @@ export default defineComponent({
         store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
     });
 
+    // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
       if (!event || event.dataTransfer.files.length === 0) return;
