@@ -5,6 +5,7 @@ models/AccentPhrase.ts
 models/AudioQuery.ts
 models/HTTPValidationError.ts
 models/Mora.ts
+models/Speaker.ts
 models/ValidationError.ts
 models/index.ts
 runtime.ts
