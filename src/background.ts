@@ -84,7 +84,7 @@ async function runEngine() {
   );
 
   engineProcess.on("exit", () => {
-    ipcMainSend(win, "DETECT_ERROR_ENGINE");
+    ipcMainSend(win, "EXIT_PROCESS_FOR_ENGINE");
   });
 }
 

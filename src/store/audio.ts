@@ -104,7 +104,7 @@ export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
-export const DETECT_ERROR_ENGINE = "DETECT_ERROR_ENGINE";
+export const EXIT_PROCESS_FOR_ENGINE = "EXIT_PROCESS_FOR_ENGINE";
 export const FAILED_START_ENGINE = "FAILED_START_ENGINE";
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -698,7 +698,7 @@ export const audioStore = {
     [FAILED_START_ENGINE]({ commit }) {
       commit(SET_ENGINE_STATUS, { engineStatus: "FAILED_START" });
     },
-    [DETECT_ERROR_ENGINE]({ state, dispatch }) {
+    [EXIT_PROCESS_FOR_ENGINE]({ state, dispatch }) {
       if (state.engineStatus === "STARTING") {
         dispatch(FAILED_START_ENGINE);
       }
