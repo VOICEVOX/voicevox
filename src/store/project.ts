@@ -8,6 +8,8 @@ import Ajv, { JTDDataType } from "ajv/dist/jtd";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 
+const DEFAULT_SAMPLING_RATE = 24000;
+
 export const projectActions = {
   [LOAD_PROJECT_FILE]: createUILockAction(
     async (
@@ -52,6 +54,15 @@ export const projectActions = {
               obj.audioItems[audioItemsKey].characterIndex =
                 obj.audioItems[audioItemsKey].charactorIndex;
               delete obj.audioItems[audioItemsKey].charactorIndex;
+            }
+          }
+          for (const audioItemsKey in obj.audioItems) {
+            if (obj.audioItems[audioItemsKey].query != null) {
+              obj.audioItems[audioItemsKey].query.volumeScale = 1;
+              obj.audioItems[audioItemsKey].query.prePhonemeLength = 0.1;
+              obj.audioItems[audioItemsKey].query.postPhonemeLength = 0.1;
+              obj.audioItems[audioItemsKey].query.outputSamplingRate =
+                DEFAULT_SAMPLING_RATE;
             }
           }
         }
