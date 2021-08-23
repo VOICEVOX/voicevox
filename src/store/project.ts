@@ -164,6 +164,10 @@ const audioQuerySchema = {
     speedScale: { type: "float32" },
     pitchScale: { type: "float32" },
     intonationScale: { type: "float32" },
+    volumeScale: { type: "float32" },
+    prePhonemeLength: { type: "float32" },
+    postPhonemeLength: { type: "float32" },
+    outputSamplingRate: { type: "int32" },
   },
 } as const;
 
