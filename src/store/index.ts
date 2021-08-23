@@ -16,7 +16,7 @@ export const storeKey: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
   state: {
-    isEngineReady: false,
+    engineStatus: "STARTING",
     audioItems: {},
     audioKeys: [],
     audioStates: {},

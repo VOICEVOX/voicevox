@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, State } from "./type";
+import { AudioItem, EngineStatus, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -62,7 +62,7 @@ function buildFileName(state: State, audioKey: string) {
   );
 }
 
-export const SET_ENGINE_READY = "SET_ENGINE_READY";
+export const SET_ENGINE_STATUS = "SET_ENGINE_STATUS";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
 export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
@@ -125,8 +125,11 @@ export const audioStore = {
   },
 
   mutations: {
-    [SET_ENGINE_READY](state, { isEngineReady }: { isEngineReady: boolean }) {
-      state.isEngineReady = isEngineReady;
+    [SET_ENGINE_STATUS](
+      state,
+      { engineStatus }: { engineStatus: EngineStatus }
+    ) {
+      state.engineStatus = engineStatus;
     },
     [SET_CHARACTER_INFOS](
       state,
@@ -160,6 +163,10 @@ export const audioStore = {
   actions: {
     [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
       for (let i = 0; i < 100; i++) {
+        if (state.engineStatus === "FAILED") {
+          break;
+        }
+
         try {
           await api.versionVersionGet();
         } catch {
@@ -167,7 +174,7 @@ export const audioStore = {
           console.log("waiting engine...");
           continue;
         }
-        state.isEngineReady = true;
+        state.engineStatus = "READY";
         break;
       }
     }),
