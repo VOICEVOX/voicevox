@@ -83,7 +83,7 @@ async function runEngine() {
     }
   );
 
-  engineProcess.on("exit", () => {
+  engineProcess.once("exit", () => {
     ipcMainSend(win, "FAILED_START_ENGINE");
   });
 }
