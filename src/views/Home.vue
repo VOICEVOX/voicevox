@@ -434,9 +434,9 @@ export default defineComponent({
 @use '@/styles' as global;
 body {
   user-select: none;
-  border-left: solid 2px #{global.$primary};
-  border-right: solid 2px #{global.$primary};
-  border-bottom: solid 4px #{global.$primary};
+  border-left: solid #{global.$window-border-width} #{global.$primary};
+  border-right: solid #{global.$window-border-width} #{global.$primary};
+  border-bottom: solid #{global.$window-border-width} #{global.$primary};
 }
 
 .relarive-absolute-wrapper {
@@ -480,7 +480,10 @@ body {
   display: flex;
 
   .q-splitter--horizontal {
-    height: calc(100vh - #{global.$menubar-height} - #{global.$header-height});
+    height: calc(
+      100vh - #{global.$menubar-height + global.$header-height +
+        global.$window-border-width}
+    );
   }
 }
 
