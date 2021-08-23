@@ -5,13 +5,14 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, ipcMain, dialog, shell } from "electron";
+import { app, protocol, BrowserWindow, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
+import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
@@ -98,6 +99,7 @@ const characterInfos = fs
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
+      portraitPath: path.join(dirPath, "portrait.png"),
       metas: JSON.parse(
         fs.readFileSync(path.join(dirPath, "metas.json"), { encoding: "utf-8" })
       ),
@@ -124,6 +126,8 @@ async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
+    frame: false,
+    minWidth: 320,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -142,15 +146,19 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
+  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
+  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
       const filePath = process.argv[1];
-      win.webContents.send("LOAD_PROJECT_FILE", { filePath, confirm: false });
+      ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
     }
   });
 }
 
-ipcMain.handle("GET_APP_INFOS", () => {
+// プロセス間通信
+ipcMainHandle("GET_APP_INFOS", () => {
   const name = app.getName();
   const version = app.getVersion();
   return {
@@ -159,28 +167,27 @@ ipcMain.handle("GET_APP_INFOS", () => {
   };
 });
 
-// プロセス間通信
-ipcMain.handle("GET_TEMP_DIR", () => {
+ipcMainHandle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMain.handle("GET_CHARACTER_INFOS", () => {
+ipcMainHandle("GET_CHARACTER_INFOS", () => {
   return characterInfos;
 });
 
-ipcMain.handle("GET_POLICY_TEXT", () => {
+ipcMainHandle("GET_POLICY_TEXT", () => {
   return policyText;
 });
 
-ipcMain.handle("GET_OSS_LICENSES", () => {
+ipcMainHandle("GET_OSS_LICENSES", () => {
   return ossLicenses;
 });
 
-ipcMain.handle("GET_UPDATE_INFOS", () => {
+ipcMainHandle("GET_UPDATE_INFOS", () => {
   return updateInfos;
 });
 
-ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
+ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", (_, { title, defaultPath }) => {
   return dialog.showSaveDialogSync(win, {
     title,
     defaultPath,
@@ -189,14 +196,14 @@ ipcMain.handle("SHOW_AUDIO_SAVE_DIALOG", (event, { title, defaultPath }) => {
   });
 });
 
-ipcMain.handle("SHOW_OPEN_DIRECTORY_DIALOG", (event, { title }) => {
+ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", (_, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
   })?.[0];
 });
 
-ipcMain.handle("SHOW_PROJECT_SAVE_DIALOG", (event, { title }) => {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", (_, { title }) => {
   return dialog.showSaveDialogSync(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
@@ -204,7 +211,7 @@ ipcMain.handle("SHOW_PROJECT_SAVE_DIALOG", (event, { title }) => {
   });
 });
 
-ipcMain.handle("SHOW_PROJECT_LOAD_DIALOG", (event, { title }) => {
+ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
@@ -212,7 +219,7 @@ ipcMain.handle("SHOW_PROJECT_LOAD_DIALOG", (event, { title }) => {
   });
 });
 
-ipcMain.handle("SHOW_CONFIRM_DIALOG", (event, { title, message }) => {
+ipcMainHandle("SHOW_CONFIRM_DIALOG", (_, { title, message }) => {
   return dialog
     .showMessageBox(win, {
       type: "info",
@@ -225,7 +232,7 @@ ipcMain.handle("SHOW_CONFIRM_DIALOG", (event, { title, message }) => {
     });
 });
 
-ipcMain.handle("SHOW_WARNING_DIALOG", (event, { title, message }) => {
+ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",
     title: title,
@@ -233,7 +240,7 @@ ipcMain.handle("SHOW_WARNING_DIALOG", (event, { title, message }) => {
   });
 });
 
-ipcMain.handle("SHOW_ERROR_DIALOG", (event, { title, message }) => {
+ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "error",
     title: title,
@@ -241,7 +248,7 @@ ipcMain.handle("SHOW_ERROR_DIALOG", (event, { title, message }) => {
   });
 });
 
-ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
+ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: "Text", extensions: ["txt"] }],
@@ -249,11 +256,11 @@ ipcMain.handle("SHOW_IMPORT_FILE_DIALOG", (event, { title }) => {
   })?.[0];
 });
 
-ipcMain.handle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
+ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMain.handle("USE_GPU", (_, { newValue }) => {
+ipcMainHandle("USE_GPU", (_, { newValue }) => {
   if (newValue !== undefined) {
     store.set("useGpu", newValue);
   }
@@ -261,16 +268,29 @@ ipcMain.handle("USE_GPU", (_, { newValue }) => {
   return store.get("useGpu", false) as boolean;
 });
 
-ipcMain.handle("IS_AVAILABLE_GPU_MODE", () => {
+ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-ipcMain.handle("FILE_ENCODING", (_, { newValue }) => {
+ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
   if (newValue !== undefined) {
     store.set("fileEncoding", newValue);
   }
 
   return store.get("fileEncoding", "UTF-8") as Encoding;
+});
+
+ipcMainHandle("CLOSE_WINDOW", () => {
+  app.emit("window-all-closed");
+  win.destroy();
+});
+ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
+ipcMainHandle("MAXIMIZE_WINDOW", () => {
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
 });
 
 // app callback

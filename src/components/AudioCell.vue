@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="audio-cell"
-    @mouseover="mouseOverAction"
-    @mouseleave="mouseLeaveAction"
-  >
+  <div class="audio-cell">
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
@@ -41,8 +37,9 @@
       class="full-width"
       :disable="uiLocked"
       :error="audioItem.text.length >= 80"
-      v-model="audioItem.text"
-      @change="willRemove || setAudioText($event)"
+      :model-value="audioItem.text"
+      @update:model-value="setAudioText"
+      @change="willRemove || updateAudioQuery($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -56,7 +53,7 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template #after v-if="hoverFlag && deleteButtonEnable">
+      <template #after v-if="deleteButtonEnable">
         <q-btn
           round
           flat
@@ -133,6 +130,8 @@ export default defineComponent({
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
       await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
+    };
+    const updateAudioQuery = async () => {
       if (!haveAudioQuery.value) {
         store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
       } else {
@@ -177,6 +176,7 @@ export default defineComponent({
             const text = texts.shift();
             if (text == undefined) return;
             setAudioText(text);
+            updateAudioQuery();
           }
 
           store.dispatch(PUT_TEXTS, {
@@ -269,19 +269,9 @@ export default defineComponent({
         URL.createObjectURL(characterInfo.iconBlob)
     );
 
-    // ホバー
-    const hoverFlag = ref(false);
-
-    const mouseOverAction = () => {
-      hoverFlag.value = true;
-    };
-
-    const mouseLeaveAction = () => {
-      hoverFlag.value = false;
-    };
-
     // 初期化
     onMounted(() => {
+      // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
       if (audioItem.value.query == undefined) {
         store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
       }
@@ -297,6 +287,7 @@ export default defineComponent({
       selectedCharacterInfo,
       characterIconUrl,
       setAudioText,
+      updateAudioQuery,
       changeCharacterIndex,
       setActiveAudioKey,
       save,
@@ -315,9 +306,6 @@ export default defineComponent({
       blurCell,
       isOpenedCharacterList,
       getCharacterIconUrl,
-      hoverFlag,
-      mouseOverAction,
-      mouseLeaveAction,
     };
   },
 });
@@ -353,10 +341,14 @@ export default defineComponent({
     .q-field__after {
       height: 2rem;
       padding-left: 5px;
+      display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
       background-color: #0001;
     }
+  }
+  &:hover > .q-input > .q-field__after {
+    display: flex;
   }
 }
 
