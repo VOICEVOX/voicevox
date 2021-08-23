@@ -126,4 +126,9 @@ type IpcSOData = {
     args: [];
     return: void;
   };
+
+  FAILED_START_ENGINE: {
+    args: [];
+    return: void;
+  };
 };

@@ -62,6 +62,9 @@
           <div>エンジン起動中・・・</div>
         </div>
       </div>
+      <div v-else-if="engineStatus === 'FAILED_START'" class="waiting-engine">
+        <div>エンジンの起動に失敗しました。</div>
+      </div>
       <q-page v-else class="main-row-panes">
         <q-splitter
           horizontal

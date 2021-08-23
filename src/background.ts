@@ -82,6 +82,10 @@ async function runEngine() {
       }
     }
   );
+
+  engineProcess.on("exit", () => {
+    ipcMainSend(win, "FAILED_START_ENGINE");
+  });
 }
 
 // temp dir
