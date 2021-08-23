@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.4.1",
+    "descriptions": ["ファイル読み込み時のバグを修正"],
+    "contributors": ["Segu-g"]
+  },
+  {
     "version": "0.4.0",
     "descriptions": [
       "文章が長い場合に警告文を表示",
