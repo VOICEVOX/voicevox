@@ -56,8 +56,6 @@ export const projectActions = {
               delete obj.audioItems[audioItemsKey].charactorIndex;
             }
           }
-        }
-        if (appVersionList < [0, 4, 1]) {
           for (const audioItemsKey in obj.audioItems) {
             if (obj.audioItems[audioItemsKey].query != null) {
               obj.audioItems[audioItemsKey].query.volumeScale = 1;
