@@ -47,6 +47,19 @@ export default defineComponent({
   background-color: white;
 }
 
+.q-dialog {
+  .q-dialog__backdrop,
+  .q-dialog__inner {
+    top: global.$menubar-height;
+    left: global.$window-border-width;
+    right: global.$window-border-width;
+    bottom: global.$window-border-width;
+  }
+  .q-layout-container {
+    box-shadow: none;
+  }
+}
+
 // スクロールバーのデザイン
 ::-webkit-scrollbar {
   width: 15px;
