@@ -12,7 +12,7 @@
         :step="0.1"
         :disable="uiLocked"
         v-model="query.speedScale"
-        @chaneg="setAudioSpeedScale"
+        @change="setAudioSpeedScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
       />
     </div>
@@ -28,7 +28,7 @@
         :step="0.01"
         :disable="uiLocked"
         v-model="query.pitchScale"
-        @chaneg="setAudioPitchScale"
+        @change="setAudioPitchScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
       />
     </div>
@@ -44,7 +44,7 @@
         :step="0.01"
         :disable="uiLocked"
         v-model="query.intonationScale"
-        @chaneg="setAudioIntonationScale"
+        @change="setAudioIntonationScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'into')"
       />
     </div>
@@ -60,7 +60,7 @@
         :step="0.1"
         :disable="uiLocked"
         v-model="query.volumeScale"
-        @chaneg="setAudioVolumeScale"
+        @change="setAudioVolumeScale"
         @wheel="
           uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'volume')
         "
