@@ -76,7 +76,7 @@ async function runEngine() {
     { cwd: path.dirname(enginePath) },
     () => {
       if (!willQuitEngine) {
-        ipcMainSend(win, "EXIT_PROCESS_FOR_ENGINE");
+        ipcMainSend(win, "DETECT_ENGINE_ERROR");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
           "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"
@@ -334,9 +334,8 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-  // createWindow();
+
   createWindow().then(() => runEngine());
-  // runEngine();
 });
 
 app.on("second-instance", () => {

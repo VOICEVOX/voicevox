@@ -127,7 +127,7 @@ type IpcSOData = {
     return: void;
   };
 
-  EXIT_PROCESS_FOR_ENGINE: {
+  DETECT_ENGINE_ERROR: {
     args: [];
     return: void;
   };

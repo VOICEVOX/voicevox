@@ -104,9 +104,9 @@ export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
-export const EXIT_PROCESS_FOR_ENGINE = "EXIT_PROCESS_FOR_ENGINE";
+export const DETECT_ENGINE_ERROR = "DETECT_ENGINE_ERROR";
 export const FAILED_START_ENGINE = "FAILED_START_ENGINE";
-export const MISSING_ENGINE = "MISSING_ENGINE";
+export const ENGINE_ERROR = "ENGINE_ERROR";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -701,16 +701,16 @@ export const audioStore = {
     [FAILED_START_ENGINE]({ commit }) {
       commit(SET_ENGINE_STATE, { engineState: "FAILED_START" });
     },
-    [MISSING_ENGINE]({ commit }) {
-      commit(SET_ENGINE_STATE, { engineState: "MISSING" });
+    [ENGINE_ERROR]({ commit }) {
+      commit(SET_ENGINE_STATE, { engineState: "ERROR" });
     },
-    [EXIT_PROCESS_FOR_ENGINE]({ state, dispatch }) {
+    [DETECT_ENGINE_ERROR]({ state, dispatch }) {
       switch (state.engineState) {
         case "STARTING":
           dispatch(FAILED_START_ENGINE);
           break;
         case "READY":
-          dispatch(MISSING_ENGINE);
+          dispatch(ENGINE_ERROR);
           break;
       }
     },
