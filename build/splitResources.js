@@ -52,6 +52,6 @@ exports.default = async function (buildResult) {
   });
 
   inputStream.on("end", () => {
-    console.log("Finished.");
+    console.log("Split Finished.");
   });
 };
