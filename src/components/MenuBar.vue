@@ -10,7 +10,10 @@
       @mouseover="reassignSubMenuOpen(i)"
     />
     <q-space />
-    <div class="window-title">VOICEVOX</div>
+    <div v-if="projectName !== undefined" class="window-title">
+      {{ projectName + " - VOICEVOX" }}
+    </div>
+    <div v-else class="window-title">VOICEVOX</div>
     <q-space />
     <title-bar-buttons />
   </q-bar>
@@ -21,7 +24,11 @@ import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
-import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
+import {
+  SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE,
+  PROJECT_NAME,
+} from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
@@ -69,6 +76,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const projectName = computed(() => store.getters[PROJECT_NAME]);
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -249,6 +257,7 @@ export default defineComponent({
 
     return {
       uiLocked,
+      projectName,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,

@@ -66,6 +66,10 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
+  getBaseName: ({ filePath }) => {
+    return path.basename(filePath);
+  },
+
   showAudioSaveDialog: ({ title, defaultPath }) => {
     return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
   },
