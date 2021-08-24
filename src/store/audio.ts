@@ -106,6 +106,7 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const EXIT_PROCESS_FOR_ENGINE = "EXIT_PROCESS_FOR_ENGINE";
 export const FAILED_START_ENGINE = "FAILED_START_ENGINE";
+export const MISSING_ENGINE = "MISSING_ENGINE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -700,9 +701,17 @@ export const audioStore = {
     [FAILED_START_ENGINE]({ commit }) {
       commit(SET_ENGINE_STATE, { engineState: "FAILED_START" });
     },
+    [MISSING_ENGINE]({ commit }) {
+      commit(SET_ENGINE_STATE, { engineState: "MISSING" });
+    },
     [EXIT_PROCESS_FOR_ENGINE]({ state, dispatch }) {
-      if (state.engineState === "STARTING") {
-        dispatch(FAILED_START_ENGINE);
+      switch (state.engineState) {
+        case "STARTING":
+          dispatch(FAILED_START_ENGINE);
+          break;
+        case "READY":
+          dispatch(MISSING_ENGINE);
+          break;
       }
     },
   },

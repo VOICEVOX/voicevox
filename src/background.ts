@@ -16,6 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
+import { EXIT_PROCESS_FOR_ENGINE } from "./store/audio";
 
 let win: BrowserWindow;
 
@@ -75,6 +76,7 @@ async function runEngine() {
     { cwd: path.dirname(enginePath) },
     () => {
       if (!willQuitEngine) {
+        ipcMainSend(win, "EXIT_PROCESS_FOR_ENGINE");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
           "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"
@@ -82,10 +84,6 @@ async function runEngine() {
       }
     }
   );
-
-  engineProcess.on("exit", () => {
-    ipcMainSend(win, "EXIT_PROCESS_FOR_ENGINE");
-  });
 }
 
 // temp dir
@@ -336,8 +334,9 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-  createWindow();
-  runEngine();
+  // createWindow();
+  createWindow().then(() => runEngine());
+  // runEngine();
 });
 
 app.on("second-instance", () => {
