@@ -228,6 +228,15 @@ export default defineComponent({
       }
     };
 
+    watch(uiLocked, () => {
+      // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
+      if (uiLocked.value) {
+        subMenuOpenFlags.value = [...Array(menudata.value.length)].map(
+          () => false
+        );
+      }
+    });
+
     return {
       uiLocked,
       subMenuOpenFlags,
