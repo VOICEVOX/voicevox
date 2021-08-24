@@ -56,7 +56,7 @@
         dense
         snap
         :min="0"
-        :max="1"
+        :max="2"
         :step="0.1"
         :disable="uiLocked"
         v-model="query.volumeScale"
@@ -162,7 +162,7 @@ export default defineComponent({
         case "volume": {
           let curVolume = query.volumeScale - (delta_y > 0 ? 0.1 : -0.1);
           curVolume = Math.round(curVolume * 1e1) / 1e1;
-          if (1 >= curVolume && curVolume >= 0) {
+          if (2 >= curVolume && curVolume >= 0) {
             setAudioVolumeScale(curVolume);
           }
           break;
