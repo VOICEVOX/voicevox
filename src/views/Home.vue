@@ -56,13 +56,13 @@
     </q-header>
 
     <q-page-container>
-      <div v-if="engineStatus === 'STARTING'" class="waiting-engine">
+      <div v-if="engineState === 'STARTING'" class="waiting-engine">
         <div>
           <q-spinner color="primary" size="2.5rem" />
           <div>エンジン起動中・・・</div>
         </div>
       </div>
-      <div v-else-if="engineStatus === 'FAILED_START'" class="waiting-engine">
+      <div v-else-if="engineState === 'FAILED_START'" class="waiting-engine">
         <div>エンジンの起動に失敗しました。</div>
       </div>
       <q-page v-else class="main-row-panes">
@@ -362,7 +362,7 @@ export default defineComponent({
     });
 
     // エンジン待機
-    const engineStatus = computed(() => store.state.engineStatus);
+    const engineState = computed(() => store.state.engineState);
     store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
@@ -424,7 +424,7 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
-      engineStatus,
+      engineState,
       isHelpDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
