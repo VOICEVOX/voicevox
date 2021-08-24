@@ -145,8 +145,16 @@ export default defineComponent({
           { type: "separator" },
           {
             type: "button",
-            label: "プロジェクト保存",
+            label: "プロジェクトを上書き保存",
             shortCut: "Ctrl+S",
+            onClick: () => {
+              store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
+            },
+          },
+          {
+            type: "button",
+            label: "プロジェクトを名前を付けて保存",
+            shortCut: "Ctrl+Shift+S",
             onClick: () => {
               store.dispatch(SAVE_PROJECT_FILE, {});
             },

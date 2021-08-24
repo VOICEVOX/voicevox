@@ -4,7 +4,7 @@ import { createStore, Store, useStore as baseUseStore } from "vuex";
 import { State } from "./type";
 import { commandStore } from "./command";
 import { audioStore } from "./audio";
-import { projectActions } from "./project";
+import { projectStore } from "./project";
 import { uiStore } from "./ui";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
@@ -36,19 +36,21 @@ export const store = createStore<State>({
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
+    ...projectStore.getters,
   },
 
   mutations: {
     ...uiStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
+    ...projectStore.mutations,
   },
 
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
-    ...projectActions,
+    ...projectStore.actions,
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();
     },
