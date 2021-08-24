@@ -17,10 +17,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
-import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
+import {
+  UI_LOCKED,
+  SET_USE_GPU,
+  SET_FILE_ENCODING,
+  LOCK_UI,
+  UNLOCK_UI,
+} from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
@@ -83,6 +89,7 @@ export default defineComponent({
         });
       };
 
+      store.dispatch(LOCK_UI);
       $q.loading.show({
         spinnerColor: "primary",
         spinnerSize: 50,
@@ -91,6 +98,8 @@ export default defineComponent({
       });
       const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
       $q.loading.hide();
+      store.dispatch(UNLOCK_UI);
+
       if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
           title: "対応するGPUデバイスが見つかりません",
