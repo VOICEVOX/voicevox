@@ -47,9 +47,12 @@ export default defineComponent({
   background-color: white;
 }
 
-.q-dialog {
+.q-dialog,
+#q-loading {
   .q-dialog__backdrop,
-  .q-dialog__inner {
+  .q-dialog__inner,
+  .q-loading,
+  .q-loading__backdrop {
     top: global.$menubar-height;
     left: global.$window-border-width;
     right: global.$window-border-width;
