@@ -24,8 +24,7 @@ import {
   UI_LOCKED,
   SET_USE_GPU,
   SET_FILE_ENCODING,
-  LOCK_UI,
-  UNLOCK_UI,
+  ASYNC_UI_LOCK,
 } from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
@@ -89,16 +88,20 @@ export default defineComponent({
         });
       };
 
-      store.dispatch(LOCK_UI);
-      $q.loading.show({
-        spinnerColor: "primary",
-        spinnerSize: 50,
-        boxClass: "bg-white text-secondary",
-        message: "起動モードを変更中です",
+      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
+        store.dispatch(ASYNC_UI_LOCK, {
+          callback: async () => {
+            $q.loading.show({
+              spinnerColor: "primary",
+              spinnerSize: 50,
+              boxClass: "bg-white text-secondary",
+              message: "起動モードを変更中です",
+            });
+            resolve(await window.electron.isAvailableGPUMode());
+            $q.loading.hide();
+          },
+        });
       });
-      const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
-      $q.loading.hide();
-      store.dispatch(UNLOCK_UI);
 
       if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
