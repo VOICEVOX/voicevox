@@ -7,6 +7,7 @@ export const UI_LOCKED = "UI_LOCKED";
 export const SHOULD_SHOW_PANES = "SHOULD_SHOW_PANES";
 export const LOCK_UI = "LOCK_UI";
 export const UNLOCK_UI = "UNLOCK_UI";
+export const ASYNC_UI_LOCK = "ASYNC_UI_LOCK";
 export const GET_USE_GPU = "GET_USE_GPU";
 export const SET_USE_GPU = "SET_USE_GPU";
 export const SET_FILE_ENCODING = "SET_FILE_ENCODING";
@@ -70,6 +71,11 @@ export const uiStore = {
     [UNLOCK_UI]({ commit }) {
       commit(UNLOCK_UI);
     },
+    [ASYNC_UI_LOCK]: createUILockAction(
+      async (_, { callback }: { callback: () => Promise<void> }) => {
+        await callback();
+      }
+    ),
     [IS_HELP_DIALOG_OPEN](
       { state, commit },
       { isHelpDialogOpen }: { isHelpDialogOpen: boolean }

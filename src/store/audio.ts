@@ -86,6 +86,7 @@ export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
 export const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
 export const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
 export const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
+export const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 export const CHANGE_ACCENT = "CHANGE_ACCENT";
 export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
@@ -359,6 +360,12 @@ export const audioStore = {
       { audioKey: string; intonationScale: number }
     >((draft, { audioKey, intonationScale }) => {
       draft.audioItems[audioKey].query!.intonationScale = intonationScale;
+    }),
+    [SET_AUDIO_VOLUME_SCALE]: createCommandAction<
+      State,
+      { audioKey: string; volumeScale: number }
+    >((draft, { audioKey, volumeScale }) => {
+      draft.audioItems[audioKey].query!.volumeScale = volumeScale;
     }),
     [SET_AUDIO_ACCENT]: createCommandAction<
       State,
