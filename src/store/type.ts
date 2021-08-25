@@ -1,17 +1,12 @@
 import { StoreOptions, MutationTree, ActionTree } from "vuex";
 import { AudioQuery } from "@/openapi";
 import { CharacterInfo, Encoding } from "@/type/preload";
-import { Command } from "./command";
-
-export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsMutationTree = <Arg extends MutationTree<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsActionTree = <Arg extends ActionTree<State, State>>(
-  arg: Arg
-): Arg => arg;
+import {
+  Command,
+  PayloadRecipeTree,
+  PayloadMutationTree,
+  createCommandMutationTree,
+} from "./command";
 
 export type State = {
   isEngineReady: boolean;
@@ -42,3 +37,17 @@ export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
 };
+
+export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
+  arg: Arg
+): Arg => arg;
+export const typeAsMutationTree = <Arg extends MutationTree<State>>(
+  arg: Arg
+): Arg => arg;
+export const typeAsActionTree = <Arg extends ActionTree<State, State>>(
+  arg: Arg
+): Arg => arg;
+
+export const commandMutationsCreator = <Arg extends PayloadRecipeTree<State>>(
+  arg: Arg
+): PayloadMutationTree<State> => createCommandMutationTree<State, Arg>(arg);

@@ -1,11 +1,13 @@
-type ConcatLiteral<T1 extends string, T2 extends string> = `${T1}${T2}`;
+export type ConcatLiteral<T1 extends string, T2 extends string> = `${T1}${T2}`;
 export const concatLiteral = <T1 extends string, T2 extends string>(
   t1: T1,
   t2: T2
 ): ConcatLiteral<T1, T2> => (t1 + t2) as ConcatLiteral<T1, T2>;
 
-type MapAddPrefix<Prefix extends string, Arg extends Record<string, unknown>> =
-  { [K in keyof Arg as ConcatLiteral<Prefix, K & string>]: Arg[K] };
+export type MapAddPrefix<
+  Prefix extends string,
+  Arg extends Record<string, unknown>
+> = { [K in keyof Arg as ConcatLiteral<Prefix, K & string>]: Arg[K] };
 export const mapAddPrefix =
   <Prefix extends string>(prefix: Prefix) =>
   <Arg extends Record<string, unknown>>(arg: Arg): MapAddPrefix<Prefix, Arg> =>
@@ -13,7 +15,7 @@ export const mapAddPrefix =
       Object.entries(arg).map(([key, val]) => [prefix + key, val])
     ) as MapAddPrefix<Prefix, Arg>;
 
-type RemovePrefix<Prefix extends string, K extends string> =
+export type RemovePrefix<Prefix extends string, K extends string> =
   K extends `${Prefix}${infer Rest}` ? Rest : K;
 export const removePrefix =
   <Prefix extends string>(prefix: Prefix) =>
@@ -22,7 +24,7 @@ export const removePrefix =
       ? key.substring(prefix.length)
       : key) as RemovePrefix<Prefix, K>;
 
-type MapRemovePrefix<
+export type MapRemovePrefix<
   Prefix extends string,
   Arg extends Record<string, unknown>
 > = {
@@ -37,10 +39,12 @@ export const mapRemovePrefix =
       Object.entries(arg).map(([key, val]) => [removePrefix(prefix)(key), val])
     ) as MapRemovePrefix<Prefix, Arg>;
 
-type FilterPrefix<Prefix extends string, Arg extends Record<string, unknown>> =
-  {
-    [K in keyof Arg as K extends `${Prefix}${string}` ? K : never]: Arg[K];
-  };
+export type FilterPrefix<
+  Prefix extends string,
+  Arg extends Record<string, unknown>
+> = {
+  [K in keyof Arg as K extends `${Prefix}${string}` ? K : never]: Arg[K];
+};
 export const filterPrefix =
   <Prefix extends string>(prefix: Prefix) =>
   <Arg extends Record<string, unknown>>(arg: Arg): FilterPrefix<Prefix, Arg> =>
@@ -50,7 +54,7 @@ export const filterPrefix =
       )
     ) as FilterPrefix<Prefix, Arg>;
 
-type FilterNoPrefix<
+export type FilterNoPrefix<
   Prefix extends string,
   Arg extends Record<string, unknown>
 > = {
@@ -66,3 +70,18 @@ export const filterNoPrefix =
         ([key, val]) => key.substring(0, prefix.length) != prefix
       )
     ) as FilterNoPrefix<Prefix, Arg>;
+
+export type FilterAttrList<
+  Obj extends Record<string, unknown>,
+  Lst extends (keyof Obj)[]
+> = { [K in keyof Obj as K extends Lst[number] ? K : never]: Obj[K] };
+export const filterAttrList = <
+  Obj extends Record<string, unknown>,
+  Lst extends (keyof Obj)[]
+>(
+  obj: Obj,
+  list: Lst
+): FilterAttrList<Obj, Lst> =>
+  Object.fromEntries(
+    list.map((value) => [value, obj[value]])
+  ) as FilterAttrList<Obj, Lst>;

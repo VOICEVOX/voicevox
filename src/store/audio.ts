@@ -1,8 +1,12 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
-import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, State, typeAsStoreOptions } from "./type";
+import {
+  AudioItem,
+  State,
+  typeAsStoreOptions,
+  commandMutationsCreator,
+} from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -61,65 +65,110 @@ function buildFileName(state: State, audioKey: string) {
   );
 }
 
-export const SET_ENGINE_READY = "SET_ENGINE_READY";
-export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
-export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
-export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
-export const IS_ACTIVE = "IS_ACTIVE";
-export const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
-export const LOAD_CHARACTER = "LOAD_CHARACTER";
-export const SET_AUDIO_TEXT = "SET_AUDIO_TEXT";
-export const SET_AUDIO_CHARACTER_INDEX = "SET_AUDIO_CHARACTER_INDEX";
-export const CHANGE_CHARACTER_INDEX = "CHANGE_CHARACTER_INDEX";
-export const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
-export const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
-export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
-export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
-export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
-export const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
-export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
-export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
-export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
-export const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
-export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
-export const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
-export const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
-export const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
-export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
-export const CHANGE_ACCENT = "CHANGE_ACCENT";
-export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
-export const CHANGE_ACCENT_PHRASE_SPLIT = "CHANGE_ACCENT_PHRASE_SPLIT";
-export const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
-export const GENERATE_AUDIO = "GENERATE_AUDIO";
-export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
-export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
-export const IMPORT_FROM_FILE = "IMPORT_FROM_FILE";
-export const PLAY_AUDIO = "PLAY_AUDIO";
-export const STOP_AUDIO = "STOP_AUDIO";
-export const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
-export const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
-export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
-export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
-export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
-export const PUT_TEXTS = "PUT_TEXTS";
-export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
+function toggleAccentPhrase(
+  accentPhrases: AccentPhrase[],
+  {
+    accentPhraseIndex,
+    moraIndex,
+    isPause,
+  }: {
+    accentPhraseIndex: number;
+    moraIndex: number | null;
+    isPause: boolean;
+  }
+) {
+  if (
+    moraIndex === accentPhrases[accentPhraseIndex].moras.length - 1 ||
+    isPause
+  ) {
+    // merge
+    const newAccentPhrase: AccentPhrase = {
+      moras: [
+        ...accentPhrases[accentPhraseIndex].moras,
+        ...accentPhrases[accentPhraseIndex + 1].moras,
+      ],
+      accent: accentPhrases[accentPhraseIndex].accent,
+      pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
+    };
+    accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
+  } else {
+    // split
+    if (moraIndex === null) {
+      return;
+    }
+    const newAccentPhrase1: AccentPhrase = {
+      moras: accentPhrases[accentPhraseIndex].moras.slice(0, moraIndex + 1),
+      accent:
+        accentPhrases[accentPhraseIndex].accent > moraIndex
+          ? moraIndex + 1
+          : accentPhrases[accentPhraseIndex].accent,
+      pauseMora: undefined,
+    };
+    const newAccentPhrase2: AccentPhrase = {
+      moras: accentPhrases[accentPhraseIndex].moras.slice(moraIndex + 1),
+      accent:
+        accentPhrases[accentPhraseIndex].accent > moraIndex + 1
+          ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
+          : 1,
+      pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
+    };
+    accentPhrases.splice(
+      accentPhraseIndex,
+      1,
+      newAccentPhrase1,
+      newAccentPhrase2
+    );
+  }
+}
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
-const commandMutationsCreater = <Arg extends PayloadRecipeTree<State>>(
-  payloadRecipe: Arg
-) => createCommandMutationTree<State, Arg>(payloadRecipe);
+// getters
+export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
+export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
+export const IS_ACTIVE = "IS_ACTIVE";
+export const GET_ENGINE_STATE = "GET_ENGINE_STATE";
 
-export const commandMutations = commandMutationsCreater({
-  REMOVE_ALL_AUDIO_ITEM: (state) => {
-    for (const audioKey of state.audioKeys) {
-      delete state.audioItems[audioKey];
-      delete state.audioStates[audioKey];
-    }
-    state.audioKeys.splice(0, state.audioKeys.length);
-  },
-} as const);
+//mutations (and actions)
+const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
+const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
+const SET_AUDIO_CHARACTER_INDEX = "SET_AUDIO_CHARACTER_INDEX";
+const SET_AUDIO_TEXT = "SET_AUDIO_TEXT";
+const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
+const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
+const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
+const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
+const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
+const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
+const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
+const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
+
+const SET_ENGINE_READY = "SET_ENGINE_READY";
+const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
+const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
+const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
+const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
+const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
+//actions
+export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
+export const LOAD_CHARACTER = "LOAD_CHARACTER";
+export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
+export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
+export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
+export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
+export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
+export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
+export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
+export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
+export const GENERATE_AUDIO = "GENERATE_AUDIO";
+export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
+export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
+export const PLAY_AUDIO = "PLAY_AUDIO";
+export const STOP_AUDIO = "STOP_AUDIO";
+export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
+export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
+export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 
 export const audioStore = typeAsStoreOptions({
   getters: {
@@ -130,10 +179,13 @@ export const audioStore = typeAsStoreOptions({
         : undefined;
     },
     [HAVE_AUDIO_QUERY]: (state) => (audioKey: string) => {
-      return state.audioItems[audioKey]?.query != undefined;
+      return state.audioItems[audioKey]?.query !== undefined;
     },
     [IS_ACTIVE]: (state) => (audioKey: string) => {
       return state._activeAudioKey === audioKey;
+    },
+    [GET_ENGINE_STATE]: (state) => () => {
+      return state.isEngineReady;
     },
   },
 
@@ -237,53 +289,11 @@ export const audioStore = typeAsStoreOptions({
       }
     ) => {
       const query = state.audioItems[audioKey].query!;
-      if (
-        moraIndex === query.accentPhrases[accentPhraseIndex].moras.length - 1 ||
-        isPause
-      ) {
-        // merge
-        const newAccentPhrase: AccentPhrase = {
-          moras: [
-            ...query.accentPhrases[accentPhraseIndex].moras,
-            ...query.accentPhrases[accentPhraseIndex + 1].moras,
-          ],
-          accent: query.accentPhrases[accentPhraseIndex].accent,
-          pauseMora: query.accentPhrases[accentPhraseIndex + 1].pauseMora,
-        };
-        query.accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
-      } else {
-        // split
-        if (moraIndex === null) {
-          return;
-        }
-        const newAccentPhrase1: AccentPhrase = {
-          moras: query.accentPhrases[accentPhraseIndex].moras.slice(
-            0,
-            moraIndex + 1
-          ),
-          accent:
-            query.accentPhrases[accentPhraseIndex].accent > moraIndex
-              ? moraIndex + 1
-              : query.accentPhrases[accentPhraseIndex].accent,
-          pauseMora: undefined,
-        };
-        const newAccentPhrase2: AccentPhrase = {
-          moras: query.accentPhrases[accentPhraseIndex].moras.slice(
-            moraIndex + 1
-          ),
-          accent:
-            query.accentPhrases[accentPhraseIndex].accent > moraIndex + 1
-              ? query.accentPhrases[accentPhraseIndex].accent - moraIndex - 1
-              : 1,
-          pauseMora: query.accentPhrases[accentPhraseIndex].pauseMora,
-        };
-        query.accentPhrases.splice(
-          accentPhraseIndex,
-          1,
-          newAccentPhrase1,
-          newAccentPhrase2
-        );
-      }
+      toggleAccentPhrase(query.accentPhrases, {
+        accentPhraseIndex,
+        moraIndex,
+        isPause,
+      });
     },
     [SET_AUDIO_MORA_PITCH]: (
       state,
@@ -302,7 +312,10 @@ export const audioStore = typeAsStoreOptions({
       const query = state.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
-    [SET_ENGINE_READY](state, { isEngineReady }: { isEngineReady: boolean }) {
+    [SET_ENGINE_READY]: (
+      state,
+      { isEngineReady }: { isEngineReady: boolean }
+    ) => {
       state.isEngineReady = isEngineReady;
     },
     [SET_CHARACTER_INFOS](
@@ -311,20 +324,20 @@ export const audioStore = typeAsStoreOptions({
     ) {
       state.characterInfos = characterInfos;
     },
-    [SET_ACTIVE_AUDIO_KEY](state, { audioKey }: { audioKey?: string }) {
+    [SET_ACTIVE_AUDIO_KEY]: (state, { audioKey }: { audioKey?: string }) => {
       state._activeAudioKey = audioKey;
-    },
-    [SET_AUDIO_NOW_PLAYING](
-      state,
-      { audioKey, nowPlaying }: { audioKey: string; nowPlaying: boolean }
-    ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
     },
     [SET_AUDIO_NOW_GENERATING](
       state,
       { audioKey, nowGenerating }: { audioKey: string; nowGenerating: boolean }
     ) {
       state.audioStates[audioKey].nowGenerating = nowGenerating;
+    },
+    [SET_AUDIO_NOW_PLAYING](
+      state,
+      { audioKey, nowPlaying }: { audioKey: string; nowPlaying: boolean }
+    ) {
+      state.audioStates[audioKey].nowPlaying = nowPlaying;
     },
     [SET_NOW_PLAYING_CONTINUOUSLY](
       state,
@@ -355,7 +368,9 @@ export const audioStore = typeAsStoreOptions({
         characterInfos.map(async (characterInfo) => {
           const [iconBuf, portraitBuf] = await Promise.all([
             window.electron.readFile({ filePath: characterInfo.iconPath }),
-            window.electron.readFile({ filePath: characterInfo.portraitPath }),
+            window.electron.readFile({
+              filePath: characterInfo.portraitPath,
+            }),
           ]);
           characterInfo.iconBlob = new Blob([iconBuf]);
           characterInfo.portraitBlob = new Blob([portraitBuf]);
@@ -364,70 +379,65 @@ export const audioStore = typeAsStoreOptions({
 
       commit(SET_CHARACTER_INFOS, { characterInfos });
     }),
-    [REGISTER_AUDIO_ITEM]: (
-      { state, dispatch },
+    [REGISTER_AUDIO_ITEM]: async (
+      { state, dispatch, commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey: string | undefined }
     ) => {
-      const audioKey = uuidv4();
+      const audioKey = await dispatch(ISSUE_AUDIO_KEY);
       const index =
         prevAudioKey !== undefined
           ? state.audioKeys.indexOf(prevAudioKey) + 1
           : state.audioKeys.length;
-      dispatch(INSERT_AUDIO_ITEM, { audioItem, audioKey, index });
+      commit(INSERT_AUDIO_ITEM, { audioItem, audioKey, index });
+      return audioKey;
+    },
+    [UNREGISER_AUDIO_ITEM]: (
+      { commit, dispatch },
+      { audioKey }: { audioKey: string }
+    ) => {
+      commit(REMOVE_AUDIO_ITEM, { audioKey });
+      dispatch(DISPOSE_AUDIO_KEY, { audioKey });
+    },
+    [ISSUE_AUDIO_KEY]: (_, _) => {
+      const audioKey = uuidv4();
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
-    [SET_ACTIVE_AUDIO_KEY]: (
-      { commit },
-      { audioKey }: { audioKey?: string }
-    ) => {
-      commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
+    [DISPOSE_AUDIO_KEY]: (_, { audioKey }: { audioKey: string }) => {
+      delete audioElements[audioKey];
     },
     [FETCH_ACCENT_PHRASES]: (
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
+      { state },
+      { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      const audioItem = state.audioItems[audioKey];
-
       return api.accentPhrasesAccentPhrasesPost({
-        text: audioItem.text,
-        speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
+        text: text,
+        speaker: state.characterInfos![characterIndex].metas.speaker,
       });
     },
     [FETCH_MORA_PITCH]: (
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
+      { state },
+      {
+        accentPhrases,
+        characterIndex,
+      }: { accentPhrases: AccentPhrase[]; characterIndex: number }
     ) => {
-      const audioItem = state.audioItems[audioKey];
-
       return api.moraPitchMoraPitchPost({
-        accentPhrase: audioItem.query!.accentPhrases,
-        speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
+        accentPhrase: accentPhrases,
+        speaker: state.characterInfos![characterIndex].metas.speaker,
       });
     },
     [FETCH_AUDIO_QUERY]: (
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
+      { state },
+      { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      const audioItem = state.audioItems[audioKey];
-
       return api.audioQueryAudioQueryPost({
-        text: audioItem.text,
-        speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
+        text: text,
+        speaker: state.characterInfos![characterIndex].metas.speaker,
       });
-    },
-    [CHANGE_CHARACTER_INDEX]: async (
-      { getters, dispatch },
-      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
-    ) => {
-      const haveAudioQuery = getters[HAVE_AUDIO_QUERY](audioKey);
-      await dispatch(SET_AUDIO_CHARACTER_INDEX, { audioKey, characterIndex });
-      if (haveAudioQuery) {
-        return dispatch(FETCH_MORA_PITCH, { audioKey });
-      }
     },
     [GET_AUDIO_CACHE]: async (
       { state },
@@ -441,43 +451,6 @@ export const audioStore = typeAsStoreOptions({
       } else {
         return null;
       }
-    },
-    [CHANGE_ACCENT]: async (
-      { dispatch },
-      {
-        audioKey,
-        accentPhraseIndex,
-        accent,
-      }: {
-        audioKey: string;
-        accentPhraseIndex: number;
-        accent: number;
-      }
-    ) => {
-      await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
-      return dispatch(FETCH_MORA_PITCH, { audioKey });
-    },
-    [CHANGE_ACCENT_PHRASE_SPLIT]: async (
-      { dispatch },
-      {
-        audioKey,
-        accentPhraseIndex,
-        moraIndex,
-        isPause,
-      }: {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number | null;
-        isPause: boolean;
-      }
-    ) => {
-      await dispatch(TOGGLE_ACCENT_PHRASE_SPLIT, {
-        audioKey,
-        accentPhraseIndex,
-        moraIndex,
-        isPause,
-      });
-      return dispatch(FETCH_MORA_PITCH, { audioKey });
     },
     [GENERATE_AUDIO]: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {
@@ -561,30 +534,6 @@ export const audioStore = typeAsStoreOptions({
         }
       }
     ),
-    [IMPORT_FROM_FILE]: createUILockAction(
-      async ({ state, dispatch }, { filePath }: { filePath?: string }) => {
-        if (!filePath) {
-          filePath = await window.electron.showImportFileDialog({
-            title: "セリフ読み込み",
-          });
-          if (!filePath) return;
-        }
-        let body = new TextDecoder("utf-8").decode(
-          await window.electron.readFile({ filePath })
-        );
-        if (body.indexOf("\ufffd") > -1) {
-          body = new TextDecoder("shift-jis").decode(
-            await window.electron.readFile({ filePath })
-          );
-        }
-        const audioItems = parseTextFile(body, state.characterInfos);
-        return Promise.all(
-          audioItems.map((item) =>
-            dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })
-          )
-        );
-      }
-    ),
     [PLAY_AUDIO]: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];
@@ -656,9 +605,197 @@ export const audioStore = typeAsStoreOptions({
         }
       }
     },
-    [PUT_TEXTS]: createUILockAction(
+    [OPEN_TEXT_EDIT_CONTEXT_MENU]: () => {
+      window.electron.openTextEditContextMenu();
+    },
+  },
+} as const);
+
+//commands
+export const COMMAND_UPDATE_AUDIO_TEXT = "COMMAND_UPDATE_AUDIO_TEXT";
+export const COMMAND_CHANGE_CHARACTER_INDEX = "COMMAND_CHANGE_CHARACTER_INDEX";
+export const COMMAND_CHANGE_ACCENT = "COMMAND_CHANGE_ACCENT";
+export const COMMAND_CHANGE_ACCENT_PHRASE_SPLIT =
+  "COMMAND_CHANGE_ACCENT_PHRASE_SPLIT";
+export const COMMAND_IMPORT_FROM_FILE = "COMMAND_IMPORT_FROM_FILE";
+export const COMMAND_PUT_TEXTS = "COMMAND_PUT_TEXTS";
+
+export const audioCommandStore = typeAsStoreOptions({
+  actions: {
+    [COMMAND_UPDATE_AUDIO_TEXT]: async (
+      { state, commit, dispatch },
+      { audioKey, text }: { audioKey: string; text: string }
+    ) => {
+      const characterIndex = state.audioItems[audioKey].characterIndex ?? 0;
+      const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+        text: text,
+        characterIndex: characterIndex,
+      });
+      commit(COMMAND_UPDATE_AUDIO_TEXT, {
+        audioKey,
+        text,
+        query,
+      });
+    },
+    [COMMAND_CHANGE_CHARACTER_INDEX]: async (
+      { state, dispatch, commit },
+      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
+    ) => {
+      const query = state.audioItems[audioKey].query;
+      if (query !== undefined) {
+        const accentPhrases = query.accentPhrases;
+        const newAccentPhrases: AccentPhrase[] = await dispatch(
+          FETCH_MORA_PITCH,
+          {
+            accentPhrases,
+            characterIndex,
+          }
+        );
+        commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+          characterIndex: characterIndex,
+          audioKey: audioKey,
+          haveAudioQuery: true,
+          accentPhrases: newAccentPhrases,
+        });
+      } else {
+        const text = state.audioItems[audioKey].text;
+        const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+          text: text,
+          characterIndex: characterIndex,
+        });
+        commit(COMMAND_UPDATE_AUDIO_TEXT, {
+          audioKey,
+          text,
+          query,
+        });
+      }
+    },
+    [COMMAND_CHANGE_ACCENT]: async (
+      { state, dispatch, commit },
+      {
+        audioKey,
+        accentPhraseIndex,
+        accent,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        accent: number;
+      }
+    ) => {
+      const query = state.audioItems[audioKey].query;
+      if (query !== undefined) {
+        const newAccentPhrases: AccentPhrase[] = JSON.parse(
+          JSON.stringify(query.accentPhrases)
+        );
+        newAccentPhrases[accentPhraseIndex].accent = accent;
+
+        const characterIndex: number =
+          state.audioItems[audioKey].characterIndex ?? 0;
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          FETCH_MORA_PITCH,
+          { newAccentPhrases, characterIndex }
+        );
+        commit(COMMAND_CHANGE_ACCENT, {
+          audioKey,
+          accentPhrases: resultAccentPhrases,
+        });
+      }
+
+      await dispatch(SET_AUDIO_ACCENT, {
+        audioKey,
+        accentPhraseIndex,
+        accent,
+      });
+      return;
+    },
+    [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: async (
+      { state, dispatch, commit },
+      {
+        audioKey,
+        accentPhraseIndex,
+        moraIndex,
+        isPause,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number | null;
+        isPause: boolean;
+      }
+    ) => {
+      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      const characterIndex: number =
+        state.audioItems[audioKey].characterIndex ?? 0;
+      if (query !== undefined) {
+        const newAccentPhrases: AccentPhrase[] = JSON.parse(
+          JSON.stringify(query.accentPhrases)
+        );
+        toggleAccentPhrase(newAccentPhrases, {
+          accentPhraseIndex,
+          moraIndex,
+          isPause,
+        });
+        const resultAccentPhrases = await dispatch(FETCH_MORA_PITCH, {
+          accentPhrases: newAccentPhrases,
+          characterIndex,
+        });
+        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT);
+      }
+    },
+    [COMMAND_IMPORT_FROM_FILE]: createUILockAction(
       async (
-        { dispatch },
+        { state, dispatch, commit, getters },
+        { filePath }: { filePath?: string }
+      ) => {
+        if (!filePath) {
+          filePath = await window.electron.showImportFileDialog({
+            title: "セリフ読み込み",
+          });
+          if (!filePath) return;
+        }
+        let body = new TextDecoder("utf-8").decode(
+          await window.electron.readFile({ filePath })
+        );
+        if (body.indexOf("\ufffd") > -1) {
+          body = new TextDecoder("shift-jis").decode(
+            await window.electron.readFile({ filePath })
+          );
+        }
+
+        const audioItems = parseTextFile(body, state.characterInfos);
+        for (
+          let count = 0;
+          !getters[GET_ENGINE_STATE]() || count < 120;
+          count++
+        ) {
+          console.error("Waiting engine...");
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+        if (!getters[GET_ENGINE_STATE]()) {
+          console.error("The engine must be running to read text.");
+        }
+
+        const audioKeys = await Promise.all(
+          audioItems.map(
+            async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
+          )
+        );
+
+        const fetchAudioQuerys = audioItems.map(async (audioItem, index) => {
+          const text: string = audioItem.text;
+          const characterIndex: number = audioItem.characterIndex ?? 0;
+          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+            text,
+            characterIndex,
+          });
+          audioItem.query = query;
+        });
+        await Promise.all(fetchAudioQuerys);
+        commit(COMMAND_IMPORT_FROM_FILE, { audioItems, audioKeys });
+      }
+    ),
+    [COMMAND_PUT_TEXTS]: createUILockAction(
+      async (
+        { dispatch, commit },
         {
           texts,
           characterIndex,
@@ -669,32 +806,125 @@ export const audioStore = typeAsStoreOptions({
           prevAudioKey: string | undefined;
         }
       ) => {
-        const arrLen = texts.length;
-        characterIndex == undefined ? 0 : characterIndex;
-        const addedAudioKeys = [];
-        for (let i = 0; i < arrLen; i++) {
-          if (texts[i] != "") {
-            const audioItem = {
-              text: texts[i],
-              characterIndex: characterIndex,
-            };
-            prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
-              audioItem: audioItem,
-              prevAudioKey: prevAudioKey,
+        const partialCharacterIndex: number = characterIndex ?? 0;
+        const asyncAudioItems: Promise<AudioItem>[] = texts
+          .filter((text) => text != "")
+          .map(async (text) => {
+            const query = await dispatch(FETCH_AUDIO_QUERY, {
+              text,
+              characterIndex: partialCharacterIndex,
             });
-            addedAudioKeys.push(prevAudioKey);
-          }
-        }
-
-        return Promise.all(
-          addedAudioKeys.map((audioKey) =>
-            dispatch(FETCH_AUDIO_QUERY, { audioKey })
+            return {
+              text,
+              query,
+              characterIndex: partialCharacterIndex,
+            };
+          });
+        const audioKeys = await Promise.all(
+          asyncAudioItems.map(
+            async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
           )
         );
+        const audioItems = await Promise.all(asyncAudioItems);
+        commit(COMMAND_PUT_TEXTS, { audioItems, audioKeys, prevAudioKey });
       }
     ),
-    [OPEN_TEXT_EDIT_CONTEXT_MENU]: () => {
-      window.electron.openTextEditContextMenu();
-    },
   },
+  mutations: commandMutationsCreator({
+    [COMMAND_UPDATE_AUDIO_TEXT]: (
+      draft,
+      payload: { audioKey: string; text: string; query: AudioQuery }
+    ) => {
+      audioStore.mutations[SET_AUDIO_TEXT](draft, {
+        audioKey: payload.audioKey,
+        text: payload.text,
+      });
+      audioStore.mutations[SET_AUDIO_QUERY](draft, {
+        audioKey: payload.audioKey,
+        audioQuery: payload.query,
+      });
+    },
+    [COMMAND_CHANGE_CHARACTER_INDEX]: (
+      draft,
+      payload: { characterIndex: number; audioKey: string } & (
+        | {
+            haveAudioQuery: true;
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            haveAudioQuery: false;
+            query: AudioQuery;
+          }
+      )
+    ) => {
+      audioStore.mutations[SET_AUDIO_CHARACTER_INDEX](draft, {
+        audioKey: payload.audioKey,
+        characterIndex: payload.characterIndex,
+      });
+      if (payload.haveAudioQuery) {
+        audioStore.mutations[SET_ACCENT_PHRASES](draft, {
+          audioKey: payload.audioKey,
+          accentPhrases: payload.accentPhrases,
+        });
+      } else {
+        audioStore.mutations[SET_AUDIO_QUERY](draft, {
+          audioKey: payload.audioKey,
+          audioQuery: payload.query,
+        });
+      }
+    },
+    [COMMAND_CHANGE_ACCENT]: (
+      draft,
+      {
+        audioKey,
+        accentPhrases,
+      }: {
+        audioKey: string;
+        accentPhrases: AccentPhrase[];
+      }
+    ) => {
+      audioStore.mutations[SET_ACCENT_PHRASES](draft, {
+        audioKey,
+        accentPhrases,
+      });
+    },
+    [COMMAND_IMPORT_FROM_FILE]: (
+      draft,
+      {
+        audioItems,
+        audioKeys,
+      }: { audioItems: AudioItem[]; audioKeys: string[] }
+    ) => {
+      for (let i = 0; i < audioItems.length; i++)
+        audioStore.mutations[INSERT_AUDIO_ITEM](draft, {
+          index: draft.audioKeys.length,
+          audioItem: audioItems[i],
+          audioKey: audioKeys[i],
+        });
+    },
+    [COMMAND_PUT_TEXTS]: (
+      draft,
+      {
+        audioItems,
+        audioKeys,
+        prevAudioKey,
+      }: {
+        audioItems: AudioItem[];
+        audioKeys: string[];
+        prevAudioKey: string | undefined;
+      }
+    ) => {
+      let prevIndex =
+        prevAudioKey !== undefined
+          ? draft.audioKeys.indexOf(prevAudioKey) + 1
+          : draft.audioKeys.length;
+      for (let i = 0; i < audioItems.length; i++) {
+        audioStore.mutations[INSERT_AUDIO_ITEM](draft, {
+          audioItem: audioItems[i],
+          audioKey: audioKeys[i],
+          index: prevIndex++,
+        });
+      }
+    },
+  } as const),
 } as const);
