@@ -22,7 +22,7 @@
     ${endif}
 
     ${if} $0 != "OK"
-        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Error happened downloading files. click OK to abort installation." IDRETRY download
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Error happened downloading files." IDRETRY download
         Quit ; quit immidiately
     ${endif}
 
