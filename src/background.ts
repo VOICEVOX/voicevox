@@ -16,7 +16,6 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
-import { EXIT_PROCESS_FOR_ENGINE } from "./store/audio";
 
 let win: BrowserWindow;
 

@@ -105,8 +105,6 @@ export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECT_ENGINE_ERROR = "DETECT_ENGINE_ERROR";
-export const FAILED_START_ENGINE = "FAILED_START_ENGINE";
-export const ENGINE_ERROR = "ENGINE_ERROR";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -163,7 +161,7 @@ export const audioStore = {
   actions: {
     [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
       for (let i = 0; i < 100; i++) {
-        if (state.engineState === "FAILED_START") {
+        if (state.engineState === "FAILED_STARTING") {
           break;
         }
 
@@ -698,19 +696,13 @@ export const audioStore = {
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
       window.electron.openTextEditContextMenu();
     },
-    [FAILED_START_ENGINE]({ commit }) {
-      commit(SET_ENGINE_STATE, { engineState: "FAILED_START" });
-    },
-    [ENGINE_ERROR]({ commit }) {
-      commit(SET_ENGINE_STATE, { engineState: "ERROR" });
-    },
-    [DETECT_ENGINE_ERROR]({ state, dispatch }) {
+    [DETECT_ENGINE_ERROR]({ state, commit }) {
       switch (state.engineState) {
         case "STARTING":
-          dispatch(FAILED_START_ENGINE);
+          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
           break;
         case "READY":
-          dispatch(ENGINE_ERROR);
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
       }
     },
