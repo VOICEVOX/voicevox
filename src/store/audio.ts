@@ -1,4 +1,3 @@
-import { mapActions } from "vuex";
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -11,7 +10,6 @@ import {
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { audio } from "systeminformation";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -142,6 +140,7 @@ const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
 const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
 const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
 const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
+const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
@@ -262,6 +261,12 @@ export const audioStore = typeAsStoreOptions({
       }: { audioKey: string; intonationScale: number }
     ) => {
       state.audioItems[audioKey].query!.intonationScale = intonationScale;
+    },
+    [SET_AUDIO_VOLUME_SCALE]: (
+      state,
+      { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
+    ) => {
+      state.audioItems[audioKey].query!.volumeScale = volumeScale;
     },
     [SET_AUDIO_ACCENT]: (
       state,
@@ -651,6 +656,7 @@ export const COMMAND_SET_AUDIO_INTONATION_SCALE =
   "COMMAND_SET_AUDIO_INTONATION_SCALE";
 export const COMMAND_SET_AUDIO_PITCH_SCALE = "COMMAND_SET_AUDIO_PITCH_SCALE";
 export const COMMAND_SET_AUDIO_SPEED_SCALE = "COMMAND_SET_AUDIO_SPEED_SCALE";
+export const COMMAND_SET_AUDIO_VOLUME_SCALE = "COMMAND_SET_AUDIO_VOLUME_SCALE";
 export const COMMAND_SET_AUDIO_MORA_PITCH = "COMMAND_SET_AUDIO_MORA_PITCH";
 export const COMMAND_IMPORT_FROM_FILE = "COMMAND_IMPORT_FROM_FILE";
 export const COMMAND_PUT_TEXTS = "COMMAND_PUT_TEXTS";
@@ -815,6 +821,12 @@ export const audioCommandStore = typeAsStoreOptions({
       payload: { audioKey: string; speedScale: number }
     ) => {
       commit(COMMAND_SET_AUDIO_SPEED_SCALE, payload);
+    },
+    [COMMAND_SET_AUDIO_VOLUME_SCALE]: (
+      { commit },
+      payload: { audioKey: string; volumeScale: number }
+    ) => {
+      commit(COMMAND_SET_AUDIO_VOLUME_SCALE, payload);
     },
     [COMMAND_SET_AUDIO_MORA_PITCH]: (
       { dispatch },
@@ -1000,6 +1012,12 @@ export const audioCommandStore = typeAsStoreOptions({
       payload: { audioKey: string; speedScale: number }
     ) => {
       audioStore.mutations[SET_AUDIO_SPEED_SCALE](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_VOLUME_SCALE]: (
+      draft,
+      payload: { audioKey: string; volumeScale: number }
+    ) => {
+      audioStore.mutations[SET_AUDIO_VOLUME_SCALE](draft, payload);
     },
     [COMMAND_SET_AUDIO_MORA_PITCH]: (
       draft,

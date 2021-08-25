@@ -1,5 +1,10 @@
 import { InjectionKey } from "vue";
-import { createStore, Store, useStore as baseUseStore } from "vuex";
+import {
+  createLogger,
+  createStore,
+  Store,
+  useStore as baseUseStore,
+} from "vuex";
 
 import { State } from "./type";
 import { commandStore } from "./command";
@@ -11,6 +16,8 @@ export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
+
+const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<Store<State>> = Symbol();
 
@@ -67,6 +74,7 @@ export const store = createStore<State>({
       return await window.electron.showWarningDialog({ title, message });
     },
   },
+  plugins: isDevelopment ? [createLogger()] : undefined,
 });
 
 export const useStore = (): Store<State> => {
