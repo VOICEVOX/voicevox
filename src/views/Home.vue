@@ -176,10 +176,11 @@ import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
   COMMAND_IMPORT_FROM_FILE,
-  LOAD_CHARACTER,
-  PLAY_CONTINUOUSLY_AUDIO,
   COMMAND_REGISTER_AUDIO_ITEM,
   GENERATE_AUDIO_ITEM,
+  REGISTER_AUDIO_ITEM,
+  LOAD_CHARACTER,
+  PLAY_CONTINUOUSLY_AUDIO,
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
@@ -363,7 +364,10 @@ export default defineComponent({
 
     // エンジン待機
     const isEngineReady = computed(() => store.state.isEngineReady);
-    store.dispatch(START_WAITING_ENGINE);
+    store.dispatch(START_WAITING_ENGINE).then(async () => {
+      const audioItem = await store.dispatch(GENERATE_AUDIO_ITEM, { text: "" });
+      return await store.dispatch(REGISTER_AUDIO_ITEM, { audioItem });
+    });
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
