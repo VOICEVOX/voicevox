@@ -1,14 +1,21 @@
-import { Store, Payload, ActionContext, StoreOptions } from "vuex";
-
-import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
-import { applyPatch, Operation } from "rfc6902";
-import { State } from "./type";
-
+import {
+  enablePatches,
+  enableMapSet,
+  setUseProxies,
+  Patch,
+  Draft,
+  Immer,
+} from "immer";
 enablePatches();
 enableMapSet();
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
+
+import { Store, Payload, ActionContext, StoreOptions } from "vuex";
+
+import { applyPatch, Operation } from "rfc6902";
+import { State } from "./type";
 
 export const CAN_UNDO = "CAN_UNDO";
 export const CAN_REDO = "CAN_REDO";

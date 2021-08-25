@@ -756,20 +756,13 @@ export const audioCommandStore = typeAsStoreOptions({
           state.audioItems[audioKey].characterIndex ?? 0;
         const resultAccentPhrases: AccentPhrase[] = await dispatch(
           FETCH_MORA_PITCH,
-          { newAccentPhrases, characterIndex }
+          { accentPhrases: newAccentPhrases, characterIndex }
         );
         commit(COMMAND_CHANGE_ACCENT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
         });
       }
-
-      await dispatch(SET_AUDIO_ACCENT, {
-        audioKey,
-        accentPhraseIndex,
-        accent,
-      });
-      return;
     },
     [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: async (
       { state, dispatch, commit },
@@ -801,7 +794,10 @@ export const audioCommandStore = typeAsStoreOptions({
           accentPhrases: newAccentPhrases,
           characterIndex,
         });
-        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT);
+        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+          audioKey,
+          accentPhrases: resultAccentPhrases,
+        });
       }
     },
     [COMMAND_SET_AUDIO_INTONATION_SCALE]: (
@@ -936,7 +932,10 @@ export const audioCommandStore = typeAsStoreOptions({
       audioStore.mutations[INSERT_AUDIO_ITEM](draft, payload);
     },
     [COMMAND_UNREGISTER_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
-      audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+      // audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+      draft.audioKeys.splice(draft.audioKeys.indexOf(payload.audioKey), 1);
+      delete draft.audioItems[payload.audioKey];
+      delete draft.audioStates[payload.audioKey];
     },
     [COMMAND_UPDATE_AUDIO_TEXT]: (
       draft,
@@ -994,6 +993,15 @@ export const audioCommandStore = typeAsStoreOptions({
         audioKey,
         accentPhrases,
       });
+    },
+    [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: (
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhrases: AccentPhrase[];
+      }
+    ) => {
+      audioStore.mutations[SET_ACCENT_PHRASES](draft, payload);
     },
     [COMMAND_SET_AUDIO_INTONATION_SCALE]: (
       draft,

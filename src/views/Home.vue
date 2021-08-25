@@ -22,6 +22,24 @@
           @click="stopContinuously"
           >停止</q-btn
         >
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="!canRedo && uiLocked"
+          @click="redo"
+          >REDO</q-btn
+        >
+        <q-btn
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="!canUndo && uiLocked"
+          @click="undo"
+          >UNDO</q-btn
+        >
 
         <q-space />
 
@@ -179,6 +197,7 @@ import {
   LOAD_CHARACTER,
   PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
+  GENERATE_AUDIO_ITEM,
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
@@ -295,7 +314,9 @@ export default defineComponent({
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const addAudioItem = async () => {
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
+      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
+        text: "",
+      });
       const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
