@@ -73,9 +73,10 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    () => {
+    (error) => {
+      console.log(error);
       if (!willQuitEngine) {
-        ipcMainSend(win, "DETECT_ENGINE_ERROR");
+        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
           "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"

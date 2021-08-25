@@ -105,7 +105,7 @@ export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
-export const DETECT_ENGINE_ERROR = "DETECT_ENGINE_ERROR";
+export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -175,6 +175,10 @@ export const audioStore = {
         }
         state.engineState = "READY";
         break;
+      }
+
+      if (state.engineState !== "READY") {
+        state.engineState = "FAILED_STARTING";
       }
     }),
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
@@ -703,7 +707,7 @@ export const audioStore = {
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
       window.electron.openTextEditContextMenu();
     },
-    [DETECT_ENGINE_ERROR]({ state, commit }) {
+    [DETECTED_ENGINE_ERROR]({ state, commit }) {
       switch (state.engineState) {
         case "STARTING":
           commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
