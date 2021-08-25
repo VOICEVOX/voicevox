@@ -8,7 +8,7 @@
     inetc::get /POPUP "https://github.com/" /RESUME "" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.0" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.0" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.1" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.1" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.2" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.2" /END
     Pop $0 ; return value("OK", "Cancelled" or else)
 
-    ; cancel handling
+    ; download cancel handling
     ${if} $0 == "Cancelled"
         Quit ; quit immidiately
     ${endif}
@@ -19,7 +19,7 @@
         Pop $0 ; return value("OK", "Cancelled" or else)
     ${endif}
 
-    ; cancel handling
+    ; download cancel handling
     ${if} $0 == "Cancelled"
         Quit ; quit immidiately
     ${endif}
