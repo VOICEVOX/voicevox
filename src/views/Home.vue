@@ -178,7 +178,7 @@ import {
   COMMAND_IMPORT_FROM_FILE,
   LOAD_CHARACTER,
   PLAY_CONTINUOUSLY_AUDIO,
-  REGISTER_AUDIO_ITEM,
+  COMMAND_REGISTER_AUDIO_ITEM,
   GENERATE_AUDIO_ITEM,
   START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
@@ -299,7 +299,7 @@ export default defineComponent({
       const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
       });
-      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
+      const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
       });
@@ -339,11 +339,11 @@ export default defineComponent({
     }: {
       prevAudioKey: string;
     }) => {
-      const audioItem: AudioItem = {
+      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
         characterIndex: audioItems.value[prevAudioKey].characterIndex,
-      };
-      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
+      });
+      const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey,
       });
