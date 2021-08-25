@@ -7,6 +7,8 @@
     download:
     inetc::get /POPUP "https://github.com/" /RESUME "" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.0" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.0" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.1" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.1" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.2" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.2" /END
     Pop $0 ; return value("OK", "Cancelled" or else)
+
+    ; cancel handling
     ${if} $0 == "Cancelled"
         Quit ; quit immidiately
     ${endif}
@@ -17,21 +19,26 @@
         Pop $0 ; return value("OK", "Cancelled" or else)
     ${endif}
 
+    ; cancel handling
     ${if} $0 == "Cancelled"
         Quit ; quit immidiately
     ${endif}
 
+    ; download error handling
     ${if} $0 != "OK"
         MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Error happened downloading files." IDRETRY download
         Quit ; quit immidiately
     ${endif}
 
+    ; show preparing message banner
+    Banner::show /set 76 "Preparing for installation" "please wait..."
+
     ; copy and concatenate files
-    MessageBox MB_OK "Concatenate files. Please wait."
     nsExec::ExecToStack '"$SYSDIR\cmd.exe" /C COPY /B "$TEMP\voicevox-${VERSION}-x64.nsis.7z.0" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2" "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"'
     Pop $0 ; return value
     Pop $1 ; return message
 
+    ; concatenation error handling
     ${If} $0 != "0"
         MessageBox MB_OK|MB_ICONEXCLAMATION "Error happened concatenating files. $1($0)"
         Quit ; quit immidiately
@@ -42,6 +49,8 @@
     Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1"
     Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2"
 
+    ; destroy preparing message banner
+    Banner::destroy
 !macroend
 
 ; post install process
