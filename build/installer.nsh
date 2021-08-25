@@ -1,7 +1,7 @@
 ; pre install process
 !macro customInit
     ; define download url
-    !define DOWNLOAD_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
+    !define DOWNLOAD_URL "https://github.com/HyodaKazuaki/voicevox/releases/download/${VERSION}"
 
     ; download files
     download:
@@ -10,7 +10,7 @@
 
     ; download cancel handling
     ${if} $0 == "Cancelled"
-        Quit ; quit immidiately
+        Quit ; quit immediately
     ${endif}
 
     ; try without proxy
@@ -21,13 +21,13 @@
 
     ; download cancel handling
     ${if} $0 == "Cancelled"
-        Quit ; quit immidiately
+        Quit ; quit immediately
     ${endif}
 
     ; download error handling
     ${if} $0 != "OK"
         MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Error happened downloading files." IDRETRY download
-        Quit ; quit immidiately
+        Quit ; quit immediately
     ${endif}
 
     ; show preparing message banner
@@ -41,7 +41,7 @@
     ; concatenation error handling
     ${If} $0 != "0"
         MessageBox MB_OK|MB_ICONEXCLAMATION "Error happened concatenating files. $1($0)"
-        Quit ; quit immidiately
+        Quit ; quit immediately
     ${EndIf}
 
     ; delete files in temp dir
