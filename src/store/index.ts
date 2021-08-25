@@ -3,7 +3,7 @@ import { createStore, Store, useStore as baseUseStore } from "vuex";
 
 import { State } from "./type";
 import { commandStore } from "./command";
-import { audioStore } from "./audio";
+import { audioStore, audioCommandStore } from "./audio";
 import { projectActions } from "./project";
 import { uiStore } from "./ui";
 
@@ -42,6 +42,7 @@ export const store = createStore<State>({
     ...uiStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
+    ...audioCommandStore.mutations,
   },
 
   actions: {
@@ -49,6 +50,7 @@ export const store = createStore<State>({
     ...audioStore.actions,
     ...commandStore.actions,
     ...projectActions,
+    ...audioCommandStore.actions,
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();
     },

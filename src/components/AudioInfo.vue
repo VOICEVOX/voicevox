@@ -56,9 +56,9 @@ import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
-  SET_AUDIO_INTONATION_SCALE,
-  SET_AUDIO_PITCH_SCALE,
-  SET_AUDIO_SPEED_SCALE,
+  COMMAND_SET_AUDIO_INTONATION_SCALE,
+  COMMAND_SET_AUDIO_PITCH_SCALE,
+  COMMAND_SET_AUDIO_SPEED_SCALE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
@@ -81,21 +81,21 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
 
     const setAudioSpeedScale = (speedScale: number) => {
-      store.dispatch(SET_AUDIO_SPEED_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_SPEED_SCALE, {
         audioKey: activeAudioKey.value!,
         speedScale,
       });
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
-      store.dispatch(SET_AUDIO_PITCH_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
         pitchScale,
       });
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
-      store.dispatch(SET_AUDIO_INTONATION_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_INTONATION_SCALE, {
         audioKey: activeAudioKey.value!,
         intonationScale,
       });

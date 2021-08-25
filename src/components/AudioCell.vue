@@ -71,19 +71,18 @@
 import { computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
-  FETCH_ACCENT_PHRASES,
-  FETCH_AUDIO_QUERY,
   GENERATE_AND_SAVE_AUDIO,
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
-  SET_AUDIO_TEXT,
-  CHANGE_CHARACTER_INDEX,
-  REGISTER_AUDIO_ITEM,
+  GENERATE_AUDIO_ITEM,
+  COMMAND_REGISTER_AUDIO_ITEM,
+  COMMAND_UPDATE_AUDIO_TEXT,
+  COMMAND_CHANGE_CHARACTER_INDEX,
+  COMMAND_PUT_TEXTS,
   PLAY_AUDIO,
   STOP_AUDIO,
-  REMOVE_AUDIO_ITEM,
+  COMMAND_UNREGISTER_AUDIO_ITEM,
   IS_ACTIVE,
-  PUT_TEXTS,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
@@ -129,17 +128,20 @@ export default defineComponent({
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
-      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
+      await store.dispatch(COMMAND_UPDATE_AUDIO_TEXT, {
+        audioKey: props.audioKey,
+        text,
+      });
     };
     const updateAudioQuery = async () => {
-      if (!haveAudioQuery.value) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      } else {
-        store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
-      }
+      // if (!haveAudioQuery.value) {
+      //   store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+      // } else {
+      //   store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
+      // }
     };
     const changeCharacterIndex = (characterIndex: number) => {
-      store.dispatch(CHANGE_CHARACTER_INDEX, {
+      store.dispatch(COMMAND_CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
         characterIndex,
       });
@@ -176,10 +178,9 @@ export default defineComponent({
             const text = texts.shift();
             if (text == undefined) return;
             setAudioText(text);
-            updateAudioQuery();
           }
 
-          store.dispatch(PUT_TEXTS, {
+          store.dispatch(COMMAND_PUT_TEXTS, {
             texts,
             characterIndex: audioItem.value.characterIndex,
             prevAudioKey,
@@ -223,7 +224,9 @@ export default defineComponent({
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
 
-        store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch(COMMAND_UNREGISTER_AUDIO_ITEM, {
+          audioKey: props.audioKey,
+        });
       }
     };
 
@@ -239,11 +242,11 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
-      await store.dispatch(REGISTER_AUDIO_ITEM, {
-        audioItem,
-        prevAudioKey: props.audioKey,
+      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
+        text: "",
+        characterIndex: 0,
       });
+      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, { audioItem });
       moveDownCell();
     };
 
@@ -268,14 +271,6 @@ export default defineComponent({
       () => (characterInfo: CharacterInfo) =>
         URL.createObjectURL(characterInfo.iconBlob)
     );
-
-    // 初期化
-    onMounted(() => {
-      // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
-      if (audioItem.value.query == undefined) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      }
-    });
 
     return {
       characterInfos,

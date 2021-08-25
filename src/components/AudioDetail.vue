@@ -239,9 +239,9 @@ import { computed, defineComponent, reactive, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
-  CHANGE_ACCENT,
-  SET_AUDIO_MORA_PITCH,
-  CHANGE_ACCENT_PHRASE_SPLIT,
+  COMMAND_CHANGE_ACCENT,
+  COMMAND_SET_AUDIO_MORA_PITCH,
+  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
@@ -308,7 +308,7 @@ export default defineComponent({
     const previewAccentPhraseIndex = ref<number | undefined>(undefined);
 
     const changeAccent = (accentPhraseIndex: number, accent: number) => {
-      store.dispatch(CHANGE_ACCENT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         accent,
@@ -336,7 +336,7 @@ export default defineComponent({
       moraIndex: number | null,
       isPause: boolean
     ) => {
-      store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -349,7 +349,7 @@ export default defineComponent({
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(SET_AUDIO_MORA_PITCH, {
+      store.dispatch(COMMAND_SET_AUDIO_MORA_PITCH, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,

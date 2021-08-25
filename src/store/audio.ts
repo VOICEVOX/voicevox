@@ -1,3 +1,4 @@
+import { mapActions } from "vuex";
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -10,6 +11,7 @@ import {
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { audio } from "systeminformation";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -146,10 +148,12 @@ const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
 
 const SET_ENGINE_READY = "SET_ENGINE_READY";
 const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
-const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
 const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
 const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
+//mutaion & actions
+export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
+
 //actions
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
@@ -157,6 +161,7 @@ export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
+export const GENERATE_AUDIO_ITEM = "GENERATE_AUDIO_ITEM";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
 export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
@@ -401,7 +406,23 @@ export const audioStore = typeAsStoreOptions({
       commit(REMOVE_AUDIO_ITEM, { audioKey });
       dispatch(DISPOSE_AUDIO_KEY, { audioKey });
     },
-    [ISSUE_AUDIO_KEY]: (_, _) => {
+    [GENERATE_AUDIO_ITEM]: async (
+      { dispatch },
+      {
+        text,
+        characterIndex,
+      }: { text: string; characterIndex: number | undefined }
+    ) => {
+      return {
+        text: text,
+        characterIndex: characterIndex ?? 0,
+        query: await dispatch(FETCH_AUDIO_QUERY, {
+          text: text,
+          characterIndex: characterIndex ?? 0,
+        }),
+      };
+    },
+    [ISSUE_AUDIO_KEY]: () => {
       const audioKey = uuidv4();
       audioElements[audioKey] = new Audio();
       return audioKey;
@@ -608,20 +629,56 @@ export const audioStore = typeAsStoreOptions({
     [OPEN_TEXT_EDIT_CONTEXT_MENU]: () => {
       window.electron.openTextEditContextMenu();
     },
+
+    [SET_ACTIVE_AUDIO_KEY]: (
+      { commit },
+      { audioKey }: { audioKey?: string }
+    ) => {
+      commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
+    },
   },
 } as const);
 
 //commands
+export const COMMAND_REGISTER_AUDIO_ITEM = "COMMAND_REGISTER_AUDIO_ITEM";
+export const COMMAND_UNREGISTER_AUDIO_ITEM = "COMMAND_UNREGISTER_AUDIO_ITEM";
 export const COMMAND_UPDATE_AUDIO_TEXT = "COMMAND_UPDATE_AUDIO_TEXT";
 export const COMMAND_CHANGE_CHARACTER_INDEX = "COMMAND_CHANGE_CHARACTER_INDEX";
 export const COMMAND_CHANGE_ACCENT = "COMMAND_CHANGE_ACCENT";
 export const COMMAND_CHANGE_ACCENT_PHRASE_SPLIT =
   "COMMAND_CHANGE_ACCENT_PHRASE_SPLIT";
+export const COMMAND_SET_AUDIO_INTONATION_SCALE =
+  "COMMAND_SET_AUDIO_INTONATION_SCALE";
+export const COMMAND_SET_AUDIO_PITCH_SCALE = "COMMAND_SET_AUDIO_PITCH_SCALE";
+export const COMMAND_SET_AUDIO_SPEED_SCALE = "COMMAND_SET_AUDIO_SPEED_SCALE";
+export const COMMAND_SET_AUDIO_MORA_PITCH = "COMMAND_SET_AUDIO_MORA_PITCH";
 export const COMMAND_IMPORT_FROM_FILE = "COMMAND_IMPORT_FROM_FILE";
 export const COMMAND_PUT_TEXTS = "COMMAND_PUT_TEXTS";
 
 export const audioCommandStore = typeAsStoreOptions({
   actions: {
+    [COMMAND_REGISTER_AUDIO_ITEM]: async (
+      { state, commit, dispatch },
+      {
+        audioItem,
+        prevAudioKey,
+      }: { audioItem: AudioItem; prevAudioKey: string | undefined }
+    ) => {
+      const audioKey = await dispatch(ISSUE_AUDIO_KEY);
+      const index =
+        prevAudioKey !== undefined
+          ? state.audioKeys.indexOf(prevAudioKey) + 1
+          : state.audioKeys.length;
+      commit(COMMAND_REGISTER_AUDIO_ITEM, { audioItem, audioKey, index });
+      return audioKey;
+    },
+    [COMMAND_UNREGISTER_AUDIO_ITEM]: async (
+      { commit, dispatch },
+      { audioKey }: { audioKey: string }
+    ) => {
+      commit(COMMAND_UNREGISTER_AUDIO_ITEM, { audioKey });
+      dispatch(DISPOSE_AUDIO_KEY, { audioKey });
+    },
     [COMMAND_UPDATE_AUDIO_TEXT]: async (
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
@@ -741,6 +798,35 @@ export const audioCommandStore = typeAsStoreOptions({
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT);
       }
     },
+    [COMMAND_SET_AUDIO_INTONATION_SCALE]: (
+      { commit },
+      payload: { audioKey: string; intonationScale: number }
+    ) => {
+      commit(COMMAND_SET_AUDIO_INTONATION_SCALE, payload);
+    },
+    [COMMAND_SET_AUDIO_PITCH_SCALE]: (
+      { commit },
+      payload: { audioKey: string; pitchScale: number }
+    ) => {
+      commit(COMMAND_SET_AUDIO_PITCH_SCALE, payload);
+    },
+    [COMMAND_SET_AUDIO_SPEED_SCALE]: (
+      { commit },
+      payload: { audioKey: string; speedScale: number }
+    ) => {
+      commit(COMMAND_SET_AUDIO_SPEED_SCALE, payload);
+    },
+    [COMMAND_SET_AUDIO_MORA_PITCH]: (
+      { dispatch },
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      dispatch(COMMAND_SET_AUDIO_MORA_PITCH, payload);
+    },
     [COMMAND_IMPORT_FROM_FILE]: createUILockAction(
       async (
         { state, dispatch, commit, getters },
@@ -831,6 +917,15 @@ export const audioCommandStore = typeAsStoreOptions({
     ),
   },
   mutations: commandMutationsCreator({
+    [COMMAND_REGISTER_AUDIO_ITEM]: (
+      draft,
+      payload: { audioItem: AudioItem; audioKey: string; index: number }
+    ) => {
+      audioStore.mutations[INSERT_AUDIO_ITEM](draft, payload);
+    },
+    [COMMAND_UNREGISTER_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
+      audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+    },
     [COMMAND_UPDATE_AUDIO_TEXT]: (
       draft,
       payload: { audioKey: string; text: string; query: AudioQuery }
@@ -887,6 +982,35 @@ export const audioCommandStore = typeAsStoreOptions({
         audioKey,
         accentPhrases,
       });
+    },
+    [COMMAND_SET_AUDIO_INTONATION_SCALE]: (
+      draft,
+      payload: { audioKey: string; intonationScale: number }
+    ) => {
+      audioStore.mutations[SET_AUDIO_INTONATION_SCALE](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_PITCH_SCALE]: (
+      draft,
+      payload: { audioKey: string; pitchScale: number }
+    ) => {
+      audioStore.mutations[SET_AUDIO_PITCH_SCALE](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_SPEED_SCALE]: (
+      draft,
+      payload: { audioKey: string; speedScale: number }
+    ) => {
+      audioStore.mutations[SET_AUDIO_SPEED_SCALE](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_MORA_PITCH]: (
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      audioStore.mutations[SET_AUDIO_MORA_PITCH](draft, payload);
     },
     [COMMAND_IMPORT_FROM_FILE]: (
       draft,

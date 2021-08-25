@@ -175,7 +175,7 @@ import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
 import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
+  COMMAND_IMPORT_FROM_FILE,
   LOAD_CHARACTER,
   PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
@@ -242,7 +242,7 @@ export default defineComponent({
       store.dispatch(LOAD_PROJECT_FILE, {});
     };
     const importFromFile = () => {
-      store.dispatch(IMPORT_FROM_FILE, {});
+      store.dispatch(COMMAND_IMPORT_FROM_FILE, {});
     };
 
     // view
@@ -376,7 +376,7 @@ export default defineComponent({
       const file = event.dataTransfer.files[0];
       switch (path.extname(file.name)) {
         case ".txt":
-          store.dispatch(IMPORT_FROM_FILE, { filePath: file.path });
+          store.dispatch(COMMAND_IMPORT_FROM_FILE, { filePath: file.path });
           break;
         case ".vvproj":
           store.dispatch(LOAD_PROJECT_FILE, { filePath: file.path });
