@@ -85,7 +85,6 @@ export class BaseAPI {
                 }) || fetchParams;
             }
         }
-        
         let response = await this.configuration.fetchApi(fetchParams.url, fetchParams.init);
         for (const middleware of this.middleware) {
             if (middleware.post) {

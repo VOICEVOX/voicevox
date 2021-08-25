@@ -378,14 +378,7 @@ export default defineComponent({
 
     // audio play
     const play = () => {
-      if (store.state.engineState === "READY") {
-        store.dispatch(PLAY_AUDIO, { audioKey: activeAudioKey.value! });
-      } else {
-        window.electron.showErrorDialog({
-          title: "Error",
-          message: "エンジンの準備ができていません。",
-        });
-      }
+      store.dispatch(PLAY_AUDIO, { audioKey: activeAudioKey.value! });
     };
 
     const stop = () => {
