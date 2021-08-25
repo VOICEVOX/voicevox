@@ -858,7 +858,7 @@ export const audioCommandStore = typeAsStoreOptions({
         const audioItems = parseTextFile(body, state.characterInfos);
         for (
           let count = 0;
-          !getters[GET_ENGINE_STATE]() || count < 120;
+          !getters[GET_ENGINE_STATE]() && count < 120;
           count++
         ) {
           console.error("Waiting engine...");
@@ -874,7 +874,7 @@ export const audioCommandStore = typeAsStoreOptions({
           )
         );
 
-        const fetchAudioQuerys = audioItems.map(async (audioItem, index) => {
+        for (const audioItem of audioItems) {
           const text: string = audioItem.text;
           const characterIndex: number = audioItem.characterIndex ?? 0;
           const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
@@ -882,8 +882,8 @@ export const audioCommandStore = typeAsStoreOptions({
             characterIndex,
           });
           audioItem.query = query;
-        });
-        await Promise.all(fetchAudioQuerys);
+        }
+
         commit(COMMAND_IMPORT_FROM_FILE, { audioItems, audioKeys });
       }
     ),
@@ -901,25 +901,26 @@ export const audioCommandStore = typeAsStoreOptions({
         }
       ) => {
         const partialCharacterIndex: number = characterIndex ?? 0;
-        const asyncAudioItems: Promise<AudioItem>[] = texts
+        const audioItems: AudioItem[] = texts
           .filter((text) => text != "")
-          .map(async (text) => {
-            const query = await dispatch(FETCH_AUDIO_QUERY, {
-              text,
-              characterIndex: partialCharacterIndex,
-            });
-            return {
-              text,
-              query,
-              characterIndex: partialCharacterIndex,
-            };
-          });
+          .map((text) => ({
+            text,
+            characterIndex: partialCharacterIndex,
+          }));
         const audioKeys = await Promise.all(
-          asyncAudioItems.map(
+          audioItems.map(
             async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
           )
         );
-        const audioItems = await Promise.all(asyncAudioItems);
+        for (const audioItem of audioItems) {
+          const text: string = audioItem.text;
+          const characterIndex: number = audioItem.characterIndex ?? 0;
+          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+            text,
+            characterIndex,
+          });
+          audioItem.query = query;
+        }
         commit(COMMAND_PUT_TEXTS, { audioItems, audioKeys, prevAudioKey });
       }
     ),
