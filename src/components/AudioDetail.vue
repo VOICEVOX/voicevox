@@ -64,7 +64,7 @@
                     :max="accentPhrase.moras.length"
                     :step="1"
                     :disable="uiLocked"
-                    v-model="accentPhrase.accent"
+                    :model-value="accentPhrase.accent"
                     @change="changeAccent(accentPhraseIndex, parseInt($event))"
                     @input="
                       changePreviewAccent(accentPhraseIndex, parseInt($event))
@@ -161,7 +161,7 @@
                   :max="6.5"
                   :step="0.01"
                   :disable="uiLocked || mora.pitch == 0"
-                  v-model="mora.pitch"
+                  :model-value="mora.pitch"
                   @change="
                     setAudioMoraPitch(
                       accentPhraseIndex,

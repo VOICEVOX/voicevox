@@ -22,28 +22,10 @@
           @click="stopContinuously"
           >停止</q-btn
         >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="!canRedo && uiLocked"
-          @click="redo"
-          >REDO</q-btn
-        >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="!canUndo && uiLocked"
-          @click="undo"
-          >UNDO</q-btn
-        >
 
         <q-space />
 
-        <!-- <q-btn
+        <q-btn
           unelevated
           color="white"
           text-color="secondary"
@@ -60,7 +42,7 @@
           :disable="!canRedo || uiLocked"
           @click="redo"
           >やり直す</q-btn
-        > -->
+        >
         <q-btn
           unelevated
           color="white"

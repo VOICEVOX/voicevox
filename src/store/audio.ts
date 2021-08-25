@@ -825,7 +825,7 @@ export const audioCommandStore = typeAsStoreOptions({
       commit(COMMAND_SET_AUDIO_VOLUME_SCALE, payload);
     },
     [COMMAND_SET_AUDIO_MORA_PITCH]: (
-      { dispatch },
+      { commit },
       payload: {
         audioKey: string;
         accentPhraseIndex: number;
@@ -833,7 +833,7 @@ export const audioCommandStore = typeAsStoreOptions({
         pitch: number;
       }
     ) => {
-      dispatch(COMMAND_SET_AUDIO_MORA_PITCH, payload);
+      commit(COMMAND_SET_AUDIO_MORA_PITCH, payload);
     },
     [COMMAND_IMPORT_FROM_FILE]: createUILockAction(
       async (
