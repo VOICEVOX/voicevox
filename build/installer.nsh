@@ -43,3 +43,9 @@
     Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2"
 
 !macroend
+
+; post install process
+!macro customInstall
+    ; delete file in installer dir
+    Delete "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"
+!macroend
