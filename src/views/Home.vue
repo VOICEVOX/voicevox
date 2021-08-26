@@ -359,7 +359,13 @@ export default defineComponent({
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
-      addAudioItem();
+      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
+        text: "",
+      });
+      store.dispatch(REGISTER_AUDIO_ITEM, {
+        audioItem,
+        prevAudioKey: activeAudioKey.value,
+      });
     });
 
     // エンジン待機
