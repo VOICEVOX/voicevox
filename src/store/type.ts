@@ -8,7 +8,7 @@ export interface ICommand<S> {
 }
 
 export type State = {
-  isEngineReady: boolean;
+  engineState: EngineState;
   characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -37,3 +37,5 @@ export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
 };
+
+export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";

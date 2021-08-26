@@ -20,10 +20,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
-import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
+import {
+  UI_LOCKED,
+  SET_USE_GPU,
+  SET_FILE_ENCODING,
+  ASYNC_UI_LOCK,
+} from "@/store/ui";
 import {
   SAVE_PROJECT_FILE,
   LOAD_PROJECT_FILE,
@@ -93,14 +98,21 @@ export default defineComponent({
         });
       };
 
-      $q.loading.show({
-        spinnerColor: "primary",
-        spinnerSize: 50,
-        boxClass: "bg-white text-secondary",
-        message: "起動モードを変更中です",
+      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
+        store.dispatch(ASYNC_UI_LOCK, {
+          callback: async () => {
+            $q.loading.show({
+              spinnerColor: "primary",
+              spinnerSize: 50,
+              boxClass: "bg-white text-secondary",
+              message: "起動モードを変更中です",
+            });
+            resolve(await window.electron.isAvailableGPUMode());
+            $q.loading.hide();
+          },
+        });
       });
-      const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
-      $q.loading.hide();
+
       if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
           title: "対応するGPUデバイスが見つかりません",
@@ -256,6 +268,15 @@ export default defineComponent({
       });
     };
     _enableHotKey(menudata.value);
+
+    watch(uiLocked, () => {
+      // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
+      if (uiLocked.value) {
+        subMenuOpenFlags.value = [...Array(menudata.value.length)].map(
+          () => false
+        );
+      }
+    });
 
     return {
       uiLocked,

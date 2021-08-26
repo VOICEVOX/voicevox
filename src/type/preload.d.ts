@@ -49,7 +49,9 @@ export type AppInfos = {
 export type CharacterInfo = {
   dirPath: string;
   iconPath: string;
+  portraitPath: string;
   iconBlob?: Blob;
+  portraitBlob?: Blob;
   metas: {
     name: string;
     speaker: number;
