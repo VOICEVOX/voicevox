@@ -84,7 +84,8 @@ export default defineComponent({
         await store.dispatch(SET_USE_GPU, { useGpu });
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにVOICEVOXを再起動してください。",
+          message:
+            "変更を適用するためにVOICEVOXの再起動または画面上部の「エンジン」メニューからエンジンの再起動を行ってください。",
           ok: {
             flat: true,
             textColor: "secondary",
