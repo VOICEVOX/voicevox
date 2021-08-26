@@ -310,7 +310,7 @@ ipcMainHandle("RESTART_ENGINE", () => {
       treeKill(engineProcess.pid);
     }
 
-    setTimeout(runEngine, 1000);
+    setTimeout(runEngine, 2000);
   } catch {
     console.log("restart engine: error");
   }
