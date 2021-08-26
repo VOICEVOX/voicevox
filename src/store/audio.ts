@@ -183,9 +183,6 @@ export const audioStore = {
           case "STARTING":
             state.engineState = "FAILED_STARTING";
             break;
-          case "RESTARTING":
-            state.engineState = "FAILED_STARTING";
-            break;
           default:
             state.engineState = "ERROR";
         }
@@ -725,15 +722,12 @@ export const audioStore = {
         case "READY":
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
-        case "RESTARTING":
-          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
-          break;
         default:
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
     async [RESTART_ENGINE]({ dispatch, commit }) {
-      await commit(SET_ENGINE_STATE, { engineState: "RESTARTING" });
+      await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
       dispatch(START_WAITING_ENGINE);
       window.electron.restartEngine();
     },

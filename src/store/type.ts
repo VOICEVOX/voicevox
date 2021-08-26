@@ -37,9 +37,4 @@ export type AudioState = {
   nowGenerating: boolean;
 };
 
-export type EngineState =
-  | "STARTING"
-  | "FAILED_STARTING"
-  | "RESTARTING"
-  | "ERROR"
-  | "READY";
+export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";

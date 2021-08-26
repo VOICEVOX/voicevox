@@ -16,7 +16,6 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
-import { error } from "ajv/dist/vocabularies/applicator/dependencies";
 
 let win: BrowserWindow;
 
@@ -74,7 +73,8 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    () => {
+    (error) => {
+      console.log(error);
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
