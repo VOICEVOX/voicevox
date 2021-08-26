@@ -294,6 +294,13 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
     win.maximize();
   }
 });
+ipcMainHandle("PIN_WINDOW", () => {
+  if (win.isAlwaysOnTop()) {
+    win.setAlwaysOnTop(false);
+  } else {
+    win.setAlwaysOnTop(true);
+  }
+});
 
 // app callback
 app.on("web-contents-created", (e, contents) => {

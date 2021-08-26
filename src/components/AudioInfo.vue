@@ -49,9 +49,7 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >音量 {{ query.volumeScale.toFixed(1) }}</span
-      >
+      <span class="text-body1 q-mb-xs">音量 {{ query.volumeScale }}</span>
       <q-slider
         dense
         snap

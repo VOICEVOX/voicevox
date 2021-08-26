@@ -106,6 +106,11 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  PIN_WINDOW: {
+    args: [];
+    return: void;
+  };
 };
 
 /**

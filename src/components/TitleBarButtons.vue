@@ -10,6 +10,15 @@
       dense
       flat
       round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons"
+      @click="pinWindow()"
+    ></q-btn>
+    <q-btn
+      dense
+      flat
+      round
       icon="lens"
       color="green"
       class="title-bar-buttons"
@@ -45,6 +54,16 @@
       title-bar-buttons-root
     "
   >
+    <q-btn
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons rotate-45"
+      id="pinned-btn"
+      @click="pinWindow()"
+    ></q-btn>
     <q-btn
       dense
       flat
@@ -94,6 +113,17 @@ export default defineComponent({
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
 
+    let pinned = false;
+    const pinWindow = () => {
+      if (pinned) {
+        document.getElementById("pinned-btn")?.classList.add("rotate-45");
+      } else {
+        document.getElementById("pinned-btn")?.classList.remove("rotate-45");
+      }
+      pinned = !pinned;
+      window.electron.pinWindow();
+    };
+
     const store = useStore();
 
     const isMaximized = computed(() => store.state.isMaximized);
@@ -104,6 +134,7 @@ export default defineComponent({
       closeWindow,
       minimizeWindow,
       maximizeWindow,
+      pinWindow,
       mdiWindowRestore,
       isMaximized,
     };

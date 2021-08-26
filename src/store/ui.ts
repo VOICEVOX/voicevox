@@ -13,6 +13,7 @@ export const SET_USE_GPU = "SET_USE_GPU";
 export const SET_FILE_ENCODING = "SET_FILE_ENCODING";
 export const GET_FILE_ENCODING = "GET_FILE_ENCODING";
 export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
+export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
 export const DETECT_UNMAXIMIZED = "DETECT_UNMAXIMIZED";
 export const DETECT_MAXIMIZED = "DETECT_MAXIMIZED";
 
@@ -50,6 +51,12 @@ export const uiStore = {
     ) {
       state.isHelpDialogOpen = isHelpDialogOpen;
     },
+    [IS_SETTING_DIALOG_OPEN](
+      state,
+      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
+    ) {
+      state.isSettingDialogOpen = isSettingDialogOpen;
+    },
     [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
       state.useGpu = useGpu;
     },
@@ -86,6 +93,17 @@ export const uiStore = {
       else commit(UNLOCK_UI);
 
       commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
+    },
+    [IS_SETTING_DIALOG_OPEN](
+      { state, commit },
+      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
+    ) {
+      if (state.isSettingDialogOpen === isSettingDialogOpen) return;
+
+      if (isSettingDialogOpen) commit(LOCK_UI);
+      else commit(UNLOCK_UI);
+
+      commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
     },
     async [GET_USE_GPU]({ commit }) {
       commit(SET_USE_GPU, {
