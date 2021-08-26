@@ -25,7 +25,6 @@ export type State = {
   isSettingDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
-  isPinned: boolean;
 };
 
 export type AudioItem = {
