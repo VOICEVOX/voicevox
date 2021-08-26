@@ -73,8 +73,10 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    () => {
+    (error) => {
+      console.log(error);
       if (!willQuitEngine) {
+        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
           "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"
@@ -99,6 +101,7 @@ const characterInfos = fs
     return {
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
+      portraitPath: path.join(dirPath, "portrait.png"),
       metas: JSON.parse(
         fs.readFileSync(path.join(dirPath, "metas.json"), { encoding: "utf-8" })
       ),
@@ -331,8 +334,8 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-  createWindow();
-  runEngine();
+
+  createWindow().then(() => runEngine());
 });
 
 app.on("second-instance", () => {
