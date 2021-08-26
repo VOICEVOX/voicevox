@@ -248,7 +248,9 @@ export default defineComponent({
           return;
         }
         if (item.type === "button" && item.shortCut) {
-          Mousetrap.bind(item.shortCut.toLowerCase(), item.onClick);
+          Mousetrap.bind(item.shortCut.toLowerCase(), () => {
+            if (!uiLocked.value) item.onClick();
+          });
           return;
         }
       });
