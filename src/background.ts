@@ -63,9 +63,6 @@ async function runEngine() {
     });
   }
 
-  // for restartEngine function
-  // willQuitEngine = false;
-
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
@@ -87,6 +84,7 @@ async function runEngine() {
     }
   );
 
+  // restartFunctionでtrueにするので戻す用
   willQuitEngine = false;
 }
 
@@ -307,7 +305,7 @@ ipcMainHandle("RESTART_ENGINE", () => {
       treeKill(engineProcess.pid);
     }
 
-    setTimeout(runEngine, 1000);
+    setTimeout(runEngine, 2000);
   } catch {
     console.log("restart engine: error");
   }
