@@ -84,6 +84,11 @@ async function runEngine() {
     }
   );
 
+  // エンジン再起動時用
+  if (willQuitEngine) {
+    ipcMainSend(win, "START_WAITING_ENGINE");
+  }
+
   // restartFunctionでtrueにするので戻す用
   willQuitEngine = false;
 }
@@ -305,7 +310,7 @@ ipcMainHandle("RESTART_ENGINE", () => {
       treeKill(engineProcess.pid);
     }
 
-    setTimeout(runEngine, 2000);
+    setTimeout(runEngine, 1000);
   } catch {
     console.log("restart engine: error");
   }

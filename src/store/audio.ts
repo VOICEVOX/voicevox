@@ -726,9 +726,8 @@ export const audioStore = {
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
-    async [RESTART_ENGINE]({ dispatch, commit }) {
+    async [RESTART_ENGINE]({ commit }) {
       await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
-      dispatch(START_WAITING_ENGINE);
       window.electron.restartEngine();
     },
   },

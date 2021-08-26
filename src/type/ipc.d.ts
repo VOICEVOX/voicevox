@@ -136,4 +136,9 @@ type IpcSOData = {
     args: [];
     return: void;
   };
+
+  START_WAITING_ENGINE: {
+    args: [];
+    return: void;
+  };
 };
