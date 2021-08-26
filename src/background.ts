@@ -63,6 +63,9 @@ async function runEngine() {
     });
   }
 
+  // for restartEngine function
+  // willQuitEngine = false;
+
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
@@ -73,8 +76,7 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    (error) => {
-      console.log(error);
+    () => {
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
@@ -84,6 +86,8 @@ async function runEngine() {
       }
     }
   );
+
+  willQuitEngine = false;
 }
 
 // temp dir
@@ -295,18 +299,19 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-function restartEngine() {
+ipcMainHandle("RESTART_ENGINE", () => {
   willQuitEngine = true;
 
-  if (!engineProcess.killed) {
-    console.log("engine pid: ", engineProcess.pid);
-    treeKill(engineProcess.pid);
+  try {
+    if (engineProcess.pid !== undefined) {
+      treeKill(engineProcess.pid);
+    }
+
+    setTimeout(runEngine, 1000);
+  } catch {
+    console.log("restart engine: error");
   }
-
-  runEngine();
-}
-
-ipcMainHandle("RESTART_ENGINE", () => restartEngine());
+});
 
 // app callback
 app.on("web-contents-created", (e, contents) => {
