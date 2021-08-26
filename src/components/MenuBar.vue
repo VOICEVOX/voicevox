@@ -10,7 +10,10 @@
       @mouseover="reassignSubMenuOpen(i)"
     />
     <q-space />
-    <div class="window-title">VOICEVOX</div>
+    <div v-if="projectName !== undefined" class="window-title">
+      {{ projectName + " - VOICEVOX" }}
+    </div>
+    <div v-else class="window-title">VOICEVOX</div>
     <q-space />
     <title-bar-buttons />
   </q-bar>
@@ -26,10 +29,15 @@ import {
   SET_FILE_ENCODING,
   ASYNC_UI_LOCK,
 } from "@/store/ui";
-import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
+import {
+  SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE,
+  PROJECT_NAME,
+} from "@/store/project";
 import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
+import Mousetrap from "mousetrap";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -44,6 +52,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  shortCut?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -72,6 +81,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const projectName = computed(() => store.getters[PROJECT_NAME]);
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -138,6 +148,7 @@ export default defineComponent({
           {
             type: "button",
             label: "音声書き出し",
+            shortCut: "Ctrl+E",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
                 encoding: store.state.fileEncoding,
@@ -154,7 +165,16 @@ export default defineComponent({
           { type: "separator" },
           {
             type: "button",
-            label: "プロジェクト保存",
+            label: "プロジェクトを上書き保存",
+            shortCut: "Ctrl+S",
+            onClick: () => {
+              store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
+            },
+          },
+          {
+            type: "button",
+            label: "プロジェクトを名前を付けて保存",
+            shortCut: "Ctrl+Shift+S",
             onClick: () => {
               store.dispatch(SAVE_PROJECT_FILE, {});
             },
@@ -162,6 +182,7 @@ export default defineComponent({
           {
             type: "button",
             label: "プロジェクト読み込み",
+            shortCut: "Ctrl+O",
             onClick: () => {
               store.dispatch(LOAD_PROJECT_FILE, {});
             },
@@ -231,6 +252,23 @@ export default defineComponent({
       }
     };
 
+    // メニューバー中のホットキー有効化
+    const _enableHotKey = (items: any) => {
+      items.forEach((item: MenuItemData) => {
+        if (item.type === "root") {
+          _enableHotKey(item.subMenu);
+          return;
+        }
+        if (item.type === "button" && item.shortCut) {
+          Mousetrap.bind(item.shortCut.toLowerCase(), () => {
+            if (!uiLocked.value) item.onClick();
+          });
+          return;
+        }
+      });
+    };
+    _enableHotKey(menudata.value);
+
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
       if (uiLocked.value) {
@@ -242,6 +280,7 @@ export default defineComponent({
 
     return {
       uiLocked,
+      projectName,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
