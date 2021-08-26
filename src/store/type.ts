@@ -41,6 +41,5 @@ export type EngineState =
   | "STARTING"
   | "FAILED_STARTING"
   | "RESTARTING"
-  | "FAILED_RESTARTING"
   | "ERROR"
   | "READY";

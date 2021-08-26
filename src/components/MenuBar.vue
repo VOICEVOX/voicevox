@@ -82,10 +82,10 @@ export default defineComponent({
 
       const change = async () => {
         await store.dispatch(SET_USE_GPU, { useGpu });
+        store.dispatch(RESTART_ENGINE);
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
-          message:
-            "変更を適用するためにVOICEVOXの再起動または画面上部の「エンジン」メニューからエンジンの再起動を行ってください。",
+          message: "変更を適用するためにエンジンを再起動します。",
           ok: {
             flat: true,
             textColor: "secondary",
@@ -136,29 +136,7 @@ export default defineComponent({
     };
 
     const restartEngineProcess = () => {
-      const restart = () => {
-        store.dispatch(RESTART_ENGINE);
-      };
-
-      $q.dialog({
-        title: "確認",
-        message: "本当にエンジンを再起動しますか？",
-        html: true,
-        persistent: true,
-        focus: "cancel",
-        style: {
-          width: "90vw",
-          maxWidth: "90vw",
-        },
-        ok: {
-          flat: true,
-          textColor: "secondary",
-        },
-        cancel: {
-          flat: true,
-          textColor: "secondary",
-        },
-      }).onOk(restart);
+      store.dispatch(RESTART_ENGINE);
     };
 
     const menudata = ref<MenuItemData[]>([

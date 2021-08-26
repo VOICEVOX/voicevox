@@ -163,10 +163,7 @@ export const audioStore = {
   actions: {
     [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
       for (let i = 0; i < 100; i++) {
-        if (
-          state.engineState === "FAILED_STARTING" ||
-          state.engineState === "FAILED_RESTARTING"
-        ) {
+        if (state.engineState === "FAILED_STARTING") {
           break;
         }
 
@@ -187,7 +184,7 @@ export const audioStore = {
             state.engineState = "FAILED_STARTING";
             break;
           case "RESTARTING":
-            state.engineState = "FAILED_RESTARTING";
+            state.engineState = "FAILED_STARTING";
             break;
           default:
             state.engineState = "ERROR";
@@ -729,16 +726,16 @@ export const audioStore = {
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
         case "RESTARTING":
-          commit(SET_ENGINE_STATE, { engineState: "FAILED_RESTARTING" });
+          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
           break;
         default:
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
-    [RESTART_ENGINE]({ dispatch, commit }) {
-      commit(SET_ENGINE_STATE, { engineState: "RESTARTING" });
-      window.electron.restartEngine();
+    async [RESTART_ENGINE]({ dispatch, commit }) {
+      await commit(SET_ENGINE_STATE, { engineState: "RESTARTING" });
       dispatch(START_WAITING_ENGINE);
+      window.electron.restartEngine();
     },
   },
 } as StoreOptions<State>;

@@ -63,9 +63,9 @@
         </div>
       </div>
       <div v-else-if="engineState === 'FAILED_STARTING'" class="waiting-engine">
-        <div>エンジンの起動に失敗しました。</div>
+        <div>エンンジンの起動に失敗しました。</div>
       </div>
-      <q-page v-else class="main-row-panes">
+      <q-page class="main-row-panes">
         <div
           v-if="engineState === 'RESTARTING'"
           class="waiting-engine waiting-reboot-engine"

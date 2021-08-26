@@ -16,6 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
+import { error } from "ajv/dist/vocabularies/applicator/dependencies";
 
 let win: BrowserWindow;
 
@@ -73,8 +74,7 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    (error) => {
-      console.log(error);
+    () => {
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
@@ -295,15 +295,18 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-ipcMainHandle("RESTART_ENGINE", () => {
-  engineProcess.removeAllListeners();
+function restartEngine() {
+  willQuitEngine = true;
 
   if (!engineProcess.killed) {
-    engineProcess.kill();
+    console.log("engine pid: ", engineProcess.pid);
+    treeKill(engineProcess.pid);
   }
 
   runEngine();
-});
+}
+
+ipcMainHandle("RESTART_ENGINE", () => restartEngine());
 
 // app callback
 app.on("web-contents-created", (e, contents) => {
