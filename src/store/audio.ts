@@ -728,6 +728,11 @@ export const audioStore = {
         case "READY":
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
+        case "RESTARTING":
+          commit(SET_ENGINE_STATE, { engineState: "FAILED_RESTARTING" });
+          break;
+        default:
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
     [RESTART_ENGINE]({ dispatch, commit }) {
