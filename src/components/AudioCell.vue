@@ -239,9 +239,8 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const prevAudioKey = props.audioKey;
       const characterIndex =
-        store.state.audioItems[prevAudioKey].characterIndex;
+        store.state.audioItems[props.audioKey].characterIndex;
       const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
       await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,

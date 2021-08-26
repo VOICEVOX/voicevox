@@ -295,7 +295,7 @@ export default defineComponent({
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const addAudioItem = async () => {
-      const prevAudioKey: any = activeAudioKey.value;
+      const prevAudioKey = activeAudioKey.value!;
       const characterIndex =
         store.state.audioItems[prevAudioKey].characterIndex;
       const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
@@ -355,15 +355,14 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
-    // プロジェクトを初期化   addAudioItem();とは別で実施
+    // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
       const audioItem: AudioItem = { text: "", characterIndex: 0 };
       const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
-        prevAudioKey: activeAudioKey.value,
       });
-      audioCellRefs[newAudioKey].focusTextField();
+      focusCell({ audioKey: newAudioKey });
     });
 
     // エンジン待機
