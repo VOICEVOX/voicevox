@@ -66,6 +66,15 @@
         <div>エンジンの起動に失敗しました。</div>
       </div>
       <q-page v-else class="main-row-panes">
+        <div
+          v-if="engineState === 'RESTARTING'"
+          class="waiting-engine waiting-reboot-engine"
+        >
+          <div>
+            <q-spinner color="primary" size="2.5rem" />
+            <div>エンジン再起動中・・・</div>
+          </div>
+        </div>
         <q-splitter
           horizontal
           reverse
@@ -473,6 +482,10 @@ body {
     border-radius: 6px;
     padding: 14px;
   }
+}
+
+.waiting-restart-engine {
+  background-color: transparent;
 }
 
 .main-row-panes {

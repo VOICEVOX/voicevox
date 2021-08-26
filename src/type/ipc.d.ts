@@ -106,6 +106,11 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  RESTART_ENGINE: {
+    args: [];
+    return: void;
+  };
 };
 
 /**

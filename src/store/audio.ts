@@ -106,6 +106,7 @@ export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
+export const RESTART_ENGINE = "RESTART_ENGINE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -162,7 +163,10 @@ export const audioStore = {
   actions: {
     [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
       for (let i = 0; i < 100; i++) {
-        if (state.engineState === "FAILED_STARTING") {
+        if (
+          state.engineState === "FAILED_STARTING" ||
+          state.engineState === "FAILED_RESTARTING"
+        ) {
           break;
         }
 
@@ -178,7 +182,16 @@ export const audioStore = {
       }
 
       if (state.engineState !== "READY") {
-        state.engineState = "FAILED_STARTING";
+        switch (state.engineState) {
+          case "STARTING":
+            state.engineState = "FAILED_STARTING";
+            break;
+          case "RESTARTING":
+            state.engineState = "FAILED_RESTARTING";
+            break;
+          default:
+            state.engineState = "ERROR";
+        }
       }
     }),
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
@@ -716,6 +729,11 @@ export const audioStore = {
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
       }
+    },
+    [RESTART_ENGINE]({ dispatch, commit }) {
+      commit(SET_ENGINE_STATE, { engineState: "RESTARTING" });
+      window.electron.restartEngine();
+      dispatch(START_WAITING_ENGINE);
     },
   },
 } as StoreOptions<State>;

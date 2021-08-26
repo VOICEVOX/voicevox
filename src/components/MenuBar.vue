@@ -27,7 +27,11 @@ import {
   ASYNC_UI_LOCK,
 } from "@/store/ui";
 import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
-import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  RESTART_ENGINE,
+} from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 
@@ -130,6 +134,32 @@ export default defineComponent({
       } else change();
     };
 
+    const restartEngineProcess = () => {
+      const restart = () => {
+        store.dispatch(RESTART_ENGINE);
+      };
+
+      $q.dialog({
+        title: "確認",
+        message: "本当にエンジンを再起動しますか？",
+        html: true,
+        persistent: true,
+        focus: "cancel",
+        style: {
+          width: "90vw",
+          maxWidth: "90vw",
+        },
+        ok: {
+          flat: true,
+          textColor: "secondary",
+        },
+        cancel: {
+          flat: true,
+          textColor: "secondary",
+        },
+      }).onOk(restart);
+    };
+
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -189,6 +219,11 @@ export default defineComponent({
                 onClick: async () => changeUseGPU(true),
               },
             ],
+          },
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => restartEngineProcess(),
           },
         ],
       },

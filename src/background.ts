@@ -295,6 +295,16 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
+ipcMainHandle("RESTART_ENGINE", () => {
+  engineProcess.removeAllListeners();
+
+  if (!engineProcess.killed) {
+    engineProcess.kill();
+  }
+
+  runEngine();
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
