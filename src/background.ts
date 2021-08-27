@@ -315,6 +315,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     treeKill(engineProcess.pid, (error) => {
       if (error) {
         console.log(error);
+        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
       }
     });
   }
