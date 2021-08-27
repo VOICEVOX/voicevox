@@ -47,87 +47,12 @@
           class="mora-table"
         >
           <template v-if="selectedDetail === 'accent'">
-            <div
-              class="accent-slider-cell"
-              :style="{
-                'grid-column': `1 / span ${accentPhrase.moras.length * 2 - 1}`,
-              }"
-            >
-              <!-- div for input width -->
-              <div>
-                <div>
-                  <q-slider
-                    v-if="accentPhrase.moras.length > 1"
-                    snap
-                    dense
-                    :min="1"
-                    :max="accentPhrase.moras.length"
-                    :step="1"
-                    :disable="uiLocked"
-                    v-model="accentPhrase.accent"
-                    @change="changeAccent(accentPhraseIndex, parseInt($event))"
-                    @input="
-                      changePreviewAccent(accentPhraseIndex, parseInt($event))
-                    "
-                    @wheel="
-                      changeAccentByScroll(
-                        accentPhraseIndex,
-                        accentPhrase.moras.length,
-                        accentPhrase.accent,
-                        $event.deltaY
-                      )
-                    "
-                  />
-                </div>
-              </div>
-            </div>
-            <div
-              class="accent-draw-cell"
-              :style="{
-                'grid-column': `1 / span ${accentPhrase.moras.length * 2 - 1}`,
-              }"
-            >
-              <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
-                <polyline
-                  :points="
-                    '' +
-                    [...Array(accentPhrase.moras.length).keys()].map(
-                      (index) =>
-                        `${index * 40 + 15} ${
-                          index + 1 == accentPhrase.accent ||
-                          (index != 0 && index < accentPhrase.accent)
-                            ? 5
-                            : 45
-                        }`
-                    )
-                  "
-                  stroke="black"
-                  fill="none"
-                />
-              </svg>
-            </div>
-            <template
-              v-for="(mora, moraIndex) in accentPhrase.moras"
-              :key="moraIndex"
-            >
-              <div
-                @click="
-                  uiLocked || changeAccent(accentPhraseIndex, moraIndex + 1)
-                "
-                :class="[
-                  'accent-select-cell',
-                  {
-                    'accent-select-cell-selected':
-                      accentPhrase.accent == moraIndex + 1,
-                  },
-                ]"
-                :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-              >
-                <svg width="29" height="50" viewBox="0 0 29 50">
-                  <line x1="14" y1="0" x2="14" y2="50" stroke-width="1" />
-                </svg>
-              </div>
-            </template>
+            <audio-accent
+              :accentPhraseIndex="accentPhraseIndex"
+              :accentPhrase="accentPhrase"
+              :uiLocked="uiLocked"
+              @changeAccent="changeAccent"
+            />
           </template>
           <template v-if="selectedDetail === 'intonation'">
             <div
@@ -248,8 +173,11 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import AudioAccent from "./AudioAccent.vue";
 
 export default defineComponent({
+  components: { AudioAccent },
+
   name: "AudioDetail",
 
   setup() {
@@ -304,31 +232,14 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const previewAccent = ref<number | undefined>(undefined);
     const previewAccentPhraseIndex = ref<number | undefined>(undefined);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = ([accentPhraseIndex, accent]: [number, number]) => {
       store.dispatch(CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         accent,
       });
-    };
-
-    const changeAccentByScroll = (
-      accentPhraseIndex: number,
-      length: number,
-      accent: number,
-      deltaY: number
-    ) => {
-      let currentAccent = accent - (deltaY > 0 ? 1 : -1);
-      if (
-        !uiLocked.value &&
-        !shiftKeyFlag &&
-        length >= currentAccent &&
-        currentAccent >= 1
-      )
-        changeAccent(accentPhraseIndex, currentAccent);
     };
 
     const toggleAccentPhraseSplit = (
@@ -369,11 +280,6 @@ export default defineComponent({
       pitch = Math.round(pitch * 1e2) / 1e2;
       if (!uiLocked.value && !shiftKeyFlag && 6.5 >= pitch && pitch >= 3)
         setAudioMoraPitch(accentPhraseIndex, moraIndex, pitch);
-    };
-
-    const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {
-      previewAccent.value = accent;
-      previewAccentPhraseIndex.value = accentPhraseIndex;
     };
 
     // audio play
@@ -437,14 +343,11 @@ export default defineComponent({
       audioItem,
       query,
       accentPhrases,
-      previewAccent,
       previewAccentPhraseIndex,
       changeAccent,
-      changeAccentByScroll,
       toggleAccentPhraseSplit,
       setAudioMoraPitch,
       setAudioMoraPitchByScroll,
-      changePreviewAccent,
       play,
       stop,
       save,
@@ -511,45 +414,6 @@ $pitch-label-height: 24px;
 
       div {
         padding: 0px;
-        &.accent-slider-cell {
-          grid-row-start: 1;
-          align-self: flex-end;
-
-          margin-left: 5px;
-          margin-right: 10px;
-          position: relative;
-          > div {
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            > div {
-              padding-left: 10px;
-              padding-right: 5px;
-            }
-          }
-        }
-        &.accent-draw-cell {
-          grid-row-start: 2;
-          svg line {
-            stroke: black;
-          }
-        }
-        &.accent-select-cell {
-          grid-row-start: 2;
-          text-align: center;
-          cursor: pointer;
-          svg line {
-            stroke: global.$primary;
-            stroke-dasharray: 3;
-          }
-        }
-        &.accent-select-cell-selected {
-          svg line {
-            stroke-dasharray: none;
-            stroke-width: 3;
-          }
-        }
         &.text-cell {
           min-width: 30px;
           max-width: 30px;
