@@ -311,11 +311,15 @@ ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
   isRestart = true;
 
-  treeKill(engineProcess.pid, (error) => {
-    if (error) {
-      runEngine();
-    }
-  });
+  if (engineProcess.exitCode) {
+    runEngine();
+  } else {
+    treeKill(engineProcess.pid, (error) => {
+      if (error) {
+        console.log(error);
+      }
+    });
+  }
 });
 
 // app callback
