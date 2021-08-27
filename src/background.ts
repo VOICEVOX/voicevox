@@ -1,6 +1,6 @@
 "use strict";
 
-import { exec, execFile, ChildProcess } from "child_process";
+import { execFile, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
@@ -16,6 +16,8 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
+
+import ps from "ps-node";
 
 let win: BrowserWindow;
 
@@ -301,20 +303,20 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
 
-  if (!engineProcess.killed) {
-    treeKill(engineProcess.pid);
-    for (let i = 0; i < 10; ++i) {
-      console.log(engineProcess.pid);
-      console.log(engineProcess.killed);
-      if (engineProcess.killed) {
-        break;
+  const killCallback = () => {
+    ps.lookup({ pid: engineProcess.pid }, (e, resultList) => {
+      const process = resultList[0];
+      if (!process) {
+        runEngine();
       }
+    });
+  };
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+  if (!engineProcess.killed) {
+    treeKill(engineProcess.pid, killCallback);
+  } else {
+    runEngine();
   }
-
-  runEngine();
 });
 
 // app callback

@@ -21,6 +21,7 @@
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
+  "packageManager": "npm@6.14.14",
   "main": "background.js",
   "dependencies": {
     "@quasar/extras": "^1.10.9",
@@ -30,6 +31,7 @@
     "encoding-japanese": "^1.0.30",
     "immer": "^9.0.2",
     "markdown-it": "^12.0.4",
+    "ps-node": "^0.1.6",
     "quasar": "^2.0.3",
     "rfc6902": "^4.0.2",
     "systeminformation": "^5.8.0",
@@ -43,10 +45,11 @@
     "@openapitools/openapi-generator-cli": "^2.3.3",
     "@types/chai": "^4.2.11",
     "@types/electron-devtools-installer": "^2.2.0",
-    "@types/markdown-it": "^12.2.0",
     "@types/encoding-japanese": "^1.0.18",
+    "@types/markdown-it": "^12.2.0",
     "@types/mocha": "^5.2.4",
     "@types/mousetrap": "^1.6.8",
+    "@types/ps-node": "^0.1.1",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
