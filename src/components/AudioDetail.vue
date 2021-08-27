@@ -62,50 +62,17 @@
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
             >
               <!-- div for input width -->
-              <div
-                @mouseenter="setPitchLabel(true, accentPhraseIndex, moraIndex)"
-                @mouseleave="setPitchLabel(false)"
-              >
-                <q-badge
-                  class="pitch-label"
-                  text-color="secondary"
-                  v-if="
-                    (pitchLabel.visible || pitchLabel.panning) &&
-                    pitchLabel.accentPhraseIndex == accentPhraseIndex &&
-                    pitchLabel.moraIndex == moraIndex &&
-                    mora.pitch > 0
-                  "
-                >
-                  {{ mora.pitch.toPrecision(3) }}
-                </q-badge>
-                <q-slider
-                  vertical
-                  reverse
-                  snap
-                  :min="3"
-                  :max="6.5"
-                  :step="0.01"
-                  :disable="uiLocked || mora.pitch == 0"
-                  v-model="mora.pitch"
-                  @change="
-                    setAudioMoraPitch(
-                      accentPhraseIndex,
-                      moraIndex,
-                      parseFloat($event)
-                    )
-                  "
-                  @wheel="
-                    setAudioMoraPitchByScroll(
-                      accentPhraseIndex,
-                      moraIndex,
-                      mora.pitch,
-                      $event.deltaY,
-                      $event.ctrlKey
-                    )
-                  "
-                  @pan="setPitchPanning"
-                />
-              </div>
+              <audio-parameter
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :accentPhrase="accentPhrase"
+                :value="mora.pitch"
+                :uiLocked="uiLocked"
+                :min="3"
+                :max="6.5"
+                :disable="mora.pitch <= 0.0"
+                @changeValue="changeMoraPitch"
+              />
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
@@ -160,7 +127,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -174,9 +141,10 @@ import {
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import AudioAccent from "./AudioAccent.vue";
+import AudioParameter from "./AudioParameter.vue";
 
 export default defineComponent({
-  components: { AudioAccent },
+  components: { AudioAccent, AudioParameter },
 
   name: "AudioDetail",
 
@@ -232,8 +200,6 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const previewAccentPhraseIndex = ref<number | undefined>(undefined);
-
     const changeAccent = ([accentPhraseIndex, accent]: [number, number]) => {
       store.dispatch(CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
@@ -255,31 +221,17 @@ export default defineComponent({
       });
     };
 
-    const setAudioMoraPitch = (
-      accentPhraseIndex: number,
-      moraIndex: number,
-      pitch: number
-    ) => {
+    const changeMoraPitch = ([accentPhraseIndex, moraIndex, pitch]: [
+      number,
+      number,
+      number
+    ]) => {
       store.dispatch(SET_AUDIO_MORA_PITCH, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
         pitch,
       });
-    };
-
-    const setAudioMoraPitchByScroll = (
-      accentPhraseIndex: number,
-      moraIndex: number,
-      moraPitch: number,
-      deltaY: number,
-      withDetailedStep: boolean
-    ) => {
-      const step = withDetailedStep ? 0.01 : 0.1;
-      let pitch = moraPitch - (deltaY > 0 ? step : -step);
-      pitch = Math.round(pitch * 1e2) / 1e2;
-      if (!uiLocked.value && !shiftKeyFlag && 6.5 >= pitch && pitch >= 3)
-        setAudioMoraPitch(accentPhraseIndex, moraIndex, pitch);
     };
 
     // audio play
@@ -311,30 +263,6 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const pitchLabel = reactive({
-      visible: false,
-      // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
-      // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
-      panning: false,
-      accentPhraseIndex: -1,
-      moraIndex: -1,
-    });
-
-    const setPitchLabel = (
-      visible: boolean,
-      accentPhraseIndex: number | undefined,
-      moraIndex: number | undefined
-    ) => {
-      pitchLabel.visible = visible;
-      pitchLabel.accentPhraseIndex =
-        accentPhraseIndex ?? pitchLabel.accentPhraseIndex;
-      pitchLabel.moraIndex = moraIndex ?? pitchLabel.moraIndex;
-    };
-
-    const setPitchPanning = (panningPhase: string) => {
-      pitchLabel.panning = panningPhase === "start";
-    };
-
     return {
       selectDetail,
       selectedDetail,
@@ -343,20 +271,15 @@ export default defineComponent({
       audioItem,
       query,
       accentPhrases,
-      previewAccentPhraseIndex,
       changeAccent,
       toggleAccentPhraseSplit,
-      setAudioMoraPitch,
-      setAudioMoraPitchByScroll,
+      changeMoraPitch,
       play,
       stop,
       save,
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
-      pitchLabel,
-      setPitchLabel,
-      setPitchPanning,
     };
   },
 });
@@ -454,26 +377,6 @@ $pitch-label-height: 24px;
           max-width: 30px;
           display: inline-block;
           position: relative;
-          div {
-            position: absolute;
-            top: 8px;
-            bottom: 8px;
-            .q-slider {
-              height: calc(100% - #{$pitch-label-height + 12px});
-              margin-top: $pitch-label-height + 12px;
-              min-width: 30px;
-              max-width: 30px;
-              :deep(.q-slider__track-container--v) {
-                margin-left: -1.5px;
-                width: 3px;
-              }
-            }
-            .pitch-label {
-              height: $pitch-label-height;
-              padding: 0px 8px;
-              transform: translateX(-50%) translateX(15px);
-            }
-          }
         }
       }
     }
