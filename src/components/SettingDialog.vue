@@ -1,6 +1,7 @@
 <template>
   <q-dialog
     maximized
+    persistent
     class="setting-dialog"
     v-model="modelValueComputed"
     transition-show="slide-up"
@@ -60,11 +61,8 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, Component } from "vue";
-import Policy from "@/components/Policy.vue";
-import LibraryPolicy from "@/components/LibraryPolicy.vue";
-import HowToUse from "@/components/HowToUse.vue";
-import OssLicense from "@/components/OssLicense.vue";
-import UpdateInfo from "@/components/UpdateInfo.vue";
+import GeneralSetting from "@/components/GeneralSetting.vue";
+import HotkeySetting from "@/components/HotkeySetting.vue";
 
 type Page = {
   name: string;
@@ -89,24 +87,12 @@ export default defineComponent({
 
     const pagedata: Page[] = [
       {
-        name: "ソフトウェアの利用規約",
-        component: Policy,
+        name: "通常",
+        component: GeneralSetting,
       },
       {
-        name: "音声ライブラリの利用規約",
-        component: LibraryPolicy,
-      },
-      {
-        name: "使い方",
-        component: HowToUse,
-      },
-      {
-        name: "OSSライセンス情報",
-        component: OssLicense,
-      },
-      {
-        name: "アップデート情報",
-        component: UpdateInfo,
+        name: "ショートカットキー",
+        component: HotkeySetting,
       },
     ];
 

@@ -257,7 +257,7 @@ export default defineComponent({
 
     // add hotkeys with mousetrap
     Mousetrap.bind("space", () => {
-      if (!nowPlaying.value && !nowGenerating.value) {
+      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
         play();
       } else {
         stop();
@@ -265,11 +265,15 @@ export default defineComponent({
     });
 
     Mousetrap.bind("1", () => {
-      selectedDetail.value = "accent";
+      if (!uiLocked.value) {
+        selectedDetail.value = "accent";
+      }
     });
 
     Mousetrap.bind("2", () => {
-      selectedDetail.value = "intonation";
+      if (!uiLocked.value) {
+        selectedDetail.value = "intonation";
+      }
     });
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around

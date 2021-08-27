@@ -233,11 +233,15 @@ export default defineComponent({
 
     // add hotkeys
     Mousetrap.bind(["ctrl+e"], () => {
-      generateAndSaveAllAudio();
+      if (!uiLocked.value) {
+        generateAndSaveAllAudio();
+      }
     });
 
     Mousetrap.bind("shift+enter", () => {
-      addAudioItem();
+      if (!uiLocked.value) {
+        addAudioItem();
+      }
     });
 
     const undo = () => {
@@ -389,6 +393,7 @@ export default defineComponent({
         store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
     });
 
+    // show setting dialog
     const isSettingDialogOpenComputed = computed({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>

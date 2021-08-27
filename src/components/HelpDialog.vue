@@ -1,5 +1,11 @@
 <template>
-  <q-dialog maximized class="help-dialog" v-model="modelValueComputed">
+  <q-dialog
+    maximized
+    class="help-dialog"
+    v-model="modelValueComputed"
+    transition-show="slide-up"
+    transition-hide="slide-down"
+  >
     <q-layout container view="lHh Lpr lff" class="bg-white">
       <q-drawer
         bordered
