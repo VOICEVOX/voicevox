@@ -79,8 +79,7 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    (error) => {
-      console.log(error);
+    () => {
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
