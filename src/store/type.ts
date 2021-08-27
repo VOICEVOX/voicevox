@@ -25,6 +25,7 @@ export type State = {
   isSettingDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
+  isPinned: boolean;
 };
 
 export type AudioItem = {
@@ -39,3 +40,14 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+
+export interface HotkeySetting {
+  actions: string;
+  combinations: string;
+  id: string;
+}
+
+export interface SimpleMode {
+  enabled: boolean;
+  dir: string;
+}

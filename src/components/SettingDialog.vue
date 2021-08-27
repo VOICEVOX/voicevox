@@ -31,11 +31,18 @@
           </q-list>
           <q-space />
           <q-list>
-            <q-item clickable v-ripple @click="modelValueComputed = false">
-              <q-item-section side>
-                <q-icon name="keyboard_arrow_left" />
-              </q-item-section>
-              <q-item-section>オプションを閉じる</q-item-section>
+            <q-item v-ripple>
+              <q-btn
+                flat
+                color="teal"
+                @click="
+                  saveSettings();
+                  modelValueComputed = false;
+                "
+              >
+                設定を保存
+              </q-btn>
+              <q-btn @click="modelValueComputed = false" flat>キャンセル</q-btn>
             </q-item>
           </q-list>
         </div>
@@ -87,7 +94,7 @@ export default defineComponent({
 
     const pagedata: Page[] = [
       {
-        name: "通常",
+        name: "通常設定",
         component: GeneralSetting,
       },
       {
@@ -96,12 +103,18 @@ export default defineComponent({
       },
     ];
 
+    const saveSettings = () => {
+      console.log("saved");
+      console.log(HotkeySetting.rows);
+    };
+
     const selectedPage = ref(pagedata[0].name);
 
     return {
       modelValueComputed,
       pagedata,
       selectedPage,
+      saveSettings,
     };
   },
 });

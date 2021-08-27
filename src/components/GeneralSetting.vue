@@ -17,12 +17,11 @@
 
 <script lang="ts">
 // TODO: engine, simple mode & its base dir settings
-import { defineComponent, ref } from "vue";
-import { useStore } from "vuex";
+import { defineComponent } from "vue";
 export default defineComponent({
   name: "GeneralSetting",
   setup() {
-    return ref;
+    return;
   },
 });
 </script>

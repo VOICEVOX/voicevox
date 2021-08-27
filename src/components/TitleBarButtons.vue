@@ -55,6 +55,18 @@
     "
   >
     <q-btn
+      v-if="isPinned"
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="teal"
+      class="title-bar-buttons"
+      id="pinned-btn"
+      @click="pinWindow()"
+    ></q-btn>
+    <q-btn
+      v-else
       dense
       flat
       round
@@ -111,16 +123,13 @@ export default defineComponent({
   setup() {
     const closeWindow = () => window.electron.closeWindow();
     const minimizeWindow = () => window.electron.minimizeWindow();
-    const maximizeWindow = () => window.electron.maximizeWindow();
+    const maximizeWindow = () => {
+      window.electron.maximizeWindow();
+    };
 
-    let pinned = false;
+    const isPinned = computed(() => store.state.isPinned);
+
     const pinWindow = () => {
-      if (pinned) {
-        document.getElementById("pinned-btn")?.classList.add("rotate-45");
-      } else {
-        document.getElementById("pinned-btn")?.classList.remove("rotate-45");
-      }
-      pinned = !pinned;
       window.electron.pinWindow();
     };
 
@@ -137,6 +146,7 @@ export default defineComponent({
       pinWindow,
       mdiWindowRestore,
       isMaximized,
+      isPinned,
     };
   },
 });

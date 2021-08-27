@@ -136,4 +136,14 @@ type IpcSOData = {
     args: [];
     return: void;
   };
+
+  DETECT_PINNED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNPINNED: {
+    args: [];
+    return: void;
+  };
 };

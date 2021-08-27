@@ -38,6 +38,7 @@ export const store = createStore<State>({
     isSettingDialogOpen: false,
     fileEncoding: "UTF-8",
     isMaximized: false,
+    isPinned: false,
   },
 
   getters: {

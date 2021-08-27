@@ -5,25 +5,6 @@
         <q-toolbar-title class="text-secondary"
           >ショートカットキーの設定</q-toolbar-title
         >
-        <q-input
-          dark
-          dense
-          standout
-          v-model="text"
-          placeholder="Search"
-          input-class="text-left"
-          class="q-ml-md"
-        >
-          <template v-slot:append>
-            <q-icon v-if="text === ''" name="search" />
-            <q-icon
-              v-else
-              name="clear"
-              class="cursor-pointer"
-              @click="text = ''"
-            />
-          </template>
-        </q-input>
       </q-toolbar>
     </q-header>
     <q-page class="relarive-absolute-wrapper scroller">
@@ -55,7 +36,6 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { useStore } from "vuex";
 
 const columns = [
   {
@@ -75,20 +55,18 @@ const rows = [
   {
     id: "1",
     action: "音声保存",
-    combination: "Ctrl+E",
+    combination: "Ctrl E",
   },
   {
     id: "2",
     action: "プロジェクト保存",
-    combination: "Ctrl+S",
+    combination: "Ctrl S",
   },
 ];
 
 export default defineComponent({
   name: "HotkeySetting",
   setup() {
-    const store = useStore();
-
     let lastHotkey: string | null = null;
     let lastRecord = "";
 
@@ -97,8 +75,10 @@ export default defineComponent({
         if (lastHotkey === null) {
           lastHotkey = id;
           event.target.style.color = "grey";
+        } else if (lastHotkey != id) {
+          return;
         } else {
-          changeHotkey(parseInt(lastHotkey), lastRecord);
+          changeHotkey(lastHotkey, lastRecord);
           lastHotkey = null;
           event.target.style.color = "black";
         }
@@ -111,18 +91,22 @@ export default defineComponent({
       } else {
         let recorded = "";
         if (event.altKey) {
-          recorded += "Alt+";
+          recorded += "Alt ";
         }
         if (event.ctrlKey) {
-          recorded += "Ctrl+";
+          recorded += "Ctrl ";
         }
         if (event.shiftKey) {
-          recorded += "Shift+";
+          recorded += "Shift ";
         }
-        recorded += event.key.toUpperCase();
+        if (event.key === " ") {
+          recorded += "Space";
+        } else {
+          recorded += event.key.toUpperCase();
+        }
         const hotkey = document.getElementById(lastHotkey);
         if (hotkey instanceof HTMLElement) {
-          hotkey.style.color = "green";
+          hotkey.style.color = "teal";
           hotkey.innerHTML = recorded;
           lastRecord = recorded;
         }
@@ -131,8 +115,11 @@ export default defineComponent({
     };
     document.addEventListener("keydown", recordCombination);
 
-    const changeHotkey = (hotkey_id: number, combination: string) => {
-      store.dispatch("CHANGE_HOTKEY_SETTING", { hotkey_id, combination });
+    const changeHotkey = (hotkey_id: string, combination: string) => {
+      rows.filter(function (rows) {
+        return rows.id == hotkey_id;
+      })[0].combination = combination;
+      console.log(rows);
     };
 
     return {
