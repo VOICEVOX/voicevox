@@ -1,7 +1,38 @@
-; pre install process
-!macro customInit
+!include "LogicLib.nsh"
+!include "FileFunc.nsh"
+
+!macro defineVariables
     ; define download url
     !define DOWNLOAD_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
+
+    ; 12GB (Installer: 2.7GB x2, VOICEVOX: 5.7GB)
+    !define SPACENEEDED 12
+!macroend
+
+!macro checkDiskSpace
+    Var /GLOBAL spaceAvailable
+
+	${GetRoot} "$INSTDIR" $0 ; get drive letter
+
+	${DriveSpace} "$0\" "/D=F /S=G" $spaceAvailable ; G = GiB
+
+    MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOX needs to have at least ${SPACENEEDED} GB of free space on your system drive to installation.$\r$\nSpace available: $spaceAvailable GB$\r$\nDo you want to install VOICEVOX?" IDOK next
+    ; execute below process if selected "Cancel"
+    Quit ; quit immediately
+
+    ; execute below process if selected "OK"
+    next:
+    ${If} $spaceAvailable < ${SPACENEEDED}
+        MessageBox MB_OK|MB_ICONEXCLAMATION "There is not enough free space to install VOICEVOX on your system drive.$\r$\nnSpace required: ${SPACENEEDED} GB$\r$\nSpace available: $spaceAvailable GB"
+        Quit ; quit immediately
+    ${EndIf}
+!macroend
+
+; pre install process
+!macro customInit
+    !insertmacro defineVariables
+
+    !insertmacro checkDiskSpace
 
     ; download files
     download:
