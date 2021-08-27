@@ -356,9 +356,14 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    // エンジン待機
+    const isEngineReady = computed(() => store.state.isEngineReady);
+    const enginePromise = store.dispatch(START_WAITING_ENGINE);
+
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
+      await enginePromise;
       const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
       });
@@ -366,13 +371,6 @@ export default defineComponent({
         audioItem,
         prevAudioKey: activeAudioKey.value,
       });
-    });
-
-    // エンジン待機
-    const isEngineReady = computed(() => store.state.isEngineReady);
-    store.dispatch(START_WAITING_ENGINE).then(async () => {
-      const audioItem = await store.dispatch(GENERATE_AUDIO_ITEM, { text: "" });
-      return await store.dispatch(REGISTER_AUDIO_ITEM, { audioItem });
     });
 
     // ライセンス表示
