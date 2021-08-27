@@ -46,6 +46,7 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
+      @keyup.f1.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
