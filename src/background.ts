@@ -17,7 +17,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
 
-import ps from "ps-node";
+// import ps from "ps-node";
 
 let win: BrowserWindow;
 
@@ -47,6 +47,7 @@ const store = new Store({
 
 // engine
 let willQuitEngine = false;
+let isRestart = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   willQuitEngine = false;
@@ -89,6 +90,13 @@ async function runEngine() {
       }
     }
   );
+
+  engineProcess.on("close", () => {
+    if (isRestart) {
+      isRestart = false;
+      runEngine();
+    }
+  });
 }
 
 // temp dir
@@ -302,21 +310,13 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 
 ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
+  isRestart = true;
 
-  const killCallback = () => {
-    ps.lookup({ pid: engineProcess.pid }, (e, resultList) => {
-      const process = resultList[0];
-      if (!process) {
-        runEngine();
-      }
-    });
-  };
-
-  if (!engineProcess.killed) {
-    treeKill(engineProcess.pid, killCallback);
-  } else {
-    runEngine();
-  }
+  treeKill(engineProcess.pid, (error) => {
+    if (error) {
+      runEngine();
+    }
+  });
 });
 
 // app callback
