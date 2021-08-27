@@ -17,8 +17,6 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
 
-// import ps from "ps-node";
-
 let win: BrowserWindow;
 
 // 多重起動防止
