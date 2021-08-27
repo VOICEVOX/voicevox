@@ -17,16 +17,17 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!app.requestSingleInstanceLock()) app.quit();
+if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
 
 // 設定
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
-const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
