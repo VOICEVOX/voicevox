@@ -46,7 +46,6 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
-      @keyup.escape.exact="blurCell"
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
@@ -247,7 +246,6 @@ export default defineComponent({
       moveDownCell();
     };
 
-    // blur cell on pressing escape key
     const blurCell = () => {
       if (document.activeElement instanceof HTMLInputElement) {
         document.activeElement.blur();
