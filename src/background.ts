@@ -32,7 +32,10 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 // 設定ファイル
-const store = new Store({
+const store = new Store<{
+  useGpu: boolean;
+  fileEncoding: Encoding;
+}>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -267,7 +270,7 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
     store.set("useGpu", newValue);
   }
 
-  return store.get("useGpu", false) as boolean;
+  return store.get("useGpu", false);
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -279,7 +282,7 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
     store.set("fileEncoding", newValue);
   }
 
-  return store.get("fileEncoding", "UTF-8") as Encoding;
+  return store.get("fileEncoding", "UTF-8");
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
