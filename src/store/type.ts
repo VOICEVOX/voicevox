@@ -24,6 +24,7 @@ export type State = {
   isHelpDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
+  projectFilePath?: string;
 };
 
 export type AudioItem = {
