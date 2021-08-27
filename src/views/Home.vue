@@ -360,7 +360,6 @@ export default defineComponent({
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
-    store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({

@@ -1,6 +1,6 @@
 "use strict";
 
-import { execFile, ChildProcess } from "child_process";
+import { exec, execFile, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
@@ -47,6 +47,9 @@ const store = new Store({
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
+  willQuitEngine = false;
+  ipcMainSend(win, "START_WAITING_ENGINE");
+
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
     const hasGpu = await hasSupportedGpu();
@@ -73,7 +76,8 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    () => {
+    (error) => {
+      console.log(error);
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
@@ -83,14 +87,6 @@ async function runEngine() {
       }
     }
   );
-
-  // エンジン再起動時用
-  if (willQuitEngine) {
-    ipcMainSend(win, "START_WAITING_ENGINE");
-  }
-
-  // restartFunctionでtrueにするので戻す用
-  willQuitEngine = false;
 }
 
 // temp dir
@@ -302,18 +298,23 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-ipcMainHandle("RESTART_ENGINE", () => {
+ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
 
-  try {
-    if (engineProcess.pid !== undefined) {
-      treeKill(engineProcess.pid);
-    }
+  if (!engineProcess.killed) {
+    treeKill(engineProcess.pid);
+    for (let i = 0; i < 10; ++i) {
+      console.log(engineProcess.pid);
+      console.log(engineProcess.killed);
+      if (engineProcess.killed) {
+        break;
+      }
 
-    setTimeout(runEngine, 2000);
-  } catch {
-    console.log("restart engine: error");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
+
+  runEngine();
 });
 
 // app callback
