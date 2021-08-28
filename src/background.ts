@@ -317,6 +317,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     runEngine();
   });
 
+  // treeKillのコールバック関数はコマンドが終了した時に呼ばれます．
   treeKill(engineProcess.pid, (error) => {
     // error変数の値がnull以外であればkillコマンドが失敗したことを意味します．
     if (error !== null) {
