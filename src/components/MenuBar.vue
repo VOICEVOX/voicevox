@@ -87,12 +87,17 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
+    const restartEngineProcess = () => {
+      store.dispatch(RESTART_ENGINE);
+    };
+
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
       const change = async () => {
         await store.dispatch(SET_USE_GPU, { useGpu });
-        store.dispatch(RESTART_ENGINE);
+        restartEngineProcess();
+
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
           message: "変更を適用するためにエンジンを再起動します。",
@@ -143,10 +148,6 @@ export default defineComponent({
           },
         }).onOk(change);
       } else change();
-    };
-
-    const restartEngineProcess = () => {
-      store.dispatch(RESTART_ENGINE);
     };
 
     const menudata = ref<MenuItemData[]>([

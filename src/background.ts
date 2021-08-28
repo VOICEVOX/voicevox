@@ -313,7 +313,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
 
   /*
     「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
-    なので、ChildProcessのcloseイベントのタイミングで実行するようにしてあります。closeイベントはexitイベントよりも後に発火します。
+     closeイベントはexitイベントよりも後に発火します。
   */
   engineProcess.once("close", () => {
     runEngine();
@@ -326,7 +326,9 @@ ipcMainHandle("RESTART_ENGINE", async () => {
       console.log(error);
 
       // 再起動用に設定したclose listenerを削除。
-      engineProcess.removeAllListeners("close");
+      engineProcess.removeListener("close", () => {
+        return;
+      });
 
       // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理。
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
