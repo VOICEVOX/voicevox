@@ -300,13 +300,14 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 ipcMainHandle("RESTART_ENGINE", async () => {
   /*
     プロセスが生存している場合はexitCodeにnull，終了していればnumber型のexit codeが代入されています．
-    プロセスが既に落ちている場合にtreeKillをわざわざ実行するのは違うかなと思いこうしてあります．
+    プロセスが既に落ちている場合にtreeKillを実行する意味がないのでこうしてあります．
   */
   if (engineProcess.exitCode !== null) {
     runEngine();
     return;
   }
 
+  // エンジンエラー時のエラーウィンドウ抑制用．
   willQuitEngine = true;
 
   /*
@@ -323,7 +324,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     if (error !== null) {
       console.log(error);
 
-      // 再起動用に設定したcloseハンドラを削除．
+      // 再起動用に設定したclose listnerを削除．
       engineProcess.removeAllListeners("close");
 
       // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理
