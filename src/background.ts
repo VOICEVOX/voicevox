@@ -299,8 +299,8 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 
 ipcMainHandle("RESTART_ENGINE", async () => {
   /*
-    プロセスが生存している場合はexitCodeにnull，終了していればnumber型のexit codeが代入されています．
-    プロセスが既に落ちている場合にtreeKillを実行する意味がないのでこうしてあります．
+    プロセスが生存している場合はexitCodeにnull、終了していればnumber型のexit codeが代入されています。
+    プロセスが既に落ちている場合にtreeKillを実行する意味がないのでこうしてあります。
   */
   if (engineProcess.exitCode !== null) {
     runEngine();
@@ -311,23 +311,23 @@ ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
 
   /*
-    「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します．
-    なので，ChildProcessのcloseイベントのタイミングで実行するようにしてあります．closeイベントはexitイベントよりも後に発火します．
+    「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
+    なので、ChildProcessのcloseイベントのタイミングで実行するようにしてあります。closeイベントはexitイベントよりも後に発火します。
   */
   engineProcess.once("close", () => {
     runEngine();
   });
 
-  // treeKillのコールバック関数はコマンドが終了した時に呼ばれます．
+  // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
   treeKill(engineProcess.pid, (error) => {
-    // error変数の値がnull以外であればkillコマンドが失敗したことを意味します．
+    // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
     if (error !== null) {
       console.log(error);
 
-      // 再起動用に設定したclose listnerを削除．
+      // 再起動用に設定したclose listnerを削除。
       engineProcess.removeAllListeners("close");
 
-      // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理
+      // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理。
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
     }
   });
