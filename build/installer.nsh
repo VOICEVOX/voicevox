@@ -5,8 +5,15 @@
     ; define download url
     !define DOWNLOAD_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
 
-    ; 12GB (Installer: 2.7GB x2, VOICEVOX: 5.7GB)
-    !define SPACENEEDED 12
+    ; installer size (GB)
+    !define VOICEVOX_DOWNLOAD_SIZE 2.7
+    ; VOICEVOX size (GB)
+    !define VOICEVOX_SIZE 5.7
+    ; space required for installation (including installer x2 and vOICEVOX)
+    ; because of NSIS specification, mathematic operation must be one operation at a command.
+    ; ref. https://nsis.sourceforge.io/mediawiki/index.php?title=Reference/!define&oldid=23418
+    !define /math VOICEVOX_DOWNLOAD_SIZE_DUBLE ${VOICEVOX_DOWNLOAD_SIZE} * 2
+    !define /math INSTALL_SPACE_NEEDED ${VOICEVOX_DOWNLOAD_SIZE_DUBLE} + ${VOICEVOX_SIZE}
 !macroend
 
 !macro checkDiskSpace
@@ -16,15 +23,19 @@
 
     ${DriveSpace} "$0\" "/D=F /S=G" $spaceAvailable ; G = GiB
 
-    MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOX needs to have at least ${SPACENEEDED} GB of free space on your system drive to installation.$\r$\nSpace available: $spaceAvailable GB$\r$\nDo you want to install VOICEVOX?" IDOK next
+    MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOXをインストールするために ${VOICEVOX_DOWNLOAD_SIZE} GBのファイルをダウンロードします。$\r$\nインストールを続行しますか？" IDOK next
     ; execute below process if selected "Cancel"
     Quit ; quit immediately
 
     ; execute below process if selected "OK"
     next:
-    ${If} $spaceAvailable < ${SPACENEEDED}
-        MessageBox MB_OK|MB_ICONEXCLAMATION "There is not enough free space to install VOICEVOX on your system drive.$\r$\nnSpace required: ${SPACENEEDED} GB$\r$\nSpace available: $spaceAvailable GB"
+    ${If} $spaceAvailable < ${INSTALL_SPACE_NEEDED}
+        MessageBox MB_YESNO|MB_ICONEXCLAMATION "インストール作業には ${INSTALL_SPACE_NEEDED} GBの空き容量が必要です。（空き容量：$spaceAvailable GB）$\r$\nインストールを中断しますか？" IDNO continue
+        ; execute below process if select "YES"
         Quit ; quit immediately
+
+        ; execute below process if selected "NO"
+        continue:
     ${EndIf}
 !macroend
 
