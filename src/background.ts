@@ -48,6 +48,7 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   willQuitEngine = false;
+  // エンジンが起動完了または失敗するまで待機させる処理を呼び出している。
   ipcMainSend(win, "START_WAITING_ENGINE");
 
   // 最初のエンジンモード
