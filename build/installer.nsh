@@ -12,9 +12,9 @@
 !macro checkDiskSpace
     Var /GLOBAL spaceAvailable
 
-	${GetRoot} "$INSTDIR" $0 ; get drive letter
+    ${GetRoot} "$INSTDIR" $0 ; get drive letter
 
-	${DriveSpace} "$0\" "/D=F /S=G" $spaceAvailable ; G = GiB
+    ${DriveSpace} "$0\" "/D=F /S=G" $spaceAvailable ; G = GiB
 
     MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOX needs to have at least ${SPACENEEDED} GB of free space on your system drive to installation.$\r$\nSpace available: $spaceAvailable GB$\r$\nDo you want to install VOICEVOX?" IDOK next
     ; execute below process if selected "Cancel"
