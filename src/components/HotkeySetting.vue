@@ -9,6 +9,8 @@
     </q-header>
     <q-page class="relarive-absolute-wrapper scroller">
       <q-table
+        flat
+        class="hotkey-table"
         :rows="rows"
         :columns="columns"
         :rows-per-page-options="[]"
@@ -24,8 +26,11 @@
               :props="props"
               :id="props.row.id"
               @click="handelRecording($event, props.row.id)"
+              @dblclick="removeHotkey($event, props.row.id)"
             >
-              {{ props.row.combination }}
+              {{
+                props.row.combination === "" ? "未設定" : props.row.combination
+              }}
             </q-td>
           </q-tr>
         </template>
@@ -35,7 +40,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { useStore } from "@/store";
+import { computed, defineComponent, ref } from "vue";
+import { SET_HOTKEY_SETTING } from "@/store/setting";
 
 const columns = [
   {
@@ -51,28 +58,20 @@ const columns = [
     field: "combination",
   },
 ];
-const rows = [
-  {
-    id: "1",
-    action: "音声保存",
-    combination: "Ctrl E",
-  },
-  {
-    id: "2",
-    action: "プロジェクト保存",
-    combination: "Ctrl S",
-  },
-];
 
 export default defineComponent({
   name: "HotkeySetting",
   setup() {
+    const store = useStore();
     let lastHotkey: string | null = null;
     let lastRecord = "";
+
+    const hotkey_rows = computed(() => store.state.hotkeySetting);
 
     const handelRecording = (event: MouseEvent, id: string) => {
       if (event.target instanceof HTMLElement) {
         if (lastHotkey === null) {
+          lastRecord = event.target.innerHTML;
           lastHotkey = id;
           event.target.style.color = "grey";
         } else if (lastHotkey != id) {
@@ -115,17 +114,23 @@ export default defineComponent({
     };
     document.addEventListener("keydown", recordCombination);
 
+    const removeHotkey = (event: MouseEvent, id: string) => {
+      changeHotkey(id, "");
+    };
+
     const changeHotkey = (hotkey_id: string, combination: string) => {
-      rows.filter(function (rows) {
-        return rows.id == hotkey_id;
+      hotkey_rows.value.filter(function (hotkey_rows) {
+        return hotkey_rows.id == hotkey_id;
       })[0].combination = combination;
-      console.log(rows);
+      console.log(hotkey_rows.value);
+      store.dispatch(SET_HOTKEY_SETTING, { data: hotkey_rows.value });
     };
 
     return {
-      rows: ref(rows),
+      rows: ref(hotkey_rows.value),
       columns: ref(columns),
       handelRecording,
+      removeHotkey,
     };
   },
 });
@@ -137,5 +142,31 @@ export default defineComponent({
     width: 100%;
     overflow: auto;
   }
+}
+
+.hotkey-table {
+  /* height or max-height is important */
+  height: 310px;
+}
+
+.q-table__top,
+  .q-table__bottom,
+  thead tr:first-child th
+    /* bg color is important for th; just specify one */ {
+  background-color: #c1f4cd;
+}
+
+thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+thead tr:first-child th {
+  top: 0;
+}
+
+/* this is when the loading indicator appears */
+&.q-table--loading thead tr:last-child th
+    /* height of all previous header rows */ {
+  top: 48px;
 }
 </style>

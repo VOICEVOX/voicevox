@@ -31,18 +31,11 @@
           </q-list>
           <q-space />
           <q-list>
-            <q-item v-ripple>
-              <q-btn
-                flat
-                color="teal"
-                @click="
-                  saveSettings();
-                  modelValueComputed = false;
-                "
-              >
-                設定を保存
-              </q-btn>
-              <q-btn @click="modelValueComputed = false" flat>キャンセル</q-btn>
+            <q-item clickable v-ripple @click="modelValueComputed = false">
+              <q-item-section side>
+                <q-icon name="keyboard_arrow_left" />
+              </q-item-section>
+              <q-item-section>オプションを閉じる</q-item-section>
             </q-item>
           </q-list>
         </div>

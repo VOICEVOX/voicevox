@@ -11,6 +11,7 @@ import { commandStore } from "./command";
 import { audioStore } from "./audio";
 import { projectActions } from "./project";
 import { uiStore } from "./ui";
+import { settingStore } from "./setting";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
@@ -39,24 +40,53 @@ export const store = createStore<State>({
     fileEncoding: "UTF-8",
     isMaximized: false,
     isPinned: false,
+    hotkeySetting: [
+      {
+        id: "1",
+        action: "save_audio",
+        combination: "Ctrl E",
+      },
+      {
+        id: "2",
+        action: "export_sigle_audio",
+        combination: "",
+      },
+      {
+        id: "3",
+        action: "save_project",
+        combination: "Ctrl S",
+      },
+      {
+        id: "4",
+        action: "play",
+        combination: "Space",
+      },
+    ],
+    simpleMode: {
+      enabled: false,
+      dir: "",
+    },
   },
 
   getters: {
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
+    ...settingStore.getters,
   },
 
   mutations: {
     ...uiStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
+    ...settingStore.mutations,
   },
 
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
+    ...settingStore.actions,
     ...projectActions,
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();

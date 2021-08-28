@@ -40,6 +40,25 @@ const store = new Store({
     fileEncoding: {
       type: "string",
     },
+    hotkeySetting: {
+      type: "array",
+      description: "A bunch of hotkey settings",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          action: { type: "string" },
+          combination: { type: "string" },
+        },
+      },
+    },
+    simple_mode: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean" },
+        dir: { type: "string" },
+      },
+    },
   },
 });
 
