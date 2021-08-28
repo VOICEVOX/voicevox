@@ -298,8 +298,6 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 });
 
 ipcMainHandle("RESTART_ENGINE", async () => {
-  willQuitEngine = true;
-
   /*
     プロセスが生存している場合はexitCodeにnull，終了していればnumber型のexit codeが代入されています．
     プロセスが既に落ちている場合にtreeKillをわざわざ実行するのは違うかなと思いこうしてあります．
@@ -308,6 +306,8 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     runEngine();
     return;
   }
+
+  willQuitEngine = true;
 
   /*
     「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します．
