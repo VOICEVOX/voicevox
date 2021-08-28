@@ -21,16 +21,16 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
-    const dispatch = (error: Error): void => {
+    const captureError = (error: Error): void => {
       store.dispatch(CAPTURE_ERROR, { error, stack: error.stack });
     };
-    return { dispatch };
+    return { captureError };
   },
   errorCaptured(error, instance, info) {
     this.error = error instanceof Error ? error : null;
     this.instance = instance;
     this.info = info;
-    if (this.error) this.dispatch(this.error);
+    if (this.error) this.captureError(this.error);
     return false;
   },
   mounted() {
@@ -38,13 +38,13 @@ export default defineComponent({
       this.error = event.reason;
       this.instance = null;
       this.info = null;
-      if (this.error) this.dispatch(this.error);
+      if (this.error) this.captureError(this.error);
     };
     window.addEventListener("error", (event: ErrorEvent) => {
       this.error = event.error;
       this.instance = null;
       this.info = null;
-      if (this.error) this.dispatch(this.error);
+      if (this.error) this.captureError(this.error);
     });
     window.addEventListener("unhandledrejection", handlePromiseRejectionEvent);
     window.addEventListener("rejectionhandled", handlePromiseRejectionEvent);
