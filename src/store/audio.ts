@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
   State,
-  EngineState,
   typeAsStoreOptions,
   commandMutationsCreator,
 } from "./type";
@@ -146,7 +145,7 @@ const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
 
-const SET_ENGINE_STATE = "SET_ENGINE_STATE";
+const SET_ENGINE_READY = "SET_ENGINE_READY";
 const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
 const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
@@ -156,7 +155,6 @@ export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
 
 //actions
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
-export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
 export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
@@ -191,7 +189,7 @@ export const audioStore = typeAsStoreOptions({
       return state._activeAudioKey === audioKey;
     },
     [GET_ENGINE_STATE]: (state) => () => {
-      return state.engineState === "READY";
+      return state.isEngineReady;
     },
   },
 
@@ -324,8 +322,11 @@ export const audioStore = typeAsStoreOptions({
       const query = state.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
-    [SET_ENGINE_STATE](state, { engineState }: { engineState: EngineState }) {
-      state.engineState = engineState;
+    [SET_ENGINE_READY]: (
+      state,
+      { isEngineReady }: { isEngineReady: boolean }
+    ) => {
+      state.isEngineReady = isEngineReady;
     },
     [SET_CHARACTER_INFOS](
       state,
@@ -357,14 +358,8 @@ export const audioStore = typeAsStoreOptions({
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
-      let engineState = state.engineState;
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
       for (let i = 0; i < 100; i++) {
-        engineState = state.engineState;
-        if (engineState === "FAILED_STARTING") {
-          break;
-        }
-
         try {
           await api.versionVersionGet();
         } catch {
@@ -372,25 +367,10 @@ export const audioStore = typeAsStoreOptions({
           console.log("waiting engine...");
           continue;
         }
-        engineState = "READY";
-        commit(SET_ENGINE_STATE, { engineState });
+        state.isEngineReady = true;
         break;
       }
-
-      if (engineState !== "READY") {
-        commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
-      }
     }),
-    [DETECTED_ENGINE_ERROR]({ state, commit }) {
-      switch (state.engineState) {
-        case "STARTING":
-          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
-          break;
-        case "READY":
-          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
-          break;
-      }
-    },
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();
 

@@ -126,9 +126,4 @@ type IpcSOData = {
     args: [];
     return: void;
   };
-
-  DETECTED_ENGINE_ERROR: {
-    args: [];
-    return: void;
-  };
 };

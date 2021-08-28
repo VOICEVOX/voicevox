@@ -17,26 +17,22 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
 
-const isDevelopment = process.env.NODE_ENV !== "production";
-
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
+if (!app.requestSingleInstanceLock()) app.quit();
 
 // 設定
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
+const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 // 設定ファイル
-const store = new Store<{
-  useGpu: boolean;
-  fileEncoding: Encoding;
-}>({
+const store = new Store({
   schema: {
     useGpu: {
       type: "boolean",
@@ -77,10 +73,8 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    (error) => {
-      console.log(error);
+    () => {
       if (!willQuitEngine) {
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
           "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"
@@ -271,7 +265,7 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
     store.set("useGpu", newValue);
   }
 
-  return store.get("useGpu", false);
+  return store.get("useGpu", false) as boolean;
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -283,7 +277,7 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
     store.set("fileEncoding", newValue);
   }
 
-  return store.get("fileEncoding", "UTF-8");
+  return store.get("fileEncoding", "UTF-8") as Encoding;
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
@@ -338,8 +332,8 @@ app.on("ready", async () => {
       console.error("Vue Devtools failed to install:", e.toString());
     }
   }
-
-  createWindow().then(() => runEngine());
+  createWindow();
+  runEngine();
 });
 
 app.on("second-instance", () => {

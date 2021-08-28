@@ -2,7 +2,6 @@ import { LOAD_PROJECT_FILE } from "@/store/project";
 import { App } from "vue";
 import { Store } from "vuex";
 import { DETECT_MAXIMIZED, DETECT_UNMAXIMIZED } from "@/store/ui";
-import { DETECTED_ENGINE_ERROR } from "@/store/audio";
 
 export const ipcMessageReceiver = {
   install: (_: App, options: { store: Store<unknown> }): void => {
@@ -18,10 +17,6 @@ export const ipcMessageReceiver = {
 
     window.electron.onReceivedIPCMsg("DETECT_UNMAXIMIZED", () =>
       options.store.dispatch(DETECT_UNMAXIMIZED)
-    );
-
-    window.electron.onReceivedIPCMsg("DETECTED_ENGINE_ERROR", () =>
-      options.store.dispatch(DETECTED_ENGINE_ERROR)
     );
   },
 };

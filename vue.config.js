@@ -27,6 +27,7 @@ module.exports = {
         productName: "VOICEVOX",
         appId: "jp.hiroshiba.voicevox",
         copyright: "Hiroshiba Kazuyuki",
+        compression: "maximum",
         afterAllArtifactBuild: path.resolve(
           __dirname,
           "build",

@@ -64,7 +64,7 @@ export default defineComponent({
   .scroller {
     width: 100%;
     overflow: auto;
-    :deep() {
+    ::v-deep {
       h3 {
         font-size: 1.3rem;
         font-weight: bold;

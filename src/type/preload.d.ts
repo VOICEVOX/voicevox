@@ -8,7 +8,6 @@ export interface Sandbox {
   getUpdateInfos(): Promise<Record<string, any>[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
-  getBaseName(obj: { filePath: string }): string;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
