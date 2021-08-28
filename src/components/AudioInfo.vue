@@ -2,7 +2,7 @@
   <div class="root full-height q-py-sm" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >話速 {{ query.speedScale.toFixed(1) }}</span
+        >話速 {{ currentAudioSpeedScale.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -11,14 +11,15 @@
         :max="2"
         :step="0.1"
         :disable="uiLocked"
-        :model-value="query.speedScale"
+        :model-value="currentAudioSpeedScale"
+        @update:model-value="previewAudioSpeedScale.setPreviewValue($event)"
         @change="setAudioSpeedScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音高 {{ query.pitchScale.toFixed(2) }}</span
+        >音高 {{ currentAudioPitchScale.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -27,14 +28,15 @@
         :max="0.15"
         :step="0.01"
         :disable="uiLocked"
-        :model-value="query.pitchScale"
+        :model-value="currentAudioPitchScale"
+        @update:model-value="previewAudioPitchScale.setPreviewValue($event)"
         @change="setAudioPitchScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >抑揚 {{ query.intonationScale.toFixed(1) }}</span
+        >抑揚 {{ currentIntonationScale.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -43,14 +45,15 @@
         :max="2"
         :step="0.01"
         :disable="uiLocked"
-        :model-value="query.intonationScale"
+        :model-value="currentIntonationScale"
+        @update:model-value="previewIntonationScale.setPreviewValue($event)"
         @change="setAudioIntonationScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'into')"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音量 {{ query.volumeScale.toFixed(1) }}</span
+        >音量 {{ currentAudioVolumeScale.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -59,7 +62,8 @@
         :max="2"
         :step="0.1"
         :disable="uiLocked"
-        :model-value="query.volumeScale"
+        :model-value="currentAudioVolumeScale"
+        @update:model-value="previewAudioVolumeScale.setPreviewValue($event)"
         @change="setAudioVolumeScale"
         @wheel="
           uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'volume')
@@ -70,7 +74,14 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
+import {
+  computed,
+  reactive,
+  ref,
+  ComputedRef,
+  Ref,
+  defineComponent,
+} from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -82,10 +93,41 @@ import {
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
 
+type PreviewableValue = {
+  isPreview: boolean;
+
+  storeValue: ComputedRef<number | undefined>;
+
+  previewValue: Ref<number | undefined>;
+
+  setPreviewValue: ((value: number | undefined) => void) | null;
+};
+
 export default defineComponent({
   name: "AudioInfo",
 
   setup() {
+    const createPreviewValue = (
+      storeFunc: () => number | undefined
+    ): [PreviewableValue, ComputedRef<number | undefined>] => {
+      const previewObj = reactive<PreviewableValue>({
+        isPreview: false,
+        storeValue: computed(storeFunc),
+        previewValue: ref(storeFunc()),
+        setPreviewValue: null,
+      });
+      previewObj.setPreviewValue = (value) => {
+        previewObj.isPreview = true;
+        previewObj.previewValue = value;
+      };
+
+      const currentValue = computed(() =>
+        previewObj.isPreview ? previewObj.previewValue : previewObj.storeValue
+      );
+
+      return [previewObj as any, currentValue];
+    };
+
     const store = useStore();
 
     // accent phrase
@@ -99,7 +141,23 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
+    const [previewAudioSpeedScale, currentAudioSpeedScale] = createPreviewValue(
+      () => query.value?.speedScale
+    );
+
+    const [previewAudioPitchScale, currentAudioPitchScale] = createPreviewValue(
+      () => query.value?.pitchScale
+    );
+
+    const [previewIntonationScale, currentIntonationScale] = createPreviewValue(
+      () => query.value?.intonationScale
+    );
+
+    const [previewAudioVolumeScale, currentAudioVolumeScale] =
+      createPreviewValue(() => query.value?.volumeScale);
+
     const setAudioSpeedScale = (speedScale: number) => {
+      previewAudioSpeedScale.isPreview = false;
       store.dispatch(SET_AUDIO_SPEED_SCALE, {
         audioKey: activeAudioKey.value!,
         speedScale,
@@ -107,6 +165,7 @@ export default defineComponent({
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
+      previewAudioPitchScale.isPreview = false;
       store.dispatch(SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
         pitchScale,
@@ -114,6 +173,7 @@ export default defineComponent({
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
+      previewIntonationScale.isPreview = false;
       store.dispatch(SET_AUDIO_INTONATION_SCALE, {
         audioKey: activeAudioKey.value!,
         intonationScale,
@@ -121,6 +181,7 @@ export default defineComponent({
     };
 
     const setAudioVolumeScale = (volumeScale: number) => {
+      previewAudioVolumeScale.isPreview = false;
       store.dispatch(SET_AUDIO_VOLUME_SCALE, {
         audioKey: activeAudioKey.value!,
         volumeScale,
@@ -177,6 +238,14 @@ export default defineComponent({
       uiLocked,
       audioItem,
       query,
+      previewAudioSpeedScale,
+      previewAudioPitchScale,
+      previewIntonationScale,
+      previewAudioVolumeScale,
+      currentAudioSpeedScale,
+      currentAudioPitchScale,
+      currentIntonationScale,
+      currentAudioVolumeScale,
       setAudioSpeedScale,
       setAudioPitchScale,
       setAudioIntonationScale,
