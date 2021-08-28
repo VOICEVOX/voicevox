@@ -325,7 +325,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     if (error !== null) {
       console.log(error);
 
-      // 再起動用に設定したclose listnerを削除。
+      // 再起動用に設定したclose listenerを削除。
       engineProcess.removeAllListeners("close");
 
       // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理。
