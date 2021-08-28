@@ -307,7 +307,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
     return;
   }
 
-  // エンジンエラー時のエラーウィンドウ抑制用．
+  // エンジンエラー時のエラーウィンドウ抑制用。
   willQuitEngine = true;
 
   /*
