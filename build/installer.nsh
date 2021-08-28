@@ -25,14 +25,14 @@
 
     MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOXをインストールするために ${VOICEVOX_DOWNLOAD_SIZE} GBのファイルをダウンロードします。$\r$\nインストールを続行しますか？" IDOK next
     ; execute below process if selected "Cancel"
-    Quit ; quit immediately
+    !insertmacro quitSuccess ; normal termination immediately
 
     ; execute below process if selected "OK"
     next:
     ${If} $spaceAvailable < ${INSTALL_SPACE_NEEDED}
         MessageBox MB_YESNO|MB_ICONEXCLAMATION "インストール作業には ${INSTALL_SPACE_NEEDED} GBの空き容量が必要です。（空き容量：$spaceAvailable GB）$\r$\nインストールを中断しますか？" IDNO continue
         ; execute below process if select "YES"
-        Quit ; quit immediately
+        !insertmacro quitSuccess ; normal termination immediately
 
         ; execute below process if selected "NO"
         continue:
@@ -52,7 +52,7 @@
 
     ; download cancel handling
     ${if} $0 == "Cancelled"
-        Quit ; quit immediately
+        !insertmacro quitSuccess ; normal termination immediately
     ${endif}
 
     ; try without proxy
@@ -63,7 +63,7 @@
 
     ; download cancel handling
     ${if} $0 == "Cancelled"
-        Quit ; quit immediately
+        !insertmacro quitSuccess ; normal termination immediately
     ${endif}
 
     ; download error handling
