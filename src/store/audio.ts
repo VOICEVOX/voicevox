@@ -933,10 +933,7 @@ export const audioCommandStore = typeAsStoreOptions({
       audioStore.mutations[INSERT_AUDIO_ITEM](draft, payload);
     },
     [COMMAND_UNREGISTER_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
-      // audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
-      draft.audioKeys.splice(draft.audioKeys.indexOf(payload.audioKey), 1);
-      delete draft.audioItems[payload.audioKey];
-      delete draft.audioStates[payload.audioKey];
+      audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
     },
     [COMMAND_UPDATE_AUDIO_TEXT]: (
       draft,

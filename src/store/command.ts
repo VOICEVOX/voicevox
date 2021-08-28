@@ -1,16 +1,15 @@
 import {
   enablePatches,
   enableMapSet,
-  setUseProxies,
+  setAutoFreeze,
+  produceWithPatches,
+  immerable,
   Patch,
   Draft,
-  Immer,
 } from "immer";
 enablePatches();
 enableMapSet();
-
-const immer = new Immer();
-immer.setAutoFreeze(false);
+setAutoFreeze(false);
 
 import { Store, Payload, ActionContext, StoreOptions } from "vuex";
 
@@ -135,6 +134,13 @@ type CreatePayloadMutationTree<
     ? PayloadMutation<S, P>
     : PayloadMutation<S, undefined>;
 };
+/**
+ * Create an object of Mutation from an object of Recipe with Payload.
+ * @see {@link recordOperations} - the created mutations will take a snapshot of
+ * State. It may cause a bottleneck of performance.
+ * @param payloadRecipeTree - an object of Recipe with Payload
+ * @returns an object of Mutation
+ */
 export const createCommandMutationTree = <
   S extends UndoRedoState,
   Arg extends PayloadRecipeTree<S>
@@ -165,13 +171,22 @@ const patchToOperation = (patch: Patch): Operation => ({
   value: patch.value,
 });
 
+/**
+ * This function take snapshot of State. This approach may cause a bottleneck!
+ * @param recipe - Function to execute the operations you want to record in the
+ * given draft.
+ * @returns mutation - that record the operations of the recipe with the given
+ * payload.
+ */
 const recordOperations =
   <S, P extends Record<string, unknown> | undefined>(
     recipe: PayloadRecipe<S, P>
   ) =>
   (state: S, payload: P): Command => {
-    const [_, doPatches, undoPatches] = immer.produceWithPatches(
-      state,
+    const [_, doPatches, undoPatches] = produceWithPatches(
+      // Taking snapshots has negative effects on performance.
+      // This approach may cause a bottleneck.
+      JSON.parse(JSON.stringify(state)) as State,
       (draft: Draft<S>) => recipe(draft, payload)
     );
     return {
