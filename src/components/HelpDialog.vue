@@ -118,7 +118,7 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-.help-dialog .q-layout-container ::v-deep .absolute-full {
+.help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
   .scroll {
     left: unset !important;

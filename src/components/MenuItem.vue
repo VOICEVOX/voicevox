@@ -40,6 +40,7 @@
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
+    <q-item-section side>{{ menudata.shortCut }}</q-item-section>
   </q-item>
 </template>
 
