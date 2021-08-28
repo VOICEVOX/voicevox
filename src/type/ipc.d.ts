@@ -108,7 +108,7 @@ type IpcIHData = {
   };
 
   CAPTURE_ERROR: {
-    //プロセス間通信の際にError内のstackが壊れるのでstringとして引数にする
+    //プロセス間通信の際にError内のstackが壊れるのでstringとして引数にもつ
     args: [obj: { error: Error; stack: string }];
     return: void;
   };
