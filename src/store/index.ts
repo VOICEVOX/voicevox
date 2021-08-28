@@ -75,6 +75,7 @@ export const store = createStore<State>({
     },
   },
   plugins: isDevelopment ? [createLogger()] : undefined,
+  strict: process.env.NODE_ENV !== "production",
 });
 
 export const useStore = () => {
