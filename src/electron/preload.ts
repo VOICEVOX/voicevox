@@ -141,6 +141,13 @@ const api: Sandbox = {
   pinWindow: () => {
     ipcRenderer.invoke("PIN_WINDOW");
   },
+
+  resetSetting: () => {
+    ipcRenderer.invoke("RESET_SETTING");
+  },
+  hotkeySetting: (newValue, id) => {
+    return ipcRenderer.invoke("HOTKEY_SETTING", { newValue, id });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

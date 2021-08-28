@@ -1,3 +1,5 @@
+import { HotkeySetting } from "@/store/type";
+
 /**
  * invoke, handle
  */
@@ -110,6 +112,16 @@ type IpcIHData = {
   PIN_WINDOW: {
     args: [];
     return: void;
+  };
+
+  RESET_SETTING: {
+    args: [];
+    return: void;
+  };
+
+  HOTKEY_SETTING: {
+    args: [obj: { newValue: string; id: number }];
+    return: HotkeySetting[];
   };
 };
 

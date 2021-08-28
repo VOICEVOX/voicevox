@@ -39,6 +39,8 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   pinWindow(): void;
+  resetSetting(): void;
+  hotkeySetting(newValue?: string, id?: number): Promise<HotkeySetting[]>;
 }
 
 export type AppInfos = {

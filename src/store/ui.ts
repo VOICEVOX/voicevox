@@ -72,11 +72,9 @@ export const uiStore = {
       state.isMaximized = true;
     },
     [DETECT_PINNED](state) {
-      console.log("pinned");
       state.isPinned = true;
     },
     [DETECT_UNPINNED](state) {
-      console.log("unpinned");
       state.isPinned = false;
     },
   },

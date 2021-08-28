@@ -15,6 +15,7 @@
         :columns="columns"
         :rows-per-page-options="[]"
         row-key="action"
+        sq
       >
         <template v-slot:body="props">
           <q-tr :props="props">
@@ -25,7 +26,7 @@
               key="combination"
               :props="props"
               :id="props.row.id"
-              @click="handelRecording($event, props.row.id)"
+              @click="handleRecording($event, props.row.id)"
               @dblclick="removeHotkey($event, props.row.id)"
             >
               {{
@@ -42,7 +43,8 @@
 <script lang="ts">
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "vue";
-import { SET_HOTKEY_SETTING } from "@/store/setting";
+import { GET_HOTKEY_SETTING, SET_HOTKEY_SETTING } from "@/store/setting";
+import { HotkeySetting } from "@/store/type";
 
 const columns = [
   {
@@ -66,9 +68,11 @@ export default defineComponent({
     let lastHotkey: string | null = null;
     let lastRecord = "";
 
+    store.dispatch(GET_HOTKEY_SETTING);
+
     const hotkey_rows = computed(() => store.state.hotkeySetting);
 
-    const handelRecording = (event: MouseEvent, id: string) => {
+    const handleRecording = (event: MouseEvent, id: string) => {
       if (event.target instanceof HTMLElement) {
         if (lastHotkey === null) {
           lastRecord = event.target.innerHTML;
@@ -119,17 +123,18 @@ export default defineComponent({
     };
 
     const changeHotkey = (hotkey_id: string, combination: string) => {
-      hotkey_rows.value.filter(function (hotkey_rows) {
-        return hotkey_rows.id == hotkey_id;
-      })[0].combination = combination;
-      console.log(hotkey_rows.value);
-      store.dispatch(SET_HOTKEY_SETTING, { data: hotkey_rows.value });
+      const id = parseInt(hotkey_id) - 1;
+      hotkey_rows.value[id].combination = combination;
+      store.dispatch(SET_HOTKEY_SETTING, {
+        combination: combination,
+        id: id,
+      });
     };
 
     return {
       rows: ref(hotkey_rows.value),
       columns: ref(columns),
-      handelRecording,
+      handleRecording,
       removeHotkey,
     };
   },
@@ -142,31 +147,5 @@ export default defineComponent({
     width: 100%;
     overflow: auto;
   }
-}
-
-.hotkey-table {
-  /* height or max-height is important */
-  height: 310px;
-}
-
-.q-table__top,
-  .q-table__bottom,
-  thead tr:first-child th
-    /* bg color is important for th; just specify one */ {
-  background-color: #c1f4cd;
-}
-
-thead tr th {
-  position: sticky;
-  z-index: 1;
-}
-thead tr:first-child th {
-  top: 0;
-}
-
-/* this is when the loading indicator appears */
-&.q-table--loading thead tr:last-child th
-    /* height of all previous header rows */ {
-  top: 48px;
 }
 </style>

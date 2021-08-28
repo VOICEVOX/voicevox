@@ -6,6 +6,7 @@
 import { useStore } from "@/store";
 import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
 import { defineComponent } from "vue";
+import { GET_HOTKEY_SETTING } from "./store/setting";
 
 export default defineComponent({
   name: "App",
@@ -15,6 +16,7 @@ export default defineComponent({
 
     store.dispatch(GET_USE_GPU);
     store.dispatch(GET_FILE_ENCODING);
+    store.dispatch(GET_HOTKEY_SETTING)
   }
 });
 </script>

@@ -40,28 +40,7 @@ export const store = createStore<State>({
     fileEncoding: "UTF-8",
     isMaximized: false,
     isPinned: false,
-    hotkeySetting: [
-      {
-        id: "1",
-        action: "save_audio",
-        combination: "Ctrl E",
-      },
-      {
-        id: "2",
-        action: "export_sigle_audio",
-        combination: "",
-      },
-      {
-        id: "3",
-        action: "save_project",
-        combination: "Ctrl S",
-      },
-      {
-        id: "4",
-        action: "play",
-        combination: "Space",
-      },
-    ],
+    hotkeySetting: [],
     simpleMode: {
       enabled: false,
       dir: "",

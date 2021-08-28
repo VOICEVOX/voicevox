@@ -16,6 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
+import { HotkeySetting } from "./store/type";
 
 let win: BrowserWindow;
 
@@ -52,7 +53,7 @@ const store = new Store({
         },
       },
     },
-    simple_mode: {
+    simpleMode: {
       type: "object",
       properties: {
         enabled: { type: "boolean" },
@@ -104,6 +105,51 @@ async function runEngine() {
     }
   );
 }
+
+// initialize settings
+// GPU mode is handled by runEngine() but will be reset after clear()
+const initSetting = () => {
+  if (!store.has("fileEncoding")) {
+    const defaultFileEncoding = "UTF-8";
+    store.set("fileEncoding", defaultFileEncoding);
+  }
+  if (!store.has("useGpu")) {
+    const defaultEngineMode = "CPU";
+    store.set("fileEncoding", defaultEngineMode);
+  }
+  if (!store.has("hotkeySetting")) {
+    const defaultHotkeys = [
+      {
+        id: "1",
+        action: "save_audio",
+        combination: "Ctrl E",
+      },
+      {
+        id: "2",
+        action: "save_single_audio",
+        combination: "",
+      },
+      {
+        id: "3",
+        action: "play/stop",
+        combination: "SPACE",
+      },
+      {
+        id: "4",
+        action: "switch_into",
+        combination: "2",
+      },
+    ];
+    store.set("hotkeySetting", defaultHotkeys);
+  }
+  if (!store.has("simpleMode")) {
+    const defaultSimpleMode = {
+      enabled: false,
+      dir: "",
+    };
+    store.set("simpleMode", defaultSimpleMode);
+  }
+};
 
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
@@ -306,6 +352,17 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
   return store.get("fileEncoding", "UTF-8") as Encoding;
 });
 
+ipcMainHandle("HOTKEY_SETTING", (_, { newValue, id }) => {
+  console.log(newValue);
+  if (newValue !== undefined) {
+    const temp = store.get("hotkeySetting");
+    console.log(temp);
+    temp[id].combination = newValue;
+  } else {
+    return store.get("hotkeySetting") as HotkeySetting[];
+  }
+});
+
 ipcMainHandle("CLOSE_WINDOW", () => {
   app.emit("window-all-closed");
   win.destroy();
@@ -324,6 +381,13 @@ ipcMainHandle("PIN_WINDOW", () => {
   } else {
     win.setAlwaysOnTop(true);
   }
+});
+
+ipcMainHandle("RESET_SETTING", () => {
+  store.delete("fileEncoding");
+  store.delete("hotkeySetting");
+  store.delete("simpleMode");
+  initSetting();
 });
 
 // app callback
@@ -366,7 +430,10 @@ app.on("ready", async () => {
     }
   }
 
-  createWindow().then(() => runEngine());
+  createWindow().then(() => {
+    runEngine();
+    initSetting();
+  });
 });
 
 app.on("second-instance", () => {
