@@ -45,7 +45,6 @@ const store = new Store({
 
 // engine
 let willQuitEngine = false;
-let isRestart = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   willQuitEngine = false;
@@ -87,13 +86,6 @@ async function runEngine() {
       }
     }
   );
-
-  engineProcess.on("close", () => {
-    if (isRestart) {
-      isRestart = false;
-      runEngine();
-    }
-  });
 }
 
 // temp dir
@@ -307,18 +299,36 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 
 ipcMainHandle("RESTART_ENGINE", async () => {
   willQuitEngine = true;
-  isRestart = true;
 
-  if (engineProcess.exitCode) {
+  /*
+    プロセスが生存している場合はexitCodeにnull，終了していればnumber型のexit codeが代入されています．
+    プロセスが既に落ちている場合にtreeKillをわざわざ実行するのは違うかなと思いこうしてあります．
+  */
+  if (engineProcess.exitCode === null) {
     runEngine();
-  } else {
-    treeKill(engineProcess.pid, (error) => {
-      if (error) {
-        console.log(error);
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
-      }
-    });
+    return;
   }
+
+  /*
+    「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します．
+    なので，ChildProcessのcloseイベントのタイミングで実行するようにしてあります．closeイベントはexitイベントよりも後に発火します．
+  */
+  engineProcess.on("close", () => {
+    runEngine();
+  });
+
+  treeKill(engineProcess.pid, (error) => {
+    // error変数の値がnull以外であればkillコマンドが失敗したことを意味します．
+    if (error !== null) {
+      console.log(error);
+
+      // 再起動用に設定したcloseハンドラを削除．
+      engineProcess.removeAllListeners("close");
+
+      // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+    }
+  });
 });
 
 // app callback
