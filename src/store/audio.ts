@@ -161,9 +161,11 @@ export const audioStore = {
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
+      let engineState = state.engineState;
       for (let i = 0; i < 100; i++) {
-        if (state.engineState === "FAILED_STARTING") {
+        engineState = state.engineState;
+        if (engineState === "FAILED_STARTING") {
           break;
         }
 
@@ -174,18 +176,13 @@ export const audioStore = {
           console.log("waiting engine...");
           continue;
         }
-        state.engineState = "READY";
+        engineState = "READY";
+        commit(SET_ENGINE_STATE, { engineState });
         break;
       }
 
-      if (state.engineState !== "READY") {
-        switch (state.engineState) {
-          case "STARTING":
-            state.engineState = "FAILED_STARTING";
-            break;
-          default:
-            state.engineState = "ERROR";
-        }
+      if (engineState !== "READY") {
+        commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
       }
     }),
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {

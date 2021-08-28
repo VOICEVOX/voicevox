@@ -477,7 +477,7 @@ $pitch-label-height: 24px;
     justify-content: space-between;
     .detail-selector .q-tab--active {
       background-color: rgba(global.$primary, 0.3);
-      ::v-deep .q-tab__indicator {
+      :deep(.q-tab__indicator) {
         background-color: global.$primary;
       }
     }
@@ -599,7 +599,7 @@ $pitch-label-height: 24px;
               margin-top: $pitch-label-height + 12px;
               min-width: 30px;
               max-width: 30px;
-              ::v-deep(.q-slider__track-container--v) {
+              :deep(.q-slider__track-container--v) {
                 margin-left: -1.5px;
                 width: 3px;
               }
