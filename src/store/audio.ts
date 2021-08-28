@@ -679,11 +679,10 @@ export const audioCommandStore = typeAsStoreOptions({
       return audioKey;
     },
     [COMMAND_UNREGISTER_AUDIO_ITEM]: async (
-      { commit, dispatch },
+      { commit },
       { audioKey }: { audioKey: string }
     ) => {
       commit(COMMAND_UNREGISTER_AUDIO_ITEM, { audioKey });
-      dispatch(DISPOSE_AUDIO_KEY, { audioKey });
     },
     [COMMAND_UPDATE_AUDIO_TEXT]: async (
       { state, commit, dispatch },
