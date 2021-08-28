@@ -137,6 +137,10 @@ const api: Sandbox = {
   maximizeWindow: () => {
     ipcRenderer.invoke("MAXIMIZE_WINDOW");
   },
+
+  captureError: ({ error, stack }) => {
+    return ipcRenderer.invoke("CAPTURE_ERROR", { error, stack });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

@@ -8,6 +8,7 @@ import Store from "electron-store";
 import { app, protocol, BrowserWindow, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import log from "electron-log";
 
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
@@ -21,6 +22,23 @@ let win: BrowserWindow;
 
 // 多重起動防止
 if (!app.requestSingleInstanceLock()) app.quit();
+
+const initializeLog = () => {
+  //ファイル名に日時を指定
+  const d = new Date();
+  const prefix =
+    d.getFullYear() +
+    ("00" + (d.getMonth() + 1)).slice(-2) +
+    ("00" + d.getDate()).slice(-2);
+  log.transports.file.fileName = `${prefix}_${log.transports.file.fileName}`;
+};
+initializeLog();
+process.on("uncaughtException", (error) => {
+  log.error(error.stack);
+});
+process.on("unhandledRejection", (reason) => {
+  log.error(reason);
+});
 
 // 設定
 const appDirPath = path.dirname(app.getPath("exe"));
@@ -291,6 +309,10 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   } else {
     win.maximize();
   }
+});
+
+ipcMainHandle("CAPTURE_ERROR", (_, { stack }) => {
+  log.error(stack);
 });
 
 // app callback
