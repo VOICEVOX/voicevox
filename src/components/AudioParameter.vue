@@ -119,8 +119,8 @@ div {
   top: 8px;
   bottom: 8px;
   .q-slider {
-    height: calc(100% - #{$pitch-label-height + 12px});
-    margin-top: $pitch-label-height + 12px;
+    height: calc(100% - #{$value-label-height + 12px});
+    margin-top: $value-label-height + 12px;
     min-width: 30px;
     max-width: 30px;
     :deep(.q-slider__track-container--v) {
@@ -128,8 +128,8 @@ div {
       width: 3px;
     }
   }
-  .pitch-label {
-    height: $pitch-label-height;
+  .value-label {
+    height: $value-label-height;
     padding: 0px 8px;
     transform: translateX(-50%) translateX(15px);
   }
