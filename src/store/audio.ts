@@ -157,6 +157,7 @@ export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
 //actions
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
+export const RESTART_ENGINE = "RESTART_ENGINE";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
 export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
@@ -389,7 +390,13 @@ export const audioStore = typeAsStoreOptions({
         case "READY":
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
+        default:
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
+    },
+    async [RESTART_ENGINE]({ commit }) {
+      await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
+      window.electron.restartEngine();
     },
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();

@@ -106,6 +106,11 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  RESTART_ENGINE: {
+    args: [];
+    return: void;
+  };
 };
 
 /**
@@ -128,6 +133,11 @@ type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
+    args: [];
+    return: void;
+  };
+
+  START_WAITING_ENGINE: {
     args: [];
     return: void;
   };
