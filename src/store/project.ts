@@ -6,6 +6,7 @@ import {
   UNREGISER_AUDIO_ITEM,
   FETCH_AUDIO_QUERY,
 } from "@/store/audio";
+import { CLEAR_COMMANDS } from "@/store/command";
 import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -121,6 +122,8 @@ export const projectStore = {
           ) {
             return;
           }
+
+          commit(CLEAR_COMMANDS);
 
           for (const audioKey of state.audioKeys) {
             dispatch(UNREGISER_AUDIO_ITEM, { audioKey });
