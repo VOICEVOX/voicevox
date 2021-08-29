@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
   State,
+  EngineState,
   typeAsStoreOptions,
   commandMutationsCreator,
 } from "./type";
@@ -128,7 +129,7 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
 export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
 export const IS_ACTIVE = "IS_ACTIVE";
-export const GET_ENGINE_STATE = "GET_ENGINE_STATE";
+export const IS_ENGINE_READY = "IS_ENGINE_READY";
 
 //mutations (and actions)
 const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
@@ -145,7 +146,7 @@ const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
 
-const SET_ENGINE_READY = "SET_ENGINE_READY";
+const SET_ENGINE_STATE = "SET_ENGINE_STATE";
 const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
 const SET_AUDIO_NOW_GENERATING = "SET_AUDIO_NOW_GENERATING";
 const SET_AUDIO_NOW_PLAYING = "SET_AUDIO_NOW_PLAYING";
@@ -155,6 +156,7 @@ export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
 
 //actions
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
+export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
 export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
@@ -188,8 +190,8 @@ export const audioStore = typeAsStoreOptions({
     [IS_ACTIVE]: (state) => (audioKey: string) => {
       return state._activeAudioKey === audioKey;
     },
-    [GET_ENGINE_STATE]: (state) => () => {
-      return state.isEngineReady;
+    [IS_ENGINE_READY]: (state) => () => {
+      return state.engineState == "READY";
     },
   },
 
@@ -322,11 +324,8 @@ export const audioStore = typeAsStoreOptions({
       const query = state.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
-    [SET_ENGINE_READY]: (
-      state,
-      { isEngineReady }: { isEngineReady: boolean }
-    ) => {
-      state.isEngineReady = isEngineReady;
+    [SET_ENGINE_STATE](state, { engineState }: { engineState: EngineState }) {
+      state.engineState = engineState;
     },
     [SET_CHARACTER_INFOS](
       state,
@@ -358,8 +357,14 @@ export const audioStore = typeAsStoreOptions({
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
+      let engineState = state.engineState;
       for (let i = 0; i < 100; i++) {
+        engineState = state.engineState;
+        if (engineState === "FAILED_STARTING") {
+          break;
+        }
+
         try {
           await api.versionVersionGet();
         } catch {
@@ -367,10 +372,25 @@ export const audioStore = typeAsStoreOptions({
           console.log("waiting engine...");
           continue;
         }
-        state.isEngineReady = true;
+        engineState = "READY";
+        commit(SET_ENGINE_STATE, { engineState });
         break;
       }
+
+      if (engineState !== "READY") {
+        commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
+      }
     }),
+    [DETECTED_ENGINE_ERROR]({ state, commit }) {
+      switch (state.engineState) {
+        case "STARTING":
+          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
+          break;
+        case "READY":
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
+          break;
+      }
+    },
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();
 
@@ -857,13 +877,13 @@ export const audioCommandStore = typeAsStoreOptions({
         const audioItems = parseTextFile(body, state.characterInfos);
         for (
           let count = 0;
-          !getters[GET_ENGINE_STATE]() && count < 120;
+          !getters[IS_ENGINE_READY]() && count < 120;
           count++
         ) {
           console.error("Waiting engine...");
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-        if (!getters[GET_ENGINE_STATE]()) {
+        if (!getters[IS_ENGINE_READY]()) {
           console.error("The engine must be running to read text.");
         }
 

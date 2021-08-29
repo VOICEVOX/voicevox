@@ -9,7 +9,7 @@ import {
 } from "./command";
 
 export type State = {
-  isEngineReady: boolean;
+  engineState: EngineState;
   characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -25,6 +25,7 @@ export type State = {
   isHelpDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
+  projectFilePath?: string;
 };
 
 export type AudioItem = {
@@ -37,6 +38,8 @@ export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
 };
+
+export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 
 export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
   arg: Arg

@@ -9,7 +9,7 @@ import {
 import { State } from "./type";
 import { commandStore } from "./command";
 import { audioStore, audioCommandStore } from "./audio";
-import { projectActions } from "./project";
+import { projectStore } from "./project";
 import { uiStore } from "./ui";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
@@ -23,7 +23,7 @@ export const storeKey: InjectionKey<Store<State>> = Symbol();
 
 export const store = createStore<State>({
   state: {
-    isEngineReady: false,
+    engineState: "STARTING",
     audioItems: {},
     audioKeys: [],
     audioStates: {},
@@ -43,12 +43,14 @@ export const store = createStore<State>({
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
+    ...projectStore.getters,
   },
 
   mutations: {
     ...uiStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
+    ...projectStore.mutations,
     ...audioCommandStore.mutations,
   },
 
@@ -56,8 +58,9 @@ export const store = createStore<State>({
     ...uiStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
-    ...projectActions,
+    ...projectStore.actions,
     ...audioCommandStore.actions,
+
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();
     },

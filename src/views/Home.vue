@@ -56,11 +56,14 @@
     </q-header>
 
     <q-page-container>
-      <div v-if="!isEngineReady" class="waiting-engine">
+      <div v-if="engineState === 'STARTING'" class="waiting-engine">
         <div>
           <q-spinner color="primary" size="2.5rem" />
           <div>エンジン起動中・・・</div>
         </div>
+      </div>
+      <div v-else-if="engineState === 'FAILED_STARTING'" class="waiting-engine">
+        <div>エンジンの起動に失敗しました。</div>
       </div>
       <q-page v-else class="main-row-panes">
         <q-splitter
@@ -297,8 +300,12 @@ export default defineComponent({
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const addAudioItem = async () => {
+      const prevAudioKey = activeAudioKey.value!;
+      const characterIndex =
+        store.state.audioItems[prevAudioKey].characterIndex;
       const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
+        characterIndex: characterIndex,
       });
       const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
@@ -357,8 +364,15 @@ export default defineComponent({
     };
 
     // エンジン待機
-    const isEngineReady = computed(() => store.state.isEngineReady);
+    const engineState = computed(() => store.state.engineState);
     const enginePromise = store.dispatch(START_WAITING_ENGINE);
+
+    // ライセンス表示
+    const isHelpDialogOpenComputed = computed({
+      get: () => store.state.isHelpDialogOpen,
+      set: (val) =>
+        store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
+    });
 
     // プロジェクトを初期化
     onMounted(async () => {
@@ -367,17 +381,10 @@ export default defineComponent({
       const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
       });
-      store.dispatch(REGISTER_AUDIO_ITEM, {
+      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
-        prevAudioKey: activeAudioKey.value,
       });
-    });
-
-    // ライセンス表示
-    const isHelpDialogOpenComputed = computed({
-      get: () => store.state.isHelpDialogOpen,
-      set: (val) =>
-        store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
+      focusCell({ audioKey: newAudioKey });
     });
 
     // ドラッグ＆ドロップ
@@ -432,7 +439,7 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
-      isEngineReady,
+      engineState,
       isHelpDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
