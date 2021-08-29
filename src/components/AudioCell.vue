@@ -248,7 +248,10 @@ export default defineComponent({
         text: "",
         characterIndex: characterIndex,
       });
-      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, { audioItem });
+      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
+        audioItem,
+        prevAudioKey: props.audioKey,
+      });
       moveDownCell();
     };
 
