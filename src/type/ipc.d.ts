@@ -29,7 +29,7 @@ type IpcIHData = {
 
   GET_UPDATE_INFOS: {
     args: [];
-    return: Record<string, any>[];
+    return: import("@/type/preload").UpdateInfo[];
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
