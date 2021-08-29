@@ -36,10 +36,10 @@
       hide-bottom-space
       class="full-width"
       :disable="uiLocked"
-      :error="audioItem.text.length >= 80"
-      :model-value="audioItem.text"
-      @update:model-value="setAudioText"
-      @change="willRemove || updateAudioQuery($event)"
+      :error="textBuffer.length >= 80"
+      v-model="textBuffer"
+      @change="willRemove || pushAudioText()"
+      @keydown.prevent.enter.exact="willRemove || pushAudioText()"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -68,11 +68,10 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   GENERATE_AND_SAVE_AUDIO,
-  HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   GENERATE_AUDIO_ITEM,
   COMMAND_REGISTER_AUDIO_ITEM,
@@ -111,9 +110,6 @@ export default defineComponent({
     );
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const haveAudioQuery = computed(() =>
-      store.getters[HAVE_AUDIO_QUERY](props.audioKey)
-    );
 
     const selectedCharacterInfo = computed(() =>
       characterInfos.value != undefined &&
@@ -126,6 +122,24 @@ export default defineComponent({
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
+    const textBuffer = ref(audioItem.value.text);
+    watch(
+      () => store.state.audioItems[props.audioKey]?.text,
+      () => {
+        const item = store.state.audioItems[props.audioKey];
+        if (item != undefined) {
+          textBuffer.value = item.text;
+        }
+      }
+    );
+
+    const pushAudioText = async () => {
+      const stateText = audioItem.value.text;
+      if (stateText !== textBuffer.value) {
+        await setAudioText(textBuffer.value);
+      }
+    };
+
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
       await store.dispatch(COMMAND_UPDATE_AUDIO_TEXT, {
@@ -133,13 +147,7 @@ export default defineComponent({
         text,
       });
     };
-    const updateAudioQuery = async () => {
-      // if (!haveAudioQuery.value) {
-      //   store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      // } else {
-      //   store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
-      // }
-    };
+
     const changeCharacterIndex = (characterIndex: number) => {
       store.dispatch(COMMAND_CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
@@ -288,8 +296,9 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
+      textBuffer,
+      pushAudioText,
       setAudioText,
-      updateAudioQuery,
       changeCharacterIndex,
       setActiveAudioKey,
       save,
