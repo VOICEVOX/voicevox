@@ -357,7 +357,7 @@ export const audioStore = typeAsStoreOptions({
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }) => {
       let engineState = state.engineState;
       for (let i = 0; i < 100; i++) {
         engineState = state.engineState;
@@ -572,7 +572,7 @@ export const audioStore = typeAsStoreOptions({
           title: "Save ALL",
         });
         if (dirPath) {
-          const promises = state.audioKeys.map((audioKey, index) => {
+          const promises = state.audioKeys.map((audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
               audioKey,

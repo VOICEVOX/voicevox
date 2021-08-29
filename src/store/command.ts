@@ -3,7 +3,6 @@ import {
   enableMapSet,
   setAutoFreeze,
   produceWithPatches,
-  immerable,
   Patch,
   Draft,
 } from "immer";
@@ -11,7 +10,7 @@ enablePatches();
 enableMapSet();
 setAutoFreeze(false);
 
-import { Store, Payload, ActionContext, StoreOptions } from "vuex";
+import { Store, ActionContext, StoreOptions } from "vuex";
 
 import { applyPatch, Operation } from "rfc6902";
 import { State } from "./type";
@@ -134,6 +133,7 @@ type CreatePayloadMutationTree<
     ? PayloadMutation<S, P>
     : PayloadMutation<S, undefined>;
 };
+
 /**
  * Create an object of Mutation from an object of Recipe with Payload.
  * @see {@link recordOperations} - the created mutations will take a snapshot of
