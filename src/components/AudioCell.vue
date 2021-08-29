@@ -91,8 +91,7 @@ import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
-import Mousetrap from "mousetrap";
-import { bindHotkeys } from "@/store/setting";
+import { bindHotkeys, watchAndReset } from "@/store/setting";
 
 export default defineComponent({
   name: "AudioCell",
@@ -150,8 +149,8 @@ export default defineComponent({
       () => {
         if (!uiLocked.value) {
           backToLastCell();
+          return false;
         }
-        return false;
       },
       () => {
         if (!uiLocked.value) {
@@ -159,18 +158,11 @@ export default defineComponent({
         }
       },
     ];
-    const numIndex = [8, 6];
+    const numIndex = [9, 6];
+
     bindHotkeys(store.state.hotkeySetting, numIndex, actions);
 
-    store.watch(
-      (state, getter) => {
-        return state.hotkeySetting;
-      },
-      (newVal, oldVal) => {
-        Mousetrap.reset();
-        bindHotkeys(newVal, numIndex, actions);
-      }
-    );
+    watchAndReset(numIndex, actions);
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {

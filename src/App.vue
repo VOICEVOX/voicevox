@@ -6,7 +6,7 @@
 import { useStore } from "@/store";
 import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
 import { defineComponent } from "vue";
-import { GET_HOTKEY_SETTING, GET_WHEEL_SETTING } from "./store/setting";
+import { GET_HOTKEY_SETTING, GET_WHEEL_SETTING, GET_SIMPLE_MODE_DATA } from "./store/setting";
 
 export default defineComponent({
   name: "App",
@@ -16,8 +16,10 @@ export default defineComponent({
 
     store.dispatch(GET_USE_GPU);
     store.dispatch(GET_FILE_ENCODING);
-    store.dispatch(GET_HOTKEY_SETTING)
+    store.dispatch(GET_HOTKEY_SETTING);
     store.dispatch(GET_WHEEL_SETTING);
+    store.dispatch(GET_SIMPLE_MODE_DATA);
+    console.log(store.state.hotkeySetting);
   }
 });
 </script>

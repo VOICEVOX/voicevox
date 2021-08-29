@@ -182,7 +182,6 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
-import GeneralSetting from "@/components/GeneralSetting.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
@@ -206,6 +205,11 @@ import {
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
+import {
+  bindHotkeys,
+  GET_HOTKEY_SETTING,
+  watchAndReset,
+} from "@/store/setting";
 
 export default defineComponent({
   name: "Home",
@@ -222,6 +226,8 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const hotkeys = computed(() => store.getters[GET_HOTKEY_SETTING]);
+    console.log(hotkeys);
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
     const nowPlayingContinuously = computed(

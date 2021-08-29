@@ -153,6 +153,10 @@ const api: Sandbox = {
   mouseWheelSetting: (enabled, reversed, id) => {
     return ipcRenderer.invoke("MOUSE_WHEEL_SETTING", { enabled, reversed, id });
   },
+
+  simpleModeSetting: (newData) => {
+    return ipcRenderer.invoke("SIMPLE_MODE_SETTING", { newData });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

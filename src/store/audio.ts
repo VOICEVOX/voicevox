@@ -519,10 +519,16 @@ export const audioStore = {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
-        filePath ??= await window.electron.showAudioSaveDialog({
-          title: "Save",
-          defaultPath: buildFileName(state, audioKey),
-        });
+        if (state.simpleMode.enabled && state.simpleMode.dir) {
+          filePath =
+            state.simpleMode.dir + "/" + buildFileName(state, audioKey);
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "Save",
+            defaultPath: buildFileName(state, audioKey),
+          });
+        }
+        console.log(filePath);
         const blob = await blobPromise;
         if (filePath) {
           window.electron.writeFile({
@@ -556,9 +562,13 @@ export const audioStore = {
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
-        dirPath ??= await window.electron.showOpenDirectoryDialog({
-          title: "Save ALL",
-        });
+        if (state.simpleMode.enabled && state.simpleMode.dir) {
+          dirPath = state.simpleMode.dir;
+        } else {
+          dirPath ??= await window.electron.showOpenDirectoryDialog({
+            title: "Save ALL",
+          });
+        }
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);

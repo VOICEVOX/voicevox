@@ -1,6 +1,7 @@
 import { StoreOptions } from "vuex";
-import { HotkeySetting, MouseWheelSetting, State } from "./type";
+import { HotkeySetting, MouseWheelSetting, SimpleMode, State } from "./type";
 import { createUILockAction } from "./ui";
+import { useStore } from "@/store";
 import Mousetrap from "mousetrap";
 
 export const GET_HOTKEY_SETTING = "GET_HOTKEY_SETTING";
@@ -19,6 +20,9 @@ export const settingStore = {
     [GET_SIMPLE_MODE_DATA](state) {
       return state.simpleMode;
     },
+    [GET_HOTKEY_SETTING](state) {
+      return state.hotkeySetting;
+    },
   },
   mutations: {
     [SET_HOTKEY_SETTING](
@@ -28,7 +32,7 @@ export const settingStore = {
       state.hotkeySetting = newHotkeys;
     },
     [SET_SIMPLE_MODE_DATA](state, payload) {
-      state.simpleMode = payload;
+      state.simpleMode = payload.value;
     },
     [SET_WHEEL_SETTING](
       state,
@@ -84,13 +88,34 @@ export const settingStore = {
         });
       });
     },
-    [OPEN_FILE_EXPLORE]: createUILockAction(async ({ state, dispatch }) => {
+    [GET_SIMPLE_MODE_DATA]: ({ commit }) => {
+      const newData = window.electron.simpleModeSetting();
+      newData.then((value) => {
+        commit(SET_SIMPLE_MODE_DATA, { value: value });
+      });
+    },
+    [SET_SIMPLE_MODE_DATA]: ({ commit }, { data }: { data: SimpleMode }) => {
+      const newData = window.electron.simpleModeSetting(data);
+      newData.then((value) => {
+        commit(SET_SIMPLE_MODE_DATA, { value: value });
+      });
+    },
+    [OPEN_FILE_EXPLORE]: createUILockAction(async ({ commit }) => {
       const dirPath = await window.electron.showOpenDirectoryDialog({
         title: "Select Default Output Directory",
       });
       if (dirPath) {
-        dispatch(SET_SIMPLE_MODE_DATA);
+        const newData = window.electron.simpleModeSetting({
+          enabled: true,
+          dir: dirPath,
+        });
+        newData.then((value) => {
+          commit(SET_SIMPLE_MODE_DATA, {
+            value: value,
+          });
+        });
       }
+      return dirPath;
     }),
     [RESET_SETTING]: () => {
       window.electron.resetSetting();
@@ -101,14 +126,36 @@ export const settingStore = {
 export const bindHotkeys = (
   newHotkeys: HotkeySetting[],
   numIndex: number[],
-  actions: (() => void)[] | (() => boolean)[]
+  actions: (() => void)[]
 ): void => {
   for (let i = 0; i < numIndex.length; i++) {
     const hotkeyIndex = numIndex[i];
+    console.log(hotkeyIndex);
     const newCombination = newHotkeys[hotkeyIndex].combination
       .toLowerCase()
       .replace(" ", "+");
     if (newCombination === "") continue;
     Mousetrap.bind(newCombination, actions[i]);
+  }
+};
+
+export const watchAndReset = (
+  numIndex: number[],
+  actions: (() => void)[]
+): void => {
+  const store = useStore();
+  for (let i = 0; i < numIndex.length; i++) {
+    store.watch(
+      (state) => {
+        return state.hotkeySetting[numIndex[i]];
+      },
+      (newVal, oldVal) => {
+        Mousetrap.unbind(oldVal.combination.toLowerCase().replace(" ", "+"));
+        Mousetrap.bind(
+          newVal.combination.toLowerCase().replace(" ", "+"),
+          actions[i]
+        );
+      }
+    );
   }
 };

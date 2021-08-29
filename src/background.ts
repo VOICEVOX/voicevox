@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
-import { HotkeySetting, MouseWheelSetting } from "./store/type";
+import { HotkeySetting, MouseWheelSetting, SimpleMode } from "./store/type";
 
 let win: BrowserWindow;
 
@@ -124,48 +124,78 @@ const initSetting = () => {
     const defaultHotkeys = [
       {
         id: "0",
-        action: "save_all_audio",
+        action: "書き出し",
         combination: "Ctrl E",
       },
       {
         id: "1",
-        action: "save_single_audio",
+        action: "一つだけ書き出し",
         combination: "",
       },
       {
         id: "2",
-        action: "play/stop",
+        action: "再生/停止",
         combination: "space",
       },
       {
         id: "3",
-        action: "play_continuously",
+        action: "連続再生/停止",
         combination: "",
       },
       {
         id: "4",
-        action: "switch_accent",
+        action: "ｱｸｾﾝﾄ欄を表示",
         combination: "1",
       },
       {
         id: "5",
-        action: "switch_into",
+        action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
         combination: "2",
       },
       {
         id: "6",
-        action: "add_cell",
+        action: "テキスト欄を追加",
         combination: "Shift enter",
       },
       {
         id: "7",
-        action: "blur_cell",
-        combination: "escape",
+        action: "テキスト欄を削除",
+        combination: "Shift delete",
       },
       {
         id: "8",
-        action: "return_to_last_cell",
+        action: "テキスト欄からフォーカスを外す",
+        combination: "escape",
+      },
+      {
+        id: "9",
+        action: "テキスト欄にフォーカスを戻す",
         combination: "backspace",
+      },
+      {
+        id: "10",
+        action: "元に戻す",
+        combination: "Ctrl Z",
+      },
+      {
+        id: "11",
+        action: "やり直す",
+        combination: "Ctrl Y",
+      },
+      {
+        id: "12",
+        action: "プロジェクトを保存する",
+        combination: "Ctrl S",
+      },
+      {
+        id: "13",
+        action: "プロジェクトを読み込む",
+        combination: "",
+      },
+      {
+        id: "14",
+        action: "テキストファイルを読み込む",
+        combination: "",
       },
     ];
     store.set("hotkeySetting", defaultHotkeys);
@@ -446,6 +476,13 @@ ipcMainHandle("MOUSE_WHEEL_SETTING", (_, { enabled, reversed, id }) => {
     store.set("mouseWheelSetting", mouseWheelSetting);
   }
   return mouseWheelSetting as MouseWheelSetting[];
+});
+
+ipcMainHandle("SIMPLE_MODE_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("simpleMode", newData);
+  }
+  return store.get("simpleMode") as SimpleMode;
 });
 
 // app callback

@@ -126,6 +126,11 @@ type IpcIHData = {
     args: [obj: { enabled: boolean; reversed: boolean; id: number }];
     return: import("@/store/type").MouseWheelSetting[];
   };
+
+  SIMPLE_MODE_SETTING: {
+    args: [obj: { newData?: import("@/store/type").SimpleMode }];
+    return: import("@/store/type").SimpleMode;
+  };
 };
 
 /**

@@ -1,4 +1,4 @@
-import { MouseWheelSetting } from "@/store/type";
+import { MouseWheelSetting, SimpleMode } from "@/store/type";
 import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
@@ -47,6 +47,7 @@ export interface Sandbox {
     reversed: boolean,
     id: number
   ): Pormise<MouseWheelSetting[]>;
+  simpleModeSetting(newData?: SimpleMode): Promise<SimpleMode>;
 }
 
 export type AppInfos = {

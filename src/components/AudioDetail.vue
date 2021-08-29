@@ -246,10 +246,14 @@ import {
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
   GENERATE_AND_SAVE_ALL_AUDIO,
+  PLAY_CONTINUOUSLY_AUDIO,
+  STOP_CONTINUOUSLY_AUDIO,
+  IMPORT_FROM_FILE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
-import { bindHotkeys } from "@/store/setting";
-import Mousetrap from "mousetrap";
+import { bindHotkeys, watchAndReset } from "@/store/setting";
+import { REDO, UNDO } from "@/store/command";
+import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -257,6 +261,8 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    // all the actions, it's worth to notice I copied all the functions from Home.vue to here
+    // since doing the bind there will throw an error which I haven't figured out
     const actions = [
       // play and stop
       () => {
@@ -272,12 +278,6 @@ export default defineComponent({
           save();
         }
       },
-      // save all audio
-      () => {
-        if (!uiLocked.value) {
-          saveAllAudio();
-        }
-      },
       // switch to accent
       () => {
         if (!uiLocked.value) {
@@ -290,25 +290,63 @@ export default defineComponent({
           selectedDetail.value = "intonation";
         }
       },
+      // undo
+      () => {
+        if (!uiLocked.value) {
+          undo();
+        }
+      },
+      // redo
+      () => {
+        if (!uiLocked.value) {
+          redo();
+        }
+      },
+      // play/stop continuously
+      () => {
+        if (!nowPlayingContinuously.value && !uiLocked.value) {
+          playContinuously();
+        } else {
+          stopContinuously();
+        }
+      },
+      // save all audio
+      () => {
+        if (!uiLocked.value) {
+          generateAndSaveAllAudio();
+        }
+      },
+      // save project file
+      () => {
+        if (!uiLocked.value) {
+          saveProjectFile();
+        }
+      },
+      // load project file
+      () => {
+        if (!uiLocked.value) {
+          loadProjectFile();
+        }
+      },
+      // import text file
+      () => {
+        if (!uiLocked.value) {
+          importFromFile();
+        }
+      },
     ];
 
     // records the corresponding hotkey index in local storage
     // for example, action 'play and stop' has index 2 in config.json
     // meanwhile is the first in actions
-    const numIndex = [2, 1, 0, 4, 5];
-
-    store.watch(
-      (state, getter) => {
-        return state.hotkeySetting;
-      },
-      (newVal, oldVal) => {
-        Mousetrap.reset();
-        bindHotkeys(newVal, numIndex, actions);
-      }
-    );
+    const numIndex = [2, 1, 4, 5, 10, 11, 3, 0, 12, 13, 14];
 
     // initialize hotkeys
+    console.log(store.state.hotkeySetting);
+
     bindHotkeys(store.state.hotkeySetting, numIndex, actions);
+
+    watchAndReset(numIndex, actions);
 
     const mouseWheelSetting = computed(() => store.state.mouseWheelSetting);
 
@@ -483,6 +521,31 @@ export default defineComponent({
 
     const setPitchPanning = (panningPhase: string) => {
       pitchLabel.panning = panningPhase === "start";
+    };
+
+    const undo = () => {
+      store.dispatch(UNDO);
+    };
+    const redo = () => {
+      store.dispatch(REDO);
+    };
+    const playContinuously = () => {
+      store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+    };
+    const stopContinuously = () => {
+      store.dispatch(STOP_CONTINUOUSLY_AUDIO, {});
+    };
+    const generateAndSaveAllAudio = () => {
+      store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+    };
+    const saveProjectFile = () => {
+      store.dispatch(SAVE_PROJECT_FILE, {});
+    };
+    const loadProjectFile = () => {
+      store.dispatch(LOAD_PROJECT_FILE, {});
+    };
+    const importFromFile = () => {
+      store.dispatch(IMPORT_FROM_FILE, {});
     };
 
     return {

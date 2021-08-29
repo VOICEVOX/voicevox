@@ -23,7 +23,7 @@
             <q-card-section class="bg-nvidia">
               <div class="text-h5">エンジン</div>
               <div class="text-subtitle2">
-                You'll need a NVIDIA&trade; GPU to enable GPU mode
+                GPUモードには <b>NVIDIA&trade;</b> GPUが必要です
               </div>
             </q-card-section>
 
@@ -32,7 +32,7 @@
             <div class="q-pa-md">
               <q-toggle
                 v-model="engine_mode"
-                :label="(engine_mode ? 'GPU' : 'CPU') + ' Mode'"
+                :label="(engine_mode ? 'GPU' : 'CPU') + ' モード'"
                 icon="loop"
                 color="green"
                 @update:model-value="changeUseGPU(engine_mode)"
@@ -43,10 +43,7 @@
 
           <q-card class="setting-card">
             <q-card-section class="bg-blue">
-              <div class="text-h5">File Encoding</div>
-              <div class="text-subtitle2">
-                This will affect the text file you export with audio
-              </div>
+              <div class="text-h5">文字コード</div>
             </q-card-section>
 
             <q-separator />
@@ -70,8 +67,7 @@
             <q-card-section class="bg-pink-4">
               <div class="text-h5">シンプルモード</div>
               <div class="text-subtitle2">
-                Set a default export directory and export without being asked
-                everytime
+                デフォルトのフォルダに自動的に書き出す
               </div>
             </q-card-section>
 
@@ -83,17 +79,19 @@
                   align="left"
                   dense
                   color="pink-4"
-                  v-model="simple_mode"
-                  :label="simple_mode ? 'enabled' : 'disabled'"
+                  v-model="simple_mode.enabled"
+                  :label="simple_mode.enabled ? '有効' : '無効'"
+                  @click="handleSimpleModeChange()"
                 >
                 </q-toggle>
                 <q-input
                   unelevated
                   dense
                   bottom-slots
-                  v-model="dir"
-                  label="Output Directory"
-                  :readonly="!simple_mode"
+                  v-model="simple_mode.dir"
+                  label="デフォルトのフォルダ"
+                  :readonly="!simple_mode.enabled"
+                  @change="handleSimpleModeChange"
                   color="pink-5"
                 >
                   <template v-slot:append>
@@ -103,14 +101,14 @@
                       flat
                       color="pink-5"
                       icon="folder_open"
-                      :disable="!simple_mode"
+                      :disable="!simple_mode.enabled"
                       @click="onOpeningFileExplore"
                     >
                       <q-tooltip
                         class="bg-pink-4 text-body2"
                         anchor="bottom right"
                       >
-                        Explore
+                        フォルダ選択
                       </q-tooltip>
                     </q-btn>
                   </template>
@@ -121,22 +119,19 @@
 
           <q-card class="setting-card">
             <q-card-section class="bg-brown-5">
-              <div class="text-h5">Mouse Wheel Event</div>
-              <div class="text-subtitle2">
-                Set mouse wheel behaviour on sliders
-              </div>
+              <div class="text-h5">マウスホイール</div>
             </q-card-section>
             <q-separator />
             <q-list dense class="q-pa-sm">
               <q-item>
                 <q-item-section>
-                  <q-item-label>Actions</q-item-label>
+                  <q-item-label>操作</q-item-label>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Enabled</q-item-label>
+                  <q-item-label>有効</q-item-label>
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>Inverted</q-item-label>
+                  <q-item-label>反転</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-for="setting in mouseWheelSetting" :key="setting.id">
@@ -170,20 +165,19 @@
             <q-card-section class="bg-purple-5">
               <div class="text-h5">ショートカット</div>
               <div class="text-subtitle2">
-                Click to set, Double Click to unset
+                クリックで設置、ダブルクリックで解除
               </div>
             </q-card-section>
 
             <q-separator />
 
             <q-table
-              flat
               dense
-              class="hotkey-table"
               :rows="rows"
               :columns="columns"
+              row-key="index"
+              v-model:pagination="pagination"
               :rows-per-page-options="[]"
-              row-key="action"
             >
               <template v-slot:body="props">
                 <q-tr :props="props">
@@ -195,7 +189,7 @@
                     :props="props"
                     :id="props.row.id"
                     @click="handleRecording($event, props.row.id)"
-                    @dblclick="removeHotkey($event, props.row.id)"
+                    @dblclick="removeHotkey(props.row.id)"
                   >
                     {{
                       (disabledHotkeys.indexOf(props.row.id) > -1
@@ -211,7 +205,7 @@
             </q-table>
           </q-card>
 
-          <!-- not finished yet, restarting is pretty tricky -->
+          <!-- not finished yet since restarting is pretty tricky -->
           <!-- you can find some functions involved with this, they do no harm -->
 
           <!-- <q-card class="setting-card">
@@ -253,10 +247,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, Component } from "vue";
-import GeneralSetting from "@/components/GeneralSetting.vue";
-import HotkeySetting from "@/components/HotkeySetting.vue";
+import { defineComponent, computed, ref } from "vue";
 import {
+  OPEN_FILE_EXPLORE,
   RESET_SETTING,
   SET_HOTKEY_SETTING,
   SET_SIMPLE_MODE_DATA,
@@ -265,11 +258,6 @@ import {
 import { ASYNC_UI_LOCK, SET_FILE_ENCODING, SET_USE_GPU } from "@/store/ui";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-
-type Page = {
-  name: string;
-  component: Component;
-};
 
 export default defineComponent({
   name: "SettingDialog",
@@ -286,17 +274,6 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
-
-    const pagedata: Page[] = [
-      {
-        name: "通常設定",
-        component: GeneralSetting,
-      },
-      {
-        name: "ショートカットキー",
-        component: HotkeySetting,
-      },
-    ];
 
     const store = useStore();
     const $q = useQuasar();
@@ -387,8 +364,22 @@ export default defineComponent({
       });
     };
 
+    const simpleModeSetting = ref(computed(() => store.state.simpleMode));
+
+    const handleSimpleModeChange = () => {
+      store.dispatch(SET_SIMPLE_MODE_DATA, {
+        data: {
+          enabled: simpleModeSetting.value.enabled,
+          dir: simpleModeSetting.value.dir,
+        },
+      });
+    };
+
     const onOpeningFileExplore = () => {
-      store.dispatch(SET_SIMPLE_MODE_DATA);
+      const path = store.dispatch(OPEN_FILE_EXPLORE);
+      path.then((value) => {
+        console.log(value);
+      });
     };
 
     const resetSetting = () => {
@@ -402,7 +393,7 @@ export default defineComponent({
 
     // these are ids of disabled hotkeys, only for display
     // they don't have an easy to implement but still useful
-    const disabledHotkeys = ["6", "7"];
+    const disabledHotkeys = ["6", "7", "8"];
 
     const handleRecording = (event: MouseEvent, id: string) => {
       if (disabledHotkeys.indexOf(id) > -1) {
@@ -410,7 +401,7 @@ export default defineComponent({
       }
       if (event.target instanceof HTMLElement) {
         if (lastHotkey === null) {
-          lastRecord = event.target.innerHTML;
+          lastRecord = hotkey_rows.value[parseInt(id)].combination;
           lastHotkey = id;
           event.target.style.color = "grey";
         } else if (lastHotkey != id) {
@@ -454,17 +445,79 @@ export default defineComponent({
     };
     document.addEventListener("keydown", recordCombination);
 
-    const removeHotkey = (event: MouseEvent, id: string) => {
-      changeHotkey(id, "");
+    const removeHotkey = (id: string) => {
+      if (!(disabledHotkeys.indexOf(id) > -1)) {
+        changeHotkey(id, "");
+      }
     };
 
     const changeHotkey = (hotkey_id: string, combination: string) => {
       const id = parseInt(hotkey_id);
+      let flag = true;
+      for (let i = 0; i < hotkey_rows.value.length; i++) {
+        if (
+          hotkey_rows.value[i].combination == combination &&
+          i != id &&
+          combination !== ""
+        ) {
+          flag = false;
+          $q.dialog({
+            title: "Duplicated Hotkey",
+            message:
+              "設置するショートカットキー <b>" +
+              combination +
+              ": " +
+              hotkey_rows.value[id].action +
+              "</b> は <b>" +
+              hotkey_rows.value[i].action +
+              "</b>と同じです、削除しますか？",
+            html: true,
+            persistent: true,
+            focus: "none",
+            style: {
+              width: "90vw",
+              maxWidth: "90vw",
+            },
+            ok: {
+              label: "削除する",
+              flat: true,
+              textColor: "secondary",
+            },
+            cancel: {
+              label: "キャンセル",
+              flat: true,
+              textColor: "secondary",
+            },
+          })
+            .onOk(() => {
+              confirmHotkeyChange("", i);
+              rollbackHotkey("", i);
+              confirmHotkeyChange(combination, id);
+            })
+            .onCancel(() =>
+              rollbackHotkey(hotkey_rows.value[id].combination, id)
+            );
+        }
+      }
+      if (flag) {
+        confirmHotkeyChange(combination, id);
+      }
+    };
+
+    const confirmHotkeyChange = (combination: string, id: number) => {
       store.dispatch(SET_HOTKEY_SETTING, {
         combination: combination,
         id: id,
       });
     };
+
+    function rollbackHotkey(combination: string, id: number) {
+      const rollbackHotkeyElement = document.getElementById(id.toString());
+      if (rollbackHotkeyElement instanceof HTMLElement) {
+        rollbackHotkeyElement.innerHTML =
+          combination == "" ? "未設定" : combination;
+      }
+    }
 
     const mouseWheelSetting = ref(
       computed(() => store.state.mouseWheelSetting)
@@ -488,16 +541,11 @@ export default defineComponent({
         id: id,
       });
     }
-
-    const selectedPage = ref(pagedata[0].name);
-
     return {
       modelValueComputed,
-      pagedata,
-      selectedPage,
       engine_mode: engineMode,
       text_encoding: ref(textEncoding.value),
-      simple_mode: ref(false),
+      simple_mode: simpleModeSetting,
       unlock: ref(false),
       dir: ref(""),
       changeUseGPU,
@@ -512,6 +560,10 @@ export default defineComponent({
       mouseWheelReference,
       handelMouseWheelSettingClicked,
       disabledHotkeys,
+      handleSimpleModeChange,
+      pagination: ref({
+        rowsPerPage: 5,
+      }),
     };
   },
 });
