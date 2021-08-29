@@ -1,7 +1,7 @@
 <template>
   <div
     v-show="activeAudioKey"
-    class="full-height root relarive-absolute-wrapper"
+    class="full-height root relative-absolute-wrapper"
   >
     <div>
       <div class="side">
@@ -245,9 +245,12 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
+  GENERATE_AND_SAVE_ALL_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import { HotkeySetting } from "@/store/type";
+import HotkeySettingVue from "./HotkeySetting.vue";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -255,26 +258,82 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    // add hotkeys with mousetrap
-    Mousetrap.bind("space", () => {
-      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-        play();
-      } else {
-        stop();
-      }
-    });
+    const actions = [
+      // play and stop
+      () => {
+        if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+          play();
+        } else {
+          stop();
+        }
+      },
+      // save single audio
+      () => {
+        if (!uiLocked.value) {
+          save();
+        }
+      },
+      // save all audio
+      () => {
+        if (!uiLocked.value) {
+          saveAllAudio();
+        }
+      },
+      // switch to accent
+      () => {
+        if (!uiLocked.value) {
+          selectedDetail.value = "accent";
+        }
+      },
+      // switch to intonation
+      () => {
+        if (!uiLocked.value) {
+          selectedDetail.value = "intonation";
+        }
+      },
+    ];
 
-    Mousetrap.bind("1", () => {
-      if (!uiLocked.value) {
-        selectedDetail.value = "accent";
-      }
-    });
+    // records the corresponding hotkey index in local storage
+    // for example, action 'play and stop' has index 2 in config.json
+    // meanwhile is the first in actions
+    const numIndex = [2, 1, 0, 4, 5];
 
-    Mousetrap.bind("2", () => {
-      if (!uiLocked.value) {
-        selectedDetail.value = "intonation";
+    const bindHotkeys = (newHotkeys: HotkeySetting[]) => {
+      for (let i = 0; i < numIndex.length; i++) {
+        let hotkeyIndex = numIndex[i];
+        let newCombination = newHotkeys[hotkeyIndex].combination
+          .toLowerCase()
+          .replace(" ", "+");
+        if (newCombination === "") continue;
+        Mousetrap.bind(newCombination, actions[i]);
       }
-    });
+      return 0;
+    };
+
+    const unbindHotkeys = (oldHotkeys: HotkeySetting[]) => {
+      for (let i = 0; i < numIndex.length; i++) {
+        let hotkeyIndex = numIndex[i];
+        let oldCombination = oldHotkeys[hotkeyIndex].combination
+          .toLowerCase()
+          .replace(" ", "+");
+        Mousetrap.unbind(oldCombination);
+      }
+      return 0;
+    };
+
+    store.watch(
+      (state, getter) => {
+        return state.hotkeySetting;
+      },
+      (newVal, oldVal) => {
+        console.log(newVal, oldVal);
+        unbindHotkeys(oldVal);
+        bindHotkeys(newVal);
+      }
+    );
+
+    // initialize hotkeys
+    bindHotkeys(store.state.hotkeySetting);
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
     let shiftKeyFlag = false;
@@ -294,6 +353,12 @@ export default defineComponent({
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "intonation";
+    };
+
+    const saveAllAudio = () => {
+      store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+        encoding: store.state.fileEncoding,
+      });
     };
 
     // accent phrase
@@ -458,6 +523,7 @@ export default defineComponent({
       pitchLabel,
       setPitchLabel,
       setPitchPanning,
+      saveAllAudio,
     };
   },
 });

@@ -1,5 +1,3 @@
-import { HotkeySetting } from "@/store/type";
-
 /**
  * invoke, handle
  */
@@ -120,8 +118,8 @@ type IpcIHData = {
   };
 
   HOTKEY_SETTING: {
-    args: [obj: { newValue: string; id: number }];
-    return: HotkeySetting[];
+    args: [obj: { newValue?: string; id?: number }];
+    return: import("@/store/type").HotkeySetting[] | unknown;
   };
 };
 

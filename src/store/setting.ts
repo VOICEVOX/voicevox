@@ -20,28 +20,32 @@ export const settingStore = {
   mutations: {
     [SET_HOTKEY_SETTING](
       state,
-      { combination, id }: { combination: string; id: number }
+      { newHotkeys }: { newHotkeys: HotkeySetting[] }
     ) {
-      console.log(combination);
-      state.hotkeySetting[id].combination = combination;
+      state.hotkeySetting = newHotkeys;
     },
     [SET_SIMPLE_MODE_DATA](state, payload) {
       state.simpleMode = payload;
     },
-    [GET_HOTKEY_SETTING](state, payload) {
-      state.hotkeySetting = payload;
-    },
   },
   actions: {
-    async [SET_HOTKEY_SETTING](
+    [GET_HOTKEY_SETTING]: async ({ commit }) => {
+      const hotkey = window.electron.hotkeySetting("", -1);
+      hotkey.then((value) => {
+        commit(SET_HOTKEY_SETTING, {
+          newHotkeys: value,
+        });
+      });
+    },
+    [SET_HOTKEY_SETTING]: (
       { commit },
       { combination, id }: { combination: string; id: number }
-    ) {
-      console.log("action: " + combination);
-      window.electron.hotkeySetting(combination, id);
-      commit(SET_HOTKEY_SETTING, {
-        combination: combination,
-        id: id,
+    ) => {
+      const newHotkeys = window.electron.hotkeySetting(combination, id);
+      newHotkeys.then((value) => {
+        commit(SET_HOTKEY_SETTING, {
+          newHotkeys: value,
+        });
       });
     },
     [OPEN_FILE_EXPLORE]: createUILockAction(async ({ state, dispatch }) => {
@@ -52,13 +56,6 @@ export const settingStore = {
         dispatch(SET_SIMPLE_MODE_DATA);
       }
     }),
-    [GET_HOTKEY_SETTING]: async ({ commit }): Promise<HotkeySetting[]> => {
-      const hotkey = window.electron.hotkeySetting();
-      commit(GET_HOTKEY_SETTING, {
-        payload: hotkey,
-      });
-      return hotkey as unknown as HotkeySetting[];
-    },
     [RESET_SETTING]: () => {
       window.electron.resetSetting();
     },

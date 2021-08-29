@@ -73,6 +73,8 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
 
+    console.log(store.state.fileEncoding);
+
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 

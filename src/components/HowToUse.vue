@@ -5,7 +5,7 @@
         <q-toolbar-title class="text-secondary">使い方</q-toolbar-title>
       </q-toolbar>
     </q-header>
-    <q-page class="relarive-absolute-wrapper scroller">
+    <q-page class="relative-absolute-wrapper scroller">
       <div class="q-pa-md">
         <section>
           <p>ソフトウェアの使い方は以下をご参照ください。</p>

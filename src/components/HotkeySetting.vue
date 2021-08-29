@@ -7,44 +7,24 @@
         >
       </q-toolbar>
     </q-header>
-    <q-page class="relarive-absolute-wrapper scroller">
-      <q-table
-        flat
-        class="hotkey-table"
-        :rows="rows"
-        :columns="columns"
-        :rows-per-page-options="[]"
-        row-key="action"
-        sq
-      >
-        <template v-slot:body="props">
-          <q-tr :props="props">
-            <q-td key="action" :props="props">
-              {{ props.row.action }}
-            </q-td>
-            <q-td
-              key="combination"
-              :props="props"
-              :id="props.row.id"
-              @click="handleRecording($event, props.row.id)"
-              @dblclick="removeHotkey($event, props.row.id)"
-            >
-              {{
-                props.row.combination === "" ? "未設定" : props.row.combination
-              }}
-            </q-td>
-          </q-tr>
-        </template>
-      </q-table>
-    </q-page>
+    <q-page-container>
+      <q-page class="relative-absolute-wrapper scroller">
+        <p v-for="n in 15" :key="n">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugit nihil
+          praesentium molestias a adipisci, dolore vitae odit, quidem
+          consequatur optio voluptates asperiores pariatur eos numquam rerum
+          delectus commodi perferendis voluptate?
+        </p>
+      </q-page>
+    </q-page-container>
   </div>
 </template>
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "vue";
-import { GET_HOTKEY_SETTING, SET_HOTKEY_SETTING } from "@/store/setting";
-import { HotkeySetting } from "@/store/type";
+import { computed, defineComponent, ref, toRaw } from "vue";
+import { SET_HOTKEY_SETTING } from "@/store/setting";
+import { Store } from "vuex";
 
 const columns = [
   {
@@ -68,10 +48,30 @@ export default defineComponent({
     let lastHotkey: string | null = null;
     let lastRecord = "";
 
-    store.dispatch(GET_HOTKEY_SETTING);
+    const hotkey_rows = ref(computed(() => store.state.hotkeySetting));
 
-    const hotkey_rows = computed(() => store.state.hotkeySetting);
-
+    // const hotkey_rows = computed(() => [
+    //   {
+    //     id: "1",
+    //     action: "save_audio",
+    //     combination: "Ctrl E",
+    //   },
+    //   {
+    //     id: "2",
+    //     action: "save_single_audio",
+    //     combination: "Ctrl O",
+    //   },
+    //   {
+    //     id: "3",
+    //     action: "play/stop",
+    //     combination: "SPACE",
+    //   },
+    //   {
+    //     id: "4",
+    //     action: "switch_into",
+    //     combination: "2",
+    //   },
+    // ]);
     const handleRecording = (event: MouseEvent, id: string) => {
       if (event.target instanceof HTMLElement) {
         if (lastHotkey === null) {
@@ -124,15 +124,21 @@ export default defineComponent({
 
     const changeHotkey = (hotkey_id: string, combination: string) => {
       const id = parseInt(hotkey_id) - 1;
-      hotkey_rows.value[id].combination = combination;
       store.dispatch(SET_HOTKEY_SETTING, {
         combination: combination,
         id: id,
       });
     };
 
+    document.addEventListener("keyup", (event: KeyboardEvent) => {
+      if (event.key === "p") {
+        console.log(hotkey_rows);
+        console.log(store.state.hotkeySetting);
+      }
+    });
+
     return {
-      rows: ref(hotkey_rows.value),
+      rows: hotkey_rows,
       columns: ref(columns),
       handleRecording,
       removeHotkey,

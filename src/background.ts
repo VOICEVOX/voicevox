@@ -107,40 +107,61 @@ async function runEngine() {
 }
 
 // initialize settings
-// GPU mode is handled by runEngine() but will be reset after clear()
+// GPU mode is handled by runEngine()
 const initSetting = () => {
-  if (!store.has("fileEncoding")) {
-    const defaultFileEncoding = "UTF-8";
-    store.set("fileEncoding", defaultFileEncoding);
-  }
-  if (!store.has("useGpu")) {
-    const defaultEngineMode = "CPU";
-    store.set("fileEncoding", defaultEngineMode);
-  }
   if (!store.has("hotkeySetting")) {
     const defaultHotkeys = [
       {
-        id: "1",
-        action: "save_audio",
+        id: "0",
+        action: "save_all_audio",
         combination: "Ctrl E",
       },
       {
-        id: "2",
+        id: "1",
         action: "save_single_audio",
         combination: "",
       },
       {
-        id: "3",
+        id: "2",
         action: "play/stop",
-        combination: "SPACE",
+        combination: "space",
+      },
+      {
+        id: "3",
+        action: "play_continuously",
+        combination: "",
       },
       {
         id: "4",
+        action: "switch_accent",
+        combination: "1",
+      },
+      {
+        id: "5",
         action: "switch_into",
         combination: "2",
       },
+      {
+        id: "6",
+        action: "add_cell",
+        combination: "Shift enter",
+      },
+      {
+        id: "7",
+        action: "blur_cell",
+        combination: "escape",
+      },
+      {
+        id: "8",
+        action: "return_to_last_cell",
+        combination: "backspace",
+      },
     ];
     store.set("hotkeySetting", defaultHotkeys);
+    if (!store.has("fileEncoding")) {
+      const defaultFileEncoding = "UTF-8";
+      store.set("fileEncoding", defaultFileEncoding);
+    }
   }
   if (!store.has("simpleMode")) {
     const defaultSimpleMode = {
@@ -191,8 +212,8 @@ const updateInfos = JSON.parse(
 // create window
 async function createWindow() {
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 880,
+    height: 680,
     frame: false,
     minWidth: 320,
     webPreferences: {
@@ -353,14 +374,13 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
 });
 
 ipcMainHandle("HOTKEY_SETTING", (_, { newValue, id }) => {
-  console.log(newValue);
-  if (newValue !== undefined) {
-    const temp = store.get("hotkeySetting");
-    console.log(temp);
-    temp[id].combination = newValue;
-  } else {
-    return store.get("hotkeySetting") as HotkeySetting[];
+  if (newValue !== undefined && id !== -1 && id !== undefined) {
+    const hotkey = store.get("hotkeySetting") as HotkeySetting[];
+    hotkey[id].combination = newValue;
+    store.set("hotkeySetting", hotkey);
+    return hotkey;
   }
+  return store.get("hotkeySetting") as HotkeySetting[];
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
@@ -430,9 +450,10 @@ app.on("ready", async () => {
     }
   }
 
+  initSetting();
+
   createWindow().then(() => {
     runEngine();
-    initSetting();
   });
 });
 

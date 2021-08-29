@@ -182,6 +182,7 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
+import GeneralSetting from "@/components/GeneralSetting.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
@@ -471,7 +472,7 @@ body {
   border-bottom: solid #{global.$window-border-width} #{global.$primary};
 }
 
-.relarive-absolute-wrapper {
+.relative-absolute-wrapper {
   position: relative;
   > div {
     position: absolute;

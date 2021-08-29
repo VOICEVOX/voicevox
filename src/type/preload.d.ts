@@ -40,7 +40,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   pinWindow(): void;
   resetSetting(): void;
-  hotkeySetting(newValue?: string, id?: number): Promise<HotkeySetting[]>;
+  hotkeySetting(newValue: string, id: number): Promise<HotkeySetting[]>;
 }
 
 export type AppInfos = {
