@@ -173,12 +173,21 @@
 
             <q-table
               dense
+              :filter="filter"
               :rows="rows"
               :columns="columns"
+              :rows-per-page-options="[]"
               row-key="index"
               v-model:pagination="pagination"
-              :rows-per-page-options="[]"
             >
+              <template v-slot:top>
+                <q-space />
+                <q-input borderless dense flat v-model="filter">
+                  <template v-slot:append>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
+              </template>
               <template v-slot:body="props">
                 <q-tr :props="props">
                   <q-td key="action" :props="props">
@@ -564,6 +573,7 @@ export default defineComponent({
       pagination: ref({
         rowsPerPage: 5,
       }),
+      filter: ref(""),
     };
   },
 });
