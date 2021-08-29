@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, State } from "./type";
+import { AudioItem, EngineState, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -62,7 +62,7 @@ function buildFileName(state: State, audioKey: string) {
   );
 }
 
-export const SET_ENGINE_READY = "SET_ENGINE_READY";
+export const SET_ENGINE_STATE = "SET_ENGINE_STATE";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
 export const SET_ACTIVE_AUDIO_KEY = "SET_ACTIVE_AUDIO_KEY";
@@ -86,6 +86,7 @@ export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
 export const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
 export const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
 export const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
+export const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 export const CHANGE_ACCENT = "CHANGE_ACCENT";
 export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
@@ -104,6 +105,8 @@ export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
+export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
+export const RESTART_ENGINE = "RESTART_ENGINE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -125,8 +128,8 @@ export const audioStore = {
   },
 
   mutations: {
-    [SET_ENGINE_READY](state, { isEngineReady }: { isEngineReady: boolean }) {
-      state.isEngineReady = isEngineReady;
+    [SET_ENGINE_STATE](state, { engineState }: { engineState: EngineState }) {
+      state.engineState = engineState;
     },
     [SET_CHARACTER_INFOS](
       state,
@@ -158,8 +161,14 @@ export const audioStore = {
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state }, _) => {
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
+      let engineState = state.engineState;
       for (let i = 0; i < 100; i++) {
+        engineState = state.engineState;
+        if (engineState === "FAILED_STARTING") {
+          break;
+        }
+
         try {
           await api.versionVersionGet();
         } catch {
@@ -167,8 +176,13 @@ export const audioStore = {
           console.log("waiting engine...");
           continue;
         }
-        state.isEngineReady = true;
+        engineState = "READY";
+        commit(SET_ENGINE_STATE, { engineState });
         break;
+      }
+
+      if (engineState !== "READY") {
+        commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
       }
     }),
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
@@ -354,6 +368,12 @@ export const audioStore = {
       { audioKey: string; intonationScale: number }
     >((draft, { audioKey, intonationScale }) => {
       draft.audioItems[audioKey].query!.intonationScale = intonationScale;
+    }),
+    [SET_AUDIO_VOLUME_SCALE]: createCommandAction<
+      State,
+      { audioKey: string; volumeScale: number }
+    >((draft, { audioKey, volumeScale }) => {
+      draft.audioItems[audioKey].query!.volumeScale = volumeScale;
     }),
     [SET_AUDIO_ACCENT]: createCommandAction<
       State,
@@ -690,6 +710,22 @@ export const audioStore = {
     ),
     [OPEN_TEXT_EDIT_CONTEXT_MENU]() {
       window.electron.openTextEditContextMenu();
+    },
+    [DETECTED_ENGINE_ERROR]({ state, commit }) {
+      switch (state.engineState) {
+        case "STARTING":
+          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
+          break;
+        case "READY":
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
+          break;
+        default:
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
+      }
+    },
+    async [RESTART_ENGINE]({ commit }) {
+      await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
+      window.electron.restartEngine();
     },
   },
 } as StoreOptions<State>;

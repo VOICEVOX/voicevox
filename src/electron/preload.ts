@@ -66,6 +66,16 @@ const api: Sandbox = {
     return new TextDecoder().decode(buf);
   },
 
+  getBaseName: ({ filePath }) => {
+    /**
+     * filePathから拡張子を含むファイル名を取り出す。
+     * vueファイルから直接pathモジュールを読み込むことは出来るが、
+     * その中のbasename関数は上手く動作しない（POSIX pathとして処理される）。
+     * この関数を呼び出せばWindows pathが正しく処理される。
+     */
+    return path.basename(filePath);
+  },
+
   showAudioSaveDialog: ({ title, defaultPath }) => {
     return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
   },
@@ -140,6 +150,10 @@ const api: Sandbox = {
 
   captureError: ({ error, stack }) => {
     return ipcRenderer.invoke("CAPTURE_ERROR", { error, stack });
+  },
+
+  restartEngine: () => {
+    ipcRendererInvoke("RESTART_ENGINE");
   },
 };
 

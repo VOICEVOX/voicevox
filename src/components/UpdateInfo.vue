@@ -18,12 +18,13 @@
 <script lang="ts">
 import { useStore, GET_UPDATE_INFOS } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
+import { UpdateInfo } from "../type/preload";
 
 export default defineComponent({
   setup() {
     const store = useStore();
 
-    const infos = ref<Record<string, any>[]>();
+    const infos = ref<UpdateInfo[]>();
     store.dispatch(GET_UPDATE_INFOS).then((obj) => (infos.value = obj));
 
     const html = computed(() => {
@@ -64,7 +65,7 @@ export default defineComponent({
   .scroller {
     width: 100%;
     overflow: auto;
-    ::v-deep {
+    :deep() {
       h3 {
         font-size: 1.3rem;
         font-weight: bold;

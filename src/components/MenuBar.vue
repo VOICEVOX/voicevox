@@ -10,21 +10,38 @@
       @mouseover="reassignSubMenuOpen(i)"
     />
     <q-space />
-    <div class="window-title">VOICEVOX</div>
+    <div v-if="projectName !== undefined" class="window-title">
+      {{ projectName + " - VOICEVOX" }}
+    </div>
+    <div v-else class="window-title">VOICEVOX</div>
     <q-space />
     <title-bar-buttons />
   </q-bar>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
-import { UI_LOCKED, SET_USE_GPU, SET_FILE_ENCODING } from "@/store/ui";
-import { SAVE_PROJECT_FILE, LOAD_PROJECT_FILE } from "@/store/project";
-import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
+import {
+  UI_LOCKED,
+  SET_USE_GPU,
+  SET_FILE_ENCODING,
+  ASYNC_UI_LOCK,
+} from "@/store/ui";
+import {
+  SAVE_PROJECT_FILE,
+  LOAD_PROJECT_FILE,
+  PROJECT_NAME,
+} from "@/store/project";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  RESTART_ENGINE,
+} from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
+import Mousetrap from "mousetrap";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -39,6 +56,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  shortCut?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -67,15 +85,22 @@ export default defineComponent({
     const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const projectName = computed(() => store.getters[PROJECT_NAME]);
+
+    const restartEngineProcess = () => {
+      store.dispatch(RESTART_ENGINE);
+    };
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
       const change = async () => {
         await store.dispatch(SET_USE_GPU, { useGpu });
+        restartEngineProcess();
+
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにVOICEVOXを再起動してください。",
+          message: "変更を適用するためにエンジンを再起動します。",
           ok: {
             flat: true,
             textColor: "secondary",
@@ -83,14 +108,21 @@ export default defineComponent({
         });
       };
 
-      $q.loading.show({
-        spinnerColor: "primary",
-        spinnerSize: 50,
-        boxClass: "bg-white text-secondary",
-        message: "起動モードを変更中です",
+      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
+        store.dispatch(ASYNC_UI_LOCK, {
+          callback: async () => {
+            $q.loading.show({
+              spinnerColor: "primary",
+              spinnerSize: 50,
+              boxClass: "bg-white text-secondary",
+              message: "起動モードを変更中です",
+            });
+            resolve(await window.electron.isAvailableGPUMode());
+            $q.loading.hide();
+          },
+        });
       });
-      const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
-      $q.loading.hide();
+
       if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
           title: "対応するGPUデバイスが見つかりません",
@@ -126,6 +158,7 @@ export default defineComponent({
           {
             type: "button",
             label: "音声書き出し",
+            shortCut: "Ctrl+E",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
                 encoding: store.state.fileEncoding,
@@ -142,7 +175,16 @@ export default defineComponent({
           { type: "separator" },
           {
             type: "button",
-            label: "プロジェクト保存",
+            label: "プロジェクトを上書き保存",
+            shortCut: "Ctrl+S",
+            onClick: () => {
+              store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
+            },
+          },
+          {
+            type: "button",
+            label: "プロジェクトを名前を付けて保存",
+            shortCut: "Ctrl+Shift+S",
             onClick: () => {
               store.dispatch(SAVE_PROJECT_FILE, {});
             },
@@ -150,6 +192,7 @@ export default defineComponent({
           {
             type: "button",
             label: "プロジェクト読み込み",
+            shortCut: "Ctrl+O",
             onClick: () => {
               store.dispatch(LOAD_PROJECT_FILE, {});
             },
@@ -177,6 +220,11 @@ export default defineComponent({
                 onClick: async () => changeUseGPU(true),
               },
             ],
+          },
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => restartEngineProcess(),
           },
         ],
       },
@@ -219,8 +267,35 @@ export default defineComponent({
       }
     };
 
+    // メニューバー中のホットキー有効化
+    const _enableHotKey = (items: any) => {
+      items.forEach((item: MenuItemData) => {
+        if (item.type === "root") {
+          _enableHotKey(item.subMenu);
+          return;
+        }
+        if (item.type === "button" && item.shortCut) {
+          Mousetrap.bind(item.shortCut.toLowerCase(), () => {
+            if (!uiLocked.value) item.onClick();
+          });
+          return;
+        }
+      });
+    };
+    _enableHotKey(menudata.value);
+
+    watch(uiLocked, () => {
+      // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
+      if (uiLocked.value) {
+        subMenuOpenFlags.value = [...Array(menudata.value.length)].map(
+          () => false
+        );
+      }
+    });
+
     return {
       uiLocked,
+      projectName,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
