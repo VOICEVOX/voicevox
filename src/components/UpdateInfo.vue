@@ -9,29 +9,7 @@
     </q-header>
     <q-page ref="scroller" class="relative-absolute-wrapper scroller">
       <div class="q-pa-md">
-        <div v-html="html" v-for="n in 15" :key="n"></div>
-        <q-card class="setting-card">
-          <q-card-section class="bg-amber">
-            <div class="text-h5">Restore Default</div>
-            <div class="text-subtitle2">
-              Current setting <b>except</b> <br />Engine Mode will be lost
-            </div>
-          </q-card-section>
-
-          <q-separator />
-
-          <q-toggle v-model="unlock" label="I understand" color="amber" />
-          <q-card-actions align="right">
-            <q-btn
-              :disable="!unlock"
-              color="amber"
-              text-color="black"
-              @click="resetSetting"
-            >
-              Restore
-            </q-btn>
-          </q-card-actions>
-        </q-card>
+        <div v-html="html"></div>
       </div>
     </q-page>
   </div>
