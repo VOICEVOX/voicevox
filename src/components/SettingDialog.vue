@@ -182,7 +182,7 @@
             >
               <template v-slot:top>
                 <q-space />
-                <q-input borderless dense flat v-model="filter">
+                <q-input dense v-model="filter" label="検索" color="purple-5">
                   <template v-slot:append>
                     <q-icon name="search" />
                   </template>
@@ -213,34 +213,6 @@
               </template>
             </q-table>
           </q-card>
-
-          <!-- not finished yet since restarting is pretty tricky -->
-          <!-- you can find some functions involved with this, they do no harm -->
-
-          <!-- <q-card class="setting-card">
-            <q-card-section class="bg-amber">
-              <div class="text-h5">Restore Default</div>
-              <div class="text-subtitle2">
-                Current setting <b>except</b> <br />Engine Mode will be lost
-              </div>
-            </q-card-section>
-
-            <q-separator />
-
-            <div class="q-pa-sm">
-              <q-toggle v-model="unlock" label="I understand" color="amber" />
-              <q-card-actions align="right">
-                <q-btn
-                  :disable="!unlock"
-                  color="amber"
-                  text-color="black"
-                  @click="resetSetting"
-                >
-                  Restore
-                </q-btn>
-              </q-card-actions>
-            </div>
-          </q-card> -->
           <q-page-sticky position="top-right" :offset="[20, 20]">
             <q-btn
               round
@@ -259,7 +231,6 @@
 import { defineComponent, computed, ref } from "vue";
 import {
   OPEN_FILE_EXPLORE,
-  RESET_SETTING,
   SET_HOTKEY_SETTING,
   SET_SIMPLE_MODE_DATA,
   SET_WHEEL_SETTING,
@@ -385,14 +356,7 @@ export default defineComponent({
     };
 
     const onOpeningFileExplore = () => {
-      const path = store.dispatch(OPEN_FILE_EXPLORE);
-      path.then((value) => {
-        console.log(value);
-      });
-    };
-
-    const resetSetting = () => {
-      store.dispatch(RESET_SETTING);
+      store.dispatch(OPEN_FILE_EXPLORE);
     };
 
     let lastHotkey: string | null = null;
@@ -531,16 +495,14 @@ export default defineComponent({
     const mouseWheelSetting = ref(
       computed(() => store.state.mouseWheelSetting)
     );
-    console.log(mouseWheelSetting);
-    console.log("mouseWheelSetting");
 
     const mouseWheelReference = [
-      "Speed",
-      "Pitch",
-      "Into",
-      "Volume",
-      "Accent",
-      "Intonation",
+      "話速",
+      "音高",
+      "抑揚",
+      "音量",
+      "ｱｸｾﾝﾄ",
+      "ｲﾝﾄﾈｰｼｮﾝ",
     ];
 
     function handelMouseWheelSettingClicked(id: number) {
@@ -560,7 +522,6 @@ export default defineComponent({
       changeUseGPU,
       changeTextEncoding,
       onOpeningFileExplore,
-      resetSetting,
       rows: hotkey_rows,
       columns: ref(columns),
       handleRecording,

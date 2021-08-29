@@ -528,7 +528,6 @@ export const audioStore = {
             defaultPath: buildFileName(state, audioKey),
           });
         }
-        console.log(filePath);
         const blob = await blobPromise;
         if (filePath) {
           window.electron.writeFile({

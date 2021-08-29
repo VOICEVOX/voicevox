@@ -455,17 +455,6 @@ ipcMainHandle("PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("RESET_SETTING", () => {
-  store.delete("fileEncoding");
-  store.delete("hotkeySetting");
-  store.delete("simpleMode");
-  store.delete("mouseWheelSetting");
-  initSetting();
-  // restart whole front end after resetting
-  app.relaunch();
-  app.exit();
-});
-
 ipcMainHandle("MOUSE_WHEEL_SETTING", (_, { enabled, reversed, id }) => {
   const mouseWheelSetting = store.get(
     "mouseWheelSetting"

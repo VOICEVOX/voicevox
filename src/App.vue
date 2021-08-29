@@ -19,7 +19,6 @@ export default defineComponent({
     store.dispatch(GET_HOTKEY_SETTING);
     store.dispatch(GET_WHEEL_SETTING);
     store.dispatch(GET_SIMPLE_MODE_DATA);
-    console.log(store.state.hotkeySetting);
   }
 });
 </script>

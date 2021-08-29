@@ -205,11 +205,6 @@ import {
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import {
-  bindHotkeys,
-  GET_HOTKEY_SETTING,
-  watchAndReset,
-} from "@/store/setting";
 
 export default defineComponent({
   name: "Home",
@@ -226,8 +221,6 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const hotkeys = computed(() => store.getters[GET_HOTKEY_SETTING]);
-    console.log(hotkeys);
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
     const nowPlayingContinuously = computed(

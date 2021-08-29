@@ -342,7 +342,6 @@ export default defineComponent({
     const numIndex = [2, 1, 4, 5, 10, 11, 3, 0, 12, 13, 14];
 
     // initialize hotkeys
-    console.log(store.state.hotkeySetting);
 
     bindHotkeys(store.state.hotkeySetting, numIndex, actions);
 

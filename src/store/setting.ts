@@ -130,7 +130,6 @@ export const bindHotkeys = (
 ): void => {
   for (let i = 0; i < numIndex.length; i++) {
     const hotkeyIndex = numIndex[i];
-    console.log(hotkeyIndex);
     const newCombination = newHotkeys[hotkeyIndex].combination
       .toLowerCase()
       .replace(" ", "+");
