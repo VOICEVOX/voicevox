@@ -464,17 +464,21 @@ export const audioStore = typeAsStoreOptions({
         speaker: state.characterInfos![characterIndex].metas.speaker,
       });
     },
-    [FETCH_MORA_PITCH]: (
+    [FETCH_MORA_PITCH]: async (
       { state },
       {
         accentPhrases,
         characterIndex,
       }: { accentPhrases: AccentPhrase[]; characterIndex: number }
     ) => {
-      return api.moraPitchMoraPitchPost({
-        accentPhrase: accentPhrases,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      if (accentPhrases.length == 0) {
+        return [];
+      } else {
+        return await api.moraPitchMoraPitchPost({
+          accentPhrase: accentPhrases,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        });
+      }
     },
     [FETCH_AUDIO_QUERY]: (
       { state },
