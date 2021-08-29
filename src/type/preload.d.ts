@@ -1,3 +1,4 @@
+import { MouseWheelSetting } from "@/store/type";
 import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
@@ -41,6 +42,11 @@ export interface Sandbox {
   pinWindow(): void;
   resetSetting(): void;
   hotkeySetting(newValue: string, id: number): Promise<HotkeySetting[]>;
+  mouseWheelSetting(
+    enabled: boolean,
+    reversed: boolean,
+    id: number
+  ): Pormise<MouseWheelSetting[]>;
 }
 
 export type AppInfos = {

@@ -139,28 +139,36 @@
                   <q-item-label>Inverted</q-item-label>
                 </q-item-section>
               </q-item>
-              <q-item v-for="setting in mouseWheelSetting" :key="setting[0]">
+              <q-item v-for="setting in mouseWheelSetting" :key="setting.id">
                 <q-item-section>
-                  <q-item-label>{{ setting[0] }}</q-item-label>
-                </q-item-section>
-                <q-item-section>
-                  <q-checkbox dense color="brown" v-model="setting[1]" />
+                  <q-item-label>{{
+                    mouseWheelReference[parseInt(setting.id)]
+                  }}</q-item-label>
                 </q-item-section>
                 <q-item-section>
                   <q-checkbox
                     dense
                     color="brown"
-                    v-model="setting[2]"
-                    :disable="!setting[1]"
+                    v-model="setting.enabled"
+                    @click="handelMouseWheelSettingClicked(setting.id)"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-checkbox
+                    dense
+                    color="brown"
+                    v-model="setting.reversed"
+                    :disable="!setting.enabled"
+                    @click="handelMouseWheelSettingClicked(setting.id)"
                   />
                 </q-item-section>
               </q-item>
             </q-list>
           </q-card>
 
-          <q-card class="setting-card">
+          <q-card class="hoykey-card">
             <q-card-section class="bg-purple-5">
-              <div class="text-h5">Restore Default</div>
+              <div class="text-h5">ショートカット</div>
               <div class="text-subtitle2">
                 Click to set, Double Click to unset
               </div>
@@ -190,9 +198,12 @@
                     @dblclick="removeHotkey($event, props.row.id)"
                   >
                     {{
-                      props.row.combination === ""
+                      (disabledHotkeys.indexOf(props.row.id) > -1
+                        ? "(read only) "
+                        : "") +
+                      (props.row.combination === ""
                         ? "未設定"
-                        : props.row.combination
+                        : props.row.combination)
                     }}
                   </q-td>
                 </q-tr>
@@ -200,7 +211,10 @@
             </q-table>
           </q-card>
 
-          <q-card class="setting-card">
+          <!-- not finished yet, restarting is pretty tricky -->
+          <!-- you can find some functions involved with this, they do no harm -->
+
+          <!-- <q-card class="setting-card">
             <q-card-section class="bg-amber">
               <div class="text-h5">Restore Default</div>
               <div class="text-subtitle2">
@@ -223,7 +237,7 @@
                 </q-btn>
               </q-card-actions>
             </div>
-          </q-card>
+          </q-card> -->
           <q-page-sticky position="top-right" :offset="[20, 20]">
             <q-btn
               round
@@ -246,6 +260,7 @@ import {
   RESET_SETTING,
   SET_HOTKEY_SETTING,
   SET_SIMPLE_MODE_DATA,
+  SET_WHEEL_SETTING,
 } from "@/store/setting";
 import { ASYNC_UI_LOCK, SET_FILE_ENCODING, SET_USE_GPU } from "@/store/ui";
 import { useStore } from "@/store";
@@ -385,29 +400,14 @@ export default defineComponent({
 
     const hotkey_rows = ref(computed(() => store.state.hotkeySetting));
 
-    // const hotkey_rows = computed(() => [
-    //   {
-    //     id: "1",
-    //     action: "save_audio",
-    //     combination: "Ctrl E",
-    //   },
-    //   {
-    //     id: "2",
-    //     action: "save_single_audio",
-    //     combination: "Ctrl O",
-    //   },
-    //   {
-    //     id: "3",
-    //     action: "play/stop",
-    //     combination: "SPACE",
-    //   },
-    //   {
-    //     id: "4",
-    //     action: "switch_into",
-    //     combination: "2",
-    //   },
-    // ]);
+    // these are ids of disabled hotkeys, only for display
+    // they don't have an easy to implement but still useful
+    const disabledHotkeys = ["6", "7"];
+
     const handleRecording = (event: MouseEvent, id: string) => {
+      if (disabledHotkeys.indexOf(id) > -1) {
+        return;
+      }
       if (event.target instanceof HTMLElement) {
         if (lastHotkey === null) {
           lastRecord = event.target.innerHTML;
@@ -466,22 +466,28 @@ export default defineComponent({
       });
     };
 
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
-      if (event.key === "p") {
-        console.log(hotkey_rows);
-        console.log(store.state.hotkeySetting);
-      }
-    });
+    const mouseWheelSetting = ref(
+      computed(() => store.state.mouseWheelSetting)
+    );
+    console.log(mouseWheelSetting);
+    console.log("mouseWheelSetting");
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    console.log(width, height);
+    const mouseWheelReference = [
+      "Speed",
+      "Pitch",
+      "Into",
+      "Volume",
+      "Accent",
+      "Intonation",
+    ];
 
-    document.addEventListener("resize", () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      console.log(width, height);
-    });
+    function handelMouseWheelSettingClicked(id: number) {
+      store.dispatch(SET_WHEEL_SETTING, {
+        enabled: mouseWheelSetting.value[id].enabled,
+        reversed: mouseWheelSetting.value[id].reversed,
+        id: id,
+      });
+    }
 
     const selectedPage = ref(pagedata[0].name);
 
@@ -494,7 +500,6 @@ export default defineComponent({
       simple_mode: ref(false),
       unlock: ref(false),
       dir: ref(""),
-      size: ref([width, height]),
       changeUseGPU,
       changeTextEncoding,
       onOpeningFileExplore,
@@ -503,14 +508,10 @@ export default defineComponent({
       columns: ref(columns),
       handleRecording,
       removeHotkey,
-      mouseWheelSetting: ref([
-        ["Pitch", true, true],
-        ["Speed", true, true],
-        ["Into", true, true],
-        ["Volume", true, true],
-        ["Accent", true, true],
-        ["Intonation", true, true],
-      ]),
+      mouseWheelSetting,
+      mouseWheelReference,
+      handelMouseWheelSettingClicked,
+      disabledHotkeys,
     };
   },
 });
@@ -544,6 +545,11 @@ export default defineComponent({
 .setting-card {
   width: 100%;
   max-width: 265px;
+}
+
+.hotkey-card {
+  width: 100%;
+  max-width: 300px;
 }
 
 .text-nvidia {

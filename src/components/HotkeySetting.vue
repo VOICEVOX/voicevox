@@ -130,13 +130,6 @@ export default defineComponent({
       });
     };
 
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
-      if (event.key === "p") {
-        console.log(hotkey_rows);
-        console.log(store.state.hotkeySetting);
-      }
-    });
-
     return {
       rows: hotkey_rows,
       columns: ref(columns),

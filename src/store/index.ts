@@ -45,6 +45,7 @@ export const store = createStore<State>({
       enabled: false,
       dir: "",
     },
+    mouseWheelSetting: [],
   },
 
   getters: {

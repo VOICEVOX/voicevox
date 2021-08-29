@@ -28,6 +28,7 @@ export type State = {
   isPinned: boolean;
   hotkeySetting: HotkeySetting[];
   simpleMode: SimpleMode;
+  mouseWheelSetting: MouseWheelSetting[];
 };
 
 export type AudioItem = {
@@ -47,6 +48,12 @@ export interface HotkeySetting {
   id: string;
   action: string;
   combination: string;
+}
+
+export interface MouseWheelSetting {
+  id: string;
+  enabled: boolean;
+  reversed: boolean;
 }
 
 export interface SimpleMode {

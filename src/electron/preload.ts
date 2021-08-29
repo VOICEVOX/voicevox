@@ -145,8 +145,13 @@ const api: Sandbox = {
   resetSetting: () => {
     ipcRenderer.invoke("RESET_SETTING");
   },
+
   hotkeySetting: (newValue, id) => {
     return ipcRenderer.invoke("HOTKEY_SETTING", { newValue, id });
+  },
+
+  mouseWheelSetting: (enabled, reversed, id) => {
+    return ipcRenderer.invoke("MOUSE_WHEEL_SETTING", { enabled, reversed, id });
   },
 };
 

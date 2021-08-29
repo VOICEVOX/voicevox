@@ -407,30 +407,12 @@ export default defineComponent({
       });
     };
 
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
-      if (event.key === "p") {
-        console.log(hotkey_rows);
-        console.log(store.state.hotkeySetting);
-      }
-    });
-
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    console.log(width, height);
-
-    document.addEventListener("resize", () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      console.log(width, height);
-    });
-
     return {
       engine_mode: engineMode,
       text_encoding: ref(textEncoding.value),
       simple_mode: ref(false),
       unlock: ref(false),
       dir: ref(""),
-      size: ref([width, height]),
       changeUseGPU,
       changeTextEncoding,
       onOpeningFileExplore,

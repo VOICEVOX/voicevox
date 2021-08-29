@@ -125,6 +125,8 @@ export default defineComponent({
       });
     };
 
+    const mouseWheelSetting = computed(() => store.state.mouseWheelSetting);
+
     type InfoType = "speed" | "pitch" | "into" | "volume";
 
     const setAudioInfoByScroll = (
@@ -134,34 +136,54 @@ export default defineComponent({
     ) => {
       switch (type) {
         case "speed": {
-          let curSpeed = query.speedScale - (delta_y > 0 ? 0.1 : -0.1);
-          curSpeed = Math.round(curSpeed * 1e2) / 1e2;
-          if (2 >= curSpeed && curSpeed >= 0.5) {
-            setAudioSpeedScale(curSpeed);
+          if (mouseWheelSetting.value[0].enabled) {
+            let curSpeed =
+              query.speedScale -
+              (mouseWheelSetting.value[0].reversed ? -1 : 1) *
+                (delta_y > 0 ? 0.1 : -0.1);
+            curSpeed = Math.round(curSpeed * 1e2) / 1e2;
+            if (2 >= curSpeed && curSpeed >= 0.5) {
+              setAudioSpeedScale(curSpeed);
+            }
           }
           break;
         }
         case "pitch": {
-          let curPitch = query.pitchScale - (delta_y > 0 ? 0.01 : -0.01);
-          curPitch = Math.round(curPitch * 1e2) / 1e2;
-          if (0.15 >= curPitch && curPitch >= -0.15) {
-            setAudioPitchScale(curPitch);
+          if (mouseWheelSetting.value[1].enabled) {
+            let curPitch =
+              query.pitchScale -
+              (mouseWheelSetting.value[1].reversed ? -1 : 1) *
+                (delta_y > 0 ? 0.01 : -0.01);
+            curPitch = Math.round(curPitch * 1e2) / 1e2;
+            if (0.15 >= curPitch && curPitch >= -0.15) {
+              setAudioPitchScale(curPitch);
+            }
           }
           break;
         }
         case "into": {
-          let curInto = query.intonationScale - (delta_y > 0 ? 0.1 : -0.1);
-          curInto = Math.round(curInto * 1e1) / 1e1;
-          if (2 >= curInto && curInto >= 0) {
-            setAudioIntonationScale(curInto);
+          if (mouseWheelSetting.value[2].enabled) {
+            let curInto =
+              query.intonationScale -
+              (mouseWheelSetting.value[2].reversed ? -1 : 1) *
+                (delta_y > 0 ? 0.1 : -0.1);
+            curInto = Math.round(curInto * 1e1) / 1e1;
+            if (2 >= curInto && curInto >= 0) {
+              setAudioIntonationScale(curInto);
+            }
           }
           break;
         }
         case "volume": {
-          let curVolume = query.volumeScale - (delta_y > 0 ? 0.1 : -0.1);
-          curVolume = Math.round(curVolume * 1e1) / 1e1;
-          if (2 >= curVolume && curVolume >= 0) {
-            setAudioVolumeScale(curVolume);
+          if (mouseWheelSetting.value[3].enabled) {
+            let curVolume =
+              query.volumeScale -
+              (mouseWheelSetting.value[3].reversed ? -1 : 1) *
+                (delta_y > 0 ? 0.1 : -0.1);
+            curVolume = Math.round(curVolume * 1e1) / 1e1;
+            if (2 >= curVolume && curVolume >= 0) {
+              setAudioVolumeScale(curVolume);
+            }
           }
           break;
         }

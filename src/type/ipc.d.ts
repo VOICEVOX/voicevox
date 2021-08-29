@@ -121,6 +121,11 @@ type IpcIHData = {
     args: [obj: { newValue?: string; id?: number }];
     return: import("@/store/type").HotkeySetting[] | unknown;
   };
+
+  MOUSE_WHEEL_SETTING: {
+    args: [obj: { enabled: boolean; reversed: boolean; id: number }];
+    return: import("@/store/type").MouseWheelSetting[];
+  };
 };
 
 /**

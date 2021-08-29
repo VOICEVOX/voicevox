@@ -42,12 +42,13 @@
       @change="willRemove || updateAudioQuery($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
+      @focusout="recordLastFocused"
       @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
+      @mouseup.right="onRightClickTextField"
       @keydown.shift.enter.exact="addCellBellow"
       @keyup.escape.exact="blurCell"
-      @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
         文章が長いと正常に動作しない可能性があります。
@@ -90,6 +91,8 @@ import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
 import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
+import Mousetrap from "mousetrap";
+import { bindHotkeys } from "@/store/setting";
 
 export default defineComponent({
   name: "AudioCell",
@@ -125,6 +128,48 @@ export default defineComponent({
 
     const characterIconUrl = computed(() =>
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
+    );
+
+    let lastFocused: HTMLElement | null = null;
+
+    const backToLastCell = () => {
+      if (lastFocused instanceof HTMLInputElement) {
+        lastFocused.focus();
+      }
+    };
+
+    const recordLastFocused = (event: FocusEvent) => {
+      if (event.target instanceof HTMLInputElement) {
+        lastFocused = event.target;
+      }
+    };
+
+    document.addEventListener("focus", recordLastFocused);
+
+    const actions = [
+      () => {
+        if (!uiLocked.value) {
+          backToLastCell();
+        }
+        return false;
+      },
+      () => {
+        if (!uiLocked.value) {
+          addCellBellow();
+        }
+      },
+    ];
+    const numIndex = [8, 6];
+    bindHotkeys(store.state.hotkeySetting, numIndex, actions);
+
+    store.watch(
+      (state, getter) => {
+        return state.hotkeySetting;
+      },
+      (newVal, oldVal) => {
+        Mousetrap.reset();
+        bindHotkeys(newVal, numIndex, actions);
+      }
     );
 
     // TODO: change audio textにしてvuexに載せ替える
@@ -304,6 +349,8 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
+      backToLastCell,
+      recordLastFocused,
       isOpenedCharacterList,
       getCharacterIconUrl,
     };

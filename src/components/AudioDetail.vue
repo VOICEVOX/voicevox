@@ -248,9 +248,8 @@ import {
   GENERATE_AND_SAVE_ALL_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
+import { bindHotkeys } from "@/store/setting";
 import Mousetrap from "mousetrap";
-import { HotkeySetting } from "@/store/type";
-import HotkeySettingVue from "./HotkeySetting.vue";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -298,42 +297,20 @@ export default defineComponent({
     // meanwhile is the first in actions
     const numIndex = [2, 1, 0, 4, 5];
 
-    const bindHotkeys = (newHotkeys: HotkeySetting[]) => {
-      for (let i = 0; i < numIndex.length; i++) {
-        let hotkeyIndex = numIndex[i];
-        let newCombination = newHotkeys[hotkeyIndex].combination
-          .toLowerCase()
-          .replace(" ", "+");
-        if (newCombination === "") continue;
-        Mousetrap.bind(newCombination, actions[i]);
-      }
-      return 0;
-    };
-
-    const unbindHotkeys = (oldHotkeys: HotkeySetting[]) => {
-      for (let i = 0; i < numIndex.length; i++) {
-        let hotkeyIndex = numIndex[i];
-        let oldCombination = oldHotkeys[hotkeyIndex].combination
-          .toLowerCase()
-          .replace(" ", "+");
-        Mousetrap.unbind(oldCombination);
-      }
-      return 0;
-    };
-
     store.watch(
       (state, getter) => {
         return state.hotkeySetting;
       },
       (newVal, oldVal) => {
-        console.log(newVal, oldVal);
-        unbindHotkeys(oldVal);
-        bindHotkeys(newVal);
+        Mousetrap.reset();
+        bindHotkeys(newVal, numIndex, actions);
       }
     );
 
     // initialize hotkeys
-    bindHotkeys(store.state.hotkeySetting);
+    bindHotkeys(store.state.hotkeySetting, numIndex, actions);
+
+    const mouseWheelSetting = computed(() => store.state.mouseWheelSetting);
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
     let shiftKeyFlag = false;
@@ -390,14 +367,19 @@ export default defineComponent({
       accent: number,
       deltaY: number
     ) => {
-      let currentAccent = accent - (deltaY > 0 ? 1 : -1);
-      if (
-        !uiLocked.value &&
-        !shiftKeyFlag &&
-        length >= currentAccent &&
-        currentAccent >= 1
-      )
-        changeAccent(accentPhraseIndex, currentAccent);
+      if (mouseWheelSetting.value[4].enabled) {
+        let currentAccent =
+          accent -
+          (mouseWheelSetting.value[4].reversed ? -1 : 1) *
+            (deltaY > 0 ? 1 : -1);
+        if (
+          !uiLocked.value &&
+          !shiftKeyFlag &&
+          length >= currentAccent &&
+          currentAccent >= 1
+        )
+          changeAccent(accentPhraseIndex, currentAccent);
+      }
     };
 
     const toggleAccentPhraseSplit = (
@@ -433,11 +415,16 @@ export default defineComponent({
       deltaY: number,
       withDetailedStep: boolean
     ) => {
-      const step = withDetailedStep ? 0.01 : 0.1;
-      let pitch = moraPitch - (deltaY > 0 ? step : -step);
-      pitch = Math.round(pitch * 1e2) / 1e2;
-      if (!uiLocked.value && !shiftKeyFlag && 6.5 >= pitch && pitch >= 3)
-        setAudioMoraPitch(accentPhraseIndex, moraIndex, pitch);
+      if (mouseWheelSetting.value[5].enabled) {
+        const step = withDetailedStep ? 0.01 : 0.1;
+        let pitch =
+          moraPitch -
+          (mouseWheelSetting.value[5].reversed ? -1 : 1) *
+            (deltaY > 0 ? step : -step);
+        pitch = Math.round(pitch * 1e2) / 1e2;
+        if (!uiLocked.value && !shiftKeyFlag && 6.5 >= pitch && pitch >= 3)
+          setAudioMoraPitch(accentPhraseIndex, moraIndex, pitch);
+      }
     };
 
     const changePreviewAccent = (accentPhraseIndex: number, accent: number) => {

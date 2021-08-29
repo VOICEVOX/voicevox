@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
-import { HotkeySetting } from "./store/type";
+import { HotkeySetting, MouseWheelSetting } from "./store/type";
 
 let win: BrowserWindow;
 
@@ -58,6 +58,17 @@ const store = new Store({
       properties: {
         enabled: { type: "boolean" },
         dir: { type: "string" },
+      },
+    },
+    mouseWheelSetting: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          enabled: { type: "boolean" },
+          reversed: { type: "boolean" },
+        },
       },
     },
   },
@@ -169,6 +180,17 @@ const initSetting = () => {
       dir: "",
     };
     store.set("simpleMode", defaultSimpleMode);
+  }
+  if (!store.has("mouseWheelSetting")) {
+    const defaultMouseWheelSetting: MouseWheelSetting[] = [];
+    for (let i = 0; i < 6; i++) {
+      defaultMouseWheelSetting.push({
+        id: i.toString(),
+        enabled: true,
+        reversed: false,
+      });
+    }
+    store.set("mouseWheelSetting", defaultMouseWheelSetting);
   }
 };
 
@@ -407,7 +429,23 @@ ipcMainHandle("RESET_SETTING", () => {
   store.delete("fileEncoding");
   store.delete("hotkeySetting");
   store.delete("simpleMode");
+  store.delete("mouseWheelSetting");
   initSetting();
+  // restart whole front end after resetting
+  app.relaunch();
+  app.exit();
+});
+
+ipcMainHandle("MOUSE_WHEEL_SETTING", (_, { enabled, reversed, id }) => {
+  const mouseWheelSetting = store.get(
+    "mouseWheelSetting"
+  ) as MouseWheelSetting[];
+  if (id > -1) {
+    mouseWheelSetting[id].enabled = enabled;
+    mouseWheelSetting[id].reversed = reversed;
+    store.set("mouseWheelSetting", mouseWheelSetting);
+  }
+  return mouseWheelSetting as MouseWheelSetting[];
 });
 
 // app callback
