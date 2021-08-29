@@ -106,6 +106,7 @@ export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
+export const RESTART_ENGINE = "RESTART_ENGINE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -718,7 +719,13 @@ export const audioStore = {
         case "READY":
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
           break;
+        default:
+          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
+    },
+    async [RESTART_ENGINE]({ commit }) {
+      await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
+      window.electron.restartEngine();
     },
   },
 } as StoreOptions<State>;
