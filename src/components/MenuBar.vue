@@ -299,6 +299,8 @@ export default defineComponent({
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
+      changeUseGPU,
+      restartEngineProcess,
     };
   },
 });
