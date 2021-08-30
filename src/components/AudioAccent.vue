@@ -26,7 +26,7 @@
               $event.deltaY
             )
           "
-        @pan="setPanning($event)"
+          @pan="setPanning($event)"
         />
       </div>
     </div>
@@ -120,7 +120,7 @@ export default defineComponent({
     const setPanning = (panning: string) => {
       isPreview.value = panning === "start";
       previewAccent.value = props.accentPhrase.accent;
-    }
+    };
 
     const createAccentLine = () => {
       const accent = currentAccent.value;

@@ -80,13 +80,7 @@
 </template>
 
 <script lang="ts">
-import {
-  computed,
-  reactive,
-  ref,
-  ComputedRef,
-  defineComponent,
-} from "vue";
+import { computed, reactive, ref, ComputedRef, defineComponent } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -167,7 +161,7 @@ export default defineComponent({
     ) => {
       previewableValue.isPreview = panning === "start";
       previewableValue.previewValue = previewableValue.storeValue;
-    }
+    };
 
     const setAudioSpeedScale = (speedScale: number) => {
       previewAudioSpeedScale.isPreview = false;
