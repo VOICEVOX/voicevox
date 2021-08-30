@@ -148,8 +148,8 @@ const api: Sandbox = {
     ipcRenderer.invoke("MAXIMIZE_WINDOW");
   },
 
-  captureError: ({ error, stack }) => {
-    return ipcRenderer.invoke("CAPTURE_ERROR", { error, stack });
+  logError: ({ error, stack }) => {
+    return ipcRenderer.invoke("LOG_ERROR", { error, stack });
   },
 
   restartEngine: () => {

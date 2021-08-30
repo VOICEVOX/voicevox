@@ -4,22 +4,22 @@
 
 <script lang="ts">
 import { defineComponent, onErrorCaptured, onMounted } from "vue";
-import { useStore, CAPTURE_ERROR } from "@/store";
+import { useStore, LOG_ERROR } from "@/store";
 
 export default defineComponent({
   name: "ErrorBoundary",
   setup() {
     const store = useStore();
-    const captureError = (error: Error): void => {
-      store.dispatch(CAPTURE_ERROR, { error, stack: error.stack });
+    const logError = (error: Error): void => {
+      store.dispatch(LOG_ERROR, { error, stack: error.stack });
     };
 
     onMounted(() => {
       const handlePromiseRejectionEvent = (event: PromiseRejectionEvent) => {
-        captureError(event.reason);
+        logError(event.reason);
       };
       window.addEventListener("error", (event: ErrorEvent) => {
-        captureError(event.error);
+        logError(event.error);
       });
       window.addEventListener(
         "unhandledrejection",
@@ -29,7 +29,7 @@ export default defineComponent({
     });
 
     onErrorCaptured((error) => {
-      if (error instanceof Error) captureError(error);
+      if (error instanceof Error) logError(error);
       return false;
     });
   },

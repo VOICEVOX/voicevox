@@ -311,7 +311,7 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-ipcMainHandle("CAPTURE_ERROR", (_, { stack }) => {
+ipcMainHandle("LOG_ERROR", (_, { stack }) => {
   logError(stack);
 });
 

@@ -107,7 +107,7 @@ type IpcIHData = {
     return: void;
   };
 
-  CAPTURE_ERROR: {
+  LOG_ERROR: {
     //プロセス間通信の際にError内のstackが壊れるのでstringとして引数にもつ
     args: [obj: { error: Error; stack: string }];
     return: void;

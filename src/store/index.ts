@@ -16,7 +16,7 @@ export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
-export const CAPTURE_ERROR = "CAPTURE_ERROR";
+export const LOG_ERROR = "LOG_ERROR";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -74,8 +74,8 @@ export const store = createStore<State>({
     ) => {
       return await window.electron.showWarningDialog({ title, message });
     },
-    [CAPTURE_ERROR]: (_, { error, stack }: { error: Error; stack: string }) => {
-      window.electron.captureError({ error, stack });
+    [LOG_ERROR]: (_, { error, stack }: { error: Error; stack: string }) => {
+      window.electron.logError({ error, stack });
     },
   },
   plugins: isDevelopment ? [createLogger()] : undefined,

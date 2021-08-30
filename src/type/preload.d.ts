@@ -39,7 +39,7 @@ export interface Sandbox {
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
-  captureError(obj: { error: Error; stack: string }): void;
+  logError(obj: { error: Error; stack: string }): void;
   restartEngine(): void;
 }
 
