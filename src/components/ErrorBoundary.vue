@@ -11,7 +11,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const logError = (error: Error): void => {
-      store.dispatch(LOG_ERROR, { error, stack: error.stack });
+      store.dispatch(LOG_ERROR, error.stack);
     };
 
     onMounted(() => {

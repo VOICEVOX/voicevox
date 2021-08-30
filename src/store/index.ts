@@ -74,8 +74,8 @@ export const store = createStore<State>({
     ) => {
       return await window.electron.showWarningDialog({ title, message });
     },
-    [LOG_ERROR]: (_, { error, stack }: { error: Error; stack: string }) => {
-      window.electron.logError({ error, stack });
+    [LOG_ERROR]: (_, ...params: unknown[]) => {
+      window.electron.logError(...params);
     },
   },
   plugins: isDevelopment ? [createLogger()] : undefined,

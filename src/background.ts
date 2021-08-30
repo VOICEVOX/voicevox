@@ -8,7 +8,6 @@ import Store from "electron-store";
 import { app, protocol, BrowserWindow, dialog, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
-import log from "electron-log";
 
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
@@ -309,10 +308,11 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   } else {
     win.maximize();
   }
+  throw new Error("aaa");
 });
 
-ipcMainHandle("LOG_ERROR", (_, { stack }) => {
-  logError(stack);
+ipcMainHandle("LOG_ERROR", (_, ...params) => {
+  logError(...params);
 });
 
 ipcMainHandle("RESTART_ENGINE", async () => {
@@ -373,7 +373,7 @@ app.on("quit", () => {
   try {
     engineProcess.pid != undefined && treeKill(engineProcess.pid);
   } catch {
-    console.error("engine kill error");
+    logError("engine kill error");
   }
 });
 
@@ -386,7 +386,7 @@ app.on("ready", async () => {
     try {
       await installExtension(VUEJS3_DEVTOOLS);
     } catch (e) {
-      console.error("Vue Devtools failed to install:", e.toString());
+      logError("Vue Devtools failed to install:", e.toString());
     }
   }
 

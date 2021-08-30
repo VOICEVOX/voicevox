@@ -108,8 +108,7 @@ type IpcIHData = {
   };
 
   LOG_ERROR: {
-    //プロセス間通信の際にError内のstackが壊れるのでstringとして引数にもつ
-    args: [obj: { error: Error; stack: string }];
+    args: [...params: unknown[]];
     return: void;
   };
 
