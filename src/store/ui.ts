@@ -124,7 +124,6 @@ export const uiStore = {
       { commit },
       { encoding }: { encoding: Encoding }
     ) {
-      console.log(encoding);
       commit(SET_FILE_ENCODING, {
         encoding: await window.electron.fileEncoding(encoding),
       });
