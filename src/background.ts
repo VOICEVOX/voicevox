@@ -308,7 +308,6 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   } else {
     win.maximize();
   }
-  throw new Error("aaa");
 });
 
 ipcMainHandle("LOG_ERROR", (_, ...params) => {
