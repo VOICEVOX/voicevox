@@ -1,14 +1,21 @@
 <template>
-  <router-view />
+  <error-boundary>
+    <router-view />
+  </error-boundary>
 </template>
 
 <script type="ts">
 import { useStore } from "@/store";
 import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "App",
+
+  components: {
+    ErrorBoundary
+  },
 
   setup() {
     const store = useStore();
