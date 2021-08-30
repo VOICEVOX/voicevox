@@ -7,12 +7,25 @@
     class="full-height cursor-not-allowed no-border-radius"
   >
     <q-btn
+      v-if="isPinned"
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="teal"
+      class="title-bar-buttons"
+      id="pinned-btn"
+      @click="changePinWindow()"
+    ></q-btn>
+    <q-btn
+      v-else
       dense
       flat
       round
       icon="push_pin"
       color="black"
-      class="title-bar-buttons"
+      class="title-bar-buttons rotate-45"
+      id="pinned-btn"
       @click="changePinWindow()"
     ></q-btn>
     <q-btn
