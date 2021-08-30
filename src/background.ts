@@ -342,7 +342,7 @@ ipcMainHandle("RESTART_ENGINE", async () => {
   });
 });
 
-ipcMainHandle("PIN_WINDOW", () => {
+ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   if (win.isAlwaysOnTop()) {
     win.setAlwaysOnTop(false);
   } else {

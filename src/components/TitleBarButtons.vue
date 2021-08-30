@@ -13,7 +13,7 @@
       icon="push_pin"
       color="black"
       class="title-bar-buttons"
-      @click="pinWindow()"
+      @click="changePinWindow()"
     ></q-btn>
     <q-btn
       dense
@@ -63,7 +63,7 @@
       color="teal"
       class="title-bar-buttons"
       id="pinned-btn"
-      @click="pinWindow()"
+      @click="changePinWindow()"
     ></q-btn>
     <q-btn
       v-else
@@ -74,7 +74,7 @@
       color="black"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
-      @click="pinWindow()"
+      @click="changePinWindow()"
     ></q-btn>
     <q-btn
       dense
@@ -124,14 +124,13 @@ export default defineComponent({
     const closeWindow = () => window.electron.closeWindow();
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
+    const changePinWindow = () => {
+      window.electron.changePinWindow();
+    };
 
     const store = useStore();
 
     const isPinned = computed(() => store.state.isPinned);
-
-    const pinWindow = () => {
-      window.electron.pinWindow();
-    };
 
     const isMaximized = computed(() => store.state.isMaximized);
 
@@ -141,7 +140,7 @@ export default defineComponent({
       closeWindow,
       minimizeWindow,
       maximizeWindow,
-      pinWindow,
+      changePinWindow,
       mdiWindowRestore,
       isMaximized,
       isPinned,

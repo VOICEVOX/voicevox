@@ -112,7 +112,7 @@ type IpcIHData = {
     return: void;
   };
 
-  PIN_WINDOW: {
+  CHANGE_PIN_WINDOW: {
     args: [];
     return: void;
   };

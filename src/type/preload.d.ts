@@ -40,7 +40,7 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   restartEngine(): void;
-  pinWindow(): void;
+  changePinWindow(): void;
 }
 
 export type AppInfos = {

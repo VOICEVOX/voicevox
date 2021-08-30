@@ -152,8 +152,8 @@ const api: Sandbox = {
     ipcRendererInvoke("RESTART_ENGINE");
   },
 
-  pinWindow: () => {
-    ipcRenderer.invoke("PIN_WINDOW");
+  changePinWindow: () => {
+    ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 };
 
