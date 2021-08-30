@@ -1,5 +1,5 @@
 import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
-import log from "electron-log";
+import { logError } from "@/electron/log";
 
 export function ipcMainHandle<T extends keyof IpcIHData>(
   channel: T,
@@ -19,7 +19,7 @@ export function ipcMainHandle(
     try {
       return listener(event, ...args);
     } catch (e) {
-      log.error(e);
+      logError(e);
     }
   };
   ipcMain.handle(channel, errorHandledListener);

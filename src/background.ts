@@ -14,6 +14,7 @@ import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import { logError } from "./electron/log";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
@@ -25,21 +26,11 @@ let win: BrowserWindow;
 // 多重起動防止
 if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
 
-const initializeLog = () => {
-  //ファイル名に日時を指定
-  const d = new Date();
-  const prefix =
-    d.getFullYear() +
-    ("00" + (d.getMonth() + 1)).slice(-2) +
-    ("00" + d.getDate()).slice(-2);
-  log.transports.file.fileName = `${prefix}_${log.transports.file.fileName}`;
-};
-initializeLog();
 process.on("uncaughtException", (error) => {
-  log.error(error.stack);
+  logError(error);
 });
 process.on("unhandledRejection", (reason) => {
-  log.error(reason);
+  logError(reason);
 });
 
 // 設定
@@ -321,7 +312,7 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 });
 
 ipcMainHandle("CAPTURE_ERROR", (_, { stack }) => {
-  log.error(stack);
+  logError(stack);
 });
 
 ipcMainHandle("RESTART_ENGINE", async () => {
