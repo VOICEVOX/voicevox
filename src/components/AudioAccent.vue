@@ -26,6 +26,7 @@
               $event.deltaY
             )
           "
+        @pan="setPanning($event)"
         />
       </div>
     </div>
@@ -94,7 +95,6 @@ export default defineComponent({
     window.addEventListener("keydown", setShiftKeyFlag);
 
     const changeAccent = (accent: number) => {
-      isPreview.value = false;
       emit("changeAccent", [props.accentPhraseIndex, accent]);
     };
 
@@ -114,9 +114,13 @@ export default defineComponent({
     };
 
     const changePreviewAccent = (accent: number) => {
-      isPreview.value = true;
       previewAccent.value = accent;
     };
+
+    const setPanning = (panning: string) => {
+      isPreview.value = panning === "start";
+      previewAccent.value = props.accentPhrase.accent;
+    }
 
     const createAccentLine = () => {
       const accent = currentAccent.value;
@@ -136,6 +140,7 @@ export default defineComponent({
       changeAccentByScroll,
       changePreviewAccent,
       createAccentLine,
+      setPanning,
     };
   },
 });

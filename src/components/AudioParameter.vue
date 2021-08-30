@@ -94,6 +94,7 @@ export default defineComponent({
 
     const setPanning = (panningPhase: string) => {
       isPreview.value = pitchLabel.panning = panningPhase === "start";
+      previewValue.value = props.value;
     };
 
     return {
