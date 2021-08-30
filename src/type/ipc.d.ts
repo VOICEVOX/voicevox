@@ -111,6 +111,11 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  PIN_WINDOW: {
+    args: [];
+    return: void;
+  };
 };
 
 /**
@@ -138,6 +143,16 @@ type IpcSOData = {
   };
 
   START_WAITING_ENGINE: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_PINNED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNPINNED: {
     args: [];
     return: void;
   };

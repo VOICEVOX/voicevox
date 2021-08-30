@@ -37,6 +37,7 @@ export const store = createStore<State>({
     isHelpDialogOpen: false,
     fileEncoding: "UTF-8",
     isMaximized: false,
+    isPinned: false,
   },
 
   getters: {

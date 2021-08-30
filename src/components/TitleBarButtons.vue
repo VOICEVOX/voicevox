@@ -10,6 +10,15 @@
       dense
       flat
       round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons"
+      @click="pinWindow()"
+    ></q-btn>
+    <q-btn
+      dense
+      flat
+      round
       icon="lens"
       color="green"
       class="title-bar-buttons"
@@ -45,6 +54,28 @@
       title-bar-buttons-root
     "
   >
+    <q-btn
+      v-if="isPinned"
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="teal"
+      class="title-bar-buttons"
+      id="pinned-btn"
+      @click="pinWindow()"
+    ></q-btn>
+    <q-btn
+      v-else
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons rotate-45"
+      id="pinned-btn"
+      @click="pinWindow()"
+    ></q-btn>
     <q-btn
       dense
       flat
@@ -96,6 +127,12 @@ export default defineComponent({
 
     const store = useStore();
 
+    const isPinned = computed(() => store.state.isPinned);
+
+    const pinWindow = () => {
+      window.electron.pinWindow();
+    };
+
     const isMaximized = computed(() => store.state.isMaximized);
 
     Mousetrap.bind(["alt+f4", "command+q"], closeWindow);
@@ -104,8 +141,10 @@ export default defineComponent({
       closeWindow,
       minimizeWindow,
       maximizeWindow,
+      pinWindow,
       mdiWindowRestore,
       isMaximized,
+      isPinned,
     };
   },
 });

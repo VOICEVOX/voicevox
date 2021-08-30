@@ -25,6 +25,7 @@ export type State = {
   fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
+  isPinned: boolean;
 };
 
 export type AudioItem = {
