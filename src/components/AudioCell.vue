@@ -73,7 +73,7 @@ import { useStore } from "@/store";
 import {
   GENERATE_AND_SAVE_AUDIO,
   SET_ACTIVE_AUDIO_KEY,
-  GENERATE_AUDIO_ITEM,
+  GENERATE_INITIAL_AUDIO_ITEM,
   COMMAND_REGISTER_AUDIO_ITEM,
   COMMAND_UPDATE_AUDIO_TEXT,
   COMMAND_CHANGE_CHARACTER_INDEX,
@@ -252,10 +252,13 @@ export default defineComponent({
     const addCellBellow = async () => {
       const characterIndex =
         store.state.audioItems[props.audioKey].characterIndex;
-      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
-        text: "",
-        characterIndex: characterIndex,
-      });
+      const audioItem: AudioItem = await store.dispatch(
+        GENERATE_INITIAL_AUDIO_ITEM,
+        {
+          text: "",
+          characterIndex: characterIndex,
+        }
+      );
       await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,

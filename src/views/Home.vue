@@ -177,7 +177,7 @@ import {
   GENERATE_AND_SAVE_ALL_AUDIO,
   COMMAND_IMPORT_FROM_FILE,
   COMMAND_REGISTER_AUDIO_ITEM,
-  GENERATE_AUDIO_ITEM,
+  GENERATE_INITIAL_AUDIO_ITEM,
   REGISTER_AUDIO_ITEM,
   LOAD_CHARACTER,
   PLAY_CONTINUOUSLY_AUDIO,
@@ -299,10 +299,13 @@ export default defineComponent({
       const prevAudioKey = activeAudioKey.value!;
       const characterIndex =
         store.state.audioItems[prevAudioKey]?.characterIndex;
-      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
-        text: "",
-        characterIndex: characterIndex,
-      });
+      const audioItem: AudioItem = await store.dispatch(
+        GENERATE_INITIAL_AUDIO_ITEM,
+        {
+          text: "",
+          characterIndex: characterIndex,
+        }
+      );
       const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
@@ -343,10 +346,13 @@ export default defineComponent({
     }: {
       prevAudioKey: string;
     }) => {
-      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
-        text: "",
-        characterIndex: audioItems.value[prevAudioKey].characterIndex,
-      });
+      const audioItem: AudioItem = await store.dispatch(
+        GENERATE_INITIAL_AUDIO_ITEM,
+        {
+          text: "",
+          characterIndex: audioItems.value[prevAudioKey].characterIndex,
+        }
+      );
       const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey,
@@ -372,9 +378,12 @@ export default defineComponent({
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
-      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
-        text: "",
-      });
+      const audioItem: AudioItem = await store.dispatch(
+        GENERATE_INITIAL_AUDIO_ITEM,
+        {
+          text: "",
+        }
+      );
       const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
       });

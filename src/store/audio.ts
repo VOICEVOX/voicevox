@@ -12,6 +12,8 @@ import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
+export const DEFAULT_SAMPLING_RATE = 24000;
+
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
@@ -163,7 +165,8 @@ export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
-export const GENERATE_AUDIO_ITEM = "GENERATE_AUDIO_ITEM";
+export const GENERATE_INITIAL_AUDIO_ITEM = "GENERATE_INITIAL_AUDIO_ITEM";
+export const GENERATE_INITIAL_AUDIO_QUERY = "GENERATE_INITIAL_AUDIO_QUERY";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
 export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
@@ -438,20 +441,50 @@ export const audioStore = typeAsStoreOptions({
       commit(REMOVE_AUDIO_ITEM, { audioKey });
       dispatch(DISPOSE_AUDIO_KEY, { audioKey });
     },
-    [GENERATE_AUDIO_ITEM]: async (
+    [GENERATE_INITIAL_AUDIO_ITEM]: async (
       { dispatch },
       {
         text,
         characterIndex,
-      }: { text: string; characterIndex: number | undefined }
+      }: { text: string | undefined; characterIndex: number | undefined }
     ) => {
       return {
-        text: text,
+        text: text ?? "",
         characterIndex: characterIndex ?? 0,
-        query: await dispatch(FETCH_AUDIO_QUERY, {
-          text: text,
-          characterIndex: characterIndex ?? 0,
-        }),
+        query: await dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}),
+      };
+    },
+    [GENERATE_INITIAL_AUDIO_QUERY]: async (
+      context,
+      {
+        accentPhrases,
+        speedScale,
+        pitchScale,
+        intonationScale,
+        volumeScale,
+        prePhonemeLength,
+        postPhonemeLength,
+        outputSamplingRate,
+      }: {
+        accentPhrases: Array<AccentPhrase> | undefined;
+        speedScale: number | undefined;
+        pitchScale: number | undefined;
+        intonationScale: number | undefined;
+        volumeScale: number | undefined;
+        prePhonemeLength: number | undefined;
+        postPhonemeLength: number | undefined;
+        outputSamplingRate: number | undefined;
+      }
+    ): Promise<AudioQuery> => {
+      return {
+        accentPhrases: accentPhrases ?? [],
+        speedScale: speedScale ?? 1,
+        pitchScale: pitchScale ?? 0,
+        intonationScale: intonationScale ?? 1,
+        volumeScale: volumeScale ?? 1,
+        prePhonemeLength: prePhonemeLength ?? 0.1,
+        postPhonemeLength: postPhonemeLength ?? 0.1,
+        outputSamplingRate: outputSamplingRate ?? DEFAULT_SAMPLING_RATE,
       };
     },
     [ISSUE_AUDIO_KEY]: () => {
@@ -720,14 +753,17 @@ export const audioCommandStore = typeAsStoreOptions({
       { audioKey, text }: { audioKey: string; text: string }
     ) => {
       const characterIndex = state.audioItems[audioKey].characterIndex ?? 0;
-      const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-        text: text,
-        characterIndex: characterIndex,
-      });
+      const accentPhrases: AccentPhrase[] = await dispatch(
+        FETCH_ACCENT_PHRASES,
+        {
+          text: text,
+          characterIndex: characterIndex,
+        }
+      ).catch(() => []);
       commit(COMMAND_UPDATE_AUDIO_TEXT, {
         audioKey,
         text,
-        query,
+        accentPhrases,
       });
     },
     [COMMAND_CHANGE_CHARACTER_INDEX]: async (
@@ -743,7 +779,7 @@ export const audioCommandStore = typeAsStoreOptions({
             accentPhrases,
             characterIndex,
           }
-        );
+        ).catch(() => accentPhrases);
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
           characterIndex: characterIndex,
           audioKey: audioKey,
@@ -755,10 +791,11 @@ export const audioCommandStore = typeAsStoreOptions({
         const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
           text: text,
           characterIndex: characterIndex,
-        });
-        commit(COMMAND_UPDATE_AUDIO_TEXT, {
+        }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
+        commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+          characterIndex,
           audioKey,
-          text,
+          haveAudioQuery: false,
           query,
         });
       }
@@ -787,7 +824,7 @@ export const audioCommandStore = typeAsStoreOptions({
         const resultAccentPhrases: AccentPhrase[] = await dispatch(
           FETCH_MORA_PITCH,
           { accentPhrases: newAccentPhrases, characterIndex }
-        );
+        ).catch(() => newAccentPhrases);
         commit(COMMAND_CHANGE_ACCENT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
@@ -823,7 +860,7 @@ export const audioCommandStore = typeAsStoreOptions({
         const resultAccentPhrases = await dispatch(FETCH_MORA_PITCH, {
           accentPhrases: newAccentPhrases,
           characterIndex,
-        });
+        }).catch(() => newAccentPhrases);
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
@@ -910,7 +947,7 @@ export const audioCommandStore = typeAsStoreOptions({
           const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
             text,
             characterIndex,
-          });
+          }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
           audioItem.query = query;
         }
 
@@ -948,7 +985,7 @@ export const audioCommandStore = typeAsStoreOptions({
           const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
             text,
             characterIndex,
-          });
+          }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
           audioItem.query = query;
         }
         commit(COMMAND_PUT_TEXTS, { audioItems, audioKeys, prevAudioKey });
@@ -967,15 +1004,15 @@ export const audioCommandStore = typeAsStoreOptions({
     },
     [COMMAND_UPDATE_AUDIO_TEXT]: (
       draft,
-      payload: { audioKey: string; text: string; query: AudioQuery }
+      payload: { audioKey: string; text: string; accentPhrases: AccentPhrase[] }
     ) => {
       audioStore.mutations[SET_AUDIO_TEXT](draft, {
         audioKey: payload.audioKey,
         text: payload.text,
       });
-      audioStore.mutations[SET_AUDIO_QUERY](draft, {
+      audioStore.mutations[SET_ACCENT_PHRASES](draft, {
         audioKey: payload.audioKey,
-        audioQuery: payload.query,
+        accentPhrases: payload.accentPhrases,
       });
     },
     [COMMAND_CHANGE_CHARACTER_INDEX]: (
