@@ -5,16 +5,13 @@
     <header-bar />
 
     <q-page-container>
-      <div v-if="engineState === 'STARTING'" class="waiting-engine">
-        <div>
-          <q-spinner color="primary" size="2.5rem" />
-          <div>エンジン起動中・・・</div>
+      <q-page class="main-row-panes">
+        <div v-if="engineState === 'STARTING'" class="waiting-engine">
+          <div>
+            <q-spinner color="primary" size="2.5rem" />
+            <div>エンジン起動中・・・</div>
+          </div>
         </div>
-      </div>
-      <div v-else-if="engineState === 'FAILED_STARTING'" class="waiting-engine">
-        <div>エンジンの起動に失敗しました。</div>
-      </div>
-      <q-page v-else class="main-row-panes">
         <q-splitter
           horizontal
           reverse
@@ -130,7 +127,6 @@ import {
   IMPORT_FROM_FILE,
   LOAD_CHARACTER,
   REGISTER_AUDIO_ITEM,
-  START_WAITING_ENGINE,
 } from "@/store/audio";
 import { UI_LOCKED, IS_HELP_DIALOG_OPEN, SHOULD_SHOW_PANES } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -275,7 +271,6 @@ export default defineComponent({
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
-    store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({

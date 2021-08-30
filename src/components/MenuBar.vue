@@ -34,7 +34,11 @@ import {
   LOAD_PROJECT_FILE,
   PROJECT_NAME,
 } from "@/store/project";
-import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  RESTART_ENGINE,
+} from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
@@ -83,14 +87,20 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
+    const restartEngineProcess = () => {
+      store.dispatch(RESTART_ENGINE);
+    };
+
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
       const change = async () => {
         await store.dispatch(SET_USE_GPU, { useGpu });
+        restartEngineProcess();
+
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにVOICEVOXを再起動してください。",
+          message: "変更を適用するためにエンジンを再起動します。",
           ok: {
             flat: true,
             textColor: "secondary",
@@ -210,6 +220,11 @@ export default defineComponent({
                 onClick: async () => changeUseGPU(true),
               },
             ],
+          },
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => restartEngineProcess(),
           },
         ],
       },
