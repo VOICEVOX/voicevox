@@ -5,9 +5,10 @@ export interface Sandbox {
   getCharacterInfos(): Promise<CharacterInfo[]>;
   getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;
-  getUpdateInfos(): Promise<Record<string, any>[]>;
+  getUpdateInfos(): Promise<UpdateInfo[]>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
+  getBaseName(obj: { filePath: string }): string;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -38,6 +39,7 @@ export interface Sandbox {
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
+  restartEngine(): void;
 }
 
 export type AppInfos = {
@@ -56,6 +58,12 @@ export type CharacterInfo = {
     speaker: number;
     policy: string;
   };
+};
+
+export type UpdateInfo = {
+  version: string;
+  descriptions: string[];
+  contributors: string[];
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";

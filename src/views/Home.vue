@@ -56,16 +56,13 @@
     </q-header>
 
     <q-page-container>
-      <div v-if="engineState === 'STARTING'" class="waiting-engine">
-        <div>
-          <q-spinner color="primary" size="2.5rem" />
-          <div>エンジン起動中・・・</div>
+      <q-page class="main-row-panes">
+        <div v-if="engineState === 'STARTING'" class="waiting-engine">
+          <div>
+            <q-spinner color="primary" size="2.5rem" />
+            <div>エンジン起動中・・・</div>
+          </div>
         </div>
-      </div>
-      <div v-else-if="engineState === 'FAILED_STARTING'" class="waiting-engine">
-        <div>エンジンの起動に失敗しました。</div>
-      </div>
-      <q-page v-else class="main-row-panes">
         <q-splitter
           horizontal
           reverse
@@ -182,7 +179,6 @@ import {
   LOAD_CHARACTER,
   PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
-  START_WAITING_ENGINE,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { UI_LOCKED, IS_HELP_DIALOG_OPEN, SHOULD_SHOW_PANES } from "@/store/ui";
@@ -298,7 +294,10 @@ export default defineComponent({
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const addAudioItem = async () => {
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
+      const prevAudioKey = activeAudioKey.value!;
+      const characterIndex =
+        store.state.audioItems[prevAudioKey].characterIndex;
+      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
       const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
@@ -358,12 +357,15 @@ export default defineComponent({
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
-      addAudioItem();
+      const audioItem: AudioItem = { text: "", characterIndex: 0 };
+      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
+        audioItem,
+      });
+      focusCell({ audioKey: newAudioKey });
     });
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
-    store.dispatch(START_WAITING_ENGINE);
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({

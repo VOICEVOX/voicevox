@@ -46,7 +46,7 @@
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
       @keydown.shift.enter.exact="addCellBellow"
-      @keyup.escape.exact="blurCell"
+      @keyup.escape.exact="blurCell($event)"
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
@@ -239,7 +239,9 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
+      const characterIndex =
+        store.state.audioItems[props.audioKey].characterIndex;
+      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
       await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
@@ -247,8 +249,10 @@ export default defineComponent({
       moveDownCell();
     };
 
-    // blur cell on pressing escape key
-    const blurCell = () => {
+    const blurCell = (event?: KeyboardEvent) => {
+      if (event?.isComposing) {
+        return;
+      }
       if (document.activeElement instanceof HTMLInputElement) {
         document.activeElement.blur();
       }

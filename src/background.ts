@@ -17,22 +17,26 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!app.requestSingleInstanceLock()) app.quit();
+if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
 
 // 設定
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
-const isDevelopment = process.env.NODE_ENV !== "production";
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 // 設定ファイル
-const store = new Store({
+const store = new Store<{
+  useGpu: boolean;
+  fileEncoding: Encoding;
+}>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -47,6 +51,10 @@ const store = new Store({
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
+  willQuitEngine = false;
+  // エンジンが起動完了または失敗するまで待機させる処理を呼び出している。
+  ipcMainSend(win, "START_WAITING_ENGINE");
+
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
     const hasGpu = await hasSupportedGpu();
@@ -73,8 +81,7 @@ async function runEngine() {
     enginePath,
     args,
     { cwd: path.dirname(enginePath) },
-    (error) => {
-      console.log(error);
+    () => {
       if (!willQuitEngine) {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
@@ -267,7 +274,7 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
     store.set("useGpu", newValue);
   }
 
-  return store.get("useGpu", false) as boolean;
+  return store.get("useGpu", false);
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -279,7 +286,7 @@ ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
     store.set("fileEncoding", newValue);
   }
 
-  return store.get("fileEncoding", "UTF-8") as Encoding;
+  return store.get("fileEncoding", "UTF-8");
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
@@ -293,6 +300,41 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   } else {
     win.maximize();
   }
+});
+
+ipcMainHandle("RESTART_ENGINE", async () => {
+  /*
+    プロセスが生存している場合はexitCodeにnull、終了していればnumber型のexit codeが代入されています。
+    プロセスが既に落ちている場合にtreeKillを実行する意味がないのでこうしてあります。
+  */
+  if (engineProcess.exitCode !== null) {
+    runEngine();
+    return;
+  }
+
+  // エンジンエラー時のエラーウィンドウ抑制用。
+  willQuitEngine = true;
+
+  /*
+    「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
+    closeイベントはexitイベントよりも後に発火します。
+  */
+  const closeListenerCallBack = () => runEngine();
+  engineProcess.once("close", closeListenerCallBack);
+
+  // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+  treeKill(engineProcess.pid, (error) => {
+    // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
+    if (error !== null) {
+      console.log(error);
+
+      // 再起動用に設定したclose listenerを削除。
+      engineProcess.removeListener("close", closeListenerCallBack);
+
+      // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理。
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+    }
+  });
 });
 
 // app callback
