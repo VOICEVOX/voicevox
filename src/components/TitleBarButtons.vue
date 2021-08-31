@@ -16,7 +16,11 @@
       class="title-bar-buttons"
       id="pinned-btn"
       @click="changePinWindow()"
-    ></q-btn>
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
     <q-btn
       v-else
       dense
@@ -27,7 +31,11 @@
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
-    ></q-btn>
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
     <q-btn
       dense
       flat
@@ -77,7 +85,11 @@
       class="title-bar-buttons"
       id="pinned-btn"
       @click="changePinWindow()"
-    ></q-btn>
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
     <q-btn
       v-else
       dense
@@ -88,7 +100,11 @@
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
-    ></q-btn>
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
     <q-btn
       dense
       flat
