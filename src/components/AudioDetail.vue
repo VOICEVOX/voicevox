@@ -19,6 +19,7 @@
               color="primary"
               text-color="secondary"
               icon="play_arrow"
+              :disable="query == undefined"
               @click="play"
             ></q-btn>
             <q-btn
@@ -35,7 +36,9 @@
               size="small"
               icon="file_download"
               @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
+              :disable="
+                nowPlaying || nowGenerating || uiLocked || query == undefined
+              "
             ></q-btn>
           </template>
         </div>

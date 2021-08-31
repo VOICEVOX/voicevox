@@ -12,8 +12,6 @@ import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
-export const DEFAULT_SAMPLING_RATE = 24000;
-
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
@@ -166,7 +164,6 @@ export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
 export const GENERATE_INITIAL_AUDIO_ITEM = "GENERATE_INITIAL_AUDIO_ITEM";
-export const GENERATE_INITIAL_AUDIO_QUERY = "GENERATE_INITIAL_AUDIO_QUERY";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
 export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
@@ -442,7 +439,7 @@ export const audioStore = typeAsStoreOptions({
       dispatch(DISPOSE_AUDIO_KEY, { audioKey });
     },
     [GENERATE_INITIAL_AUDIO_ITEM]: async (
-      { dispatch },
+      context,
       {
         text,
         characterIndex,
@@ -451,40 +448,7 @@ export const audioStore = typeAsStoreOptions({
       return {
         text: text ?? "",
         characterIndex: characterIndex ?? 0,
-        query: await dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}),
-      };
-    },
-    [GENERATE_INITIAL_AUDIO_QUERY]: async (
-      context,
-      {
-        accentPhrases,
-        speedScale,
-        pitchScale,
-        intonationScale,
-        volumeScale,
-        prePhonemeLength,
-        postPhonemeLength,
-        outputSamplingRate,
-      }: {
-        accentPhrases: Array<AccentPhrase> | undefined;
-        speedScale: number | undefined;
-        pitchScale: number | undefined;
-        intonationScale: number | undefined;
-        volumeScale: number | undefined;
-        prePhonemeLength: number | undefined;
-        postPhonemeLength: number | undefined;
-        outputSamplingRate: number | undefined;
-      }
-    ): Promise<AudioQuery> => {
-      return {
-        accentPhrases: accentPhrases ?? [],
-        speedScale: speedScale ?? 1,
-        pitchScale: pitchScale ?? 0,
-        intonationScale: intonationScale ?? 1,
-        volumeScale: volumeScale ?? 1,
-        prePhonemeLength: prePhonemeLength ?? 0.1,
-        postPhonemeLength: postPhonemeLength ?? 0.1,
-        outputSamplingRate: outputSamplingRate ?? DEFAULT_SAMPLING_RATE,
+        query: undefined,
       };
     },
     [ISSUE_AUDIO_KEY]: () => {
@@ -630,11 +594,14 @@ export const audioStore = typeAsStoreOptions({
         audioElem.pause();
 
         // 音声用意
-        let blob = await dispatch(GET_AUDIO_CACHE, { audioKey });
+        let blob: Blob | null = await dispatch(GET_AUDIO_CACHE, { audioKey });
         if (!blob) {
           commit(SET_AUDIO_NOW_GENERATING, { audioKey, nowGenerating: true });
           try {
-            blob = await dispatch(GENERATE_AUDIO, { audioKey });
+            blob = await dispatch(GENERATE_AUDIO, { audioKey }).catch((err) => {
+              window.electron.logError(err, `Faild to synthesis an audio.`);
+              return null;
+            });
           } finally {
             commit(SET_AUDIO_NOW_GENERATING, {
               audioKey,
@@ -642,28 +609,33 @@ export const audioStore = typeAsStoreOptions({
             });
           }
         }
-        audioElem.src = URL.createObjectURL(blob);
 
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: true });
-        };
-        audioElem.addEventListener("play", played);
+        if (blob !== null) {
+          audioElem.src = URL.createObjectURL(blob);
 
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(audioElem.ended);
+          // 再生終了時にresolveされるPromiseを返す
+          const played = async () => {
+            commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: true });
           };
-          audioElem.addEventListener("pause", paused);
-        }).finally(async () => {
-          audioElem.removeEventListener("play", played);
-          audioElem.removeEventListener("pause", paused);
-          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: false });
-        });
+          audioElem.addEventListener("play", played);
 
-        audioElem.play();
-        return audioPlayPromise;
+          let paused: () => void;
+          const audioPlayPromise = new Promise<boolean>((resolve) => {
+            paused = () => {
+              resolve(audioElem.ended);
+            };
+            audioElem.addEventListener("pause", paused);
+          }).finally(async () => {
+            audioElem.removeEventListener("play", played);
+            audioElem.removeEventListener("pause", paused);
+            commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: false });
+          });
+
+          audioElem.play();
+          return audioPlayPromise;
+        } else {
+          return new Promise((resolve) => resolve(true));
+        }
       }
     ),
     [STOP_AUDIO]: (_, { audioKey }: { audioKey: string }) => {
@@ -753,18 +725,45 @@ export const audioCommandStore = typeAsStoreOptions({
       { audioKey, text }: { audioKey: string; text: string }
     ) => {
       const characterIndex = state.audioItems[audioKey].characterIndex ?? 0;
-      const accentPhrases: AccentPhrase[] = await dispatch(
-        FETCH_ACCENT_PHRASES,
-        {
-          text: text,
-          characterIndex: characterIndex,
-        }
-      ).catch(() => []);
-      commit(COMMAND_UPDATE_AUDIO_TEXT, {
-        audioKey,
-        text,
-        accentPhrases,
-      });
+      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      if (query !== undefined) {
+        const accentPhrases: AccentPhrase[] = await dispatch(
+          FETCH_ACCENT_PHRASES,
+          {
+            text: text,
+            characterIndex: characterIndex,
+          }
+        ).catch((err) => {
+          window.electron.logError(
+            err,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          return [];
+        });
+        commit(COMMAND_UPDATE_AUDIO_TEXT, {
+          audioKey,
+          text,
+          haveAudioQuery: true,
+          accentPhrases,
+        });
+      } else {
+        const newAudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+          text,
+          characterIndex,
+        }).catch((err) => {
+          window.electron.logError(
+            err,
+            `Failed to fetch audio query for text "${text}"`
+          );
+          return undefined;
+        });
+        commit(COMMAND_UPDATE_AUDIO_TEXT, {
+          audioKey,
+          text,
+          haveAudioQuery: false,
+          query: newAudioQuery,
+        });
+      }
     },
     [COMMAND_CHANGE_CHARACTER_INDEX]: async (
       { state, dispatch, commit },
@@ -779,7 +778,14 @@ export const audioCommandStore = typeAsStoreOptions({
             accentPhrases,
             characterIndex,
           }
-        ).catch(() => accentPhrases);
+        ).catch((err) => {
+          window.electron.logError(
+            err,
+            "Failed to fetch of mora pitch.",
+            JSON.stringify(accentPhrases)
+          );
+          return accentPhrases;
+        });
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
           characterIndex: characterIndex,
           audioKey: audioKey,
@@ -788,10 +794,19 @@ export const audioCommandStore = typeAsStoreOptions({
         });
       } else {
         const text = state.audioItems[audioKey].text;
-        const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-          text: text,
-          characterIndex: characterIndex,
-        }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
+        const query: AudioQuery | undefined = await dispatch(
+          FETCH_AUDIO_QUERY,
+          {
+            text: text,
+            characterIndex: characterIndex,
+          }
+        ).catch((err) => {
+          window.electron.logError(
+            err,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          return undefined;
+        });
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
           characterIndex,
           audioKey,
@@ -824,7 +839,14 @@ export const audioCommandStore = typeAsStoreOptions({
         const resultAccentPhrases: AccentPhrase[] = await dispatch(
           FETCH_MORA_PITCH,
           { accentPhrases: newAccentPhrases, characterIndex }
-        ).catch(() => newAccentPhrases);
+        ).catch((err) => {
+          window.electron.logError(
+            err,
+            "Failed to fetch of mora pitch.",
+            JSON.stringify(newAccentPhrases)
+          );
+          return newAccentPhrases;
+        });
         commit(COMMAND_CHANGE_ACCENT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
@@ -860,7 +882,14 @@ export const audioCommandStore = typeAsStoreOptions({
         const resultAccentPhrases = await dispatch(FETCH_MORA_PITCH, {
           accentPhrases: newAccentPhrases,
           characterIndex,
-        }).catch(() => newAccentPhrases);
+        }).catch((err) => {
+          window.electron.logError(
+            err,
+            "Failed to fetch of mora pitch.",
+            JSON.stringify(newAccentPhrases)
+          );
+          return newAccentPhrases;
+        });
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
@@ -923,17 +952,6 @@ export const audioCommandStore = typeAsStoreOptions({
         }
 
         const audioItems = parseTextFile(body, state.characterInfos);
-        for (
-          let count = 0;
-          !getters[IS_ENGINE_READY]() && count < 120;
-          count++
-        ) {
-          console.error("Waiting engine...");
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-        if (!getters[IS_ENGINE_READY]()) {
-          console.error("The engine must be running to read text.");
-        }
 
         const audioKeys = await Promise.all(
           audioItems.map(
@@ -941,13 +959,22 @@ export const audioCommandStore = typeAsStoreOptions({
           )
         );
 
+        const isEngineReady: boolean = getters[IS_ENGINE_READY]();
         for (const audioItem of audioItems) {
           const text: string = audioItem.text;
           const characterIndex: number = audioItem.characterIndex ?? 0;
-          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-            text,
-            characterIndex,
-          }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
+          const query: AudioQuery | undefined = isEngineReady
+            ? await dispatch(FETCH_AUDIO_QUERY, {
+                text,
+                characterIndex,
+              }).catch((err) => {
+                window.electron.logError(
+                  err,
+                  "Failed to fetch AudioQuery while loading a text file."
+                );
+                return undefined;
+              })
+            : undefined;
           audioItem.query = query;
         }
 
@@ -956,7 +983,7 @@ export const audioCommandStore = typeAsStoreOptions({
     ),
     [COMMAND_PUT_TEXTS]: createUILockAction(
       async (
-        { dispatch, commit },
+        { getters, dispatch, commit },
         {
           texts,
           characterIndex,
@@ -979,13 +1006,23 @@ export const audioCommandStore = typeAsStoreOptions({
             async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
           )
         );
+
+        const isEngineReady: boolean = getters[IS_ENGINE_READY]();
         for (const audioItem of audioItems) {
           const text: string = audioItem.text;
           const characterIndex: number = audioItem.characterIndex ?? 0;
-          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-            text,
-            characterIndex,
-          }).catch(() => dispatch(GENERATE_INITIAL_AUDIO_QUERY, {}));
+          const query: AudioQuery | undefined = isEngineReady
+            ? await dispatch(FETCH_AUDIO_QUERY, {
+                text,
+                characterIndex,
+              }).catch((err) => {
+                window.electron.logError(
+                  err,
+                  "Failed to fetch AudioQuery while pasting text"
+                );
+                return undefined;
+              })
+            : undefined;
           audioItem.query = query;
         }
         commit(COMMAND_PUT_TEXTS, { audioItems, audioKeys, prevAudioKey });
@@ -1004,16 +1041,32 @@ export const audioCommandStore = typeAsStoreOptions({
     },
     [COMMAND_UPDATE_AUDIO_TEXT]: (
       draft,
-      payload: { audioKey: string; text: string; accentPhrases: AccentPhrase[] }
+      payload: { audioKey: string; text: string } & (
+        | {
+            haveAudioQuery: true;
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            haveAudioQuery: false;
+            query: AudioQuery | undefined;
+          }
+      )
     ) => {
       audioStore.mutations[SET_AUDIO_TEXT](draft, {
         audioKey: payload.audioKey,
         text: payload.text,
       });
-      audioStore.mutations[SET_ACCENT_PHRASES](draft, {
-        audioKey: payload.audioKey,
-        accentPhrases: payload.accentPhrases,
-      });
+      if (payload.haveAudioQuery) {
+        audioStore.mutations[SET_ACCENT_PHRASES](draft, {
+          audioKey: payload.audioKey,
+          accentPhrases: payload.accentPhrases,
+        });
+      } else if (payload.query !== undefined) {
+        audioStore.mutations[SET_AUDIO_QUERY](draft, {
+          audioKey: payload.audioKey,
+          audioQuery: payload.query,
+        });
+      }
     },
     [COMMAND_CHANGE_CHARACTER_INDEX]: (
       draft,
