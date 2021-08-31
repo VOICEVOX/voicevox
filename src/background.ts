@@ -13,6 +13,7 @@ import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import { logError } from "./electron/log";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
@@ -23,6 +24,13 @@ let win: BrowserWindow;
 
 // 多重起動防止
 if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
+
+process.on("uncaughtException", (error) => {
+  logError(error);
+});
+process.on("unhandledRejection", (reason) => {
+  logError(reason);
+});
 
 // 設定
 const appDirPath = path.dirname(app.getPath("exe"));
@@ -302,6 +310,10 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
+ipcMainHandle("LOG_ERROR", (_, ...params) => {
+  logError(...params);
+});
+
 ipcMainHandle("RESTART_ENGINE", async () => {
   /*
     プロセスが生存している場合はexitCodeにnull、終了していればnumber型のexit codeが代入されています。
@@ -360,7 +372,7 @@ app.on("quit", () => {
   try {
     engineProcess.pid != undefined && treeKill(engineProcess.pid);
   } catch {
-    console.error("engine kill error");
+    logError("engine kill error");
   }
 });
 
@@ -373,7 +385,7 @@ app.on("ready", async () => {
     try {
       await installExtension(VUEJS3_DEVTOOLS);
     } catch (e) {
-      console.error("Vue Devtools failed to install:", e.toString());
+      logError("Vue Devtools failed to install:", e.toString());
     }
   }
 
