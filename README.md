@@ -1,5 +1,7 @@
 # VOICEVOX
 
+[VOICEVOX](https://voicevox.hiroshiba.jp/) のフロントエンド。（音声合成エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) へ）
+
 ## 環境構築
 
 [.node-version](.node-version)に記載されているバージョンの Node.js をインストールしてください。
