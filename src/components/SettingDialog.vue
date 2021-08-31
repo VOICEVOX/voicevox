@@ -80,8 +80,7 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { SET_FILE_ENCODING } from "@/store/ui";
-
-type Encoding = "UTF-8" | "Shift_JIS";
+import { Encoding } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
