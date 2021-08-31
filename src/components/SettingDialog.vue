@@ -48,7 +48,12 @@
                   label="GPU"
                 />
                 <div class="q-pl-lg">
-                  <q-btn label="再起動" color="green" @click="restartEngine" />
+                  <q-btn
+                    size="12px"
+                    label="再起動"
+                    color="green"
+                    @click="restartEngineProcess"
+                  />
                 </div>
               </q-card-actions>
             </q-card>
@@ -82,9 +87,10 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { SET_FILE_ENCODING } from "@/store/ui";
+import { ASYNC_UI_LOCK, SET_FILE_ENCODING, SET_USE_GPU } from "@/store/ui";
 import { Encoding } from "@/type/preload";
 import { RESTART_ENGINE } from "@/store/audio";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -97,19 +103,79 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const $q = useQuasar();
+
     const settingDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
 
-    const store = useStore();
-
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
       set: (mode: string) => {
-        emit(mode);
+        changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
+
+    const changeUseGPU = async (useGpu: boolean) => {
+      if (store.state.useGpu === useGpu) return;
+
+      const change = async () => {
+        await store.dispatch(SET_USE_GPU, { useGpu });
+        restartEngineProcess();
+
+        $q.dialog({
+          title: "エンジンの起動モードを変更しました",
+          message: "変更を適用するためにエンジンを再起動します。",
+          ok: {
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+      };
+
+      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
+        store.dispatch(ASYNC_UI_LOCK, {
+          callback: async () => {
+            $q.loading.show({
+              spinnerColor: "primary",
+              spinnerSize: 50,
+              boxClass: "bg-white text-secondary",
+              message: "起動モードを変更中です",
+            });
+            resolve(await window.electron.isAvailableGPUMode());
+            $q.loading.hide();
+          },
+        });
+      });
+
+      if (useGpu && !isAvailableGPUMode) {
+        $q.dialog({
+          title: "対応するGPUデバイスが見つかりません",
+          message:
+            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
+            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+          html: true,
+          persistent: true,
+          focus: "cancel",
+          style: {
+            width: "90vw",
+            maxWidth: "90vw",
+          },
+          ok: {
+            label: "変更する",
+            flat: true,
+            textColor: "secondary",
+          },
+          cancel: {
+            label: "変更しない",
+            flat: true,
+            textColor: "secondary",
+          },
+        }).onOk(change);
+      } else change();
+    };
 
     const fileEncoding = computed({
       get: () => store.state.fileEncoding,
@@ -119,7 +185,7 @@ export default defineComponent({
         }),
     });
 
-    const restartEngine = () => {
+    const restartEngineProcess = () => {
       store.dispatch(RESTART_ENGINE);
     };
 
@@ -127,7 +193,7 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       fileEncoding,
-      restartEngine,
+      restartEngineProcess,
     };
   },
 });

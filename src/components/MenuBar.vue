@@ -87,69 +87,6 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
-    const restartEngineProcess = () => {
-      store.dispatch(RESTART_ENGINE);
-    };
-
-    const changeUseGPU = async (useGpu: boolean) => {
-      if (store.state.useGpu === useGpu) return;
-
-      const change = async () => {
-        await store.dispatch(SET_USE_GPU, { useGpu });
-        restartEngineProcess();
-
-        $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにエンジンを再起動します。",
-          ok: {
-            flat: true,
-            textColor: "secondary",
-          },
-        });
-      };
-
-      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch(ASYNC_UI_LOCK, {
-          callback: async () => {
-            $q.loading.show({
-              spinnerColor: "primary",
-              spinnerSize: 50,
-              boxClass: "bg-white text-secondary",
-              message: "起動モードを変更中です",
-            });
-            resolve(await window.electron.isAvailableGPUMode());
-            $q.loading.hide();
-          },
-        });
-      });
-
-      if (useGpu && !isAvailableGPUMode) {
-        $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          html: true,
-          persistent: true,
-          focus: "cancel",
-          style: {
-            width: "90vw",
-            maxWidth: "90vw",
-          },
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "secondary",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "secondary",
-          },
-        }).onOk(change);
-      } else change();
-    };
-
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -196,59 +133,6 @@ export default defineComponent({
             onClick: () => {
               store.dispatch(LOAD_PROJECT_FILE, {});
             },
-          },
-        ],
-      },
-      {
-        type: "root",
-        label: "エンジン",
-        subMenu: [
-          {
-            type: "root",
-            label: "起動モード",
-            subMenu: [
-              {
-                type: "checkbox",
-                label: "CPU",
-                checked: computed(() => !store.state.useGpu),
-                onClick: async () => changeUseGPU(false),
-              },
-              {
-                type: "checkbox",
-                label: "GPU",
-                checked: computed(() => store.state.useGpu),
-                onClick: async () => changeUseGPU(true),
-              },
-            ],
-          },
-          {
-            type: "button",
-            label: "再起動",
-            onClick: () => restartEngineProcess(),
-          },
-        ],
-      },
-      {
-        type: "root",
-        label: "文字コード",
-        subMenu: [
-          {
-            type: "checkbox",
-            label: "UTF-8",
-            checked: computed(() => store.state.fileEncoding === "UTF-8"),
-            onClick: () =>
-              store.dispatch(SET_FILE_ENCODING, {
-                encoding: "UTF-8",
-              }),
-          },
-          {
-            type: "checkbox",
-            label: "Shift_JIS",
-            checked: computed(() => store.state.fileEncoding === "Shift_JIS"),
-            onClick: () =>
-              store.dispatch(SET_FILE_ENCODING, {
-                encoding: "Shift_JIS",
-              }),
           },
         ],
       },
@@ -299,8 +183,6 @@ export default defineComponent({
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
-      changeUseGPU,
-      restartEngineProcess,
     };
   },
 });
