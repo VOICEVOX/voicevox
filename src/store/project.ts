@@ -159,8 +159,8 @@ export const projectStore = {
           }
           commit(SET_PROJECT_FILEPATH, { filePath });
         } catch (err) {
-          console.error(err);
-          console.error(
+          window.electron.logError(
+            err,
             `VOICEVOX Project file "${filePath}" is a invalid file.`
           );
           await window.electron.showErrorDialog({
