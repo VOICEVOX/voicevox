@@ -107,6 +107,11 @@ type IpcIHData = {
     return: void;
   };
 
+  LOG_ERROR: {
+    args: [...params: unknown[]];
+    return: void;
+  };
+
   RESTART_ENGINE: {
     args: [];
     return: void;
