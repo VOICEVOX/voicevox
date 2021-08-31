@@ -7,71 +7,63 @@
     transition-show="slide-up"
     transition-hide="slide-down"
   >
-    <q-layout container view="hhh lpr fFf" class="bg-white">
-      <q-footer reveal elevated>
+    <q-layout container view="hHh Lpr fFf" class="bg-white">
+      <q-header class="q-py-sm" elevated>
         <q-toolbar>
           <q-toolbar-title class="text-secondary">オプション</q-toolbar-title>
+          <q-space />
+          <!-- colse button -->
+          <q-btn round flat icon="close" @click="modelValueComputed = false" />
         </q-toolbar>
-      </q-footer>
-      <q-page
-        ref="scroller"
-        class="relative-absolute-wrapper scroller"
-        display="flex"
-      >
-        <div class="q-pa-md row items-start q-gutter-md">
-          <!-- Engine Mode Card -->
-          <q-card class="setting-card">
-            <q-card-section class="bg-nvidia">
-              <div class="text-h5">エンジン</div>
-              <div class="text-subtitle2">
-                GPUモードには <b>NVIDIA&trade;</b> GPUが必要です
+      </q-header>
+      <q-page-container>
+        <q-page ref="scroller" class="relative-absolute-wrapper scroller">
+          <div class="q-pa-md row items-start q-gutter-md">
+            <!-- Engine Mode Card -->
+            <q-card class="setting-card">
+              <q-card-section class="bg-nvidia">
+                <div class="text-h5">エンジン</div>
+                <div class="text-subtitle2">
+                  GPUモードには <b>NVIDIA&trade;</b> GPUが必要です
+                </div>
+              </q-card-section>
+
+              <q-separator />
+              <q-card-actions class="q-pa-mdi">
+                <q-toggle
+                  v-model="engineMode"
+                  :label="(engineMode ? 'GPU' : 'CPU') + ' モード'"
+                  icon="loop"
+                  color="green"
+                />
+                <q-btn flat label="再起動" color="green" @click="restart" />
+              </q-card-actions>
+            </q-card>
+
+            <!-- File Encoding Card -->
+            <q-card class="setting-card">
+              <q-card-section class="bg-blue">
+                <div class="text-h5">文字コード</div>
+              </q-card-section>
+
+              <q-separator />
+
+              <div class="q-pa-md">
+                <q-btn-toggle
+                  v-model="fileEncoding"
+                  push
+                  flat
+                  toggle-color="blue"
+                  :options="[
+                    { label: 'Shift_JIS', value: 'Shift_JIS' },
+                    { label: 'UTF-8', value: 'UTF-8' },
+                  ]"
+                />
               </div>
-            </q-card-section>
-
-            <q-separator />
-            <q-card-actions class="q-pa-mdi">
-              <q-toggle
-                v-model="engineMode"
-                :label="(engineMode ? 'GPU' : 'CPU') + ' モード'"
-                icon="loop"
-                color="green"
-              />
-              <q-btn flat label="再起動" color="green" @click="restart" />
-            </q-card-actions>
-          </q-card>
-
-          <!-- File Encoding Card -->
-          <q-card class="setting-card">
-            <q-card-section class="bg-blue">
-              <div class="text-h5">文字コード</div>
-            </q-card-section>
-
-            <q-separator />
-
-            <div class="q-pa-md">
-              <q-btn-toggle
-                v-model="fileEncoding"
-                push
-                flat
-                toggle-color="blue"
-                :options="[
-                  { label: 'Shift_JIS', value: 'Shift_JIS' },
-                  { label: 'UTF-8', value: 'UTF-8' },
-                ]"
-              />
-            </div>
-          </q-card>
-          <!-- close button -->
-          <q-page-sticky position="top-right" :offset="[20, 20]">
-            <q-btn
-              round
-              color="primary"
-              icon="close"
-              @click="modelValueComputed = false"
-            />
-          </q-page-sticky>
-        </div>
-      </q-page>
+            </q-card>
+          </div>
+        </q-page>
+      </q-page-container>
     </q-layout>
   </q-dialog>
 </template>
