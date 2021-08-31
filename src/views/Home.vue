@@ -2,67 +2,7 @@
   <menu-bar ref="menuBarRef" />
 
   <q-layout reveal elevated>
-    <q-header class="q-py-sm">
-      <q-toolbar>
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="uiLocked"
-          @click="playContinuously"
-          >連続再生</q-btn
-        >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="!nowPlayingContinuously"
-          @click="stopContinuously"
-          >停止</q-btn
-        >
-
-        <q-space />
-
-        <!-- <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="!canUndo || uiLocked"
-          @click="undo"
-          >元に戻す</q-btn
-        >
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="!canRedo || uiLocked"
-          @click="redo"
-          >やり直す</q-btn
-        > -->
-        <q-btn
-          id="setting_button"
-          unelevated
-          round
-          icon="settings"
-          class="q-mr-sm"
-          :disable="uiLocked"
-          @click="isSettingDialogOpenComputed = true"
-        />
-        <q-btn
-          unelevated
-          color="white"
-          text-color="secondary"
-          class="text-no-wrap text-bold"
-          :disable="uiLocked"
-          @click="isHelpDialogOpenComputed = true"
-          >ヘルプ</q-btn
-        >
-      </q-toolbar>
-    </q-header>
+    <header-bar />
 
     <q-page-container>
       <q-page class="main-row-panes">
@@ -178,6 +118,7 @@ import {
   watch,
 } from "vue";
 import { useStore, SHOW_WARNING_DIALOG } from "@/store";
+import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
@@ -185,17 +126,14 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
 import { AudioItem } from "@/store/type";
-import { LOAD_PROJECT_FILE, SAVE_PROJECT_FILE } from "@/store/project";
+import { LOAD_PROJECT_FILE } from "@/store/project";
 import {
   ACTIVE_AUDIO_KEY,
   GENERATE_AND_SAVE_ALL_AUDIO,
   IMPORT_FROM_FILE,
   LOAD_CHARACTER,
-  PLAY_CONTINUOUSLY_AUDIO,
   REGISTER_AUDIO_ITEM,
-  STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import {
   UI_LOCKED,
@@ -212,6 +150,7 @@ export default defineComponent({
 
   components: {
     MenuBar,
+    HeaderBar,
     AudioCell,
     AudioDetail,
     AudioInfo,
@@ -222,15 +161,10 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
-    const nowPlayingContinuously = computed(
-      () => store.state.nowPlayingContinuously
-    );
-
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const canUndo = computed(() => store.getters[CAN_UNDO]);
-    const canRedo = computed(() => store.getters[CAN_REDO]);
 
     // add hotkeys
     Mousetrap.bind(["ctrl+e"], () => {
@@ -241,29 +175,8 @@ export default defineComponent({
       addAudioItem();
     });
 
-    const undo = () => {
-      store.dispatch(UNDO);
-    };
-    const redo = () => {
-      store.dispatch(REDO);
-    };
-    const playContinuously = () => {
-      store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
-    };
-    const stopContinuously = () => {
-      store.dispatch(STOP_CONTINUOUSLY_AUDIO, {});
-    };
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
-    };
-    const saveProjectFile = () => {
-      store.dispatch(SAVE_PROJECT_FILE, {});
-    };
-    const loadProjectFile = () => {
-      store.dispatch(LOAD_PROJECT_FILE, {});
-    };
-    const importFromFile = () => {
-      store.dispatch(IMPORT_FROM_FILE, {});
     };
 
     // view
@@ -354,23 +267,6 @@ export default defineComponent({
       }
     });
 
-    // セルを追加して移動
-    const addAndMoveCell = async ({
-      prevAudioKey,
-    }: {
-      prevAudioKey: string;
-    }) => {
-      const audioItem: AudioItem = {
-        text: "",
-        characterIndex: audioItems.value[prevAudioKey].characterIndex,
-      };
-      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
-        audioItem,
-        prevAudioKey,
-      });
-      audioCellRefs[newAudioKey].focusTextField();
-    };
-
     // セルをフォーカス
     const focusCell = ({ audioKey }: { audioKey: string }) => {
       audioCellRefs[audioKey].focusTextField();
@@ -437,25 +333,14 @@ export default defineComponent({
     return {
       audioItems,
       audioKeys,
-      nowPlayingContinuously,
       uiLocked,
-      canUndo,
-      canRedo,
-      undo,
-      redo,
       addAudioCellRef,
       addAudioItem,
       shouldShowPanes,
-      addAndMoveCell,
       focusCell,
       changeAudioDetailPaneMaxHeight,
       resizeObserverRef,
-      playContinuously,
-      stopContinuously,
       generateAndSaveAllAudio,
-      saveProjectFile,
-      loadProjectFile,
-      importFromFile,
       MIN_PORTRAIT_PANE_WIDTH,
       MAX_PORTRAIT_PANE_WIDTH,
       portraitPaneWidth,
