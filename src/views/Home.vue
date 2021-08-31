@@ -1,5 +1,5 @@
 <template>
-  <menu-bar ref="menuBarRef" />
+  <menu-bar />
 
   <q-layout reveal elevated>
     <header-bar />
@@ -100,12 +100,7 @@
     </q-page-container>
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog
-    v-model="isSettingDialogOpenComputed"
-    @switchGPU="changeUseGPU(true)"
-    @switchCPU="changeUseGPU(false)"
-    @restart="restartEngineProcess"
-  />
+  <setting-dialog v-model="isSettingDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -299,16 +294,6 @@ export default defineComponent({
         store.dispatch(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen: val }),
     });
 
-    const menuBarRef = ref<typeof MenuBar>();
-
-    const changeUseGPU = (mode: boolean) => {
-      menuBarRef.value?.changeUseGPU(mode);
-    };
-
-    const restartEngineProcess = () => {
-      menuBarRef.value?.restartEngineProcess();
-    };
-
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -353,9 +338,6 @@ export default defineComponent({
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
-      menuBarRef,
-      changeUseGPU,
-      restartEngineProcess,
       dragEventCounter,
       loadDraggedFile,
     };
