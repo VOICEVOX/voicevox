@@ -3,17 +3,22 @@
     maximized
     persistent
     class="setting-dialog"
-    v-model="modelValueComputed"
+    v-model="settingDialogOpenedComputed"
     transition-show="slide-up"
     transition-hide="slide-down"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
-      <q-header class="q-py-sm" elevated>
+      <q-header class="q-pa-sm" elevated>
         <q-toolbar>
           <q-toolbar-title class="text-secondary">オプション</q-toolbar-title>
           <q-space />
           <!-- colse button -->
-          <q-btn round flat icon="close" @click="modelValueComputed = false" />
+          <q-btn
+            round
+            flat
+            icon="close"
+            @click="settingDialogOpenedComputed = false"
+          />
         </q-toolbar>
       </q-header>
       <q-page-container>
@@ -29,14 +34,22 @@
               </q-card-section>
 
               <q-separator />
-              <q-card-actions class="q-pa-mdi">
-                <q-toggle
+              <q-card-actions class="q-px-md">
+                <q-radio
                   v-model="engineMode"
-                  :label="(engineMode ? 'GPU' : 'CPU') + ' モード'"
-                  icon="loop"
                   color="green"
+                  val="switchCPU"
+                  label="CPU"
                 />
-                <q-btn flat label="再起動" color="green" @click="restart" />
+                <q-radio
+                  v-model="engineMode"
+                  color="green"
+                  val="switchGPU"
+                  label="GPU"
+                />
+                <div class="q-pl-lg">
+                  <q-btn label="再起動" color="green" @click="restartEngine" />
+                </div>
               </q-card-actions>
             </q-card>
 
@@ -51,12 +64,10 @@
               <div class="q-pa-md">
                 <q-btn-toggle
                   v-model="fileEncoding"
-                  push
-                  flat
                   toggle-color="blue"
                   :options="[
-                    { label: 'Shift_JIS', value: 'Shift_JIS' },
                     { label: 'UTF-8', value: 'UTF-8' },
+                    { label: 'Shift_JIS', value: 'Shift_JIS' },
                   ]"
                 />
               </div>
@@ -73,6 +84,7 @@ import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { SET_FILE_ENCODING } from "@/store/ui";
 import { Encoding } from "@/type/preload";
+import { RESTART_ENGINE } from "@/store/audio";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -85,7 +97,7 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    const modelValueComputed = computed({
+    const settingDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
@@ -93,9 +105,9 @@ export default defineComponent({
     const store = useStore();
 
     const engineMode = computed({
-      get: () => store.state.useGpu,
-      set: (mode: boolean) => {
-        emit(mode ? "switchGPU" : "switchCPU");
+      get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
+      set: (mode: string) => {
+        emit(mode);
       },
     });
 
@@ -107,15 +119,15 @@ export default defineComponent({
         }),
     });
 
-    const restart = () => {
-      emit("restart");
+    const restartEngine = () => {
+      store.dispatch(RESTART_ENGINE);
     };
 
     return {
-      modelValueComputed,
+      settingDialogOpenedComputed,
       engineMode,
       fileEncoding,
-      restart,
+      restartEngine,
     };
   },
 });
