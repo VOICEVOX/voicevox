@@ -100,6 +100,7 @@
     </q-page-container>
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
+  <setting-dialog v-model="isSettingDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -118,6 +119,7 @@ import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
+import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { AudioItem } from "@/store/type";
 import { LOAD_PROJECT_FILE } from "@/store/project";
@@ -130,7 +132,12 @@ import {
   REGISTER_AUDIO_ITEM,
   LOAD_CHARACTER,
 } from "@/store/audio";
-import { UI_LOCKED, IS_HELP_DIALOG_OPEN, SHOULD_SHOW_PANES } from "@/store/ui";
+import {
+  UI_LOCKED,
+  IS_HELP_DIALOG_OPEN,
+  SHOULD_SHOW_PANES,
+  IS_SETTING_DIALOG_OPEN,
+} from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -145,6 +152,7 @@ export default defineComponent({
     AudioDetail,
     AudioInfo,
     HelpDialog,
+    SettingDialog,
     CharacterPortrait,
   },
 
@@ -277,6 +285,13 @@ export default defineComponent({
         store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
     });
 
+    // show setting dialog
+    const isSettingDialogOpenComputed = computed({
+      get: () => store.state.isSettingDialogOpen,
+      set: (val) =>
+        store.dispatch(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen: val }),
+    });
+
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER);
@@ -335,6 +350,7 @@ export default defineComponent({
       audioDetailPaneMaxHeight,
       engineState,
       isHelpDialogOpenComputed,
+      isSettingDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

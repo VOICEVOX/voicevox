@@ -23,6 +23,7 @@ export type State = {
   redoCommands: Command[];
   useGpu: boolean;
   isHelpDialogOpen: boolean;
+  isSettingDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;

@@ -41,6 +41,15 @@
         >やり直す</q-btn
       >
       <q-btn
+        id="setting_button"
+        unelevated
+        round
+        icon="settings"
+        class="q-mr-sm"
+        :disable="uiLocked"
+        @click="openSettingDialog"
+      />
+      <q-btn
         unelevated
         color="white"
         text-color="secondary"
@@ -57,7 +66,11 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
-import { UI_LOCKED, IS_HELP_DIALOG_OPEN } from "@/store/ui";
+import {
+  UI_LOCKED,
+  IS_HELP_DIALOG_OPEN,
+  IS_SETTING_DIALOG_OPEN,
+} from "@/store/ui";
 import {
   PLAY_CONTINUOUSLY_AUDIO,
   STOP_CONTINUOUSLY_AUDIO,
@@ -89,6 +102,9 @@ export default defineComponent({
     const openHelpDialog = () => {
       store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: true });
     };
+    const openSettingDialog = () => {
+      store.dispatch(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen: true });
+    };
 
     return {
       uiLocked,
@@ -100,6 +116,7 @@ export default defineComponent({
       playContinuously,
       stopContinuously,
       openHelpDialog,
+      openSettingDialog,
     };
   },
 });
