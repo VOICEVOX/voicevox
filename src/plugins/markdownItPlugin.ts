@@ -9,7 +9,9 @@ export const useMarkdownIt = (): MarkdownIt => {
 
 export const markdownItPlugin: Plugin = {
   install(app) {
-    const md = new MarkdownIt();
+    const md = new MarkdownIt({
+      linkify: true,
+    });
 
     // 全てのリンクに_blankを付ける
     // https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
