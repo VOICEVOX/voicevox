@@ -18,6 +18,7 @@ export type State = {
   audioDetailPaneOffset?: number;
   audioInfoPaneOffset?: number;
   nowPlayingContinuously: boolean;
+  isSaveAll: boolean;
   undoCommands: ICommand<State>[];
   redoCommands: ICommand<State>[];
   useGpu: boolean;
@@ -40,3 +41,4 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+export type SaveAllCommandResult = "SUCCESS" | "WRITE_ERROR" | "ENGINE_ERROR";

@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, State } from "./type";
+import { AudioItem, EngineState, SaveAllCommandResult, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -62,6 +62,20 @@ function buildFileName(state: State, audioKey: string) {
   );
 }
 
+function showErrorWindowForFailedSpeechSynthesis() {
+  window.electron.showErrorDialog({
+    title: "Error",
+    message: "音声の合成に失敗しました。",
+  });
+}
+
+function showErrorWindowForFailedWriteFile() {
+  window.electron.showErrorDialog({
+    title: "Error",
+    message: "書き込みが失敗しました。",
+  });
+}
+
 export const SET_ENGINE_STATE = "SET_ENGINE_STATE";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
@@ -107,6 +121,7 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
+export const SET_IS_SAVE_ALL = "SET_IS_SAVE_ALL";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -157,6 +172,9 @@ export const audioStore = {
       { nowPlaying }: { nowPlaying: boolean }
     ) {
       state.nowPlayingContinuously = nowPlaying;
+    },
+    [SET_IS_SAVE_ALL](state, { isSaveAll }: { isSaveAll: boolean }) {
+      state.isSaveAll = isSaveAll;
     },
   },
 
@@ -508,17 +526,25 @@ export const audioStore = {
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
+          })
+          .catch((e) => {
+            window.electron.logError(e);
+            return null;
           });
       }
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { state, dispatch },
+        { state, dispatch, commit },
         {
           audioKey,
           filePath,
           encoding,
-        }: { audioKey: string; filePath?: string; encoding?: EncodingType }
+        }: {
+          audioKey: string;
+          filePath?: string;
+          encoding?: EncodingType;
+        }
       ) => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
@@ -528,11 +554,30 @@ export const audioStore = {
           defaultPath: buildFileName(state, audioKey),
         });
         const blob = await blobPromise;
+        if (!blob) {
+          if (state.isSaveAll) {
+            return ["ENGINE_ERROR", filePath];
+          }
+
+          return;
+        }
+
         if (filePath) {
-          window.electron.writeFile({
-            filePath,
-            buffer: await blob.arrayBuffer(),
-          });
+          try {
+            window.electron.writeFile({
+              filePath,
+              buffer: await blob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+
+            if (state.isSaveAll) {
+              return ["WRITE_ERROR", filePath];
+            }
+
+            return;
+          }
+
           const textBlob = ((): Blob => {
             if (!encoding || encoding === "UTF-8") {
               const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
@@ -548,22 +593,38 @@ export const audioStore = {
               type: "text/plain;charset=Shift_JIS",
             });
           })();
-          window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".txt"),
-            buffer: await textBlob.arrayBuffer(),
-          });
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            });
+
+            if (state.isSaveAll) {
+              return ["SUCCESS", filePath];
+            }
+          } catch (e) {
+            window.electron.logError(e);
+
+            if (state.isSaveAll) {
+              return ["WRITE_ERROR", filePath];
+            }
+
+            showErrorWindowForFailedWriteFile();
+          }
         }
       }
     ),
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
       async (
-        { state, dispatch },
+        { state, dispatch, commit },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
         dirPath ??= await window.electron.showOpenDirectoryDialog({
           title: "Save ALL",
         });
         if (dirPath) {
+          await commit(SET_IS_SAVE_ALL, { isSaveAll: true });
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
@@ -572,7 +633,26 @@ export const audioStore = {
               encoding,
             });
           });
-          return Promise.all(promises);
+          return Promise.all(promises)
+            .then((result: Array<[SaveAllCommandResult, string]>) => {
+              let failedMessages = "";
+              for (const item of result) {
+                switch (item[0]) {
+                  case "WRITE_ERROR":
+                    failedMessages += "書き込みエラー: " + item[1] + "\n";
+                    break;
+                  case "ENGINE_ERROR":
+                    failedMessages += "エンジンエラー: " + item[1] + "\n";
+                    break;
+                }
+              }
+
+              window.electron.showErrorDialog({
+                title: "Error",
+                message: failedMessages,
+              });
+            })
+            .finally(() => commit(SET_IS_SAVE_ALL, { isSaveAll: false }));
         }
       }
     ),
@@ -609,13 +689,14 @@ export const audioStore = {
         let blob = await dispatch(GET_AUDIO_CACHE, { audioKey });
         if (!blob) {
           commit(SET_AUDIO_NOW_GENERATING, { audioKey, nowGenerating: true });
-          try {
-            blob = await dispatch(GENERATE_AUDIO, { audioKey });
-          } finally {
-            commit(SET_AUDIO_NOW_GENERATING, {
-              audioKey,
-              nowGenerating: false,
-            });
+          blob = await dispatch(GENERATE_AUDIO, { audioKey });
+          commit(SET_AUDIO_NOW_GENERATING, {
+            audioKey,
+            nowGenerating: false,
+          });
+          if (!blob) {
+            showErrorWindowForFailedSpeechSynthesis();
+            return false;
           }
         }
         audioElem.src = URL.createObjectURL(blob);
