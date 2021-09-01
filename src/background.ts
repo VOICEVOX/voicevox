@@ -164,6 +164,8 @@ async function createWindow() {
       ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
     }
   });
+
+  win.removeMenu();
 }
 
 // プロセス間通信
