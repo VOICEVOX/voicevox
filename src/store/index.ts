@@ -16,6 +16,7 @@ export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
+export const LOG_ERROR = "LOG_ERROR";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -35,6 +36,7 @@ export const store = createStore<State>({
     redoCommands: [],
     useGpu: false,
     isHelpDialogOpen: false,
+    isSettingDialogOpen: false,
     fileEncoding: "UTF-8",
     isMaximized: false,
     isPinned: false,
@@ -73,6 +75,9 @@ export const store = createStore<State>({
       { title, message }: { title: string; message: string }
     ) => {
       return await window.electron.showWarningDialog({ title, message });
+    },
+    [LOG_ERROR]: (_, ...params: unknown[]) => {
+      window.electron.logError(...params);
     },
   },
   plugins: isDevelopment ? [createLogger()] : undefined,

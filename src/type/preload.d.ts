@@ -39,6 +39,7 @@ export interface Sandbox {
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
+  logError(...params: unknown[]): void;
   restartEngine(): void;
   changePinWindow(): void;
 }
