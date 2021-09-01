@@ -154,6 +154,13 @@ export const createCommandMutationTree = <
     ])
   ) as CreatePayloadMutationTree<S, Arg>;
 
+/**
+ * Create mutation from recipe with payload.
+ * @see {@link recordOperations} - the created mutations will take a snapshot of
+ * State. It may cause a bottleneck of performance.
+ * @param payloadRecipe - source recipe
+ * @returns mutation that has same payload.
+ */
 export const createCommandMutation =
   <S extends UndoRedoState, P extends Record<string, unknown> | undefined>(
     payloadRecipe: PayloadRecipe<S, P>
