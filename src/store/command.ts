@@ -112,6 +112,12 @@ export const createPayloadActionTree = <
     ])
   ) as CreatePayloadActionTree<S, Arg>;
 
+/**
+ * Return an action that just calls the mutation with the given payload.
+ * @param mutationType the label to commit mutation
+ * @param _mutation the mutation you want to call
+ * @returns action
+ */
 export const createPayloadAction =
   <
     S extends UndoRedoState,
@@ -119,7 +125,8 @@ export const createPayloadAction =
     P extends Record<string, unknown> | undefined
   >(
     mutationType: K,
-    _commandMutation: PayloadMutation<S, P>
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _mutation: PayloadMutation<S, P> // for Type Generics
   ): PayloadAction<S, P> =>
   (injectee: ActionContext<S, S>, payload: P): void => {
     injectee.commit({ ...payload, type: mutationType });
@@ -135,7 +142,7 @@ type CreatePayloadMutationTree<
 };
 
 /**
- * Create an object of Mutation from an object of Recipe with Payload.
+ * Create an object of mutation from an object of recipe with payload.
  * @see {@link recordOperations} - the created mutations will take a snapshot of
  * State. It may cause a bottleneck of performance.
  * @param payloadRecipeTree - an object of Recipe with Payload
