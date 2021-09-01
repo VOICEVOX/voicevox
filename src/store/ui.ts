@@ -15,6 +15,8 @@ export const GET_FILE_ENCODING = "GET_FILE_ENCODING";
 export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
 export const DETECT_UNMAXIMIZED = "DETECT_UNMAXIMIZED";
 export const DETECT_MAXIMIZED = "DETECT_MAXIMIZED";
+export const DETECT_PINNED = "DETECT_PINNED";
+export const DETECT_UNPINNED = "DETECT_UNPINNED";
 export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
 
 export function createUILockAction<S, P>(
@@ -68,6 +70,12 @@ export const uiStore = {
     },
     [DETECT_MAXIMIZED](state) {
       state.isMaximized = true;
+    },
+    [DETECT_PINNED](state) {
+      state.isPinned = true;
+    },
+    [DETECT_UNPINNED](state) {
+      state.isPinned = false;
     },
   },
 
@@ -133,6 +141,12 @@ export const uiStore = {
     },
     async [DETECT_MAXIMIZED]({ commit }) {
       commit(DETECT_MAXIMIZED);
+    },
+    async [DETECT_PINNED]({ commit }) {
+      commit(DETECT_PINNED);
+    },
+    async [DETECT_UNPINNED]({ commit }) {
+      commit(DETECT_UNPINNED);
     },
   },
 } as StoreOptions<State>;

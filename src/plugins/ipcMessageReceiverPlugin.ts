@@ -1,7 +1,12 @@
 import { LOAD_PROJECT_FILE } from "@/store/project";
 import { App } from "vue";
 import { Store } from "vuex";
-import { DETECT_MAXIMIZED, DETECT_UNMAXIMIZED } from "@/store/ui";
+import {
+  DETECT_MAXIMIZED,
+  DETECT_PINNED,
+  DETECT_UNMAXIMIZED,
+  DETECT_UNPINNED,
+} from "@/store/ui";
 import { DETECTED_ENGINE_ERROR, START_WAITING_ENGINE } from "@/store/audio";
 
 export const ipcMessageReceiver = {
@@ -26,6 +31,14 @@ export const ipcMessageReceiver = {
 
     window.electron.onReceivedIPCMsg("START_WAITING_ENGINE", () => {
       options.store.dispatch(START_WAITING_ENGINE);
+    });
+
+    window.electron.onReceivedIPCMsg("DETECT_PINNED", () => {
+      options.store.dispatch(DETECT_PINNED);
+    });
+
+    window.electron.onReceivedIPCMsg("DETECT_UNPINNED", () => {
+      options.store.dispatch(DETECT_UNPINNED);
     });
   },
 };
