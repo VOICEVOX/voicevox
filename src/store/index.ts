@@ -36,6 +36,7 @@ export const store = createStore<State>({
     redoCommands: [],
     useGpu: false,
     isHelpDialogOpen: false,
+    isSettingDialogOpen: false,
     fileEncoding: "UTF-8",
     isMaximized: false,
   },
