@@ -1,11 +1,12 @@
 import { LOAD_PROJECT_FILE } from "@/store/project";
-import { App } from "vue";
+import { Plugin } from "vue";
 import { Store } from "vuex";
 import { DETECT_MAXIMIZED, DETECT_UNMAXIMIZED } from "@/store/ui";
 import { DETECTED_ENGINE_ERROR, START_WAITING_ENGINE } from "@/store/audio";
+import { State } from "@/store/type";
 
-export const ipcMessageReceiver = {
-  install: (_: App, options: { store: Store<unknown> }): void => {
+export const ipcMessageReceiver: Plugin = {
+  install: (_, options: { store: Store<State> }) => {
     window.electron.onReceivedIPCMsg(
       "LOAD_PROJECT_FILE",
       (_, { filePath, confirm } = {}) =>
