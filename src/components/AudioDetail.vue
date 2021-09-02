@@ -200,7 +200,7 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = ([accentPhraseIndex, accent]: [number, number]) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) => {
       store.dispatch(CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
@@ -221,11 +221,11 @@ export default defineComponent({
       });
     };
 
-    const changeMoraPitch = ([accentPhraseIndex, moraIndex, pitch]: [
-      number,
-      number,
-      number
-    ]) => {
+    const changeMoraPitch = (
+      accentPhraseIndex: number,
+      moraIndex: number,
+      pitch: number
+    ) => {
       store.dispatch(SET_AUDIO_MORA_PITCH, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,

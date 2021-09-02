@@ -76,13 +76,11 @@ export default defineComponent({
     );
 
     const changePreviewValue = (newValue: number) => {
-      isPreview.value = true;
       previewValue.value = newValue;
     };
 
     const changeValue = (newValue: number) => {
-      isPreview.value = false;
-      emit("changeValue", [props.accentPhraseIndex, props.moraIndex, newValue]);
+      emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue);
     };
 
     const changeValueByScroll = (deltaY: number, withDetailedStep: boolean) => {
