@@ -38,7 +38,7 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >抑揚 {{ currentIntonationScale.toFixed(1) }}</span
+        >抑揚 {{ currentAudioIntonationScale.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -47,7 +47,7 @@
         :max="2"
         :step="0.01"
         :disable="uiLocked"
-        :model-value="currentIntonationScale"
+        :model-value="currentAudioIntonationScale"
         @update:model-value="
           setPreviewValue(previewAudioIntonationScale, $event)
         "
@@ -80,7 +80,7 @@
 </template>
 
 <script lang="ts">
-import { computed, reactive, ref, ComputedRef, defineComponent } from "vue";
+import { computed, ref, ComputedRef, defineComponent } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -93,11 +93,13 @@ import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
 
 type PreviewableValue = {
-  isPreview: boolean;
+  currentValue: ComputedRef<number | undefined>;
 
-  storeValue: number | undefined;
+  setPreviewValue: (newValue: number) => void;
 
-  previewValue: number | undefined;
+  startPreview: () => void;
+
+  stopPreview: () => void;
 };
 
 export default defineComponent({
@@ -106,18 +108,26 @@ export default defineComponent({
   setup() {
     const createPreviewValue = (
       storeFunc: () => number | undefined
-    ): [PreviewableValue, ComputedRef<number | undefined>] => {
-      const previewObj: PreviewableValue = reactive({
-        isPreview: false,
-        storeValue: computed(storeFunc),
-        previewValue: ref(storeFunc()),
-      });
+    ): PreviewableValue => {
+      const isPreview = ref(false);
+      const storeValue = computed(storeFunc);
+      const previewValue = ref<number | undefined>(undefined);
 
       const currentValue = computed(() =>
-        previewObj.isPreview ? previewObj.previewValue : previewObj.storeValue
+        isPreview.value ? previewValue.value : storeValue.value
       );
 
-      return [previewObj, currentValue];
+      const setPreviewValue = (newValue: number) =>
+        (previewValue.value = newValue);
+
+      const startPreview = () => {
+        previewValue.value = storeValue.value;
+        isPreview.value = true;
+      };
+
+      const stopPreview = () => (isPreview.value = false);
+
+      return { currentValue, setPreviewValue, startPreview, stopPreview };
     };
 
     const store = useStore();
@@ -133,38 +143,40 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
-    const [previewAudioSpeedScale, currentAudioSpeedScale] = createPreviewValue(
-      () => query.value?.speedScale
-    );
+    const { currentValue: currentAudioSpeedScale, ...previewAudioSpeedScale } =
+      createPreviewValue(() => query.value?.speedScale);
 
-    const [previewAudioPitchScale, currentAudioPitchScale] = createPreviewValue(
-      () => query.value?.pitchScale
-    );
+    const { currentValue: currentAudioPitchScale, ...previewAudioPitchScale } =
+      createPreviewValue(() => query.value?.pitchScale);
 
-    const [previewAudioIntonationScale, currentIntonationScale] =
-      createPreviewValue(() => query.value?.intonationScale);
+    const {
+      currentValue: currentAudioIntonationScale,
+      ...previewAudioIntonationScale
+    } = createPreviewValue(() => query.value?.intonationScale);
 
-    const [previewAudioVolumeScale, currentAudioVolumeScale] =
-      createPreviewValue(() => query.value?.volumeScale);
+    const {
+      currentValue: currentAudioVolumeScale,
+      ...previewAudioVolumeScale
+    } = createPreviewValue(() => query.value?.volumeScale);
 
     const setPreviewValue = (
       previewableValue: PreviewableValue,
       value: number
-    ) => {
-      previewableValue.isPreview = true;
-      previewableValue.previewValue = value;
-    };
+    ) => previewableValue.setPreviewValue(value);
 
     const setPanning = (
       previewableValue: PreviewableValue,
       panning: string
     ) => {
-      previewableValue.isPreview = panning === "start";
-      previewableValue.previewValue = previewableValue.storeValue;
+      if (panning === "start") {
+        previewableValue.startPreview();
+      } else {
+        previewableValue.stopPreview();
+      }
     };
 
     const setAudioSpeedScale = (speedScale: number) => {
-      previewAudioSpeedScale.isPreview = false;
+      previewAudioSpeedScale.stopPreview();
       store.dispatch(SET_AUDIO_SPEED_SCALE, {
         audioKey: activeAudioKey.value!,
         speedScale,
@@ -172,7 +184,7 @@ export default defineComponent({
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
-      previewAudioPitchScale.isPreview = false;
+      previewAudioPitchScale.stopPreview();
       store.dispatch(SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
         pitchScale,
@@ -180,7 +192,7 @@ export default defineComponent({
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
-      previewAudioIntonationScale.isPreview = false;
+      previewAudioIntonationScale.stopPreview();
       store.dispatch(SET_AUDIO_INTONATION_SCALE, {
         audioKey: activeAudioKey.value!,
         intonationScale,
@@ -188,7 +200,7 @@ export default defineComponent({
     };
 
     const setAudioVolumeScale = (volumeScale: number) => {
-      previewAudioVolumeScale.isPreview = false;
+      previewAudioVolumeScale.stopPreview();
       store.dispatch(SET_AUDIO_VOLUME_SCALE, {
         audioKey: activeAudioKey.value!,
         volumeScale,
@@ -251,7 +263,7 @@ export default defineComponent({
       previewAudioVolumeScale,
       currentAudioSpeedScale,
       currentAudioPitchScale,
-      currentIntonationScale,
+      currentAudioIntonationScale,
       currentAudioVolumeScale,
       setPreviewValue,
       setAudioSpeedScale,
