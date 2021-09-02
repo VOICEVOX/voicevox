@@ -155,6 +155,10 @@ const api: Sandbox = {
   restartEngine: () => {
     ipcRendererInvoke("RESTART_ENGINE");
   },
+
+  changePinWindow: () => {
+    ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
