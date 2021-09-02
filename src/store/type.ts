@@ -26,6 +26,7 @@ export type State = {
   fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
+  simpleMode: SimpleMode;
 };
 
 export type AudioItem = {
@@ -40,3 +41,9 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+
+export type SimpleMode = {
+  enabled: boolean;
+  avoid: boolean;
+  dir: string;
+};

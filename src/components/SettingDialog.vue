@@ -69,6 +69,82 @@
                 />
               </div>
             </q-card>
+            <!-- Simple Mode Card -->
+            <q-card class="setting-card">
+              <q-card-section class="bg-pink-4">
+                <div class="text-h5">シンプルモード</div>
+                <div class="text-subtitle2">
+                  デフォルトのフォルダに自動的に書き出す
+                </div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-actions align="left" vertical>
+                <div class="q-pa-sm">
+                  <q-toggle
+                    name="enabled"
+                    align="left"
+                    dense
+                    color="pink-4"
+                    :model-value="simpleMode.enabled"
+                    :label="simpleMode.enabled ? '有効' : '無効'"
+                    @update:model-value="
+                      handleSimpleModeChange('enabled', $event)
+                    "
+                  >
+                  </q-toggle>
+                  <q-checkbox
+                    class="q-pl-lg"
+                    label="上書き防止"
+                    dense
+                    color="pink-4"
+                    :model-value="simpleMode.avoid"
+                    @update:model-value="
+                      handleSimpleModeChange('avoid', $event)
+                    "
+                  >
+                    <q-tooltip
+                      anchor="center right"
+                      self="center left"
+                      :delay="500"
+                      :offset="[10, 10]"
+                      class="bg-pink-4"
+                    >
+                      上書きの代わりにファイル名に番号をつける<br />シンプルモードが無効化されても効く
+                    </q-tooltip>
+                  </q-checkbox>
+                  <q-input
+                    unelevated
+                    dense
+                    bottom-slots
+                    v-model="simpleMode.dir"
+                    label="デフォルトのフォルダ"
+                    @update:model-value="handleSimpleModeChange('dir', $event)"
+                    color="pink-5"
+                  >
+                    <template v-slot:append>
+                      <q-btn
+                        square
+                        dense
+                        flat
+                        color="pink-5"
+                        icon="folder_open"
+                        @click="onOpeningFileExplore"
+                      >
+                        <q-tooltip
+                          :delay="500"
+                          class="bg-pink-4 text-body2"
+                          anchor="bottom right"
+                        >
+                          フォルダー選択
+                        </q-tooltip>
+                      </q-btn>
+                    </template>
+                  </q-input>
+                </div>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -77,12 +153,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_FILE_ENCODING, SET_USE_GPU } from "@/store/ui";
 import { Encoding } from "@/type/preload";
 import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
+import { SET_SIMPLE_MODE_DATA } from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -181,11 +258,33 @@ export default defineComponent({
       store.dispatch(RESTART_ENGINE);
     };
 
+    const simpleMode = computed(() => store.state.simpleMode);
+
+    const handleSimpleModeChange = (key: string, data: string) => {
+      console.log(key);
+      console.log(data);
+      store.dispatch(SET_SIMPLE_MODE_DATA, {
+        data: { ...simpleMode.value, [key]: data },
+      });
+    };
+
+    const onOpeningFileExplore = async () => {
+      const path = await window.electron.showOpenDirectoryDialog({
+        title: "デフォルトのフォルダーを選択",
+      });
+      store.dispatch(SET_SIMPLE_MODE_DATA, {
+        data: { ...simpleMode.value, dir: path },
+      });
+    };
+
     return {
       settingDialogOpenedComputed,
       engineMode,
       fileEncoding,
       restartEngineProcess,
+      simpleMode: ref(simpleMode),
+      handleSimpleModeChange,
+      onOpeningFileExplore,
     };
   },
 });

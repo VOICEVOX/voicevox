@@ -7,6 +7,7 @@ import { AudioItem, EngineState, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { SHOW_WARNING_DIALOG } from ".";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -46,7 +47,7 @@ function parseTextFile(
   return audioItems;
 }
 
-function buildFileName(state: State, audioKey: string) {
+function buildFileName(state: State, audioKey: string, offset?: number) {
   // eslint-disable-next-line no-control-regex
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
@@ -56,6 +57,9 @@ function buildFileName(state: State, audioKey: string) {
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
+  }
+  if (offset !== undefined) {
+    text += "[" + offset.toString() + "]";
   }
   return (
     (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
@@ -107,6 +111,7 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
+export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -523,10 +528,35 @@ export const audioStore = {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
-        filePath ??= await window.electron.showAudioSaveDialog({
-          title: "Save",
-          defaultPath: buildFileName(state, audioKey),
-        });
+        if (state.simpleMode.enabled) {
+          const dirExist = await dispatch(CHECK_FILE_EXISTS, {
+            file: state.simpleMode.dir,
+          });
+          if (!dirExist) {
+            dispatch(SHOW_WARNING_DIALOG, {
+              title: "シンプルモードエラー",
+              message: "設置したフォルダーは存在しまぜん",
+            });
+            return;
+          }
+          filePath =
+            state.simpleMode.dir + "\\" + buildFileName(state, audioKey);
+          if (state.simpleMode.avoid) {
+            let tail = 1;
+            while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
+              filePath =
+                state.simpleMode.dir +
+                "\\" +
+                buildFileName(state, audioKey, tail);
+              tail += 1;
+            }
+          }
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "Save",
+            defaultPath: buildFileName(state, audioKey),
+          });
+        }
         const blob = await blobPromise;
         if (filePath) {
           window.electron.writeFile({
@@ -560,9 +590,24 @@ export const audioStore = {
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
-        dirPath ??= await window.electron.showOpenDirectoryDialog({
-          title: "Save ALL",
-        });
+        if (state.simpleMode.enabled) {
+          const dirExists = await dispatch(CHECK_FILE_EXISTS, {
+            file: state.simpleMode.dir,
+          });
+          if (!dirExists) {
+            dispatch(SHOW_WARNING_DIALOG, {
+              title: "シンプルモードエラー",
+              message: "設置したフォルダーは存在しません",
+            });
+            return;
+          } else {
+            dirPath = state.simpleMode.dir;
+          }
+        } else {
+          dirPath ??= await window.electron.showOpenDirectoryDialog({
+            title: "Save ALL",
+          });
+        }
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);
@@ -726,6 +771,9 @@ export const audioStore = {
     async [RESTART_ENGINE]({ commit }) {
       await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
       window.electron.restartEngine();
+    },
+    [CHECK_FILE_EXISTS]({ commit }, { file }: { file: string }) {
+      return window.electron.checkFileExists(file);
     },
   },
 } as StoreOptions<State>;

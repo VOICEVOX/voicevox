@@ -17,6 +17,7 @@ import { logError } from "./electron/log";
 
 import fs from "fs";
 import { CharacterInfo, Encoding } from "./type/preload";
+import { SimpleMode } from "./store/type";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -44,6 +45,7 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   fileEncoding: Encoding;
+  simpleMode: SimpleMode;
 }>({
   schema: {
     useGpu: {
@@ -51,6 +53,13 @@ const store = new Store<{
     },
     fileEncoding: {
       type: "string",
+    },
+    simpleMode: {
+      type: "object",
+      properties: {
+        enabled: { type: "boolean" },
+        dir: { type: "string" },
+      },
     },
   },
 });
@@ -149,6 +158,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
       contextIsolation: true,
+      enableRemoteModule: true,
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -173,6 +183,22 @@ async function createWindow() {
     }
   });
 }
+
+// initialize settings
+// GPU mode is handled by runEngine()
+const initSetting = () => {
+  if (!store.has("fileEncoding")) {
+    const defaultFileEncoding = "UTF-8";
+    store.set("fileEncoding", defaultFileEncoding);
+  }
+  if (!store.has("simpleMode")) {
+    const defaultSimpleMode = {
+      enabled: false,
+      dir: "",
+    };
+    store.set("simpleMode", defaultSimpleMode);
+  }
+};
 
 // プロセス間通信
 ipcMainHandle("GET_APP_INFOS", () => {
@@ -349,6 +375,17 @@ ipcMainHandle("RESTART_ENGINE", async () => {
   });
 });
 
+ipcMainHandle("SIMPLE_MODE_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("simpleMode", newData);
+  }
+  return store.get("simpleMode");
+});
+
+ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
+  return fs.existsSync(file);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -388,6 +425,8 @@ app.on("ready", async () => {
       logError("Vue Devtools failed to install:", e.toString());
     }
   }
+
+  initSetting();
 
   createWindow().then(() => runEngine());
 });

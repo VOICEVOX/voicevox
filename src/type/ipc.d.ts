@@ -116,6 +116,16 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  SIMPLE_MODE_SETTING: {
+    args: [obj: { newData?: import("@/store/type").SimpleMode }];
+    return: import("@/store/type").SimpleMode;
+  };
+
+  CHECK_FILE_EXISTS: {
+    args: [obj: { file: string }];
+    return: boolean;
+  };
 };
 
 /**

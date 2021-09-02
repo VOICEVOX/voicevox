@@ -155,6 +155,14 @@ const api: Sandbox = {
   restartEngine: () => {
     ipcRendererInvoke("RESTART_ENGINE");
   },
+
+  simpleModeSetting: (newData) => {
+    return ipcRenderer.invoke("SIMPLE_MODE_SETTING", { newData });
+  },
+
+  checkFileExists: (file) => {
+    return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

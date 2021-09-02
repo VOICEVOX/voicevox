@@ -41,6 +41,8 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   restartEngine(): void;
+  simpleModeSetting(newData?: SimpleMode): Promise<SimpleMode>;
+  checkFileExists(file: string): Promise<boolean>;
 }
 
 export type AppInfos = {
