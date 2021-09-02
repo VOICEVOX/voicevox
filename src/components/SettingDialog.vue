@@ -47,9 +47,10 @@
                   val="switchGPU"
                   label="GPU"
                 />
-                <div class="q-pl-lg">
+                <div class="q-pl-md">
                   <q-btn
-                    size="12px"
+                    size="md"
+                    padding="xs md"
                     label="再起動"
                     color="green"
                     @click="restartEngineProcess"
