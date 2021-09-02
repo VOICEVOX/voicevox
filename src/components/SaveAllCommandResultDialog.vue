@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-layout container class="q-dialog-plugin bg-white q-pa-no">
+    <q-layout container class="q-dialog-plugin bg-white">
       <q-header>
         <q-toolbar>
           <q-toolbar-title>音声書き出し結果</q-toolbar-title>
