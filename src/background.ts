@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, shell } from "electron";
+import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -182,6 +182,10 @@ async function createWindow() {
       ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
     }
   });
+}
+
+if (!isDevelopment) {
+  Menu.setApplicationMenu(null);
 }
 
 // プロセス間通信
