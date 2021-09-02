@@ -47,15 +47,6 @@
                   val="switchGPU"
                   label="GPU"
                 />
-                <div class="q-pl-md">
-                  <q-btn
-                    size="md"
-                    padding="xs md"
-                    label="再起動"
-                    color="green"
-                    @click="restartEngineProcess"
-                  />
-                </div>
               </q-card-actions>
             </q-card>
 

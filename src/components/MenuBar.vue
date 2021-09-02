@@ -21,14 +21,8 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
-import {
-  UI_LOCKED,
-  SET_USE_GPU,
-  SET_FILE_ENCODING,
-  ASYNC_UI_LOCK,
-} from "@/store/ui";
+import { UI_LOCKED } from "@/store/ui";
 import {
   SAVE_PROJECT_FILE,
   LOAD_PROJECT_FILE,
@@ -82,7 +76,6 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
@@ -136,7 +129,22 @@ export default defineComponent({
           },
         ],
       },
+      {
+        type: "root",
+        label: "エンジン",
+        subMenu: [
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => restartEngineProcess(),
+          },
+        ],
+      },
     ]);
+
+    const restartEngineProcess = () => {
+      store.dispatch(RESTART_ENGINE);
+    };
 
     const subMenuOpenFlags = ref(
       [...Array(menudata.value.length)].map(() => false)
