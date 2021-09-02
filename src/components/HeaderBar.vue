@@ -75,6 +75,7 @@ import {
   PLAY_CONTINUOUSLY_AUDIO,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
+import Mousetrap from "mousetrap";
 
 export default defineComponent({
   setup() {
@@ -93,6 +94,10 @@ export default defineComponent({
     const redo = () => {
       store.dispatch(REDO);
     };
+
+    Mousetrap.bind("ctrl+z", undo);
+    Mousetrap.bind(["ctrl+y", "ctrl+shift+z"], redo);
+
     const playContinuously = () => {
       store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
     };
