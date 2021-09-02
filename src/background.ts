@@ -176,6 +176,11 @@ async function createWindow() {
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("always-on-top-changed", () => {
+    win.webContents.send(
+      win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
+    );
+  });
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -386,6 +391,13 @@ ipcMainHandle("SIMPLE_MODE_SETTING", (_, { newData }) => {
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
   return fs.existsSync(file);
+});
+ipcMainHandle("CHANGE_PIN_WINDOW", () => {
+  if (win.isAlwaysOnTop()) {
+    win.setAlwaysOnTop(false);
+  } else {
+    win.setAlwaysOnTop(true);
+  }
 });
 
 // app callback

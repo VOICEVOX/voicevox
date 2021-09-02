@@ -163,6 +163,10 @@ const api: Sandbox = {
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },
+
+  changePinWindow: () => {
+    ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

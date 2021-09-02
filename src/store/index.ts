@@ -45,6 +45,7 @@ export const store = createStore<State>({
       avoid: false,
       dir: "",
     },
+    isPinned: false,
   },
 
   getters: {

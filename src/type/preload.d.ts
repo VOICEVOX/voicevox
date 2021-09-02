@@ -43,6 +43,7 @@ export interface Sandbox {
   restartEngine(): void;
   simpleModeSetting(newData?: SimpleMode): Promise<SimpleMode>;
   checkFileExists(file: string): Promise<boolean>;
+  changePinWindow(): void;
 }
 
 export type AppInfos = {

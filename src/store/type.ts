@@ -27,6 +27,7 @@ export type State = {
   isMaximized: boolean;
   projectFilePath?: string;
   simpleMode: SimpleMode;
+  isPinned: boolean;
 };
 
 export type AudioItem = {
