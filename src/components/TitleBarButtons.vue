@@ -7,6 +7,36 @@
     class="full-height cursor-not-allowed no-border-radius"
   >
     <q-btn
+      v-if="isPinned"
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="teal"
+      class="title-bar-buttons"
+      id="pinned-btn"
+      @click="changePinWindow()"
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
+    <q-btn
+      v-else
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons rotate-45"
+      id="pinned-btn"
+      @click="changePinWindow()"
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
+    <q-btn
       dense
       flat
       round
@@ -45,6 +75,36 @@
       title-bar-buttons-root
     "
   >
+    <q-btn
+      v-if="isPinned"
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="teal"
+      class="title-bar-buttons"
+      id="pinned-btn"
+      @click="changePinWindow()"
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
+    <q-btn
+      v-else
+      dense
+      flat
+      round
+      icon="push_pin"
+      color="black"
+      class="title-bar-buttons rotate-45"
+      id="pinned-btn"
+      @click="changePinWindow()"
+    >
+      <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
+        最前面に表示
+      </q-tooltip>
+    </q-btn>
     <q-btn
       dense
       flat
@@ -93,8 +153,13 @@ export default defineComponent({
     const closeWindow = () => window.electron.closeWindow();
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
+    const changePinWindow = () => {
+      window.electron.changePinWindow();
+    };
 
     const store = useStore();
+
+    const isPinned = computed(() => store.state.isPinned);
 
     const isMaximized = computed(() => store.state.isMaximized);
 
@@ -104,8 +169,10 @@ export default defineComponent({
       closeWindow,
       minimizeWindow,
       maximizeWindow,
+      changePinWindow,
       mdiWindowRestore,
       isMaximized,
+      isPinned,
     };
   },
 });
