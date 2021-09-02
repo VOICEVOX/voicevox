@@ -41,6 +41,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   restartEngine(): void;
+  changePinWindow(): void;
 }
 
 export type AppInfos = {
