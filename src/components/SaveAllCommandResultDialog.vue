@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-layout container class="q-dialog-plugin bg-white">
+    <q-layout container class="q-dialog-plugin bg-white q-pa-no">
       <q-header>
         <q-toolbar>
           <q-toolbar-title>音声書き出し結果</q-toolbar-title>
@@ -9,33 +9,27 @@
       </q-header>
       <q-page-container>
         <q-page>
-          <q-list bordered separator>
+          <q-list separator v-if="successArray.length > 0">
+            <div class="success">成功:</div>
             <q-item v-for="(value, index) in successArray" :key="index">
               <q-item-section>
-                <q-item-label
-                  ><div class="success">成功:</div>
-                  {{ value }}</q-item-label
-                >
+                <q-item-label>{{ value }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list bordered separator>
+          <q-list bordered separator v-if="writeErrorArray.length > 0">
+            <div class="error">書き込みエラー:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
-                <q-item-label
-                  ><div class="write-error">書き込みエラー:</div>
-                  {{ value }}</q-item-label
-                >
+                <q-item-label>{{ value }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list bordered separator>
+          <q-list bordered separator v-if="engineErrorArray.length > 0">
+            <div class="error">エンジンエラー:</div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
               <q-item-section>
-                <q-item-label
-                  ><div class="engine-error">エンジンエラー:</div>
-                  {{ value }}</q-item-label
-                >
+                <q-item-label>{{ value }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -80,19 +74,15 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-.q-list {
-  border: global.$primary;
+.q-item {
+  border-bottom: solid 0.1rem global.$primary;
 }
 
 .success {
   color: green;
 }
 
-.engine-error {
+.error {
   color: red;
-}
-
-.write-error {
-  color: yellow;
 }
 </style>
