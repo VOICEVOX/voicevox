@@ -165,7 +165,9 @@ async function createWindow() {
     }
   });
 
-  win.removeMenu();
+  if (!isDevelopment) {
+    win.removeMenu();
+  }
 }
 
 // プロセス間通信
