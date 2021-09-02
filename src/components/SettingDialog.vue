@@ -272,9 +272,11 @@ export default defineComponent({
       const path = await window.electron.showOpenDirectoryDialog({
         title: "デフォルトのフォルダーを選択",
       });
-      store.dispatch(SET_SIMPLE_MODE_DATA, {
-        data: { ...simpleMode.value, dir: path },
-      });
+      if (path) {
+        store.dispatch(SET_SIMPLE_MODE_DATA, {
+          data: { ...simpleMode.value, dir: path },
+        });
+      }
     };
 
     return {
