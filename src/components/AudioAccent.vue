@@ -38,7 +38,7 @@
     }"
   >
     <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
-      <polyline :points="createAccentLine()" stroke="black" fill="none" />
+      <polyline :points="createAccentLine" stroke="black" fill="none" />
     </svg>
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
@@ -130,7 +130,7 @@ export default defineComponent({
       previewAccent.value = props.accentPhrase.accent;
     };
 
-    const createAccentLine = () => {
+    const createAccentLine = computed(() => {
       const accent = currentAccent.value;
       return [...Array(props.accentPhrase.moras.length).keys()].map(
         (index) =>
@@ -138,7 +138,7 @@ export default defineComponent({
             index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
           }`
       );
-    };
+    });
 
     return {
       isPreview,
