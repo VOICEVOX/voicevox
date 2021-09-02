@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, SaveAllCommandResult, State } from "./type";
+import { AudioItem, EngineState, SaveCommandResult, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -60,20 +60,6 @@ function buildFileName(state: State, audioKey: string) {
   return (
     (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
   );
-}
-
-function showErrorWindowForFailedSpeechSynthesis() {
-  window.electron.showErrorDialog({
-    title: "Error",
-    message: "音声の合成に失敗しました。",
-  });
-}
-
-function showErrorWindowForFailedWriteFile() {
-  window.electron.showErrorDialog({
-    title: "Error",
-    message: "書き込みが失敗しました。",
-  });
 }
 
 export const SET_ENGINE_STATE = "SET_ENGINE_STATE";
@@ -535,7 +521,7 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_AUDIO]: createUILockAction(
       async (
-        { state, dispatch, commit },
+        { state, dispatch },
         {
           audioKey,
           filePath,
@@ -559,7 +545,7 @@ export const audioStore = {
             return ["ENGINE_ERROR", filePath];
           }
 
-          return;
+          return "ENGINE_ERROR";
         }
 
         if (filePath) {
@@ -575,7 +561,7 @@ export const audioStore = {
               return ["WRITE_ERROR", filePath];
             }
 
-            return;
+            return "WRITE_ERROR";
           }
 
           const textBlob = ((): Blob => {
@@ -603,6 +589,8 @@ export const audioStore = {
             if (state.isSaveAll) {
               return ["SUCCESS", filePath];
             }
+
+            return "SUCCESS";
           } catch (e) {
             window.electron.logError(e);
 
@@ -610,7 +598,7 @@ export const audioStore = {
               return ["WRITE_ERROR", filePath];
             }
 
-            showErrorWindowForFailedWriteFile();
+            return "WRITE_ERROR";
           }
         }
       }
@@ -633,26 +621,9 @@ export const audioStore = {
               encoding,
             });
           });
-          return Promise.all(promises)
-            .then((result: Array<[SaveAllCommandResult, string]>) => {
-              let failedMessages = "";
-              for (const item of result) {
-                switch (item[0]) {
-                  case "WRITE_ERROR":
-                    failedMessages += "書き込みエラー: " + item[1] + "\n";
-                    break;
-                  case "ENGINE_ERROR":
-                    failedMessages += "エンジンエラー: " + item[1] + "\n";
-                    break;
-                }
-              }
-
-              window.electron.showErrorDialog({
-                title: "Error",
-                message: failedMessages,
-              });
-            })
-            .finally(() => commit(SET_IS_SAVE_ALL, { isSaveAll: false }));
+          return Promise.all(promises).finally(() =>
+            commit(SET_IS_SAVE_ALL, { isSaveAll: false })
+          );
         }
       }
     ),
@@ -695,7 +666,6 @@ export const audioStore = {
             nowGenerating: false,
           });
           if (!blob) {
-            showErrorWindowForFailedSpeechSynthesis();
             return false;
           }
         }
@@ -736,9 +706,11 @@ export const audioStore = {
             commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
             const isEnded = await dispatch(PLAY_AUDIO, { audioKey });
             if (!isEnded) {
-              break;
+              return false;
             }
           }
+
+          return true;
         } finally {
           commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
           commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });

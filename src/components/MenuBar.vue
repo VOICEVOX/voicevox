@@ -36,6 +36,9 @@ import {
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
+import { SaveCommandResult } from "@/store/type";
+import { useQuasar } from "quasar";
+import SaveAllCommandResultDialog from "@/components/SaveAllCommandResultDialog.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -76,6 +79,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
@@ -89,9 +93,26 @@ export default defineComponent({
             type: "button",
             label: "音声書き出し",
             shortCut: "Ctrl+E",
-            onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: store.state.fileEncoding,
+            onClick: async () => {
+              const result: Array<[SaveCommandResult, string]> =
+                await store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+                  encoding: store.state.fileEncoding,
+                });
+              const messages = result.map((x) => {
+                switch (x[0]) {
+                  case "SUCCESS":
+                    return "成功: " + x[1];
+                  case "WRITE_ERROR":
+                    return "書き込みエラー: " + x[1];
+                  case "ENGINE_ERROR":
+                    return "エンジンエラー: " + x[1];
+                }
+              });
+              $q.dialog({
+                component: SaveAllCommandResultDialog,
+                componentProps: {
+                  resultData: messages,
+                },
               });
             },
           },

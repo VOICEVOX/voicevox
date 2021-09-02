@@ -248,12 +248,15 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import { useQuasar } from "quasar";
+import { SaveCommandResult } from "@/store/type";
 
 export default defineComponent({
   name: "AudioDetail",
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     // add hotkeys with mousetrap
     Mousetrap.bind("space", () => {
@@ -377,8 +380,17 @@ export default defineComponent({
     };
 
     // audio play
-    const play = () => {
-      store.dispatch(PLAY_AUDIO, { audioKey: activeAudioKey.value! });
+    const play = async () => {
+      const result = await store.dispatch(PLAY_AUDIO, {
+        audioKey: activeAudioKey.value!,
+      });
+
+      if (!result) {
+        $q.dialog({
+          title: "Error",
+          message: "再生に失敗しました。",
+        });
+      }
     };
 
     const stop = () => {
@@ -386,10 +398,31 @@ export default defineComponent({
     };
 
     // save
-    const save = () => {
-      store.dispatch(GENERATE_AND_SAVE_AUDIO, {
-        audioKey: activeAudioKey.value!,
-        encoding: store.state.fileEncoding,
+    const save = async () => {
+      const result: SaveCommandResult = await store.dispatch(
+        GENERATE_AND_SAVE_AUDIO,
+        {
+          audioKey: activeAudioKey.value!,
+          encoding: store.state.fileEncoding,
+        }
+      );
+
+      let msg = "";
+      switch (result) {
+        case "SUCCESS":
+          msg = "保存に成功しました。";
+          break;
+        case "WRITE_ERROR":
+          msg = "書き込みエラーによって失敗しました。";
+          break;
+        case "ENGINE_ERROR":
+          msg = "エンジンエラーによって失敗しました。";
+          break;
+      }
+
+      $q.dialog({
+        title: "Result",
+        message: msg,
       });
     };
 
