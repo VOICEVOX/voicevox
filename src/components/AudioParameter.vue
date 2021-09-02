@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, computed, ref } from "vue";
+import { defineComponent, reactive, computed, ref, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -53,12 +53,20 @@ export default defineComponent({
     function handleKeyPress(event: KeyboardEvent) {
       if (event.key === "Shift") shiftKeyFlag = false;
     }
-    window.addEventListener("keyup", handleKeyPress);
 
     function setShiftKeyFlag(event: KeyboardEvent) {
       if (event.shiftKey) shiftKeyFlag = true;
     }
-    window.addEventListener("keydown", setShiftKeyFlag);
+
+    onMounted(() => {
+      window.addEventListener("keyup", handleKeyPress);
+      window.addEventListener("keydown", setShiftKeyFlag);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("keyup", handleKeyPress);
+      window.removeEventListener("keydown", setShiftKeyFlag);
+    });
 
     const isPreview = ref(false);
     const previewValue = ref(props.value);
