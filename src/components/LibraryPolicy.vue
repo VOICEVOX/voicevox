@@ -29,11 +29,11 @@
             <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
           </q-item>
         </q-list>
-        <div v-else>
-          <p
-            v-html="convertTextToHtml(characterInfos[detailIndex].metas.policy)"
-          ></p>
-        </div>
+        <div
+          v-else
+          class="markdown"
+          v-html="convertMarkdown(characterInfos[detailIndex].metas.policy)"
+        ></div>
       </div>
     </q-page>
   </div>
@@ -42,19 +42,17 @@
 <script lang="ts">
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 export default defineComponent({
   setup() {
     const store = useStore();
+    const md = useMarkdownIt();
 
     const characterInfos = computed(() => store.state.characterInfos);
 
-    const convertTextToHtml = (text: string) => {
-      text = text.replaceAll("\n", "<br>");
-      const hoge = /https?:\/\/[a-zA-Z0-9.\-_@:/~?%&;=+#',()*!]+/g;
-      return text.replaceAll(hoge, (url: string) => {
-        return '<a href="' + url + '" target="_blank">' + url + "</a>";
-      });
+    const convertMarkdown = (text: string) => {
+      return md.render(text);
     };
 
     const detailIndex = ref<number | undefined>(undefined);
@@ -67,7 +65,7 @@ export default defineComponent({
 
     return {
       characterInfos,
-      convertTextToHtml,
+      convertMarkdown,
       selectCharacterInfIndex,
       detailIndex,
       scroller,

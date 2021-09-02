@@ -127,9 +127,14 @@ const characterInfos = fs
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
       portraitPath: path.join(dirPath, "portrait.png"),
-      metas: JSON.parse(
-        fs.readFileSync(path.join(dirPath, "metas.json"), { encoding: "utf-8" })
-      ),
+      metas: {
+        ...JSON.parse(
+          fs.readFileSync(path.join(dirPath, "metas.json"), {
+            encoding: "utf-8",
+          })
+        ),
+        policy: fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8"),
+      },
     };
   });
 
