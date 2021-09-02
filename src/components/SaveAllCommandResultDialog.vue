@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog persistent ref="dialogRef" @hide="onDialogHide">
     <q-layout container class="q-dialog-plugin bg-white">
       <q-header>
         <q-toolbar>
@@ -17,7 +17,7 @@
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list bordered separator v-if="writeErrorArray.length > 0">
+          <q-list separator v-if="writeErrorArray.length > 0">
             <div class="error">書き込みエラー:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
@@ -25,7 +25,7 @@
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list bordered separator v-if="engineErrorArray.length > 0">
+          <q-list separator v-if="engineErrorArray.length > 0">
             <div class="error">エンジンエラー:</div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
               <q-item-section>
@@ -35,9 +35,8 @@
           </q-list>
         </q-page>
       </q-page-container>
-      <q-space />
       <q-footer>
-        <q-item clickable v-ripple align="center" @click="close">
+        <q-item clickable v-ripple align="right" @click="close">
           <q-item-section>閉じる</q-item-section>
         </q-item>
       </q-footer>
@@ -73,6 +72,10 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use '@/styles' as global;
+
+.q-page-container {
+  margin-top: 1em;
+}
 
 .q-item {
   border-bottom: solid 0.1rem global.$primary;
