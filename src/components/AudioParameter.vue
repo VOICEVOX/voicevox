@@ -28,7 +28,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, computed, ref, onMounted, onUnmounted } from "vue";
+import {
+  defineComponent,
+  reactive,
+  computed,
+  ref,
+  onMounted,
+  onUnmounted,
+} from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -76,6 +83,7 @@ export default defineComponent({
     );
 
     const changePreviewValue = (newValue: number) => {
+      isPreview.value = true;
       previewValue.value = newValue;
     };
 
