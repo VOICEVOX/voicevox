@@ -8,13 +8,15 @@
         <q-space />
       </q-header>
       <q-page-container>
-        <q-list>
-          <q-item v-for="(value, index) in resultData" :key="index"
-            ><q-item-section>
-              {{ value }}
-            </q-item-section></q-item
-          >
-        </q-list>
+        <q-page>
+          <q-list bordered separator>
+            <q-item v-for="(value, index) in resultData" :key="index">
+              <q-item-section>
+                <q-item-label>{{ value }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-page>
       </q-page-container>
       <q-space />
       <q-footer>

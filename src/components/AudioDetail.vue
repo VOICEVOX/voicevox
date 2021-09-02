@@ -407,23 +407,22 @@ export default defineComponent({
         }
       );
 
-      let msg = "";
-      switch (result) {
-        case "SUCCESS":
-          msg = "保存に成功しました。";
-          break;
-        case "WRITE_ERROR":
-          msg = "書き込みエラーによって失敗しました。";
-          break;
-        case "ENGINE_ERROR":
-          msg = "エンジンエラーによって失敗しました。";
-          break;
-      }
+      if (result !== "SUCCESS") {
+        let msg = "";
+        switch (result) {
+          case "WRITE_ERROR":
+            msg = "書き込みエラーによって失敗しました。";
+            break;
+          case "ENGINE_ERROR":
+            msg = "エンジンエラーによって失敗しました。";
+            break;
+        }
 
-      $q.dialog({
-        title: "Result",
-        message: msg,
-      });
+        $q.dialog({
+          title: "Result",
+          message: msg,
+        });
+      }
     };
 
     const nowPlaying = computed(
