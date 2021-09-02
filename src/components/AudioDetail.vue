@@ -70,7 +70,7 @@
                 :uiLocked="uiLocked"
                 :min="3"
                 :max="6.5"
-                :disable="mora.pitch <= 0.0"
+                :disable="mora.pitch == 0.0"
                 @changeValue="changeMoraPitch"
               />
             </div>
