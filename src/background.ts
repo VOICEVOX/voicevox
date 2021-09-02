@@ -58,6 +58,7 @@ const store = new Store<{
       type: "object",
       properties: {
         enabled: { type: "boolean" },
+        avoid: { type: "boolean" },
         dir: { type: "string" },
       },
     },
@@ -194,6 +195,7 @@ const initSetting = () => {
   if (!store.has("simpleMode")) {
     const defaultSimpleMode = {
       enabled: false,
+      avoid: false,
       dir: "",
     };
     store.set("simpleMode", defaultSimpleMode);
