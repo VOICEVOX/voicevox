@@ -1,12 +1,12 @@
 <template>
   <div
-    @mouseenter="pitchLabel.visible = true"
-    @mouseleave="pitchLabel.visible = false"
+    @mouseenter="valueLabel.visible = true"
+    @mouseleave="valueLabel.visible = false"
   >
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="!disable && (pitchLabel.visible || pitchLabel.panning)"
+      v-if="!disable && (valueLabel.visible || valueLabel.panning)"
     >
       {{ currentValue.toPrecision(3) }}
     </q-badge>
@@ -91,7 +91,7 @@ export default defineComponent({
         changeValue(newValue);
     };
 
-    const pitchLabel = reactive({
+    const valueLabel = reactive({
       visible: false,
       // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
       // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
@@ -99,7 +99,7 @@ export default defineComponent({
     });
 
     const setPanning = (panningPhase: string) => {
-      isPreview.value = pitchLabel.panning = panningPhase === "start";
+      isPreview.value = valueLabel.panning = panningPhase === "start";
       previewValue.value = props.value;
     };
 
@@ -109,7 +109,7 @@ export default defineComponent({
       changePreviewValue,
       changeValue,
       changeValueByScroll,
-      pitchLabel,
+      valueLabel,
       setPanning,
     };
   },
