@@ -98,22 +98,34 @@ export default defineComponent({
                 await store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
                   encoding: store.state.fileEncoding,
                 });
-              const messages = result.map((x) => {
-                switch (x[0]) {
+
+              let successArray: Array<string> = [];
+              let writeErrorArray: Array<string> = [];
+              let engineErrorArray: Array<string> = [];
+              for (const item of result) {
+                switch (item[0]) {
                   case "SUCCESS":
-                    return "成功: " + x[1];
+                    successArray.push(item[1]);
+                    break;
                   case "WRITE_ERROR":
-                    return "書き込みエラー: " + x[1];
+                    writeErrorArray.push(item[1]);
+                    break;
                   case "ENGINE_ERROR":
-                    return "エンジンエラー: " + x[1];
+                    engineErrorArray.push(item[1]);
+                    break;
                 }
-              });
-              $q.dialog({
-                component: SaveAllCommandResultDialog,
-                componentProps: {
-                  resultData: messages,
-                },
-              });
+              }
+
+              if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+                $q.dialog({
+                  component: SaveAllCommandResultDialog,
+                  componentProps: {
+                    successArray: successArray,
+                    writeErrorArray: writeErrorArray,
+                    engineErrorArray: engineErrorArray,
+                  },
+                });
+              }
             },
           },
           {

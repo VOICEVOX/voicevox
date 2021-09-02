@@ -10,9 +10,32 @@
       <q-page-container>
         <q-page>
           <q-list bordered separator>
-            <q-item v-for="(value, index) in resultData" :key="index">
+            <q-item v-for="(value, index) in successArray" :key="index">
               <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
+                <q-item-label
+                  ><div class="success">成功:</div>
+                  {{ value }}</q-item-label
+                >
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-list bordered separator>
+            <q-item v-for="(value, index) in writeErrorArray" :key="index">
+              <q-item-section>
+                <q-item-label
+                  ><div class="write-error">書き込みエラー:</div>
+                  {{ value }}</q-item-label
+                >
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-list bordered separator>
+            <q-item v-for="(value, index) in engineErrorArray" :key="index">
+              <q-item-section>
+                <q-item-label
+                  ><div class="engine-error">エンジンエラー:</div>
+                  {{ value }}</q-item-label
+                >
               </q-item-section>
             </q-item>
           </q-list>
@@ -35,7 +58,9 @@ import { useDialogPluginComponent } from "quasar";
 export default defineComponent({
   name: "SaveAllCommandResultDialog",
   props: {
-    resultData: Array,
+    successArray: Array,
+    writeErrorArray: Array,
+    engineErrorArray: Array,
   },
   emits: {
     ...useDialogPluginComponent.emits,
@@ -57,5 +82,17 @@ export default defineComponent({
 
 .q-list {
   border: global.$primary;
+}
+
+.success {
+  color: green;
+}
+
+.engine-error {
+  color: red;
+}
+
+.write-error {
+  color: yellow;
 }
 </style>
