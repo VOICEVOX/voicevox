@@ -1,5 +1,6 @@
 <template>
   <q-dialog persistent ref="dialogRef" @hide="onDialogHide">
+    <!-- 仮デザイン -->
     <q-layout container class="q-dialog-plugin bg-white">
       <q-header>
         <q-toolbar>
