@@ -11,7 +11,7 @@
       <q-page-container>
         <q-page>
           <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">書き込み失敗リスト:</div>
+            <div class="error">書き込みエラーによって失敗しました:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -19,9 +19,7 @@
             </q-item>
           </q-list>
           <q-list separator v-if="engineErrorArray.length > 0">
-            <div class="error">
-              エンジンエラーによって失敗したファイルリスト:
-            </div>
+            <div class="error">エンジンエラーによって失敗しました:</div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
