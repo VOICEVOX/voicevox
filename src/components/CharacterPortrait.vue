@@ -28,9 +28,7 @@ export default defineComponent({
         : undefined;
       const characterIndex = audioItem?.characterIndex;
 
-      return characterIndex !== undefined
-        ? characterInfos[characterIndex]
-        : undefined;
+      return characterInfos[characterIndex ?? 0];
     });
 
     const characterName = computed(() => characterInfo.value?.metas.name);
