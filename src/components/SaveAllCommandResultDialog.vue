@@ -10,16 +10,8 @@
       </q-header>
       <q-page-container>
         <q-page>
-          <q-list separator v-if="successArray.length > 0">
-            <div class="success">成功:</div>
-            <q-item v-for="(value, index) in successArray" :key="index">
-              <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
           <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">書き込みエラー:</div>
+            <div class="error">書き込み失敗リスト:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -27,8 +19,18 @@
             </q-item>
           </q-list>
           <q-list separator v-if="engineErrorArray.length > 0">
-            <div class="error">エンジンエラー:</div>
+            <div class="error">
+              エンジンエラーによって失敗したファイルリスト:
+            </div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
+              <q-item-section>
+                <q-item-label>{{ value }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-list separator v-if="successArray.length > 0">
+            <div class="success">成功:</div>
+            <q-item v-for="(value, index) in successArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
               </q-item-section>

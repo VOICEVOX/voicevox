@@ -100,8 +100,8 @@ export default defineComponent({
 
       if (!result) {
         $q.dialog({
-          title: "Error",
-          message: "再生に失敗しました。",
+          title: "連続再生エラー",
+          message: "エンジンの再起動をお試しください。",
         });
       }
     };
