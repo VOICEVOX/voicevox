@@ -541,11 +541,7 @@ export const audioStore = {
         });
         const blob = await blobPromise;
         if (!blob) {
-          if (state.isSaveAll) {
-            return ["ENGINE_ERROR", filePath];
-          }
-
-          return "ENGINE_ERROR";
+          throw ["ENGINE_ERROR", filePath];
         }
 
         if (filePath) {
@@ -557,11 +553,7 @@ export const audioStore = {
           } catch (e) {
             window.electron.logError(e);
 
-            if (state.isSaveAll) {
-              return ["WRITE_ERROR", filePath];
-            }
-
-            return "WRITE_ERROR";
+            throw ["WRITE_ERROR", filePath];
           }
 
           const textBlob = ((): Blob => {
@@ -586,19 +578,11 @@ export const audioStore = {
               buffer: await textBlob.arrayBuffer(),
             });
 
-            if (state.isSaveAll) {
-              return ["SUCCESS", filePath];
-            }
-
-            return "SUCCESS";
+            return ["SUCCESS", filePath];
           } catch (e) {
             window.electron.logError(e);
 
-            if (state.isSaveAll) {
-              return ["WRITE_ERROR", filePath];
-            }
-
-            return "WRITE_ERROR";
+            throw ["WRITE_ERROR", filePath];
           }
         }
       }

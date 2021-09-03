@@ -387,8 +387,8 @@ export default defineComponent({
 
       if (!result) {
         $q.dialog({
-          title: "Error",
-          message: "再生に失敗しました。",
+          title: "再生に失敗しました",
+          message: "エンジンの再起動をお試しください。",
         });
       }
     };
@@ -407,19 +407,21 @@ export default defineComponent({
         }
       );
 
-      if (result !== "SUCCESS") {
+      if (result[0] !== "SUCCESS") {
         let msg = "";
-        switch (result) {
+        switch (result[0]) {
           case "WRITE_ERROR":
-            msg = "書き込みエラーによって失敗しました。";
+            msg =
+              "書き込みエラーによって失敗しました。可能性としては書き込み先のストレージの容量不足または書き込み権限が無いことが考えられますご確認ください。";
             break;
           case "ENGINE_ERROR":
-            msg = "エンジンエラーによって失敗しました。";
+            msg =
+              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
             break;
         }
 
         $q.dialog({
-          title: "Result",
+          title: "書き出しに失敗しました。",
           message: msg,
         });
       }
