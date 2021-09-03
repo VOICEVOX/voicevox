@@ -18,9 +18,6 @@ export const DETECT_MAXIMIZED = "DETECT_MAXIMIZED";
 export const DETECT_PINNED = "DETECT_PINNED";
 export const DETECT_UNPINNED = "DETECT_UNPINNED";
 export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
-export const DETECT_PINNED = "DETECT_PINNED";
-export const DETECT_UNPINNED = "DETECT_UNPINNED";
-export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
 
 export function createUILockAction<S, P>(
   action: (context: ActionContext<S, S>, payload: P) => Promise<any>
