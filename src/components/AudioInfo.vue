@@ -2,7 +2,7 @@
   <div class="root full-height q-py-sm" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >話速 {{ currentAudioSpeedScale.toFixed(1) }}</span
+        >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -11,7 +11,7 @@
         :max="2"
         :step="0.1"
         :disable="uiLocked"
-        :model-value="currentAudioSpeedScale"
+        :model-value="previewAudioSpeedScale.currentValue.value"
         @update:model-value="setPreviewValue(previewAudioSpeedScale, $event)"
         @change="setAudioSpeedScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
@@ -20,7 +20,7 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音高 {{ currentAudioPitchScale.toFixed(2) }}</span
+        >音高 {{ previewAudioPitchScale.currentValue.value.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -29,7 +29,7 @@
         :max="0.15"
         :step="0.01"
         :disable="uiLocked"
-        :model-value="currentAudioPitchScale"
+        :model-value="previewAudioPitchScale.currentValue.value"
         @update:model-value="setPreviewValue(previewAudioPitchScale, $event)"
         @change="setAudioPitchScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
@@ -38,7 +38,8 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >抑揚 {{ currentAudioIntonationScale.toFixed(1) }}</span
+        >抑揚
+        {{ previewAudioIntonationScale.currentValue.value.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -47,7 +48,7 @@
         :max="2"
         :step="0.01"
         :disable="uiLocked"
-        :model-value="currentAudioIntonationScale"
+        :model-value="previewAudioIntonationScale.currentValue.value"
         @update:model-value="
           setPreviewValue(previewAudioIntonationScale, $event)
         "
@@ -58,7 +59,7 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音量 {{ currentAudioVolumeScale.toFixed(1) }}</span
+        >音量 {{ previewAudioVolumeScale.currentValue.value.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -67,7 +68,7 @@
         :max="2"
         :step="0.1"
         :disable="uiLocked"
-        :model-value="currentAudioVolumeScale"
+        :model-value="previewAudioVolumeScale.currentValue.value"
         @update:model-value="setPreviewValue(previewAudioVolumeScale, $event)"
         @change="setAudioVolumeScale"
         @wheel="
@@ -143,21 +144,21 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
-    const { currentValue: currentAudioSpeedScale, ...previewAudioSpeedScale } =
-      createPreviewValue(() => query.value?.speedScale);
+    const previewAudioSpeedScale = createPreviewValue(
+      () => query.value?.speedScale
+    );
 
-    const { currentValue: currentAudioPitchScale, ...previewAudioPitchScale } =
-      createPreviewValue(() => query.value?.pitchScale);
+    const previewAudioPitchScale = createPreviewValue(
+      () => query.value?.pitchScale
+    );
 
-    const {
-      currentValue: currentAudioIntonationScale,
-      ...previewAudioIntonationScale
-    } = createPreviewValue(() => query.value?.intonationScale);
+    const previewAudioIntonationScale = createPreviewValue(
+      () => query.value?.intonationScale
+    );
 
-    const {
-      currentValue: currentAudioVolumeScale,
-      ...previewAudioVolumeScale
-    } = createPreviewValue(() => query.value?.volumeScale);
+    const previewAudioVolumeScale = createPreviewValue(
+      () => query.value?.volumeScale
+    );
 
     const setPreviewValue = (
       previewableValue: PreviewableValue,
@@ -261,10 +262,6 @@ export default defineComponent({
       previewAudioPitchScale,
       previewAudioIntonationScale,
       previewAudioVolumeScale,
-      currentAudioSpeedScale,
-      currentAudioPitchScale,
-      currentAudioIntonationScale,
-      currentAudioVolumeScale,
       setPreviewValue,
       setAudioSpeedScale,
       setAudioPitchScale,
