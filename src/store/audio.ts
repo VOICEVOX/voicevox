@@ -587,7 +587,7 @@ export const audioStore = {
     ),
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
       async (
-        { state, dispatch, commit },
+        { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
         dirPath ??= await window.electron.showOpenDirectoryDialog({
