@@ -8,7 +8,7 @@
       text-color="secondary"
       v-if="!disable && (valueLabel.visible || valueLabel.panning)"
     >
-      {{ currentValue.toPrecision(3) }}
+      {{ previewValue.currentValue.value.toPrecision(3) }}
     </q-badge>
     <q-slider
       vertical
@@ -18,8 +18,8 @@
       :max="max"
       :step="step"
       :disable="disable || uiLocked"
-      :model-value="currentValue"
-      @update:model-value="changePreviewValue(parseFloat($event))"
+      :model-value="previewValue.currentValue.value"
+      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
       @change="changeValue(parseFloat($event))"
       @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
       @pan="setPanning"
@@ -28,14 +28,8 @@
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  reactive,
-  computed,
-  ref,
-  onMounted,
-  onUnmounted,
-} from "vue";
+import { PreviewableValue } from "@/helpers/previewable-value";
+import { defineComponent, reactive, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -75,17 +69,7 @@ export default defineComponent({
       window.removeEventListener("keydown", setShiftKeyFlag);
     });
 
-    const isPreview = ref(false);
-    const previewValue = ref(props.value);
-
-    const currentValue = computed(() =>
-      isPreview.value ? previewValue.value : props.value
-    );
-
-    const changePreviewValue = (newValue: number) => {
-      isPreview.value = true;
-      previewValue.value = newValue;
-    };
+    const previewValue = new PreviewableValue(() => props.value);
 
     const changeValue = (newValue: number) => {
       emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue);
@@ -107,14 +91,17 @@ export default defineComponent({
     });
 
     const setPanning = (panningPhase: string) => {
-      isPreview.value = valueLabel.panning = panningPhase === "start";
-      previewValue.value = props.value;
+      if (panningPhase === "start") {
+        valueLabel.panning = true;
+        previewValue.startPreview();
+      } else {
+        valueLabel.panning = false;
+        previewValue.stopPreview();
+      }
     };
 
     return {
       previewValue,
-      currentValue,
-      changePreviewValue,
       changeValue,
       changeValueByScroll,
       valueLabel,

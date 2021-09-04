@@ -16,9 +16,9 @@
           :max="accentPhrase.moras.length"
           :step="1"
           :disable="uiLocked"
-          :model-value="currentAccent"
+          :model-value="previewAccent.currentValue.value"
           @change="changeAccent(parseInt($event))"
-          @update:model-value="changePreviewAccent(parseInt($event))"
+          @update:model-value="previewAccent.setPreviewValue(parseInt($event))"
           @wheel="
             changeAccentByScroll(
               accentPhrase.moras.length,
@@ -47,7 +47,8 @@
       :class="[
         'accent-select-cell',
         {
-          'accent-select-cell-selected': currentAccent == moraIndex + 1,
+          'accent-select-cell-selected':
+            previewAccent.currentValue.value == moraIndex + 1,
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
@@ -60,6 +61,7 @@
 </template>
 
 <script lang="ts">
+import { PreviewableValue } from "@/helpers/previewable-value";
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
@@ -74,12 +76,7 @@ export default defineComponent({
   emits: ["changeAccent"],
 
   setup(props, { emit }) {
-    const isPreview = ref(false);
-    const previewAccent = ref(props.accentPhrase.accent);
-
-    const currentAccent = computed(() =>
-      isPreview.value ? previewAccent.value : props.accentPhrase.accent
-    );
+    const previewAccent = new PreviewableValue(() => props.accentPhrase.accent);
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
     let shiftKeyFlag = false;
@@ -121,17 +118,16 @@ export default defineComponent({
         changeAccent(currentAccent);
     };
 
-    const changePreviewAccent = (accent: number) => {
-      previewAccent.value = accent;
-    };
-
-    const setPanning = (panning: string) => {
-      isPreview.value = panning === "start";
-      previewAccent.value = props.accentPhrase.accent;
+    const setPanning = (panningPhrase: string) => {
+      if (panningPhrase === "start") {
+        previewAccent.startPreview();
+      } else {
+        previewAccent.stopPreview();
+      }
     };
 
     const accentLine = computed(() => {
-      const accent = currentAccent.value;
+      const accent = previewAccent.currentValue.value ?? 0;
       return [...Array(props.accentPhrase.moras.length).keys()].map(
         (index) =>
           `${index * 40 + 15} ${
@@ -141,12 +137,9 @@ export default defineComponent({
     });
 
     return {
-      isPreview,
       previewAccent,
-      currentAccent,
       changeAccent,
       changeAccentByScroll,
-      changePreviewAccent,
       accentLine,
       setPanning,
     };

@@ -81,7 +81,7 @@
 </template>
 
 <script lang="ts">
-import { computed, ref, ComputedRef, defineComponent } from "vue";
+import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -92,45 +92,12 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
-
-type PreviewableValue = {
-  currentValue: ComputedRef<number | undefined>;
-
-  setPreviewValue: (newValue: number) => void;
-
-  startPreview: () => void;
-
-  stopPreview: () => void;
-};
+import { PreviewableValue } from "@/helpers/previewable-value";
 
 export default defineComponent({
   name: "AudioInfo",
 
   setup() {
-    const createPreviewValue = (
-      storeFunc: () => number | undefined
-    ): PreviewableValue => {
-      const isPreview = ref(false);
-      const storeValue = computed(storeFunc);
-      const previewValue = ref<number | undefined>(undefined);
-
-      const currentValue = computed(() =>
-        isPreview.value ? previewValue.value : storeValue.value
-      );
-
-      const setPreviewValue = (newValue: number) =>
-        (previewValue.value = newValue);
-
-      const startPreview = () => {
-        previewValue.value = storeValue.value;
-        isPreview.value = true;
-      };
-
-      const stopPreview = () => (isPreview.value = false);
-
-      return { currentValue, setPreviewValue, startPreview, stopPreview };
-    };
-
     const store = useStore();
 
     // accent phrase
@@ -144,19 +111,19 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
-    const previewAudioSpeedScale = createPreviewValue(
+    const previewAudioSpeedScale = new PreviewableValue(
       () => query.value?.speedScale
     );
 
-    const previewAudioPitchScale = createPreviewValue(
+    const previewAudioPitchScale = new PreviewableValue(
       () => query.value?.pitchScale
     );
 
-    const previewAudioIntonationScale = createPreviewValue(
+    const previewAudioIntonationScale = new PreviewableValue(
       () => query.value?.intonationScale
     );
 
-    const previewAudioVolumeScale = createPreviewValue(
+    const previewAudioVolumeScale = new PreviewableValue(
       () => query.value?.volumeScale
     );
 
