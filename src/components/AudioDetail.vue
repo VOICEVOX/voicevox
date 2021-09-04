@@ -249,7 +249,7 @@ import {
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
-import { SaveCommandResult } from "@/store/type";
+import { SaveResult } from "@/store/type";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -399,10 +399,13 @@ export default defineComponent({
 
     // save
     const save = async () => {
-      const result = await store.dispatch(GENERATE_AND_SAVE_AUDIO, {
-        audioKey: activeAudioKey.value!,
-        encoding: store.state.fileEncoding,
-      });
+      const result: [SaveResult, string] = await store.dispatch(
+        GENERATE_AND_SAVE_AUDIO,
+        {
+          audioKey: activeAudioKey.value!,
+          encoding: store.state.fileEncoding,
+        }
+      );
 
       if (result[0] !== "SUCCESS") {
         let msg = "";
