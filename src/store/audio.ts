@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, PlayState, SaveCommandResult, State } from "./type";
+import { AudioItem, EngineState, SaveCommandResult, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -652,7 +652,7 @@ export const audioStore = {
             nowGenerating: false,
           });
           if (!blob) {
-            throw "ERROR";
+            throw new Error();
           }
         }
         audioElem.src = URL.createObjectURL(blob);
@@ -664,9 +664,9 @@ export const audioStore = {
         audioElem.addEventListener("play", played);
 
         let paused: () => void;
-        const audioPlayPromise = new Promise<PlayState>((resolve) => {
+        const audioPlayPromise = new Promise<boolean>((resolve) => {
           paused = () => {
-            resolve("PAUSE");
+            resolve(audioElem.ended);
           };
           audioElem.addEventListener("pause", paused);
         }).finally(async () => {
@@ -691,14 +691,12 @@ export const audioStore = {
           for (const audioKey of state.audioKeys) {
             commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
             const isEnded = await dispatch(PLAY_AUDIO, { audioKey });
-
-            switch (isEnded) {
-              case "ERROR":
-                throw isEnded;
+            if (!isEnded) {
+              break;
             }
           }
-
-          return "SUCCESS";
+        } catch {
+          throw new Error();
         } finally {
           commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
           commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });

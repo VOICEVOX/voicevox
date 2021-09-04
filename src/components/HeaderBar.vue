@@ -96,9 +96,9 @@ export default defineComponent({
       store.dispatch(REDO);
     };
     const playContinuously = async () => {
-      const result = await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
-
-      if (!result) {
+      try {
+        await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+      } catch {
         $q.dialog({
           title: "連続再生エラー",
           message: "エンジンの再起動をお試しください。",

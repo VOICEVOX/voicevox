@@ -381,11 +381,11 @@ export default defineComponent({
 
     // audio play
     const play = async () => {
-      const result = await store.dispatch(PLAY_AUDIO, {
-        audioKey: activeAudioKey.value!,
-      });
-
-      if (!result) {
+      try {
+        await store.dispatch(PLAY_AUDIO, {
+          audioKey: activeAudioKey.value!,
+        });
+      } catch (e) {
         $q.dialog({
           title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
@@ -399,17 +399,14 @@ export default defineComponent({
 
     // save
     const save = async () => {
-      const result: SaveCommandResult = await store.dispatch(
-        GENERATE_AND_SAVE_AUDIO,
-        {
+      try {
+        await store.dispatch(GENERATE_AND_SAVE_AUDIO, {
           audioKey: activeAudioKey.value!,
           encoding: store.state.fileEncoding,
-        }
-      );
-
-      if (result[0] !== "SUCCESS") {
+        });
+      } catch (e) {
         let msg = "";
-        switch (result[0]) {
+        switch (e[0]) {
           case "WRITE_ERROR":
             msg =
               "書き込みエラーによって失敗しました。可能性としては書き込み先のストレージの容量不足または書き込み権限が無いことが考えられますご確認ください。";

@@ -47,4 +47,3 @@ export type SaveCommandResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "DID_NOT";
-export type PlayState = "SUCCESS" | "ERROR" | "PAUSE";
