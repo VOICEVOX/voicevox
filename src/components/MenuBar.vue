@@ -38,7 +38,7 @@ import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
 import { SaveResult } from "@/store/type";
 import { useQuasar } from "quasar";
-import SaveAllCommandResultDialog from "@/components/SaveAllCommandResultDialog.vue";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -120,7 +120,7 @@ export default defineComponent({
 
               if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
                 $q.dialog({
-                  component: SaveAllCommandResultDialog,
+                  component: SaveAllResultDialog,
                   componentProps: {
                     successArray: successArray,
                     writeErrorArray: writeErrorArray,

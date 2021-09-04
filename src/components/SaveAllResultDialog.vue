@@ -50,7 +50,7 @@ import { defineComponent } from "vue";
 import { useDialogPluginComponent } from "quasar";
 
 export default defineComponent({
-  name: "SaveAllCommandResultDialog",
+  name: "SaveAllResultDialog",
   props: {
     successArray: Array,
     writeErrorArray: Array,
