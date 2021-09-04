@@ -102,6 +102,11 @@ export default defineComponent({
         $q.dialog({
           title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
         });
       }
     };
