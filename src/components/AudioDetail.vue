@@ -403,22 +403,25 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         encoding: store.state.fileEncoding,
       });
-      let msg = "";
-      switch (result[0]) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。可能性としては書き込み先のストレージの容量不足または書き込み権限が無いことが考えられますご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
 
-      $q.dialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-      });
+      if (result[0] !== "SUCCESS") {
+        let msg = "";
+        switch (result[0]) {
+          case "WRITE_ERROR":
+            msg =
+              "書き込みエラーによって失敗しました。可能性としては書き込み先のストレージの容量不足または書き込み権限が無いことが考えられますご確認ください。";
+            break;
+          case "ENGINE_ERROR":
+            msg =
+              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+            break;
+        }
+
+        $q.dialog({
+          title: "書き出しに失敗しました。",
+          message: msg,
+        });
+      }
     };
 
     const nowPlaying = computed(
