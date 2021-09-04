@@ -389,6 +389,11 @@ export default defineComponent({
         $q.dialog({
           title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
         });
       }
     };
@@ -423,6 +428,11 @@ export default defineComponent({
         $q.dialog({
           title: "書き出しに失敗しました。",
           message: msg,
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
         });
       }
     };

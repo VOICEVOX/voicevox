@@ -40,6 +40,7 @@ export const store = createStore<State>({
     fileEncoding: "UTF-8",
     isMaximized: false,
     isPinned: false,
+    isSaveAllResultOpen: false,
   },
 
   getters: {

@@ -4,7 +4,9 @@
     <q-layout container class="q-dialog-plugin bg-white">
       <q-header>
         <q-toolbar>
-          <q-toolbar-title>音声書き出し結果</q-toolbar-title>
+          <q-toolbar-title class="header-and-close-text"
+            >音声書き出し結果</q-toolbar-title
+          >
         </q-toolbar>
         <q-space />
       </q-header>
@@ -38,7 +40,7 @@
       </q-page-container>
       <q-footer>
         <q-item clickable v-ripple align="right" @click="close">
-          <q-item-section>閉じる</q-item-section>
+          <q-item-section class="header-and-close-text">閉じる</q-item-section>
         </q-item>
       </q-footer>
     </q-layout>
@@ -88,5 +90,9 @@ export default defineComponent({
 
 .error {
   color: red;
+}
+
+.header-and-close-text {
+  color: global.$secondary;
 }
 </style>
