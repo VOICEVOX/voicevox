@@ -535,13 +535,13 @@ export const audioStore = {
           title: "Save",
           defaultPath: buildFileName(state, audioKey),
         });
+        if (!filePath) {
+          return ["CANCELED", ""];
+        }
+
         const blob = await blobPromise;
         if (!blob) {
           return ["ENGINE_ERROR", filePath];
-        }
-
-        if (!filePath) {
-          return ["CANCELED", ""];
         }
 
         try {
