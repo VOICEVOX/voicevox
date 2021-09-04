@@ -32,7 +32,6 @@ export const store = createStore<State>({
     audioDetailPaneOffset: undefined,
     audioInfoPaneOffset: undefined,
     nowPlayingContinuously: false,
-    isSaveAll: false,
     undoCommands: [],
     redoCommands: [],
     useGpu: false,

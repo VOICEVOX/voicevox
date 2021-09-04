@@ -409,7 +409,7 @@ export default defineComponent({
         switch (result[0]) {
           case "WRITE_ERROR":
             msg =
-              "書き込みエラーによって失敗しました。可能性としては書き込み先のストレージの容量不足または書き込み権限が無いことが考えられますご確認ください。";
+              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
             break;
           case "ENGINE_ERROR":
             msg =

@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, SaveCommandResult, State } from "./type";
+import { AudioItem, EngineState, SaveResult, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -531,7 +531,7 @@ export const audioStore = {
           filePath?: string;
           encoding?: EncodingType;
         }
-      ): Promise<[SaveCommandResult, string | undefined]> => {
+      ): Promise<[SaveResult, string | undefined]> => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
@@ -544,49 +544,49 @@ export const audioStore = {
           return ["ENGINE_ERROR", filePath];
         }
 
-        if (filePath) {
-          try {
-            window.electron.writeFile({
-              filePath,
-              buffer: await blob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return ["WRITE_ERROR", filePath];
-          }
-
-          const textBlob = ((): Blob => {
-            if (!encoding || encoding === "UTF-8") {
-              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, state.audioItems[audioKey].text], {
-                type: "text/plain;charset=UTF-8",
-              });
-            }
-            const sjisArray = Encoding.convert(
-              Encoding.stringToCode(state.audioItems[audioKey].text),
-              { to: "SJIS", type: "arraybuffer" }
-            );
-            return new Blob([new Uint8Array(sjisArray)], {
-              type: "text/plain;charset=Shift_JIS",
-            });
-          })();
-
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            });
-
-            return ["SUCCESS", filePath];
-          } catch (e) {
-            window.electron.logError(e);
-
-            return ["WRITE_ERROR", filePath];
-          }
+        if (!filePath) {
+          return ["CANCELED", ""];
         }
 
-        return ["DID_NOT", ""];
+        try {
+          window.electron.writeFile({
+            filePath,
+            buffer: await blob.arrayBuffer(),
+          });
+        } catch (e) {
+          window.electron.logError(e);
+
+          return ["WRITE_ERROR", filePath];
+        }
+
+        const textBlob = ((): Blob => {
+          if (!encoding || encoding === "UTF-8") {
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            return new Blob([bom, state.audioItems[audioKey].text], {
+              type: "text/plain;charset=UTF-8",
+            });
+          }
+          const sjisArray = Encoding.convert(
+            Encoding.stringToCode(state.audioItems[audioKey].text),
+            { to: "SJIS", type: "arraybuffer" }
+          );
+          return new Blob([new Uint8Array(sjisArray)], {
+            type: "text/plain;charset=Shift_JIS",
+          });
+        })();
+
+        try {
+          window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
+          });
+
+          return ["SUCCESS", filePath];
+        } catch (e) {
+          window.electron.logError(e);
+
+          return ["WRITE_ERROR", filePath];
+        }
       }
     ),
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
@@ -598,7 +598,6 @@ export const audioStore = {
           title: "Save ALL",
         });
         if (dirPath) {
-          await commit(SET_IS_SAVE_ALL, { isSaveAll: true });
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);
             return dispatch(GENERATE_AND_SAVE_AUDIO, {
@@ -607,9 +606,7 @@ export const audioStore = {
               encoding,
             });
           });
-          return Promise.all(promises).finally(() =>
-            commit(SET_IS_SAVE_ALL, { isSaveAll: false })
-          );
+          return Promise.all(promises);
         }
       }
     ),

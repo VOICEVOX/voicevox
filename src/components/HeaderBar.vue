@@ -100,7 +100,7 @@ export default defineComponent({
         await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
       } catch {
         $q.dialog({
-          title: "連続再生エラー",
+          title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
         });
       }
