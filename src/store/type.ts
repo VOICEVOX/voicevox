@@ -46,3 +46,4 @@ export type SaveResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
+export type SaveResultObject = { result: SaveResult; path: string | undefined };

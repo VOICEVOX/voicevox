@@ -36,7 +36,7 @@ import {
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
-import { SaveResult } from "@/store/type";
+import { SaveResultObject } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
@@ -94,26 +94,26 @@ export default defineComponent({
             label: "音声書き出し",
             shortCut: "Ctrl+E",
             onClick: async () => {
-              const result: Array<[SaveResult, string]> = await store.dispatch(
+              const result: Array<SaveResultObject> = await store.dispatch(
                 GENERATE_AND_SAVE_ALL_AUDIO,
                 {
                   encoding: store.state.fileEncoding,
                 }
               );
 
-              let successArray: Array<string> = [];
-              let writeErrorArray: Array<string> = [];
-              let engineErrorArray: Array<string> = [];
+              let successArray: Array<string | undefined> = [];
+              let writeErrorArray: Array<string | undefined> = [];
+              let engineErrorArray: Array<string | undefined> = [];
               for (const item of result) {
-                switch (item[0]) {
+                switch (item.result) {
                   case "SUCCESS":
-                    successArray.push(item[1]);
+                    successArray.push(item.path);
                     break;
                   case "WRITE_ERROR":
-                    writeErrorArray.push(item[1]);
+                    writeErrorArray.push(item.path);
                     break;
                   case "ENGINE_ERROR":
-                    engineErrorArray.push(item[1]);
+                    engineErrorArray.push(item.path);
                     break;
                 }
               }

@@ -249,7 +249,7 @@ import {
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
-import { SaveResult } from "@/store/type";
+import { SaveResultObject } from "@/store/type";
 
 export default defineComponent({
   name: "AudioDetail",
@@ -399,7 +399,7 @@ export default defineComponent({
 
     // save
     const save = async () => {
-      const result: [SaveResult, string] = await store.dispatch(
+      const result: SaveResultObject = await store.dispatch(
         GENERATE_AND_SAVE_AUDIO,
         {
           audioKey: activeAudioKey.value!,
@@ -407,9 +407,9 @@ export default defineComponent({
         }
       );
 
-      if (result[0] !== "SUCCESS") {
+      if (result.result !== "SUCCESS") {
         let msg = "";
-        switch (result[0]) {
+        switch (result.result) {
           case "WRITE_ERROR":
             msg =
               "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";

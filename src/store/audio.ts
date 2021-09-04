@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, SaveResult, State } from "./type";
+import { AudioItem, EngineState, SaveResultObject, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -527,7 +527,7 @@ export const audioStore = {
           filePath?: string;
           encoding?: EncodingType;
         }
-      ): Promise<[SaveResult, string | undefined]> => {
+      ): Promise<SaveResultObject> => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
@@ -536,12 +536,12 @@ export const audioStore = {
           defaultPath: buildFileName(state, audioKey),
         });
         if (!filePath) {
-          return ["CANCELED", ""];
+          return { result: "CANCELED", path: "" };
         }
 
         const blob = await blobPromise;
         if (!blob) {
-          return ["ENGINE_ERROR", filePath];
+          return { result: "ENGINE_ERROR", path: filePath };
         }
 
         try {
@@ -552,7 +552,7 @@ export const audioStore = {
         } catch (e) {
           window.electron.logError(e);
 
-          return ["WRITE_ERROR", filePath];
+          return { result: "WRITE_ERROR", path: filePath };
         }
 
         const textBlob = ((): Blob => {
@@ -577,11 +577,11 @@ export const audioStore = {
             buffer: await textBlob.arrayBuffer(),
           });
 
-          return ["SUCCESS", filePath];
+          return { result: "SUCCESS", path: filePath };
         } catch (e) {
           window.electron.logError(e);
 
-          return ["WRITE_ERROR", filePath];
+          return { result: "WRITE_ERROR", path: filePath };
         }
       }
     ),
