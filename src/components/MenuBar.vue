@@ -36,7 +36,7 @@ import {
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
-import { SaveCommandResult } from "@/store/type";
+import { SaveResult } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllCommandResultDialog from "@/components/SaveAllCommandResultDialog.vue";
 
@@ -94,10 +94,12 @@ export default defineComponent({
             label: "音声書き出し",
             shortCut: "Ctrl+E",
             onClick: async () => {
-              const result: Array<[SaveCommandResult, string]> =
-                await store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+              const result: Array<[SaveResult, string]> = await store.dispatch(
+                GENERATE_AND_SAVE_ALL_AUDIO,
+                {
                   encoding: store.state.fileEncoding,
-                });
+                }
+              );
 
               let successArray: Array<string> = [];
               let writeErrorArray: Array<string> = [];

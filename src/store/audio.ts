@@ -107,7 +107,6 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const SET_IS_SAVE_ALL = "SET_IS_SAVE_ALL";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -158,9 +157,6 @@ export const audioStore = {
       { nowPlaying }: { nowPlaying: boolean }
     ) {
       state.nowPlayingContinuously = nowPlaying;
-    },
-    [SET_IS_SAVE_ALL](state, { isSaveAll }: { isSaveAll: boolean }) {
-      state.isSaveAll = isSaveAll;
     },
   },
 
