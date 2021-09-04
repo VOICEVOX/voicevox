@@ -531,7 +531,7 @@ export const audioStore = {
           filePath?: string;
           encoding?: EncodingType;
         }
-      ): Promise<[SaveCommandResult, string]> => {
+      ): Promise<[SaveCommandResult, string | undefined]> => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
@@ -541,7 +541,7 @@ export const audioStore = {
         });
         const blob = await blobPromise;
         if (!blob) {
-          throw ["ENGINE_ERROR", filePath];
+          return ["ENGINE_ERROR", filePath];
         }
 
         if (filePath) {
@@ -553,7 +553,7 @@ export const audioStore = {
           } catch (e) {
             window.electron.logError(e);
 
-            throw ["WRITE_ERROR", filePath];
+            return ["WRITE_ERROR", filePath];
           }
 
           const textBlob = ((): Blob => {
@@ -582,7 +582,7 @@ export const audioStore = {
           } catch (e) {
             window.electron.logError(e);
 
-            throw ["WRITE_ERROR", filePath];
+            return ["WRITE_ERROR", filePath];
           }
         }
 
