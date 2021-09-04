@@ -42,4 +42,9 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
-export type SaveCommandResult = "SUCCESS" | "WRITE_ERROR" | "ENGINE_ERROR";
+export type SaveCommandResult =
+  | "SUCCESS"
+  | "WRITE_ERROR"
+  | "ENGINE_ERROR"
+  | "DID_NOT";
+export type PlayState = "SUCCESS" | "ERROR" | "PAUSE";

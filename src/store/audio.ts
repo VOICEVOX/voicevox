@@ -3,7 +3,7 @@ import { StoreOptions } from "vuex";
 import path from "path";
 import { createCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, SaveCommandResult, State } from "./type";
+import { AudioItem, EngineState, PlayState, SaveCommandResult, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -531,7 +531,7 @@ export const audioStore = {
           filePath?: string;
           encoding?: EncodingType;
         }
-      ) => {
+      ): Promise<[SaveCommandResult, string]> => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
@@ -585,6 +585,8 @@ export const audioStore = {
             throw ["WRITE_ERROR", filePath];
           }
         }
+
+        return ["DID_NOT", ""];
       }
     ),
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
@@ -650,7 +652,7 @@ export const audioStore = {
             nowGenerating: false,
           });
           if (!blob) {
-            return false;
+            throw "ERROR";
           }
         }
         audioElem.src = URL.createObjectURL(blob);
@@ -662,9 +664,9 @@ export const audioStore = {
         audioElem.addEventListener("play", played);
 
         let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
+        const audioPlayPromise = new Promise<PlayState>((resolve) => {
           paused = () => {
-            resolve(audioElem.ended);
+            resolve("PAUSE");
           };
           audioElem.addEventListener("pause", paused);
         }).finally(async () => {
@@ -689,12 +691,14 @@ export const audioStore = {
           for (const audioKey of state.audioKeys) {
             commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
             const isEnded = await dispatch(PLAY_AUDIO, { audioKey });
-            if (!isEnded) {
-              return false;
+
+            switch (isEnded) {
+              case "ERROR":
+                throw isEnded;
             }
           }
 
-          return true;
+          return "SUCCESS";
         } finally {
           commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
           commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });
