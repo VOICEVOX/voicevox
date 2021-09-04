@@ -695,8 +695,6 @@ export const audioStore = {
               break;
             }
           }
-        } catch {
-          throw new Error();
         } finally {
           commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
           commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });
