@@ -9,6 +9,7 @@
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab label="ｱｸｾﾝﾄ" name="accent" />
             <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+            <q-tab label="ﾓｰﾗ" name="mora" />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
@@ -41,6 +42,13 @@
         </div>
       </div>
       <div class="overflow-hidden-y accent-phrase-table">
+        <template v-if="selectedDetail === 'mora' && accentPhrases">
+          <audio-mora
+            :accentPhrases="accentPhrases"
+            :uiLocked="uiLocked"
+            @changeAccentPhrases="changeAccentPhrases"
+          />
+        </template>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -76,49 +84,51 @@
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
-          <template
-            v-for="(mora, moraIndex) in accentPhrase.moras"
-            :key="moraIndex"
-          >
-            <div
-              class="text-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+          <template v-if="selectedDetail !== 'mora'">
+            <template
+              v-for="(mora, moraIndex) in accentPhrase.moras"
+              :key="moraIndex"
             >
-              {{ mora.text }}
-            </div>
-            <div
-              v-if="
-                accentPhraseIndex < accentPhrases.length - 1 ||
-                moraIndex < accentPhrase.moras.length - 1
-              "
-              @click="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, moraIndex, false)
-              "
-              :class="[
-                'splitter-cell',
-                {
-                  'splitter-cell-be-split':
-                    moraIndex == accentPhrase.moras.length - 1,
-                  'splitter-cell-be-split-pause': accentPhrase.pauseMora,
-                },
-              ]"
-              :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
-            />
-          </template>
-          <template v-if="accentPhrase.pauseMora">
-            <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
-            <div
-              @click="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, null, true)
-              "
-              class="
-                splitter-cell
-                splitter-cell-be-split
-                splitter-cell-be-split-pause
-              "
-            />
+              <div
+                class="text-cell"
+                :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+              >
+                {{ mora.text }}
+              </div>
+              <div
+                v-if="
+                  accentPhraseIndex < accentPhrases.length - 1 ||
+                  moraIndex < accentPhrase.moras.length - 1
+                "
+                @click="
+                  uiLocked ||
+                    toggleAccentPhraseSplit(accentPhraseIndex, moraIndex, false)
+                "
+                :class="[
+                  'splitter-cell',
+                  {
+                    'splitter-cell-be-split':
+                      moraIndex == accentPhrase.moras.length - 1,
+                    'splitter-cell-be-split-pause': accentPhrase.pauseMora,
+                  },
+                ]"
+                :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
+              />
+            </template>
+            <template v-if="accentPhrase.pauseMora">
+              <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
+              <div
+                @click="
+                  uiLocked ||
+                    toggleAccentPhraseSplit(accentPhraseIndex, null, true)
+                "
+                class="
+                  splitter-cell
+                  splitter-cell-be-split
+                  splitter-cell-be-split-pause
+                "
+              />
+            </template>
           </template>
         </div>
       </div>
@@ -132,6 +142,7 @@ import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
   CHANGE_ACCENT,
+  CHANGE_ACCENT_PHRASES,
   SET_AUDIO_MORA_PITCH,
   CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
@@ -142,11 +153,13 @@ import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
+import { AccentPhrase } from "@/openapi/models";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import AudioMora from "./AudioMora.vue";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter },
+  components: { AudioAccent, AudioParameter, AudioMora },
 
   name: "AudioDetail",
 
@@ -171,6 +184,10 @@ export default defineComponent({
       selectedDetail.value = "intonation";
     });
 
+    Mousetrap.bind("3", () => {
+      selectedDetail.value = "mora";
+    });
+
     // detect shift key and set flag, preventing changes in intonation while scrolling around
     let shiftKeyFlag = false;
 
@@ -185,10 +202,16 @@ export default defineComponent({
     window.addEventListener("keydown", setShiftKeyFlag);
 
     // detail selector
-    type DetailTypes = "accent" | "intonation";
+    type DetailTypes = "accent" | "intonation" | "mora";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
-      selectedDetail.value = index === 0 ? "accent" : "intonation";
+      if (index === 0) {
+        selectedDetail.value = "accent";
+      } else if (index === 1) {
+        selectedDetail.value = "intonation";
+      } else {
+        selectedDetail.value = "mora";
+      }
     };
 
     // accent phrase
@@ -234,6 +257,14 @@ export default defineComponent({
         accentPhraseIndex,
         moraIndex,
         pitch,
+      });
+    };
+
+    // audio mora
+    const changeAccentPhrases = (accentPhrases: AccentPhrase[]) => {
+      store.dispatch(CHANGE_ACCENT_PHRASES, {
+        audioKey: activeAudioKey.value!,
+        accentPhrases,
       });
     };
 
@@ -324,6 +355,7 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      changeAccentPhrases,
     };
   },
 });

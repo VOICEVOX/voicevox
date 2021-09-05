@@ -89,6 +89,7 @@ export const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
 export const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 export const CHANGE_ACCENT = "CHANGE_ACCENT";
+export const CHANGE_ACCENT_PHRASES = "CHANGE_ACCENT_PHRASES";
 export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 export const CHANGE_ACCENT_PHRASE_SPLIT = "CHANGE_ACCENT_PHRASE_SPLIT";
 export const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
@@ -400,6 +401,19 @@ export const audioStore = {
       }
     ) {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
+      return dispatch(FETCH_MORA_PITCH, { audioKey });
+    },
+    async [CHANGE_ACCENT_PHRASES](
+      { dispatch },
+      {
+        audioKey,
+        accentPhrases,
+      }: {
+        audioKey: string;
+        accentPhrases: AccentPhrase[];
+      }
+    ) {
+      dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
       return dispatch(FETCH_MORA_PITCH, { audioKey });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: createCommandAction<
