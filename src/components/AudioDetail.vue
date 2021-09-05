@@ -42,7 +42,13 @@
         </div>
       </div>
       <div class="overflow-hidden-y accent-phrase-table">
-        <template v-if="selectedDetail === 'mora' && accentPhrases">
+        <template
+          v-if="
+            selectedDetail === 'mora' &&
+            accentPhrases &&
+            accentPhrases.length > 0
+          "
+        >
           <audio-mora
             :accentPhrases="accentPhrases"
             :uiLocked="uiLocked"
