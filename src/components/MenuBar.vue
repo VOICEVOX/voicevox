@@ -84,36 +84,6 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
-    const showError = (result: Array<SaveResultObject>) => {
-      let successArray: Array<string | undefined> = [];
-      let writeErrorArray: Array<string | undefined> = [];
-      let engineErrorArray: Array<string | undefined> = [];
-      for (const item of result) {
-        switch (item.result) {
-          case "SUCCESS":
-            successArray.push(item.path);
-            break;
-          case "WRITE_ERROR":
-            writeErrorArray.push(item.path);
-            break;
-          case "ENGINE_ERROR":
-            engineErrorArray.push(item.path);
-            break;
-        }
-      }
-
-      if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-        $q.dialog({
-          component: SaveAllResultDialog,
-          componentProps: {
-            successArray: successArray,
-            writeErrorArray: writeErrorArray,
-            engineErrorArray: engineErrorArray,
-          },
-        });
-      }
-    };
-
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -130,9 +100,7 @@ export default defineComponent({
                   encoding: store.state.fileEncoding,
                 }
               );
-              showError(result);
 
-              /* 
               let successArray: Array<string | undefined> = [];
               let writeErrorArray: Array<string | undefined> = [];
               let engineErrorArray: Array<string | undefined> = [];
@@ -160,7 +128,6 @@ export default defineComponent({
                   },
                 });
               }
-              */
             },
           },
           {
