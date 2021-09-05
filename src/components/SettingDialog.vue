@@ -50,100 +50,120 @@
               </q-card-actions>
             </q-card>
             <!-- Saving Card -->
-            <q-card class="saving-card">
+            <q-card class="setting-card">
               <q-card-section class="bg-blue">
                 <div class="text-h5">保存</div>
               </q-card-section>
+              <q-list>
+                <q-expansion-item
+                  dense
+                  dense-toggle
+                  expand-separator
+                  header-class="bg-blue text-white"
+                  group="saving-group"
+                  label="文字コード"
+                  expand-icon-class="text-white"
+                >
+                  <q-card>
+                    <q-card-section>
+                      <q-btn-toggle
+                        v-model="fileEncoding"
+                        toggle-color="blue"
+                        :options="[
+                          { label: 'UTF-8', value: 'UTF-8' },
+                          { label: 'Shift_JIS', value: 'Shift_JIS' },
+                        ]"
+                      />
+                    </q-card-section>
+                  </q-card>
+                </q-expansion-item>
 
-              <q-tabs
-                v-model="tab"
-                dense
-                class="bg-blue text-black"
-                active-color="white"
-                indicator-color="white"
-                align="justify"
-                narrow-indicator
-              >
-                <q-tab name="encoding" label="文字コード" />
-                <q-tab name="directory" label="書き出し先を固定" />
-                <q-tab name="avoid" label="上書き防止" />
-              </q-tabs>
-
-              <q-tab-panels v-model="tab">
-                <q-tab-panel name="encoding">
-                  <div class="q-pa-md">
-                    <q-btn-toggle
-                      v-model="fileEncoding"
-                      toggle-color="blue"
-                      :options="[
-                        { label: 'UTF-8', value: 'UTF-8' },
-                        { label: 'Shift_JIS', value: 'Shift_JIS' },
-                      ]"
-                    />
-                  </div>
-                </q-tab-panel>
-                <q-tab-panel name="directory">
-                  <q-toggle
-                    name="enabled"
-                    align="left"
-                    dense
-                    color="blue"
-                    :model-value="simpleMode.enabled"
-                    :label="simpleMode.enabled ? '有効' : '無効'"
-                    @update:model-value="
-                      handleSimpleModeChange('enabled', $event)
-                    "
-                  />
-                  <q-input
-                    unelevated
-                    dense
-                    bottom-slots
-                    v-model="simpleMode.dir"
-                    label="デフォルトのフォルダ"
-                    @update:model-value="handleSimpleModeChange('dir', $event)"
-                    color="blue"
-                  >
-                    <template v-slot:append>
-                      <q-btn
-                        square
+                <q-expansion-item
+                  dense
+                  dense-toggle
+                  expand-separator
+                  header-class="bg-blue text-white"
+                  group="saving-group"
+                  label="書き出し先を固定"
+                  expand-icon-class="text-white"
+                >
+                  <q-card>
+                    <q-card-section>
+                      <q-toggle
+                        name="enabled"
+                        align="left"
                         dense
-                        flat
                         color="blue"
-                        icon="folder_open"
-                        @click="onOpeningFileExplore"
+                        :model-value="simpleMode.enabled"
+                        :label="simpleMode.enabled ? '有効' : '無効'"
+                        @update:model-value="
+                          handleSimpleModeChange('enabled', $event)
+                        "
+                      />
+                      <q-input
+                        unelevated
+                        dense
+                        bottom-slots
+                        v-model="simpleMode.dir"
+                        label="デフォルトのフォルダ"
+                        @update:model-value="
+                          handleSimpleModeChange('dir', $event)
+                        "
+                        color="blue"
                       >
-                        <q-tooltip
-                          :delay="500"
-                          class="bg-blue text-body2"
-                          anchor="bottom right"
-                        >
-                          フォルダー選択
-                        </q-tooltip>
-                      </q-btn>
-                    </template>
-                  </q-input>
-                  設定したフォルダーに書き出す
-                </q-tab-panel>
+                        <template v-slot:append>
+                          <q-btn
+                            square
+                            dense
+                            flat
+                            color="blue"
+                            icon="folder_open"
+                            @click="onOpeningFileExplore"
+                          >
+                            <q-tooltip
+                              :delay="500"
+                              class="bg-blue text-body2"
+                              anchor="bottom right"
+                            >
+                              フォルダー選択
+                            </q-tooltip>
+                          </q-btn>
+                        </template>
+                      </q-input>
+                      設定したフォルダーに書き出す
+                    </q-card-section>
+                  </q-card>
+                </q-expansion-item>
 
-                <q-tab-panel name="avoid">
-                  <div class="q-py-sm">
-                    <q-checkbox
-                      class="q-pl-lg"
-                      label="上書き防止"
-                      dense
-                      color="blue"
-                      :model-value="simpleMode.avoid"
-                      @update:model-value="
-                        handleSimpleModeChange('avoid', $event)
-                      "
-                    />
-                  </div>
-                  <q-separator />
-                  <div class="q-pt-sm">
-                    上書きの代わりにファイル名に番号をつける
-                  </div>
-                </q-tab-panel>
-              </q-tab-panels>
+                <q-expansion-item
+                  dense
+                  dense-toggle
+                  expand-separator
+                  header-class="bg-blue text-white"
+                  group="saving-group"
+                  label="上書き防止"
+                  expand-icon-class="text-white"
+                >
+                  <q-card>
+                    <q-card-section>
+                      <q-checkbox
+                        class="q-pl-lg q-pb-md"
+                        :label="simpleMode.avoid ? '有効' : '無効'"
+                        dense
+                        color="blue"
+                        :model-value="simpleMode.avoid"
+                        @update:model-value="
+                          handleSimpleModeChange('avoid', $event)
+                        "
+                      />
+                      <q-separator />
+                      <div class="q-pt-sm">
+                        上書きの代わりにファイル名に番号をつける
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </q-expansion-item>
+              </q-list>
             </q-card>
           </div>
         </q-page>
@@ -299,12 +319,6 @@ export default defineComponent({
 .setting-card {
   width: 100%;
   max-width: 265px;
-}
-.saving-card {
-  width: 100%;
-  max-width: 400px;
-  height: 100%;
-  max-height: 400px;
 }
 
 .text-nvidia {
