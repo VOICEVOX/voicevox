@@ -140,6 +140,8 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
+import { useQuasar } from "quasar";
+import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 
@@ -150,6 +152,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     // add hotkeys with mousetrap
     Mousetrap.bind("space", () => {
@@ -235,8 +238,22 @@ export default defineComponent({
     };
 
     // audio play
-    const play = () => {
-      store.dispatch(PLAY_AUDIO, { audioKey: activeAudioKey.value! });
+    const play = async () => {
+      try {
+        await store.dispatch(PLAY_AUDIO, {
+          audioKey: activeAudioKey.value!,
+        });
+      } catch (e) {
+        $q.dialog({
+          title: "再生に失敗しました",
+          message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+      }
     };
 
     const stop = () => {
@@ -244,11 +261,38 @@ export default defineComponent({
     };
 
     // save
-    const save = () => {
-      store.dispatch(GENERATE_AND_SAVE_AUDIO, {
-        audioKey: activeAudioKey.value!,
-        encoding: store.state.fileEncoding,
-      });
+    const save = async () => {
+      const result: SaveResultObject = await store.dispatch(
+        GENERATE_AND_SAVE_AUDIO,
+        {
+          audioKey: activeAudioKey.value!,
+          encoding: store.state.fileEncoding,
+        }
+      );
+
+      if (result.result !== "SUCCESS") {
+        let msg = "";
+        switch (result.result) {
+          case "WRITE_ERROR":
+            msg =
+              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+            break;
+          case "ENGINE_ERROR":
+            msg =
+              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+            break;
+        }
+
+        $q.dialog({
+          title: "書き出しに失敗しました。",
+          message: msg,
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+      }
     };
 
     const nowPlaying = computed(

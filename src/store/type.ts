@@ -22,9 +22,11 @@ export type State = {
   redoCommands: ICommand<State>[];
   useGpu: boolean;
   isHelpDialogOpen: boolean;
+  isSettingDialogOpen: boolean;
   fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
+  isPinned: boolean;
 };
 
 export type AudioItem = {
@@ -39,3 +41,9 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+export type SaveResult =
+  | "SUCCESS"
+  | "WRITE_ERROR"
+  | "ENGINE_ERROR"
+  | "CANCELED";
+export type SaveResultObject = { result: SaveResult; path: string | undefined };

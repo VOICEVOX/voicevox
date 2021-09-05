@@ -21,23 +21,24 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
-import { useQuasar } from "quasar";
 import { useStore } from "@/store";
-import {
-  UI_LOCKED,
-  SET_USE_GPU,
-  SET_FILE_ENCODING,
-  ASYNC_UI_LOCK,
-} from "@/store/ui";
+import { UI_LOCKED } from "@/store/ui";
 import {
   SAVE_PROJECT_FILE,
   LOAD_PROJECT_FILE,
   PROJECT_NAME,
 } from "@/store/project";
-import { GENERATE_AND_SAVE_ALL_AUDIO, IMPORT_FROM_FILE } from "@/store/audio";
+import {
+  GENERATE_AND_SAVE_ALL_AUDIO,
+  IMPORT_FROM_FILE,
+  RESTART_ENGINE,
+} from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
+import { SaveResultObject } from "@/store/type";
+import { useQuasar } from "quasar";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -83,63 +84,6 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
-    const changeUseGPU = async (useGpu: boolean) => {
-      if (store.state.useGpu === useGpu) return;
-
-      const change = async () => {
-        await store.dispatch(SET_USE_GPU, { useGpu });
-        $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにVOICEVOXを再起動してください。",
-          ok: {
-            flat: true,
-            textColor: "secondary",
-          },
-        });
-      };
-
-      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch(ASYNC_UI_LOCK, {
-          callback: async () => {
-            $q.loading.show({
-              spinnerColor: "primary",
-              spinnerSize: 50,
-              boxClass: "bg-white text-secondary",
-              message: "起動モードを変更中です",
-            });
-            resolve(await window.electron.isAvailableGPUMode());
-            $q.loading.hide();
-          },
-        });
-      });
-
-      if (useGpu && !isAvailableGPUMode) {
-        $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          html: true,
-          persistent: true,
-          focus: "cancel",
-          style: {
-            width: "90vw",
-            maxWidth: "90vw",
-          },
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "secondary",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "secondary",
-          },
-        }).onOk(change);
-      } else change();
-    };
-
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -149,10 +93,41 @@ export default defineComponent({
             type: "button",
             label: "音声書き出し",
             shortCut: "Ctrl+E",
-            onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: store.state.fileEncoding,
-              });
+            onClick: async () => {
+              const result: Array<SaveResultObject> = await store.dispatch(
+                GENERATE_AND_SAVE_ALL_AUDIO,
+                {
+                  encoding: store.state.fileEncoding,
+                }
+              );
+
+              let successArray: Array<string | undefined> = [];
+              let writeErrorArray: Array<string | undefined> = [];
+              let engineErrorArray: Array<string | undefined> = [];
+              for (const item of result) {
+                switch (item.result) {
+                  case "SUCCESS":
+                    successArray.push(item.path);
+                    break;
+                  case "WRITE_ERROR":
+                    writeErrorArray.push(item.path);
+                    break;
+                  case "ENGINE_ERROR":
+                    engineErrorArray.push(item.path);
+                    break;
+                }
+              }
+
+              if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+                $q.dialog({
+                  component: SaveAllResultDialog,
+                  componentProps: {
+                    successArray: successArray,
+                    writeErrorArray: writeErrorArray,
+                    engineErrorArray: engineErrorArray,
+                  },
+                });
+              }
             },
           },
           {
@@ -194,50 +169,17 @@ export default defineComponent({
         label: "エンジン",
         subMenu: [
           {
-            type: "root",
-            label: "起動モード",
-            subMenu: [
-              {
-                type: "checkbox",
-                label: "CPU",
-                checked: computed(() => !store.state.useGpu),
-                onClick: async () => changeUseGPU(false),
-              },
-              {
-                type: "checkbox",
-                label: "GPU",
-                checked: computed(() => store.state.useGpu),
-                onClick: async () => changeUseGPU(true),
-              },
-            ],
-          },
-        ],
-      },
-      {
-        type: "root",
-        label: "文字コード",
-        subMenu: [
-          {
-            type: "checkbox",
-            label: "UTF-8",
-            checked: computed(() => store.state.fileEncoding === "UTF-8"),
-            onClick: () =>
-              store.dispatch(SET_FILE_ENCODING, {
-                encoding: "UTF-8",
-              }),
-          },
-          {
-            type: "checkbox",
-            label: "Shift_JIS",
-            checked: computed(() => store.state.fileEncoding === "Shift_JIS"),
-            onClick: () =>
-              store.dispatch(SET_FILE_ENCODING, {
-                encoding: "Shift_JIS",
-              }),
+            type: "button",
+            label: "再起動",
+            onClick: () => restartEngineProcess(),
           },
         ],
       },
     ]);
+
+    const restartEngineProcess = () => {
+      store.dispatch(RESTART_ENGINE);
+    };
 
     const subMenuOpenFlags = ref(
       [...Array(menudata.value.length)].map(() => false)

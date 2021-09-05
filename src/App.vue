@@ -1,14 +1,21 @@
 <template>
-  <router-view />
+  <error-boundary>
+    <router-view />
+  </error-boundary>
 </template>
 
 <script type="ts">
 import { useStore } from "@/store";
 import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "App",
+
+  components: {
+    ErrorBoundary
+  },
 
   setup() {
     const store = useStore();
@@ -60,6 +67,52 @@ export default defineComponent({
   }
   .q-layout-container {
     box-shadow: none;
+  }
+}
+
+.markdown {
+  // h1-h6のスタイルをデフォルトに戻す
+  // https://www.w3schools.com/tags/tag_hn.asp
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    display: block;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-top: 0.67rem;
+    margin-bottom: 0.67rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    margin-top: 0.83rem;
+    margin-bottom: 0.83rem;
+  }
+  h3 {
+    font-size: 1.17rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  h4 {
+    font-size: 1rem;
+    margin-top: 1.33rem;
+    margin-bottom: 1.33rem;
+  }
+  h5 {
+    font-size: 0.83rem;
+    margin-top: 1.67rem;
+    margin-bottom: 1.67rem;
+  }
+  h6 {
+    font-size: 0.67rem;
+    margin-top: 2.33rem;
+    margin-bottom: 2.33rem;
   }
 }
 
