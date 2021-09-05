@@ -164,7 +164,7 @@
                       />
                       <q-separator color="black" />
                       <div class="q-pt-sm">
-                        上書きの代わりにファイル名に番号をつける
+                        上書きせずにファイルを連番にします
                       </div>
                     </q-card-section>
                   </q-card>
