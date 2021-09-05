@@ -1,5 +1,5 @@
 <template>
-  <q-dialog persistent ref="dialogRef" @hide="onDialogHide">
+  <q-dialog persistent ref="dialogRef">
     <!-- 仮デザイン -->
     <q-layout container class="q-dialog-plugin bg-white">
       <q-header>
@@ -62,11 +62,10 @@ export default defineComponent({
     ...useDialogPluginComponent.emits,
   },
   setup() {
-    const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const close = () => onDialogOK();
     return {
       dialogRef,
-      onDialogHide,
       close,
     };
   },
