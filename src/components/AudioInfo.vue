@@ -92,7 +92,7 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
-import { PreviewableValue } from "@/helpers/previewable-value";
+import { PreviewableValue } from "@/helpers/previewableValue";
 
 export default defineComponent({
   name: "AudioInfo",

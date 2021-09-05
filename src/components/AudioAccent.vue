@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts">
-import { PreviewableValue } from "@/helpers/previewable-value";
+import { PreviewableValue } from "@/helpers/previewableValue";
 import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
