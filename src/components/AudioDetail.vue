@@ -55,42 +55,42 @@
             @changeAccentPhrases="changeAccentPhrases"
           />
         </template>
-        <div
-          v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
-          :key="accentPhraseIndex"
-          class="mora-table"
-        >
-          <template v-if="selectedDetail === 'accent'">
-            <audio-accent
-              :accentPhraseIndex="accentPhraseIndex"
-              :accentPhrase="accentPhrase"
-              :uiLocked="uiLocked"
-              @changeAccent="changeAccent"
-            />
-          </template>
-          <template v-if="selectedDetail === 'intonation'">
-            <div
-              v-for="(mora, moraIndex) in accentPhrase.moras"
-              :key="moraIndex"
-              class="q-mb-sm pitch-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-            >
-              <!-- div for input width -->
-              <audio-parameter
-                :moraIndex="moraIndex"
+        <template v-if="selectedDetail !== 'mora'">
+          <div
+            v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
+            :key="accentPhraseIndex"
+            class="mora-table"
+          >
+            <template v-if="selectedDetail === 'accent'">
+              <audio-accent
                 :accentPhraseIndex="accentPhraseIndex"
                 :accentPhrase="accentPhrase"
-                :value="mora.pitch"
                 :uiLocked="uiLocked"
-                :min="3"
-                :max="6.5"
-                :disable="mora.pitch == 0.0"
-                @changeValue="changeMoraPitch"
+                @changeAccent="changeAccent"
               />
-            </div>
-            <div v-if="accentPhrase.pauseMora" />
-          </template>
-          <template v-if="selectedDetail !== 'mora'">
+            </template>
+            <template v-if="selectedDetail === 'intonation'">
+              <div
+                v-for="(mora, moraIndex) in accentPhrase.moras"
+                :key="moraIndex"
+                class="q-mb-sm pitch-cell"
+                :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+              >
+                <!-- div for input width -->
+                <audio-parameter
+                  :moraIndex="moraIndex"
+                  :accentPhraseIndex="accentPhraseIndex"
+                  :accentPhrase="accentPhrase"
+                  :value="mora.pitch"
+                  :uiLocked="uiLocked"
+                  :min="3"
+                  :max="6.5"
+                  :disable="mora.pitch == 0.0"
+                  @changeValue="changeMoraPitch"
+                />
+              </div>
+              <div v-if="accentPhrase.pauseMora" />
+            </template>
             <template
               v-for="(mora, moraIndex) in accentPhrase.moras"
               :key="moraIndex"
@@ -135,8 +135,8 @@
                 "
               />
             </template>
-          </template>
-        </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
