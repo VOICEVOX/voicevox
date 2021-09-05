@@ -39,7 +39,7 @@
         </q-page>
       </q-page-container>
       <q-footer>
-        <q-item clickable v-ripple align="right" @click="close">
+        <q-item clickable v-ripple align="center" @click="close">
           <q-item-section class="header-and-close-text">閉じる</q-item-section>
         </q-item>
       </q-footer>
