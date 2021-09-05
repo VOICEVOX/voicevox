@@ -128,10 +128,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
 
-  fileEncoding: (newValue) => {
-    return ipcRendererInvoke("FILE_ENCODING", { newValue });
-  },
-
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRendererOn(channel, callback);
   },
@@ -156,8 +152,8 @@ const api: Sandbox = {
     ipcRendererInvoke("RESTART_ENGINE");
   },
 
-  simpleModeSetting: (newData) => {
-    return ipcRenderer.invoke("SIMPLE_MODE_SETTING", { newData });
+  savingSetting: (newData) => {
+    return ipcRenderer.invoke("SAVING_SETTING", { newData });
   },
 
   checkFileExists: (file) => {

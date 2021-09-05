@@ -91,7 +91,7 @@ export default defineComponent({
             shortCut: "Ctrl+E",
             onClick: () => {
               store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: store.state.fileEncoding,
+                encoding: store.state.savingSetting.fileEncoding,
               });
             },
           },

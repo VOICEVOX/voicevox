@@ -1,6 +1,6 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
-import { CharacterInfo, Encoding } from "@/type/preload";
+import { CharacterInfo, SavingSetting } from "@/type/preload";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -23,10 +23,9 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
-  fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
-  simpleMode: SimpleMode;
+  savingSetting: SavingSetting;
   isPinned: boolean;
 };
 
@@ -42,9 +41,3 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
-
-export type SimpleMode = {
-  enabled: boolean;
-  avoid: boolean;
-  dir: string;
-};

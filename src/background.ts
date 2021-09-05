@@ -16,8 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, Encoding } from "./type/preload";
-import { SimpleMode } from "./store/type";
+import { CharacterInfo, Encoding, SavingSetting } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -44,23 +43,29 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
-  fileEncoding: Encoding;
-  simpleMode: SimpleMode;
+  savingSetting: SavingSetting;
 }>({
   schema: {
     useGpu: {
       type: "boolean",
     },
-    fileEncoding: {
-      type: "string",
-    },
-    simpleMode: {
+    savingSetting: {
       type: "object",
       properties: {
-        enabled: { type: "boolean" },
-        avoid: { type: "boolean" },
-        dir: { type: "string" },
+        fileEncoding: { type: "string" },
+        fixedExportEnabled: { type: "boolean" },
+        avoidOverwrite: { type: "boolean" },
+        fixedExportDir: { type: "string" },
       },
+    },
+  },
+  defaults: {
+    useGpu: false,
+    savingSetting: {
+      fileEncoding: "UTF-8",
+      fixedExportEnabled: false,
+      avoidOverwrite: false,
+      fixedExportDir: "",
     },
   },
 });
@@ -164,7 +169,6 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
       contextIsolation: true,
-      enableRemoteModule: true,
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -194,23 +198,6 @@ async function createWindow() {
     }
   });
 }
-
-// initialize settings
-// GPU mode is handled by runEngine()
-const initSetting = () => {
-  if (!store.has("fileEncoding")) {
-    const defaultFileEncoding = "UTF-8";
-    store.set("fileEncoding", defaultFileEncoding);
-  }
-  if (!store.has("simpleMode")) {
-    const defaultSimpleMode = {
-      enabled: false,
-      avoid: false,
-      dir: "",
-    };
-    store.set("simpleMode", defaultSimpleMode);
-  }
-};
 
 if (!isDevelopment) {
   Menu.setApplicationMenu(null);
@@ -331,14 +318,6 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("fileEncoding", newValue);
-  }
-
-  return store.get("fileEncoding", "UTF-8");
-});
-
 ipcMainHandle("CLOSE_WINDOW", () => {
   app.emit("window-all-closed");
   win.destroy();
@@ -391,11 +370,11 @@ ipcMainHandle("RESTART_ENGINE", async () => {
   });
 });
 
-ipcMainHandle("SIMPLE_MODE_SETTING", (_, { newData }) => {
+ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   if (newData !== undefined) {
-    store.set("simpleMode", newData);
+    store.set("savingSetting", newData);
   }
-  return store.get("simpleMode");
+  return store.get("savingSetting");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
@@ -444,12 +423,14 @@ app.on("ready", async () => {
   if (isDevelopment) {
     try {
       await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      logError("Vue Devtools failed to install:", e.toString());
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        logError("Vue Devtools failed to install:", e.toString());
+      }
     }
   }
 
-  initSetting();
+  // initSetting();
 
   createWindow().then(() => runEngine());
 });

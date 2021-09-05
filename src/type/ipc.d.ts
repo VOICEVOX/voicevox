@@ -87,11 +87,6 @@ type IpcIHData = {
     return: boolean;
   };
 
-  FILE_ENCODING: {
-    args: [obj: { newValue?: import("@/type/preload").Encoding }];
-    return: import("@/type/preload").Encoding;
-  };
-
   CLOSE_WINDOW: {
     args: [];
     return: void;
@@ -117,9 +112,9 @@ type IpcIHData = {
     return: void;
   };
 
-  SIMPLE_MODE_SETTING: {
-    args: [obj: { newData?: import("@/store/type").SimpleMode }];
-    return: import("@/store/type").SimpleMode;
+  SAVING_SETTING: {
+    args: [obj: { newData?: import("@/type/preload").SavingSetting }];
+    return: import("@/type/preload").SavingSetting;
   };
 
   CHECK_FILE_EXISTS: {

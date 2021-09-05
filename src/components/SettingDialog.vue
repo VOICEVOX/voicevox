@@ -52,27 +52,29 @@
             <!-- Saving Card -->
             <q-card class="setting-card">
               <q-card-section class="bg-blue">
-                <div class="text-h5">保存</div>
+                <div class="text-h5 text-white">保存</div>
               </q-card-section>
               <q-list>
                 <q-expansion-item
                   dense
                   dense-toggle
                   expand-separator
-                  header-class="bg-blue text-white"
                   group="saving-group"
                   label="文字コード"
-                  expand-icon-class="text-white"
+                  expand-icon-class="text-black"
                 >
                   <q-card>
                     <q-card-section>
                       <q-btn-toggle
-                        v-model="fileEncoding"
+                        :model-value="savingSetting.fileEncoding"
                         toggle-color="blue"
                         :options="[
                           { label: 'UTF-8', value: 'UTF-8' },
                           { label: 'Shift_JIS', value: 'Shift_JIS' },
                         ]"
+                        @update:model-value="
+                          handleSavingSettingChange('fileEncoding', $event)
+                        "
                       />
                     </q-card-section>
                   </q-card>
@@ -82,10 +84,9 @@
                   dense
                   dense-toggle
                   expand-separator
-                  header-class="bg-blue text-white"
                   group="saving-group"
                   label="書き出し先を固定"
-                  expand-icon-class="text-white"
+                  expand-icon-class="text-black"
                 >
                   <q-card>
                     <q-card-section>
@@ -94,20 +95,24 @@
                         align="left"
                         dense
                         color="blue"
-                        :model-value="simpleMode.enabled"
-                        :label="simpleMode.enabled ? '有効' : '無効'"
+                        :model-value="savingSetting.fixedExportEnabled"
+                        :label="
+                          savingSetting.fixedExportEnabled ? '有効' : '無効'
+                        "
                         @update:model-value="
-                          handleSimpleModeChange('enabled', $event)
+                          handleSavingSettingChange(
+                            'fixedExportEnabled',
+                            $event
+                          )
                         "
                       />
                       <q-input
                         unelevated
                         dense
-                        bottom-slots
-                        v-model="simpleMode.dir"
+                        v-model="savingSetting.fixedExportDir"
                         label="デフォルトのフォルダ"
                         @update:model-value="
-                          handleSimpleModeChange('dir', $event)
+                          handleSavingSettingChange('fixedExportDir', $event)
                         "
                         color="blue"
                       >
@@ -125,12 +130,14 @@
                               class="bg-blue text-body2"
                               anchor="bottom right"
                             >
-                              フォルダー選択
+                              フォルダ選択
                             </q-tooltip>
                           </q-btn>
                         </template>
                       </q-input>
-                      設定したフォルダーに書き出す
+                      <div class="q-pt-sm">
+                        音声ファイルを設定したフォルダに書き出す
+                      </div>
                     </q-card-section>
                   </q-card>
                 </q-expansion-item>
@@ -139,24 +146,23 @@
                   dense
                   dense-toggle
                   expand-separator
-                  header-class="bg-blue text-white"
                   group="saving-group"
                   label="上書き防止"
-                  expand-icon-class="text-white"
+                  expand-icon-class="text-black"
                 >
                   <q-card>
                     <q-card-section>
                       <q-checkbox
-                        class="q-pl-lg q-pb-md"
-                        :label="simpleMode.avoid ? '有効' : '無効'"
+                        class="q-pl-md q-pb-sm"
+                        :label="savingSetting.avoidOverwrite ? '有効' : '無効'"
                         dense
                         color="blue"
-                        :model-value="simpleMode.avoid"
+                        :model-value="savingSetting.avoidOverwrite"
                         @update:model-value="
-                          handleSimpleModeChange('avoid', $event)
+                          handleSavingSettingChange('avoidOverwrite', $event)
                         "
                       />
-                      <q-separator />
+                      <q-separator color="black" />
                       <div class="q-pt-sm">
                         上書きの代わりにファイル名に番号をつける
                       </div>
@@ -175,11 +181,10 @@
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
-import { ASYNC_UI_LOCK, SET_FILE_ENCODING, SET_USE_GPU } from "@/store/ui";
-import { Encoding } from "@/type/preload";
+import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
 import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import { SET_SIMPLE_MODE_DATA } from "@/store/setting";
+import { SET_SAVING_SETTING_DATA } from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -266,35 +271,26 @@ export default defineComponent({
       } else change();
     };
 
-    const fileEncoding = computed({
-      get: () => store.state.fileEncoding,
-      set: (encoding: Encoding) =>
-        store.dispatch(SET_FILE_ENCODING, {
-          encoding: encoding,
-        }),
-    });
-
     const restartEngineProcess = () => {
       store.dispatch(RESTART_ENGINE);
     };
 
-    const simpleMode = computed(() => store.state.simpleMode);
+    const savingSetting = computed(() => store.state.savingSetting);
 
-    const handleSimpleModeChange = (key: string, data: string) => {
-      console.log(key);
-      console.log(data);
-      store.dispatch(SET_SIMPLE_MODE_DATA, {
-        data: { ...simpleMode.value, [key]: data },
+    const handleSavingSettingChange = (key: string, data: string | boolean) => {
+      console.log(savingSetting.value.fileEncoding);
+      store.dispatch(SET_SAVING_SETTING_DATA, {
+        data: { ...savingSetting.value, [key]: data },
       });
     };
 
     const onOpeningFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
-        title: "デフォルトのフォルダーを選択",
+        title: "デフォルトのフォルダを選択",
       });
       if (path) {
-        store.dispatch(SET_SIMPLE_MODE_DATA, {
-          data: { ...simpleMode.value, dir: path },
+        store.dispatch(SET_SAVING_SETTING_DATA, {
+          data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
     };
@@ -302,12 +298,10 @@ export default defineComponent({
     return {
       settingDialogOpenedComputed,
       engineMode,
-      fileEncoding,
       restartEngineProcess,
-      simpleMode: ref(simpleMode),
-      handleSimpleModeChange,
+      savingSetting: ref(savingSetting),
+      handleSavingSettingChange,
       onOpeningFileExplore,
-      tab: ref("encoding"),
     };
   },
 });
@@ -315,6 +309,7 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use '@/styles' as global;
+@import "~quasar/src/css/variables";
 
 .setting-card {
   width: 100%;
@@ -327,5 +322,20 @@ export default defineComponent({
 
 .bg-nvidia {
   background: #76b900;
+}
+
+.q-expansion-item {
+  background-color: $blue;
+  color: white;
+}
+
+.q-expansion-item--expanded {
+  background-color: white;
+  color: black;
+}
+
+.q-expansion-item * {
+  background-color: white;
+  color: black;
 }
 </style>

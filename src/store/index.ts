@@ -38,12 +38,12 @@ export const store = createStore<State>({
     useGpu: false,
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,
-    fileEncoding: "UTF-8",
     isMaximized: false,
-    simpleMode: {
-      enabled: false,
-      avoid: false,
-      dir: "",
+    savingSetting: {
+      fileEncoding: "UTF-8",
+      fixedExportEnabled: false,
+      fixedExportDir: "",
+      avoidOverwrite: false,
     },
     isPinned: false,
   },

@@ -58,7 +58,7 @@ function buildFileName(state: State, audioKey: string, offset?: number) {
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
-  if (offset !== undefined) {
+  if (offset !== undefined && offset != 0) {
     text += "[" + offset.toString() + "]";
   }
   return (
@@ -528,26 +528,28 @@ export const audioStore = {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
-        if (state.simpleMode.enabled) {
+        if (state.savingSetting.fixedExportEnabled) {
           const dirExist = await dispatch(CHECK_FILE_EXISTS, {
-            file: state.simpleMode.dir,
+            file: state.savingSetting.fixedExportDir,
           });
           if (!dirExist) {
             dispatch(SHOW_WARNING_DIALOG, {
               title: "シンプルモードエラー",
-              message: "設置したフォルダーは存在しまぜん",
+              message: "設置したフォルダは存在しまぜん",
             });
             return;
           }
-          filePath =
-            state.simpleMode.dir + "\\" + buildFileName(state, audioKey);
-          if (state.simpleMode.avoid) {
-            let tail = 1;
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            buildFileName(state, audioKey)
+          );
+          if (state.savingSetting.avoidOverwrite) {
+            let tail = 0;
             while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
-              filePath =
-                state.simpleMode.dir +
-                "\\" +
-                buildFileName(state, audioKey, tail);
+              filePath = path.join(
+                state.savingSetting.fixedExportDir,
+                buildFileName(state, audioKey, tail)
+              );
               tail += 1;
             }
           }
@@ -590,18 +592,18 @@ export const audioStore = {
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
-        if (state.simpleMode.enabled) {
+        if (state.savingSetting.fixedExportEnabled) {
           const dirExists = await dispatch(CHECK_FILE_EXISTS, {
-            file: state.simpleMode.dir,
+            file: state.savingSetting.fixedExportDir,
           });
           if (!dirExists) {
             dispatch(SHOW_WARNING_DIALOG, {
-              title: "シンプルモードエラー",
-              message: "設置したフォルダーは存在しません",
+              title: "書き出しエラー",
+              message: "設置したフォルダは見つかりません",
             });
             return;
           } else {
-            dirPath = state.simpleMode.dir;
+            dirPath = state.savingSetting.fixedExportDir;
           }
         } else {
           dirPath ??= await window.electron.showOpenDirectoryDialog({
