@@ -123,7 +123,7 @@
                             flat
                             color="blue"
                             icon="folder_open"
-                            @click="onOpeningFileExplore"
+                            @click="openFileExplore"
                           >
                             <q-tooltip
                               :delay="500"
@@ -278,13 +278,12 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      console.log(savingSetting.value.fileEncoding);
       store.dispatch(SET_SAVING_SETTING_DATA, {
         data: { ...savingSetting.value, [key]: data },
       });
     };
 
-    const onOpeningFileExplore = async () => {
+    const openFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
         title: "デフォルトのフォルダを選択",
       });
@@ -301,7 +300,7 @@ export default defineComponent({
       restartEngineProcess,
       savingSetting: ref(savingSetting),
       handleSavingSettingChange,
-      onOpeningFileExplore,
+      openFileExplore,
     };
   },
 });

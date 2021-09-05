@@ -534,8 +534,8 @@ export const audioStore = {
           });
           if (!dirExist) {
             dispatch(SHOW_WARNING_DIALOG, {
-              title: "シンプルモードエラー",
-              message: "設置したフォルダは存在しまぜん",
+              title: "ファイル書き出しエラー",
+              message: "書き出し先のフォルダーが見つかりませんでした",
             });
             return;
           }
@@ -598,8 +598,8 @@ export const audioStore = {
           });
           if (!dirExists) {
             dispatch(SHOW_WARNING_DIALOG, {
-              title: "書き出しエラー",
-              message: "設置したフォルダは見つかりません",
+              title: "ファイル書き出しエラー",
+              message: "書き出し先のフォルダーが見つかりませんでした",
             });
             return;
           } else {
