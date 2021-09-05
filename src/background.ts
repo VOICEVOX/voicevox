@@ -430,8 +430,6 @@ app.on("ready", async () => {
     }
   }
 
-  // initSetting();
-
   createWindow().then(() => runEngine());
 });
 
