@@ -39,7 +39,7 @@ export interface AudioQueryAudioQueryPostRequest {
     speaker: number;
 }
 
-export interface MoraPitchMoraPitchPostRequest {
+export interface MoraDataMoraDataPostRequest {
     speaker: number;
     accentPhrase: Array<AccentPhrase>;
 }
@@ -91,19 +91,19 @@ export interface DefaultApiInterface {
 
     /**
      * 
-     * @summary アクセント句から音高を得る
+     * @summary アクセント句から音高・音素長を得る
      * @param {number} speaker 
      * @param {Array<AccentPhrase>} accentPhrase 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
-     * アクセント句から音高を得る
+     * アクセント句から音高・音素長を得る
      */
-    moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest): Promise<Array<AccentPhrase>>;
+    moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest): Promise<Array<AccentPhrase>>;
 
     /**
      * 
@@ -243,15 +243,15 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * アクセント句から音高を得る
+     * アクセント句から音高・音素長を得る
      */
-    async moraPitchMoraPitchPostRaw(requestParameters: MoraPitchMoraPitchPostRequest): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+    async moraDataMoraDataPostRaw(requestParameters: MoraDataMoraDataPostRequest): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraPitchMoraPitchPost.');
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling moraDataMoraDataPost.');
         }
 
         if (requestParameters.accentPhrase === null || requestParameters.accentPhrase === undefined) {
-            throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraPitchMoraPitchPost.');
+            throw new runtime.RequiredError('accentPhrase','Required parameter requestParameters.accentPhrase was null or undefined when calling moraDataMoraDataPost.');
         }
 
         const queryParameters: any = {};
@@ -265,7 +265,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
         headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/mora_pitch`,
+            path: `/mora_data`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -276,10 +276,10 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * アクセント句から音高を得る
+     * アクセント句から音高・音素長を得る
      */
-    async moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest): Promise<Array<AccentPhrase>> {
-        const response = await this.moraPitchMoraPitchPostRaw(requestParameters);
+    async moraDataMoraDataPost(requestParameters: MoraDataMoraDataPostRequest): Promise<Array<AccentPhrase>> {
+        const response = await this.moraDataMoraDataPostRaw(requestParameters);
         return await response.value();
     }
 
