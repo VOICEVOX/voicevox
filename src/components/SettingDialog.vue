@@ -324,11 +324,13 @@ export default defineComponent({
 }
 
 .q-expansion-item {
-  background-color: $blue;
-  color: white;
+  background-color: white;
+  color: black;
 }
 
 .q-expansion-item--expanded {
+  border: 1px solid #000000;
+  border-color: $blue;
   background-color: white;
   color: $blue;
 }
