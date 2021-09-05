@@ -75,10 +75,12 @@ import {
   PLAY_CONTINUOUSLY_AUDIO,
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const canUndo = computed(() => store.getters[CAN_UNDO]);
@@ -93,8 +95,20 @@ export default defineComponent({
     const redo = () => {
       store.dispatch(REDO);
     };
-    const playContinuously = () => {
-      store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+    const playContinuously = async () => {
+      try {
+        await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+      } catch {
+        $q.dialog({
+          title: "再生に失敗しました",
+          message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+      }
     };
     const stopContinuously = () => {
       store.dispatch(STOP_CONTINUOUSLY_AUDIO, {});

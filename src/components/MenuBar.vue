@@ -36,6 +36,9 @@ import {
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
+import { SaveResultObject } from "@/store/type";
+import { useQuasar } from "quasar";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -76,6 +79,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
@@ -89,10 +93,41 @@ export default defineComponent({
             type: "button",
             label: "音声書き出し",
             shortCut: "Ctrl+E",
-            onClick: () => {
-              store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: store.state.fileEncoding,
-              });
+            onClick: async () => {
+              const result: Array<SaveResultObject> = await store.dispatch(
+                GENERATE_AND_SAVE_ALL_AUDIO,
+                {
+                  encoding: store.state.fileEncoding,
+                }
+              );
+
+              let successArray: Array<string | undefined> = [];
+              let writeErrorArray: Array<string | undefined> = [];
+              let engineErrorArray: Array<string | undefined> = [];
+              for (const item of result) {
+                switch (item.result) {
+                  case "SUCCESS":
+                    successArray.push(item.path);
+                    break;
+                  case "WRITE_ERROR":
+                    writeErrorArray.push(item.path);
+                    break;
+                  case "ENGINE_ERROR":
+                    engineErrorArray.push(item.path);
+                    break;
+                }
+              }
+
+              if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+                $q.dialog({
+                  component: SaveAllResultDialog,
+                  componentProps: {
+                    successArray: successArray,
+                    writeErrorArray: writeErrorArray,
+                    engineErrorArray: engineErrorArray,
+                  },
+                });
+              }
             },
           },
           {
