@@ -52,7 +52,7 @@
             <!-- Saving Card -->
             <q-card class="setting-card">
               <q-card-section class="bg-blue">
-                <div class="text-h5 text-white">保存</div>
+                <div class="text-h5">保存</div>
               </q-card-section>
               <q-list>
                 <q-expansion-item
@@ -330,7 +330,7 @@ export default defineComponent({
 
 .q-expansion-item--expanded {
   background-color: white;
-  color: black;
+  color: $blue;
 }
 
 .q-expansion-item * {
