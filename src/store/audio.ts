@@ -7,7 +7,7 @@ import { AudioItem, EngineState, SaveResultObject, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { SHOW_WARNING_DIALOG } from ".";
+import { SHOW_WARNING_DIALOG, store } from ".";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -47,7 +47,7 @@ function parseTextFile(
   return audioItems;
 }
 
-function buildFileName(state: State, audioKey: string, offset?: number) {
+function buildFileName(state: State, audioKey: string) {
   // eslint-disable-next-line no-control-regex
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
@@ -57,9 +57,6 @@ function buildFileName(state: State, audioKey: string, offset?: number) {
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
-  }
-  if (offset !== undefined && offset != 0) {
-    text += "[" + offset.toString() + "]";
   }
   return (
     (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
@@ -542,26 +539,15 @@ export const audioStore = {
             file: state.savingSetting.fixedExportDir,
           });
           if (!dirExist) {
-            dispatch(SHOW_WARNING_DIALOG, {
-              title: "ファイル書き出しエラー",
-              message: "書き出し先のフォルダーが見つかりませんでした",
-            });
-            return;
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+            };
           }
           filePath = path.join(
             state.savingSetting.fixedExportDir,
             buildFileName(state, audioKey)
           );
-          if (state.savingSetting.avoidOverwrite) {
-            let tail = 0;
-            while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
-              filePath = path.join(
-                state.savingSetting.fixedExportDir,
-                buildFileName(state, audioKey, tail)
-              );
-              tail += 1;
-            }
-          }
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "Save",
@@ -571,6 +557,15 @@ export const audioStore = {
 
         if (!filePath) {
           return { result: "CANCELED", path: "" };
+        }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
         }
 
         const blob = await blobPromise;
@@ -625,18 +620,7 @@ export const audioStore = {
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
-          const dirExists = await dispatch(CHECK_FILE_EXISTS, {
-            file: state.savingSetting.fixedExportDir,
-          });
-          if (!dirExists) {
-            dispatch(SHOW_WARNING_DIALOG, {
-              title: "ファイル書き出しエラー",
-              message: "書き出し先のフォルダーが見つかりませんでした",
-            });
-            return;
-          } else {
-            dirPath = state.savingSetting.fixedExportDir;
-          }
+          dirPath = state.savingSetting.fixedExportDir;
         } else {
           dirPath ??= await window.electron.showOpenDirectoryDialog({
             title: "Save ALL",
