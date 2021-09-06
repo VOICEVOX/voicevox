@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, shell } from "electron";
+import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -117,9 +117,14 @@ const characterInfos = fs
       dirPath,
       iconPath: path.join(dirPath, "icon.png"),
       portraitPath: path.join(dirPath, "portrait.png"),
-      metas: JSON.parse(
-        fs.readFileSync(path.join(dirPath, "metas.json"), { encoding: "utf-8" })
-      ),
+      metas: {
+        ...JSON.parse(
+          fs.readFileSync(path.join(dirPath, "metas.json"), {
+            encoding: "utf-8",
+          })
+        ),
+        policy: fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8"),
+      },
     };
   });
 
@@ -165,6 +170,11 @@ async function createWindow() {
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("always-on-top-changed", () => {
+    win.webContents.send(
+      win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
+    );
+  });
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -172,6 +182,10 @@ async function createWindow() {
       ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
     }
   });
+}
+
+if (!isDevelopment) {
+  Menu.setApplicationMenu(null);
 }
 
 // プロセス間通信
@@ -347,6 +361,14 @@ ipcMainHandle("RESTART_ENGINE", async () => {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
     }
   });
+});
+
+ipcMainHandle("CHANGE_PIN_WINDOW", () => {
+  if (win.isAlwaysOnTop()) {
+    win.setAlwaysOnTop(false);
+  } else {
+    win.setAlwaysOnTop(true);
+  }
 });
 
 // app callback
