@@ -1,6 +1,5 @@
 import { Action, ActionContext, StoreOptions } from "vuex";
 import { State } from "./type";
-import { Encoding } from "@/type/preload";
 import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";

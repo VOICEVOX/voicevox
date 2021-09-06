@@ -7,7 +7,6 @@ import { AudioItem, EngineState, SaveResultObject, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { SHOW_WARNING_DIALOG, store } from ".";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })

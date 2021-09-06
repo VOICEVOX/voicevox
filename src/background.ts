@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, Encoding, SavingSetting } from "./type/preload";
+import { CharacterInfo, SavingSetting } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
