@@ -535,15 +535,6 @@ export const audioStore = {
         });
 
         if (state.savingSetting.fixedExportEnabled) {
-          const dirExist = await dispatch(CHECK_FILE_EXISTS, {
-            file: state.savingSetting.fixedExportDir,
-          });
-          if (!dirExist) {
-            return {
-              result: "WRITE_ERROR",
-              path: filePath,
-            };
-          }
           filePath = path.join(
             state.savingSetting.fixedExportDir,
             buildFileName(state, audioKey)

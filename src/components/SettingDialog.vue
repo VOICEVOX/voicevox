@@ -12,7 +12,7 @@
         <q-toolbar>
           <q-toolbar-title class="text-secondary">オプション</q-toolbar-title>
           <q-space />
-          <!-- colse button -->
+          <!-- close button -->
           <q-btn
             round
             flat
@@ -109,14 +109,18 @@
                       <q-input
                         unelevated
                         dense
+                        no-error-icon
                         v-model="savingSetting.fixedExportDir"
                         label="デフォルトのフォルダ"
+                        error-message="フォルダが見つかりません"
+                        :rules="[inputCheckDirExists]"
+                        ref="fixedExportInputRef"
                         @update:model-value="
                           handleSavingSettingChange('fixedExportDir', $event)
                         "
                         color="blue"
                       >
-                        <template v-slot:append>
+                        <template v-slot:after>
                           <q-btn
                             square
                             dense
@@ -135,9 +139,7 @@
                           </q-btn>
                         </template>
                       </q-input>
-                      <div class="q-pt-sm">
-                        音声ファイルを設定したフォルダに書き出す
-                      </div>
+                      音声ファイルを設定したフォルダに書き出す
                     </q-card-section>
                   </q-card>
                 </q-expansion-item>
@@ -182,7 +184,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
-import { RESTART_ENGINE } from "@/store/audio";
+import { CHECK_FILE_EXISTS, RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
 import { SET_SAVING_SETTING_DATA } from "@/store/setting";
 
@@ -275,12 +277,24 @@ export default defineComponent({
       store.dispatch(RESTART_ENGINE);
     };
 
+    const fixedExportInputRef = ref(null);
+
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      store.dispatch(SET_SAVING_SETTING_DATA, {
-        data: { ...savingSetting.value, [key]: data },
-      });
+      if (key === "fixedExportDir") {
+        inputCheckDirExists(data.toString()).then((res) => {
+          if (res) {
+            store.dispatch(SET_SAVING_SETTING_DATA, {
+              data: { ...savingSetting.value, [key]: data },
+            });
+          }
+        });
+      } else {
+        store.dispatch(SET_SAVING_SETTING_DATA, {
+          data: { ...savingSetting.value, [key]: data },
+        });
+      }
     };
 
     const openFileExplore = async () => {
@@ -288,19 +302,29 @@ export default defineComponent({
         title: "デフォルトのフォルダを選択",
       });
       if (path) {
-        store.dispatch(SET_SAVING_SETTING_DATA, {
-          data: { ...savingSetting.value, fixedExportDir: path },
+        inputCheckDirExists(path).then((res) => {
+          if (res) {
+            store.dispatch(SET_SAVING_SETTING_DATA, {
+              data: { ...savingSetting.value, fixedExportDir: path },
+            });
+          }
         });
       }
+    };
+
+    const inputCheckDirExists = (dir: string) => {
+      return store.dispatch(CHECK_FILE_EXISTS, { file: dir });
     };
 
     return {
       settingDialogOpenedComputed,
       engineMode,
       restartEngineProcess,
-      savingSetting: ref(savingSetting),
+      savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      inputCheckDirExists,
+      fixedExportInputRef,
     };
   },
 });
