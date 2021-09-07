@@ -5,6 +5,7 @@ import {
   AudioItem,
   State,
   EngineState,
+  SaveResultObject,
   typeAsStoreOptions,
   commandMutationsCreator,
 } from "./type";
@@ -520,6 +521,10 @@ export const audioStore = typeAsStoreOptions({
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
+          })
+          .catch((e) => {
+            window.electron.logError(e);
+            return null;
           });
       }
     ),
@@ -530,8 +535,12 @@ export const audioStore = typeAsStoreOptions({
           audioKey,
           filePath,
           encoding,
-        }: { audioKey: string; filePath?: string; encoding?: EncodingType }
-      ) => {
+        }: {
+          audioKey: string;
+          filePath?: string;
+          encoding?: EncodingType;
+        }
+      ): Promise<SaveResultObject> => {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
@@ -539,31 +548,53 @@ export const audioStore = typeAsStoreOptions({
           title: "Save",
           defaultPath: buildFileName(state, audioKey),
         });
+        if (!filePath) {
+          return { result: "CANCELED", path: "" };
+        }
+
         const blob = await blobPromise;
-        if (filePath) {
+        if (!blob) {
+          return { result: "ENGINE_ERROR", path: filePath };
+        }
+
+        try {
           window.electron.writeFile({
             filePath,
             buffer: await blob.arrayBuffer(),
           });
-          const textBlob = ((): Blob => {
-            if (!encoding || encoding === "UTF-8") {
-              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, state.audioItems[audioKey].text], {
-                type: "text/plain;charset=UTF-8",
-              });
-            }
-            const sjisArray = Encoding.convert(
-              Encoding.stringToCode(state.audioItems[audioKey].text),
-              { to: "SJIS", type: "arraybuffer" }
-            );
-            return new Blob([new Uint8Array(sjisArray)], {
-              type: "text/plain;charset=Shift_JIS",
+        } catch (e) {
+          window.electron.logError(e);
+
+          return { result: "WRITE_ERROR", path: filePath };
+        }
+
+        const textBlob = ((): Blob => {
+          if (!encoding || encoding === "UTF-8") {
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            return new Blob([bom, state.audioItems[audioKey].text], {
+              type: "text/plain;charset=UTF-8",
             });
-          })();
+          }
+          const sjisArray = Encoding.convert(
+            Encoding.stringToCode(state.audioItems[audioKey].text),
+            { to: "SJIS", type: "arraybuffer" }
+          );
+          return new Blob([new Uint8Array(sjisArray)], {
+            type: "text/plain;charset=Shift_JIS",
+          });
+        })();
+
+        try {
           window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
           });
+
+          return { result: "SUCCESS", path: filePath };
+        } catch (e) {
+          window.electron.logError(e);
+
+          return { result: "WRITE_ERROR", path: filePath };
         }
       }
     ),
@@ -597,16 +628,13 @@ export const audioStore = typeAsStoreOptions({
         let blob: Blob | null = await dispatch(GET_AUDIO_CACHE, { audioKey });
         if (!blob) {
           commit(SET_AUDIO_NOW_GENERATING, { audioKey, nowGenerating: true });
-          try {
-            blob = await dispatch(GENERATE_AUDIO, { audioKey }).catch((err) => {
-              window.electron.logError(err, `Faild to synthesis an audio.`);
-              return null;
-            });
-          } finally {
-            commit(SET_AUDIO_NOW_GENERATING, {
-              audioKey,
-              nowGenerating: false,
-            });
+          blob = await dispatch(GENERATE_AUDIO, { audioKey });
+          commit(SET_AUDIO_NOW_GENERATING, {
+            audioKey,
+            nowGenerating: false,
+          });
+          if (!blob) {
+            throw new Error();
           }
         }
 

@@ -42,6 +42,12 @@ export type AudioState = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+export type SaveResult =
+  | "SUCCESS"
+  | "WRITE_ERROR"
+  | "ENGINE_ERROR"
+  | "CANCELED";
+export type SaveResultObject = { result: SaveResult; path: string | undefined };
 
 export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
   arg: Arg
