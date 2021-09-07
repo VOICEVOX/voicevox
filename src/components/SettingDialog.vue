@@ -114,7 +114,6 @@
                         label="デフォルトのフォルダ"
                         error-message="フォルダが見つかりません"
                         :rules="[inputCheckDirExists]"
-                        ref="fixedExportInputRef"
                         @update:model-value="
                           handleSavingSettingChange('fixedExportDir', $event)
                         "
@@ -181,12 +180,15 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, onUpdated } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
 import { CHECK_FILE_EXISTS, RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import { SET_SAVING_SETTING_DATA } from "@/store/setting";
+import {
+  GET_SAVING_SETTING_DATA,
+  SET_SAVING_SETTING_DATA,
+} from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -277,8 +279,6 @@ export default defineComponent({
       store.dispatch(RESTART_ENGINE);
     };
 
-    const fixedExportInputRef = ref(null);
-
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
@@ -316,6 +316,10 @@ export default defineComponent({
       return store.dispatch(CHECK_FILE_EXISTS, { file: dir });
     };
 
+    onUpdated(() => {
+      store.dispatch(GET_SAVING_SETTING_DATA);
+    });
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -324,7 +328,6 @@ export default defineComponent({
       handleSavingSettingChange,
       openFileExplore,
       inputCheckDirExists,
-      fixedExportInputRef,
     };
   },
 });
