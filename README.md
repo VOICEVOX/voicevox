@@ -25,8 +25,8 @@ npm run electron:serve
 
 ## 貢献者の方へ
 
-Issueを解決するプルリクエストを作成される際は、別の方と同じIssueに取り組むことを避けるため、
-Issue側で取り組み始めたことを伝えるか、最初にDraftプルリクエストを作成してください。
+Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
+Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
 
 ## ビルド
 
@@ -45,7 +45,7 @@ npm run fmt
 ## タイポチェック
 
 [typos](https://github.com/crate-ci/typos)を使ってタイポのチェックを行っています。
-[typosをインストール](https://github.com/crate-ci/typos#install)した後
+[typos をインストール](https://github.com/crate-ci/typos#install)した後
 
 ```bash
 typos
@@ -53,11 +53,11 @@ typos
 
 でタイポチェックを行えます。
 もし誤判定やチェックから除外すべきファイルがあれば
-[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives)に従って``_typos.toml``を編集してください．
+[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives)に従って`_typos.toml`を編集してください．
 
 ## Markdownlint
 
-Markdownの文法チェックを行います。
+Markdown の文法チェックを行います。
 
 ```bash
 npm run markdownlint
@@ -76,7 +76,7 @@ $(npm bin)/openapi-generator-cli generate \
     -o src/openapi/ \
     --additional-properties=modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true
 
-npm run lint
+npm run fmt
 ```
 
 ## ライセンス

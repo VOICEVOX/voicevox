@@ -1,6 +1,6 @@
 import { StoreOptions } from "vuex";
 import { createUILockAction } from "@/store/ui";
-import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM } from "@/store/audio";
+import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM, api } from "@/store/audio";
 import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -83,6 +83,41 @@ export const projectStore = {
               }
             }
           }
+
+          if (appVersionList < [0, 5, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.query != null) {
+                audioItem.query.outputStereo = false;
+                for (const accentPhrase of audioItem.query.accentPhrases) {
+                  if (accentPhrase.pause_mora) {
+                    accentPhrase.pause_mora.vowelLength = 0;
+                  }
+                  for (const mora of accentPhrase.moras) {
+                    if (mora.consonant) {
+                      mora.consonantLength = 0;
+                    }
+                    mora.vowelLength = 0;
+                  }
+                }
+              }
+
+              // set phoneme length
+              console.log(audioItem);
+              await api
+                .moraDataMoraDataPost({
+                  accentPhrase: audioItem.query!.accentPhrases,
+                  speaker:
+                    context.state.characterInfos![audioItem.characterIndex!]
+                      .metas.speaker,
+                })
+                .then((accentPhrases) => {
+                  audioItem.query!.accentPhrases = accentPhrases;
+                });
+            }
+          }
+
+          console.log(obj);
 
           // Validation check
           const ajv = new Ajv();
@@ -178,10 +213,12 @@ const moraSchema = {
   properties: {
     text: { type: "string" },
     vowel: { type: "string" },
+    vowelLength: { type: "float32" },
     pitch: { type: "float32" },
   },
   optionalProperties: {
     consonant: { type: "string" },
+    consonantLength: { type: "float32" },
   },
 } as const;
 
@@ -209,6 +246,7 @@ const audioQuerySchema = {
     prePhonemeLength: { type: "float32" },
     postPhonemeLength: { type: "float32" },
     outputSamplingRate: { type: "int32" },
+    outputStereo: { type: "boolean" },
   },
 } as const;
 

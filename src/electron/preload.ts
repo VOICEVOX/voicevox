@@ -153,7 +153,7 @@ const api: Sandbox = {
   },
 
   restartEngine: () => {
-    ipcRendererInvoke("RESTART_ENGINE");
+    return ipcRendererInvoke("RESTART_ENGINE");
   },
 
   changePinWindow: () => {
