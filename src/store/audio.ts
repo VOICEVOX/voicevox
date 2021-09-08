@@ -107,6 +107,8 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
+export const SET_AUDIO_MORA_DEVOICE = "SET_AUDIO_MORA_DEVOICE";
+export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -493,6 +495,35 @@ export const audioStore = {
     >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
       const query = draft.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+    }),
+    [SET_AUDIO_MORA_DEVOICE]: createCommandAction<
+      State,
+      {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch?: number;
+      }
+    >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
+      const query = draft.audioItems[audioKey].query!;
+      console.log(
+        query.accentPhrases[accentPhraseIndex].moras.forEach((mora) => {
+          console.log([mora.consonant, mora.vowel, mora.pitch]);
+        })
+      );
+      if (pitch === undefined) {
+        query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = 0;
+        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+          query.accentPhrases[accentPhraseIndex].moras[
+            moraIndex
+          ].vowel?.toUpperCase();
+      } else {
+        query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+          query.accentPhrases[accentPhraseIndex].moras[
+            moraIndex
+          ].vowel?.toLowerCase();
+      }
     }),
     [GENERATE_AUDIO]: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {

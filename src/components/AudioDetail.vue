@@ -83,8 +83,25 @@
             <div
               class="text-cell"
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+              @click="handleDevoice(accentPhraseIndex, moraIndex)"
             >
               {{ mora.text }}
+              <q-popup-edit
+                v-if="selectedDetail == 'accent'"
+                :model-value="moraTextByPhrase[accentPhraseIndex]"
+                auto-save
+                v-slot="scope"
+                @update:model-value="handleChangePhrase($event)"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  autogrow
+                  outlined
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
             </div>
             <div
               v-if="
@@ -137,6 +154,7 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
+  SET_AUDIO_MORA_DEVOICE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -170,19 +188,6 @@ export default defineComponent({
     Mousetrap.bind("2", () => {
       selectedDetail.value = "intonation";
     });
-
-    // detect shift key and set flag, preventing changes in intonation while scrolling around
-    let shiftKeyFlag = false;
-
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag = false;
-    }
-    window.addEventListener("keyup", handleKeyPress);
-
-    function setShiftKeyFlag(event: KeyboardEvent) {
-      if (event.shiftKey) shiftKeyFlag = true;
-    }
-    window.addEventListener("keydown", setShiftKeyFlag);
 
     // detail selector
     type DetailTypes = "accent" | "intonation";
@@ -307,6 +312,52 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    const handleTextClicked = (change: string) => {
+      console.log(change);
+    };
+
+    const moraTextByPhrase = computed(() => {
+      let textArray: Array<string> = [];
+      accentPhrases.value?.forEach((accentPhrase) => {
+        let textString = "";
+        accentPhrase.moras.forEach((mora) => {
+          textString += mora.text;
+        });
+        textArray.push(textString);
+      });
+      return textArray;
+    });
+
+    const pitchHistory = new Map<string, number>();
+
+    const getPitchHistory = (key: string) => {
+      return pitchHistory.get(key) || 5;
+    };
+
+    const handleDevoice = (phraseIndex: number, moraIndex: number) => {
+      if (selectedDetail.value === "intonation") {
+        if (accentPhrases.value !== undefined) {
+          const key = phraseIndex.toString() + "-" + moraIndex.toString();
+          const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
+          if (pitch == 0) {
+            store.dispatch(SET_AUDIO_MORA_DEVOICE, {
+              audioKey: activeAudioKey.value!,
+              accentPhraseIndex: phraseIndex,
+              moraIndex,
+              pitch: getPitchHistory(key),
+            });
+          } else {
+            pitchHistory.set(key, pitch);
+            store.dispatch(SET_AUDIO_MORA_DEVOICE, {
+              audioKey: activeAudioKey.value!,
+              accentPhraseIndex: phraseIndex,
+              moraIndex,
+            });
+          }
+        }
+      }
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -324,6 +375,9 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      handleTextClicked,
+      moraTextByPhrase,
+      handleDevoice,
     };
   },
 });
