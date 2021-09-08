@@ -173,6 +173,7 @@ export const projectStore = {
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
+            if (typeof err === "string") return err;
             if (!(err instanceof Error)) return "エラーが発生しました。";
             if (err.message.startsWith(projectFileErrorMsg))
               return "ファイルフォーマットが正しくありません。";
