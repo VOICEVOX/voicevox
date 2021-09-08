@@ -71,7 +71,7 @@
                 :min="3"
                 :max="6.5"
                 :disable="mora.pitch == 0.0"
-                @changeValue="changeMoraPitch"
+                @changeValue="changeMoraData"
               />
             </div>
             <div v-if="accentPhrase.pauseMora" />
@@ -132,7 +132,7 @@ import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
   CHANGE_ACCENT,
-  SET_AUDIO_MORA_PITCH,
+  SET_AUDIO_MORA_DATA,
   CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -224,12 +224,12 @@ export default defineComponent({
       });
     };
 
-    const changeMoraPitch = (
+    const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(SET_AUDIO_MORA_PITCH, {
+      store.dispatch(SET_AUDIO_MORA_DATA, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -317,7 +317,7 @@ export default defineComponent({
       accentPhrases,
       changeAccent,
       toggleAccentPhraseSplit,
-      changeMoraPitch,
+      changeMoraData,
       play,
       stop,
       save,

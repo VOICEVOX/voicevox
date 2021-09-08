@@ -171,15 +171,11 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => restartEngineProcess(),
+            onClick: () => store.dispatch(RESTART_ENGINE),
           },
         ],
       },
     ]);
-
-    const restartEngineProcess = () => {
-      store.dispatch(RESTART_ENGINE);
-    };
 
     const subMenuOpenFlags = ref(
       [...Array(menudata.value.length)].map(() => false)
