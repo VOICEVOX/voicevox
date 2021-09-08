@@ -145,7 +145,7 @@ const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
 const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
-const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
+const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 
 const SET_ENGINE_STATE = "SET_ENGINE_STATE";
 const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
@@ -166,7 +166,7 @@ export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
 export const GENERATE_INITIAL_AUDIO_ITEM = "GENERATE_INITIAL_AUDIO_ITEM";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
-export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
+export const FETCH_MORA_DATA = "FETCH_MORA_DATA";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const GENERATE_AUDIO = "GENERATE_AUDIO";
@@ -309,22 +309,29 @@ export const audioStore = typeAsStoreOptions({
         isPause,
       });
     },
-    [SET_AUDIO_MORA_PITCH]: (
+    [SET_AUDIO_MORA_DATA]: (
       state,
       {
         audioKey,
         accentPhraseIndex,
         moraIndex,
+        consonantLength,
+        vowelLength,
         pitch,
       }: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        consonantLength: number | undefined;
+        vowelLength: number | undefined;
+        pitch: number | undefined;
       }
     ) => {
       const query = state.audioItems[audioKey].query!;
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+      const mora = query.accentPhrases[accentPhraseIndex].moras[moraIndex];
+      mora.consonantLength = consonantLength ?? mora.consonantLength;
+      mora.vowelLength = vowelLength ?? mora.vowelLength;
+      mora.pitch = pitch ?? mora.pitch;
     },
     [SET_ENGINE_STATE](state, { engineState }: { engineState: EngineState }) {
       state.engineState = engineState;
@@ -469,7 +476,7 @@ export const audioStore = typeAsStoreOptions({
         speaker: state.characterInfos![characterIndex].metas.speaker,
       });
     },
-    [FETCH_MORA_PITCH]: async (
+    [FETCH_MORA_DATA]: async (
       { state },
       {
         accentPhrases,
@@ -479,7 +486,7 @@ export const audioStore = typeAsStoreOptions({
       if (accentPhrases.length == 0) {
         return [];
       } else {
-        return await api.moraPitchMoraPitchPost({
+        return await api.moraDataMoraDataPost({
           accentPhrase: accentPhrases,
           speaker: state.characterInfos![characterIndex].metas.speaker,
         });
@@ -721,7 +728,7 @@ export const COMMAND_SET_AUDIO_INTONATION_SCALE =
 export const COMMAND_SET_AUDIO_PITCH_SCALE = "COMMAND_SET_AUDIO_PITCH_SCALE";
 export const COMMAND_SET_AUDIO_SPEED_SCALE = "COMMAND_SET_AUDIO_SPEED_SCALE";
 export const COMMAND_SET_AUDIO_VOLUME_SCALE = "COMMAND_SET_AUDIO_VOLUME_SCALE";
-export const COMMAND_SET_AUDIO_MORA_PITCH = "COMMAND_SET_AUDIO_MORA_PITCH";
+export const COMMAND_SET_AUDIO_MORA_DATA = "COMMAND_SET_AUDIO_MORA_DATA";
 export const COMMAND_IMPORT_FROM_FILE = "COMMAND_IMPORT_FROM_FILE";
 export const COMMAND_PUT_TEXTS = "COMMAND_PUT_TEXTS";
 
@@ -801,7 +808,7 @@ export const audioCommandStore = typeAsStoreOptions({
       if (query !== undefined) {
         const accentPhrases = query.accentPhrases;
         const newAccentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_MORA_PITCH,
+          FETCH_MORA_DATA,
           {
             accentPhrases,
             characterIndex,
@@ -865,12 +872,12 @@ export const audioCommandStore = typeAsStoreOptions({
         const characterIndex: number =
           state.audioItems[audioKey].characterIndex ?? 0;
         const resultAccentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_MORA_PITCH,
+          FETCH_MORA_DATA,
           { accentPhrases: newAccentPhrases, characterIndex }
         ).catch((err) => {
           window.electron.logError(
             err,
-            "Failed to fetch of mora pitch.",
+            "Failed to fetch of mora data.",
             JSON.stringify(newAccentPhrases)
           );
           return newAccentPhrases;
@@ -907,7 +914,7 @@ export const audioCommandStore = typeAsStoreOptions({
           moraIndex,
           isPause,
         });
-        const resultAccentPhrases = await dispatch(FETCH_MORA_PITCH, {
+        const resultAccentPhrases = await dispatch(FETCH_MORA_DATA, {
           accentPhrases: newAccentPhrases,
           characterIndex,
         }).catch((err) => {
@@ -948,16 +955,18 @@ export const audioCommandStore = typeAsStoreOptions({
     ) => {
       commit(COMMAND_SET_AUDIO_VOLUME_SCALE, payload);
     },
-    [COMMAND_SET_AUDIO_MORA_PITCH]: (
+    [COMMAND_SET_AUDIO_MORA_DATA]: (
       { commit },
       payload: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        consonantLength: number | undefined;
+        vowelLength: number | undefined;
+        pitch: number | undefined;
       }
     ) => {
-      commit(COMMAND_SET_AUDIO_MORA_PITCH, payload);
+      commit(COMMAND_SET_AUDIO_MORA_DATA, payload);
     },
     [COMMAND_IMPORT_FROM_FILE]: createUILockAction(
       async (
@@ -1173,16 +1182,18 @@ export const audioCommandStore = typeAsStoreOptions({
     ) => {
       audioStore.mutations[SET_AUDIO_VOLUME_SCALE](draft, payload);
     },
-    [COMMAND_SET_AUDIO_MORA_PITCH]: (
+    [COMMAND_SET_AUDIO_MORA_DATA]: (
       draft,
       payload: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        consonantLength: number | undefined;
+        vowelLength: number | undefined;
+        pitch: number | undefined;
       }
     ) => {
-      audioStore.mutations[SET_AUDIO_MORA_PITCH](draft, payload);
+      audioStore.mutations[SET_AUDIO_MORA_DATA](draft, payload);
     },
     [COMMAND_IMPORT_FROM_FILE]: (
       draft,

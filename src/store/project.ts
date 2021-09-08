@@ -5,6 +5,7 @@ import {
   REGISTER_AUDIO_ITEM,
   UNREGISER_AUDIO_ITEM,
   FETCH_AUDIO_QUERY,
+  FETCH_MORA_DATA,
 } from "@/store/audio";
 import { CLEAR_COMMANDS } from "@/store/command";
 import { State, AudioItem } from "@/store/type";
@@ -89,6 +90,35 @@ export const projectStore = {
               }
             }
           }
+
+          if (appVersionList < [0, 5, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.query != null) {
+                audioItem.query.outputStereo = false;
+                for (const accentPhrase of audioItem.query.accentPhrases) {
+                  if (accentPhrase.pause_mora) {
+                    accentPhrase.pause_mora.vowelLength = 0;
+                  }
+                  for (const mora of accentPhrase.moras) {
+                    if (mora.consonant) {
+                      mora.consonantLength = 0;
+                    }
+                    mora.vowelLength = 0;
+                  }
+                }
+                // set phoneme length
+                console.log(audioItem);
+                const accentPhrases = await dispatch(FETCH_MORA_DATA, {
+                  accentPhrases: audioItem.query.accentPhrases,
+                  characterIndex: audioItem.characterIndex,
+                });
+                audioItem.query.accentPhrases = accentPhrases;
+              }
+            }
+          }
+
+          console.log(obj);
 
           // Validation check
           const ajv = new Ajv();
@@ -208,10 +238,12 @@ const moraSchema = {
   properties: {
     text: { type: "string" },
     vowel: { type: "string" },
+    vowelLength: { type: "float32" },
     pitch: { type: "float32" },
   },
   optionalProperties: {
     consonant: { type: "string" },
+    consonantLength: { type: "float32" },
   },
 } as const;
 
@@ -239,6 +271,7 @@ const audioQuerySchema = {
     prePhonemeLength: { type: "float32" },
     postPhonemeLength: { type: "float32" },
     outputSamplingRate: { type: "int32" },
+    outputStereo: { type: "boolean" },
   },
 } as const;
 

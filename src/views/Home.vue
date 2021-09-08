@@ -261,6 +261,7 @@ export default defineComponent({
           resizeObserverRef.value?.$el.parentElement.clientHeight
         );
       } else {
+        portraitPaneWidth.value = 0;
         audioInfoPaneWidth.value = 0;
         audioInfoPaneMinWidth.value = 0;
         audioInfoPaneMaxWidth.value = 0;
