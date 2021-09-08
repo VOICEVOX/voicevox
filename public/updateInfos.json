@@ -1,5 +1,40 @@
 [
   {
+    "version": "0.5.0",
+    "descriptions": [
+      "キャラクターの立ち絵を表示",
+      "音声ごとの音量調整",
+      "テキスト欄を増やすときにキャラクターをコピー",
+      "エンジンの再起動",
+      "ctrl+sでプロジェクト保存",
+      "エラーのロギング",
+      "設定画面の追加",
+      "ウィンドウを最前面に固定する機能",
+      "音声の再生・保存失敗時にエラーダイアログを表示",
+      "UXの向上",
+      "音声合成エンジンの機能追加",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "buckw6eat",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "k-kuroguro",
+      "madosuki",
+      "mes51",
+      "MT224244",
+      "oov",
+      "Patchethium",
+      "raa0121",
+      "Segu-g",
+      "tasteless0wash",
+      "y-chan",
+      "Yosshi999",
+      "YouCuber"
+    ]
+  },
+  {
     "version": "0.4.1",
     "descriptions": ["ファイル読み込み時のバグを修正"],
     "contributors": ["Segu-g"]

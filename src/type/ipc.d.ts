@@ -152,11 +152,6 @@ type IpcSOData = {
     return: void;
   };
 
-  START_WAITING_ENGINE: {
-    args: [];
-    return: void;
-  };
-
   DETECT_PINNED: {
     args: [];
     return: void;

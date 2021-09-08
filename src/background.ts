@@ -75,8 +75,6 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   willQuitEngine = false;
-  // エンジンが起動完了または失敗するまで待機させる処理を呼び出している。
-  ipcMainSend(win, "START_WAITING_ENGINE");
 
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
@@ -109,7 +107,7 @@ async function runEngine() {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR");
         dialog.showErrorBox(
           "音声合成エンジンエラー",
-          "音声合成エンジンが異常終了しました。ソフトウェアを再起動してください。"
+          "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
         );
       }
     }
@@ -335,40 +333,46 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
   logError(...params);
 });
 
-ipcMainHandle("RESTART_ENGINE", async () => {
-  /*
-    プロセスが生存している場合はexitCodeにnull、終了していればnumber型のexit codeが代入されています。
-    プロセスが既に落ちている場合にtreeKillを実行する意味がないのでこうしてあります。
-  */
-  if (engineProcess.exitCode !== null) {
-    runEngine();
-    return;
-  }
+/**
+ * エンジンを再起動する。
+ * エンジンの起動が開始したらresolve、起動が失敗したらreject。
+ */
+ipcMainHandle(
+  "RESTART_ENGINE",
+  () =>
+    new Promise((resolve, reject) => {
+      // エンジンのプロセスが存在しない場合
+      if (engineProcess.exitCode !== null) {
+        runEngine();
+        resolve();
+        return;
+      }
 
-  // エンジンエラー時のエラーウィンドウ抑制用。
-  willQuitEngine = true;
+      // エンジンエラー時のエラーウィンドウ抑制用。
+      willQuitEngine = true;
 
-  /*
-    「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
-    closeイベントはexitイベントよりも後に発火します。
-  */
-  const closeListenerCallBack = () => runEngine();
-  engineProcess.once("close", closeListenerCallBack);
+      // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
+      // closeイベントはexitイベントよりも後に発火します。
+      const closeListenerCallBack = () => {
+        runEngine();
+        resolve();
+      };
+      engineProcess.once("close", closeListenerCallBack);
 
-  // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-  treeKill(engineProcess.pid, (error) => {
-    // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
-    if (error !== null) {
-      console.log(error);
+      // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+      treeKill(engineProcess.pid, (error) => {
+        // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
+        if (error !== null) {
+          console.log(error);
 
-      // 再起動用に設定したclose listenerを削除。
-      engineProcess.removeListener("close", closeListenerCallBack);
+          // 再起動用に設定したclose listenerを削除。
+          engineProcess.removeListener("close", closeListenerCallBack);
 
-      // 何らかの理由でkillに失敗した時に起動中メッセージを消すための処理。
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
-    }
-  });
-});
+          reject();
+        }
+      });
+    })
+);
 
 ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   if (newData !== undefined) {
