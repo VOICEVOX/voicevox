@@ -44,6 +44,8 @@ export const projectStore = {
           filePath = ret[0];
         }
 
+        const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
+
         try {
           const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
@@ -52,7 +54,8 @@ export const projectStore = {
           // appVersion Validation check
           if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
             throw new Error(
-              "The appVersion of the project file should be string"
+              projectFileErrorMsg +
+                " The appVersion of the project file should be string"
             );
           }
           const appVersionList = versionTextParse(obj.appVersion);
@@ -60,7 +63,8 @@ export const projectStore = {
           const nowAppVersionList = versionTextParse(nowAppInfo.version);
           if (appVersionList == null || nowAppVersionList == null) {
             throw new Error(
-              'An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
+              projectFileErrorMsg +
+                ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
             );
           }
 
@@ -127,7 +131,8 @@ export const projectStore = {
           }
           if (!obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)) {
             throw new Error(
-              "Every audioKey in audioKeys should be a key of audioItems"
+              projectFileErrorMsg +
+                " Every audioKey in audioKeys should be a key of audioItems"
             );
           }
           if (
@@ -136,7 +141,8 @@ export const projectStore = {
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "characterIndex" atrribute.'
+              projectFileErrorMsg +
+                ' Every audioItem should have a "characterIndex" atrribute.'
             );
           }
 
@@ -165,13 +171,16 @@ export const projectStore = {
           }
           context.commit(SET_PROJECT_FILEPATH, { filePath });
         } catch (err) {
-          window.electron.logError(
-            err,
-            `VOICEVOX Project file "${filePath}" is a invalid file.`
-          );
+          window.electron.logError(err);
+          const message = (() => {
+            if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (err.message.startsWith(projectFileErrorMsg))
+              return "ファイルフォーマットが正しくありません。";
+            return err.message;
+          })();
           await window.electron.showErrorDialog({
             title: "エラー",
-            message: "ファイルフォーマットが正しくありません。",
+            message,
           });
         }
       }
