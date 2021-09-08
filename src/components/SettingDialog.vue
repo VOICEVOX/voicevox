@@ -115,7 +115,7 @@ export default defineComponent({
 
       const change = async () => {
         await store.dispatch(SET_USE_GPU, { useGpu });
-        restartEngineProcess();
+        store.dispatch(RESTART_ENGINE);
 
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
@@ -177,15 +177,10 @@ export default defineComponent({
         }),
     });
 
-    const restartEngineProcess = () => {
-      store.dispatch(RESTART_ENGINE);
-    };
-
     return {
       settingDialogOpenedComputed,
       engineMode,
       fileEncoding,
-      restartEngineProcess,
     };
   },
 });

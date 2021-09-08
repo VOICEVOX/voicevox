@@ -7,7 +7,7 @@ import {
   DETECT_UNMAXIMIZED,
   DETECT_UNPINNED,
 } from "@/store/ui";
-import { DETECTED_ENGINE_ERROR, START_WAITING_ENGINE } from "@/store/audio";
+import { DETECTED_ENGINE_ERROR } from "@/store/audio";
 import { State } from "@/store/type";
 
 export const ipcMessageReceiver: Plugin = {
@@ -29,10 +29,6 @@ export const ipcMessageReceiver: Plugin = {
     window.electron.onReceivedIPCMsg("DETECTED_ENGINE_ERROR", () =>
       options.store.dispatch(DETECTED_ENGINE_ERROR)
     );
-
-    window.electron.onReceivedIPCMsg("START_WAITING_ENGINE", () => {
-      options.store.dispatch(START_WAITING_ENGINE);
-    });
 
     window.electron.onReceivedIPCMsg("DETECT_PINNED", () => {
       options.store.dispatch(DETECT_PINNED);
