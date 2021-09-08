@@ -40,7 +40,7 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
-  restartEngine(): void;
+  restartEngine(): Promise<void>;
   changePinWindow(): void;
 }
 

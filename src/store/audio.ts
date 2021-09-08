@@ -8,7 +8,8 @@ import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
-const api = new DefaultApi(
+// TODO: 0.5.0マイグレーションに必要
+export const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
 
@@ -79,7 +80,7 @@ export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
-export const FETCH_MORA_PITCH = "FETCH_MORA_PITCH";
+export const FETCH_MORA_DATA = "FETCH_MORA_DATA";
 export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
 export const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
@@ -91,7 +92,7 @@ export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 export const CHANGE_ACCENT = "CHANGE_ACCENT";
 export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 export const CHANGE_ACCENT_PHRASE_SPLIT = "CHANGE_ACCENT_PHRASE_SPLIT";
-export const SET_AUDIO_MORA_PITCH = "SET_AUDIO_MORA_PITCH";
+export const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 export const GENERATE_AUDIO = "GENERATE_AUDIO";
 export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
 export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
@@ -221,7 +222,7 @@ export const audioStore = {
       const haveAudioQuery = getters[HAVE_AUDIO_QUERY](audioKey);
       await dispatch(SET_AUDIO_CHARACTER_INDEX, { audioKey, characterIndex });
       if (haveAudioQuery) {
-        return dispatch(FETCH_MORA_PITCH, { audioKey });
+        return dispatch(FETCH_MORA_DATA, { audioKey });
       }
     },
     [INSERT_AUDIO_ITEM]: createCommandAction(
@@ -319,14 +320,11 @@ export const audioStore = {
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
     },
-    [FETCH_MORA_PITCH](
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
-    ) {
+    [FETCH_MORA_DATA]({ state, dispatch }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
 
       return api
-        .moraPitchMoraPitchPost({
+        .moraDataMoraDataPost({
           accentPhrase: audioItem.query!.accentPhrases,
           speaker:
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
@@ -402,7 +400,7 @@ export const audioStore = {
       }
     ) {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
-      return dispatch(FETCH_MORA_PITCH, { audioKey });
+      return dispatch(FETCH_MORA_DATA, { audioKey });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: createCommandAction<
       State,
@@ -482,9 +480,9 @@ export const audioStore = {
         moraIndex,
         isPause,
       });
-      return dispatch(FETCH_MORA_PITCH, { audioKey });
+      return dispatch(FETCH_MORA_DATA, { audioKey });
     },
-    [SET_AUDIO_MORA_PITCH]: createCommandAction<
+    [SET_AUDIO_MORA_DATA]: createCommandAction<
       State,
       {
         audioKey: string;
@@ -784,9 +782,12 @@ export const audioStore = {
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
-    async [RESTART_ENGINE]({ commit }) {
+    async [RESTART_ENGINE]({ dispatch, commit }) {
       await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
-      window.electron.restartEngine();
+      window.electron
+        .restartEngine()
+        .then(() => dispatch(START_WAITING_ENGINE))
+        .catch(() => dispatch(DETECTED_ENGINE_ERROR));
     },
   },
 } as StoreOptions<State>;

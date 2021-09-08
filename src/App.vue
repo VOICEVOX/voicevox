@@ -7,6 +7,7 @@
 <script type="ts">
 import { useStore } from "@/store";
 import { GET_USE_GPU, GET_FILE_ENCODING } from "@/store/ui";
+import { START_WAITING_ENGINE } from "@/store/audio";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { defineComponent } from "vue";
 
@@ -20,6 +21,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
+    store.dispatch(START_WAITING_ENGINE);
     store.dispatch(GET_USE_GPU);
     store.dispatch(GET_FILE_ENCODING);
   }
