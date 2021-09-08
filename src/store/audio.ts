@@ -327,18 +327,31 @@ export const audioStore = typeAsStoreOptions({
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
     },
-    [FETCH_MORA_DATA]({ state, dispatch }, { audioKey }: { audioKey: string }) {
+    [FETCH_MORA_DATA](
+      { state, dispatch },
+      {
+        audioKey,
+        changeMoraDataIndex,
+      }: { audioKey: string; changeMoraDataIndex?: number }
+    ) {
       const audioItem = state.audioItems[audioKey];
+      // "Do not mutate vuex store state outside mutation handlers"エラー回避のための配列コピー
+      const originAccentPhrases = [...audioItem.query!.accentPhrases];
 
       return api
         .moraDataMoraDataPost({
-          accentPhrase: audioItem.query!.accentPhrases,
+          accentPhrase: originAccentPhrases,
           speaker:
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
-        .then((accentPhrases) =>
-          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
-        );
+        .then((accentPhrases) => {
+          if (changeMoraDataIndex !== undefined) {
+            originAccentPhrases[changeMoraDataIndex] =
+              accentPhrases[changeMoraDataIndex];
+            accentPhrases = originAccentPhrases;
+          }
+          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
+        });
     },
     [FETCH_AUDIO_QUERY]: (
       { state, dispatch },
@@ -419,7 +432,10 @@ export const audioStore = typeAsStoreOptions({
       }
     ) {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
-      return dispatch(FETCH_MORA_DATA, { audioKey });
+      return dispatch(FETCH_MORA_DATA, {
+        audioKey,
+        changeMoraDataIndex: accentPhraseIndex,
+      });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
       State,
