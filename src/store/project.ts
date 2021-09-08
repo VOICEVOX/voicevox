@@ -136,7 +136,7 @@ export const projectStore = {
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "characterIndex" atrribute.'
+              'Every audioItem should have a "characterIndex" attribute.'
             );
           }
 
