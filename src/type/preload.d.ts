@@ -39,7 +39,7 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
-  restartEngine(): void;
+  restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;

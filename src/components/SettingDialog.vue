@@ -97,7 +97,9 @@
                         color="blue"
                         :model-value="savingSetting.fixedExportEnabled"
                         :label="
-                          savingSetting.fixedExportEnabled ? '有効' : '無効'
+                          savingSetting.fixedExportEnabled
+                            ? '固定する'
+                            : '固定しない'
                         "
                         @update:model-value="
                           handleSavingSettingChange(
@@ -111,7 +113,7 @@
                         dense
                         no-error-icon
                         v-model="savingSetting.fixedExportDir"
-                        label="デフォルトのフォルダ"
+                        label="書き出し先のフォルダ"
                         error-message="フォルダが見つかりません"
                         :rules="[inputCheckDirExists]"
                         @update:model-value="
@@ -155,7 +157,6 @@
                     <q-card-section>
                       <q-checkbox
                         class="q-pl-md q-pb-sm"
-                        :label="savingSetting.avoidOverwrite ? '有効' : '無効'"
                         dense
                         color="blue"
                         :model-value="savingSetting.avoidOverwrite"
