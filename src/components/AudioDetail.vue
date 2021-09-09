@@ -366,27 +366,20 @@ export default defineComponent({
     });
 
     const handleChangePronunce = (newText: string, phraseIndex: number) => {
-      let overwriteAmount = 1;
+      let pauseFlag = false;
       newText = newText.replace(",", "、");
       console.log(newText);
       // if the user append a comma, append all the phrases with a pause after it
       if (newText.slice(-1) == "、") {
-        newText += moraTextByPhrase.value[phraseIndex + overwriteAmount];
-        while (
-          accentPhrases.value![phraseIndex + overwriteAmount].pauseMora !==
-          undefined
-        ) {
-          overwriteAmount += 1;
-          newText += moraTextByPhrase.value[phraseIndex + overwriteAmount];
-        }
-        overwriteAmount += 1;
+        newText += moraTextByPhrase.value[phraseIndex + 1];
+        pauseFlag = true;
       }
       console.log(newText);
       store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
         newText,
         accentPhraseIndex: phraseIndex,
-        overwriteAmount,
+        pauseFlag,
       });
     };
 

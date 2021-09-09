@@ -305,17 +305,24 @@ export const audioStore = {
           audioKey,
           accentPhraseIndex,
           accentPhrases,
-          overwriteAmount,
+          pauseFlag,
         }: {
           audioKey: string;
           accentPhraseIndex: number;
           accentPhrases: AccentPhrase[];
-          overwriteAmount: number;
+          pauseFlag: boolean;
         }
       ) => {
+        if (pauseFlag) {
+          while (
+            accentPhrases[accentPhrases.length - 1].pauseMora === undefined
+          ) {
+            accentPhrases.pop();
+          }
+        }
         draft.audioItems[audioKey].query!.accentPhrases.splice(
           accentPhraseIndex,
-          overwriteAmount,
+          1,
           ...accentPhrases
         );
       }
@@ -350,12 +357,12 @@ export const audioStore = {
         audioKey,
         newText,
         accentPhraseIndex,
-        overwriteAmount,
+        pauseFlag,
       }: {
         audioKey: string;
         newText: string;
         accentPhraseIndex: number;
-        overwriteAmount: number;
+        pauseFlag: boolean;
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
@@ -370,7 +377,7 @@ export const audioStore = {
             audioKey: audioKey,
             accentPhraseIndex,
             accentPhrases,
-            overwriteAmount,
+            pauseFlag,
           });
         });
     },
