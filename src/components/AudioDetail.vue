@@ -87,7 +87,7 @@
             >
               {{ mora.text }}
               <q-popup-edit
-                v-if="selectedDetail == 'accent'"
+                v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="moraTextByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
@@ -336,7 +336,7 @@ export default defineComponent({
     };
 
     const handleDevoice = (phraseIndex: number, moraIndex: number) => {
-      if (selectedDetail.value === "intonation") {
+      if (selectedDetail.value === "intonation" && !uiLocked.value) {
         if (accentPhrases.value !== undefined) {
           const key = phraseIndex.toString() + "-" + moraIndex.toString();
           const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
@@ -367,6 +367,8 @@ export default defineComponent({
 
     const handleChangePronunce = (newText: string, phraseIndex: number) => {
       let overwriteAmount = 1;
+      newText = newText.replace(",", "、");
+      console.log(newText);
       // if the user append a comma, append all the phrases with a pause after it
       if (newText.slice(-1) == "、") {
         newText += moraTextByPhrase.value[phraseIndex + overwriteAmount];
