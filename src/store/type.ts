@@ -1,6 +1,6 @@
 import { Operation } from "rfc6902";
 import { AudioQuery } from "@/openapi";
-import { CharacterInfo, Encoding } from "@/type/preload";
+import { CharacterInfo, SavingSetting } from "@/type/preload";
 
 export interface ICommand<S> {
   undoOperations: Operation[];
@@ -23,9 +23,9 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
-  fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
+  savingSetting: SavingSetting;
   isPinned: boolean;
 };
 
