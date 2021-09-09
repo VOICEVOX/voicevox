@@ -36,18 +36,14 @@ export const commandStore = {
       const command = state.undoCommands.pop();
       if (command != null) {
         state.redoCommands.push(command);
-        if (command != null) {
-          applyPatch(state, command.undoOperation);
-        }
+        applyPatch(state, command.undoOperation);
       }
     },
     [REDO](state) {
       const command = state.redoCommands.pop();
       if (command != null) {
         state.undoCommands.push(command);
-        if (command != null) {
-          applyPatch(state, command.doOperation);
-        }
+        applyPatch(state, command.doOperation);
       }
     },
     [CLEAR_COMMANDS](state) {
