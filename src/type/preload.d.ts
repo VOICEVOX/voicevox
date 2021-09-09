@@ -31,7 +31,6 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   isAvailableGPUMode(): Promise<boolean>;
-  fileEncoding(newValue?: Encoding): Promise<Encoding>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
@@ -41,6 +40,8 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   restartEngine(): Promise<void>;
+  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
+  checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
 }
 
@@ -69,3 +70,10 @@ export type UpdateInfo = {
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";
+
+export type SavingSetting = {
+  fileEncoding: Encoding;
+  fixedExportEnabled: boolean;
+  fixedExportDir: string;
+  avoidOverwrite: boolean;
+};
