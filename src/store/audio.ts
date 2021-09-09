@@ -110,6 +110,8 @@ export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
 export const SET_AUDIO_MORA_DEVOICE = "SET_AUDIO_MORA_DEVOICE";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
+export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
+export const SET_SIGNLE_ACCENT_PHRASE = "SET_SIGNLE_ACCENT_PHRASE";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -296,6 +298,28 @@ export const audioStore = {
         draft.audioItems[audioKey].query!.accentPhrases = accentPhrases;
       }
     ),
+    [SET_SIGNLE_ACCENT_PHRASE]: createCommandAction(
+      (
+        draft,
+        {
+          audioKey,
+          accentPhraseIndex,
+          accentPhrases,
+          overwriteAmount,
+        }: {
+          audioKey: string;
+          accentPhraseIndex: number;
+          accentPhrases: AccentPhrase[];
+          overwriteAmount: number;
+        }
+      ) => {
+        draft.audioItems[audioKey].query!.accentPhrases.splice(
+          accentPhraseIndex,
+          overwriteAmount,
+          ...accentPhrases
+        );
+      }
+    ),
     [SET_AUDIO_QUERY]: createCommandAction(
       (
         draft,
@@ -309,7 +333,6 @@ export const audioStore = {
       { audioKey }: { audioKey: string }
     ) => {
       const audioItem = state.audioItems[audioKey];
-      console.log(audioItem.text);
 
       return api
         .accentPhrasesAccentPhrasesPost({
@@ -321,17 +344,35 @@ export const audioStore = {
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
     },
-    [FETCH_ACCENT_PHRASES]: (
+    [FETCH_SINGLE_ACCENT_PHRASE]: (
       { state, dispatch },
-      { audioKey, newText }: { audioKey: string; newText: string }
+      {
+        audioKey,
+        newText,
+        accentPhraseIndex,
+        overwriteAmount,
+      }: {
+        audioKey: string;
+        newText: string;
+        accentPhraseIndex: number;
+        overwriteAmount: number;
+      }
     ) => {
       const audioItem = state.audioItems[audioKey];
-      return api.accentPhrasesAccentPhrasesPost({
-        text: newText,
-        speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
-      }).then((accentPhrases) => {
-        dispatch()
-      })
+      return api
+        .accentPhrasesAccentPhrasesPost({
+          text: newText,
+          speaker:
+            state.characterInfos![audioItem.characterIndex!].metas.speaker,
+        })
+        .then((accentPhrases) => {
+          dispatch(SET_SIGNLE_ACCENT_PHRASE, {
+            audioKey: audioKey,
+            accentPhraseIndex,
+            accentPhrases,
+            overwriteAmount,
+          });
+        });
     },
     [FETCH_MORA_DATA]({ state, dispatch }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];

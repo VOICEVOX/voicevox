@@ -91,7 +91,9 @@
                 :model-value="moraTextByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
-                @update:model-value="handleChangePronunce($event)"
+                @update:model-value="
+                  handleChangePronunce($event, accentPhraseIndex)
+                "
               >
                 <q-input
                   v-model="scope.value"
@@ -154,6 +156,7 @@ import {
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
   SET_AUDIO_MORA_DEVOICE,
+  FETCH_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -311,10 +314,6 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const handleTextClicked = (change: string) => {
-      console.log(change);
-    };
-
     const moraTextByPhrase = computed(() => {
       let textArray: Array<string> = [];
       accentPhrases.value?.forEach((accentPhrase) => {
@@ -322,6 +321,9 @@ export default defineComponent({
         accentPhrase.moras.forEach((mora) => {
           textString += mora.text;
         });
+        if (accentPhrase.pauseMora) {
+          textString += "、";
+        }
         textArray.push(textString);
       });
       return textArray;
@@ -357,8 +359,33 @@ export default defineComponent({
       }
     };
 
-    const handleChangePronunce = (newPronunce: string) => {
-      console.log(newPronunce);
+    addEventListener("keyup", (event: KeyboardEvent) => {
+      if (event.key === "f") {
+        console.log(accentPhrases);
+      }
+    });
+
+    const handleChangePronunce = (newText: string, phraseIndex: number) => {
+      let overwriteAmount = 1;
+      // if the user append a comma, append all the phrases with a pause after it
+      if (newText.slice(-1) == "、") {
+        newText += moraTextByPhrase.value[phraseIndex + overwriteAmount];
+        while (
+          accentPhrases.value![phraseIndex + overwriteAmount].pauseMora !==
+          undefined
+        ) {
+          overwriteAmount += 1;
+          newText += moraTextByPhrase.value[phraseIndex + overwriteAmount];
+        }
+        overwriteAmount += 1;
+      }
+      console.log(newText);
+      store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
+        audioKey: activeAudioKey.value,
+        newText,
+        accentPhraseIndex: phraseIndex,
+        overwriteAmount,
+      });
     };
 
     return {
@@ -378,7 +405,6 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
-      handleTextClicked,
       moraTextByPhrase,
       handleDevoice,
       handleChangePronunce,
