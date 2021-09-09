@@ -7,6 +7,7 @@ import { AudioItem, EngineState, SaveResultObject, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { useFunc } from "ajv/dist/compile/util";
 
 // TODO: 0.5.0マイグレーションに必要
 export const api = new DefaultApi(
@@ -509,6 +510,8 @@ export const audioStore = {
           console.log([mora.consonant, mora.vowel, mora.pitch]);
         })
       );
+      if (query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel == "cl")
+        return;
       if (pitch === undefined) {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = 0;
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
