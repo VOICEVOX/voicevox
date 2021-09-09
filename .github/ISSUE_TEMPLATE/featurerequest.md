@@ -1,10 +1,7 @@
 ---
 name: Feature Request
-about: 機能要望
-title: ''
-labels: kind/new feature
-assignees: ''
-
+about: 機能要望・改善提案
+labels: enhancement
 ---
 
 ## 内容

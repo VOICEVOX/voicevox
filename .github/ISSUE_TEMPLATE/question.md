@@ -1,10 +1,7 @@
 ---
 name: Question
 about: 質問 (既存のIssueや一般事例を良く調べてからしてください)
-title: ''
-labels: kind/question
-assignees: ''
-
+labels: question
 ---
 
 ## 質問の内容
