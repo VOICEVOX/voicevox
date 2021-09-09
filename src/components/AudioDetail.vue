@@ -336,7 +336,12 @@ export default defineComponent({
     const handleDevoice = (phraseIndex: number, moraIndex: number) => {
       if (selectedDetail.value === "intonation" && !uiLocked.value) {
         if (accentPhrases.value !== undefined) {
-          const key = phraseIndex.toString() + "-" + moraIndex.toString();
+          const key =
+            activeAudioKey.value +
+            "-" +
+            phraseIndex.toString() +
+            "-" +
+            moraIndex.toString();
           const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
           if (pitch == 0) {
             store.dispatch(SET_AUDIO_MORA_DEVOICE, {
