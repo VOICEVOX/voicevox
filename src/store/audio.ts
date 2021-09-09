@@ -177,6 +177,7 @@ export const STOP_AUDIO = "STOP_AUDIO";
 export const PLAY_CONTINUOUSLY_AUDIO = "PLAY_CONTINUOUSLY_AUDIO";
 export const STOP_CONTINUOUSLY_AUDIO = "STOP_CONTINUOUSLY_AUDIO";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
+export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 export const audioStore = typeAsStoreOptions({
   getters: {
@@ -551,12 +552,30 @@ export const audioStore = typeAsStoreOptions({
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
-        filePath ??= await window.electron.showAudioSaveDialog({
-          title: "Save",
-          defaultPath: buildFileName(state, audioKey),
-        });
+
+        if (state.savingSetting.fixedExportEnabled) {
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            buildFileName(state, audioKey)
+          );
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "Save",
+            defaultPath: buildFileName(state, audioKey),
+          });
+        }
+
         if (!filePath) {
           return { result: "CANCELED", path: "" };
+        }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
         }
 
         const blob = await blobPromise;
@@ -610,9 +629,13 @@ export const audioStore = typeAsStoreOptions({
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
-        dirPath ??= await window.electron.showOpenDirectoryDialog({
-          title: "Save ALL",
-        });
+        if (state.savingSetting.fixedExportEnabled) {
+          dirPath = state.savingSetting.fixedExportDir;
+        } else {
+          dirPath ??= await window.electron.showOpenDirectoryDialog({
+            title: "Save ALL",
+          });
+        }
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey) => {
             const name = buildFileName(state, audioKey);
@@ -711,6 +734,9 @@ export const audioStore = typeAsStoreOptions({
       { audioKey }: { audioKey?: string }
     ) => {
       commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
+    },
+    [CHECK_FILE_EXISTS]({ commit }, { file }: { file: string }) {
+      return window.electron.checkFileExists(file);
     },
   },
 } as const);

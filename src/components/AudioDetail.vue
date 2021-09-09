@@ -269,7 +269,7 @@ export default defineComponent({
         GENERATE_AND_SAVE_AUDIO,
         {
           audioKey: activeAudioKey.value!,
-          encoding: store.state.fileEncoding,
+          encoding: store.state.savingSetting.fileEncoding,
         }
       );
 

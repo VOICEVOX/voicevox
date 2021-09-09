@@ -1,6 +1,6 @@
 import { StoreOptions, MutationTree, ActionTree } from "vuex";
 import { AudioQuery } from "@/openapi";
-import { CharacterInfo, Encoding } from "@/type/preload";
+import { CharacterInfo, SavingSetting } from "@/type/preload";
 import {
   Command,
   PayloadRecipeTree,
@@ -24,9 +24,9 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
-  fileEncoding: Encoding;
   isMaximized: boolean;
   projectFilePath?: string;
+  savingSetting: SavingSetting;
   isPinned: boolean;
 };
 

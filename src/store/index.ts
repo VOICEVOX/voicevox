@@ -11,6 +11,7 @@ import { commandStore } from "./command";
 import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
 import { uiStore } from "./ui";
+import { settingStore } from "./setting";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
@@ -37,8 +38,13 @@ export const store = createStore<State>({
     useGpu: false,
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,
-    fileEncoding: "UTF-8",
     isMaximized: false,
+    savingSetting: {
+      fileEncoding: "UTF-8",
+      fixedExportEnabled: false,
+      fixedExportDir: "",
+      avoidOverwrite: false,
+    },
     isPinned: false,
   },
 
@@ -47,6 +53,7 @@ export const store = createStore<State>({
     ...audioStore.getters,
     ...commandStore.getters,
     ...projectStore.getters,
+    ...settingStore.getters,
   },
 
   mutations: {
@@ -54,6 +61,7 @@ export const store = createStore<State>({
     ...audioStore.mutations,
     ...commandStore.mutations,
     ...projectStore.mutations,
+    ...settingStore.mutations,
     ...audioCommandStore.mutations,
   },
 
@@ -62,6 +70,7 @@ export const store = createStore<State>({
     ...audioStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,
+    ...settingStore.actions,
     ...audioCommandStore.actions,
 
     [GET_POLICY_TEXT]: async () => {

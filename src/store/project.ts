@@ -97,8 +97,8 @@ export const projectStore = {
               if (audioItem.query != null) {
                 audioItem.query.outputStereo = false;
                 for (const accentPhrase of audioItem.query.accentPhrases) {
-                  if (accentPhrase.pause_mora) {
-                    accentPhrase.pause_mora.vowelLength = 0;
+                  if (accentPhrase.pauseMora) {
+                    accentPhrase.pauseMora.vowelLength = 0;
                   }
                   for (const mora of accentPhrase.moras) {
                     if (mora.consonant) {
@@ -137,7 +137,7 @@ export const projectStore = {
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "characterIndex" atrribute.'
+              'Every audioItem should have a "characterIndex" attribute.'
             );
           }
 
