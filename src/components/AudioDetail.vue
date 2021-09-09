@@ -91,7 +91,7 @@
                 :model-value="moraTextByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
-                @save="handleChangePronunce($event, accentPhraseIndex)"
+                @save="handleChangePronounce($event, accentPhraseIndex)"
               >
                 <q-input
                   v-model="scope.value"
@@ -357,7 +357,7 @@ export default defineComponent({
       }
     };
 
-    const handleChangePronunce = (newText: string, phraseIndex: number) => {
+    const handleChangePronounce = (newText: string, phraseIndex: number) => {
       let pauseFlag = false;
       newText = newText.replace(",", "、");
       // if the user append a comma, append all the phrases with a pause after it
@@ -392,7 +392,7 @@ export default defineComponent({
       nowPlayingContinuously,
       moraTextByPhrase,
       handleDevoice,
-      handleChangePronunce,
+      handleChangePronounce,
     };
   },
 });
