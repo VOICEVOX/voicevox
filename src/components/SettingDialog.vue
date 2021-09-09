@@ -300,7 +300,7 @@ export default defineComponent({
 
     const openFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
-        title: "デフォルトのフォルダを選択",
+        title: "書き出し先のフォルダを選択",
       });
       if (path) {
         inputCheckDirExists(path).then((res) => {
