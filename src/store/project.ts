@@ -165,24 +165,6 @@ export const projectStore = {
           for (const audioKey of audioKeys) {
             const audioItem: AudioItem = audioItems[audioKey];
 
-            if (audioItem.query == undefined) {
-              for (
-                let count = 0;
-                !getters[IS_ENGINE_READY]() || count < 120;
-                count++
-              ) {
-                console.error("Waiting engine...");
-                await new Promise((resolve) => setTimeout(resolve, 1000));
-              }
-              if (!getters[IS_ENGINE_READY]()) {
-                console.error("The engine must be running to read text.");
-              }
-              audioItem.query = await dispatch(FETCH_AUDIO_QUERY, {
-                text: audioItem.text,
-                characterIndex: audioItem.characterIndex ?? 0,
-              });
-            }
-
             prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
               prevAudioKey,
               audioItem,
