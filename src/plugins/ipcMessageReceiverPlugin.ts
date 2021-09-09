@@ -1,4 +1,4 @@
-import { LOAD_PROJECT_FILE } from "@/store/project";
+import { CREATE_NEW_PROJECT, LOAD_PROJECT_FILE } from "@/store/project";
 import { Plugin } from "vue";
 import { Store } from "vuex";
 import {
@@ -12,6 +12,12 @@ import { State } from "@/store/type";
 
 export const ipcMessageReceiver: Plugin = {
   install: (_, options: { store: Store<State> }) => {
+    window.electron.onReceivedIPCMsg(
+      "CREATE_NEW_PROJECT",
+      (_, { confirm } = {}) =>
+        options.store.dispatch(CREATE_NEW_PROJECT, { confirm })
+    );
+
     window.electron.onReceivedIPCMsg(
       "LOAD_PROJECT_FILE",
       (_, { filePath, confirm } = {}) =>

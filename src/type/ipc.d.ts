@@ -127,6 +127,11 @@ type IpcIHData = {
  * send, on
  */
 type IpcSOData = {
+  CREATE_NEW_PROJECT: {
+    args: [obj: { confirm?: boolean }];
+    return: void;
+  };
+
   LOAD_PROJECT_FILE: {
     args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;

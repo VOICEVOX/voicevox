@@ -27,9 +27,8 @@ import {
   SAVE_PROJECT_FILE,
   LOAD_PROJECT_FILE,
   PROJECT_NAME,
-  SET_PROJECT_FILEPATH,
+  CREATE_NEW_PROJECT,
 } from "@/store/project";
-import { REMOVE_ALL_AUDIO_ITEM, REGISTER_AUDIO_ITEM } from "@/store/audio";
 import {
   GENERATE_AND_SAVE_ALL_AUDIO,
   IMPORT_FROM_FILE,
@@ -38,7 +37,7 @@ import {
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
-import { AudioItem, SaveResultObject } from "@/store/type";
+import { SaveResultObject } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
@@ -96,25 +95,7 @@ export default defineComponent({
             label: "新規作成",
             shortCut: "Ctrl+N",
             onClick: async () => {
-              if (
-                !(await window.electron.showConfirmDialog({
-                  title: "警告",
-                  message:
-                    "保存されていないプロジェクトの変更は破棄されます。\n" +
-                    "よろしいですか？",
-                }))
-              ) {
-                return;
-              }
-
-              await store.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
-
-              const audioItem: AudioItem = { text: "", characterIndex: 0 };
-              await store.dispatch(REGISTER_AUDIO_ITEM, {
-                audioItem,
-              });
-
-              store.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+              await store.dispatch(CREATE_NEW_PROJECT, {});
             },
           },
           {

@@ -5,6 +5,7 @@ import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 
+export const CREATE_NEW_PROJECT = "NEW_PROJECT";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 export const PROJECT_NAME = "PROJECT_NAME";
@@ -28,6 +29,30 @@ export const projectStore = {
   },
 
   actions: {
+    [CREATE_NEW_PROJECT]: createUILockAction(
+      async (context, { confirm }: { confirm?: boolean }) => {
+        if (
+          confirm !== false &&
+          !(await window.electron.showConfirmDialog({
+            title: "警告",
+            message:
+              "保存されていないプロジェクトの変更は破棄されます。\n" +
+              "よろしいですか？",
+          }))
+        ) {
+          return;
+        }
+
+        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
+
+        const audioItem: AudioItem = { text: "", characterIndex: 0 };
+        await context.dispatch(REGISTER_AUDIO_ITEM, {
+          audioItem,
+        });
+
+        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+      }
+    ),
     [LOAD_PROJECT_FILE]: createUILockAction(
       async (
         context,
