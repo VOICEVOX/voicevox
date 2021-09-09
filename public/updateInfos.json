@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.5.1",
+    "descriptions": ["過去のプロジェクトファイルが読み込めない問題の修正"],
+    "contributors": ["y-chan"]
+  },
+  {
     "version": "0.5.0",
     "descriptions": [
       "キャラクターの立ち絵を表示",

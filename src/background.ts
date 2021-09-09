@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, Encoding } from "./type/preload";
+import { CharacterInfo, SavingSetting } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -43,14 +43,29 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
-  fileEncoding: Encoding;
+  savingSetting: SavingSetting;
 }>({
   schema: {
     useGpu: {
       type: "boolean",
     },
-    fileEncoding: {
-      type: "string",
+    savingSetting: {
+      type: "object",
+      properties: {
+        fileEncoding: { type: "string" },
+        fixedExportEnabled: { type: "boolean" },
+        avoidOverwrite: { type: "boolean" },
+        fixedExportDir: { type: "string" },
+      },
+    },
+  },
+  defaults: {
+    useGpu: false,
+    savingSetting: {
+      fileEncoding: "UTF-8",
+      fixedExportEnabled: false,
+      avoidOverwrite: false,
+      fixedExportDir: "",
     },
   },
 });
@@ -301,14 +316,6 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-ipcMainHandle("FILE_ENCODING", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("fileEncoding", newValue);
-  }
-
-  return store.get("fileEncoding", "UTF-8");
-});
-
 ipcMainHandle("CLOSE_WINDOW", () => {
   app.emit("window-all-closed");
   win.destroy();
@@ -367,6 +374,16 @@ ipcMainHandle(
     })
 );
 
+ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("savingSetting", newData);
+  }
+  return store.get("savingSetting");
+});
+
+ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
+  return fs.existsSync(file);
+});
 ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   if (win.isAlwaysOnTop()) {
     win.setAlwaysOnTop(false);
@@ -410,8 +427,10 @@ app.on("ready", async () => {
   if (isDevelopment) {
     try {
       await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      logError("Vue Devtools failed to install:", e.toString());
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        logError("Vue Devtools failed to install:", e.toString());
+      }
     }
   }
 

@@ -97,7 +97,7 @@ export default defineComponent({
               const result: Array<SaveResultObject> = await store.dispatch(
                 GENERATE_AND_SAVE_ALL_AUDIO,
                 {
-                  encoding: store.state.fileEncoding,
+                  encoding: store.state.savingSetting.fileEncoding,
                 }
               );
 
