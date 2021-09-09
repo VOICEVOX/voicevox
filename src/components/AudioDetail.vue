@@ -270,6 +270,7 @@ export default defineComponent({
         }
       );
 
+      if (result.result === "CANCELED") return;
       if (result.result !== "SUCCESS") {
         let msg = "";
         switch (result.result) {
