@@ -91,9 +91,7 @@
                 :model-value="moraTextByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
-                @update:model-value="
-                  handleChangePronunce($event, accentPhraseIndex)
-                "
+                @save="handleChangePronunce($event, accentPhraseIndex)"
               >
                 <q-input
                   v-model="scope.value"
@@ -359,22 +357,14 @@ export default defineComponent({
       }
     };
 
-    addEventListener("keyup", (event: KeyboardEvent) => {
-      if (event.key === "f") {
-        console.log(accentPhrases);
-      }
-    });
-
     const handleChangePronunce = (newText: string, phraseIndex: number) => {
       let pauseFlag = false;
       newText = newText.replace(",", "、");
-      console.log(newText);
       // if the user append a comma, append all the phrases with a pause after it
       if (newText.slice(-1) == "、") {
         newText += moraTextByPhrase.value[phraseIndex + 1];
         pauseFlag = true;
       }
-      console.log(newText);
       store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
         newText,
