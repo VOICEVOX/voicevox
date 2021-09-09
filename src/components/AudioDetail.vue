@@ -365,7 +365,6 @@ export default defineComponent({
     const handleChangePronounce = (newText: string, phraseIndex: number) => {
       let pauseFlag = false;
       newText = newText.replace(",", "、");
-      // if the user append a comma, append all the phrases with a pause after it
       if (newText.slice(-1) == "、") {
         newText += moraTextByPhrase.value[phraseIndex + 1];
         pauseFlag = true;
