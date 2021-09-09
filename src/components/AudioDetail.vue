@@ -91,13 +91,12 @@
                 :model-value="moraTextByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
-                @update:model-value="handleChangePhrase($event)"
+                @update:model-value="handleChangePronunce($event)"
               >
                 <q-input
                   v-model="scope.value"
                   dense
                   autofocus
-                  autogrow
                   outlined
                   @keyup.enter="scope.set"
                 />
@@ -358,6 +357,10 @@ export default defineComponent({
       }
     };
 
+    const handleChangePronunce = (newPronunce: string) => {
+      console.log(newPronunce);
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -378,6 +381,7 @@ export default defineComponent({
       handleTextClicked,
       moraTextByPhrase,
       handleDevoice,
+      handleChangePronunce,
     };
   },
 });

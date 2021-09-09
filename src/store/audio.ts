@@ -7,7 +7,6 @@ import { AudioItem, EngineState, SaveResultObject, State } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { useFunc } from "ajv/dist/compile/util";
 
 // TODO: 0.5.0マイグレーションに必要
 export const api = new DefaultApi(
@@ -310,6 +309,7 @@ export const audioStore = {
       { audioKey }: { audioKey: string }
     ) => {
       const audioItem = state.audioItems[audioKey];
+      console.log(audioItem.text);
 
       return api
         .accentPhrasesAccentPhrasesPost({
@@ -320,6 +320,18 @@ export const audioStore = {
         .then((accentPhrases) =>
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
+    },
+    [FETCH_ACCENT_PHRASES]: (
+      { state, dispatch },
+      { audioKey, newText }: { audioKey: string; newText: string }
+    ) => {
+      const audioItem = state.audioItems[audioKey];
+      return api.accentPhrasesAccentPhrasesPost({
+        text: newText,
+        speaker: state.characterInfos![audioItem.characterIndex!].metas.speaker,
+      }).then((accentPhrases) => {
+        dispatch()
+      })
     },
     [FETCH_MORA_DATA]({ state, dispatch }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
@@ -505,25 +517,19 @@ export const audioStore = {
       }
     >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
       const query = draft.audioItems[audioKey].query!;
-      console.log(
-        query.accentPhrases[accentPhraseIndex].moras.forEach((mora) => {
-          console.log([mora.consonant, mora.vowel, mora.pitch]);
-        })
-      );
-      if (query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel == "cl")
+      const vowel =
+        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel;
+      if (["i", "I", "u", "U"].indexOf(vowel) == -1) {
         return;
+      }
       if (pitch === undefined) {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = 0;
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-          query.accentPhrases[accentPhraseIndex].moras[
-            moraIndex
-          ].vowel?.toUpperCase();
+          vowel.toUpperCase();
       } else {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-          query.accentPhrases[accentPhraseIndex].moras[
-            moraIndex
-          ].vowel?.toLowerCase();
+          vowel.toLowerCase();
       }
     }),
     [GENERATE_AUDIO]: createUILockAction(
