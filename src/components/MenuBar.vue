@@ -114,7 +114,7 @@ export default defineComponent({
                 audioItem,
               });
 
-              store.commit(SET_PROJECT_FILEPATH, { filePath: "" });
+              store.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
             },
           },
           {
