@@ -112,6 +112,7 @@ export const SET_AUDIO_MORA_DEVOICE = "SET_AUDIO_MORA_DEVOICE";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
 export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
 export const SET_SIGNLE_ACCENT_PHRASE = "SET_SIGNLE_ACCENT_PHRASE";
+export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -617,12 +618,30 @@ export const audioStore = {
         const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
-        filePath ??= await window.electron.showAudioSaveDialog({
-          title: "Save",
-          defaultPath: buildFileName(state, audioKey),
-        });
+
+        if (state.savingSetting.fixedExportEnabled) {
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            buildFileName(state, audioKey)
+          );
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "Save",
+            defaultPath: buildFileName(state, audioKey),
+          });
+        }
+
         if (!filePath) {
           return { result: "CANCELED", path: "" };
+        }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
         }
 
         const blob = await blobPromise;
@@ -676,9 +695,13 @@ export const audioStore = {
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
       ) => {
-        dirPath ??= await window.electron.showOpenDirectoryDialog({
-          title: "Save ALL",
-        });
+        if (state.savingSetting.fixedExportEnabled) {
+          dirPath = state.savingSetting.fixedExportDir;
+        } else {
+          dirPath ??= await window.electron.showOpenDirectoryDialog({
+            title: "Save ALL",
+          });
+        }
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);
@@ -845,6 +868,9 @@ export const audioStore = {
         .restartEngine()
         .then(() => dispatch(START_WAITING_ENGINE))
         .catch(() => dispatch(DETECTED_ENGINE_ERROR));
+    },
+    [CHECK_FILE_EXISTS]({ commit }, { file }: { file: string }) {
+      return window.electron.checkFileExists(file);
     },
   },
 } as StoreOptions<State>;
