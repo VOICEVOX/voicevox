@@ -403,9 +403,12 @@ export const audioStore = typeAsStoreOptions({
           commit(SET_ENGINE_STATE, { engineState: "ERROR" });
       }
     },
-    async [RESTART_ENGINE]({ commit }) {
+    async [RESTART_ENGINE]({ commit, dispatch }) {
       await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
-      window.electron.restartEngine();
+      window.electron
+        .restartEngine()
+        .then(() => dispatch(START_WAITING_ENGINE))
+        .catch(() => dispatch(DETECTED_ENGINE_ERROR));
     },
     [LOAD_CHARACTER]: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();
