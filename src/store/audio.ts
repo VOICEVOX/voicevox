@@ -515,7 +515,7 @@ export const audioStore = typeAsStoreOptions({
       if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
         return audioBlobCache[id];
       } else {
-        return null;
+        return undefined;
       }
     },
     [GENERATE_AUDIO]: createUILockAction(
@@ -535,7 +535,7 @@ export const audioStore = typeAsStoreOptions({
           })
           .catch((e) => {
             window.electron.logError(e);
-            return null;
+            return undefined;
           });
       }
     ),
@@ -552,9 +552,12 @@ export const audioStore = typeAsStoreOptions({
           encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
-        const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
-          audioKey,
-        });
+        const blobPromise: Promise<Blob | undefined> = dispatch(
+          GENERATE_AUDIO,
+          {
+            audioKey,
+          }
+        );
 
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
@@ -658,7 +661,9 @@ export const audioStore = typeAsStoreOptions({
         audioElem.pause();
 
         // 音声用意
-        let blob: Blob | null = await dispatch(GET_AUDIO_CACHE, { audioKey });
+        let blob: Blob | undefined = await dispatch(GET_AUDIO_CACHE, {
+          audioKey,
+        });
         if (!blob) {
           commit(SET_AUDIO_NOW_GENERATING, { audioKey, nowGenerating: true });
           blob = await dispatch(GENERATE_AUDIO, { audioKey });
@@ -671,32 +676,28 @@ export const audioStore = typeAsStoreOptions({
           }
         }
 
-        if (blob !== null) {
-          audioElem.src = URL.createObjectURL(blob);
+        audioElem.src = URL.createObjectURL(blob);
 
-          // 再生終了時にresolveされるPromiseを返す
-          const played = async () => {
-            commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: true });
+        // 再生終了時にresolveされるPromiseを返す
+        const played = async () => {
+          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: true });
+        };
+        audioElem.addEventListener("play", played);
+
+        let paused: () => void;
+        const audioPlayPromise = new Promise<boolean>((resolve) => {
+          paused = () => {
+            resolve(audioElem.ended);
           };
-          audioElem.addEventListener("play", played);
+          audioElem.addEventListener("pause", paused);
+        }).finally(async () => {
+          audioElem.removeEventListener("play", played);
+          audioElem.removeEventListener("pause", paused);
+          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: false });
+        });
 
-          let paused: () => void;
-          const audioPlayPromise = new Promise<boolean>((resolve) => {
-            paused = () => {
-              resolve(audioElem.ended);
-            };
-            audioElem.addEventListener("pause", paused);
-          }).finally(async () => {
-            audioElem.removeEventListener("play", played);
-            audioElem.removeEventListener("pause", paused);
-            commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: false });
-          });
-
-          audioElem.play();
-          return audioPlayPromise;
-        } else {
-          return new Promise((resolve) => resolve(true));
-        }
+        audioElem.play();
+        return audioPlayPromise;
       }
     ),
     [STOP_AUDIO]: (_, { audioKey }: { audioKey: string }) => {
