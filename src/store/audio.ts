@@ -475,10 +475,18 @@ export const audioStore = typeAsStoreOptions({
       { state },
       { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      return api.accentPhrasesAccentPhrasesPost({
-        text: text,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      return api
+        .accentPhrasesAccentPhrasesPost({
+          text: text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          throw error;
+        });
     },
     [FETCH_MORA_DATA]: async (
       { state },
@@ -490,20 +498,36 @@ export const audioStore = typeAsStoreOptions({
       if (accentPhrases.length == 0) {
         return [];
       } else {
-        return await api.moraDataMoraDataPost({
-          accentPhrase: accentPhrases,
-          speaker: state.characterInfos![characterIndex].metas.speaker,
-        });
+        return await api
+          .moraDataMoraDataPost({
+            accentPhrase: accentPhrases,
+            speaker: state.characterInfos![characterIndex].metas.speaker,
+          })
+          .catch((error) => {
+            window.electron.logError(
+              error,
+              `Failed to fetch MoraData for the accentPhrases "${accentPhrases}".`
+            );
+            throw error;
+          });
       }
     },
     [FETCH_AUDIO_QUERY]: (
       { state },
       { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      return api.audioQueryAudioQueryPost({
-        text: text,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      return api
+        .audioQueryAudioQueryPost({
+          text: text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch audio query for text "${text}"`
+          );
+          throw error;
+        });
     },
     [GET_AUDIO_CACHE]: async (
       { state },
@@ -799,10 +823,6 @@ export const audioCommandStore = typeAsStoreOptions({
             characterIndex: characterIndex,
           }
         ).catch((err) => {
-          window.electron.logError(
-            err,
-            `Failed to fetch AccentPhrases for the text "${text}".`
-          );
           return [];
         });
         commit(COMMAND_UPDATE_AUDIO_TEXT, {
@@ -816,10 +836,6 @@ export const audioCommandStore = typeAsStoreOptions({
           text,
           characterIndex,
         }).catch((err) => {
-          window.electron.logError(
-            err,
-            `Failed to fetch audio query for text "${text}"`
-          );
           return undefined;
         });
         commit(COMMAND_UPDATE_AUDIO_TEXT, {
@@ -844,11 +860,6 @@ export const audioCommandStore = typeAsStoreOptions({
             characterIndex,
           }
         ).catch((err) => {
-          window.electron.logError(
-            err,
-            "Failed to fetch of mora pitch.",
-            JSON.stringify(accentPhrases)
-          );
           return accentPhrases;
         });
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
@@ -866,10 +877,6 @@ export const audioCommandStore = typeAsStoreOptions({
             characterIndex: characterIndex,
           }
         ).catch((err) => {
-          window.electron.logError(
-            err,
-            `Failed to fetch AccentPhrases for the text "${text}".`
-          );
           return undefined;
         });
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
@@ -905,11 +912,6 @@ export const audioCommandStore = typeAsStoreOptions({
           FETCH_MORA_DATA,
           { accentPhrases: newAccentPhrases, characterIndex }
         ).catch((err) => {
-          window.electron.logError(
-            err,
-            "Failed to fetch of mora data.",
-            JSON.stringify(newAccentPhrases)
-          );
           return newAccentPhrases;
         });
         commit(COMMAND_CHANGE_ACCENT, {
@@ -948,11 +950,6 @@ export const audioCommandStore = typeAsStoreOptions({
           accentPhrases: newAccentPhrases,
           characterIndex,
         }).catch((err) => {
-          window.electron.logError(
-            err,
-            "Failed to fetch of mora pitch.",
-            JSON.stringify(newAccentPhrases)
-          );
           return newAccentPhrases;
         });
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
@@ -1035,10 +1032,6 @@ export const audioCommandStore = typeAsStoreOptions({
                 text,
                 characterIndex,
               }).catch((err) => {
-                window.electron.logError(
-                  err,
-                  "Failed to fetch AudioQuery while loading a text file."
-                );
                 return undefined;
               })
             : undefined;
@@ -1083,10 +1076,6 @@ export const audioCommandStore = typeAsStoreOptions({
                 text,
                 characterIndex,
               }).catch((err) => {
-                window.electron.logError(
-                  err,
-                  "Failed to fetch AudioQuery while pasting text"
-                );
                 return undefined;
               })
             : undefined;
