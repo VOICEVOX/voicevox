@@ -108,7 +108,7 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const SET_AUDIO_MORA_DEVOICE = "SET_AUDIO_MORA_DEVOICE";
+export const SET_AUDIO_MORA_VOICING = "SET_AUDIO_MORA_VOICING";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
 export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
 export const SET_SIGNLE_ACCENT_PHRASE = "SET_SIGNLE_ACCENT_PHRASE";
@@ -556,7 +556,7 @@ export const audioStore = {
       const query = draft.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     }),
-    [SET_AUDIO_MORA_DEVOICE]: createCommandAction<
+    [SET_AUDIO_MORA_VOICING]: createCommandAction<
       State,
       {
         audioKey: string;

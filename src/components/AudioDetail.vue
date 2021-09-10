@@ -81,9 +81,31 @@
             :key="moraIndex"
           >
             <div
-              class="text-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
-              @click="handleDevoice(accentPhraseIndex, moraIndex)"
+              :class="
+                !uiLocked
+                  ? selectedDetail === 'accent'
+                    ? hoverState.get(
+                        activeAudioKey + '-' + accentPhraseIndex.toString()
+                      )
+                      ? 'text-cell-hovered'
+                      : 'text-cell'
+                    : hoverState.get(
+                        activeAudioKey +
+                          '-' +
+                          accentPhraseIndex.toString() +
+                          '-' +
+                          moraIndex.toString()
+                      )
+                    ? 'text-cell-hovered'
+                    : 'text-cell'
+                  : 'text-cell'
+              "
+              :style="{
+                'grid-column': `${moraIndex * 2 + 1} / span 1`,
+              }"
+              @click="handleVoicing(accentPhraseIndex, moraIndex)"
+              @mouseover="handleHoverText(accentPhraseIndex, moraIndex, true)"
+              @mouseleave="handleHoverText(accentPhraseIndex, moraIndex, false)"
             >
               {{ mora.text }}
               <q-popup-edit
@@ -143,7 +165,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, reactive, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -153,7 +175,7 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
-  SET_AUDIO_MORA_DEVOICE,
+  SET_AUDIO_MORA_VOICING,
   FETCH_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
@@ -182,10 +204,16 @@ export default defineComponent({
     });
 
     Mousetrap.bind("1", () => {
+      if (selectedDetail.value == "intonation") {
+        hoverState.clear();
+      }
       selectedDetail.value = "accent";
     });
 
     Mousetrap.bind("2", () => {
+      if (selectedDetail.value == "accent") {
+        hoverState.clear();
+      }
       selectedDetail.value = "intonation";
     });
 
@@ -333,7 +361,7 @@ export default defineComponent({
       return pitchHistory.get(key) || 5;
     };
 
-    const handleDevoice = (phraseIndex: number, moraIndex: number) => {
+    const handleVoicing = (phraseIndex: number, moraIndex: number) => {
       if (selectedDetail.value === "intonation" && !uiLocked.value) {
         if (accentPhrases.value !== undefined) {
           const key =
@@ -344,7 +372,7 @@ export default defineComponent({
             moraIndex.toString();
           const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
           if (pitch == 0) {
-            store.dispatch(SET_AUDIO_MORA_DEVOICE, {
+            store.dispatch(SET_AUDIO_MORA_VOICING, {
               audioKey: activeAudioKey.value!,
               accentPhraseIndex: phraseIndex,
               moraIndex,
@@ -352,7 +380,7 @@ export default defineComponent({
             });
           } else {
             pitchHistory.set(key, pitch);
-            store.dispatch(SET_AUDIO_MORA_DEVOICE, {
+            store.dispatch(SET_AUDIO_MORA_VOICING, {
               audioKey: activeAudioKey.value!,
               accentPhraseIndex: phraseIndex,
               moraIndex,
@@ -377,6 +405,34 @@ export default defineComponent({
       });
     };
 
+    const hoverState = reactive(new Map<string, boolean>());
+
+    const handleHoverText = (
+      phraseIndex: number,
+      moraIndex: number,
+      isOver: boolean
+    ) => {
+      if (selectedDetail.value == "accent") {
+        hoverState.set(
+          activeAudioKey.value + "-" + phraseIndex.toString(),
+          isOver
+        );
+      } else if (
+        ["U", "u", "I", "i"].indexOf(
+          accentPhrases.value![phraseIndex].moras[moraIndex].vowel
+        ) != -1
+      ) {
+        hoverState.set(
+          activeAudioKey.value +
+            "-" +
+            phraseIndex.toString() +
+            "-" +
+            moraIndex.toString(),
+          isOver
+        );
+      }
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -395,8 +451,10 @@ export default defineComponent({
       nowGenerating,
       nowPlayingContinuously,
       moraTextByPhrase,
-      handleDevoice,
+      handleVoicing,
       handleChangePronounce,
+      handleHoverText,
+      hoverState,
     };
   },
 });
@@ -404,6 +462,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use '@/styles' as global;
+@import "~quasar/src/css/variables";
 
 $pitch-label-height: 24px;
 
@@ -459,6 +518,14 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
+          color: global.$secondary;
+        }
+        &.text-cell-hovered {
+          min-width: 30px;
+          max-width: 30px;
+          grid-row-start: 3;
+          text-align: center;
+          color: global.$primary;
         }
         &.splitter-cell {
           min-width: 10px;
