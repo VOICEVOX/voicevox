@@ -330,9 +330,9 @@ export const audioStore = typeAsStoreOptions({
     ) => {
       const query = state.audioItems[audioKey].query!;
       const mora = query.accentPhrases[accentPhraseIndex].moras[moraIndex];
-      mora.consonantLength = consonantLength ?? mora.consonantLength;
-      mora.vowelLength = vowelLength ?? mora.vowelLength;
-      mora.pitch = pitch ?? mora.pitch;
+      if (consonantLength !== undefined) mora.consonantLength = consonantLength;
+      if (vowelLength !== undefined) mora.vowelLength = vowelLength;
+      if (pitch !== undefined) mora.pitch = pitch;
     },
     [SET_ENGINE_STATE](state, { engineState }: { engineState: EngineState }) {
       state.engineState = engineState;
