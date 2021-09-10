@@ -789,18 +789,18 @@ export const COMMAND_PUT_TEXTS = "COMMAND_PUT_TEXTS";
 export const audioCommandStore = typeAsStoreOptions({
   actions: {
     [COMMAND_REGISTER_AUDIO_ITEM]: async (
-      { state, commit, dispatch },
+      { commit, dispatch },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey: string | undefined }
     ) => {
       const audioKey = await dispatch(ISSUE_AUDIO_KEY);
-      const index =
-        prevAudioKey !== undefined
-          ? state.audioKeys.indexOf(prevAudioKey) + 1
-          : state.audioKeys.length;
-      commit(COMMAND_REGISTER_AUDIO_ITEM, { audioItem, audioKey, index });
+      commit(COMMAND_REGISTER_AUDIO_ITEM, {
+        audioItem,
+        audioKey,
+        prevAudioKey,
+      });
       return audioKey;
     },
     [COMMAND_UNREGISTER_AUDIO_ITEM]: async (
@@ -1088,9 +1088,21 @@ export const audioCommandStore = typeAsStoreOptions({
   mutations: commandMutationsCreator({
     [COMMAND_REGISTER_AUDIO_ITEM]: (
       draft,
-      payload: { audioItem: AudioItem; audioKey: string; index: number }
+      {
+        audioItem,
+        audioKey,
+        prevAudioKey,
+      }: { audioItem: AudioItem; audioKey: string; prevAudioKey: string }
     ) => {
-      audioStore.mutations[INSERT_AUDIO_ITEM](draft, payload);
+      const index =
+        prevAudioKey !== undefined
+          ? draft.audioKeys.indexOf(prevAudioKey) + 1
+          : draft.audioKeys.length;
+      audioStore.mutations[INSERT_AUDIO_ITEM](draft, {
+        audioItem,
+        audioKey,
+        index,
+      });
     },
     [COMMAND_UNREGISTER_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
       audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
