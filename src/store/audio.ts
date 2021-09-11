@@ -815,35 +815,40 @@ export const audioCommandStore = typeAsStoreOptions({
     ) => {
       const characterIndex = state.audioItems[audioKey].characterIndex ?? 0;
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
-      if (query !== undefined) {
-        const accentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_ACCENT_PHRASES,
-          {
-            text: text,
-            characterIndex: characterIndex,
-          }
-        ).catch((err) => {
-          return [];
-        });
+      try {
+        if (query !== undefined) {
+          const accentPhrases: AccentPhrase[] = await dispatch(
+            FETCH_ACCENT_PHRASES,
+            {
+              text: text,
+              characterIndex: characterIndex,
+            }
+          );
+          commit(COMMAND_UPDATE_AUDIO_TEXT, {
+            audioKey,
+            text,
+            update: "AccentPhrases",
+            accentPhrases,
+          });
+        } else {
+          const newAudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+            text,
+            characterIndex,
+          });
+          commit(COMMAND_UPDATE_AUDIO_TEXT, {
+            audioKey,
+            text,
+            update: "AudioQuery",
+            query: newAudioQuery,
+          });
+        }
+      } catch (error) {
         commit(COMMAND_UPDATE_AUDIO_TEXT, {
           audioKey,
           text,
-          haveAudioQuery: true,
-          accentPhrases,
+          update: "Text",
         });
-      } else {
-        const newAudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-          text,
-          characterIndex,
-        }).catch((err) => {
-          return undefined;
-        });
-        commit(COMMAND_UPDATE_AUDIO_TEXT, {
-          audioKey,
-          text,
-          haveAudioQuery: false,
-          query: newAudioQuery,
-        });
+        throw error;
       }
     },
     [COMMAND_CHANGE_CHARACTER_INDEX]: async (
@@ -851,40 +856,45 @@ export const audioCommandStore = typeAsStoreOptions({
       { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
     ) => {
       const query = state.audioItems[audioKey].query;
-      if (query !== undefined) {
-        const accentPhrases = query.accentPhrases;
-        const newAccentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_MORA_DATA,
-          {
-            accentPhrases,
-            characterIndex,
-          }
-        ).catch((err) => {
-          return accentPhrases;
-        });
-        commit(COMMAND_CHANGE_CHARACTER_INDEX, {
-          characterIndex: characterIndex,
-          audioKey: audioKey,
-          haveAudioQuery: true,
-          accentPhrases: newAccentPhrases,
-        });
-      } else {
-        const text = state.audioItems[audioKey].text;
-        const query: AudioQuery | undefined = await dispatch(
-          FETCH_AUDIO_QUERY,
-          {
-            text: text,
+      try {
+        if (query !== undefined) {
+          const accentPhrases = query.accentPhrases;
+          const newAccentPhrases: AccentPhrase[] = await dispatch(
+            FETCH_MORA_DATA,
+            {
+              accentPhrases,
+              characterIndex,
+            }
+          );
+          commit(COMMAND_CHANGE_CHARACTER_INDEX, {
             characterIndex: characterIndex,
-          }
-        ).catch((err) => {
-          return undefined;
-        });
+            audioKey: audioKey,
+            update: "AccentPhrases",
+            accentPhrases: newAccentPhrases,
+          });
+        } else {
+          const text = state.audioItems[audioKey].text;
+          const query: AudioQuery | undefined = await dispatch(
+            FETCH_AUDIO_QUERY,
+            {
+              text: text,
+              characterIndex: characterIndex,
+            }
+          );
+          commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+            characterIndex,
+            audioKey,
+            update: "AudioQuery",
+            query,
+          });
+        }
+      } catch (error) {
         commit(COMMAND_CHANGE_CHARACTER_INDEX, {
           characterIndex,
           audioKey,
-          haveAudioQuery: false,
-          query,
+          update: "CharacterIndex",
         });
+        throw error;
       }
     },
     [COMMAND_CHANGE_ACCENT]: async (
@@ -906,18 +916,24 @@ export const audioCommandStore = typeAsStoreOptions({
         );
         newAccentPhrases[accentPhraseIndex].accent = accent;
 
-        const characterIndex: number =
-          state.audioItems[audioKey].characterIndex ?? 0;
-        const resultAccentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_MORA_DATA,
-          { accentPhrases: newAccentPhrases, characterIndex }
-        ).catch((err) => {
-          return newAccentPhrases;
-        });
-        commit(COMMAND_CHANGE_ACCENT, {
-          audioKey,
-          accentPhrases: resultAccentPhrases,
-        });
+        try {
+          const characterIndex: number =
+            state.audioItems[audioKey].characterIndex ?? 0;
+          const resultAccentPhrases: AccentPhrase[] = await dispatch(
+            FETCH_MORA_DATA,
+            { accentPhrases: newAccentPhrases, characterIndex }
+          );
+          commit(COMMAND_CHANGE_ACCENT, {
+            audioKey,
+            accentPhrases: resultAccentPhrases,
+          });
+        } catch (error) {
+          commit(COMMAND_CHANGE_ACCENT, {
+            audioKey,
+            accentPhrases: newAccentPhrases,
+          });
+          throw error;
+        }
       }
     },
     [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: async (
@@ -946,16 +962,22 @@ export const audioCommandStore = typeAsStoreOptions({
           moraIndex,
           isPause,
         });
-        const resultAccentPhrases = await dispatch(FETCH_MORA_DATA, {
-          accentPhrases: newAccentPhrases,
-          characterIndex,
-        }).catch((err) => {
-          return newAccentPhrases;
-        });
-        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
-          audioKey,
-          accentPhrases: resultAccentPhrases,
-        });
+        try {
+          const resultAccentPhrases = await dispatch(FETCH_MORA_DATA, {
+            accentPhrases: newAccentPhrases,
+            characterIndex,
+          });
+          commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+            audioKey,
+            accentPhrases: resultAccentPhrases,
+          });
+        } catch (error) {
+          commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+            audioKey,
+            accentPhrases: newAccentPhrases,
+          });
+          throw error;
+        }
       }
     },
     [COMMAND_SET_AUDIO_INTONATION_SCALE]: (
@@ -1024,21 +1046,28 @@ export const audioCommandStore = typeAsStoreOptions({
         );
 
         const isEngineReady: boolean = getters[IS_ENGINE_READY]();
+        const errors: [string, Error][] = [];
         for (const audioItem of audioItems) {
-          const text: string = audioItem.text;
-          const characterIndex: number = audioItem.characterIndex ?? 0;
-          const query: AudioQuery | undefined = isEngineReady
-            ? await dispatch(FETCH_AUDIO_QUERY, {
-                text,
-                characterIndex,
-              }).catch((err) => {
-                return undefined;
-              })
-            : undefined;
-          audioItem.query = query;
+          try {
+            const text: string = audioItem.text;
+            const characterIndex: number = audioItem.characterIndex ?? 0;
+            const query: AudioQuery | undefined = isEngineReady
+              ? await dispatch(FETCH_AUDIO_QUERY, {
+                  text,
+                  characterIndex,
+                })
+              : undefined;
+            audioItem.query = query;
+          } catch (error) {
+            if (error instanceof Error)
+              errors.splice(errors.length, 0, [audioItem.text, error]);
+          }
         }
 
         commit(COMMAND_IMPORT_FROM_FILE, { audioItems, audioKeys });
+        if (errors.length != 0) {
+          throw errors;
+        }
       }
     ),
     [COMMAND_PUT_TEXTS]: createUILockAction(
@@ -1068,20 +1097,29 @@ export const audioCommandStore = typeAsStoreOptions({
         );
 
         const isEngineReady: boolean = getters[IS_ENGINE_READY]();
+        const errors: [string, Error][] = [];
+
         for (const audioItem of audioItems) {
-          const text: string = audioItem.text;
-          const characterIndex: number = audioItem.characterIndex ?? 0;
-          const query: AudioQuery | undefined = isEngineReady
-            ? await dispatch(FETCH_AUDIO_QUERY, {
-                text,
-                characterIndex,
-              }).catch((err) => {
-                return undefined;
-              })
-            : undefined;
-          audioItem.query = query;
+          try {
+            const text: string = audioItem.text;
+            const characterIndex: number = audioItem.characterIndex ?? 0;
+            const query: AudioQuery | undefined = isEngineReady
+              ? await dispatch(FETCH_AUDIO_QUERY, {
+                  text,
+                  characterIndex,
+                })
+              : undefined;
+            audioItem.query = query;
+          } catch (error: unknown) {
+            if (error instanceof Error) {
+              errors.splice(errors.length, 0, [audioItem.text, error]);
+            }
+          }
         }
         commit(COMMAND_PUT_TEXTS, { audioItems, audioKeys, prevAudioKey });
+        if (errors.length != 0) {
+          throw errors;
+        }
       }
     ),
   },
@@ -1111,12 +1149,15 @@ export const audioCommandStore = typeAsStoreOptions({
       draft,
       payload: { audioKey: string; text: string } & (
         | {
-            haveAudioQuery: true;
+            update: "Text";
+          }
+        | {
+            update: "AccentPhrases";
             accentPhrases: AccentPhrase[];
           }
         | {
-            haveAudioQuery: false;
-            query: AudioQuery | undefined;
+            update: "AudioQuery";
+            query: AudioQuery;
           }
       )
     ) => {
@@ -1124,12 +1165,12 @@ export const audioCommandStore = typeAsStoreOptions({
         audioKey: payload.audioKey,
         text: payload.text,
       });
-      if (payload.haveAudioQuery) {
+      if (payload.update == "AccentPhrases") {
         audioStore.mutations[SET_ACCENT_PHRASES](draft, {
           audioKey: payload.audioKey,
           accentPhrases: payload.accentPhrases,
         });
-      } else if (payload.query !== undefined) {
+      } else if (payload.update == "AudioQuery") {
         audioStore.mutations[SET_AUDIO_QUERY](draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
@@ -1140,11 +1181,14 @@ export const audioCommandStore = typeAsStoreOptions({
       draft,
       payload: { characterIndex: number; audioKey: string } & (
         | {
-            haveAudioQuery: true;
+            update: "CharacterIndex";
+          }
+        | {
+            update: "AccentPhrases";
             accentPhrases: AccentPhrase[];
           }
         | {
-            haveAudioQuery: false;
+            update: "AudioQuery";
             query: AudioQuery;
           }
       )
@@ -1153,12 +1197,12 @@ export const audioCommandStore = typeAsStoreOptions({
         audioKey: payload.audioKey,
         characterIndex: payload.characterIndex,
       });
-      if (payload.haveAudioQuery) {
+      if (payload.update == "AccentPhrases") {
         audioStore.mutations[SET_ACCENT_PHRASES](draft, {
           audioKey: payload.audioKey,
           accentPhrases: payload.accentPhrases,
         });
-      } else {
+      } else if (payload.update == "AudioQuery") {
         audioStore.mutations[SET_AUDIO_QUERY](draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
