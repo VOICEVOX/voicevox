@@ -38,3 +38,6 @@ data/
 
 # release
 electron-builder.yml
+
+# voicevox engine for gitpod
+voicevox_engine/

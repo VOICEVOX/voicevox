@@ -1,0 +1,7 @@
+image:
+  file: .gitpod.dockerfile
+ports:
+  - port: 6080
+    onOpen: open-preview
+tasks:
+  - init: sh scripts/gitpod_init.sh
