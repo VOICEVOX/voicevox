@@ -36,12 +36,13 @@
       hide-bottom-space
       class="full-width"
       :disable="uiLocked"
-      :error="textBuffer.length >= 80"
-      v-model="textBuffer"
-      @change="willRemove || pushAudioText()"
-      @keydown.prevent.enter.exact="willRemove || pushAudioText()"
+      :error="audioItem.text.length >= 80"
+      debounce="500"
+      :model-value="audioItem.text"
+      @update:model-value="setAudioText"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
+      @keydown.prevent.enter.exact="preventDefault"
       @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
@@ -68,7 +69,7 @@
 </template>
 
 <script lang="ts">
-import { computed, watch, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   GENERATE_AND_SAVE_AUDIO,
@@ -121,24 +122,6 @@ export default defineComponent({
     const characterIconUrl = computed(() =>
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
-
-    const textBuffer = ref(audioItem.value.text);
-    watch(
-      () => store.state.audioItems[props.audioKey]?.text,
-      () => {
-        const item = store.state.audioItems[props.audioKey];
-        if (item != undefined) {
-          textBuffer.value = item.text;
-        }
-      }
-    );
-
-    const pushAudioText = async () => {
-      const stateText = audioItem.value.text;
-      if (stateText !== textBuffer.value) {
-        await setAudioText(textBuffer.value);
-      }
-    };
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
@@ -282,6 +265,10 @@ export default defineComponent({
       textfield.value.focus();
     };
 
+    const preventDefault = (event: Event) => {
+      event.preventDefault();
+    };
+
     // キャラクター選択
     const isOpenedCharacterList = ref(false);
 
@@ -299,8 +286,6 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
-      textBuffer,
-      pushAudioText,
       setAudioText,
       changeCharacterIndex,
       setActiveAudioKey,
@@ -318,6 +303,7 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
+      preventDefault,
       isOpenedCharacterList,
       getCharacterIconUrl,
     };
