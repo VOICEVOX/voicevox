@@ -384,7 +384,10 @@ export default defineComponent({
     ) => {
       let pauseFlag = false;
       newPronunciation = newPronunciation.replace(",", "、");
-      if (newPronunciation.slice(-1) == "、") {
+      if (
+        newPronunciation.slice(-1) == "、" &&
+        accentPhrases.value!.length - 1 != phraseIndex
+      ) {
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         pauseFlag = true;
       }
