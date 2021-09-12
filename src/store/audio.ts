@@ -506,7 +506,9 @@ export const audioStore = typeAsStoreOptions({
           .catch((error) => {
             window.electron.logError(
               error,
-              `Failed to fetch MoraData for the accentPhrases "${accentPhrases}".`
+              `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
+                accentPhrases
+              )}".`
             );
             throw error;
           });
