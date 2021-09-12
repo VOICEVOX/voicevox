@@ -82,22 +82,10 @@
           >
             <div
               :class="
-                !uiLocked
-                  ? selectedDetail === 'accent'
-                    ? hoverState.get(
-                        activeAudioKey + '-' + accentPhraseIndex.toString()
-                      )
-                      ? 'text-cell-hovered'
-                      : 'text-cell'
-                    : hoverState.get(
-                        activeAudioKey +
-                          '-' +
-                          accentPhraseIndex.toString() +
-                          '-' +
-                          moraIndex.toString()
-                      )
-                    ? 'text-cell-hovered'
-                    : 'text-cell'
+                !uiLocked &&
+                (accentPhraseIndex == hoveredPhraseIndex ||
+                  accentPhraseIndex * 100 + moraIndex == hoveredMoraIndex)
+                  ? 'text-cell-hovered'
                   : 'text-cell'
               "
               :style="{
@@ -110,7 +98,7 @@
               {{ mora.text }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
-                :model-value="moraTextByPhrase[accentPhraseIndex]"
+                :model-value="pronunciationByPhrase[accentPhraseIndex]"
                 auto-save
                 v-slot="scope"
                 @save="handleChangePronounce($event, accentPhraseIndex)"
@@ -118,6 +106,10 @@
                 <q-input
                   v-model="scope.value"
                   dense
+                  :input-style="{
+                    width: `${scope.value.length + 1}em`,
+                    minWidth: '100px',
+                  }"
                   autofocus
                   outlined
                   @keyup.enter="scope.set"
@@ -204,16 +196,12 @@ export default defineComponent({
     });
 
     Mousetrap.bind("1", () => {
-      if (selectedDetail.value == "intonation") {
-        hoverState.clear();
-      }
+      hoveredMoraIndex.value = -1;
       selectedDetail.value = "accent";
     });
 
     Mousetrap.bind("2", () => {
-      if (selectedDetail.value == "accent") {
-        hoverState.clear();
-      }
+      hoveredPhraseIndex.value = -1;
       selectedDetail.value = "intonation";
     });
 
@@ -340,7 +328,7 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const moraTextByPhrase = computed(() => {
+    const pronunciationByPhrase = computed(() => {
       let textArray: Array<string> = [];
       accentPhrases.value?.forEach((accentPhrase) => {
         let textString = "";
@@ -390,46 +378,48 @@ export default defineComponent({
       }
     };
 
-    const handleChangePronounce = (newText: string, phraseIndex: number) => {
+    const handleChangePronounce = (
+      newPronunciation: string,
+      phraseIndex: number
+    ) => {
       let pauseFlag = false;
-      newText = newText.replace(",", "、");
-      if (newText.slice(-1) == "、") {
-        newText += moraTextByPhrase.value[phraseIndex + 1];
+      newPronunciation = newPronunciation.replace(",", "、");
+      if (newPronunciation.slice(-1) == "、") {
+        newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         pauseFlag = true;
       }
       store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
-        newText,
+        newPronunciation,
         accentPhraseIndex: phraseIndex,
         pauseFlag,
       });
     };
 
-    const hoverState = reactive(new Map<string, boolean>());
+    const hoveredPhraseIndex = ref(-1);
+    const hoveredMoraIndex = ref(-1);
 
     const handleHoverText = (
       phraseIndex: number,
       moraIndex: number,
       isOver: boolean
     ) => {
-      if (selectedDetail.value == "accent") {
-        hoverState.set(
-          activeAudioKey.value + "-" + phraseIndex.toString(),
-          isOver
-        );
-      } else if (
-        ["U", "u", "I", "i"].indexOf(
-          accentPhrases.value![phraseIndex].moras[moraIndex].vowel
-        ) != -1
-      ) {
-        hoverState.set(
-          activeAudioKey.value +
-            "-" +
-            phraseIndex.toString() +
-            "-" +
-            moraIndex.toString(),
-          isOver
-        );
+      if (isOver) {
+        if (selectedDetail.value == "accent") {
+          hoveredPhraseIndex.value = phraseIndex;
+        } else if (
+          ["U", "u", "I", "i"].indexOf(
+            accentPhrases.value![phraseIndex].moras[moraIndex].vowel
+          ) != -1
+        ) {
+          hoveredMoraIndex.value = phraseIndex * 100 + moraIndex;
+        }
+      } else {
+        if (selectedDetail.value == "accent") {
+          hoveredPhraseIndex.value = -1;
+        } else {
+          hoveredMoraIndex.value = -1;
+        }
       }
     };
 
@@ -450,11 +440,12 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
-      moraTextByPhrase,
+      pronunciationByPhrase,
       handleVoicing,
       handleChangePronounce,
       handleHoverText,
-      hoverState,
+      hoveredPhraseIndex,
+      hoveredMoraIndex,
     };
   },
 });
@@ -519,13 +510,15 @@ $pitch-label-height: 24px;
           grid-row-start: 3;
           text-align: center;
           color: global.$secondary;
+          transition: color 0.5s;
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$primary;
+          color: $teal;
+          transition: color 0.5s;
         }
         &.splitter-cell {
           min-width: 10px;

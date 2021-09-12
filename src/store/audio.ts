@@ -356,12 +356,12 @@ export const audioStore = {
       { state, dispatch },
       {
         audioKey,
-        newText,
+        newPronunciation,
         accentPhraseIndex,
         pauseFlag,
       }: {
         audioKey: string;
-        newText: string;
+        newPronunciation: string;
         accentPhraseIndex: number;
         pauseFlag: boolean;
       }
@@ -369,7 +369,7 @@ export const audioStore = {
       const audioItem = state.audioItems[audioKey];
       return api
         .accentPhrasesAccentPhrasesPost({
-          text: newText,
+          text: newPronunciation,
           speaker:
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
