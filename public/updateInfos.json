@@ -2,7 +2,7 @@
   {
     "version": "0.5.2",
     "descriptions": ["日本語が含まれるパスで起動しない問題の修正"],
-    "contributors": [""]
+    "contributors": []
   },
   {
     "version": "0.5.1",
