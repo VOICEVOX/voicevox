@@ -1,14 +1,9 @@
-import {
-  enablePatches,
-  enableMapSet,
-  setAutoFreeze,
-  produceWithPatches,
-  Patch,
-  Draft,
-} from "immer";
+import { Immer, enablePatches, enableMapSet, Patch, Draft } from "immer";
 enablePatches();
 enableMapSet();
-setAutoFreeze(false);
+
+const immer = new Immer();
+immer.setAutoFreeze(false);
 
 import { Store, ActionContext, StoreOptions } from "vuex";
 
@@ -193,7 +188,7 @@ const recordOperations =
     recipe: PayloadRecipe<S, P>
   ) =>
   (state: S, payload: P): Command => {
-    const [_, doPatches, undoPatches] = produceWithPatches(
+    const [_, doPatches, undoPatches] = immer.produceWithPatches(
       // Taking snapshots has negative effects on performance.
       // This approach may cause a bottleneck.
       JSON.parse(JSON.stringify(state)) as State,
