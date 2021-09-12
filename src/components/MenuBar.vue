@@ -92,7 +92,7 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "新規作成",
+            label: "新規プロジェクト",
             shortCut: "Ctrl+N",
             onClick: async () => {
               await store.dispatch(CREATE_NEW_PROJECT, {});
