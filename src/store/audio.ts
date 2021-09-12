@@ -160,7 +160,7 @@ export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
-export const ISSUE_AUDIO_KEY = "ISSUE_AUDIO_KEY";
+export const GENERATE_AUDIO_KEY = "GENERATE_AUDIO_KEY";
 export const DISPOSE_AUDIO_KEY = "DISPOSE_AUDIO_KEY";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const UNREGISER_AUDIO_ITEM = "UNREGISER_AUDIO_ITEM";
@@ -435,7 +435,7 @@ export const audioStore = typeAsStoreOptions({
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey: string | undefined }
     ) => {
-      const audioKey = await dispatch(ISSUE_AUDIO_KEY);
+      const audioKey = await dispatch(GENERATE_AUDIO_KEY);
       const index =
         prevAudioKey !== undefined
           ? state.audioKeys.indexOf(prevAudioKey) + 1
@@ -463,7 +463,7 @@ export const audioStore = typeAsStoreOptions({
         query: undefined,
       };
     },
-    [ISSUE_AUDIO_KEY]: () => {
+    [GENERATE_AUDIO_KEY]: () => {
       const audioKey = uuidv4();
       audioElements[audioKey] = new Audio();
       return audioKey;
@@ -797,7 +797,7 @@ export const audioCommandStore = typeAsStoreOptions({
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey: string | undefined }
     ) => {
-      const audioKey = await dispatch(ISSUE_AUDIO_KEY);
+      const audioKey = await dispatch(GENERATE_AUDIO_KEY);
       commit(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         audioKey,
@@ -1043,7 +1043,7 @@ export const audioCommandStore = typeAsStoreOptions({
 
         const audioKeys = await Promise.all(
           audioItems.map(
-            async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
+            async () => (await dispatch(GENERATE_AUDIO_KEY)) as string
           )
         );
 
@@ -1094,7 +1094,7 @@ export const audioCommandStore = typeAsStoreOptions({
           }));
         const audioKeys = await Promise.all(
           audioItems.map(
-            async () => (await dispatch(ISSUE_AUDIO_KEY)) as string
+            async () => (await dispatch(GENERATE_AUDIO_KEY)) as string
           )
         );
 
