@@ -108,7 +108,7 @@
                   dense
                   :input-style="{
                     width: `${scope.value.length + 1}em`,
-                    minWidth: '100px',
+                    minWidth: '50px',
                   }"
                   autofocus
                   outlined
@@ -346,7 +346,7 @@ export default defineComponent({
     const pitchHistory = new Map<string, number>();
 
     const getPitchHistory = (key: string) => {
-      return pitchHistory.get(key) || 5;
+      return pitchHistory.get(key) || -1;
     };
 
     const handleVoicing = (phraseIndex: number, moraIndex: number) => {

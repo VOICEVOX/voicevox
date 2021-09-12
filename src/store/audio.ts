@@ -576,6 +576,16 @@ export const audioStore = {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
           vowel.toUpperCase();
       } else {
+        // -1 means there's no record in pitch history, using adjacent moras
+        if (pitch == -1) {
+          const pitchLater =
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1].pitch;
+          const pitchFormer =
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch;
+          pitch = pitchLater ? pitchLater : pitchFormer;
+          // if it's alone, set it to 6
+          if (pitch === undefined) pitch = 6;
+        }
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
           vowel.toLowerCase();
