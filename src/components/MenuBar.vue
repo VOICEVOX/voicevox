@@ -27,6 +27,7 @@ import {
   SAVE_PROJECT_FILE,
   LOAD_PROJECT_FILE,
   PROJECT_NAME,
+  CREATE_NEW_PROJECT,
 } from "@/store/project";
 import {
   GENERATE_AND_SAVE_ALL_AUDIO,
@@ -89,6 +90,14 @@ export default defineComponent({
         type: "root",
         label: "ファイル",
         subMenu: [
+          {
+            type: "button",
+            label: "新規プロジェクト",
+            shortCut: "Ctrl+N",
+            onClick: async () => {
+              await store.dispatch(CREATE_NEW_PROJECT, {});
+            },
+          },
           {
             type: "button",
             label: "音声書き出し",
