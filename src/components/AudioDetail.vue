@@ -343,10 +343,10 @@ export default defineComponent({
       return textArray;
     });
 
-    const pitchHistory = new Map<string, number>();
+    const pitchHistory = new Map<string, Map<string, number>>();
 
     const getPitchHistory = (key: string) => {
-      return pitchHistory.get(key) || -1;
+      return pitchHistory.get(key) || undefined;
     };
 
     const handleVoicing = (phraseIndex: number, moraIndex: number) => {
@@ -359,6 +359,7 @@ export default defineComponent({
             "-" +
             moraIndex.toString();
           const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
+          console.log(key);
           if (pitch == 0) {
             store.dispatch(SET_AUDIO_MORA_VOICING, {
               audioKey: activeAudioKey.value!,
@@ -372,6 +373,7 @@ export default defineComponent({
               audioKey: activeAudioKey.value!,
               accentPhraseIndex: phraseIndex,
               moraIndex,
+              pitch: 0,
             });
           }
         }
@@ -382,20 +384,20 @@ export default defineComponent({
       newPronunciation: string,
       phraseIndex: number
     ) => {
-      let pauseFlag = false;
+      let popUntilPause = false;
       newPronunciation = newPronunciation.replace(",", "、");
       if (
         newPronunciation.slice(-1) == "、" &&
         accentPhrases.value!.length - 1 != phraseIndex
       ) {
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
-        pauseFlag = true;
+        popUntilPause = true;
       }
       store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
-        pauseFlag,
+        popUntilPause,
       });
     };
 

@@ -306,15 +306,15 @@ export const audioStore = {
           audioKey,
           accentPhraseIndex,
           accentPhrases,
-          pauseFlag,
+          popUntilPause,
         }: {
           audioKey: string;
           accentPhraseIndex: number;
           accentPhrases: AccentPhrase[];
-          pauseFlag: boolean;
+          popUntilPause: boolean;
         }
       ) => {
-        if (pauseFlag) {
+        if (popUntilPause) {
           while (
             accentPhrases[accentPhrases.length - 1].pauseMora === undefined
           ) {
@@ -358,12 +358,12 @@ export const audioStore = {
         audioKey,
         newPronunciation,
         accentPhraseIndex,
-        pauseFlag,
+        popUntilPause,
       }: {
         audioKey: string;
         newPronunciation: string;
         accentPhraseIndex: number;
-        pauseFlag: boolean;
+        popUntilPause: boolean;
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
@@ -378,7 +378,7 @@ export const audioStore = {
             audioKey: audioKey,
             accentPhraseIndex,
             accentPhrases,
-            pauseFlag,
+            popUntilPause,
           });
         });
     },
@@ -562,7 +562,7 @@ export const audioStore = {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch?: number;
+        pitch?: number | undefined;
       }
     >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
       const query = draft.audioItems[audioKey].query!;
@@ -572,29 +572,13 @@ export const audioStore = {
         return;
       }
       if (pitch === undefined) {
-        query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = 0;
+        pitch = 5.5;
+      }
+      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+      if (pitch == 0) {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
           vowel.toUpperCase();
       } else {
-        // -1 means there's no record in pitch history, using adjacent moras
-        if (pitch == -1) {
-          // use pitch of the mora behind it
-          try {
-            pitch =
-              query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch;
-          } catch {
-            // if there's no mora behind, use the former one
-            try {
-              pitch =
-                query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1]
-                  .pitch;
-            } catch {
-              // if there's no former mora neither, set it to 5.5
-              pitch = 5.5;
-            }
-          }
-        }
-        query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
           vowel.toLowerCase();
       }
