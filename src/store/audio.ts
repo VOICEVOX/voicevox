@@ -86,6 +86,8 @@ export const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
 export const SET_AUDIO_SPEED_SCALE = "SET_AUDIO_SPEED_SCALE";
 export const SET_AUDIO_PITCH_SCALE = "SET_AUDIO_PITCH_SCALE";
+export const SET_AUDIO_PRE_PHONEME_LENGTH = "SET_AUDIO_PRE_PHONEME_LENGTH";
+export const SET_AUDIO_POST_PHONEME_LENGTH = "SET_AUDIO_POST_PHONEME_LENGTH";
 export const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
 export const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
@@ -373,6 +375,18 @@ export const audioStore = {
       { audioKey: string; volumeScale: number }
     >((draft, { audioKey, volumeScale }) => {
       draft.audioItems[audioKey].query!.volumeScale = volumeScale;
+    }),
+    [SET_AUDIO_PRE_PHONEME_LENGTH]: createCommandAction<
+      State,
+      { audioKey: string; prePhonemeLength: number }
+    >((draft, { audioKey, prePhonemeLength }) => {
+      draft.audioItems[audioKey].query!.prePhonemeLength = prePhonemeLength;
+    }),
+    [SET_AUDIO_POST_PHONEME_LENGTH]: createCommandAction<
+      State,
+      { audioKey: string; postPhonemeLength: number }
+    >((draft, { audioKey, postPhonemeLength }) => {
+      draft.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
     }),
     [SET_AUDIO_ACCENT]: createCommandAction<
       State,

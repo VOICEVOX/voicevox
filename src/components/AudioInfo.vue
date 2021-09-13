@@ -77,6 +77,52 @@
         @pan="setPanning(previewAudioVolumeScale, $event)"
       />
     </div>
+    <div class="q-px-md">
+      <span class="text-body1 q-mb-xs"
+        >無音時間（前）
+        {{ previewAudioPrePhonemeLength.currentValue.value.toFixed(2) }}</span
+      >
+      <q-slider
+        dense
+        snap
+        :min="0"
+        :max="2"
+        :step="0.05"
+        :disable="uiLocked"
+        :model-value="previewAudioPrePhonemeLength.currentValue.value"
+        @update:model-value="
+          setPreviewValue(previewAudioPrePhonemeLength, $event)
+        "
+        @change="setAudioPrePhonemeLength"
+        @wheel="
+          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'prePhoneme')
+        "
+        @pan="setPanning(previewAudioPrePhonemeLength, $event)"
+      />
+    </div>
+    <div class="q-px-md">
+      <span class="text-body1 q-mb-xs"
+        >無音時間（後）
+        {{ previewAudioPostPhonemeLength.currentValue.value.toFixed(2) }}</span
+      >
+      <q-slider
+        dense
+        snap
+        :min="0"
+        :max="2"
+        :step="0.05"
+        :disable="uiLocked"
+        :model-value="previewAudioPostPhonemeLength.currentValue.value"
+        @update:model-value="
+          setPreviewValue(previewAudioPostPhonemeLength, $event)
+        "
+        @change="setAudioPostPhonemeLength"
+        @wheel="
+          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'postPhoneme')
+        "
+        @pan="setPanning(previewAudioPostPhonemeLength, $event)"
+      />
+    </div>
   </div>
 </template>
 
@@ -89,6 +135,8 @@ import {
   SET_AUDIO_PITCH_SCALE,
   SET_AUDIO_SPEED_SCALE,
   SET_AUDIO_VOLUME_SCALE,
+  SET_AUDIO_PRE_PHONEME_LENGTH,
+  SET_AUDIO_POST_PHONEME_LENGTH,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
@@ -125,6 +173,14 @@ export default defineComponent({
 
     const previewAudioVolumeScale = new PreviewableValue(
       () => query.value?.volumeScale
+    );
+
+    const previewAudioPrePhonemeLength = new PreviewableValue(
+      () => query.value?.prePhonemeLength
+    );
+
+    const previewAudioPostPhonemeLength = new PreviewableValue(
+      () => query.value?.postPhonemeLength
     );
 
     const setPreviewValue = (
@@ -175,7 +231,29 @@ export default defineComponent({
       });
     };
 
-    type InfoType = "speed" | "pitch" | "into" | "volume";
+    const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
+      previewAudioPrePhonemeLength.stopPreview();
+      store.dispatch(SET_AUDIO_PRE_PHONEME_LENGTH, {
+        audioKey: activeAudioKey.value!,
+        prePhonemeLength,
+      });
+    };
+
+    const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
+      previewAudioPostPhonemeLength.stopPreview();
+      store.dispatch(SET_AUDIO_POST_PHONEME_LENGTH, {
+        audioKey: activeAudioKey.value!,
+        postPhonemeLength,
+      });
+    };
+
+    type InfoType =
+      | "speed"
+      | "pitch"
+      | "into"
+      | "volume"
+      | "prePhoneme"
+      | "postPhoneme";
 
     const setAudioInfoByScroll = (
       query: AudioQuery,
@@ -215,6 +293,24 @@ export default defineComponent({
           }
           break;
         }
+        case "prePhoneme": {
+          let curPrePhoneme =
+            query.prePhonemeLength - (delta_y > 0 ? 0.05 : -0.05);
+          curPrePhoneme = Math.round(curPrePhoneme * 1e2) / 1e2;
+          if (2 >= curPrePhoneme && curPrePhoneme >= 0) {
+            setAudioPrePhonemeLength(curPrePhoneme);
+          }
+          break;
+        }
+        case "postPhoneme": {
+          let curPostPhoneme =
+            query.postPhonemeLength - (delta_y > 0 ? 0.05 : -0.05);
+          curPostPhoneme = Math.round(curPostPhoneme * 1e2) / 1e2;
+          if (2 >= curPostPhoneme && curPostPhoneme >= 0) {
+            setAudioPostPhonemeLength(curPostPhoneme);
+          }
+          break;
+        }
         default:
           break;
       }
@@ -229,11 +325,15 @@ export default defineComponent({
       previewAudioPitchScale,
       previewAudioIntonationScale,
       previewAudioVolumeScale,
+      previewAudioPrePhonemeLength,
+      previewAudioPostPhonemeLength,
       setPreviewValue,
       setAudioSpeedScale,
       setAudioPitchScale,
       setAudioIntonationScale,
       setAudioVolumeScale,
+      setAudioPrePhonemeLength,
+      setAudioPostPhonemeLength,
       setAudioInfoByScroll,
       setPanning,
     };
