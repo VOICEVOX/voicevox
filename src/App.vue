@@ -37,6 +37,10 @@ export default defineComponent({
   flex-direction: column;
 }
 
+img {
+  pointer-events: none;
+}
+
 // ホバー色
 .q-hoverable {
   &:hover > .q-focus-helper {
