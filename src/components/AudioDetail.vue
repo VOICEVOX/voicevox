@@ -157,7 +157,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -343,32 +343,45 @@ export default defineComponent({
       return textArray;
     });
 
-    const pitchHistory = new Map<string, Map<string, number>>();
+    store.watch(
+      (state) => {
+        let key = new Array<string>();
+        state.audioKeys.forEach((audioKey) => {
+          key.push(audioKey);
+        });
+        return key;
+      },
+      (newKey, oldKey) => {
+        const key = newKey[newKey.length - 1];
+        store.watch(
+          (state) => state.audioItems[key].query?.accentPhrases,
+          (newVal, oldVal) => {
+            pitchHistory.set(key, new Map<number, number>());
+          }
+        );
+      }
+    );
 
-    const getPitchHistory = (key: string) => {
-      return pitchHistory.get(key) || undefined;
+    const pitchHistory = new Map<string, Map<number, number>>();
+
+    const getPitchHistory = (audioKey: string, moraKey: number) => {
+      return pitchHistory.get(audioKey)?.get(moraKey) || undefined;
     };
 
     const handleVoicing = (phraseIndex: number, moraIndex: number) => {
       if (selectedDetail.value === "intonation" && !uiLocked.value) {
         if (accentPhrases.value !== undefined) {
-          const key =
-            activeAudioKey.value +
-            "-" +
-            phraseIndex.toString() +
-            "-" +
-            moraIndex.toString();
+          const moraKey = phraseIndex * 100 + moraIndex;
           const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
-          console.log(key);
           if (pitch == 0) {
             store.dispatch(SET_AUDIO_MORA_VOICING, {
               audioKey: activeAudioKey.value!,
               accentPhraseIndex: phraseIndex,
               moraIndex,
-              pitch: getPitchHistory(key),
+              pitch: getPitchHistory(activeAudioKey.value!, moraKey),
             });
           } else {
-            pitchHistory.set(key, pitch);
+            pitchHistory.get(activeAudioKey.value!)?.set(moraKey, pitch);
             store.dispatch(SET_AUDIO_MORA_VOICING, {
               audioKey: activeAudioKey.value!,
               accentPhraseIndex: phraseIndex,
@@ -384,6 +397,14 @@ export default defineComponent({
       newPronunciation: string,
       phraseIndex: number
     ) => {
+      // this clears the changed accent phrase's pitch history and leaves others' alone
+      const historyOfCurrentAccent =
+        pitchHistory.get(activeAudioKey.value!) || new Map();
+      for (let k of historyOfCurrentAccent.keys()) {
+        if (Math.floor(k / 100) == phraseIndex) {
+          historyOfCurrentAccent.delete(k);
+        }
+      }
       let popUntilPause = false;
       newPronunciation = newPronunciation.replace(",", "、");
       if (
@@ -401,8 +422,8 @@ export default defineComponent({
       });
     };
 
-    const hoveredPhraseIndex = ref(-1);
-    const hoveredMoraIndex = ref(-1);
+    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+    const hoveredMoraIndex = ref<number | undefined>(undefined);
 
     const handleHoverText = (
       phraseIndex: number,
@@ -421,9 +442,9 @@ export default defineComponent({
         }
       } else {
         if (selectedDetail.value == "accent") {
-          hoveredPhraseIndex.value = -1;
+          hoveredPhraseIndex.value = undefined;
         } else {
-          hoveredMoraIndex.value = -1;
+          hoveredMoraIndex.value = undefined;
         }
       }
     };

@@ -111,7 +111,7 @@ export const RESTART_ENGINE = "RESTART_ENGINE";
 export const SET_AUDIO_MORA_VOICING = "SET_AUDIO_MORA_VOICING";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
 export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
-export const SET_SIGNLE_ACCENT_PHRASE = "SET_SIGNLE_ACCENT_PHRASE";
+export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -299,7 +299,7 @@ export const audioStore = {
         draft.audioItems[audioKey].query!.accentPhrases = accentPhrases;
       }
     ),
-    [SET_SIGNLE_ACCENT_PHRASE]: createCommandAction(
+    [SET_SINGLE_ACCENT_PHRASE]: createCommandAction(
       (
         draft,
         {
@@ -374,7 +374,7 @@ export const audioStore = {
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
         .then((accentPhrases) => {
-          dispatch(SET_SIGNLE_ACCENT_PHRASE, {
+          dispatch(SET_SINGLE_ACCENT_PHRASE, {
             audioKey: audioKey,
             accentPhraseIndex,
             accentPhrases,
@@ -571,9 +571,46 @@ export const audioStore = {
       if (["i", "I", "u", "U"].indexOf(vowel) == -1) {
         return;
       }
+
+      // if pitch is undefined, calculate it referring adjacent moras
       if (pitch === undefined) {
-        pitch = 5.5;
+        // if it's the first one, use latter
+        if (moraIndex == 0) {
+          try {
+            pitch =
+              query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1]
+                .pitch || 5.5;
+          } catch {
+            pitch = 5.5;
+          }
+          // or it's the last one, use former
+        } else if (
+          moraIndex ==
+          query.accentPhrases[accentPhraseIndex].moras.length - 1
+        ) {
+          try {
+            pitch =
+              query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1]
+                .pitch || 5.5;
+          } catch {
+            pitch = 5.5;
+          }
+          // neither, use average of the both, no need to catch error
+        } else {
+          const pitchFormer =
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch ||
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1].pitch;
+          const pitchLater =
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1].pitch ||
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch;
+          pitch = (pitchFormer + pitchLater) / 2;
+          // if both of them are 0, use 5.5
+          if (pitch == 0) {
+            pitch = 5.5;
+          }
+        }
       }
+
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
       if (pitch == 0) {
         query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
