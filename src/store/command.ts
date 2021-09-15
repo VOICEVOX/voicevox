@@ -1,8 +1,8 @@
-import { Action, Mutation, StoreOptions } from "vuex";
+import { Action, StoreOptions } from "vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
-import { ICommand, State } from "./type";
+import { State, Command } from "./type";
 
 enablePatches();
 enableMapSet();
@@ -12,11 +12,21 @@ immer.setAutoFreeze(false);
 
 export const CAN_UNDO = "CAN_UNDO";
 export const CAN_REDO = "CAN_REDO";
-export const PUSH_COMMAND = "PUSH_COMMAND";
+
+/**
+ * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
+ * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
+ * */
+export const OLD_PUSH_COMMAND = "OLD_PUSH_COMMAND";
 export const UNDO = "UNDO";
 export const REDO = "REDO";
+export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
 
-export class Command<S> implements ICommand<S> {
+/**
+ * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
+ * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
+ * */
+class OldCommand<S> {
   undoOperations: Operation[];
   redoOperations: Operation[];
 
@@ -25,14 +35,14 @@ export class Command<S> implements ICommand<S> {
       state,
       recipe
     );
-    this.undoOperations = Command.convertPatches(undoPatches);
-    this.redoOperations = Command.convertPatches(redoPatches);
+    this.undoOperations = OldCommand.convertPatches(undoPatches);
+    this.redoOperations = OldCommand.convertPatches(redoPatches);
   }
 
-  static redo<S>(state: S, command: Command<S>) {
+  static redo<S>(state: S, command: OldCommand<S>) {
     applyPatch(state, command.redoOperations);
   }
-  static undo<S>(state: S, command: Command<S>) {
+  static undo<S>(state: S, command: OldCommand<S>) {
     applyPatch(state, command.undoOperations);
   }
 
@@ -48,39 +58,124 @@ export class Command<S> implements ICommand<S> {
   }
 }
 
-type CommandFactory<S, P> = (state: S, payload: P) => Command<S>;
+/**
+ * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
+ * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
+ * */
+type OldCommandFactory<S, P> = (state: S, payload: P) => OldCommand<S>;
 
-const createCommandFactory =
+/**
+ * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
+ * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
+ * */
+const oldCreateCommandFactory =
   <S, P>(
     recipeWithPayload: (draft: Draft<S>, payload: P) => void
-  ): CommandFactory<S, P> =>
+  ): OldCommandFactory<S, P> =>
   (state, payload) =>
-    new Command(state, (draft) => recipeWithPayload(draft, payload));
+    new OldCommand(state, (draft) => recipeWithPayload(draft, payload));
 
-export function createCommandAction<S, P>(
+/**
+ * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
+ * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
+ * */
+export function oldCreateCommandAction<S, P>(
   recipeWithPayload: (draft: Draft<S>, payload: P) => void
 ): Action<S, S> {
-  const commandFactory = createCommandFactory(recipeWithPayload);
+  const commandFactory = oldCreateCommandFactory(recipeWithPayload);
   return ({ state, commit }, payload: P) => {
-    commit(PUSH_COMMAND, { command: commandFactory(state, payload) });
+    commit(OLD_PUSH_COMMAND, { command: commandFactory(state, payload) });
   };
 }
 
-type UndoRedoState<S> = {
-  undoCommands: Command<S>[];
-  redoCommands: Command<S>[];
+export type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
+  draft: Draft<S>,
+  payload: P
+) => void;
+export type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
+export type PayloadMutation<S, P extends Record<string, unknown> | undefined> =
+  (state: S, payload: P) => void;
+export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
+
+interface UndoRedoState {
+  undoCommands: Command[];
+  redoCommands: Command[];
+}
+
+type CreatePayloadMutationTree<
+  S extends UndoRedoState,
+  Arg extends PayloadRecipeTree<S>
+> = {
+  [K in keyof Arg]: Arg[K] extends PayloadRecipe<S, infer P>
+    ? PayloadMutation<S, P>
+    : PayloadMutation<S, undefined>;
 };
-export function createCommandMutation<S extends UndoRedoState<S>, P>(
-  recipeWithPayload: (draft: Draft<S>, payload: P) => void
-): Mutation<S> {
-  const commandFactory = createCommandFactory(recipeWithPayload);
-  return (state, payload: P) => {
-    const command = commandFactory(state, payload);
-    Command.redo(state, command);
+
+/**
+ * レシピをプロパティに持つオブジェクトから操作を記録するMutationをプロパティにもつオブジェクトを返す関数
+ * @see {@link recordOperations} - 返されるMutationはStateのスナップショットを撮ります.
+ * これはパフォーマンス上のボトルネックを引き起こし得ます。
+ * @param payloadRecipeTree - レシピをプロパティに持つオブジェクト
+ * @returns Mutationを持つオブジェクト(MutationTree)
+ */
+export const createCommandMutationTree = <
+  S extends UndoRedoState,
+  Arg extends PayloadRecipeTree<S>
+>(
+  payloadRecipeTree: Arg
+): CreatePayloadMutationTree<S, Arg> =>
+  Object.fromEntries(
+    Object.entries(payloadRecipeTree).map(([key, val]) => [
+      key,
+      createCommandMutation(val),
+    ])
+  ) as CreatePayloadMutationTree<S, Arg>;
+
+/**
+ * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
+ * @see {@link recordOperations} - 返されるMutationはStateのスナップショットを撮ります.
+ * これはパフォーマンス上のボトルネックを引き起こし得ます。
+ * @param payloadRecipe - 操作を記録するレシピ
+ * @returns レシピと同じPayloadの型を持つMutation.
+ */
+export const createCommandMutation =
+  <S extends UndoRedoState, P extends Record<string, unknown> | undefined>(
+    payloadRecipe: PayloadRecipe<S, P>
+  ): PayloadMutation<S, P> =>
+  (state: S, payload: P): void => {
+    const command = recordOperations(payloadRecipe)(state, payload);
+    applyPatch(state, command.redoOperations);
     state.undoCommands.push(command);
     state.redoCommands.splice(0);
   };
-}
+
+const patchToOperation = (patch: Patch): Operation => ({
+  op: patch.op,
+  path: `/${patch.path.join("/")}`,
+  value: patch.value,
+});
+
+/**
+ * この関数はStateのスナップショットを撮ります. これはパフォーマンス上のボトルネックを引き起こし得ます。
+ * @param recipe - 操作を記録したいレシピ関数
+ * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
+ */
+const recordOperations =
+  <S, P extends Record<string, unknown> | undefined>(
+    recipe: PayloadRecipe<S, P>
+  ) =>
+  (state: S, payload: P): Command => {
+    const [_, doPatches, undoPatches] = immer.produceWithPatches(
+      // Taking snapshots has negative effects on performance.
+      // This approach may cause a bottleneck.
+      JSON.parse(JSON.stringify(state)) as State,
+      (draft: Draft<S>) => recipe(draft, payload)
+    );
+    return {
+      redoOperations: doPatches.map(patchToOperation),
+      undoOperations: undoPatches.map(patchToOperation),
+    };
+  };
 
 export const commandStore = {
   getters: {
@@ -93,32 +188,34 @@ export const commandStore = {
   },
 
   mutations: {
-    [PUSH_COMMAND](state, { command }: { command: Command<State> }) {
-      Command.redo(state, command);
-      state.undoCommands.push(command);
-      state.redoCommands.splice(0);
+    [OLD_PUSH_COMMAND](state, { command }: { command: OldCommand<State> }) {
+      OldCommand.redo(state, command);
     },
-    [UNDO](state) {
+    [UNDO]: (state) => {
       const command = state.undoCommands.pop();
       if (command != null) {
-        Command.undo(state, command);
         state.redoCommands.push(command);
+        applyPatch(state, command.undoOperations);
       }
     },
-    [REDO](state) {
+    [REDO]: (state) => {
       const command = state.redoCommands.pop();
       if (command != null) {
-        Command.redo(state, command);
         state.undoCommands.push(command);
+        applyPatch(state, command.redoOperations);
       }
+    },
+    [CLEAR_COMMANDS]: (state) => {
+      state.redoCommands.splice(0);
+      state.undoCommands.splice(0);
     },
   },
 
   actions: {
-    [UNDO]({ commit }) {
+    [UNDO]: ({ commit }) => {
       commit(UNDO);
     },
-    [REDO]({ commit }) {
+    [REDO]: ({ commit }) => {
       commit(REDO);
     },
   },
