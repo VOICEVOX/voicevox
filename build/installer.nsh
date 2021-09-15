@@ -1,102 +1,747 @@
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
+!include "funcs.nsh"
 
+; voicevox-X.X.X-x64.nsis.7z.ini などが配置されている場所
+; 開発中はここを一時的に差し替えて、out フォルダー内で npx http-server などとするとテストしやすい
+; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
+!define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
+
+!define defineVariables "!insertmacro defineVariables"
 !macro defineVariables
-    ; define download url
-    !define DOWNLOAD_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
 
-    ; installer size (GB)
-    !define VOICEVOX_DOWNLOAD_SIZE 2.7
-    ; VOICEVOX size (GB)
-    !define VOICEVOX_SIZE 5.7
-    ; space required for installation (including installer x2 and vOICEVOX)
-    ; because of NSIS specification, mathematic operation must be one operation at a command.
-    ; ref. https://nsis.sourceforge.io/mediawiki/index.php?title=Reference/!define&oldid=23418
-    !define /math VOICEVOX_DOWNLOAD_SIZE_DUBLE ${VOICEVOX_DOWNLOAD_SIZE} * 2
-    !define /math INSTALL_SPACE_NEEDED ${VOICEVOX_DOWNLOAD_SIZE_DUBLE} + ${VOICEVOX_SIZE}
+  ; インストール後のサイズ
+  Var installedSize
+  ; 7zアーカイブのサイズ
+  Var archiveSize
+
+  ; 分割数
+  Var numFiles
+  ; ini ファイルへのフルパス
+  Var iniFileName
+
+  ; 動作モード
+  ;   "None"        - ファイルのダウンロードもファイルの結合も行わない
+  ;   "Download"    - ファイルのダウンロードとファイルの結合を行う
+  ;   "Concatenate" - ファイルの結合のみを行う
+  Var additionalProcess
+
+  ; voicevox-X.X.X-x64.nsis.7z のようなファイル名
+  Var archiveName
+  ; SHA2-512 でのハッシュ値
+  Var archiveHash
+
+  ; 既に Welcome ページはスキップされているか？
+  Var skippedWelcomePage
+
 !macroend
 
-!macro checkDiskSpace
-    Var /GLOBAL spaceAvailable
+; ${updateDefinedVariablesINI} Result
+; ini ファイルの内容に従い変数を更新する
+; @return Result "OK"、"Broken"
+!define updateDefinedVariablesINI "!insertmacro updateDefinedVariablesINI"
+!macro updateDefinedVariablesINI Result
+  Push $0 ; Stack $0
+  Push $1 ;       $1 $0
+  Push $2 ;       $2 $1 $0
+  Push $3 ;       $3 $2 $1 $0
 
-    ${GetRoot} "$INSTDIR" $0 ; get drive letter
+  ; 分割数を取得
+  ReadINIStr $0 "$iniFileName" "files" "n"
+  IfErrors updateDefinedVariablesINI_foundError 0
+  StrCpy $numFiles $0
 
-    ${DriveSpace} "$0\" "/D=F /S=G" $spaceAvailable ; G = GiB
+  ; 分割ファイルについての情報がすべて ini ファイル内に存在するか検証する
+  ; 合わせて 7z ファイルの合計サイズを計算する
+  StrCpy $3 "0"
+  StrCpy $2 $numFiles
+  IntOp $2 $2 - 1
+  ${ForEach} $0 0 $2 + 1
+    ReadINIStr $1 "$iniFileName" "files" "hash$0"
+    IfErrors updateDefinedVariablesINI_foundError 0
+    ReadINIStr $1 "$iniFileName" "files" "size$0"
+    IfErrors updateDefinedVariablesINI_foundError 0
+    System::Int64Op $3 + $1
+    Pop $3
+  ${Next}
+  StrCpy $archiveSize $3
 
-    MessageBox MB_OKCANCEL|MB_ICONQUESTION "VOICEVOXをインストールするために ${VOICEVOX_DOWNLOAD_SIZE} GBのファイルをダウンロードします。$\r$\nインストールを続行しますか？" IDOK next
-    ; execute below process if selected "Cancel"
-    !insertmacro quitSuccess ; normal termination immediately
+  StrCpy $0 "OK"
+  Goto updateDefinedVariablesINI_finish
 
-    ; execute below process if selected "OK"
-    next:
-    ${If} $spaceAvailable < ${INSTALL_SPACE_NEEDED}
-        MessageBox MB_YESNO|MB_ICONEXCLAMATION "インストール作業には ${INSTALL_SPACE_NEEDED} GBの空き容量が必要です。（空き容量：$spaceAvailable GB）$\r$\nインストールを中断しますか？" IDNO continue
-        ; execute below process if select "YES"
-        !insertmacro quitSuccess ; normal termination immediately
+  updateDefinedVariablesINI_foundError:
+  StrCpy $0 "Broken"
 
-        ; execute below process if selected "NO"
-        continue:
-    ${EndIf}
+  updateDefinedVariablesINI_finish:
+                  ; Stack $3 $2 $1 $0
+  Pop $3          ;       $2 $1 $0
+  Pop $2          ;       $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
 !macroend
 
-; pre install process
-!macro customInit
-    !insertmacro defineVariables
+; ${updateDefinedVariables7z} Result
+; 7z ファイルの内容に従い変数を更新する
+; @return Result "OK", "Failed" のどれか
+!define updateDefinedVariables7z "!insertmacro updateDefinedVariables7z"
+!macro updateDefinedVariables7z Result
+  Push $0 ; Stack $0
+  Push $1 ;       $1 $0
 
-    !insertmacro checkDiskSpace
+  StrCpy $1 "$EXEDIR\$archiveName"
 
-    ; download files
-    download:
-    inetc::get /POPUP "https://github.com/" /RESUME "" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.0" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.0" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.1" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.1" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.2" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.2" /END
-    Pop $0 ; return value("OK", "Cancelled" or else)
+  ; アーカイブのサイズを取得
+  ${getFileSize} $0 $1
+  ${If} ${Errors}
+    StrCpy $0 "Failed"
+    Goto updateDefinedVariables7z_finish
+  ${EndIf}
+  StrCpy $archiveSize $0
 
-    ; download cancel handling
-    ${if} $0 == "Cancelled"
-        !insertmacro quitSuccess ; normal termination immediately
-    ${endif}
+  ; 展開後の合計サイズを取得
+  File /oname=$PLUGINSDIR\7zr.exe "${BUILD_RESOURCES_DIR}\7zr.exe"
+  ${getUncompressedSizeFrom7z} $0 $1
+  ${If} $0 == "Failed to execute 7zr.exe"
+  ${OrIf} $0 == "Failed to open file list"
+    StrCpy $0 "Failed"
+    Goto updateDefinedVariables7z_finish
+  ${EndIf}
+  StrCpy $installedSize $0
 
-    ; try without proxy
-    ${if} $0 != "OK"
-        inetc::get /NOPROXY /POPUP "https://github.com/" /RESUME "" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.0" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.0" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.1" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.1" "${DOWNLOAD_URL}/voicevox-${VERSION}-x64.nsis.7z.2" "$TEMP/voicevox-${VERSION}-x64.nsis.7z.2" /END
-        Pop $0 ; return value("OK", "Cancelled" or else)
-    ${endif}
+  StrCpy $0 "OK"
 
-    ; download cancel handling
-    ${if} $0 == "Cancelled"
-        !insertmacro quitSuccess ; normal termination immediately
-    ${endif}
+  updateDefinedVariables7z_finish:
+                  ; Stack $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+!macroend
 
-    ; download error handling
-    ${if} $0 != "OK"
-        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "Error happened downloading files." IDRETRY download
-        Quit ; quit immediately
-    ${endif}
+; ${downloadIniFile} Result FilePath
+; ファイルのハッシュ値情報などがある ini ファイルをダウンロードする
+; @param FilePath iniファイルの保存先
+; @return Result inetc::get の戻り値
+!define downloadIniFile "!insertmacro downloadIniFile"
+!macro downloadIniFile Result FilePath
+  Push "${FilePath}" ; Stack <FilePath>
+  Exch $0            ;       $0
+  Push $1            ;       $1 $0
 
-    ; show preparing message banner
-    Banner::show /set 76 "Preparing for installation" "please wait..."
+  inetc::get /POPUP "" /CAPTION "$(^Name) セットアップ" /RESUME "追加ファイルのダウンロードに失敗しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.ini" "$0" /END
+  Pop $0
 
-    ; copy and concatenate files
-    nsExec::ExecToStack '"$SYSDIR\cmd.exe" /C COPY /B "$TEMP\voicevox-${VERSION}-x64.nsis.7z.0" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1" + "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2" "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"'
-    Pop $0 ; return value
-    Pop $1 ; return message
+                  ; Stack $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+!macroend
 
-    ; concatenation error handling
-    ${If} $0 != "0"
-        MessageBox MB_OK|MB_ICONEXCLAMATION "Error happened concatenating files. $1($0)"
-        Quit ; quit immediately
-    ${EndIf}
+; ${verifyPartedFile} Result Index FilePath
+; 分割ファイルのうちの1つを検証する
+; @param Index 7z.N の N
+; @param FilePath ファイルへのパス
+; @return Result "OK"、"No entry"、"Failed to get file size"、"Filesize mismatch"、"Hash mismatch" のどれか
+!define verifyPartedFile "!insertmacro verifyPartedFile"
+!macro verifyPartedFile Result Index FilePath
+  !define UniqueID ${__LINE__}
+  Push "${FilePath}" ; Stack <FilePath>
+  Push "${Index}"    ;       <Index> <FilePath>
+  Exch $0            ;       $0 <FilePath>
+  Exch               ;       <FilePath> $0
+  Exch $1            ;       $1 $0
+  Push $2            ;       $2 $1 $0
+  Push $3            ;       $3 $2 $1 $0
 
-    ; delete files in temp dir
-    Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.0"
-    Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.1"
-    Delete "$TEMP\voicevox-${VERSION}-x64.nsis.7z.2"
+  ; ini ファイルからファイルサイズを取得
+  ReadINIStr $2 "$iniFileName" "files" "size$0"
+  ${If} ${Errors}
+    StrCpy $0 "No entry"
+    Goto verifyPartedFile_finish${UniqueID}
+  ${EndIf}
+  ; ファイルサイズを検証
+  ${getFileSize} $3 $1
+  ${If} ${Errors}
+    StrCpy $0 "Failed to get file size"
+    Goto verifyPartedFile_finish${UniqueID}
+  ${EndIf}
+  ${If} $3 != $2
+    StrCpy $0 "Filesize mismatch"
+    Goto verifyPartedFile_finish${UniqueID}
+  ${EndIf}
 
-    ; destroy preparing message banner
+  ; ini ファイルから正しいハッシュ値を取得
+  ReadINIStr $2 "$iniFileName" "files" "hash$0"
+  ${If} ${Errors}
+    StrCpy $0 "No entry"
+    Goto verifyPartedFile_finish${UniqueID}
+  ${EndIf}
+  ; ハッシュ値を検証
+  ${verifyFile} $3 $1 "MD5-128" $2
+  ${If} $3 != "OK"
+    StrCpy $0 "Hash mismatch"
+    Goto verifyPartedFile_finish${UniqueID}
+  ${EndIf}
+
+  StrCpy $0 "OK"
+
+verifyPartedFile_finish${UniqueID}:
+                  ; Stack $3 $2 $1 $0
+  Pop $3          ;       $2 $1 $0
+  Pop $2          ;       $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+  !undef UniqueID
+!macroend
+
+; ${downloadFile} Result ResultFilePath Index
+; 分割されたファイルを1つダウンロードする
+; @param Index 7z.N の N
+; @return Result inetc::get の戻り値, "Hash mismatch", "No entry", "Failed to rename", "Failed to get file size" のどれか
+; @return ResultFilePath ダウンロードしたファイルへのフルパス
+!define downloadFile "!insertmacro downloadFile"
+!macro downloadFile Result ResultFilePath Index
+  Push "${Index}" ; Stack <Index>
+  Exch $0         ;       $0
+  Push $1         ;       $1 $0
+  Push $2         ;       $2 $1 $0
+  Push $3         ;       $3 $2 $1 $0
+  Push $4         ;       $4 $3 $2 $1 $0
+
+  StrCpy $1 "$EXEDIR\$archiveName.$0" ; 保存先
+  StrCpy $2 $0 ; 7z.N の N
+  IntOp $3 $0 + 1 ; 画面表示で使用するインデックス番号
+  StrCpy $4 "$1.partial" ; 一時保存先
+
+  ; ダウンロード対象ファイルが既にある？
+  ${If} ${FileExists} "$1"
+    ; ファイルを検証する
+    downloadFile_preVerify:
+    Banner::show /set 76 "$(^Name) セットアップ" "ファイルを検証しています... ($3/$numFiles)"
+    ${verifyPartedFile} $0 $2 $1
     Banner::destroy
+    ${If} $0 == "OK"
+      ; 既に問題ないファイルだったので完了
+      Goto downloadFile_finish
+    ${ElseIf} $0 == "Filesize mismatch"
+    ${OrIf} $0 == "Hash mismatch"
+      ; おかしいようなのでダウンロードへ
+      Goto downloadFile_start
+    ${ElseIf} $0 == "No entry"
+      ; ini ファイル内に必要な情報が見つからなかった
+      ; ダウンロードしても検証できないので諦める
+      StrCpy $0 "No entry"
+      Goto downloadFile_finish
+    ${ElseIf} $0 == "Failed to get file size"
+      ; ファイルサイズの取得に失敗した
+      ; 別のソフトからのアクセスでブロックされている？
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルサイズの取得に失敗しました。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY downloadFile_preVerify
+      StrCpy $0 "Failed to get file size"
+      Goto downloadFile_finish
+    ${Else}
+      ; スクリプトの記述ミスの可能性が高いのでエラーを通知して終わる
+      MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+      ${myQuit}
+    ${EndIf}
+  ${EndIf}
+
+  downloadFile_start:
+  inetc::get /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
+  Pop $0
+
+  ; プロキシーなしでリトライする処理は合理的な理由が見つからないのでひとまずやめる
+  ; プロキシーを設定している環境は必要があってやっているはずなので無断で外してもいい結果を生むとは考えにくいし、これによって問題が起こっていたユーザーが改善したという報告も見当たらない
+  ; https://github.com/electron-userland/electron-builder/issues/2049
+  ; ${If} $0 != "OK"
+  ; ${AndIf} $0 != "Cancelled"
+  ;   inetc::get /NOPROXY /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
+  ;   Pop $0
+  ; ${EndIf}
+
+  ; ファイルのダウンロードが成功していたら
+  ${If} $0 == "OK"
+
+    ; ファイルを検証する
+    downloadFile_verify:
+    Banner::show /set 76 "$(^Name) セットアップ" "ファイルを検証しています... ($3/$numFiles)"
+    ${verifyPartedFile} $0 $2 $4
+    Banner::destroy
+    ${If} $0 == "OK"
+      ; 成功したので最終的なファイル名へリネーム
+      downloadFile_rename:
+      Delete "$1"
+      Rename "$4" "$1"
+      ${If} ${Errors}
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルの操作に失敗しました。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY downloadFile_rename
+        StrCpy $0 "Failed to rename"
+      ${EndIf}
+    ${ElseIf} $0 == "Filesize mismatch"
+    ${OrIf} $0 == "Hash mismatch"
+      ; ハッシュ値が一致しなかった
+      ; よくわからないファイルなので削除する
+      Delete "$4"
+      StrCpy $0 "Hash mismatch"
+    ${ElseIf} $0 == "No entry"
+      ; ini ファイルに該当ファイルを検証するためのデータが存在しなかった
+      ; 通常の流れでは発生しない
+      Delete "$4"
+      StrCpy $0 "No entry"
+    ${ElseIf} $0 == "Failed to get file size"
+      ; 検証に必要なファイルサイズの取得に失敗した
+      ; ダウンロードファイルを他のソフトなどで開いているかもしれない
+      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルサイズの取得に失敗しました。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY downloadFile_verify
+      StrCpy $0 "Failed to get file size"
+    ${Else}
+      ; スクリプトの記述ミスの可能性が高いのでエラーを通知して終わる
+      MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+      ${myQuit}
+    ${EndIf}
+
+  ${EndIf}
+
+  downloadFile_finish:
+
+                          ; Stack $4 $3 $2 $1 $0
+  Pop $4                  ;       $3 $2 $1 $0
+  Pop $3                  ;       $2 $1 $0
+  Pop $2                  ;       $1 $0
+  Exch $1                 ;       <ResultFilePath> $0
+  Exch                    ;       $0 <ResultFilePath>
+  Exch $0                 ;       <Result> <ResultFilePath>
+  Pop "${Result}"         ;       <ResultFilePath>
+  Pop "${ResultFilePath}" ;       -empty-
 !macroend
 
-; post install process
-!macro customInstall
-    ; delete file in installer dir
-    Delete "$EXEDIR\voicevox-${VERSION}-x64.nsis.7z"
+; ${verifyArchive} Result
+; 7z ファイルが正しいハッシュ値を持っているか調べる
+; @return Result "OK"、"File not found"、"Hash mismatch" のどれか
+!define verifyArchive "!insertmacro verifyArchive"
+!macro verifyArchive Result
+  Push $0 ; Stack $0
+  Push $1 ;       $1 $0
+
+  StrCpy $0 "$EXEDIR\$archiveName"
+  ${IfNot} ${FileExists} $0
+    StrCpy $0 "File not found"
+  ${Else}
+    Banner::show /set 76 "$(^Name) セットアップ" "ファイルを検証しています..."
+    ${verifyFile} $0 $0 "SHA2-512" $archiveHash
+    Banner::destroy
+    ${If} $0 == "OK"
+      StrCpy $0 "OK"
+    ${Else}
+      StrCpy $0 "Hash mismatch"
+    ${EndIf}
+  ${EndIf}
+
+                  ; Stack $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+!macroend
+
+; ${allPartedFilesExists} Result
+; 分割されたファイルがすべて正しく存在し、結合のみ行えば良い状態か確認する
+; @return Result 存在するなら 1、なければ 0
+!define allPartedFilesExists "!insertmacro allPartedFilesExists"
+!macro allPartedFilesExists Result
+  Push $0 ; Stack $0
+  Push $1 ;       $1 $0
+  Push $2 ;       $2 $1 $0
+  Push $3 ;       $3 $2 $1 $0
+
+  Banner::show /set 76 "$(^Name) セットアップ" ""
+
+  StrCpy $3 "$EXEDIR\$archiveName"
+  IntOp $2 $numFiles - 1
+  ${ForEach} $1 0 $2 + 1
+    IntOp $0 $1 + 1
+    ${updateBannerText} "ファイルを検証しています... ($0/$numFiles)"
+    ${verifyPartedFile} $0 $1 "$3.$1"
+    ${If} $0 != "OK"
+      StrCpy $0 0
+      Goto allPartedFilesExists_finish
+    ${EndIf}
+  ${Next}
+
+  StrCpy $0 1
+
+  allPartedFilesExists_finish:
+  Banner::destroy
+
+                  ; Stack $3 $2 $1 $0
+  Pop $3          ;       $2 $1 $0
+  Pop $2          ;       $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+!macroend
+
+; ${concatenateAndVerify} Result
+; 分割されたファイルを連結し、正しいハッシュ値になるか検証する
+; ある程度時間がかかるため処理のため進行中は Banner を表示する
+; 成功しなかった場合はファイルは削除される
+; @return Result "OK"、"Failed to concatenate file"、"Failed to rename"、"Hash mismatch" のどれか
+!define concatenateAndVerify "!insertmacro concatenateAndVerify"
+!macro concatenateAndVerify Result
+  Push $0 ; Stack $0
+  Push $1 ;       $1 $0
+  Push $2 ;       $2 $1 $0
+  Push $3 ;       $3 $2 $1 $0
+
+  Banner::show /set 76 "$(^Name) セットアップ" "インストールの準備をしています..."
+
+  ${getArchiveNameAndHash} $1 $3
+  StrCpy $1 "$EXEDIR\$1"
+  StrCpy $2 "$1.partial"
+
+  ; 連結ファイルを作成する
+  ${concatenateFile} $0 $2 $1 $numFiles
+  ${If} $0 != "OK"
+    StrCpy $0 "Failed to concatenate file"
+    Goto concatenateAndVerify_finish
+  ${EndIf}
+
+  ; 長く待たせてしまっているので「そろそろ終わり」感を煽っていく
+  ${updateBannerText} "ファイルの最終確認中です..."
+
+  ; できあがったファイルが正しいか検証する
+  ${verifyFile} $0 $2 "SHA2-512" $3
+  ${If} $0 == "OK"
+    ; 問題なかったのでファイル名を最終的なものに変える
+    Delete "$1"
+    ClearErrors
+    Rename "$2" "$1"
+    ${If} ${Errors}
+      Delete "$2"
+      StrCpy $0 "Failed to rename"
+      Goto concatenateAndVerify_finish
+    ${EndIf}
+
+    ; 分割ファイルを片付ける
+    IntOp $2 $numFiles - 1
+    ${ForEach} $0 0 $2 + 1
+      Delete "$1.$0"
+    ${Next}
+    StrCpy $0 "OK"
+    Goto concatenateAndVerify_finish
+  ${ElseIf} $0 == "Failed"
+    ; ハッシュ値が一致しなかった
+    ; 何かがおかしいファイルなので削除する
+    Delete "$2"
+    StrCpy $0 "Hash mismatch"
+    Goto concatenateAndVerify_finish
+  ${EndIf}
+
+  concatenateAndVerify_finish:
+  Banner::destroy
+
+                  ; Stack $3 $2 $1 $0
+  Pop $3          ;       $2 $1 $0
+  Pop $2          ;       $1 $0
+  Pop $1          ;       $0
+  Exch $0         ;       <Result>
+  Pop "${Result}" ;       -empty-
+!macroend
+
+; 一番最初に実行される場所
+!macro customInit
+  ; nsis-web インストーラーが持つ本来のダウンロード処理は、分割されていないファイルをダウンロードするもの
+  ; それが動作してしまうと、存在しないファイルを探しに行ってしまい上手くインストールができなくなる
+  ; しかし exe と同じ場所に正しいハッシュ値を持つファイルを配置しておけばダウンロード処理は省略できる
+  ; それに必要なファイル名とハッシュ値を取得しておく
+  ${getArchiveNameAndHash} $archiveName $archiveHash
+
+  ; 自身はインストール中に昇格するために起動された別のプロセスか？
+  ${If} ${UAC_IsInnerInstance}
+    ; 全ユーザーに向けてインストールしようとしたことによって実行中の昇格が必要になるはずなので、
+    ; その時点で正しいアーカイブを持っており、長時間掛かるアーカイブ検証を再度行う必要はないはず
+    ; なお、ユーザーが直接インストーラーを管理者権限で実行してもここには来ない
+    StrCpy $0 "OK"
+  ${Else}
+    ; 正しいハッシュ値を持った 7z ファイルがあるか検証する
+    ${verifyArchive} $0
+  ${EndIf}
+  ${If} $0 == "OK"
+
+    StrCpy $additionalProcess "None"
+
+  ${ElseIf} $0 == "File not found"
+  ${OrIf} $0 == "Hash mismatch"
+
+    ; ファイルの分割数やハッシュ値などが記述された ini ファイルをまずダウンロードする
+    StrCpy $iniFileName "$PLUGINSDIR\files.ini"
+    ${downloadIniFile} $0 $iniFileName
+    ${If} $0 == "Cancelled"
+      ${myQuitSuccess}
+    ${ElseIf} $0 == "File Not Found (404)"
+      ; すぐに再試行しても望みが薄いので失敗したことを伝えつつ終わる
+      MessageBox MB_OK|MB_ICONSTOP "インストールに必要なファイル一覧の取得に失敗しました。$\r$\n時間を置いてからやり直してみてください。$\r$\n$\r$\nエラー: $0"
+      ${myQuit}
+    ${ElseIf} $0 != "OK"
+      ; https://nsis.sourceforge.io/Inetc_plug-in
+      ; Inetc のソースコードを読むと ST_OK, ST_CANCELLED, ERR_NOTFOUND 以外の場合は Inetc プラグイン側で再試行を問い合わせる仕組みになっている
+      ; 再試行を諦めた結果ここにたどり着いており、ここで改めて問い合わせるとダイアログが重複してしまうためそのまま終了する
+      ${myQuit}
+    ${EndIf}
+
+    ; ダウンロードした ini ファイルの内容を元に変数を更新
+    ${updateDefinedVariablesINI} $0
+    ${If} $0 == "Broken"
+      MessageBox MB_OK|MB_ICONSTOP "セットアップの準備中にエラーが発生しました。$\r$\n時間を置いてからやり直してみてください。"
+      ${myQuit}
+    ${ElseIf} $0 != "OK"
+      ; 知らない戻り値を返してきた
+      MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+      ${myQuit}
+    ${EndIf}
+
+    ; 結合だけを行えばいい状態か判定する
+    ${allPartedFilesExists} $0
+    ${If} $0 == "1"
+      StrCpy $additionalProcess "Concatenate"
+    ${Else}
+      StrCpy $additionalProcess "Download"
+    ${EndIf}
+
+  ${EndIf}
+
+!macroend
+
+; https://github.com/electron-userland/electron-builder/blob/1beda214d255211b36019e8d2febcd0868aae5f4/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L9
+!macro customWelcomePage
+
+; customInit だと Function の内側になってしまうので customWelcomePage で宣言する
+${defineVariables}
+
+!define MUI_PAGE_CUSTOMFUNCTION_PRE welcomePagePre
+!define MUI_PAGE_CUSTOMFUNCTION_SHOW welcomePageShow
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE welcomePageLeave
+!insertmacro MUI_PAGE_WELCOME
+
+Function welcomePagePre
+  ${If} ${UAC_IsInnerInstance}
+  ${AndIf} $additionalProcess == "None"
+    ; 昇格後は Welcome ページは必要ないので省略したいが、
+    ; 常に Abort してしまうと [戻る] ボタンを押したときに戻れなくなりインストーラー自体が終了してしまう
+    ; これはユーザビリティ的に問題があるので回避したいが戻るボタンの非表示化や無効化は上手く行かなかったので、
+    ; 苦肉の策として起動直後だけスキップし、戻った際は普通に表示できるようにする
+    ${If} $skippedWelcomePage != "1"
+      StrCpy $skippedWelcomePage "1"
+      Abort
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+Function welcomePageShow
+  StrCpy $2 "このウィザードは $(^Name) ${VERSION} のインストールをガイドしていきます。"
+
+  ${getDiskSpace} $1 "$EXEDIR"
+  ${If} $additionalProcess == "None"
+
+    ; ダウンロードも結合も必要ない
+
+  ${ElseIf} $additionalProcess == "Download"
+
+    ; ダウンロードを行うのでその旨を表示する
+    ; FIXME: 一部のファイルがダウンロード済みの場合は表示が正しくない。気にしすぎ？
+    ${bytesToHumanReadable} $0 $archiveSize
+    StrCpy $2 "$2$\r$\n$\r$\nインストールのために合計 $0 の追加ファイルをダウンロードします。"
+
+    ; ダウンロードと結合に必要な空き容量
+    System::Int64Op $archiveSize * 2
+    Pop $0
+    ${If} $1 L< $0
+      ; 空き容量が足りないので画面に表示する
+      ${bytesToHumanReadable} $0 $0
+      ${bytesToHumanReadable} $1 $1
+      StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の空き容量: $1）"
+    ${EndIf}
+
+  ${ElseIf} $additionalProcess == "Concatenate"
+
+    StrCpy $0 $archiveSize
+    ${If} $1 L< $0
+      ; 空き容量が足りないので画面に表示する
+      ${bytesToHumanReadable} $0 $0
+      ${bytesToHumanReadable} $1 $1
+      StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の空き容量: $1）"
+    ${EndIf}
+
+  ${EndIf}
+
+  StrCpy $2 "$2$\r$\n$\r$\n続けるには [次へ] をクリックしてください。"
+
+  ; テキストを更新
+  SendMessage $mui.WelcomePage.Text ${WM_SETTEXT} 0 "STR:$2"
+
+FunctionEnd
+
+Function welcomePageLeave
+  ${If} $additionalProcess == "None"
+    Return
+  ${ElseIf} $additionalProcess == "Download"
+    ; ダウンロードと結合に必要な空き容量
+    System::Int64Op $archiveSize * 2
+    Pop $0
+  ${ElseIf} $additionalProcess == "Concatenate"
+    ; 結合に必要な空き容量
+    StrCpy $0 $archiveSize
+  ${EndIf}
+
+  ${getDiskSpace} $1 "$EXEDIR"
+  ${If} $1 L< $0
+    ${bytesToHumanReadable} $0 $0
+    ${bytesToHumanReadable} $1 $1
+    MessageBox MB_OKCANCEL|MB_DEFBUTTON2|MB_ICONEXCLAMATION "セットアップで一時的に必要な空き容量が不足しています。$\r$\n$\r$\n必要な容量: $0$\r$\n空き容量: $1$\r$\n$\r$\n本当に続行しますか？" IDOK welcomePageLeave_download
+    Abort
+  ${EndIf}
+
+  welcomePageLeave_download:
+  ShowWindow $HWNDPARENT ${SW_HIDE}
+
+  ${If} $additionalProcess == "Download"
+    IntOp $3 $numFiles - 1
+    ${ForEach} $2 0 $3 + 1
+      ; FIXME: 一部だけダウンロードが完了してる状態のとき、
+      ;        ${allPartedFilesExists} で一度検証が走り成功したファイルに対してここで重複して検証が走ってしまう
+      ${downloadFile} $0 $1 $2
+      ${If} $0 == "Cancelled"
+        ${myQuitSuccess}
+      ${ElseIf} $0 == "File Not Found (404)"
+        ; すぐに再試行しても望みが薄いので失敗したことを伝えつつ終わる
+        MessageBox MB_OK|MB_ICONSTOP "ファイルのダウンロードに失敗しました。$\r$\n時間を置いてからやり直してみてください。$\r$\n$\r$\nエラー: $0"
+        ${myQuit}
+      ${ElseIf} $0 == "Hash mismatch"
+        MessageBox MB_OK|MB_ICONSTOP "ダウンロードしたファイルが正しくありません。$\r$\nインストーラーの再ダウンロードをお試しください。"
+        ${myQuit}
+      ${ElseIf} $0 == "Failed to rename"
+      ${OrIf} $0 == "Failed to get file size"
+        ; リトライを諦めてここまできたのでそのまま終わる
+        ${myQuit}
+      ${ElseIf} $0 == "No entry"
+        ; ini ファイルから必要な情報が見つけられなかった
+        ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダー内のファイルを削除されると起こるかもしれない
+        MessageBox MB_OK|MB_ICONSTOP "ファイル検証に必要なデータが見つからなかったため処理を中断しました。$\r$\n時間を置いてからやり直してみてください。"
+        ${myQuit}
+      ${ElseIf} $0 != "OK"
+        ; https://nsis.sourceforge.io/Inetc_plug-in
+        ; Inetc のソースコードを読むと ST_OK, ST_CANCELLED, ERR_NOTFOUND 以外の場合は Inetc プラグイン側で再試行を問い合わせる仕組みになっている
+        ; 再試行を諦めた結果ここにたどり着いており、ここで改めて問い合わせるとダイアログが重複してしまうためそのまま終了する
+        ${myQuit}
+      ${EndIf}
+    ${Next}
+  ${EndIf}
+
+  welcomePageLeave_concatenate:
+  ${concatenateAndVerify} $0
+  ${If} $0 == "OK"
+    ; 全てに成功
+  ${ElseIf} $0 == "Failed to concatenate file"
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルの作成に失敗したためセットアップを続行できません。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY welcomePageLeave_concatenate
+    ${myQuit}
+  ${ElseIf} $0 == "Failed to rename"
+    MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイル名の変更に失敗したためセットアップを続行できません。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY welcomePageLeave_concatenate
+    ${myQuit}
+  ${ElseIf} $0 == "Hash mismatch"
+    ; 結合する前のハッシュチェックは通ったのに統合後におかしくなった
+    ; ビルド時に作成された分割ファイルではないものを受信した場合に発生するため、提供側の問題の可能性が高い
+    MessageBox MB_OK|MB_ICONSTOP "ファイルの異常を検知したためセットアップを中断しました。$\r$\nインストーラーをダウンロードし直してみてください。"
+    ${myQuit}
+  ${Else}
+    ; 知らない戻り値を返してきた
+    MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+    ${myQuit}
+  ${EndIf}
+
+  ShowWindow $HWNDPARENT ${SW_SHOW}
+FunctionEnd
+
+!macroend
+
+!macro customPageAfterChangeDir
+
+; https://github.com/electron-userland/electron-builder/blob/1beda214d255211b36019e8d2febcd0868aae5f4/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L32
+; 空き容量を計算をすべきタイミングはインストール先が確定する pageDirectory の leave のはずだが、
+; そこだと正しい値を取得できないらしく、electron-builder にはフックする方法が存在しない
+; instFiles pre ならフックのフックをすることで処理自体は注入可能だが、
+; このタイミングだと「本当に続行しますか？」をキャンセルした場合に現在のページに留まる方法が存在せず、
+; インストール処理全体をスキップするか、インストーラーを強制終了するしかなくなる
+; それはユーザビリティ的にあまりに不親切になるので、ページを追加することで妥協する
+Page custom readyPageShow readyPageLeave
+
+Function readyPageShow
+  ${If} $installedSize == ""
+    ; 7z ファイルから必要な空き容量などを計算する
+    ; すべてがコピーされる前提で計算するので実態とは少し乖離があるかもしれない
+    ShowWindow $HWNDPARENT ${SW_HIDE}
+    Banner::show /set 76 "$(^Name) セットアップ" "インストールサイズを確認中..."
+    ${updateDefinedVariables7z} $0
+    Banner::destroy
+    ShowWindow $HWNDPARENT ${SW_SHOW}
+  ${Else}
+    ; 既に取得済みだった
+    StrCpy $0 "OK"
+  ${EndIf}
+  ${If} $0 == "OK"
+    ; すべてに成功
+  ${ElseIf} $0 == "Failed"
+    ; 致命的ではないのでデフォルトフォーカスは OK
+    ; 10GB 以上空いてるなら聞かなくてもいいかも？
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "インストール時に必要な空き容量の計算に失敗しました。$\r$\nインストール先に十分な空き容量がある場合はこのまま進めても構いません。$\r$\nこのままインストールを続行しますか？" IDOK readyPageShow_ignore
+    ${myQuit}
+    readyPageShow_ignore:
+    StrCpy $installedSize "0"
+  ${Else}
+    ; 知らない戻り値を返してきた
+    MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+  ${EndIf}
+
+  !insertmacro MUI_HEADER_TEXT "インストールの開始" "インストールの準備が整いました。"
+  nsDialogs::Create /NOUNLOAD 1018
+  Pop $0
+  ${If} $0 == "error"
+    Abort
+  ${EndIf}
+
+  ${NSD_CreateLabel} 0 0 100% 12u "[インストール] を押すとコンピューターに $(^Name) ${VERSION} がセットアップされます。"
+  Pop $0
+
+  StrCpy $0 $installedSize
+  ${getDiskSpace} $1 "$INSTDIR"
+  ${If} $1 L< $0
+    ; 空き容量が不足しているときだけその旨を表示
+    ${bytesToHumanReadable} $0 $0
+    ${bytesToHumanReadable} $1 $1
+    ${NSD_CreateLabel} 0 24u 100% 12u "インストールには $0 以上の空きが必要です。（現在の空き容量: $1）"
+    Pop $0
+  ${EndIf}
+
+  nsDialogs::Show
+FunctionEnd
+
+Function readyPageLeave
+  ; 空き容量チェック
+  StrCpy $0 $installedSize
+  ${getDiskSpace} $1 "$INSTDIR"
+  ${If} $1 L< $0
+    ${bytesToHumanReadable} $0 $0
+    ${bytesToHumanReadable} $1 $1
+    MessageBox MB_OKCANCEL|MB_DEFBUTTON2|MB_ICONEXCLAMATION "インストールに必要な空き容量が不足しています。$\r$\n$\r$\n必要な容量: $0$\r$\n空き容量: $1$\r$\n$\r$\n本当に続行しますか？" IDOK readyPageLeave_finish
+    Abort
+  ${EndIf}
+  readyPageLeave_finish:
+FunctionEnd
+
+; README を表示するためのオプションを流用して、
+; セットアップ完了画面にファイル削除のチェックボックスを追加する
+Function deleteArchive
+  Delete "$EXEDIR\$archiveName"
+FunctionEnd
+!define MUI_FINISHPAGE_SHOWREADME
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "使い終わったダウンロード済みファイルを削除する"
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
+
 !macroend
