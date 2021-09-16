@@ -196,12 +196,12 @@ export default defineComponent({
     });
 
     Mousetrap.bind("1", () => {
-      hoveredMoraIndex.value = -1;
+      hoveredMoraIndex.value = undefined;
       selectedDetail.value = "accent";
     });
 
     Mousetrap.bind("2", () => {
-      hoveredPhraseIndex.value = -1;
+      hoveredPhraseIndex.value = undefined;
       selectedDetail.value = "intonation";
     });
 
@@ -345,14 +345,14 @@ export default defineComponent({
 
     store.watch(
       (state) => {
-        let key = new Array<string>();
+        let keys = new Array<string>();
         state.audioKeys.forEach((audioKey) => {
-          key.push(audioKey);
+          keys.push(audioKey);
         });
-        return key;
+        return keys;
       },
-      (newKey, oldKey) => {
-        const key = newKey[newKey.length - 1];
+      (newKeys, oldKeys) => {
+        const key = newKeys[newKeys.length - 1];
         store.watch(
           (state) => state.audioItems[key].query?.accentPhrases,
           (newVal, oldVal) => {
