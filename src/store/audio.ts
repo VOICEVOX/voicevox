@@ -1,9 +1,15 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
-import { StoreOptions } from "vuex";
 import path from "path";
-import { createCommandAction } from "./command";
+import { oldCreateCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
-import { AudioItem, EngineState, SaveResultObject, State } from "./type";
+import {
+  AudioItem,
+  EngineState,
+  SaveResultObject,
+  State,
+  typeAsStoreOptions,
+  commandMutationsCreator,
+} from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -74,7 +80,6 @@ export const SET_AUDIO_TEXT = "SET_AUDIO_TEXT";
 export const SET_AUDIO_CHARACTER_INDEX = "SET_AUDIO_CHARACTER_INDEX";
 export const CHANGE_CHARACTER_INDEX = "CHANGE_CHARACTER_INDEX";
 export const INSERT_AUDIO_ITEM = "INSERT_AUDIO_ITEM";
-export const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
 export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
@@ -112,10 +117,13 @@ export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
+// mutations
+const REMOVE_AUDIO_ITEM = "REMOVE_AUDIO_ITEM";
+
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
-export const audioStore = {
+export const audioStore = typeAsStoreOptions({
   getters: {
     [ACTIVE_AUDIO_KEY](state) {
       return state._activeAudioKey !== undefined &&
@@ -162,6 +170,11 @@ export const audioStore = {
     ) {
       state.nowPlayingContinuously = nowPlaying;
     },
+    [REMOVE_AUDIO_ITEM]: (state, { audioKey }: { audioKey: string }) => {
+      state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
+      delete state.audioItems[audioKey];
+      delete state.audioStates[audioKey];
+    },
   },
 
   actions: {
@@ -205,12 +218,12 @@ export const audioStore = {
 
       commit(SET_CHARACTER_INFOS, { characterInfos });
     }),
-    [SET_AUDIO_TEXT]: createCommandAction(
+    [SET_AUDIO_TEXT]: oldCreateCommandAction(
       (draft, { audioKey, text }: { audioKey: string; text: string }) => {
         draft.audioItems[audioKey].text = text;
       }
     ),
-    [SET_AUDIO_CHARACTER_INDEX]: createCommandAction<
+    [SET_AUDIO_CHARACTER_INDEX]: oldCreateCommandAction<
       State,
       { audioKey: string; characterIndex: number }
     >((draft, { audioKey, characterIndex }) => {
@@ -226,7 +239,7 @@ export const audioStore = {
         return dispatch(FETCH_MORA_DATA, { audioKey });
       }
     },
-    [INSERT_AUDIO_ITEM]: createCommandAction(
+    [INSERT_AUDIO_ITEM]: oldCreateCommandAction(
       (
         draft,
         {
@@ -243,14 +256,7 @@ export const audioStore = {
         };
       }
     ),
-    [REMOVE_AUDIO_ITEM]: createCommandAction(
-      (draft, { audioKey }: { audioKey: string }) => {
-        draft.audioKeys.splice(draft.audioKeys.indexOf(audioKey), 1);
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
-      }
-    ),
-    [REMOVE_ALL_AUDIO_ITEM]: createCommandAction((draft) => {
+    [REMOVE_ALL_AUDIO_ITEM]: oldCreateCommandAction((draft) => {
       for (const audioKey of draft.audioKeys) {
         delete draft.audioItems[audioKey];
         delete draft.audioStates[audioKey];
@@ -286,7 +292,7 @@ export const audioStore = {
         return null;
       }
     },
-    [SET_ACCENT_PHRASES]: createCommandAction(
+    [SET_ACCENT_PHRASES]: oldCreateCommandAction(
       (
         draft,
         {
@@ -297,7 +303,7 @@ export const audioStore = {
         draft.audioItems[audioKey].query!.accentPhrases = accentPhrases;
       }
     ),
-    [SET_AUDIO_QUERY]: createCommandAction(
+    [SET_AUDIO_QUERY]: oldCreateCommandAction(
       (
         draft,
         { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
@@ -350,7 +356,7 @@ export const audioStore = {
           dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
         );
     },
-    [SET_AUDIO_SPEED_SCALE]: createCommandAction(
+    [SET_AUDIO_SPEED_SCALE]: oldCreateCommandAction(
       (
         draft,
         { audioKey, speedScale }: { audioKey: string; speedScale: number }
@@ -358,37 +364,37 @@ export const audioStore = {
         draft.audioItems[audioKey].query!.speedScale = speedScale;
       }
     ),
-    [SET_AUDIO_PITCH_SCALE]: createCommandAction<
+    [SET_AUDIO_PITCH_SCALE]: oldCreateCommandAction<
       State,
       { audioKey: string; pitchScale: number }
     >((draft, { audioKey, pitchScale }) => {
       draft.audioItems[audioKey].query!.pitchScale = pitchScale;
     }),
-    [SET_AUDIO_INTONATION_SCALE]: createCommandAction<
+    [SET_AUDIO_INTONATION_SCALE]: oldCreateCommandAction<
       State,
       { audioKey: string; intonationScale: number }
     >((draft, { audioKey, intonationScale }) => {
       draft.audioItems[audioKey].query!.intonationScale = intonationScale;
     }),
-    [SET_AUDIO_VOLUME_SCALE]: createCommandAction<
+    [SET_AUDIO_VOLUME_SCALE]: oldCreateCommandAction<
       State,
       { audioKey: string; volumeScale: number }
     >((draft, { audioKey, volumeScale }) => {
       draft.audioItems[audioKey].query!.volumeScale = volumeScale;
     }),
-    [SET_AUDIO_PRE_PHONEME_LENGTH]: createCommandAction<
+    [SET_AUDIO_PRE_PHONEME_LENGTH]: oldCreateCommandAction<
       State,
       { audioKey: string; prePhonemeLength: number }
     >((draft, { audioKey, prePhonemeLength }) => {
       draft.audioItems[audioKey].query!.prePhonemeLength = prePhonemeLength;
     }),
-    [SET_AUDIO_POST_PHONEME_LENGTH]: createCommandAction<
+    [SET_AUDIO_POST_PHONEME_LENGTH]: oldCreateCommandAction<
       State,
       { audioKey: string; postPhonemeLength: number }
     >((draft, { audioKey, postPhonemeLength }) => {
       draft.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
     }),
-    [SET_AUDIO_ACCENT]: createCommandAction<
+    [SET_AUDIO_ACCENT]: oldCreateCommandAction<
       State,
       {
         audioKey: string;
@@ -415,7 +421,7 @@ export const audioStore = {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
       return dispatch(FETCH_MORA_DATA, { audioKey });
     },
-    [TOGGLE_ACCENT_PHRASE_SPLIT]: createCommandAction<
+    [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
       State,
       {
         audioKey: string;
@@ -495,7 +501,7 @@ export const audioStore = {
       });
       return dispatch(FETCH_MORA_DATA, { audioKey });
     },
-    [SET_AUDIO_MORA_DATA]: createCommandAction<
+    [SET_AUDIO_MORA_DATA]: oldCreateCommandAction<
       State,
       {
         audioKey: string;
@@ -799,4 +805,22 @@ export const audioStore = {
       return window.electron.checkFileExists(file);
     },
   },
-} as StoreOptions<State>;
+} as const);
+
+export const COMMAND_REMOVE_AUDIO_ITEM = "COMMAND_REMOVE_AUDIO_ITEM";
+
+export const audioCommandStore = typeAsStoreOptions({
+  actions: {
+    [COMMAND_REMOVE_AUDIO_ITEM]: (
+      { commit },
+      payload: { audioKey: string }
+    ) => {
+      commit(COMMAND_REMOVE_AUDIO_ITEM, payload);
+    },
+  },
+  mutations: commandMutationsCreator({
+    [COMMAND_REMOVE_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
+      audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+    },
+  }),
+} as const);
