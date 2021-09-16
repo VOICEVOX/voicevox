@@ -88,8 +88,6 @@ export const projectStore = {
             }
           }
 
-          console.log(appVersionList);
-
           if (appVersionList < [0, 5, 0]) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
@@ -107,8 +105,6 @@ export const projectStore = {
                   }
                 }
               }
-
-              console.log("ktkt");
 
               // set phoneme length
               await api
@@ -136,8 +132,6 @@ export const projectStore = {
                 });
             }
           }
-
-          console.log(obj);
 
           // Validation check
           const ajv = new Ajv();
