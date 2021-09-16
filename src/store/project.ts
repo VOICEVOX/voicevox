@@ -88,6 +88,8 @@ export const projectStore = {
             }
           }
 
+          console.log(appVersionList);
+
           if (appVersionList < [0, 5, 0]) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
@@ -106,8 +108,9 @@ export const projectStore = {
                 }
               }
 
+              console.log("ktkt");
+
               // set phoneme length
-              console.log(audioItem);
               await api
                 .moraDataMoraDataPost({
                   accentPhrase: audioItem.query!.accentPhrases,
@@ -116,7 +119,20 @@ export const projectStore = {
                       .metas.speaker,
                 })
                 .then((accentPhrases) => {
-                  audioItem.query!.accentPhrases = accentPhrases;
+                  accentPhrases.forEach((newAccentPhrase, i) => {
+                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                    if (newAccentPhrase.pauseMora) {
+                      oldAccentPhrase.pauseMora.vowelLength =
+                        newAccentPhrase.pauseMora.vowelLength;
+                    }
+                    newAccentPhrase.moras.forEach((mora, j) => {
+                      if (mora.consonant) {
+                        oldAccentPhrase.moras[j].consonantLength =
+                          mora.consonantLength;
+                      }
+                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                    });
+                  });
                 });
             }
           }
