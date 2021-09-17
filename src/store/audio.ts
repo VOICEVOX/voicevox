@@ -498,7 +498,7 @@ export const audioStore = typeAsStoreOptions({
       }
     }),
     async [CHANGE_ACCENT_PHRASE_SPLIT](
-      { dispatch },
+      { state, dispatch },
       {
         audioKey,
         accentPhraseIndex,
@@ -517,7 +517,20 @@ export const audioStore = typeAsStoreOptions({
         moraIndex,
         isPause,
       });
-      return dispatch(FETCH_MORA_DATA, { audioKey });
+      const changeMoraDataIndexes = [accentPhraseIndex];
+      const query = state.audioItems[audioKey].query!;
+      if (
+        (moraIndex ===
+          query.accentPhrases[accentPhraseIndex].moras.length - 1 ||
+          isPause) &&
+        moraIndex !== null
+      ) {
+        changeMoraDataIndexes.push(accentPhraseIndex + 1);
+      }
+      return dispatch(FETCH_MORA_DATA, {
+        audioKey,
+        changeMoraDataIndexes,
+      });
     },
     [SET_AUDIO_MORA_DATA]: oldCreateCommandAction<
       State,
