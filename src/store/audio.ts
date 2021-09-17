@@ -331,8 +331,8 @@ export const audioStore = typeAsStoreOptions({
       { state, dispatch },
       {
         audioKey,
-        changeMoraDataIndex,
-      }: { audioKey: string; changeMoraDataIndex?: number }
+        changeMoraDataIndexes,
+      }: { audioKey: string; changeMoraDataIndexes?: number[] }
     ) {
       const audioItem = state.audioItems[audioKey];
       // "Do not mutate vuex store state outside mutation handlers"エラー回避のための配列コピー
@@ -345,9 +345,11 @@ export const audioStore = typeAsStoreOptions({
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
         .then((accentPhrases) => {
-          if (changeMoraDataIndex !== undefined) {
-            originAccentPhrases[changeMoraDataIndex] =
-              accentPhrases[changeMoraDataIndex];
+          if (changeMoraDataIndexes !== undefined) {
+            for (const changeMoraDataIndex of changeMoraDataIndexes) {
+              originAccentPhrases[changeMoraDataIndex] =
+                accentPhrases[changeMoraDataIndex];
+            }
             accentPhrases = originAccentPhrases;
           }
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
@@ -434,7 +436,7 @@ export const audioStore = typeAsStoreOptions({
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
       return dispatch(FETCH_MORA_DATA, {
         audioKey,
-        changeMoraDataIndex: accentPhraseIndex,
+        changeMoraDataIndexes: [accentPhraseIndex],
       });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
