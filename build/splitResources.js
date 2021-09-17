@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+const crypto = require('crypto');
 const fs = require("fs");
 const path = require("path");
+
+const createIni = (sizes, hashes) => {
+  const ini = ['[files]', `n=${sizes.length}`];
+  hashes.forEach((v, i) => ini.push(`hash${i}=${v.toUpperCase()}`));
+  sizes.forEach((v, i) => ini.push(`size${i}=${v}`));
+  return ini.join("\r\n") + "\r\n";
+};
 
 exports.default = async function (buildResult) {
   const projectVersion = process.env.npm_package_version;
@@ -22,6 +30,8 @@ exports.default = async function (buildResult) {
   });
 
   let fileIndex = 0;
+  const sizes = [];
+  const hashes = [];
   inputStream.on("data", (chunk) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     fs.stat(outputDirectory, (err, _) => {
@@ -48,10 +58,15 @@ exports.default = async function (buildResult) {
       outputStream.end();
 
       fileIndex += 1;
+      sizes.push(chunk.length);
+      const hash = crypto.createHash('md5');
+      hashes.push(hash.update(chunk).digest('hex'));
     });
   });
 
   inputStream.on("end", () => {
+    const iniFilePath = path.resolve(outputDirectory, fileName).concat(".ini");
+    fs.writeFileSync(iniFilePath, createIni(sizes, hashes));
     console.log("Split Finished.");
   });
 };
