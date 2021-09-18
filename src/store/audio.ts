@@ -510,6 +510,10 @@ export const audioStore = typeAsStoreOptions({
         isPause: boolean;
       }
     ) {
+      // 後で同じ条件分岐になるようにするため、TOGGLE_ACCENT_PHRASE_SPLIT内で変更する前のqueryの状態をdeepcopyしておく。
+      const query: AudioQuery = JSON.parse(
+        JSON.stringify(state.audioItems[audioKey].query!)
+      );
       await dispatch(TOGGLE_ACCENT_PHRASE_SPLIT, {
         audioKey,
         accentPhraseIndex,
@@ -517,13 +521,12 @@ export const audioStore = typeAsStoreOptions({
         isPause,
       });
       const changeIndexes = [accentPhraseIndex];
-      const query = state.audioItems[audioKey].query!;
       if (
-        (moraIndex ===
-          query.accentPhrases[accentPhraseIndex].moras.length - 1 ||
-          isPause) &&
+        moraIndex !== query.accentPhrases[accentPhraseIndex].moras.length - 1 &&
+        !isPause &&
         moraIndex !== null
       ) {
+        // split
         changeIndexes.push(accentPhraseIndex + 1);
       }
       return dispatch(FETCH_MORA_DATA, {
