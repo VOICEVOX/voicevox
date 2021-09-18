@@ -131,12 +131,12 @@ import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
-  SET_AUDIO_INTONATION_SCALE,
-  SET_AUDIO_PITCH_SCALE,
-  SET_AUDIO_SPEED_SCALE,
-  SET_AUDIO_VOLUME_SCALE,
-  SET_AUDIO_PRE_PHONEME_LENGTH,
-  SET_AUDIO_POST_PHONEME_LENGTH,
+  COMMAND_SET_AUDIO_INTONATION_SCALE,
+  COMMAND_SET_AUDIO_PITCH_SCALE,
+  COMMAND_SET_AUDIO_SPEED_SCALE,
+  COMMAND_SET_AUDIO_VOLUME_SCALE,
+  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH,
+  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { AudioQuery } from "@/openapi";
@@ -201,7 +201,7 @@ export default defineComponent({
 
     const setAudioSpeedScale = (speedScale: number) => {
       previewAudioSpeedScale.stopPreview();
-      store.dispatch(SET_AUDIO_SPEED_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_SPEED_SCALE, {
         audioKey: activeAudioKey.value!,
         speedScale,
       });
@@ -209,7 +209,7 @@ export default defineComponent({
 
     const setAudioPitchScale = (pitchScale: number) => {
       previewAudioPitchScale.stopPreview();
-      store.dispatch(SET_AUDIO_PITCH_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_PITCH_SCALE, {
         audioKey: activeAudioKey.value!,
         pitchScale,
       });
@@ -217,7 +217,7 @@ export default defineComponent({
 
     const setAudioIntonationScale = (intonationScale: number) => {
       previewAudioIntonationScale.stopPreview();
-      store.dispatch(SET_AUDIO_INTONATION_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_INTONATION_SCALE, {
         audioKey: activeAudioKey.value!,
         intonationScale,
       });
@@ -225,7 +225,7 @@ export default defineComponent({
 
     const setAudioVolumeScale = (volumeScale: number) => {
       previewAudioVolumeScale.stopPreview();
-      store.dispatch(SET_AUDIO_VOLUME_SCALE, {
+      store.dispatch(COMMAND_SET_AUDIO_VOLUME_SCALE, {
         audioKey: activeAudioKey.value!,
         volumeScale,
       });
@@ -233,7 +233,7 @@ export default defineComponent({
 
     const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
       previewAudioPrePhonemeLength.stopPreview();
-      store.dispatch(SET_AUDIO_PRE_PHONEME_LENGTH, {
+      store.dispatch(COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH, {
         audioKey: activeAudioKey.value!,
         prePhonemeLength,
       });
@@ -241,7 +241,7 @@ export default defineComponent({
 
     const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
       previewAudioPostPhonemeLength.stopPreview();
-      store.dispatch(SET_AUDIO_POST_PHONEME_LENGTH, {
+      store.dispatch(COMMAND_SET_AUDIO_POST_PHONEME_LENGTH, {
         audioKey: activeAudioKey.value!,
         postPhonemeLength,
       });
