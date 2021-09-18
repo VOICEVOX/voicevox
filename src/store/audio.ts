@@ -440,19 +440,21 @@ export const audioStore = typeAsStoreOptions({
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
       State,
-      {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number | null;
-        isPause: boolean;
-      }
-    >((draft, { audioKey, accentPhraseIndex, moraIndex, isPause }) => {
-      const query = draft.audioItems[audioKey].query!;
-      if (
-        moraIndex === query.accentPhrases[accentPhraseIndex].moras.length - 1 ||
-        isPause
-      ) {
-        // merge
+      | {
+          audioKey: string;
+          accentPhraseIndex: number;
+          isPause: false;
+          moraIndex: number;
+        }
+      | {
+          audioKey: string;
+          accentPhraseIndex: number;
+          isPause: true;
+          moraIndex: undefined;
+        }
+    >((draft, accentSplitObject) => {
+      const query = draft.audioItems[accentSplitObject.audioKey].query!;
+      const mergeAccent = (accentPhraseIndex: number) => {
         const newAccentPhrase: AccentPhrase = {
           moras: [
             ...query.accentPhrases[accentPhraseIndex].moras,
@@ -462,11 +464,8 @@ export const audioStore = typeAsStoreOptions({
           pauseMora: query.accentPhrases[accentPhraseIndex + 1].pauseMora,
         };
         query.accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
-      } else {
-        // split
-        if (moraIndex === null) {
-          return;
-        }
+      };
+      const splitAccent = (accentPhraseIndex: number, moraIndex: number) => {
         const newAccentPhrase1: AccentPhrase = {
           moras: query.accentPhrases[accentPhraseIndex].moras.slice(
             0,
@@ -494,6 +493,20 @@ export const audioStore = typeAsStoreOptions({
           newAccentPhrase1,
           newAccentPhrase2
         );
+      };
+      const accentPhraseIndex = accentSplitObject.accentPhraseIndex;
+      if (accentSplitObject.isPause) {
+        mergeAccent(accentPhraseIndex);
+      } else {
+        const moraIndex = accentSplitObject.moraIndex;
+        if (
+          moraIndex ===
+          query.accentPhrases[accentPhraseIndex].moras.length - 1
+        ) {
+          mergeAccent(accentPhraseIndex);
+        } else {
+          splitAccent(accentPhraseIndex, moraIndex);
+        }
       }
     }),
     async [CHANGE_ACCENT_PHRASE_SPLIT](
@@ -523,8 +536,7 @@ export const audioStore = typeAsStoreOptions({
       const changeIndexes = [accentPhraseIndex];
       if (
         moraIndex !== query.accentPhrases[accentPhraseIndex].moras.length - 1 &&
-        !isPause &&
-        moraIndex !== null
+        !isPause
       ) {
         // split時はaccentPhraseIndexの後ろのものもMoraPitchをリセットしたいので、+1したindexをリストに追加しておく
         changeIndexes.push(accentPhraseIndex + 1);
