@@ -331,8 +331,8 @@ export const audioStore = typeAsStoreOptions({
       { state, dispatch },
       {
         audioKey,
-        changeMoraDataIndexes,
-      }: { audioKey: string; changeMoraDataIndexes?: number[] }
+        changeIndexes,
+      }: { audioKey: string; changeIndexes?: number[] }
     ) {
       const audioItem = state.audioItems[audioKey];
       // "Do not mutate vuex store state outside mutation handlers"エラー回避のための配列コピー
@@ -345,10 +345,9 @@ export const audioStore = typeAsStoreOptions({
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
         .then((accentPhrases) => {
-          if (changeMoraDataIndexes !== undefined) {
-            for (const changeMoraDataIndex of changeMoraDataIndexes) {
-              originAccentPhrases[changeMoraDataIndex] =
-                accentPhrases[changeMoraDataIndex];
+          if (changeIndexes !== undefined) {
+            for (const changeIndex of changeIndexes) {
+              originAccentPhrases[changeIndex] = accentPhrases[changeIndex];
             }
             accentPhrases = originAccentPhrases;
           }
@@ -436,7 +435,7 @@ export const audioStore = typeAsStoreOptions({
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
       return dispatch(FETCH_MORA_DATA, {
         audioKey,
-        changeMoraDataIndexes: [accentPhraseIndex],
+        changeIndexes: [accentPhraseIndex],
       });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
@@ -517,7 +516,7 @@ export const audioStore = typeAsStoreOptions({
         moraIndex,
         isPause,
       });
-      const changeMoraDataIndexes = [accentPhraseIndex];
+      const changeIndexes = [accentPhraseIndex];
       const query = state.audioItems[audioKey].query!;
       if (
         (moraIndex ===
@@ -525,11 +524,11 @@ export const audioStore = typeAsStoreOptions({
           isPause) &&
         moraIndex !== null
       ) {
-        changeMoraDataIndexes.push(accentPhraseIndex + 1);
+        changeIndexes.push(accentPhraseIndex + 1);
       }
       return dispatch(FETCH_MORA_DATA, {
         audioKey,
-        changeMoraDataIndexes,
+        changeIndexes,
       });
     },
     [SET_AUDIO_MORA_DATA]: oldCreateCommandAction<
