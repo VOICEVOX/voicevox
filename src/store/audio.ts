@@ -526,7 +526,7 @@ export const audioStore = typeAsStoreOptions({
         !isPause &&
         moraIndex !== null
       ) {
-        // split
+        // split時はaccentPhraseIndexの後ろのものもMoraPitchをリセットしたいので、+1したindexをリストに追加しておく
         changeIndexes.push(accentPhraseIndex + 1);
       }
       return dispatch(FETCH_MORA_DATA, {
