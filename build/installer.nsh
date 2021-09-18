@@ -20,9 +20,9 @@
   Var iniFileName
 
   ; 動作モード
-  ;   "None"        - ファイルのダウンロードもファイルの結合も行わない
-  ;   "Download"    - ファイルのダウンロードとファイルの結合を行う
-  ;   "Concatenate" - ファイルの結合のみを行う
+  ;   "None"                   - ファイルのダウンロードもファイルの結合も行わない
+  ;   "DownloadAndConcatenate" - ファイルのダウンロードとファイルの結合を行う
+  ;   "Concatenate"            - ファイルの結合のみを行う
   Var additionalProcess
 
   ; voicevox-X.X.X-x64.nsis.7z のようなファイル名
@@ -501,7 +501,7 @@ verifyPartedFile_finish${UniqueID}:
     ${If} $0 == "1"
       StrCpy $additionalProcess "Concatenate"
     ${Else}
-      StrCpy $additionalProcess "Download"
+      StrCpy $additionalProcess "DownloadAndConcatenate"
     ${EndIf}
 
   ${EndIf}
@@ -538,7 +538,7 @@ Function welcomePageShow
 
     ; ダウンロードも結合も必要ない
 
-  ${ElseIf} $additionalProcess == "Download"
+  ${ElseIf} $additionalProcess == "DownloadAndConcatenate"
 
     ; ダウンロードを行うのでその旨を表示する
     ; FIXME: 一部のファイルがダウンロード済みの場合は表示が正しくない。気にしすぎ？
@@ -577,7 +577,7 @@ FunctionEnd
 Function welcomePageLeave
   ${If} $additionalProcess == "None"
     Return
-  ${ElseIf} $additionalProcess == "Download"
+  ${ElseIf} $additionalProcess == "DownloadAndConcatenate"
     ; ダウンロードと結合に必要な空き容量
     System::Int64Op $archiveSize * 2
     Pop $0
@@ -597,7 +597,7 @@ Function welcomePageLeave
   welcomePageLeave_download:
   ShowWindow $HWNDPARENT ${SW_HIDE}
 
-  ${If} $additionalProcess == "Download"
+  ${If} $additionalProcess == "DownloadAndConcatenate"
     IntOp $3 $numFiles - 1
     ${ForEach} $2 0 $3 + 1
       ; FIXME: 一部だけダウンロードが完了してる状態のとき、
