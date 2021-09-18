@@ -129,6 +129,7 @@ import {
   IMPORT_FROM_FILE,
   LOAD_CHARACTER,
   REGISTER_AUDIO_ITEM,
+  COMMAND_REGISTER_AUDIO_ITEM,
 } from "@/store/audio";
 import {
   UI_LOCKED,
@@ -228,7 +229,7 @@ export default defineComponent({
       const characterIndex =
         store.state.audioItems[prevAudioKey].characterIndex;
       const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
-      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
+      const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
       });
