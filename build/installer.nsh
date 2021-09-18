@@ -7,7 +7,8 @@
 ; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
 !define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
 
-!macro customHeader
+!define defineVariables "!insertmacro defineVariables"
+!macro defineVariables
 
   ; インストール後のサイズ
   Var installedSize
@@ -510,6 +511,9 @@ verifyPartedFile_finish${UniqueID}:
 
 ; https://github.com/electron-userland/electron-builder/blob/1beda214d255211b36019e8d2febcd0868aae5f4/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L9
 !macro customWelcomePage
+
+; customInit だと Function の内側になってしまうので customWelcomePage で宣言する
+${defineVariables}
 
 !define MUI_PAGE_CUSTOMFUNCTION_PRE welcomePagePre
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW welcomePageShow
