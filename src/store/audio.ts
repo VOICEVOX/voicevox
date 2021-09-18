@@ -376,18 +376,32 @@ export const audioStore = typeAsStoreOptions({
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
     },
-    [FETCH_MORA_DATA]({ state, dispatch }, { audioKey }: { audioKey: string }) {
+    [FETCH_MORA_DATA](
+      { state, dispatch },
+      {
+        audioKey,
+        changeIndexes,
+      }: { audioKey: string; changeIndexes?: number[] }
+    ) {
       const audioItem = state.audioItems[audioKey];
+      // "Do not mutate vuex store state outside mutation handlers"エラー回避のための配列コピー
+      const originAccentPhrases = [...audioItem.query!.accentPhrases];
 
       return api
         .moraDataMoraDataPost({
-          accentPhrase: audioItem.query!.accentPhrases,
+          accentPhrase: originAccentPhrases,
           speaker:
             state.characterInfos![audioItem.characterIndex!].metas.speaker,
         })
-        .then((accentPhrases) =>
-          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
-        );
+        .then((accentPhrases) => {
+          if (changeIndexes !== undefined) {
+            for (const changeIndex of changeIndexes) {
+              originAccentPhrases[changeIndex] = accentPhrases[changeIndex];
+            }
+            accentPhrases = originAccentPhrases;
+          }
+          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
+        });
     },
     [FETCH_AUDIO_QUERY]: (
       { state, dispatch },
@@ -430,23 +444,28 @@ export const audioStore = typeAsStoreOptions({
       }
     ) {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
-      return dispatch(FETCH_MORA_DATA, { audioKey });
+      return dispatch(FETCH_MORA_DATA, {
+        audioKey,
+        changeIndexes: [accentPhraseIndex],
+      });
     },
     [TOGGLE_ACCENT_PHRASE_SPLIT]: oldCreateCommandAction<
       State,
-      {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number | null;
-        isPause: boolean;
-      }
-    >((draft, { audioKey, accentPhraseIndex, moraIndex, isPause }) => {
-      const query = draft.audioItems[audioKey].query!;
-      if (
-        moraIndex === query.accentPhrases[accentPhraseIndex].moras.length - 1 ||
-        isPause
-      ) {
-        // merge
+      | {
+          audioKey: string;
+          accentPhraseIndex: number;
+          isPause: false;
+          moraIndex: number;
+        }
+      | {
+          audioKey: string;
+          accentPhraseIndex: number;
+          isPause: true;
+          moraIndex: undefined;
+        }
+    >((draft, accentSplitObject) => {
+      const query = draft.audioItems[accentSplitObject.audioKey].query!;
+      const mergeAccent = (accentPhraseIndex: number) => {
         const newAccentPhrase: AccentPhrase = {
           moras: [
             ...query.accentPhrases[accentPhraseIndex].moras,
@@ -456,11 +475,8 @@ export const audioStore = typeAsStoreOptions({
           pauseMora: query.accentPhrases[accentPhraseIndex + 1].pauseMora,
         };
         query.accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
-      } else {
-        // split
-        if (moraIndex === null) {
-          return;
-        }
+      };
+      const splitAccent = (accentPhraseIndex: number, moraIndex: number) => {
         const newAccentPhrase1: AccentPhrase = {
           moras: query.accentPhrases[accentPhraseIndex].moras.slice(
             0,
@@ -488,10 +504,24 @@ export const audioStore = typeAsStoreOptions({
           newAccentPhrase1,
           newAccentPhrase2
         );
+      };
+      const accentPhraseIndex = accentSplitObject.accentPhraseIndex;
+      if (accentSplitObject.isPause) {
+        mergeAccent(accentPhraseIndex);
+      } else {
+        const moraIndex = accentSplitObject.moraIndex;
+        if (
+          moraIndex ===
+          query.accentPhrases[accentPhraseIndex].moras.length - 1
+        ) {
+          mergeAccent(accentPhraseIndex);
+        } else {
+          splitAccent(accentPhraseIndex, moraIndex);
+        }
       }
     }),
     async [CHANGE_ACCENT_PHRASE_SPLIT](
-      { dispatch },
+      { state, dispatch },
       {
         audioKey,
         accentPhraseIndex,
@@ -504,13 +534,28 @@ export const audioStore = typeAsStoreOptions({
         isPause: boolean;
       }
     ) {
+      // 後で同じ条件分岐になるようにするため、TOGGLE_ACCENT_PHRASE_SPLIT内で変更する前のqueryの状態をdeepcopyしておく。
+      const query: AudioQuery = JSON.parse(
+        JSON.stringify(state.audioItems[audioKey].query!)
+      );
       await dispatch(TOGGLE_ACCENT_PHRASE_SPLIT, {
         audioKey,
         accentPhraseIndex,
         moraIndex,
         isPause,
       });
-      return dispatch(FETCH_MORA_DATA, { audioKey });
+      const changeIndexes = [accentPhraseIndex];
+      if (
+        moraIndex !== query.accentPhrases[accentPhraseIndex].moras.length - 1 &&
+        !isPause
+      ) {
+        // split時はaccentPhraseIndexの後ろのものもMoraPitchをリセットしたいので、+1したindexをリストに追加しておく
+        changeIndexes.push(accentPhraseIndex + 1);
+      }
+      return dispatch(FETCH_MORA_DATA, {
+        audioKey,
+        changeIndexes,
+      });
     },
     [SET_AUDIO_MORA_DATA]: oldCreateCommandAction<
       State,

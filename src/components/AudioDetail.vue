@@ -93,7 +93,7 @@
               "
               @click="
                 uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, moraIndex, false)
+                  toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
               "
               :class="[
                 'splitter-cell',
@@ -110,8 +110,7 @@
             <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
             <div
               @click="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, null, true)
+                uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
               "
               class="
                 splitter-cell
@@ -213,8 +212,8 @@ export default defineComponent({
 
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
-      moraIndex: number | null,
-      isPause: boolean
+      isPause: boolean,
+      moraIndex?: number
     ) => {
       store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
