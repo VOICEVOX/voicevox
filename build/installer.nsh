@@ -560,9 +560,9 @@ Function welcomePageShow
     ; 空き容量が足りないので画面に表示する
     ${bytesToHumanReadable} $0 $0
     ${bytesToHumanReadable} $1 $1
-    ${GetRoot} "$EXEDIR" $2
-    StrCpy $2 $2 1 ; "C:" から "C" だけを取り出す
-    StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の$2ドライブの空き容量: $1）"
+    ${GetRoot} "$EXEDIR" $3
+    StrCpy $3 $3 1 ; "C:" から "C" だけを取り出す
+    StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の$3ドライブの空き容量: $1）"
   ${EndIf}
 
   StrCpy $2 "$2$\r$\n$\r$\n続けるには [次へ] をクリックしてください。"
