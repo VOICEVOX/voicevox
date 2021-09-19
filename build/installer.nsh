@@ -7,8 +7,7 @@
 ; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
 !define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
 
-!define defineVariables "!insertmacro defineVariables"
-!macro defineVariables
+!ifndef BUILD_UNINSTALLER
 
   ; インストール後のサイズ
   Var installedSize
@@ -34,7 +33,7 @@
   ; 既に Welcome ページはスキップされているか？
   Var skippedWelcomePage
 
-!macroend
+!endif
 
 ; ${updateDefinedVariablesINI} Result
 ; ini ファイルの内容に従い変数を更新する
@@ -511,11 +510,6 @@ verifyPartedFile_finish${UniqueID}:
 
 ; https://github.com/electron-userland/electron-builder/blob/1beda214d255211b36019e8d2febcd0868aae5f4/packages/app-builder-lib/templates/nsis/assistedInstaller.nsh#L9
 !macro customWelcomePage
-
-; customInit だと Function の内側になってしまうし、
-; customHeader だと assistedInstaller.nsh の後ろになってしまうので
-; customWelcomePage 内以外に宣言できる場所がなさそう
-${defineVariables}
 
 !define MUI_PAGE_CUSTOMFUNCTION_PRE welcomePagePre
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW welcomePageShow
