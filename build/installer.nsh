@@ -693,6 +693,7 @@ Function readyPageShow
   ${Else}
     ; 知らない戻り値を返してきた
     MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+    ${myQuit}
   ${EndIf}
 
   !insertmacro MUI_HEADER_TEXT "インストールの開始" "インストールの準備が整いました。"
