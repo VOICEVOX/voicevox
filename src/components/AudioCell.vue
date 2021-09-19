@@ -78,7 +78,7 @@ import {
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
   CHANGE_CHARACTER_INDEX,
-  REGISTER_AUDIO_ITEM,
+  COMMAND_REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
   COMMAND_REMOVE_AUDIO_ITEM,
@@ -242,7 +242,7 @@ export default defineComponent({
       const characterIndex =
         store.state.audioItems[props.audioKey].characterIndex;
       const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
-      await store.dispatch(REGISTER_AUDIO_ITEM, {
+      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
       });
