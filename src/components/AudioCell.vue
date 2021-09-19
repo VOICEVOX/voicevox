@@ -78,10 +78,10 @@ import {
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
   CHANGE_CHARACTER_INDEX,
-  REGISTER_AUDIO_ITEM,
+  COMMAND_REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
-  REMOVE_AUDIO_ITEM,
+  COMMAND_REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
   PUT_TEXTS,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
@@ -223,7 +223,7 @@ export default defineComponent({
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
 
-        store.dispatch(REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch(COMMAND_REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
       }
     };
 
@@ -242,7 +242,7 @@ export default defineComponent({
       const characterIndex =
         store.state.audioItems[props.audioKey].characterIndex;
       const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
-      await store.dispatch(REGISTER_AUDIO_ITEM, {
+      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
       });
