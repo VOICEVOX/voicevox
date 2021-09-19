@@ -81,13 +81,7 @@
             :key="moraIndex"
           >
             <div
-              :class="
-                !uiLocked &&
-                (accentPhraseIndex == hoveredPhraseIndex ||
-                  accentPhraseIndex * 100 + moraIndex == hoveredMoraIndex)
-                  ? 'text-cell-hovered'
-                  : 'text-cell'
-              "
+              :class="getHoveredClass(accentPhraseIndex, moraIndex)"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
@@ -449,6 +443,19 @@ export default defineComponent({
       }
     };
 
+    const getHoveredClass = (accentPhraseIndex: number, moraIndex: number) => {
+      if (!uiLocked.value) {
+        if (
+          accentPhraseIndex == hoveredPhraseIndex.value ||
+          accentPhraseIndex * 100 + moraIndex == hoveredMoraIndex.value
+        ) {
+          return "text-cell-hovered";
+        } else {
+          return "text-cell";
+        }
+      }
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -472,6 +479,7 @@ export default defineComponent({
       handleHoverText,
       hoveredPhraseIndex,
       hoveredMoraIndex,
+      getHoveredClass,
     };
   },
 });
