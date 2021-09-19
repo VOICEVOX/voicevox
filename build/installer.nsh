@@ -652,6 +652,9 @@ Function welcomePageLeave
     ${myQuit}
   ${EndIf}
 
+  ; 戻るボタンを押して戻った場合にダウンロードや結合を再実行しないように変えておく
+  StrCpy $additionalProcess "None"
+
   ShowWindow $HWNDPARENT ${SW_SHOW}
 FunctionEnd
 
