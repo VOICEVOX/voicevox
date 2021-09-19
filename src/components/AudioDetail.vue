@@ -192,7 +192,6 @@ export default defineComponent({
     });
 
     Mousetrap.bind("2", () => {
-      hoveredPhraseIndex.value = undefined;
       selectedDetail.value = "intonation";
     });
 
@@ -358,16 +357,17 @@ export default defineComponent({
     const hoveredPhraseIndex = ref<number | undefined>(undefined);
 
     const handleHoverText = (phraseIndex: number, isOver: boolean) => {
-      if (selectedDetail.value == "accent") {
-        if (isOver) {
-          hoveredPhraseIndex.value = phraseIndex;
-        } else {
-          hoveredPhraseIndex.value = undefined;
-        }
+      if (isOver) {
+        hoveredPhraseIndex.value = phraseIndex;
+      } else {
+        hoveredPhraseIndex.value = undefined;
       }
     };
 
     const getHoveredClass = (accentPhraseIndex: number) => {
+      if (selectedDetail.value != "accent") {
+        return "text-cell";
+      }
       if (!uiLocked.value) {
         if (accentPhraseIndex === hoveredPhraseIndex.value) {
           return "text-cell-hovered";
