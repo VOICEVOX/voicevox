@@ -5,6 +5,7 @@ import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 
+export const CREATE_NEW_PROJECT = "NEW_PROJECT";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 export const PROJECT_NAME = "PROJECT_NAME";
@@ -28,6 +29,30 @@ export const projectStore = {
   },
 
   actions: {
+    [CREATE_NEW_PROJECT]: createUILockAction(
+      async (context, { confirm }: { confirm?: boolean }) => {
+        if (
+          confirm !== false &&
+          !(await window.electron.showConfirmDialog({
+            title: "警告",
+            message:
+              "保存されていないプロジェクトの変更は破棄されます。\n" +
+              "よろしいですか？",
+          }))
+        ) {
+          return;
+        }
+
+        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
+
+        const audioItem: AudioItem = { text: "", characterIndex: 0 };
+        await context.dispatch(REGISTER_AUDIO_ITEM, {
+          audioItem,
+        });
+
+        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+      }
+    ),
     [LOAD_PROJECT_FILE]: createUILockAction(
       async (
         context,
@@ -44,6 +69,8 @@ export const projectStore = {
           filePath = ret[0];
         }
 
+        const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
+
         try {
           const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
@@ -52,7 +79,8 @@ export const projectStore = {
           // appVersion Validation check
           if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
             throw new Error(
-              "The appVersion of the project file should be string"
+              projectFileErrorMsg +
+                " The appVersion of the project file should be string"
             );
           }
           const appVersionList = versionTextParse(obj.appVersion);
@@ -60,7 +88,8 @@ export const projectStore = {
           const nowAppVersionList = versionTextParse(nowAppInfo.version);
           if (appVersionList == null || nowAppVersionList == null) {
             throw new Error(
-              'An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
+              projectFileErrorMsg +
+                ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
             );
           }
 
@@ -103,7 +132,6 @@ export const projectStore = {
               }
 
               // set phoneme length
-              console.log(audioItem);
               await api
                 .moraDataMoraDataPost({
                   accentPhrase: audioItem.query!.accentPhrases,
@@ -112,12 +140,23 @@ export const projectStore = {
                       .metas.speaker,
                 })
                 .then((accentPhrases) => {
-                  audioItem.query!.accentPhrases = accentPhrases;
+                  accentPhrases.forEach((newAccentPhrase, i) => {
+                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                    if (newAccentPhrase.pauseMora) {
+                      oldAccentPhrase.pauseMora.vowelLength =
+                        newAccentPhrase.pauseMora.vowelLength;
+                    }
+                    newAccentPhrase.moras.forEach((mora, j) => {
+                      if (mora.consonant) {
+                        oldAccentPhrase.moras[j].consonantLength =
+                          mora.consonantLength;
+                      }
+                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                    });
+                  });
                 });
             }
           }
-
-          console.log(obj);
 
           // Validation check
           const ajv = new Ajv();
@@ -127,7 +166,8 @@ export const projectStore = {
           }
           if (!obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)) {
             throw new Error(
-              "Every audioKey in audioKeys should be a key of audioItems"
+              projectFileErrorMsg +
+                " Every audioKey in audioKeys should be a key of audioItems"
             );
           }
           if (
@@ -165,13 +205,17 @@ export const projectStore = {
           }
           context.commit(SET_PROJECT_FILEPATH, { filePath });
         } catch (err) {
-          window.electron.logError(
-            err,
-            `VOICEVOX Project file "${filePath}" is a invalid file.`
-          );
+          window.electron.logError(err);
+          const message = (() => {
+            if (typeof err === "string") return err;
+            if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (err.message.startsWith(projectFileErrorMsg))
+              return "ファイルフォーマットが正しくありません。";
+            return err.message;
+          })();
           await window.electron.showErrorDialog({
             title: "エラー",
-            message: "ファイルフォーマットが正しくありません。",
+            message,
           });
         }
       }

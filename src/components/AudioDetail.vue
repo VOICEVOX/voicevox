@@ -116,7 +116,7 @@
               "
               @click="
                 uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, moraIndex, false)
+                  toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
               "
               :class="[
                 'splitter-cell',
@@ -133,8 +133,7 @@
             <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
             <div
               @click="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, null, true)
+                uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
               "
               class="
                 splitter-cell
@@ -224,8 +223,8 @@ export default defineComponent({
 
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
-      moraIndex: number | null,
-      isPause: boolean
+      isPause: boolean,
+      moraIndex?: number
     ) => {
       store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
@@ -281,29 +280,29 @@ export default defineComponent({
         }
       );
 
-      if (result.result !== "SUCCESS") {
-        let msg = "";
-        switch (result.result) {
-          case "WRITE_ERROR":
-            msg =
-              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-            break;
-          case "ENGINE_ERROR":
-            msg =
-              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-            break;
-        }
+      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
 
-        $q.dialog({
-          title: "書き出しに失敗しました。",
-          message: msg,
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "secondary",
-          },
-        });
+      let msg = "";
+      switch (result.result) {
+        case "WRITE_ERROR":
+          msg =
+            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+          break;
+        case "ENGINE_ERROR":
+          msg =
+            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+          break;
       }
+
+      $q.dialog({
+        title: "書き出しに失敗しました。",
+        message: msg,
+        ok: {
+          label: "閉じる",
+          flat: true,
+          textColor: "secondary",
+        },
+      });
     };
 
     const nowPlaying = computed(
