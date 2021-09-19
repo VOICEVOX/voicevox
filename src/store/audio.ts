@@ -108,7 +108,6 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const SET_AUDIO_MORA_VOICING = "SET_AUDIO_MORA_VOICING";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
 export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
 export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
@@ -555,70 +554,6 @@ export const audioStore = {
     >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
       const query = draft.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
-    }),
-    [SET_AUDIO_MORA_VOICING]: createCommandAction<
-      State,
-      {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number;
-        pitch?: number | undefined;
-      }
-    >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
-      const query = draft.audioItems[audioKey].query!;
-      const vowel =
-        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel;
-      if (["i", "I", "u", "U"].indexOf(vowel) == -1) {
-        return;
-      }
-
-      // if pitch is undefined, calculate it referring adjacent moras
-      if (pitch === undefined) {
-        // if it's the first one, use latter
-        if (moraIndex == 0) {
-          try {
-            pitch =
-              query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1]
-                .pitch || 5.5;
-          } catch {
-            pitch = 5.5;
-          }
-          // or it's the last one, use former
-        } else if (
-          moraIndex ==
-          query.accentPhrases[accentPhraseIndex].moras.length - 1
-        ) {
-          try {
-            pitch =
-              query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1]
-                .pitch || 5.5;
-          } catch {
-            pitch = 5.5;
-          }
-          // neither, use average of the both, no need to catch error
-        } else {
-          const pitchFormer =
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch ||
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1].pitch;
-          const pitchLater =
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex + 1].pitch ||
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex - 1].pitch;
-          pitch = (pitchFormer + pitchLater) / 2;
-          // if both of them are 0, use 5.5
-          if (pitch == 0) {
-            pitch = 5.5;
-          }
-        }
-      }
-
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
-      if (pitch == 0) {
-        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-          vowel.toUpperCase();
-      } else {
-        query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-          vowel.toLowerCase();
-      }
     }),
     [GENERATE_AUDIO]: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {

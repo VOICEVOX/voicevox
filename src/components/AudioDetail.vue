@@ -81,13 +81,12 @@
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(accentPhraseIndex, moraIndex)"
+              :class="getHoveredClass(accentPhraseIndex)"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @click="handleVoicing(accentPhraseIndex, moraIndex)"
-              @mouseover="handleHoverText(accentPhraseIndex, moraIndex, true)"
-              @mouseleave="handleHoverText(accentPhraseIndex, moraIndex, false)"
+              @mouseover="handleHoverText(accentPhraseIndex, true)"
+              @mouseleave="handleHoverText(accentPhraseIndex, false)"
             >
               {{ mora.text }}
               <q-popup-edit
@@ -161,7 +160,6 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
-  SET_AUDIO_MORA_VOICING,
   FETCH_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
@@ -190,7 +188,6 @@ export default defineComponent({
     });
 
     Mousetrap.bind("1", () => {
-      hoveredMoraIndex.value = undefined;
       selectedDetail.value = "accent";
     });
 
@@ -337,68 +334,10 @@ export default defineComponent({
       return textArray;
     });
 
-    store.watch(
-      (state) => {
-        let keys = new Array<string>();
-        state.audioKeys.forEach((audioKey) => {
-          keys.push(audioKey);
-        });
-        return keys;
-      },
-      (newKeys, oldKeys) => {
-        const key = newKeys[newKeys.length - 1];
-        store.watch(
-          (state) => state.audioItems[key].query?.accentPhrases,
-          (newVal, oldVal) => {
-            pitchHistory.set(key, new Map<number, number>());
-          }
-        );
-      }
-    );
-
-    const pitchHistory = new Map<string, Map<number, number>>();
-
-    const getPitchHistory = (audioKey: string, moraKey: number) => {
-      return pitchHistory.get(audioKey)?.get(moraKey) || undefined;
-    };
-
-    const handleVoicing = (phraseIndex: number, moraIndex: number) => {
-      if (selectedDetail.value === "intonation" && !uiLocked.value) {
-        if (accentPhrases.value !== undefined) {
-          const moraKey = phraseIndex * 100 + moraIndex;
-          const pitch = accentPhrases.value[phraseIndex].moras[moraIndex].pitch;
-          if (pitch == 0) {
-            store.dispatch(SET_AUDIO_MORA_VOICING, {
-              audioKey: activeAudioKey.value!,
-              accentPhraseIndex: phraseIndex,
-              moraIndex,
-              pitch: getPitchHistory(activeAudioKey.value!, moraKey),
-            });
-          } else {
-            pitchHistory.get(activeAudioKey.value!)?.set(moraKey, pitch);
-            store.dispatch(SET_AUDIO_MORA_VOICING, {
-              audioKey: activeAudioKey.value!,
-              accentPhraseIndex: phraseIndex,
-              moraIndex,
-              pitch: 0,
-            });
-          }
-        }
-      }
-    };
-
     const handleChangePronounce = (
       newPronunciation: string,
       phraseIndex: number
     ) => {
-      // this clears the changed accent phrase's pitch history and leaves others' alone
-      const historyOfCurrentAccent =
-        pitchHistory.get(activeAudioKey.value!) || new Map();
-      for (let k of historyOfCurrentAccent.keys()) {
-        if (Math.floor(k / 100) == phraseIndex) {
-          historyOfCurrentAccent.delete(k);
-        }
-      }
       let popUntilPause = false;
       newPronunciation = newPronunciation.replace(",", "、");
       if (
@@ -417,38 +356,20 @@ export default defineComponent({
     };
 
     const hoveredPhraseIndex = ref<number | undefined>(undefined);
-    const hoveredMoraIndex = ref<number | undefined>(undefined);
 
-    const handleHoverText = (
-      phraseIndex: number,
-      moraIndex: number,
-      isOver: boolean
-    ) => {
-      if (isOver) {
-        if (selectedDetail.value == "accent") {
+    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
+      if (selectedDetail.value == "accent") {
+        if (isOver) {
           hoveredPhraseIndex.value = phraseIndex;
-        } else if (
-          ["U", "u", "I", "i"].indexOf(
-            accentPhrases.value![phraseIndex].moras[moraIndex].vowel
-          ) != -1
-        ) {
-          hoveredMoraIndex.value = phraseIndex * 100 + moraIndex;
-        }
-      } else {
-        if (selectedDetail.value == "accent") {
-          hoveredPhraseIndex.value = undefined;
         } else {
-          hoveredMoraIndex.value = undefined;
+          hoveredPhraseIndex.value = undefined;
         }
       }
     };
 
-    const getHoveredClass = (accentPhraseIndex: number, moraIndex: number) => {
+    const getHoveredClass = (accentPhraseIndex: number) => {
       if (!uiLocked.value) {
-        if (
-          accentPhraseIndex == hoveredPhraseIndex.value ||
-          accentPhraseIndex * 100 + moraIndex == hoveredMoraIndex.value
-        ) {
+        if (accentPhraseIndex === hoveredPhraseIndex.value) {
           return "text-cell-hovered";
         } else {
           return "text-cell";
@@ -474,11 +395,8 @@ export default defineComponent({
       nowGenerating,
       nowPlayingContinuously,
       pronunciationByPhrase,
-      handleVoicing,
       handleChangePronounce,
       handleHoverText,
-      hoveredPhraseIndex,
-      hoveredMoraIndex,
       getHoveredClass,
     };
   },
