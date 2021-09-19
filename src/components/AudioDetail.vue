@@ -81,10 +81,33 @@
             :key="moraIndex"
           >
             <div
-              class="text-cell"
-              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+              :class="getHoveredClass(accentPhraseIndex)"
+              :style="{
+                'grid-column': `${moraIndex * 2 + 1} / span 1`,
+              }"
+              @mouseover="handleHoverText(accentPhraseIndex, true)"
+              @mouseleave="handleHoverText(accentPhraseIndex, false)"
             >
               {{ mora.text }}
+              <q-popup-edit
+                v-if="selectedDetail == 'accent' && !uiLocked"
+                :model-value="pronunciationByPhrase[accentPhraseIndex]"
+                auto-save
+                v-slot="scope"
+                @save="handleChangePronounce($event, accentPhraseIndex)"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  :input-style="{
+                    width: `${scope.value.length + 1}em`,
+                    minWidth: '50px',
+                  }"
+                  autofocus
+                  outlined
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
             </div>
             <div
               v-if="
@@ -93,7 +116,7 @@
               "
               @click="
                 uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, moraIndex, false)
+                  toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
               "
               :class="[
                 'splitter-cell',
@@ -110,8 +133,7 @@
             <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
             <div
               @click="
-                uiLocked ||
-                  toggleAccentPhraseSplit(accentPhraseIndex, null, true)
+                uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
               "
               class="
                 splitter-cell
@@ -137,6 +159,7 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
+  FETCH_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -171,19 +194,6 @@ export default defineComponent({
       selectedDetail.value = "intonation";
     });
 
-    // detect shift key and set flag, preventing changes in intonation while scrolling around
-    let shiftKeyFlag = false;
-
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag = false;
-    }
-    window.addEventListener("keyup", handleKeyPress);
-
-    function setShiftKeyFlag(event: KeyboardEvent) {
-      if (event.shiftKey) shiftKeyFlag = true;
-    }
-    window.addEventListener("keydown", setShiftKeyFlag);
-
     // detail selector
     type DetailTypes = "accent" | "intonation";
     const selectedDetail = ref<DetailTypes>("accent");
@@ -213,8 +223,8 @@ export default defineComponent({
 
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
-      moraIndex: number | null,
-      isPause: boolean
+      isPause: boolean,
+      moraIndex?: number
     ) => {
       store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
@@ -307,6 +317,65 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    const pronunciationByPhrase = computed(() => {
+      let textArray: Array<string> = [];
+      accentPhrases.value?.forEach((accentPhrase) => {
+        let textString = "";
+        accentPhrase.moras.forEach((mora) => {
+          textString += mora.text;
+        });
+        if (accentPhrase.pauseMora) {
+          textString += "、";
+        }
+        textArray.push(textString);
+      });
+      return textArray;
+    });
+
+    const handleChangePronounce = (
+      newPronunciation: string,
+      phraseIndex: number
+    ) => {
+      let popUntilPause = false;
+      newPronunciation = newPronunciation.replace(",", "、");
+      if (
+        newPronunciation.slice(-1) == "、" &&
+        accentPhrases.value!.length - 1 != phraseIndex
+      ) {
+        newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
+        popUntilPause = true;
+      }
+      store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
+        audioKey: activeAudioKey.value,
+        newPronunciation,
+        accentPhraseIndex: phraseIndex,
+        popUntilPause,
+      });
+    };
+
+    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+
+    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
+      if (isOver) {
+        hoveredPhraseIndex.value = phraseIndex;
+      } else {
+        hoveredPhraseIndex.value = undefined;
+      }
+    };
+
+    const getHoveredClass = (accentPhraseIndex: number) => {
+      if (selectedDetail.value != "accent") {
+        return "text-cell";
+      }
+      if (!uiLocked.value) {
+        if (accentPhraseIndex === hoveredPhraseIndex.value) {
+          return "text-cell-hovered";
+        } else {
+          return "text-cell";
+        }
+      }
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -324,6 +393,10 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      pronunciationByPhrase,
+      handleChangePronounce,
+      handleHoverText,
+      getHoveredClass,
     };
   },
 });
@@ -331,6 +404,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use '@/styles' as global;
+@import "~quasar/src/css/variables";
 
 $pitch-label-height: 24px;
 
@@ -386,6 +460,16 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
+          color: global.$secondary;
+          transition: color 0.5s;
+        }
+        &.text-cell-hovered {
+          min-width: 30px;
+          max-width: 30px;
+          grid-row-start: 3;
+          text-align: center;
+          color: $teal;
+          transition: color 0.5s;
         }
         &.splitter-cell {
           min-width: 10px;

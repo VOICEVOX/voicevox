@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
@@ -45,8 +45,8 @@
     "@openapitools/openapi-generator-cli": "^2.3.3",
     "@types/chai": "^4.2.11",
     "@types/electron-devtools-installer": "^2.2.0",
-    "@types/markdown-it": "^12.2.0",
     "@types/encoding-japanese": "^1.0.18",
+    "@types/markdown-it": "^12.2.0",
     "@types/mocha": "^5.2.4",
     "@types/mousetrap": "^1.6.8",
     "@types/uuid": "^8.3.0",
@@ -78,7 +78,7 @@
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
     "spectron": "14.0.0",
-    "typescript": "~4.1.5",
+    "typescript": "^4.2.4",
     "vue-cli-plugin-electron-builder": "~2.0.0"
   }
 }

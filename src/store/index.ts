@@ -8,7 +8,7 @@ import {
 
 import { State } from "./type";
 import { commandStore } from "./command";
-import { audioStore } from "./audio";
+import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
 import { uiStore } from "./ui";
 import { settingStore } from "./setting";
@@ -62,6 +62,7 @@ export const store = createStore<State>({
     ...commandStore.mutations,
     ...projectStore.mutations,
     ...settingStore.mutations,
+    ...audioCommandStore.mutations,
   },
 
   actions: {
@@ -70,6 +71,7 @@ export const store = createStore<State>({
     ...commandStore.actions,
     ...projectStore.actions,
     ...settingStore.actions,
+    ...audioCommandStore.actions,
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();
     },

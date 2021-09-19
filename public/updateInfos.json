@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.5.3",
+    "descriptions": [
+      "過去のプロジェクトファイルの調整結果が消える不具合の修正"
+    ],
+    "contributors": []
+  },
+  {
     "version": "0.5.2",
     "descriptions": ["日本語が含まれるパスで起動しない問題の修正"],
     "contributors": []
