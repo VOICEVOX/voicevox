@@ -533,7 +533,6 @@ FunctionEnd
 Function welcomePageShow
   StrCpy $2 "このウィザードは $(^Name) ${VERSION} のインストールをガイドしていきます。"
 
-  ${getDiskSpace} $1 "$EXEDIR"
   ${If} $additionalProcess == "None"
 
     ; ダウンロードも結合も必要ない
@@ -548,23 +547,22 @@ Function welcomePageShow
     ; ダウンロードと結合に必要な空き容量
     System::Int64Op $archiveSize * 2
     Pop $0
-    ${If} $1 L< $0
-      ; 空き容量が足りないので画面に表示する
-      ${bytesToHumanReadable} $0 $0
-      ${bytesToHumanReadable} $1 $1
-      StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の空き容量: $1）"
-    ${EndIf}
 
   ${ElseIf} $additionalProcess == "Concatenate"
 
+    ; 結合に必要な空き容量
     StrCpy $0 $archiveSize
-    ${If} $1 L< $0
-      ; 空き容量が足りないので画面に表示する
-      ${bytesToHumanReadable} $0 $0
-      ${bytesToHumanReadable} $1 $1
-      StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の空き容量: $1）"
-    ${EndIf}
 
+  ${EndIf}
+
+  ${getDiskSpace} $1 "$EXEDIR"
+  ${If} $1 L< $0
+    ; 空き容量が足りないので画面に表示する
+    ${bytesToHumanReadable} $0 $0
+    ${bytesToHumanReadable} $1 $1
+    ${GetRoot} "$EXEDIR" $2
+    StrCpy $2 $2 1 ; "C:" から "C" だけを取り出す
+    StrCpy $2 "$2$\r$\nインストーラーが置かれたドライブには一時的に $0 以上の空きが必要です。$\r$\n（現在の$2ドライブの空き容量: $1）"
   ${EndIf}
 
   StrCpy $2 "$2$\r$\n$\r$\n続けるには [次へ] をクリックしてください。"
@@ -575,6 +573,7 @@ Function welcomePageShow
 FunctionEnd
 
 Function welcomePageLeave
+  welcomePageLeave_checkFreeSpace:
   ${If} $additionalProcess == "None"
     Return
   ${ElseIf} $additionalProcess == "DownloadAndConcatenate"
@@ -590,7 +589,9 @@ Function welcomePageLeave
   ${If} $1 L< $0
     ${bytesToHumanReadable} $0 $0
     ${bytesToHumanReadable} $1 $1
-    MessageBox MB_OKCANCEL|MB_DEFBUTTON2|MB_ICONEXCLAMATION "セットアップで一時的に必要な空き容量が不足しています。$\r$\n$\r$\n必要な容量: $0$\r$\n空き容量: $1$\r$\n$\r$\n本当に続行しますか？" IDOK welcomePageLeave_download
+    ${GetRoot} "$EXEDIR" $2
+    StrCpy $2 $2 1 ; "C:" から "C" だけを取り出す
+    MessageBox MB_ABORTRETRYIGNORE|MB_ICONEXCLAMATION "空き容量が不足しています。$\r$\nファイルのダウンロードを始めるには、$2ドライブに $0 以上の空きが必要です。$\r$\n$\r$\n必要な容量: $0$\r$\n$2ドライブの空き容量: $1" IDRETRY welcomePageLeave_checkFreeSpace IDIGNORE welcomePageLeave_download
     Abort
   ${EndIf}
 
@@ -710,7 +711,9 @@ Function readyPageShow
     ; 空き容量が不足しているときだけその旨を表示
     ${bytesToHumanReadable} $0 $0
     ${bytesToHumanReadable} $1 $1
-    ${NSD_CreateLabel} 0 24u 100% 12u "インストールには $0 以上の空きが必要です。（現在の空き容量: $1）"
+    ${GetRoot} "$INSTDIR" $2
+    StrCpy $2 $2 1 ; "C:" から "C" だけを取り出す
+    ${NSD_CreateLabel} 0 24u 100% 24u "インストールには $0 以上の空きが必要です。$\r$\n（現在の$2ドライブの空き容量: $1）"
     Pop $0
   ${EndIf}
 
@@ -718,13 +721,16 @@ Function readyPageShow
 FunctionEnd
 
 Function readyPageLeave
+  readyPageLeave_checkDiskSpace:
   ; 空き容量チェック
   StrCpy $0 $installedSize
   ${getDiskSpace} $1 "$INSTDIR"
-  ${If} $1 L< $0
+  ${If} 1 == 1 ; $1 L< $0
     ${bytesToHumanReadable} $0 $0
     ${bytesToHumanReadable} $1 $1
-    MessageBox MB_OKCANCEL|MB_DEFBUTTON2|MB_ICONEXCLAMATION "インストールに必要な空き容量が不足しています。$\r$\n$\r$\n必要な容量: $0$\r$\n空き容量: $1$\r$\n$\r$\n本当に続行しますか？" IDOK readyPageLeave_finish
+    ${GetRoot} "$INSTDIR" $2
+    StrCpy $2 $2 1 ; "C:" から "C" だけを取り出す
+    MessageBox MB_ABORTRETRYIGNORE|MB_ICONEXCLAMATION "空き容量が不足しています。$\r$\n$(^Name) をインストールするには$2ドライブに $0 以上の空き容量が必要です。$\r$\n$\r$\n必要な容量: $0$\r$\n$2ドライブの空き容量: $1" IDRETRY readyPageLeave_checkDiskSpace IDIGNORE readyPageLeave_finish
     Abort
   ${EndIf}
   readyPageLeave_finish:
