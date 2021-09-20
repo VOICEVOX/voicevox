@@ -107,6 +107,9 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
+export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
+export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
+export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 // mutations
@@ -352,6 +355,35 @@ export const audioStore = typeAsStoreOptions({
         draft.audioItems[audioKey].query!.accentPhrases = accentPhrases;
       }
     ),
+    [SET_SINGLE_ACCENT_PHRASE]: oldCreateCommandAction(
+      (
+        draft,
+        {
+          audioKey,
+          accentPhraseIndex,
+          accentPhrases,
+          popUntilPause,
+        }: {
+          audioKey: string;
+          accentPhraseIndex: number;
+          accentPhrases: AccentPhrase[];
+          popUntilPause: boolean;
+        }
+      ) => {
+        if (popUntilPause) {
+          while (
+            accentPhrases[accentPhrases.length - 1].pauseMora === undefined
+          ) {
+            accentPhrases.pop();
+          }
+        }
+        draft.audioItems[audioKey].query!.accentPhrases.splice(
+          accentPhraseIndex,
+          1,
+          ...accentPhrases
+        );
+      }
+    ),
     [SET_AUDIO_QUERY]: oldCreateCommandAction(
       (
         draft,
@@ -375,6 +407,36 @@ export const audioStore = typeAsStoreOptions({
         .then((accentPhrases) =>
           dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
         );
+    },
+    [FETCH_SINGLE_ACCENT_PHRASE]: (
+      { state, dispatch },
+      {
+        audioKey,
+        newPronunciation,
+        accentPhraseIndex,
+        popUntilPause,
+      }: {
+        audioKey: string;
+        newPronunciation: string;
+        accentPhraseIndex: number;
+        popUntilPause: boolean;
+      }
+    ) => {
+      const audioItem = state.audioItems[audioKey];
+      return api
+        .accentPhrasesAccentPhrasesPost({
+          text: newPronunciation,
+          speaker:
+            state.characterInfos![audioItem.characterIndex!].metas.speaker,
+        })
+        .then((accentPhrases) => {
+          dispatch(SET_SINGLE_ACCENT_PHRASE, {
+            audioKey: audioKey,
+            accentPhraseIndex,
+            accentPhrases,
+            popUntilPause,
+          });
+        });
     },
     [FETCH_MORA_DATA](
       { state, dispatch },
