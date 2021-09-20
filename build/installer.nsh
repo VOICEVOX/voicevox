@@ -729,7 +729,7 @@ Function readyPageLeave
   ; 空き容量チェック
   StrCpy $0 $installedSize
   ${getDiskSpace} $1 "$INSTDIR"
-  ${If} 1 == 1 ; $1 L< $0
+  ${If} $1 L< $0
     ${bytesToHumanReadable} $0 $0
     ${bytesToHumanReadable} $1 $1
     ${GetRoot} "$INSTDIR" $2
