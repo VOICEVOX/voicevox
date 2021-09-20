@@ -13,6 +13,9 @@
   Var installedSize
   ; 7zアーカイブのサイズ
   Var archiveSize
+  ; ダウンロードするファイルサイズ
+  ; （一部のファイルがダウンロード済みの場合に archiveSize とは異なるサイズになる）
+  Var downloadSize
 
   ; 分割数
   Var numFiles
@@ -213,39 +216,12 @@ verifyPartedFile_finish${UniqueID}:
   IntOp $3 $0 + 1 ; 画面表示で使用するインデックス番号
   StrCpy $4 "$1.partial" ; 一時保存先
 
-  ; ダウンロード対象ファイルが既にある？
   ${If} ${FileExists} "$1"
-    ; ファイルを検証する
-    downloadFile_preVerify:
-    Banner::show /set 76 "$(^Name) セットアップ" "ファイルを検証しています... ($3/$numFiles)"
-    ${verifyPartedFile} $0 $2 $1
-    Banner::destroy
-    ${If} $0 == "OK"
-      ; 既に問題ないファイルだったので完了
-      Goto downloadFile_finish
-    ${ElseIf} $0 == "Filesize mismatch"
-    ${OrIf} $0 == "Hash mismatch"
-      ; おかしいようなのでダウンロードへ
-      Goto downloadFile_start
-    ${ElseIf} $0 == "No entry"
-      ; ini ファイル内に必要な情報が見つからなかった
-      ; ダウンロードしても検証できないので諦める
-      StrCpy $0 "No entry"
-      Goto downloadFile_finish
-    ${ElseIf} $0 == "Failed to get file size"
-      ; ファイルサイズの取得に失敗した
-      ; 別のソフトからのアクセスでブロックされている？
-      MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルサイズの取得に失敗しました。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY downloadFile_preVerify
-      StrCpy $0 "Failed to get file size"
-      Goto downloadFile_finish
-    ${Else}
-      ; スクリプトの記述ミスの可能性が高いのでエラーを通知して終わる
-      MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
-      ${myQuit}
-    ${EndIf}
+    ; ダウンロード対象ファイルが既にある場合は検証済みなのでそのまま終わる
+    StrCpy $0 "OK"
+    Goto downloadFile_finish
   ${EndIf}
 
-  downloadFile_start:
   inetc::get /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
   Pop $0
 
@@ -340,41 +316,83 @@ verifyPartedFile_finish${UniqueID}:
   Pop "${Result}" ;       -empty-
 !macroend
 
-; ${allPartedFilesExists} Result
-; 分割されたファイルがすべて正しく存在し、結合のみ行えば良い状態か確認する
-; @return Result 存在するなら 1、なければ 0
-!define allPartedFilesExists "!insertmacro allPartedFilesExists"
-!macro allPartedFilesExists Result
+; ${calcDownloadSize} ResultSize
+; ダウンロードが必要な分割ファイルの総容量を計算する
+; @return Result "OK", "No entry", "Failed to get file size" のどれか
+; @return ResultSize バイト単位の容量
+!define calcDownloadSize "!insertmacro calcDownloadSize"
+!macro calcDownloadSize Result ResultSize
   Push $0 ; Stack $0
   Push $1 ;       $1 $0
   Push $2 ;       $2 $1 $0
   Push $3 ;       $3 $2 $1 $0
+  Push $4 ;       $4 $3 $2 $1 $0
 
   Banner::show /set 76 "$(^Name) セットアップ" ""
 
   StrCpy $3 "$EXEDIR\$archiveName"
   IntOp $2 $numFiles - 1
+  StrCpy $4 "0"
   ${ForEach} $1 0 $2 + 1
-    IntOp $0 $1 + 1
-    ${updateBannerText} "ファイルを検証しています... ($0/$numFiles)"
-    ${verifyPartedFile} $0 $1 "$3.$1"
-    ${If} $0 != "OK"
-      StrCpy $0 0
-      Goto allPartedFilesExists_finish
+    ; 分割ファイルがあるなら
+    ${If} ${FileExists} "$3.$1"
+      ; バナーのテキストを更新
+      IntOp $0 $1 + 1
+      ${updateBannerText} "ファイルを検証しています... ($0/$numFiles)"
+
+      ; ファイルを検証する
+      calcDownloadSize_verify:
+      ${verifyPartedFile} $0 $1 "$3.$1"
+      ${If} $0 == "OK"
+        ; 正しいファイルだった
+        ${Continue}
+      ${ElseIf} $0 == "Filesize mismatch"
+      ${OrIf} $0 == "Hash mismatch"
+        ; おかしいので削除しておく
+        Delete "$3.$1"
+      ${ElseIf} $0 == "No entry"
+        ; ini ファイル内に必要な情報が見つからなかった
+        StrCpy $0 "No entry"
+        Goto calcDownloadSize_finish
+      ${ElseIf} $0 == "Failed to get file size"
+        ; ファイルサイズの取得に失敗した
+        ; 別のソフトからのアクセスでブロックされている？
+        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "ファイルサイズの取得に失敗しました。$\r$\n他のアプリケーションを開いている場合は、それらを閉じてから再試行してください。$\r$\n再試行しますか？" IDRETRY calcDownloadSize_verify
+        StrCpy $0 "Failed to get file size"
+        Goto calcDownloadSize_finish
+      ${Else}
+        ; スクリプトの記述ミスの可能性が高いのでエラーを通知して終わる
+        MessageBox MB_OK|MB_ICONSTOP "予期しないエラーが発生したため、セットアップを中止します。$\r$\n$\r$\nエラー: $0"
+        ${myQuit}
+      ${EndIf}
     ${EndIf}
+
+    ; ダウンロードが必要なファイルだったので、ini ファイルからファイルサイズを取得
+    ReadINIStr $0 "$iniFileName" "files" "size$1"
+    ${If} ${Errors}
+      StrCpy $0 "No entry"
+      Goto calcDownloadSize_finish
+    ${EndIf}
+
+    System::Int64Op $4 + $0
+    Pop $4
   ${Next}
 
-  StrCpy $0 1
+  StrCpy $0 "OK"
+  StrCpy $1 $4
 
-  allPartedFilesExists_finish:
+  calcDownloadSize_finish:
   Banner::destroy
 
-                  ; Stack $3 $2 $1 $0
-  Pop $3          ;       $2 $1 $0
-  Pop $2          ;       $1 $0
-  Pop $1          ;       $0
-  Exch $0         ;       <Result>
-  Pop "${Result}" ;       -empty-
+                      ; Stack $4 $3 $2 $1 $0
+  Pop $4              ;       $3 $2 $1 $0
+  Pop $3              ;       $2 $1 $0
+  Pop $2              ;       $1 $0
+  Exch $1             ;       <ResultSize> $0
+  Exch                ;       $0 <ResultSize>
+  Exch $0             ;       <Result> <ResultSize>
+  Pop "${Result}"     ;       <ResultSize>
+  Pop "${ResultSize}" ;       -empty-
 !macroend
 
 ; ${concatenateAndVerify} Result
@@ -496,14 +514,25 @@ verifyPartedFile_finish${UniqueID}:
       ${myQuit}
     ${EndIf}
 
-    ; 結合だけを行えばいい状態か判定する
-    ${allPartedFilesExists} $0
-    ${If} $0 == "1"
-      StrCpy $additionalProcess "Concatenate"
-    ${Else}
-      StrCpy $additionalProcess "DownloadAndConcatenate"
+    ; ダウンロードが必要な総容量を計算する
+    ${calcDownloadSize} $0 $1
+    ${If} $0 == "OK"
+      ; 総容量が 0 ならダウンロードは必要ない
+      StrCpy $downloadSize $1
+      ${If} $downloadSize == "0"
+        StrCpy $additionalProcess "Concatenate"
+      ${Else}
+        StrCpy $additionalProcess "DownloadAndConcatenate"
+      ${EndIf}
+    ${ElseIf} $0 == "No entry"
+      ; ini ファイルから必要な情報が見つけられなかった
+      ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダー内のファイルを削除されると起こるかもしれない
+      MessageBox MB_OK|MB_ICONSTOP "ファイル検証に必要なデータが見つからなかったため処理を中断しました。$\r$\n時間を置いてからやり直してみてください。"
+      ${myQuit}
+    ${ElseIf} $0 == "Failed to get file size"
+      ; リトライを諦めてここまできたのでそのまま終わる
+      ${myQuit}
     ${EndIf}
-
   ${EndIf}
 
 !macroend
@@ -540,12 +569,11 @@ Function welcomePageShow
   ${ElseIf} $additionalProcess == "DownloadAndConcatenate"
 
     ; ダウンロードを行うのでその旨を表示する
-    ; FIXME: 一部のファイルがダウンロード済みの場合は表示が正しくない。気にしすぎ？
-    ${bytesToHumanReadable} $0 $archiveSize
+    ${bytesToHumanReadable} $0 $downloadSize
     StrCpy $2 "$2$\r$\n$\r$\nインストールのために合計 $0 の追加ファイルをダウンロードします。"
 
     ; ダウンロードと結合に必要な空き容量
-    System::Int64Op $archiveSize * 2
+    System::Int64Op $archiveSize + $downloadSize
     Pop $0
 
   ${ElseIf} $additionalProcess == "Concatenate"
@@ -601,8 +629,6 @@ Function welcomePageLeave
   ${If} $additionalProcess == "DownloadAndConcatenate"
     IntOp $3 $numFiles - 1
     ${ForEach} $2 0 $3 + 1
-      ; FIXME: 一部だけダウンロードが完了してる状態のとき、
-      ;        ${allPartedFilesExists} で一度検証が走り成功したファイルに対してここで重複して検証が走ってしまう
       ${downloadFile} $0 $1 $2
       ${If} $0 == "Cancelled"
         ${myQuitSuccess}
