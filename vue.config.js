@@ -47,7 +47,6 @@ module.exports = {
         },
         publish: {
           provider: "github",
-          owner: "Hiroshiba",
           repo: "voicevox",
           vPrefixedTagName: false,
         },
