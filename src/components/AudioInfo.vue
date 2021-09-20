@@ -1,5 +1,5 @@
 <template>
-  <div class="root full-height q-py-sm" v-show="activeAudioKey" v-if="query">
+  <div class="root full-height q-py-md" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
@@ -79,15 +79,15 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >無音時間（前）
+        >開始無音
         {{ previewAudioPrePhonemeLength.currentValue.value.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
         :min="0"
-        :max="2"
-        :step="0.05"
+        :max="1.5"
+        :step="0.1"
         :disable="uiLocked"
         :model-value="previewAudioPrePhonemeLength.currentValue.value"
         @update:model-value="
@@ -102,15 +102,15 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >無音時間（後）
+        >終了無音
         {{ previewAudioPostPhonemeLength.currentValue.value.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
         :min="0"
-        :max="2"
-        :step="0.05"
+        :max="1.5"
+        :step="0.1"
         :disable="uiLocked"
         :model-value="previewAudioPostPhonemeLength.currentValue.value"
         @update:model-value="
@@ -295,18 +295,18 @@ export default defineComponent({
         }
         case "prePhoneme": {
           let curPrePhoneme =
-            query.prePhonemeLength - (delta_y > 0 ? 0.05 : -0.05);
+            query.prePhonemeLength - (delta_y > 0 ? 0.1 : -0.1);
           curPrePhoneme = Math.round(curPrePhoneme * 1e2) / 1e2;
-          if (2 >= curPrePhoneme && curPrePhoneme >= 0) {
+          if (1.5 >= curPrePhoneme && curPrePhoneme >= 0) {
             setAudioPrePhonemeLength(curPrePhoneme);
           }
           break;
         }
         case "postPhoneme": {
           let curPostPhoneme =
-            query.postPhonemeLength - (delta_y > 0 ? 0.05 : -0.05);
+            query.postPhonemeLength - (delta_y > 0 ? 0.1 : -0.1);
           curPostPhoneme = Math.round(curPostPhoneme * 1e2) / 1e2;
-          if (2 >= curPostPhoneme && curPostPhoneme >= 0) {
+          if (1.5 >= curPostPhoneme && curPostPhoneme >= 0) {
             setAudioPostPhonemeLength(curPostPhoneme);
           }
           break;
@@ -348,9 +348,8 @@ export default defineComponent({
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 15px 0;
-  overflow: hidden;
-  bottom: 0;
+  overflow-y: scroll;
 }
 </style>
