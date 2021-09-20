@@ -5,7 +5,8 @@
 ; voicevox-X.X.X-x64.nsis.7z.ini などが配置されている場所
 ; 開発中はここを一時的に差し替えて、out フォルダー内で npx http-server などとするとテストしやすい
 ; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
-!define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
+; !define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
+!define DOWNLOAD_BASE_URL "https://github.com/Hiroshiba/voicevox/releases/download/${VERSION}"
 
 !ifndef BUILD_UNINSTALLER
 
