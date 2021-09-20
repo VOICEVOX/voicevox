@@ -364,15 +364,14 @@ export default defineComponent({
     };
 
     const getHoveredClass = (accentPhraseIndex: number) => {
-      if (selectedDetail.value != "accent") {
+      if (
+        selectedDetail.value == "accent" &&
+        !uiLocked.value &&
+        accentPhraseIndex === hoveredPhraseIndex.value
+      ) {
+        return "text-cell-hovered";
+      } else {
         return "text-cell";
-      }
-      if (!uiLocked.value) {
-        if (accentPhraseIndex === hoveredPhraseIndex.value) {
-          return "text-cell-hovered";
-        } else {
-          return "text-cell";
-        }
       }
     };
 
