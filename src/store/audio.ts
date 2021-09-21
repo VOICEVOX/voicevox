@@ -423,11 +423,14 @@ export const audioStore = typeAsStoreOptions({
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
-      const katakanaRegex = /^[\u30A0-\u30FF]+$/;
-      if (katakanaRegex.test(newPronunciation)) {
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
         return api
           .accentPhrasesAccentPhrasesPost({
-            text: newPronunciation + "'",
+            text: katakana + "'",
             speaker:
               state.characterInfos![audioItem.characterIndex!].metas.speaker,
             isKana: true,
