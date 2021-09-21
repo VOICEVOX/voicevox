@@ -423,6 +423,34 @@ export const audioStore = typeAsStoreOptions({
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
+      const katakanaRegex = /^[\u30A0-\u30FF]+$/;
+      if (katakanaRegex.test(newPronunciation)) {
+        return api
+          .accentPhrasesAccentPhrasesPost({
+            text: newPronunciation + "'",
+            speaker:
+              state.characterInfos![audioItem.characterIndex!].metas.speaker,
+            isKana: true,
+          })
+          .catch(() => {
+            // fallback
+            return api.accentPhrasesAccentPhrasesPost({
+              text: newPronunciation,
+              speaker:
+                state.characterInfos![audioItem.characterIndex!].metas.speaker,
+              isKana: false,
+            });
+          })
+          .then((accentPhrases) => {
+            dispatch(SET_SINGLE_ACCENT_PHRASE, {
+              audioKey: audioKey,
+              accentPhraseIndex,
+              accentPhrases,
+              popUntilPause,
+            });
+          });
+      }
+
       return api
         .accentPhrasesAccentPhrasesPost({
           text: newPronunciation,
