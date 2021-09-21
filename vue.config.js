@@ -45,6 +45,11 @@ module.exports = {
           oneClick: false,
           allowToChangeInstallationDirectory: true,
         },
+        publish: {
+          provider: "github",
+          repo: "voicevox",
+          vPrefixedTagName: false,
+        },
       },
     },
   },

@@ -1,16 +1,16 @@
 <template>
   <q-dialog
     maximized
-    persistent
+    seamless
+    transition-show="none"
+    transition-hide="none"
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
-    transition-show="slide-up"
-    transition-hide="slide-down"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
       <q-header class="q-pa-sm" elevated>
         <q-toolbar>
-          <q-toolbar-title class="text-secondary">オプション</q-toolbar-title>
+          <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
           <q-space />
           <!-- close button -->
           <q-btn
@@ -25,35 +25,32 @@
         <q-page ref="scroller" class="relative-absolute-wrapper scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
-            <q-card class="setting-card">
-              <q-card-section class="bg-nvidia">
+            <q-card flat bordered class="setting-card">
+              <q-card-section>
                 <div class="text-h5">エンジン</div>
                 <div class="text-subtitle2">
-                  GPUモードには <b>NVIDIA&trade;</b> GPUが必要です
+                  GPUモードの利用には NVIDIA&trade; GPU が必要です
                 </div>
               </q-card-section>
-
               <q-separator />
               <q-card-actions class="q-px-md">
-                <q-radio
+                <q-option-group
                   v-model="engineMode"
-                  color="green"
-                  val="switchCPU"
-                  label="CPU"
-                />
-                <q-radio
-                  v-model="engineMode"
-                  color="green"
-                  val="switchGPU"
-                  label="GPU"
+                  :options="[
+                    { label: 'CPUモード', value: 'switchCPU' },
+                    { label: 'GPUモード', value: 'switchGPU' },
+                  ]"
+                  type="radio"
                 />
               </q-card-actions>
             </q-card>
+
             <!-- Saving Card -->
-            <q-card class="setting-card">
-              <q-card-section class="bg-blue">
+            <q-card flat bordered class="setting-card">
+              <q-card-section>
                 <div class="text-h5">保存</div>
               </q-card-section>
+              <q-separator />
               <q-list>
                 <q-expansion-item
                   dense
@@ -64,19 +61,19 @@
                   expand-icon-class="text-black"
                 >
                   <q-card>
-                    <q-card-section>
-                      <q-btn-toggle
-                        :model-value="savingSetting.fileEncoding"
-                        toggle-color="blue"
+                    <q-card-actions class="q-px-md">
+                      <q-option-group
+                        type="radio"
                         :options="[
                           { label: 'UTF-8', value: 'UTF-8' },
                           { label: 'Shift_JIS', value: 'Shift_JIS' },
                         ]"
+                        :model-value="savingSetting.fileEncoding"
                         @update:model-value="
                           handleSavingSettingChange('fileEncoding', $event)
                         "
                       />
-                    </q-card-section>
+                    </q-card-actions>
                   </q-card>
                 </q-expansion-item>
 
@@ -93,14 +90,8 @@
                       <q-toggle
                         name="enabled"
                         align="left"
-                        dense
-                        color="blue"
+                        label="書き出し先を固定"
                         :model-value="savingSetting.fixedExportEnabled"
-                        :label="
-                          savingSetting.fixedExportEnabled
-                            ? '固定する'
-                            : '固定しない'
-                        "
                         @update:model-value="
                           handleSavingSettingChange(
                             'fixedExportEnabled',
@@ -110,7 +101,6 @@
                       />
                       <q-input
                         unelevated
-                        dense
                         no-error-icon
                         v-model="savingSetting.fixedExportDir"
                         label="書き出し先のフォルダ"
@@ -119,22 +109,17 @@
                         @update:model-value="
                           handleSavingSettingChange('fixedExportDir', $event)
                         "
-                        color="blue"
                       >
                         <template v-slot:after>
                           <q-btn
                             square
                             dense
                             flat
-                            color="blue"
+                            color="primary"
                             icon="folder_open"
                             @click="openFileExplore"
                           >
-                            <q-tooltip
-                              :delay="500"
-                              class="bg-blue text-body2"
-                              anchor="bottom right"
-                            >
+                            <q-tooltip :delay="500" anchor="bottom right">
                               フォルダ選択
                             </q-tooltip>
                           </q-btn>
@@ -157,16 +142,14 @@
                     <q-card-section>
                       <q-checkbox
                         class="q-pl-md q-pb-sm"
-                        dense
-                        color="blue"
+                        label="上書き防止"
                         :model-value="savingSetting.avoidOverwrite"
                         @update:model-value="
                           handleSavingSettingChange('avoidOverwrite', $event)
                         "
                       />
-                      <q-separator color="black" />
                       <div class="q-pt-sm">
-                        上書きせずにファイルを連番にします
+                        上書きせずにファイルを連番で保存します
                       </div>
                     </q-card-section>
                   </q-card>
@@ -340,31 +323,7 @@ export default defineComponent({
 
 .setting-card {
   width: 100%;
-  max-width: 265px;
-}
-
-.text-nvidia {
-  color: #76b900;
-}
-
-.bg-nvidia {
-  background: #76b900;
-}
-
-.q-expansion-item {
-  background-color: white;
-  color: black;
-}
-
-.q-expansion-item--expanded {
-  border: 1px solid #000000;
-  border-color: $blue;
-  background-color: white;
-  color: $blue;
-}
-
-.q-expansion-item * {
-  background-color: white;
-  color: black;
+  max-width: 350px;
+  border-color: #aaa;
 }
 </style>
