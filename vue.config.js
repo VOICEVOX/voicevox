@@ -41,6 +41,10 @@ module.exports = {
             },
           ],
         },
+        nsisWeb: {
+          oneClick: false,
+          allowToChangeInstallationDirectory: true,
+        },
       },
     },
   },
