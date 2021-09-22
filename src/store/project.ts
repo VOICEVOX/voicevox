@@ -292,6 +292,9 @@ const audioQuerySchema = {
     outputSamplingRate: { type: "int32" },
     outputStereo: { type: "boolean" },
   },
+  optionalProperties: {
+    kana: { type: "string" },
+  },
 } as const;
 
 const audioItemSchema = {
