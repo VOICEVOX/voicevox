@@ -434,7 +434,9 @@ app.on("ready", async () => {
     }
   }
 
-  createWindow().then(() => runEngine());
+  createWindow().then(() => {
+    if (process.env.RUN_ENGINE_EXTERNAL !== "true") runEngine();
+  });
 });
 
 app.on("second-instance", () => {
