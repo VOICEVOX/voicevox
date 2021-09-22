@@ -93,6 +93,8 @@
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
                 auto-save
+                transition-show="none"
+                transition-hide="none"
                 v-slot="scope"
                 @save="handleChangePronounce($event, accentPhraseIndex)"
               >
@@ -460,15 +462,15 @@ $pitch-label-height: 24px;
           grid-row-start: 3;
           text-align: center;
           color: global.$secondary;
-          transition: color 0.5s;
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: $teal;
-          transition: color 0.5s;
+          color: global.$secondary;
+          font-weight: bold;
+          cursor: pointer;
         }
         &.splitter-cell {
           min-width: 10px;
