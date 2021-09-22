@@ -43,6 +43,7 @@ export interface Sandbox {
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  hotkeySettings(newDate?: HotkeySetting[]): Promise<HotkeySetting[]>;
 }
 
 export type AppInfos = {
@@ -76,4 +77,9 @@ export type SavingSetting = {
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
+};
+
+export type HotkeySetting = {
+  action: string;
+  combination: string;
 };

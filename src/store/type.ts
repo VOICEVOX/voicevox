@@ -6,7 +6,7 @@ import {
   PayloadRecipeTree,
   PayloadMutationTree,
 } from "./command";
-import { CharacterInfo, SavingSetting } from "@/type/preload";
+import { CharacterInfo, HotkeySetting, SavingSetting } from "@/type/preload";
 
 export type State = {
   engineState: EngineState;
@@ -28,6 +28,7 @@ export type State = {
   projectFilePath?: string;
   savingSetting: SavingSetting;
   isPinned: boolean;
+  hotkeySettings: HotkeySetting[];
 };
 
 export type AudioItem = {

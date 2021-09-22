@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting } from "./type/preload";
+import { CharacterInfo, HotkeySetting, SavingSetting } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -44,6 +44,7 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
 }>({
   schema: {
     useGpu: {
@@ -58,6 +59,16 @@ const store = new Store<{
         fixedExportDir: { type: "string" },
       },
     },
+    hotkeySettings: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          action: { type: "string" },
+          combination: { type: "string" },
+        },
+      },
+    },
   },
   defaults: {
     useGpu: false,
@@ -67,6 +78,68 @@ const store = new Store<{
       avoidOverwrite: false,
       fixedExportDir: "",
     },
+    hotkeySettings: [
+      {
+        action: "書き出し",
+        combination: "Ctrl E",
+      },
+      {
+        action: "一つだけ書き出し",
+        combination: "",
+      },
+      {
+        action: "再生/停止",
+        combination: "space",
+      },
+      {
+        action: "連続再生/停止",
+        combination: "",
+      },
+      {
+        action: "ｱｸｾﾝﾄ欄を表示",
+        combination: "1",
+      },
+      {
+        action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+        combination: "2",
+      },
+      {
+        action: "テキスト欄を追加",
+        combination: "Shift enter",
+      },
+      {
+        action: "テキスト欄を削除",
+        combination: "Shift delete",
+      },
+      {
+        action: "テキスト欄からフォーカスを外す",
+        combination: "escape",
+      },
+      {
+        action: "テキスト欄にフォーカスを戻す",
+        combination: "backspace",
+      },
+      {
+        action: "元に戻す",
+        combination: "Ctrl Z",
+      },
+      {
+        action: "やり直す",
+        combination: "Ctrl Y",
+      },
+      {
+        action: "プロジェクトを保存する",
+        combination: "Ctrl S",
+      },
+      {
+        action: "プロジェクトを読み込む",
+        combination: "",
+      },
+      {
+        action: "テキストファイルを読み込む",
+        combination: "",
+      },
+    ],
   },
 });
 
@@ -379,6 +452,14 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
     store.set("savingSetting", newData);
   }
   return store.get("savingSetting");
+});
+
+ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("hotkeySettings", newData);
+  }
+  console.log(store.get("hotkeySettings"));
+  return store.get("hotkeySettings");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

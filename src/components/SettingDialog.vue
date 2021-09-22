@@ -27,33 +27,31 @@
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
               <div class="q-pa-sm text-h5">エンジン</div>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>エンジンモード</div>
                 <q-space />
-                <div class="q-py-sm">
-                  <q-btn-toggle
-                    padding="none md"
-                    unelevated
-                    v-model="engineMode"
-                    color="white"
-                    text-color="black"
-                    toggle-color="primary"
-                    :options="[
-                      { label: 'CPU', value: 'switchCPU' },
-                      { label: 'GPU', value: 'switchGPU' },
-                    ]"
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  v-model="engineMode"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  :options="[
+                    { label: 'CPU', value: 'switchCPU' },
+                    { label: 'GPU', value: 'switchGPU' },
+                  ]"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
                   >
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      GPUモードの利用には NVIDIA&trade; GPU が必要です
-                    </q-tooltip>
-                  </q-btn-toggle>
-                </div>
+                    GPUモードの利用には NVIDIA&trade; GPU が必要です
+                  </q-tooltip>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
 
@@ -64,7 +62,7 @@
                 <div>文字コード</div>
                 <q-space />
                 <q-btn-toggle
-                  padding="none md"
+                  padding="xs md"
                   unelevated
                   :model-value="savingSetting.fileEncoding"
                   @update:model-value="
@@ -134,7 +132,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-
+              <!-- avoid overwrite action -->
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>上書き防止</div>
                 <q-space />
@@ -156,6 +154,50 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <!-- hotkey settings card -->
+            <q-card flat class="setting-card">
+              <div class="q-pa-sm text-h5">ショートカットキー</div>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <q-table
+                  flat
+                  :filter="hotkeyFilter"
+                  :rows="hotkeyRows"
+                  :columns="hotkeyColumns"
+                  row-key="hotkeyIndex"
+                  v-model:pagination="hotkeyPagination"
+                  class="setting-card bg-grey-3"
+                >
+                  <template v-slot:top>
+                    <div>ショートカットの設定</div>
+                    <q-space />
+                    <q-input
+                      hide-bottom-space
+                      dense
+                      v-model="hotkeyFilter"
+                      label="検索"
+                    >
+                      <template v-slot:append>
+                        <q-icon name="search" />
+                      </template>
+                    </q-input>
+                  </template>
+                  <template v-slot:body="props">
+                    <q-tr :props="props">
+                      <q-td key="action" :props="props">
+                        {{ props.row.action }}
+                      </q-td>
+                      <q-td
+                        key="combination"
+                        :props="props"
+                        @click="toggleShowRecorded($event)"
+                      >
+                        {{ props.row.combination }}
+                      </q-td>
+                    </q-tr>
+                  </template>
+                </q-table>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -164,15 +206,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onUpdated } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
-import { CHECK_FILE_EXISTS, RESTART_ENGINE } from "@/store/audio";
+import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import {
-  GET_SAVING_SETTING_DATA,
-  SET_SAVING_SETTING_DATA,
-} from "@/store/setting";
+import { SET_SAVING_SETTING_DATA } from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -282,9 +321,30 @@ export default defineComponent({
       }
     };
 
-    onUpdated(() => {
-      store.dispatch(GET_SAVING_SETTING_DATA);
-    });
+    const hotkeyRows = computed(() => store.state.hotkeySettings);
+
+    console.log(hotkeyRows.value);
+
+    const hotkeyColumns = ref([
+      {
+        name: "action",
+        align: "left",
+        label: "操作",
+        field: "action",
+      },
+      {
+        name: "combination",
+        align: "right",
+        label: "ショートカットキー",
+        field: "combination",
+      },
+    ]);
+
+    const toggleShowRecorded = (event: MouseEvent) => {
+      if (event.target instanceof HTMLElement) {
+        event.target.style.color = "grey";
+      }
+    };
 
     return {
       settingDialogOpenedComputed,
@@ -293,6 +353,13 @@ export default defineComponent({
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      hotkeyRows,
+      hotkeyColumns,
+      hotkeyPagination: ref({
+        rowsPerPage: 5,
+      }),
+      hotkeyFilter: ref(""),
+      toggleShowRecorded,
     };
   },
 });

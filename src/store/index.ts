@@ -46,6 +46,7 @@ export const store = createStore<State>({
       avoidOverwrite: false,
     },
     isPinned: false,
+    hotkeySettings: [],
   },
 
   getters: {
