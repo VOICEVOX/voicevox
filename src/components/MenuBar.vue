@@ -31,7 +31,7 @@ import {
 } from "@/store/project";
 import {
   GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
+  COMMAND_IMPORT_FROM_FILE,
   RESTART_ENGINE,
 } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
@@ -143,7 +143,7 @@ export default defineComponent({
             type: "button",
             label: "テキスト読み込み",
             onClick: () => {
-              store.dispatch(IMPORT_FROM_FILE, {});
+              store.dispatch(COMMAND_IMPORT_FROM_FILE, {});
             },
           },
           { type: "separator" },

@@ -39,7 +39,8 @@
       :error="audioItem.text.length >= 80"
       :model-value="audioItem.text"
       @update:model-value="setAudioText"
-      @change="willRemove || updateAudioQuery($event)"
+      debounce="500"
+      @keydown.prevent.enter.exact=""
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -68,22 +69,20 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
-  FETCH_ACCENT_PHRASES,
-  FETCH_AUDIO_QUERY,
   GENERATE_AND_SAVE_AUDIO,
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
-  SET_AUDIO_TEXT,
-  CHANGE_CHARACTER_INDEX,
+  COMMAND_UPDATE_AUDIO_TEXT,
+  COMMAND_CHANGE_CHARACTER_INDEX,
   COMMAND_REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
   COMMAND_REMOVE_AUDIO_ITEM,
   IS_ACTIVE,
-  PUT_TEXTS,
+  COMMAND_PASTE_TEXTS,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
@@ -112,9 +111,6 @@ export default defineComponent({
     );
 
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const haveAudioQuery = computed(() =>
-      store.getters[HAVE_AUDIO_QUERY](props.audioKey)
-    );
 
     const selectedCharacterInfo = computed(() =>
       characterInfos.value != undefined &&
@@ -129,17 +125,13 @@ export default defineComponent({
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
-      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
-    };
-    const updateAudioQuery = async () => {
-      if (!haveAudioQuery.value) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      } else {
-        store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
-      }
+      await store.dispatch(COMMAND_UPDATE_AUDIO_TEXT, {
+        audioKey: props.audioKey,
+        text,
+      });
     };
     const changeCharacterIndex = (characterIndex: number) => {
-      store.dispatch(CHANGE_CHARACTER_INDEX, {
+      store.dispatch(COMMAND_CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
         characterIndex,
       });
@@ -176,10 +168,9 @@ export default defineComponent({
             const text = texts.shift();
             if (text == undefined) return;
             setAudioText(text);
-            updateAudioQuery();
           }
 
-          store.dispatch(PUT_TEXTS, {
+          store.dispatch(COMMAND_PASTE_TEXTS, {
             texts,
             characterIndex: audioItem.value.characterIndex,
             prevAudioKey,
@@ -273,14 +264,6 @@ export default defineComponent({
         URL.createObjectURL(characterInfo.iconBlob)
     );
 
-    // 初期化
-    onMounted(() => {
-      // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
-      if (audioItem.value.query == undefined) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
-      }
-    });
-
     return {
       characterInfos,
       audioItem,
@@ -291,7 +274,6 @@ export default defineComponent({
       selectedCharacterInfo,
       characterIconUrl,
       setAudioText,
-      updateAudioQuery,
       changeCharacterIndex,
       setActiveAudioKey,
       save,
