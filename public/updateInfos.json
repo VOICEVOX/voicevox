@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.6.1",
+    "descriptions": [
+      "プロジェクトファイルが読み込めない問題の修正",
+      "開発環境の向上"
+    ],
+    "contributors": ["raa0121", "y-chan"]
+  },
+  {
     "version": "0.6.0",
     "descriptions": [
       "音声書き出し先を固定する機能を追加",
