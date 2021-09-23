@@ -26,7 +26,9 @@
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
-              <div class="q-pa-sm text-h5">エンジン</div>
+              <q-card-actions>
+                <div class="text-h5">エンジン</div>
+              </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>エンジンモード</div>
                 <q-space />
@@ -57,7 +59,9 @@
 
             <!-- Saving Card -->
             <q-card flat class="setting-card">
-              <div class="q-pa-sm text-h5">保存</div>
+              <q-card-actions>
+                <div class="text-h5">保存</div>
+              </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>文字コード</div>
                 <q-space />
@@ -156,8 +160,8 @@
             </q-card>
             <!-- hotkey settings card -->
             <q-card flat class="setting-card">
-              <div class="q-pa-sm text-h5">ショートカットキー</div>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions>
+                <div class="text-h5">ショートカットキー</div>
                 <q-space />
                 <q-input
                   hide-bottom-space
@@ -166,11 +170,17 @@
                   placeholder="検索"
                 >
                   <template v-slot:append>
+                    <q-icon
+                      v-if="hotkeyFilter !== ''"
+                      name="close"
+                      @click="hotkeyFilter = ''"
+                      class="cursor-pointer"
+                    />
                     <q-icon name="search" />
                   </template>
                 </q-input>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="bg-grey-3">
                 <q-table
                   flat
                   dense
@@ -178,7 +188,6 @@
                   :filter="hotkeyFilter"
                   :rows="hotkeyRows"
                   :columns="hotkeyColumns"
-                  table-header-style="background-color: grey; color: white"
                   row-key="hotkeyIndexes"
                   v-model:pagination="hotkeyPagination"
                   class="setting-card bg-grey-3"
