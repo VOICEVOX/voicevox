@@ -151,366 +151,364 @@
 </template>
 
 <script lang="ts">
-  import { computed, defineComponent, ref } from "vue";
-  import { useStore } from "@/store";
-  import {
-    ACTIVE_AUDIO_KEY,
-    CHANGE_ACCENT,
-    SET_AUDIO_MORA_DATA,
-    CHANGE_ACCENT_PHRASE_SPLIT,
-    PLAY_AUDIO,
-    STOP_AUDIO,
-    GENERATE_AND_SAVE_AUDIO,
-    FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
-  } from "@/store/audio";
-  import { UI_LOCKED } from "@/store/ui";
-  import Mousetrap from "mousetrap";
-  import { useQuasar } from "quasar";
-  import { SaveResultObject } from "@/store/type";
-  import AudioAccent from "./AudioAccent.vue";
-  import AudioParameter from "./AudioParameter.vue";
+import { computed, defineComponent, ref } from "vue";
+import { useStore } from "@/store";
+import {
+  ACTIVE_AUDIO_KEY,
+  CHANGE_ACCENT,
+  SET_AUDIO_MORA_DATA,
+  CHANGE_ACCENT_PHRASE_SPLIT,
+  PLAY_AUDIO,
+  STOP_AUDIO,
+  GENERATE_AND_SAVE_AUDIO,
+  FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
+} from "@/store/audio";
+import { UI_LOCKED } from "@/store/ui";
+import Mousetrap from "mousetrap";
+import { useQuasar } from "quasar";
+import { SaveResultObject } from "@/store/type";
+import AudioAccent from "./AudioAccent.vue";
+import AudioParameter from "./AudioParameter.vue";
 
-  export default defineComponent({
-    components: { AudioAccent, AudioParameter },
+export default defineComponent({
+  components: { AudioAccent, AudioParameter },
 
-    name: "AudioDetail",
+  name: "AudioDetail",
 
-    setup() {
-      const store = useStore();
-      const $q = useQuasar();
+  setup() {
+    const store = useStore();
+    const $q = useQuasar();
 
-      // add hotkeys with mousetrap
-      Mousetrap.bind("space", () => {
-        if (!nowPlaying.value && !nowGenerating.value) {
-          play();
-        } else {
-          stop();
-        }
+    // add hotkeys with mousetrap
+    Mousetrap.bind("space", () => {
+      if (!nowPlaying.value && !nowGenerating.value) {
+        play();
+      } else {
+        stop();
+      }
+    });
+
+    Mousetrap.bind("1", () => {
+      selectedDetail.value = "accent";
+    });
+
+    Mousetrap.bind("2", () => {
+      selectedDetail.value = "intonation";
+    });
+
+    // detail selector
+    type DetailTypes = "accent" | "intonation";
+    const selectedDetail = ref<DetailTypes>("accent");
+    const selectDetail = (index: number) => {
+      selectedDetail.value = index === 0 ? "accent" : "intonation";
+    };
+
+    // accent phrase
+    const activeAudioKey = computed<string | null>(
+      () => store.getters[ACTIVE_AUDIO_KEY]
+    );
+    const uiLocked = computed(() => store.getters[UI_LOCKED]);
+
+    const audioItem = computed(() =>
+      activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
+    );
+    const query = computed(() => audioItem.value?.query);
+    const accentPhrases = computed(() => query.value?.accentPhrases);
+
+    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+      store.dispatch(CHANGE_ACCENT, {
+        audioKey: activeAudioKey.value!,
+        accentPhraseIndex,
+        accent,
       });
+    };
 
-      Mousetrap.bind("1", () => {
-        selectedDetail.value = "accent";
+    const toggleAccentPhraseSplit = (
+      accentPhraseIndex: number,
+      isPause: boolean,
+      moraIndex?: number
+    ) => {
+      store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
+        audioKey: activeAudioKey.value!,
+        accentPhraseIndex,
+        moraIndex,
+        isPause,
       });
+    };
 
-      Mousetrap.bind("2", () => {
-        selectedDetail.value = "intonation";
+    const changeMoraData = (
+      accentPhraseIndex: number,
+      moraIndex: number,
+      pitch: number
+    ) => {
+      store.dispatch(SET_AUDIO_MORA_DATA, {
+        audioKey: activeAudioKey.value!,
+        accentPhraseIndex,
+        moraIndex,
+        pitch,
       });
+    };
 
-      // detail selector
-      type DetailTypes = "accent" | "intonation";
-      const selectedDetail = ref<DetailTypes>("accent");
-      const selectDetail = (index: number) => {
-        selectedDetail.value = index === 0 ? "accent" : "intonation";
-      };
-
-      // accent phrase
-      const activeAudioKey = computed<string | null>(
-        () => store.getters[ACTIVE_AUDIO_KEY]
-      );
-      const uiLocked = computed(() => store.getters[UI_LOCKED]);
-
-      const audioItem = computed(() =>
-        activeAudioKey.value
-          ? store.state.audioItems[activeAudioKey.value]
-          : null
-      );
-      const query = computed(() => audioItem.value?.query);
-      const accentPhrases = computed(() => query.value?.accentPhrases);
-
-      const changeAccent = (accentPhraseIndex: number, accent: number) => {
-        store.dispatch(CHANGE_ACCENT, {
+    // audio play
+    const play = async () => {
+      try {
+        await store.dispatch(PLAY_AUDIO, {
           audioKey: activeAudioKey.value!,
-          accentPhraseIndex,
-          accent,
         });
-      };
-
-      const toggleAccentPhraseSplit = (
-        accentPhraseIndex: number,
-        isPause: boolean,
-        moraIndex?: number
-      ) => {
-        store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
-          audioKey: activeAudioKey.value!,
-          accentPhraseIndex,
-          moraIndex,
-          isPause,
-        });
-      };
-
-      const changeMoraData = (
-        accentPhraseIndex: number,
-        moraIndex: number,
-        pitch: number
-      ) => {
-        store.dispatch(SET_AUDIO_MORA_DATA, {
-          audioKey: activeAudioKey.value!,
-          accentPhraseIndex,
-          moraIndex,
-          pitch,
-        });
-      };
-
-      // audio play
-      const play = async () => {
-        try {
-          await store.dispatch(PLAY_AUDIO, {
-            audioKey: activeAudioKey.value!,
-          });
-        } catch (e) {
-          $q.dialog({
-            title: "再生に失敗しました",
-            message: "エンジンの再起動をお試しください。",
-            ok: {
-              label: "閉じる",
-              flat: true,
-              textColor: "secondary",
-            },
-          });
-        }
-      };
-
-      const stop = () => {
-        store.dispatch(STOP_AUDIO, { audioKey: activeAudioKey.value! });
-      };
-
-      // save
-      const save = async () => {
-        const result: SaveResultObject = await store.dispatch(
-          GENERATE_AND_SAVE_AUDIO,
-          {
-            audioKey: activeAudioKey.value!,
-            encoding: store.state.savingSetting.fileEncoding,
-          }
-        );
-
-        if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-        let msg = "";
-        switch (result.result) {
-          case "WRITE_ERROR":
-            msg =
-              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-            break;
-          case "ENGINE_ERROR":
-            msg =
-              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-            break;
-        }
-
+      } catch (e) {
         $q.dialog({
-          title: "書き出しに失敗しました。",
-          message: msg,
+          title: "再生に失敗しました",
+          message: "エンジンの再起動をお試しください。",
           ok: {
             label: "閉じる",
             flat: true,
             textColor: "secondary",
           },
         });
-      };
+      }
+    };
 
-      const nowPlaying = computed(
-        () => store.state.audioStates[activeAudioKey.value!]?.nowPlaying
-      );
-      const nowGenerating = computed(
-        () => store.state.audioStates[activeAudioKey.value!]?.nowGenerating
+    const stop = () => {
+      store.dispatch(STOP_AUDIO, { audioKey: activeAudioKey.value! });
+    };
+
+    // save
+    const save = async () => {
+      const result: SaveResultObject = await store.dispatch(
+        GENERATE_AND_SAVE_AUDIO,
+        {
+          audioKey: activeAudioKey.value!,
+          encoding: store.state.savingSetting.fileEncoding,
+        }
       );
 
-      // continuously play
-      const nowPlayingContinuously = computed(
-        () => store.state.nowPlayingContinuously
-      );
+      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
 
-      const pronunciationByPhrase = computed(() => {
-        let textArray: Array<string> = [];
-        accentPhrases.value?.forEach((accentPhrase) => {
-          let textString = "";
-          accentPhrase.moras.forEach((mora) => {
-            textString += mora.text;
-          });
-          if (accentPhrase.pauseMora) {
-            textString += "、";
-          }
-          textArray.push(textString);
-        });
-        return textArray;
+      let msg = "";
+      switch (result.result) {
+        case "WRITE_ERROR":
+          msg =
+            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+          break;
+        case "ENGINE_ERROR":
+          msg =
+            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+          break;
+      }
+
+      $q.dialog({
+        title: "書き出しに失敗しました。",
+        message: msg,
+        ok: {
+          label: "閉じる",
+          flat: true,
+          textColor: "secondary",
+        },
       });
+    };
 
-      const handleChangePronounce = (
-        newPronunciation: string,
-        phraseIndex: number
-      ) => {
-        let popUntilPause = false;
-        newPronunciation = newPronunciation.replace(",", "、");
-        if (
-          newPronunciation.slice(-1) == "、" &&
-          accentPhrases.value!.length - 1 != phraseIndex
-        ) {
-          newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
-          popUntilPause = true;
-        }
-        store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
-          audioKey: activeAudioKey.value,
-          newPronunciation,
-          accentPhraseIndex: phraseIndex,
-          popUntilPause,
+    const nowPlaying = computed(
+      () => store.state.audioStates[activeAudioKey.value!]?.nowPlaying
+    );
+    const nowGenerating = computed(
+      () => store.state.audioStates[activeAudioKey.value!]?.nowGenerating
+    );
+
+    // continuously play
+    const nowPlayingContinuously = computed(
+      () => store.state.nowPlayingContinuously
+    );
+
+    const pronunciationByPhrase = computed(() => {
+      let textArray: Array<string> = [];
+      accentPhrases.value?.forEach((accentPhrase) => {
+        let textString = "";
+        accentPhrase.moras.forEach((mora) => {
+          textString += mora.text;
         });
-      };
-
-      const hoveredPhraseIndex = ref<number | undefined>(undefined);
-
-      const handleHoverText = (phraseIndex: number, isOver: boolean) => {
-        if (isOver) {
-          hoveredPhraseIndex.value = phraseIndex;
-        } else {
-          hoveredPhraseIndex.value = undefined;
+        if (accentPhrase.pauseMora) {
+          textString += "、";
         }
-      };
+        textArray.push(textString);
+      });
+      return textArray;
+    });
 
-      const getHoveredClass = (accentPhraseIndex: number) => {
-        if (
-          selectedDetail.value == "accent" &&
-          !uiLocked.value &&
-          accentPhraseIndex === hoveredPhraseIndex.value
-        ) {
-          return "text-cell-hovered";
-        } else {
-          return "text-cell";
-        }
-      };
+    const handleChangePronounce = (
+      newPronunciation: string,
+      phraseIndex: number
+    ) => {
+      let popUntilPause = false;
+      newPronunciation = newPronunciation.replace(",", "、");
+      if (
+        newPronunciation.slice(-1) == "、" &&
+        accentPhrases.value!.length - 1 != phraseIndex
+      ) {
+        newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
+        popUntilPause = true;
+      }
+      store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
+        audioKey: activeAudioKey.value,
+        newPronunciation,
+        accentPhraseIndex: phraseIndex,
+        popUntilPause,
+      });
+    };
 
-      return {
-        selectDetail,
-        selectedDetail,
-        activeAudioKey,
-        uiLocked,
-        audioItem,
-        query,
-        accentPhrases,
-        changeAccent,
-        toggleAccentPhraseSplit,
-        changeMoraData,
-        play,
-        stop,
-        save,
-        nowPlaying,
-        nowGenerating,
-        nowPlayingContinuously,
-        pronunciationByPhrase,
-        handleChangePronounce,
-        handleHoverText,
-        getHoveredClass,
-      };
-    },
-  });
+    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+
+    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
+      if (isOver) {
+        hoveredPhraseIndex.value = phraseIndex;
+      } else {
+        hoveredPhraseIndex.value = undefined;
+      }
+    };
+
+    const getHoveredClass = (accentPhraseIndex: number) => {
+      if (
+        selectedDetail.value == "accent" &&
+        !uiLocked.value &&
+        accentPhraseIndex === hoveredPhraseIndex.value
+      ) {
+        return "text-cell-hovered";
+      } else {
+        return "text-cell";
+      }
+    };
+
+    return {
+      selectDetail,
+      selectedDetail,
+      activeAudioKey,
+      uiLocked,
+      audioItem,
+      query,
+      accentPhrases,
+      changeAccent,
+      toggleAccentPhraseSplit,
+      changeMoraData,
+      play,
+      stop,
+      save,
+      nowPlaying,
+      nowGenerating,
+      nowPlayingContinuously,
+      pronunciationByPhrase,
+      handleChangePronounce,
+      handleHoverText,
+      getHoveredClass,
+    };
+  },
+});
 </script>
 
 <style scoped lang="scss">
-  @use '@/styles' as global;
-  @import "~quasar/src/css/variables";
+@use '@/styles' as global;
+@import "~quasar/src/css/variables";
 
-  $pitch-label-height: 24px;
+$pitch-label-height: 24px;
 
-  .root > div {
+.root > div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .side {
+    height: 100%;
+
     display: flex;
-    flex-direction: row;
-    align-items: center;
-
-    .side {
-      height: 100%;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      .detail-selector .q-tab--active {
-        background-color: rgba(global.$primary, 0.3);
-        :deep(.q-tab__indicator) {
-          background-color: global.$primary;
-        }
-      }
-      .play-button-wrapper {
-        align-self: flex-end;
-        display: flex;
-        align-items: flex-end;
-        flex-wrap: nowrap;
-        flex-direction: row-reverse;
-        justify-content: space-between;
-        margin: 10px;
-        gap: 0 5px;
+    flex-direction: column;
+    justify-content: space-between;
+    .detail-selector .q-tab--active {
+      background-color: rgba(global.$primary, 0.3);
+      :deep(.q-tab__indicator) {
+        background-color: global.$primary;
       }
     }
-
-    .accent-phrase-table {
-      flex-grow: 1;
-      align-self: stretch;
-      margin-left: 5px;
-      margin-right: 5px;
-      margin-bottom: 5px;
-      padding-left: 5px;
-
+    .play-button-wrapper {
+      align-self: flex-end;
       display: flex;
-      overflow-x: scroll;
+      align-items: flex-end;
+      flex-wrap: nowrap;
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      margin: 10px;
+      gap: 0 5px;
+    }
+  }
 
-      .mora-table {
-        display: inline-grid;
-        align-self: stretch;
-        grid-template-rows: 1fr 60px 30px;
+  .accent-phrase-table {
+    flex-grow: 1;
+    align-self: stretch;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding-left: 5px;
 
-        div {
-          padding: 0px;
-          &.text-cell {
-            min-width: 30px;
-            max-width: 30px;
-            grid-row-start: 3;
-            text-align: center;
-            color: global.$secondary;
-          }
-          &.text-cell-hovered {
-            min-width: 30px;
-            max-width: 30px;
-            grid-row-start: 3;
-            text-align: center;
-            color: global.$secondary;
-            font-weight: bold;
-            cursor: pointer;
-          }
-          &.splitter-cell {
-            min-width: 10px;
-            max-width: 10px;
-            grid-row: 3 / span 1;
-            z-index: global.$detail-view-splitter-cell-z-index;
-          }
-          &.splitter-cell:hover {
-            background-color: #cdf;
-            cursor: pointer;
-          }
-          &.splitter-cell-be-split {
-            min-width: 40px;
-            max-width: 40px;
-            grid-row: 1 / span 3;
-          }
-          &.splitter-cell-be-split-pause {
-            min-width: 10px;
-            max-width: 10px;
-          }
-          &.accent-cell {
-            grid-row: 2 / span 1;
-            div {
-              min-width: 30px + 10px;
-              max-width: 30px + 10px;
-              display: inline-block;
-              cursor: pointer;
-            }
-          }
-          &.pitch-cell {
-            grid-row: 1 / span 2;
-            min-width: 30px;
-            max-width: 30px;
+    display: flex;
+    overflow-x: scroll;
+
+    .mora-table {
+      display: inline-grid;
+      align-self: stretch;
+      grid-template-rows: 1fr 60px 30px;
+
+      div {
+        padding: 0px;
+        &.text-cell {
+          min-width: 30px;
+          max-width: 30px;
+          grid-row-start: 3;
+          text-align: center;
+          color: global.$secondary;
+        }
+        &.text-cell-hovered {
+          min-width: 30px;
+          max-width: 30px;
+          grid-row-start: 3;
+          text-align: center;
+          color: global.$secondary;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        &.splitter-cell {
+          min-width: 10px;
+          max-width: 10px;
+          grid-row: 3 / span 1;
+          z-index: global.$detail-view-splitter-cell-z-index;
+        }
+        &.splitter-cell:hover {
+          background-color: #cdf;
+          cursor: pointer;
+        }
+        &.splitter-cell-be-split {
+          min-width: 40px;
+          max-width: 40px;
+          grid-row: 1 / span 3;
+        }
+        &.splitter-cell-be-split-pause {
+          min-width: 10px;
+          max-width: 10px;
+        }
+        &.accent-cell {
+          grid-row: 2 / span 1;
+          div {
+            min-width: 30px + 10px;
+            max-width: 30px + 10px;
             display: inline-block;
-            position: relative;
+            cursor: pointer;
           }
+        }
+        &.pitch-cell {
+          grid-row: 1 / span 2;
+          min-width: 30px;
+          max-width: 30px;
+          display: inline-block;
+          position: relative;
         }
       }
     }
   }
+}
 </style>
