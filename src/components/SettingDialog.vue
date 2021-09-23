@@ -26,45 +26,47 @@
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
-              <div class="q-pa-sm text-h5">エンジン</div>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions>
+                <div class="text-h5">エンジン</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>エンジンモード</div>
                 <q-space />
-                <div class="q-py-sm">
-                  <q-btn-toggle
-                    padding="none md"
-                    unelevated
-                    v-model="engineMode"
-                    color="white"
-                    text-color="black"
-                    toggle-color="primary"
-                    :options="[
-                      { label: 'CPU', value: 'switchCPU' },
-                      { label: 'GPU', value: 'switchGPU' },
-                    ]"
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  v-model="engineMode"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  :options="[
+                    { label: 'CPU', value: 'switchCPU' },
+                    { label: 'GPU', value: 'switchGPU' },
+                  ]"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
                   >
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      GPUモードの利用には NVIDIA&trade; GPU が必要です
-                    </q-tooltip>
-                  </q-btn-toggle>
-                </div>
+                    GPUモードの利用には NVIDIA&trade; GPU が必要です
+                  </q-tooltip>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
 
             <!-- Saving Card -->
             <q-card flat class="setting-card">
-              <div class="q-pa-sm text-h5">保存</div>
+              <q-card-actions>
+                <div class="text-h5">保存</div>
+              </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>文字コード</div>
                 <q-space />
                 <q-btn-toggle
-                  padding="none md"
+                  padding="xs md"
                   unelevated
                   :model-value="savingSetting.fileEncoding"
                   @update:model-value="
@@ -167,7 +169,7 @@
 import { defineComponent, computed, onUpdated } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
-import { CHECK_FILE_EXISTS, RESTART_ENGINE } from "@/store/audio";
+import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
 import {
   GET_SAVING_SETTING_DATA,
