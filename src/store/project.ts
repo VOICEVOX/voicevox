@@ -1,9 +1,14 @@
 import { StoreOptions } from "vuex";
 import { createUILockAction } from "@/store/ui";
-import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM, api } from "@/store/audio";
+import {
+  REGISTER_AUDIO_ITEM,
+  REMOVE_ALL_AUDIO_ITEM,
+  FETCH_MORA_DATA,
+} from "@/store/audio";
 import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
+import { AccentPhrase } from "@/openapi";
 
 export const CREATE_NEW_PROJECT = "NEW_PROJECT";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
@@ -132,14 +137,12 @@ export const projectStore = {
               }
 
               // set phoneme length
-              await api
-                .moraDataMoraDataPost({
+              await context
+                .dispatch(FETCH_MORA_DATA, {
                   accentPhrase: audioItem.query!.accentPhrases,
-                  speaker:
-                    context.state.characterInfos![audioItem.characterIndex!]
-                      .metas.speaker,
+                  characterIndex: audioItem.characterIndex!,
                 })
-                .then((accentPhrases) => {
+                .then((accentPhrases: AccentPhrase[]) => {
                   accentPhrases.forEach((newAccentPhrase, i) => {
                     const oldAccentPhrase = audioItem.query.accentPhrases[i];
                     if (newAccentPhrase.pauseMora) {

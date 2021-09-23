@@ -14,8 +14,7 @@ import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
-// TODO: 0.5.0マイグレーションに必要
-export const api = new DefaultApi(
+const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
 

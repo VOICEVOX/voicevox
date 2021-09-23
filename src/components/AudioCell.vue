@@ -135,7 +135,9 @@ export default defineComponent({
       if (!haveAudioQuery.value) {
         store.dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey: props.audioKey });
       } else {
-        store.dispatch(FETCH_AND_SET_ACCENT_PHRASES, { audioKey: props.audioKey });
+        store.dispatch(FETCH_AND_SET_ACCENT_PHRASES, {
+          audioKey: props.audioKey,
+        });
       }
     };
     const changeCharacterIndex = (characterIndex: number) => {
