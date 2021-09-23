@@ -73,7 +73,6 @@ import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   GENERATE_AND_SAVE_AUDIO,
-  HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   COMMAND_UPDATE_AUDIO_TEXT,
   COMMAND_CHANGE_CHARACTER_INDEX,

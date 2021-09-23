@@ -1,6 +1,11 @@
 import { StoreOptions } from "vuex";
 import { createUILockAction } from "@/store/ui";
-import { REGISTER_AUDIO_ITEM, REMOVE_ALL_AUDIO_ITEM, api } from "@/store/audio";
+import {
+  REGISTER_AUDIO_ITEM,
+  REMOVE_ALL_AUDIO_ITEM,
+  api,
+  GENERATE_AUDIO_ITEM,
+} from "@/store/audio";
 import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -45,7 +50,12 @@ export const projectStore = {
 
         await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
 
-        const audioItem: AudioItem = { text: "", characterIndex: 0 };
+        const audioItem: AudioItem = await context.dispatch(
+          GENERATE_AUDIO_ITEM,
+          {
+            text: "",
+          }
+        );
         await context.dispatch(REGISTER_AUDIO_ITEM, {
           audioItem,
         });

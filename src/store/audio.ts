@@ -13,7 +13,6 @@ import {
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { MissingError } from "rfc6902/patch";
 
 // TODO: 0.5.0マイグレーションに必要
 export const api = new DefaultApi(
@@ -98,8 +97,6 @@ export const SET_NOW_PLAYING_CONTINUOUSLY = "SET_NOW_PLAYING_CONTINUOUSLY";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
-export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 // mutations
@@ -121,6 +118,7 @@ const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 
 // actions
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
+export const GENERATE_AUDIO_ITEM = "GENERATE_AUDIO_ITEM";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -376,6 +374,29 @@ export const audioStore = typeAsStoreOptions({
       }
       draft.audioKeys.splice(0, draft.audioKeys.length);
     }),
+    [GENERATE_AUDIO_ITEM]: async (
+      { getters, dispatch },
+      {
+        text,
+        characterIndex,
+      }: {
+        text?: string;
+        characterIndex?: number;
+      }
+    ) => {
+      text ??= "";
+      characterIndex ??= 0;
+      return {
+        text,
+        characterIndex,
+        query: getters[IS_ENGINE_READY]
+          ? await dispatch(FETCH_AUDIO_QUERY, {
+              text,
+              characterIndex,
+            }).catch(() => undefined)
+          : undefined,
+      };
+    },
     [REGISTER_AUDIO_ITEM](
       { commit },
       {
