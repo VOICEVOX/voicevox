@@ -11,15 +11,9 @@ exports.default = async function (buildResult) {
         if (targetKey === "nsis-web") {
           await afterWindowsNsisWebArtifactBuild(target);
         }
-        else {
-          console.warn(`Unsupported target key for ${platformName}: ${targetKey}`);
-          console.warn(target);
-        }
+        // else: nop
       }
     }
-    else {
-      console.warn(`Unsupported platform: ${platform}`);
-      console.warn(targets);
-    }
+    // else: nop
   }
 };
