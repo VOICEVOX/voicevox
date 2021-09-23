@@ -398,10 +398,18 @@ export const audioStore = typeAsStoreOptions({
       { state },
       { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      return api.accentPhrasesAccentPhrasesPost({
-        text,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      return api
+        .accentPhrasesAccentPhrasesPost({
+          text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          throw error;
+        });
     },
     [FETCH_AND_SET_ACCENT_PHRASES]: (
       { state, dispatch },
@@ -486,14 +494,24 @@ export const audioStore = typeAsStoreOptions({
     [FETCH_MORA_DATA]: (
       { state },
       {
-        accentPhrase,
+        accentPhrases,
         characterIndex,
-      }: { accentPhrase: AccentPhrase[]; characterIndex: number }
+      }: { accentPhrases: AccentPhrase[]; characterIndex: number }
     ) => {
-      return api.moraDataMoraDataPost({
-        accentPhrase,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      return api
+        .moraDataMoraDataPost({
+          accentPhrase: accentPhrases,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
+              accentPhrases
+            )}".`
+          );
+          throw error;
+        });
     },
     [FETCH_AND_SET_MORA_DATA](
       { state, dispatch },
@@ -523,10 +541,18 @@ export const audioStore = typeAsStoreOptions({
       { state },
       { text, characterIndex }: { text: string; characterIndex: number }
     ) => {
-      return api.audioQueryAudioQueryPost({
-        text,
-        speaker: state.characterInfos![characterIndex].metas.speaker,
-      });
+      return api
+        .audioQueryAudioQueryPost({
+          text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AudioQuery for the text "${text}".`
+          );
+          throw error;
+        });
     },
     [FETCH_AND_SET_AUDIO_QUERY]: (
       { state, dispatch },
