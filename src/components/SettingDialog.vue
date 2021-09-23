@@ -394,15 +394,15 @@ export default defineComponent({
           });
           if (duplicated !== null) {
             $q.dialog({
-              title: "Duplicated Hotkey",
+              title: "重複のショートカット",
               message:
                 "設置するショートカットキー <b>" +
                 action +
                 ": " +
-                combo +
+                lastRecord.value +
                 "</b> は <b>" +
                 duplicated +
-                "</b> と同じです、削除しますか？",
+                "</b> と同じです、そっちのを削除しますか？",
               html: true,
               persistent: true,
               focus: "none",
