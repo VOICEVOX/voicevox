@@ -218,5 +218,8 @@ export const commandStore = {
     [REDO]: ({ commit }) => {
       commit(REDO);
     },
+    [CLEAR_COMMANDS]: ({ commit }) => {
+      commit(CLEAR_COMMANDS);
+    },
   },
 } as StoreOptions<State>;

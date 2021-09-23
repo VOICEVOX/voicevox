@@ -77,7 +77,6 @@ export const IS_ACTIVE = "IS_ACTIVE";
 export const SET_CHARACTER_INFOS = "SET_CHARACTER_INFOS";
 export const LOAD_CHARACTER = "LOAD_CHARACTER";
 export const CHANGE_CHARACTER_INDEX = "CHANGE_CHARACTER_INDEX";
-export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
 export const FETCH_MORA_DATA = "FETCH_MORA_DATA";
@@ -118,6 +117,7 @@ const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 // actions
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
 export const GENERATE_AUDIO_ITEM = "GENERATE_AUDIO_ITEM";
+export { REMOVE_AUDIO_ITEM };
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -366,13 +366,9 @@ export const audioStore = typeAsStoreOptions({
 
       commit(SET_CHARACTER_INFOS, { characterInfos });
     }),
-    [REMOVE_ALL_AUDIO_ITEM]: oldCreateCommandAction((draft) => {
-      for (const audioKey of draft.audioKeys) {
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
-      }
-      draft.audioKeys.splice(0, draft.audioKeys.length);
-    }),
+    [REMOVE_AUDIO_ITEM]: ({ commit }, payload: { audioKey: string }) => {
+      commit(REMOVE_AUDIO_ITEM, payload);
+    },
     [GENERATE_AUDIO_ITEM]: async (
       { getters, dispatch },
       {

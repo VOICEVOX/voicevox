@@ -2,10 +2,11 @@ import { StoreOptions } from "vuex";
 import { createUILockAction } from "@/store/ui";
 import {
   REGISTER_AUDIO_ITEM,
-  REMOVE_ALL_AUDIO_ITEM,
+  REMOVE_AUDIO_ITEM,
   GENERATE_AUDIO_ITEM,
   FETCH_MORA_DATA,
 } from "@/store/audio";
+import { CLEAR_COMMANDS } from "@/store/command";
 import { State, AudioItem } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -49,7 +50,12 @@ export const projectStore = {
           return;
         }
 
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
+        // INITIALIZE_STATE
+        // コピーを取らないとループ中に書き換えられてバグる
+        for (const audioKey of [...context.state.audioKeys]) {
+          await context.dispatch(REMOVE_AUDIO_ITEM, { audioKey });
+        }
+        await context.dispatch(CLEAR_COMMANDS, {});
 
         const audioItem: AudioItem = await context.dispatch(
           GENERATE_AUDIO_ITEM,
@@ -200,7 +206,12 @@ export const projectStore = {
           ) {
             return;
           }
-          await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+
+          // INITIALIZE_STATE
+          for (const audioKey of [...context.state.audioKeys]) {
+            await context.dispatch(REMOVE_AUDIO_ITEM, { audioKey });
+          }
+          await context.dispatch(CLEAR_COMMANDS, {});
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
