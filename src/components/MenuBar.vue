@@ -142,6 +142,7 @@ export default defineComponent({
           {
             type: "button",
             label: "テキスト読み込み",
+            shortCut: "",
             onClick: () => {
               store.dispatch(IMPORT_FROM_FILE, {});
             },
@@ -215,6 +216,30 @@ export default defineComponent({
       });
     };
     _enableHotKey(menudata.value);
+
+    // reactively reassign hotkeys to menubar
+    const menubarhotkeyIndexes = [12, 0, 16, 14, 13, 15];
+    const menubarActionIndex = [0, 1, 2, 4, 5, 6];
+
+    for (let i = 0; i < menubarhotkeyIndexes.length; i++) {
+      store.watch(
+        (state) => {
+          return state.hotkeySettings[menubarhotkeyIndexes[i]];
+        },
+        (newVal, oldVal) => {
+          if (oldVal !== undefined) {
+            Mousetrap.unbind(
+              oldVal.combination.toLowerCase().replace(" ", "+")
+            );
+          }
+          // the menudata has to be explicitly casted to any for it has a separator element
+          const actionIndex = menubarActionIndex[i];
+          (menudata.value[0] as any).subMenu[actionIndex].shortCut =
+            newVal.combination.replace(" ", "+");
+          _enableHotKey([(menudata.value[0] as any).subMenu[actionIndex]]);
+        }
+      );
+    }
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

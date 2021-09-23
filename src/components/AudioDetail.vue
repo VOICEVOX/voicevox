@@ -164,11 +164,11 @@ import {
   FETCH_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
-import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import { watchHotkeys } from "@/store/setting";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -179,22 +179,41 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    // add hotkeys with mousetrap
-    Mousetrap.bind("space", () => {
-      if (!nowPlaying.value && !nowGenerating.value) {
-        play();
-      } else {
-        stop();
-      }
-    });
+    const hotkeyActions = [
+      // play and stop
+      () => {
+        if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+          play();
+        } else {
+          stop();
+        }
+      },
+      // save single audio
+      () => {
+        if (!uiLocked.value) {
+          save();
+        }
+      },
+      // switch to accent
+      () => {
+        if (!uiLocked.value) {
+          selectedDetail.value = "accent";
+        }
+      },
+      // switch to intonation
+      () => {
+        if (!uiLocked.value) {
+          selectedDetail.value = "intonation";
+        }
+      },
+    ];
 
-    Mousetrap.bind("1", () => {
-      selectedDetail.value = "accent";
-    });
+    // records the corresponding hotkey index in local storage
+    // for example, action 'play and stop' has index 2 in hotkeySettings of config.json
+    // meanwhile is the first in actions
+    const hotkeyIndexes = [2, 1, 4, 5];
 
-    Mousetrap.bind("2", () => {
-      selectedDetail.value = "intonation";
-    });
+    watchHotkeys(hotkeyIndexes, hotkeyActions);
 
     // detail selector
     type DetailTypes = "accent" | "intonation";

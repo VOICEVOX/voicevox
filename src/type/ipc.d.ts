@@ -128,7 +128,7 @@ type IpcIHData = {
   };
 
   HOTKEY_SETTINGS: {
-    args: [obj: { newData?: import("@/type/preload").HotkeySetting[] }];
+    args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];
   };
 };

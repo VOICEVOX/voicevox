@@ -10,7 +10,7 @@ import { GET_USE_GPU } from "@/store/ui";
 import { START_WAITING_ENGINE } from "@/store/audio";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { defineComponent } from "vue";
-import { GET_HOTKEY_SETTINGS, GET_SAVING_SETTING_DATA } from "./store/setting";
+import { GET_HOTKEY_SETTINGS, GET_SAVING_SETTING } from "./store/setting";
 
 export default defineComponent({
   name: "App",
@@ -24,10 +24,8 @@ export default defineComponent({
 
     store.dispatch(START_WAITING_ENGINE);
     store.dispatch(GET_USE_GPU);
-    store.dispatch(GET_SAVING_SETTING_DATA);
-    store.dispatch(GET_HOTKEY_SETTINGS).then((val) => {
-      console.log(val);
-    });
+    store.dispatch(GET_SAVING_SETTING);
+    store.dispatch(GET_HOTKEY_SETTINGS);
   }
 });
 </script>

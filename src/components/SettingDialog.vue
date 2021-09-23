@@ -8,7 +8,7 @@
     v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
-      <q-header class="q-pa-sm" elevated>
+      <q-header class="q-pa-sm">
         <q-toolbar>
           <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
           <q-space />
@@ -158,40 +158,58 @@
             <q-card flat class="setting-card">
               <div class="q-pa-sm text-h5">ショートカットキー</div>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <q-space />
+                <q-input
+                  hide-bottom-space
+                  dense
+                  v-model="hotkeyFilter"
+                  placeholder="検索"
+                >
+                  <template v-slot:append>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <q-table
                   flat
+                  dense
+                  hide-bottom
                   :filter="hotkeyFilter"
                   :rows="hotkeyRows"
                   :columns="hotkeyColumns"
-                  row-key="hotkeyIndex"
+                  table-header-style="background-color: grey; color: white"
+                  row-key="hotkeyIndexes"
                   v-model:pagination="hotkeyPagination"
                   class="setting-card bg-grey-3"
                 >
-                  <template v-slot:top>
-                    <div>ショートカットの設定</div>
-                    <q-space />
-                    <q-input
-                      hide-bottom-space
-                      dense
-                      v-model="hotkeyFilter"
-                      label="検索"
-                    >
-                      <template v-slot:append>
-                        <q-icon name="search" />
-                      </template>
-                    </q-input>
-                  </template>
                   <template v-slot:body="props">
                     <q-tr :props="props">
-                      <q-td key="action" :props="props">
+                      <q-td key="action" :props="props" no-hover>
                         {{ props.row.action }}
                       </q-td>
                       <q-td
+                        no-hover
                         key="combination"
+                        :class="
+                          getHotkeyColor(
+                            props.row.action,
+                            props.row.combination
+                          )
+                        "
                         :props="props"
-                        @click="toggleShowRecorded($event)"
+                        @click="
+                          toggleShowRecorded(
+                            $event,
+                            props.row.action,
+                            props.row.combination
+                          )
+                        "
+                        @dblclick="deleteHotkey(props.row.action)"
                       >
-                        {{ props.row.combination }}
+                        {{
+                          getHotkeyText(props.row.action, props.row.combination)
+                        }}
                       </q-td>
                     </q-tr>
                   </template>
@@ -211,7 +229,7 @@ import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
 import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import { SET_SAVING_SETTING_DATA } from "@/store/setting";
+import { SET_HOTKEY_SETTINGS, SET_SAVING_SETTING } from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -305,7 +323,7 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      store.dispatch(SET_SAVING_SETTING_DATA, {
+      store.dispatch(SET_SAVING_SETTING, {
         data: { ...savingSetting.value, [key]: data },
       });
     };
@@ -315,15 +333,13 @@ export default defineComponent({
         title: "書き出し先のフォルダを選択",
       });
       if (path) {
-        store.dispatch(SET_SAVING_SETTING_DATA, {
+        store.dispatch(SET_SAVING_SETTING, {
           data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
     };
 
     const hotkeyRows = computed(() => store.state.hotkeySettings);
-
-    console.log(hotkeyRows.value);
 
     const hotkeyColumns = ref([
       {
@@ -340,10 +356,142 @@ export default defineComponent({
       },
     ]);
 
-    const toggleShowRecorded = (event: MouseEvent) => {
+    let lastAction = ref<string | null>(null);
+    let lastRecord = ref("");
+
+    const toggleShowRecorded = (
+      event: MouseEvent,
+      action: string,
+      combo: string
+    ) => {
       if (event.target instanceof HTMLElement) {
-        event.target.style.color = "grey";
+        if (checkHotkeyReadonly(action)) return;
+        if (lastAction.value === null) {
+          lastRecord.value = combo;
+          lastAction.value = action;
+        } else if (lastAction.value != action) {
+          return;
+        } else {
+          // verify if there's a duplicated combo
+          let duplicated: string | null = null;
+          hotkeyRows.value.forEach((value) => {
+            if (
+              value.combination == lastRecord.value &&
+              value.action != action &&
+              value.combination != ""
+            ) {
+              duplicated = value.action;
+            }
+          });
+          if (duplicated !== null) {
+            $q.dialog({
+              title: "Duplicated Hotkey",
+              message:
+                "設置するショートカットキー <b>" +
+                action +
+                ": " +
+                combo +
+                "</b> は <b>" +
+                duplicated +
+                "</b> と同じです、削除しますか？",
+              html: true,
+              persistent: true,
+              focus: "none",
+              style: {
+                width: "90vw",
+                maxWidth: "90vw",
+              },
+              ok: {
+                label: "削除する",
+                flat: true,
+                textColor: "secondary",
+              },
+              cancel: {
+                label: "キャンセル",
+                flat: true,
+                textColor: "secondary",
+              },
+            }).onOk(() => {
+              changeHotkeySettings(duplicated!, "");
+              changeHotkeySettings(action, lastRecord.value);
+            });
+          } else {
+            changeHotkeySettings(action, lastRecord.value);
+          }
+          lastAction.value = null;
+          event.target.style.color = "";
+        }
       }
+    };
+
+    const recordCombination = (event: KeyboardEvent) => {
+      if (lastAction.value === null) {
+        return;
+      } else {
+        let recordedCombo = "";
+        if (event.ctrlKey) {
+          recordedCombo += "Ctrl ";
+        }
+        if (event.altKey) {
+          recordedCombo += "Alt ";
+        }
+        if (event.shiftKey) {
+          recordedCombo += "Shift ";
+        }
+        if (event.key === " ") {
+          recordedCombo += "Space";
+        } else {
+          recordedCombo +=
+            event.key.length > 1 ? event.key : event.key.toUpperCase();
+        }
+        lastRecord.value = recordedCombo;
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", recordCombination);
+
+    const changeHotkeySettings = (action: string, combo: string) => {
+      store.dispatch(SET_HOTKEY_SETTINGS, {
+        data: {
+          action: action,
+          combination: combo,
+        },
+      });
+    };
+
+    const deleteHotkey = (action: string) => {
+      changeHotkeySettings(action, "");
+    };
+
+    const getHotkeyColor = (action: string, combo: string) => {
+      if (action == lastAction.value) {
+        if (combo == lastRecord.value) return "text-grey";
+        else return "text-primary";
+      } else {
+        return "text-black";
+      }
+    };
+
+    const getHotkeyText = (action: string, combo: string) => {
+      if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
+      if (action == lastAction.value) {
+        combo = lastRecord.value;
+      }
+      if (combo == "") return "未設定";
+      else return combo;
+    };
+
+    // for later developers, in case anyone wants to add a readonly hotkey
+    const readonlyHotkeyIndexes: number[] = [];
+
+    const checkHotkeyReadonly = (action: string) => {
+      let flag = false;
+      readonlyHotkeyIndexes.forEach((index) => {
+        if (hotkeyRows.value[index].action == action) {
+          flag = true;
+        }
+      });
+      return flag;
     };
 
     return {
@@ -356,10 +504,13 @@ export default defineComponent({
       hotkeyRows,
       hotkeyColumns,
       hotkeyPagination: ref({
-        rowsPerPage: 5,
+        rowsPerPage: 0,
       }),
       hotkeyFilter: ref(""),
       toggleShowRecorded,
+      deleteHotkey,
+      getHotkeyText,
+      getHotkeyColor,
     };
   },
 });

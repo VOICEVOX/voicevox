@@ -89,7 +89,7 @@ const store = new Store<{
       },
       {
         action: "再生/停止",
-        combination: "space",
+        combination: "Space",
       },
       {
         action: "連続再生/停止",
@@ -105,19 +105,19 @@ const store = new Store<{
       },
       {
         action: "テキスト欄を追加",
-        combination: "Shift enter",
+        combination: "Shift Enter",
       },
       {
         action: "テキスト欄を削除",
-        combination: "Shift delete",
+        combination: "Shift Delete",
       },
       {
         action: "テキスト欄からフォーカスを外す",
-        combination: "escape",
+        combination: "Escape",
       },
       {
         action: "テキスト欄にフォーカスを戻す",
-        combination: "backspace",
+        combination: "Backspace",
       },
       {
         action: "元に戻す",
@@ -128,12 +128,20 @@ const store = new Store<{
         combination: "Ctrl Y",
       },
       {
-        action: "プロジェクトを保存する",
+        action: "新規プロジェクト",
+        combination: "Ctrl N",
+      },
+      {
+        action: "プロジェクトを名前を付けて保存",
+        combination: "Ctrl+Shift+S",
+      },
+      {
+        action: "プロジェクトを上書き保存",
         combination: "Ctrl S",
       },
       {
         action: "プロジェクトを読み込む",
-        combination: "",
+        combination: "Ctrl+O",
       },
       {
         action: "テキストファイルを読み込む",
@@ -456,9 +464,14 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
-    store.set("hotkeySettings", newData);
+    const hotkeySettings = store.get("hotkeySettings");
+    for (let i = 0; i < hotkeySettings.length; i++) {
+      if (hotkeySettings[i].action == newData.action) {
+        hotkeySettings[i].combination = newData.combination;
+      }
+    }
+    store.set("hotkeySettings", hotkeySettings);
   }
-  console.log(store.get("hotkeySettings"));
   return store.get("hotkeySettings");
 });
 

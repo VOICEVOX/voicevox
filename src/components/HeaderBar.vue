@@ -77,6 +77,7 @@ import {
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { useQuasar } from "quasar";
+import { watchHotkeys } from "@/store/setting";
 
 export default defineComponent({
   setup() {
@@ -91,6 +92,33 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+
+    const hotkeyActions = [
+      // play/stop continuously
+      () => {
+        if (nowPlayingContinuously.value) {
+          stopContinuously();
+        } else {
+          playContinuously();
+        }
+      },
+      // undo
+      () => {
+        if (!uiLocked.value && canUndo.value) {
+          undo();
+        }
+      },
+      // redo
+      () => {
+        if (!uiLocked.value && canRedo.value) {
+          redo();
+        }
+      },
+    ];
+
+    const hotkeyIndexeses = [3, 10, 11];
+
+    watchHotkeys(hotkeyIndexeses, hotkeyActions);
 
     const undo = () => {
       store.dispatch(UNDO);
