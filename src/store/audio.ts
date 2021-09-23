@@ -110,7 +110,8 @@ export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
 export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
-export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
+export const FETCH_AND_SET_SINGLE_ACCENT_PHRASE =
+  "FETCH_AND_SET_SINGLE_ACCENT_PHRASE";
 export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
@@ -396,12 +397,17 @@ export const audioStore = typeAsStoreOptions({
     ),
     [FETCH_ACCENT_PHRASES]: (
       { state },
-      { text, characterIndex }: { text: string; characterIndex: number }
+      {
+        text,
+        characterIndex,
+        isKana,
+      }: { text: string; characterIndex: number; isKana: boolean | undefined }
     ) => {
       return api
         .accentPhrasesAccentPhrasesPost({
           text,
           speaker: state.characterInfos![characterIndex].metas.speaker,
+          isKana,
         })
         .catch((error) => {
           window.electron.logError(
@@ -424,7 +430,7 @@ export const audioStore = typeAsStoreOptions({
         dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
       );
     },
-    [FETCH_SINGLE_ACCENT_PHRASE]: (
+    [FETCH_AND_SET_SINGLE_ACCENT_PHRASE]: (
       { state, dispatch },
       {
         audioKey,
@@ -450,19 +456,16 @@ export const audioStore = typeAsStoreOptions({
         });
         // アクセントを末尾につけaccent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
-        return api
-          .accentPhrasesAccentPhrasesPost({
-            text: katakana + "'",
-            speaker:
-              state.characterInfos![audioItem.characterIndex!].metas.speaker,
-            isKana: true,
-          })
+        return dispatch(FETCH_ACCENT_PHRASES, {
+          text: katakana + "'",
+          characterIndex: audioItem.characterIndex!,
+          isKana: true,
+        })
           .catch(() => {
             // fallback
-            return api.accentPhrasesAccentPhrasesPost({
+            return dispatch(FETCH_ACCENT_PHRASES, {
               text: newPronunciation,
-              speaker:
-                state.characterInfos![audioItem.characterIndex!].metas.speaker,
+              characterIndex: audioItem.characterIndex!,
               isKana: false,
             });
           })
@@ -525,7 +528,7 @@ export const audioStore = typeAsStoreOptions({
       const originAccentPhrases = [...audioItem.query!.accentPhrases];
 
       return dispatch(FETCH_MORA_DATA, {
-        accentPhrase: originAccentPhrases,
+        accentPhrases: originAccentPhrases,
         characterIndex: audioItem.characterIndex,
       }).then((accentPhrases) => {
         if (changeIndexes !== undefined) {

@@ -139,7 +139,7 @@ export const projectStore = {
               // set phoneme length
               await context
                 .dispatch(FETCH_MORA_DATA, {
-                  accentPhrase: audioItem.query!.accentPhrases,
+                  accentPhrases: audioItem.query!.accentPhrases,
                   characterIndex: audioItem.characterIndex!,
                 })
                 .then((accentPhrases: AccentPhrase[]) => {
