@@ -29,7 +29,7 @@ module.exports = {
         copyright: "Hiroshiba Kazuyuki",
         afterAllArtifactBuild: path.resolve(
           __dirname,
-          "build",
+          "scripts",
           "afterAllArtifactBuild.js"
         ),
         win: {
@@ -42,10 +42,10 @@ module.exports = {
           ],
         },
         directories: {
-          buildResources: "build",
+          buildResources: "assets",
         },
         nsisWeb: {
-          include: "build/installer.nsh",
+          include: "assets/installer.nsh",
           oneClick: false,
           allowToChangeInstallationDirectory: true,
         },
