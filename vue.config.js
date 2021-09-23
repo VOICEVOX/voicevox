@@ -30,7 +30,7 @@ module.exports = {
         afterAllArtifactBuild: path.resolve(
           __dirname,
           "build",
-          "splitResources.js"
+          "afterAllArtifactBuild.js"
         ),
         win: {
           icon: "public/icon.png",

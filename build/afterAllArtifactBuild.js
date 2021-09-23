@@ -1,0 +1,25 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+const afterWindowsNsisWebArtifactBuild = require("./afterWindowsNsisWebArtifactBuild").default;
+
+// buildResult: electron-builder.BuildResult
+exports.default = async function (buildResult) {
+  for (const [platform, targets] of buildResult.platformToTargets.entries()) {
+    const platformName = platform.name;
+
+    if (platformName === "windows") {
+      for (const [targetKey, target] of targets.entries()) {
+        if (targetKey === "nsis-web") {
+          await afterWindowsNsisWebArtifactBuild(target);
+        }
+        else {
+          console.warn(`Unsupported target key for ${platformName}: ${targetKey}`);
+          console.warn(target);
+        }
+      }
+    }
+    else {
+      console.warn(`Unsupported platform: ${platform}`);
+      console.warn(targets);
+    }
+  }
+};
