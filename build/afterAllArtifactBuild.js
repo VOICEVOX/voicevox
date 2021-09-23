@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const afterWindowsNsisWebArtifactBuild = require("./afterWindowsNsisWebArtifactBuild").default;
+const afterWindowsNsisWebArtifactBuild = require("./windows/afterNsisWebArtifactBuild").default;
 
 // buildResult: electron-builder.BuildResult
 exports.default = async function (buildResult) {

@@ -24,7 +24,7 @@ exports.default = async function (target) {
   const outputDirectory = path.resolve(targetDirectory, "out");
   const inputFile = path.resolve(targetDirectory, fileName);
 
-  console.log("Split NSIS Archive.");
+  console.log("Splitting NSIS Archive...");
   const inputStream = fs.createReadStream(inputFile, {
     encoding: null,
     highWaterMark: segmentSize,
@@ -68,6 +68,6 @@ exports.default = async function (target) {
   inputStream.on("end", () => {
     const iniFilePath = path.resolve(outputDirectory, fileName).concat(".ini");
     fs.writeFileSync(iniFilePath, createIni(sizes, hashes));
-    console.log("Split NSIS Archive Finished.");
+    console.log("Splitted NSIS Archive.");
   });
 };
