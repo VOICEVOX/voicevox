@@ -83,6 +83,7 @@ import {
   IS_ACTIVE,
   COMMAND_PASTE_TEXTS,
   OPEN_TEXT_EDIT_CONTEXT_MENU,
+  GENERATE_AUDIO_ITEM,
 } from "@/store/audio";
 import { AudioItem } from "@/store/type";
 import { UI_LOCKED } from "@/store/ui";
@@ -231,7 +232,10 @@ export default defineComponent({
     const addCellBellow = async () => {
       const characterIndex =
         store.state.audioItems[props.audioKey].characterIndex;
-      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
+      const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
+        text: "",
+        characterIndex,
+      });
       await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
