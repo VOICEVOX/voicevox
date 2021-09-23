@@ -371,16 +371,13 @@ export const audioStore = typeAsStoreOptions({
     },
     [GENERATE_AUDIO_ITEM]: async (
       { getters, dispatch },
-      {
-        text,
-        characterIndex,
-      }: {
-        text?: string;
-        characterIndex?: number;
+      payload: {
+        text: string | undefined;
+        characterIndex: number | undefined;
       }
-    ) => {
-      text ??= "";
-      characterIndex ??= 0;
+    ): Promise<AudioItem> => {
+      const text = payload.text ?? "";
+      const characterIndex = payload.characterIndex ?? 0;
       return {
         text,
         characterIndex,

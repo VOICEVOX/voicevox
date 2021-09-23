@@ -228,7 +228,7 @@ export default defineComponent({
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value!;
       const characterIndex =
-        store.state.audioItems[prevAudioKey].characterIndex;
+        store.state.audioItems[prevAudioKey]?.characterIndex;
       const audioItem: AudioItem = await store.dispatch(GENERATE_AUDIO_ITEM, {
         text: "",
         characterIndex: characterIndex,
