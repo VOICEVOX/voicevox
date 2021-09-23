@@ -41,7 +41,11 @@ module.exports = {
             },
           ],
         },
+        directories: {
+          buildResources: "build",
+        },
         nsisWeb: {
+          include: "build/installer.nsh",
           oneClick: false,
           allowToChangeInstallationDirectory: true,
         },
