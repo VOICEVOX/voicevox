@@ -423,12 +423,17 @@ export const audioStore = typeAsStoreOptions({
     },
     [FETCH_ACCENT_PHRASES]: (
       { state },
-      { text, characterIndex }: { text: string; characterIndex: number }
+      {
+        text,
+        characterIndex,
+        isKana,
+      }: { text: string; characterIndex: number; isKana: boolean | undefined }
     ) => {
       return api
         .accentPhrasesAccentPhrasesPost({
           text: text,
           speaker: state.characterInfos![characterIndex].metas.speaker,
+          isKana: isKana,
         })
         .catch((error) => {
           window.electron.logError(
@@ -1013,13 +1018,39 @@ export const audioCommandStore = typeAsStoreOptions({
         popUntilPause: boolean;
       }
     ) => {
-      const newAccentPhrasesSegment: AccentPhrase[] = await dispatch(
-        FETCH_ACCENT_PHRASES,
-        {
+      const characterIndex = state.audioItems[audioKey].characterIndex;
+
+      let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+
+      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
+      // 「読み仮名」としてこれを処理する
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        // ひらがなが混ざっている場合はカタカナに変換
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
+        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
+        newAccentPhrasesSegment = (await dispatch(FETCH_ACCENT_PHRASES, {
+          text: katakana + "'",
+          characterIndex,
+          isKana: true,
+        }).catch(
+          // fallback
+          () =>
+            dispatch(FETCH_ACCENT_PHRASES, {
+              text: newPronunciation,
+              characterIndex,
+              isKana: false,
+            })
+        )) as AccentPhrase[];
+      } else {
+        newAccentPhrasesSegment = (await dispatch(FETCH_ACCENT_PHRASES, {
           text: newPronunciation,
-          characterIndex: state.audioItems[audioKey].characterIndex,
-        }
-      );
+          characterIndex: characterIndex,
+        })) as AccentPhrase[];
+      }
 
       if (popUntilPause) {
         while (

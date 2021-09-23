@@ -1,5 +1,44 @@
 [
   {
+    "version": "0.6.1",
+    "descriptions": [
+      "プロジェクトファイルが読み込めない問題の修正",
+      "開発環境の向上"
+    ],
+    "contributors": ["raa0121", "y-chan"]
+  },
+  {
+    "version": "0.6.0",
+    "descriptions": [
+      "音声書き出し先を固定する機能を追加",
+      "前後の無音の長さ調整機能を追加",
+      "アクセント変更時に影響のないイントネーションを固定",
+      "読みを修正できる機能を追加",
+      "インストーラのUX向上",
+      "音声合成時のメモリ使用量の削減",
+      "コアライブラリの機能追加",
+      "音声合成エンジンの機能追加",
+      "開発環境の向上"
+    ],
+    "contributors": [
+      "aoirint",
+      "buckw6eat",
+      "eggplants",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "isnot",
+      "k-kuroguro",
+      "MT224244",
+      "oov",
+      "Patchethium",
+      "Segu-g",
+      "takana-v",
+      "tantan-tanuki",
+      "y-chan",
+      "Yosshi999"
+    ]
+  },
+  {
     "version": "0.5.3",
     "descriptions": [
       "過去のプロジェクトファイルの調整結果が消える不具合の修正"

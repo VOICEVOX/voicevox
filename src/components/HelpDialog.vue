@@ -1,5 +1,12 @@
 <template>
-  <q-dialog maximized class="help-dialog" v-model="modelValueComputed">
+  <q-dialog
+    maximized
+    seamless
+    transition-show="none"
+    transition-hide="none"
+    class="help-dialog"
+    v-model="modelValueComputed"
+  >
     <q-layout container view="lHh Lpr lff" class="bg-white">
       <q-drawer
         bordered
