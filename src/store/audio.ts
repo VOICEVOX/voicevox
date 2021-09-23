@@ -423,6 +423,43 @@ export const audioStore = typeAsStoreOptions({
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
+
+      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
+      // 「読み仮名」としてこれを処理する
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        // ひらがなが混ざっている場合はカタカナに変換
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
+        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
+        return api
+          .accentPhrasesAccentPhrasesPost({
+            text: katakana + "'",
+            speaker:
+              state.characterInfos![audioItem.characterIndex!].metas.speaker,
+            isKana: true,
+          })
+          .catch(() => {
+            // fallback
+            return api.accentPhrasesAccentPhrasesPost({
+              text: newPronunciation,
+              speaker:
+                state.characterInfos![audioItem.characterIndex!].metas.speaker,
+              isKana: false,
+            });
+          })
+          .then((accentPhrases) => {
+            dispatch(SET_SINGLE_ACCENT_PHRASE, {
+              audioKey: audioKey,
+              accentPhraseIndex,
+              accentPhrases,
+              popUntilPause,
+            });
+          });
+      }
+
       return api
         .accentPhrasesAccentPhrasesPost({
           text: newPronunciation,
