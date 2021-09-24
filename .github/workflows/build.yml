@@ -15,7 +15,7 @@ jobs:
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
-      VOICEVOX_ENGINE_REPO_URL: https://github.com/aoirint/voicevox_engine
+      VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
     strategy:
       matrix:
         voicevox_engine_version: [0.5.2-aoirint-57]
@@ -42,33 +42,35 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - run: |
+      - shell: bash
+        run: |
           mkdir -p voicevox_engine/download
 
-      - run: |
+      - shell: bash
+        run: |
           echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
 
       - uses: actions/cache@master
         id: voicevox-engine-cache
         with:
           path: voicevox_engine/download
-          key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ voicevox_engine_version }}
+          key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
 
       - name: Download VOICEVOX ENGINE
         if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
         shell: bash
         env:
-          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/tag/${{ matrix.voicevox_engine_version }}
-        run:
-          wget -O voicevox_engine/download/list.txt "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
-          cat voicevox_engine/download/list.txt | xargs -I '%' wget -O "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
+          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
+        run: |
+          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
+          cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
 
       - name: Extract VOICEVOX ENGINE
         shell: bash
-        run:
+        run: |
           # Extract first file to extract all parts
           # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
-          7z x "$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
 
       - id: node-version
         shell: bash
@@ -108,11 +110,17 @@ jobs:
       - name: Build Electron
         shell: bash
         env:
-          VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.artifact_name }}
-        run: npm run electron:build
+          VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
+        run: npm run electron:build_pnever
+
+      - shell: bash
+        run: echo ${{ endsWith(matrix.artifact_name, '-appimage') }}
+
+      - shell: bash
+        run: echo ${{ endsWith(matrix.artifact_name, '-nsis-web') }}
 
       - name: Upload Linux AppImage artifact
-        if: startsWith(matrix.artifact_name, 'linux-') == 'true'
+        if: endsWith(matrix.artifact_name, '-appimage')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}
@@ -120,7 +128,7 @@ jobs:
             dist_electron/*.AppImage
 
       - name: Upload Windows nsis-web archives artifact
-        if: startsWith(matrix.artifact_name, 'windows-') == 'true'
+        if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-archives
@@ -128,4 +136,9 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
 
       - name: Upload Windows nsis-web installer artifact
-        if: startsWith(matrix.artifact_name,
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-installer
+          path: |
+            dist_electron/nsis-web/*.exe
