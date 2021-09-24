@@ -29,7 +29,7 @@ module.exports = {
         copyright: "Hiroshiba Kazuyuki",
         afterAllArtifactBuild: path.resolve(
           __dirname,
-          "scripts",
+          "build",
           "afterAllArtifactBuild.js"
         ),
         win: {
