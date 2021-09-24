@@ -60,6 +60,7 @@ export const settingStore = {
           hotkeySettings: hotkeySettings,
         });
       });
+      return newHotkeys;
     },
   },
 } as StoreOptions<State>;

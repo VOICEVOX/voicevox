@@ -422,12 +422,15 @@ export default defineComponent({
               },
             }).onOk(() => {
               changeHotkeySettings(duplicated!, "");
-              changeHotkeySettings(action, lastRecord.value);
+              changeHotkeySettings(action, lastRecord.value).then(() => {
+                lastAction.value = null;
+              });
             });
           } else {
-            changeHotkeySettings(action, lastRecord.value);
+            changeHotkeySettings(action, lastRecord.value).then(() => {
+              lastAction.value = null;
+            });
           }
-          lastAction.value = null;
           event.target.style.color = "";
         }
       }
@@ -460,7 +463,7 @@ export default defineComponent({
     document.addEventListener("keydown", recordCombination);
 
     const changeHotkeySettings = (action: string, combo: string) => {
-      store.dispatch(SET_HOTKEY_SETTINGS, {
+      return store.dispatch(SET_HOTKEY_SETTINGS, {
         data: {
           action: action,
           combination: combo,
