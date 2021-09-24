@@ -1,5 +1,10 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require("path");
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const process = require("process");
+
+const VOICEVOX_ENGINE_DIR =
+  process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
 
 module.exports = {
   configureWebpack: {
@@ -19,7 +24,7 @@ module.exports = {
         extraFiles: [
           { from: ".env.production", to: ".env" },
           {
-            from: "../voicevox_engine/run.dist/",
+            from: VOICEVOX_ENGINE_DIR,
             to: "",
           },
         ],
