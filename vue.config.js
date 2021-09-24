@@ -42,10 +42,10 @@ module.exports = {
           ],
         },
         directories: {
-          buildResources: "assets",
+          buildResources: "build",
         },
         nsisWeb: {
-          include: "assets/installer.nsh",
+          include: "build/installer.nsh",
           oneClick: false,
           allowToChangeInstallationDirectory: true,
         },
