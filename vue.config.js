@@ -30,7 +30,7 @@ module.exports = {
         afterAllArtifactBuild: path.resolve(
           __dirname,
           "build",
-          "splitResources.js"
+          "afterAllArtifactBuild.js"
         ),
         win: {
           icon: "public/icon.png",
@@ -41,7 +41,11 @@ module.exports = {
             },
           ],
         },
+        directories: {
+          buildResources: "build",
+        },
         nsisWeb: {
+          include: "build/installer.nsh",
           oneClick: false,
           allowToChangeInstallationDirectory: true,
         },
