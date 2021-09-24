@@ -20,17 +20,9 @@ jobs:
       matrix:
         voicevox_engine_version: [0.5.2-aoirint-57]
         artifact_name:
-          - linux-cpu-appimage
-          - linux-nvidia-appimage
           - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
-          - artifact_name: linux-cpu-appimage
-            voicevox_engine_artifact_name: linux-cpu
-            os: ubuntu-18.04
-          - artifact_name: linux-nvidia-appimage
-            voicevox_engine_artifact_name: linux-nvidia
-            os: ubuntu-18.04
           - artifact_name: windows-cpu-nsis-web
             voicevox_engine_artifact_name: windows-cpu
             os: windows-2019
@@ -124,20 +116,6 @@ jobs:
         env:
           VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
         run: npm run electron:build_pnever
-
-      - shell: bash
-        run: echo ${{ endsWith(matrix.artifact_name, '-appimage') }}
-
-      - shell: bash
-        run: echo ${{ endsWith(matrix.artifact_name, '-nsis-web') }}
-
-      - name: Upload Linux AppImage artifact
-        if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            dist_electron/*.AppImage
 
       - name: Upload Windows nsis-web archives artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')

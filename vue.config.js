@@ -59,16 +59,6 @@ module.exports = {
           repo: "voicevox",
           vPrefixedTagName: false,
         },
-        linux: {
-          icon: "public/icon.png",
-          category: "AudioVideo",
-          target: [
-            {
-              target: "AppImage",
-              arch: ["x64"],
-            },
-          ],
-        },
       },
     },
   },

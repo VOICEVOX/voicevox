@@ -95,7 +95,7 @@ async function runEngine() {
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
-    process.env.ENGINE_PATH ?? "./run"
+    process.env.ENGINE_PATH ?? "run.exe"
   );
   const args = store.get("useGpu") ? ["--use_gpu"] : null;
   engineProcess = execFile(
