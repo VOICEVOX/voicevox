@@ -1,0 +1,106 @@
+
+name: build
+on:
+  push:
+    # branches:
+    #   - master
+  release:
+    types:
+      - created
+
+jobs:
+  build:
+    env:
+      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_CACHE: .cache/electron-builder
+      cache-version: v2
+      VOICEVOX_ENGINE_REPO_URL: https://github.com/aoirint/voicevox_engine
+    strategy:
+      matrix:
+        voicevox_engine_version: [0.5.2-aoirint-57]
+        artifact_name:
+          - linux-cpu-appimage
+          - linux-nvidia-appimage
+          - windows-cpu-nsis-web
+          - windows-nvidia-nsis-web
+        include:
+          - artifact_name: linux-cpu-appimage
+            voicevox_engine_artifact_name: linux-cpu
+            os: ubuntu-18.04
+          - artifact_name: linux-nvidia-appimage
+            voicevox_engine_artifact_name: linux-nvidia
+            os: ubuntu-18.04
+          - artifact_name: windows-cpu-nsis-web
+            voicevox_engine_artifact_name: windows-cpu
+            os: windows-2019
+          - artifact_name: windows-nvidia-nsis-web
+            voicevox_engine_artifact_name: windows-nvidia
+            os: windows-2019
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+
+      - id: node-version
+        shell: bash
+        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+
+      - uses: actions/setup-node@master
+        with:
+          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+
+      - uses: actions/cache@master
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-node-
+
+      - name: Cache Electron
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+
+      - name: Cache Electron-Builder
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Build Electron
+        shell: bash
+        run: npm run electron:build
+
+      - name: Upload Linux AppImage artifact
+        if: startsWith(matrix.artifact_name, 'linux-') == 'true'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist_electron/*.AppImage
+
+      - name: Upload Windows nsis-web archives artifact
+        if: startsWith(matrix.artifact_name, 'windows-') == 'true'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-archives
+          path: |
+            dist_electron/nsis-web/out/*.7z.*
+
+      - name: Upload Windows nsis-web installer artifact
+        if: startsWith(matrix.artifact_name, 'windows-') == 'true'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-installer
+          path: |
+            dist_electron/*.exe
