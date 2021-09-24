@@ -42,11 +42,13 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - shell: bash
+      - name: Create directory voicevox_engine/download
+        shell: bash
         run: |
           mkdir -p voicevox_engine/download
 
-      - shell: bash
+      - name: Dump VOICEVOX ENGINE repo URL to calc hash
+        shell: bash
         run: |
           echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
 
@@ -75,7 +77,8 @@ jobs:
           # remove downloads to free space
           rm -rf voicevox_engine/download
 
-      - id: node-version
+      - name: Output Node version
+        id: node-version
         shell: bash
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
@@ -83,7 +86,8 @@ jobs:
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
-      - uses: actions/cache@master
+      - name: Cache Node packages
+        uses: actions/cache@master
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
