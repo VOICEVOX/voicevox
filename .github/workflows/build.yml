@@ -50,14 +50,14 @@ jobs:
         run: |
           echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
 
-      - uses: actions/cache@master
-        id: voicevox-engine-cache
-        with:
-          path: voicevox_engine/download
-          key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
+      # - uses: actions/cache@master
+      #   id: voicevox-engine-cache
+      #   with:
+      #     path: voicevox_engine/download
+      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
 
       - name: Download VOICEVOX ENGINE
-        if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
+        # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
         shell: bash
         env:
           VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
@@ -71,6 +71,9 @@ jobs:
           # Extract first file to extract all parts
           # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
           7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+
+          # remove downloads to free space
+          rm -rf voicevox_engine/download
 
       - id: node-version
         shell: bash
