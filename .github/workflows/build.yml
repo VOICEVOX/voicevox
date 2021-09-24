@@ -114,6 +114,11 @@ jobs:
         shell: bash
         run: npm ci
 
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
       - name: Build Electron
         shell: bash
         env:
