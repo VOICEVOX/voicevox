@@ -139,7 +139,7 @@ import {
 } from "@/store/ui";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import { watchHotkeys } from "@/store/setting";
+import { watchHotkeys, parseCombo } from "@/store/setting";
 
 export default defineComponent({
   name: "Home",
@@ -244,26 +244,6 @@ export default defineComponent({
 
     const removeAudioItem = async () => {
       audioCellRefs[activeAudioKey.value!].removeCell();
-    };
-
-    const parseCombo = (event: KeyboardEvent) => {
-      let recordedCombo = "";
-      if (event.ctrlKey) {
-        recordedCombo += "Ctrl ";
-      }
-      if (event.altKey) {
-        recordedCombo += "Alt ";
-      }
-      if (event.shiftKey) {
-        recordedCombo += "Shift ";
-      }
-      if (event.key === " ") {
-        recordedCombo += "Space";
-      } else {
-        recordedCombo +=
-          event.key.length > 1 ? event.key : event.key.toUpperCase();
-      }
-      return recordedCombo;
     };
 
     // hotkeys handled by native, for they involves with input elements

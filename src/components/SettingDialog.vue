@@ -238,7 +238,11 @@ import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
 import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import { SET_HOTKEY_SETTINGS, SET_SAVING_SETTING } from "@/store/setting";
+import {
+  SET_HOTKEY_SETTINGS,
+  SET_SAVING_SETTING,
+  parseCombo,
+} from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -440,22 +444,7 @@ export default defineComponent({
       if (lastAction.value === null) {
         return;
       } else {
-        let recordedCombo = "";
-        if (event.ctrlKey) {
-          recordedCombo += "Ctrl ";
-        }
-        if (event.altKey) {
-          recordedCombo += "Alt ";
-        }
-        if (event.shiftKey) {
-          recordedCombo += "Shift ";
-        }
-        if (event.key === " ") {
-          recordedCombo += "Space";
-        } else {
-          recordedCombo +=
-            event.key.length > 1 ? event.key : event.key.toUpperCase();
-        }
+        let recordedCombo = parseCombo(event);
         lastRecord.value = recordedCombo;
         event.preventDefault();
       }

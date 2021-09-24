@@ -89,3 +89,22 @@ export const watchHotkeys = (
     );
   }
 };
+
+export const parseCombo = (event: KeyboardEvent): string => {
+  let recordedCombo = "";
+  if (event.ctrlKey) {
+    recordedCombo += "Ctrl ";
+  }
+  if (event.altKey) {
+    recordedCombo += "Alt ";
+  }
+  if (event.shiftKey) {
+    recordedCombo += "Shift ";
+  }
+  if (event.key === " ") {
+    recordedCombo += "Space";
+  } else {
+    recordedCombo += event.key.length > 1 ? event.key : event.key.toUpperCase();
+  }
+  return recordedCombo;
+};
