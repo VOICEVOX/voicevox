@@ -3,5 +3,5 @@ const splitNsisArchive = require("./splitNsisArchive").default;
 
 // target: electron-builder.Target
 exports.default = async function (target) {
-  splitNsisArchive(target);
+  await splitNsisArchive(target);
 };
