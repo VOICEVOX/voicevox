@@ -42,6 +42,34 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      - run: |
+          mkdir -p voicevox_engine/download
+
+      - run: |
+          echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
+
+      - uses: actions/cache@master
+        id: voicevox-engine-cache
+        with:
+          path: voicevox_engine/download
+          key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ voicevox_engine_version }}
+
+      - name: Download VOICEVOX ENGINE
+        if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/tag/${{ matrix.voicevox_engine_version }}
+        run:
+          wget -O voicevox_engine/download/list.txt "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
+          cat voicevox_engine/download/list.txt | xargs -I '%' wget -O "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
+
+      - name: Extract VOICEVOX ENGINE
+        shell: bash
+        run:
+          # Extract first file to extract all parts
+          # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
+          7z x "$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+
       - id: node-version
         shell: bash
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
@@ -79,6 +107,8 @@ jobs:
 
       - name: Build Electron
         shell: bash
+        env:
+          VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.artifact_name }}
         run: npm run electron:build
 
       - name: Upload Linux AppImage artifact
@@ -98,9 +128,4 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
 
       - name: Upload Windows nsis-web installer artifact
-        if: startsWith(matrix.artifact_name, 'windows-') == 'true'
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.artifact_name }}-installer
-          path: |
-            dist_electron/*.exe
+        if: startsWith(matrix.artifact_name,
