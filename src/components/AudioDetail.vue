@@ -156,7 +156,7 @@ import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
   CHANGE_ACCENT,
-  SET_AUDIO_MORA_DATA,
+  COMMAND_SET_AUDIO_MORA_DATA,
   CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -241,7 +241,7 @@ export default defineComponent({
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(SET_AUDIO_MORA_DATA, {
+      store.dispatch(COMMAND_SET_AUDIO_MORA_DATA, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
