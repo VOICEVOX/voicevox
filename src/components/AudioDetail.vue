@@ -156,12 +156,12 @@ import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
   CHANGE_ACCENT,
-  SET_AUDIO_MORA_DATA,
+  COMMAND_SET_AUDIO_MORA_DATA,
   CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
-  FETCH_SINGLE_ACCENT_PHRASE,
+  FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { useQuasar } from "quasar";
@@ -260,7 +260,7 @@ export default defineComponent({
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(SET_AUDIO_MORA_DATA, {
+      store.dispatch(COMMAND_SET_AUDIO_MORA_DATA, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -366,7 +366,7 @@ export default defineComponent({
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
-      store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
+      store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
         newPronunciation,
         accentPhraseIndex: phraseIndex,

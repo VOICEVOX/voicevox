@@ -14,8 +14,7 @@ import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
-// TODO: 0.5.0マイグレーションに必要
-export const api = new DefaultApi(
+const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
 
@@ -83,15 +82,17 @@ export const REMOVE_ALL_AUDIO_ITEM = "REMOVE_ALL_AUDIO_ITEM";
 export const GET_AUDIO_CACHE = "GET_AUDIO_CACHE";
 export const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
 export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
+export const FETCH_AND_SET_ACCENT_PHRASES = "FETCH_AND_SET_ACCENT_PHRASES";
 export const FETCH_MORA_DATA = "FETCH_MORA_DATA";
+export const FETCH_AND_SET_MORA_DATA = "FETCH_AND_SET_MORA_DATA";
 export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
 export const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
+export const FETCH_AND_SET_AUDIO_QUERY = "FETCH_AND_SET_AUDIO_QUERY";
 export const SET_AUDIO_ACCENT = "SET_AUDIO_ACCENT";
 export const CHANGE_ACCENT = "CHANGE_ACCENT";
 export const TOGGLE_ACCENT_PHRASE_SPLIT = "TOGGLE_ACCENT_PHRASE_SPLIT";
 export const CHANGE_ACCENT_PHRASE_SPLIT = "CHANGE_ACCENT_PHRASE_SPLIT";
-export const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 export const GENERATE_AUDIO = "GENERATE_AUDIO";
 export const GENERATE_AND_SAVE_AUDIO = "GENERATE_AND_SAVE_AUDIO";
 export const GENERATE_AND_SAVE_ALL_AUDIO = "GENERATE_AND_SAVE_ALL_AUDIO";
@@ -107,8 +108,8 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const SET_AUDIO_MORA_VOICE = "SET_AUDIO_MORA_VOICE";
-export const FETCH_SINGLE_ACCENT_PHRASE = "FETCH_SINGLE_ACCENT_PHRASE";
+export const FETCH_AND_SET_SINGLE_ACCENT_PHRASE =
+  "FETCH_AND_SET_SINGLE_ACCENT_PHRASE";
 export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
@@ -121,6 +122,7 @@ const SET_AUDIO_INTONATION_SCALE = "SET_AUDIO_INTONATION_SCALE";
 const SET_AUDIO_VOLUME_SCALE = "SET_AUDIO_VOLUME_SCALE";
 const SET_AUDIO_PRE_PHONEME_LENGTH = "SET_AUDIO_PRE_PHONEME_LENGTH";
 const SET_AUDIO_POST_PHONEME_LENGTH = "SET_AUDIO_POST_PHONEME_LENGTH";
+const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 
 // actions
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
@@ -248,6 +250,23 @@ export const audioStore = typeAsStoreOptions({
     ) => {
       draft.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
     },
+    [SET_AUDIO_MORA_DATA]: (
+      state,
+      {
+        audioKey,
+        accentPhraseIndex,
+        moraIndex,
+        pitch,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      const query = state.audioItems[audioKey].query!;
+      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+    },
   },
 
   actions: {
@@ -309,7 +328,7 @@ export const audioStore = typeAsStoreOptions({
       const haveAudioQuery = getters[HAVE_AUDIO_QUERY](audioKey);
       await dispatch(SET_AUDIO_CHARACTER_INDEX, { audioKey, characterIndex });
       if (haveAudioQuery) {
-        return dispatch(FETCH_MORA_DATA, { audioKey });
+        return dispatch(FETCH_AND_SET_MORA_DATA, { audioKey });
       }
     },
     [REMOVE_ALL_AUDIO_ITEM]: oldCreateCommandAction((draft) => {
@@ -393,22 +412,41 @@ export const audioStore = typeAsStoreOptions({
       }
     ),
     [FETCH_ACCENT_PHRASES]: (
+      { state },
+      {
+        text,
+        characterIndex,
+        isKana,
+      }: { text: string; characterIndex: number; isKana: boolean | undefined }
+    ) => {
+      return api
+        .accentPhrasesAccentPhrasesPost({
+          text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+          isKana,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          throw error;
+        });
+    },
+    [FETCH_AND_SET_ACCENT_PHRASES]: (
       { state, dispatch },
       { audioKey }: { audioKey: string }
     ) => {
       const audioItem = state.audioItems[audioKey];
 
-      return api
-        .accentPhrasesAccentPhrasesPost({
-          text: audioItem.text,
-          speaker:
-            state.characterInfos![audioItem.characterIndex!].metas.speaker,
-        })
-        .then((accentPhrases) =>
-          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
-        );
+      return dispatch(FETCH_ACCENT_PHRASES, {
+        text: audioItem.text,
+        characterIndex: audioItem.characterIndex,
+      }).then((accentPhrases) =>
+        dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
+      );
     },
-    [FETCH_SINGLE_ACCENT_PHRASE]: (
+    [FETCH_AND_SET_SINGLE_ACCENT_PHRASE]: (
       { state, dispatch },
       {
         audioKey,
@@ -423,6 +461,40 @@ export const audioStore = typeAsStoreOptions({
       }
     ) => {
       const audioItem = state.audioItems[audioKey];
+
+      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
+      // 「読み仮名」としてこれを処理する
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        // ひらがなが混ざっている場合はカタカナに変換
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
+        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
+        return dispatch(FETCH_ACCENT_PHRASES, {
+          text: katakana + "'",
+          characterIndex: audioItem.characterIndex!,
+          isKana: true,
+        })
+          .catch(() => {
+            // fallback
+            return dispatch(FETCH_ACCENT_PHRASES, {
+              text: newPronunciation,
+              characterIndex: audioItem.characterIndex!,
+              isKana: false,
+            });
+          })
+          .then((accentPhrases) => {
+            dispatch(SET_SINGLE_ACCENT_PHRASE, {
+              audioKey: audioKey,
+              accentPhraseIndex,
+              accentPhrases,
+              popUntilPause,
+            });
+          });
+      }
+
       return api
         .accentPhrasesAccentPhrasesPost({
           text: newPronunciation,
@@ -438,7 +510,29 @@ export const audioStore = typeAsStoreOptions({
           });
         });
     },
-    [FETCH_MORA_DATA](
+    [FETCH_MORA_DATA]: (
+      { state },
+      {
+        accentPhrases,
+        characterIndex,
+      }: { accentPhrases: AccentPhrase[]; characterIndex: number }
+    ) => {
+      return api
+        .moraDataMoraDataPost({
+          accentPhrase: accentPhrases,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
+              accentPhrases
+            )}".`
+          );
+          throw error;
+        });
+    },
+    [FETCH_AND_SET_MORA_DATA](
       { state, dispatch },
       {
         audioKey,
@@ -449,37 +543,48 @@ export const audioStore = typeAsStoreOptions({
       // "Do not mutate vuex store state outside mutation handlers"エラー回避のための配列コピー
       const originAccentPhrases = [...audioItem.query!.accentPhrases];
 
-      return api
-        .moraDataMoraDataPost({
-          accentPhrase: originAccentPhrases,
-          speaker:
-            state.characterInfos![audioItem.characterIndex!].metas.speaker,
-        })
-        .then((accentPhrases) => {
-          if (changeIndexes !== undefined) {
-            for (const changeIndex of changeIndexes) {
-              originAccentPhrases[changeIndex] = accentPhrases[changeIndex];
-            }
-            accentPhrases = originAccentPhrases;
+      return dispatch(FETCH_MORA_DATA, {
+        accentPhrases: originAccentPhrases,
+        characterIndex: audioItem.characterIndex,
+      }).then((accentPhrases) => {
+        if (changeIndexes !== undefined) {
+          for (const changeIndex of changeIndexes) {
+            originAccentPhrases[changeIndex] = accentPhrases[changeIndex];
           }
-          dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
-        });
+          accentPhrases = originAccentPhrases;
+        }
+        dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
+      });
     },
     [FETCH_AUDIO_QUERY]: (
+      { state },
+      { text, characterIndex }: { text: string; characterIndex: number }
+    ) => {
+      return api
+        .audioQueryAudioQueryPost({
+          text,
+          speaker: state.characterInfos![characterIndex].metas.speaker,
+        })
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AudioQuery for the text "${text}".`
+          );
+          throw error;
+        });
+    },
+    [FETCH_AND_SET_AUDIO_QUERY]: (
       { state, dispatch },
       { audioKey }: { audioKey: string }
     ) => {
       const audioItem = state.audioItems[audioKey];
 
-      return api
-        .audioQueryAudioQueryPost({
-          text: audioItem.text,
-          speaker:
-            state.characterInfos![audioItem.characterIndex!].metas.speaker,
-        })
-        .then((audioQuery) =>
-          dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
-        );
+      return dispatch(FETCH_AUDIO_QUERY, {
+        text: audioItem.text,
+        characterIndex: audioItem.characterIndex,
+      }).then((audioQuery) =>
+        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
+      );
     },
     [SET_AUDIO_ACCENT]: oldCreateCommandAction<
       State,
@@ -506,7 +611,7 @@ export const audioStore = typeAsStoreOptions({
       }
     ) {
       await dispatch(SET_AUDIO_ACCENT, { audioKey, accentPhraseIndex, accent });
-      return dispatch(FETCH_MORA_DATA, {
+      return dispatch(FETCH_AND_SET_MORA_DATA, {
         audioKey,
         changeIndexes: [accentPhraseIndex],
       });
@@ -614,23 +719,11 @@ export const audioStore = typeAsStoreOptions({
         // split時はaccentPhraseIndexの後ろのものもMoraPitchをリセットしたいので、+1したindexをリストに追加しておく
         changeIndexes.push(accentPhraseIndex + 1);
       }
-      return dispatch(FETCH_MORA_DATA, {
+      return dispatch(FETCH_AND_SET_MORA_DATA, {
         audioKey,
         changeIndexes,
       });
     },
-    [SET_AUDIO_MORA_DATA]: oldCreateCommandAction<
-      State,
-      {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number;
-        pitch: number;
-      }
-    >((draft, { audioKey, accentPhraseIndex, moraIndex, pitch }) => {
-      const query = draft.audioItems[audioKey].query!;
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
-    }),
     [GENERATE_AUDIO]: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {
         const audioItem = state.audioItems[audioKey];
@@ -892,7 +985,7 @@ export const audioStore = typeAsStoreOptions({
 
         return Promise.all(
           addedAudioKeys.map((audioKey) =>
-            dispatch(FETCH_AUDIO_QUERY, { audioKey })
+            dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey })
           )
         );
       }
@@ -928,6 +1021,7 @@ export const audioStore = typeAsStoreOptions({
 // commands
 export const COMMAND_REGISTER_AUDIO_ITEM = "COMMAND_REGISTER_AUDIO_ITEM";
 export const COMMAND_REMOVE_AUDIO_ITEM = "COMMAND_REMOVE_AUDIO_ITEM";
+export const COMMAND_SET_AUDIO_MORA_DATA = "COMMAND_SET_AUDIO_MORA_DATA";
 export const COMMAND_SET_AUDIO_SPEED_SCALE = "COMMAND_SET_AUDIO_SPEED_SCALE";
 export const COMMAND_SET_AUDIO_PITCH_SCALE = "COMMAND_SET_AUDIO_PITCH_SCALE";
 export const COMMAND_SET_AUDIO_INTONATION_SCALE =
@@ -964,6 +1058,17 @@ export const audioCommandStore = typeAsStoreOptions({
       payload: { audioKey: string }
     ) => {
       commit(COMMAND_REMOVE_AUDIO_ITEM, payload);
+    },
+    [COMMAND_SET_AUDIO_MORA_DATA]: (
+      { commit },
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      commit(COMMAND_SET_AUDIO_MORA_DATA, payload);
     },
     [COMMAND_SET_AUDIO_SPEED_SCALE]: (
       { commit },
@@ -1015,6 +1120,17 @@ export const audioCommandStore = typeAsStoreOptions({
     },
     [COMMAND_REMOVE_AUDIO_ITEM]: (draft, payload: { audioKey: string }) => {
       audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_MORA_DATA]: (
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      audioStore.mutations[SET_AUDIO_MORA_DATA](draft, payload);
     },
     [COMMAND_SET_AUDIO_SPEED_SCALE]: (
       draft,
