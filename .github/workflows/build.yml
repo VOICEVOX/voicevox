@@ -145,9 +145,8 @@ jobs:
           # remove downloads to free space
           rm -rf voicevox_engine/download
 
-      - name: Move VOICEVOX ENGINE to win-unpacked
+      - name: Merge VOICEVOX ENGINE into prepackage/
         shell: bash
-        if: startsWith(matrix.noengine_artifact_name, 'windows-')
         run: |
           mv voicevox_engine/* prepackage/
           rm -rf voicevox_engine
