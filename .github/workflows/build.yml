@@ -78,27 +78,24 @@ jobs:
           path: |
             dist_electron/win-unpacked
 
-  build:
+
+  build-engine-prepackage:
     needs: [build-noengine-prepackage]
     env:
-      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
       VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
     strategy:
       fail-fast: false
       matrix:
         voicevox_engine_version: [0.5.2-aoirint-57]
         artifact_name:
-          - windows-cpu-nsis-web
-          - windows-nvidia-nsis-web
+          - windows-cpu-prepackage
+          - windows-nvidia-prepackage
         include:
-          - artifact_name: windows-cpu-nsis-web
+          - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_artifact_name: windows-cpu
             os: windows-2019
-          - artifact_name: windows-nvidia-nsis-web
+          - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_artifact_name: windows-nvidia
             os: windows-2019
@@ -107,11 +104,11 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Download and extract artifact
+      - name: Download and extract noengine-prepackage artifact
         uses: actions/download-artifact@v2
         with:
           name: ${{ matrix.noengine_artifact_name }}
-          path: ./prepackaged
+          path: ./prepackage
 
       # Download VOICEVOX ENGINE
       - name: Create directory voicevox_engine/download
@@ -144,6 +141,7 @@ jobs:
           # Extract first file to extract all parts
           # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
           7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+
           # remove downloads to free space
           rm -rf voicevox_engine/download
 
@@ -153,6 +151,57 @@ jobs:
         run: |
           mv voicevox_engine/* prepackaged/
           rm -rf voicevox_engine
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
+      - name: Upload prepackage artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            prepackage/
+
+
+  build:
+    needs: [build-engine-prepackage]
+    env:
+      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_CACHE: .cache/electron-builder
+      cache-version: v2
+    strategy:
+      fail-fast: false
+      matrix:
+        artifact_name:
+          - windows-cpu-nsis-web
+          - windows-nvidia-nsis-web
+        include:
+          - artifact_name: windows-cpu-nsis-web
+            engine_artifact_name: windows-cpu-prepackage
+            voicevox_engine_artifact_name: windows-cpu
+            os: windows-2019
+          - artifact_name: windows-nvidia-nsis-web
+            engine_artifact_name: windows-nvidia-prepackage
+            voicevox_engine_artifact_name: windows-nvidia
+            os: windows-2019
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Download and extract engine-prepackage artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.noengine_artifact_name }}
+          path: ./prepackage
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
 
       - name: Output Node version
         id: node-version
@@ -197,9 +246,10 @@ jobs:
         run: |
           df -h
 
+      # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
         shell: bash
-        run: npm run electron:build_pnever -- --prepackaged "prepackaged"
+        run: npm run electron:build_pnever -- --prepackaged "prepackage/"
 
       - name: Show disk space (debug info)
         shell: bash
