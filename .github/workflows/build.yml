@@ -9,7 +9,7 @@ on:
       - created
 
 jobs:
-  build-noengine-cache:
+  build-noengine-prepackage:
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -70,17 +70,16 @@ jobs:
         shell: bash
         run: npm run electron:build_pnever -- --dir
 
-      - name: Upload Windows NoEngine Cache
+      - name: Upload Windows NoEngine Prepackage
         if: startsWith(matrix.os, 'windows-')
         uses: actions/upload-artifact@v2
         with:
-          name: windows-noengine-cache
+          name: windows-noengine-prepackage
           path: |
-            dist_electron/
-            dist/
+            dist_electron/win-unpacked
 
   build:
-    needs: [build-noengine-cache]
+    needs: [build-noengine-prepackage]
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -96,11 +95,11 @@ jobs:
           - windows-nvidia-nsis-web
         include:
           - artifact_name: windows-cpu-nsis-web
-            noengine_artifact_name: windows-noengine-cache
+            noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_artifact_name: windows-cpu
             os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
-            noengine_artifact_name: windows-noengine-cache
+            noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_artifact_name: windows-nvidia
             os: windows-2019
 
@@ -113,11 +112,6 @@ jobs:
         with:
           name: ${{ matrix.noengine_artifact_name }}
           path: ./prepackaged
-
-      - name: List files (debug info)
-        shell: bash
-        run: |
-          ls
 
       # Download VOICEVOX ENGINE
       - name: Create directory voicevox_engine/download
@@ -156,7 +150,7 @@ jobs:
         shell: bash
         if: startsWith(matrix.noengine_artifact_name, 'windows-')
         run: |
-          mv voicevox_engine/* prepackaged/win-unpacked/
+          mv voicevox_engine/* prepackaged/
           rm -rf voicevox_engine
 
       - name: Output Node version
