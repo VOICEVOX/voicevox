@@ -169,6 +169,7 @@ import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { watchHotkeys } from "@/store/setting";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -211,9 +212,14 @@ export default defineComponent({
     // records the corresponding hotkey index in local storage
     // for example, action 'play and stop' has index 2 in hotkeySettings of config.json
     // meanwhile is the first in actions
-    const hotkeyIndexes = [2, 1, 4, 5];
+    const hotkeyActionKeys: HotkeyAction[] = [
+      "再生/停止",
+      "一つだけ書き出し",
+      "ｱｸｾﾝﾄ欄を表示",
+      "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    ];
 
-    watchHotkeys(hotkeyIndexes, hotkeyActions);
+    watchHotkeys(hotkeyActionKeys, hotkeyActions);
 
     // detail selector
     type DetailTypes = "accent" | "intonation";

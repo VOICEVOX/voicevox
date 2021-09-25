@@ -78,6 +78,7 @@ import {
 } from "@/store/audio";
 import { useQuasar } from "quasar";
 import { watchHotkeys } from "@/store/setting";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   setup() {
@@ -116,9 +117,13 @@ export default defineComponent({
       },
     ];
 
-    const hotkeyIndexeses = [3, 10, 11];
+    const hotkeyActionKeys: HotkeyAction[] = [
+      "連続再生/停止",
+      "元に戻す",
+      "やり直す",
+    ];
 
-    watchHotkeys(hotkeyIndexeses, hotkeyActions);
+    watchHotkeys(hotkeyActionKeys, hotkeyActions);
 
     const undo = () => {
       store.dispatch(UNDO);

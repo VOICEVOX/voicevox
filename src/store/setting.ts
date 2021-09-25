@@ -1,4 +1,4 @@
-import { HotkeySetting, SavingSetting } from "@/type/preload";
+import { HotkeyAction, HotkeySetting, SavingSetting } from "@/type/preload";
 import { StoreOptions } from "vuex";
 import { State } from "./type";
 import { useStore } from "@/store";
@@ -66,24 +66,30 @@ export const settingStore = {
 } as StoreOptions<State>;
 
 export const watchHotkeys = (
-  numIndex: number[],
-  actions: (() => any)[]
+  actionKeys: HotkeyAction[],
+  hotkeyActionFunctions: (() => any)[]
 ): void => {
   const store = useStore();
-  for (let i = 0; i < numIndex.length; i++) {
+  for (let i = 0; i < actionKeys.length; i++) {
     store.watch(
       (state) => {
-        return state.hotkeySettings[numIndex[i]];
+        for (let j = 0; j < state.hotkeySettings.length; j++) {
+          if (state.hotkeySettings[j].action == actionKeys[i]) {
+            return state.hotkeySettings[j];
+          }
+        }
       },
       (newVal, oldVal) => {
         if (oldVal !== undefined) {
           Mousetrap.unbind(oldVal.combination.toLowerCase().replace(" ", "+"));
         }
-        if (newVal.combination != "") {
-          Mousetrap.bind(
-            newVal.combination.toLowerCase().replace(" ", "+"),
-            actions[i]
-          );
+        if (newVal !== undefined) {
+          if (newVal.combination != "") {
+            Mousetrap.bind(
+              newVal.combination.toLowerCase().replace(" ", "+"),
+              hotkeyActionFunctions[i]
+            );
+          }
         }
       }
     );

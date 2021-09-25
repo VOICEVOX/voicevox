@@ -80,6 +80,27 @@ export type SavingSetting = {
 };
 
 export type HotkeySetting = {
-  action: string;
-  combination: string;
+  action: HotkeyAction;
+  combination: HotkeyCombo;
 };
+
+export type HotkeyAction =
+  | "書き出し"
+  | "一つだけ書き出し"
+  | "再生/停止"
+  | "連続再生/停止"
+  | "ｱｸｾﾝﾄ欄を表示"
+  | "ｲﾝﾄﾈｰｼｮﾝ欄を表示"
+  | "テキスト欄を追加"
+  | "テキスト欄を削除"
+  | "テキスト欄からフォーカスを外す"
+  | "テキスト欄にフォーカスを戻す"
+  | "元に戻す"
+  | "やり直す"
+  | "新規プロジェクト"
+  | "プロジェクトを名前を付けて保存"
+  | "プロジェクトを上書き保存"
+  | "プロジェクトを読み込む"
+  | "テキストファイルを読み込む";
+
+export type HotkeyCombo = string;

@@ -140,6 +140,7 @@ import {
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { watchHotkeys, parseCombo } from "@/store/setting";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   name: "Home",
@@ -173,9 +174,12 @@ export default defineComponent({
       },
     ];
 
-    const hotkeyIndexes = [0, 9];
+    const hotkeyActionKeys: HotkeyAction[] = [
+      "書き出し",
+      "テキスト欄にフォーカスを戻す",
+    ];
 
-    watchHotkeys(hotkeyIndexes, hotkeyActions);
+    watchHotkeys(hotkeyActionKeys, hotkeyActions);
 
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
@@ -246,20 +250,34 @@ export default defineComponent({
       audioCellRefs[activeAudioKey.value!].removeCell();
     };
 
+    const hotkeySettingsMap = computed(
+      () =>
+        new Map(
+          store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
+        )
+    );
+
     // hotkeys handled by native, for they involves with input elements
     const hotkeyActionsNative = [
       (event: KeyboardEvent) => {
-        if (parseCombo(event) == store.state.hotkeySettings[6].combination) {
+        if (
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
+        ) {
           addAudioItem();
         }
       },
       (event: KeyboardEvent) => {
-        if (parseCombo(event) == store.state.hotkeySettings[7].combination) {
+        if (
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
+        ) {
           removeAudioItem();
         }
       },
       (event: KeyboardEvent) => {
-        if (parseCombo(event) == store.state.hotkeySettings[8].combination) {
+        if (
+          parseCombo(event) ==
+          hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
+        ) {
           if (document.activeElement instanceof HTMLInputElement) {
             document.activeElement.blur();
           }
