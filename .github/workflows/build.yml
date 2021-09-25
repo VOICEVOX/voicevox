@@ -149,7 +149,7 @@ jobs:
         shell: bash
         if: startsWith(matrix.noengine_artifact_name, 'windows-')
         run: |
-          mv voicevox_engine/* prepackaged/
+          mv voicevox_engine/* prepackage/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
