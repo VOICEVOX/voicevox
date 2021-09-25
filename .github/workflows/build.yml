@@ -164,7 +164,7 @@ jobs:
             prepackage/
 
 
-  build:
+  build-distributable:
     needs: [build-engine-prepackage]
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
