@@ -206,18 +206,11 @@ jobs:
         run: |
           df -h
 
-      - name: Upload Windows nsis-web archives artifact
+      - name: Upload Windows nsis-web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.artifact_name }}-archives
+          name: ${{ matrix.artifact_name }}
           path: |
             dist_electron/nsis-web/out/*.7z.*
-
-      - name: Upload Windows nsis-web installer artifact
-        if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.artifact_name }}-installer
-          path: |
             dist_electron/nsis-web/*.exe
