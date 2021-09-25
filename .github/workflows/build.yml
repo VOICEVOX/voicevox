@@ -112,7 +112,12 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: ${{ matrix.noengine_artifact_name }}
-          path: ./
+          path: ./prepackaged
+
+      - name: List files (debug info)
+        shell: bash
+        run: |
+          ls
 
       # Download VOICEVOX ENGINE
       - name: Create directory voicevox_engine/download
@@ -151,7 +156,7 @@ jobs:
         shell: bash
         if: startsWith(matrix.noengine_artifact_name, 'windows-')
         run: |
-          mv voicevox_engine/* dist_electron/win-unpacked/
+          mv voicevox_engine/* prepackaged/win-unpacked/
           rm -rf voicevox_engine
 
       - name: Output Node version
@@ -199,7 +204,7 @@ jobs:
 
       - name: Build Electron
         shell: bash
-        run: npm run electron:build_pnever
+        run: npm run electron:build_pnever -- --prepackaged "prepackaged"
 
       - name: Upload Windows nsis-web archives artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
