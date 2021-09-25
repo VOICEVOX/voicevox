@@ -93,11 +93,11 @@ jobs:
         include:
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
-            voicevox_engine_artifact_name: windows-cpu
+            voicevox_engine_asset_name: windows-cpu
             os: windows-2019
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
-            voicevox_engine_artifact_name: windows-nvidia
+            voicevox_engine_asset_name: windows-nvidia
             os: windows-2019
 
     runs-on: ${{ matrix.os }}
