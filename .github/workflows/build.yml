@@ -132,14 +132,14 @@ jobs:
         env:
           VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
         run: |
-          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
+          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_asset_name }}.7z.txt"
           cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
 
       - name: Extract VOICEVOX ENGINE
         shell: bash
         run: |
           # Extract first file to extract all parts
-          # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
+          # Destination: voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/
           7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
 
           # remove downloads to free space
@@ -148,7 +148,7 @@ jobs:
       - name: Merge VOICEVOX ENGINE into prepackage/
         shell: bash
         run: |
-          mv voicevox_engine/* prepackage/
+          mv voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/* prepackage/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
@@ -180,11 +180,9 @@ jobs:
         include:
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
-            voicevox_engine_artifact_name: windows-cpu
             os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
-            voicevox_engine_artifact_name: windows-nvidia
             os: windows-2019
 
     runs-on: ${{ matrix.os }}
