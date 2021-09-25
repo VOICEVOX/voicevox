@@ -115,6 +115,7 @@ jobs:
         shell: bash
         env:
           VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
+          ORIGINAL_ENGINE_DIR_TO_REMOVE: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
         run: npm run electron:build_pnever
 
       - name: Upload Windows nsis-web archives artifact
