@@ -264,3 +264,21 @@ jobs:
           path: |
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
+
+      - name: Upload Windows nsis-web archives to Release assets
+        if: github.event.release.tag_name != '' && endsWith(matrix.artifact_name, '-nsis-web')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: dist_electron/nsis-web/out/*.7z.*
+
+      - name: Upload Windows nsis-web installer to Release assets
+        if: github.event.release.tag_name != '' && endsWith(matrix.artifact_name, '-nsis-web')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: dist_electron/nsis-web/*.exe
