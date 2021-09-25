@@ -80,7 +80,7 @@ const store = new Store<{
     },
     hotkeySettings: [
       {
-        action: "書き出し",
+        action: "音声書き出し",
         combination: "Ctrl E",
       },
       {
@@ -140,11 +140,11 @@ const store = new Store<{
         combination: "Ctrl S",
       },
       {
-        action: "プロジェクトを読み込む",
+        action: "プロジェクト読み込み",
         combination: "Ctrl O",
       },
       {
-        action: "テキストファイルを読み込む",
+        action: "テキスト読み込む",
         combination: "",
       },
     ],

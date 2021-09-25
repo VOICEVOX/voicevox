@@ -85,7 +85,7 @@ export type HotkeySetting = {
 };
 
 export type HotkeyAction =
-  | "書き出し"
+  | "音声書き出し"
   | "一つだけ書き出し"
   | "再生/停止"
   | "連続再生/停止"
@@ -100,7 +100,7 @@ export type HotkeyAction =
   | "新規プロジェクト"
   | "プロジェクトを名前を付けて保存"
   | "プロジェクトを上書き保存"
-  | "プロジェクトを読み込む"
-  | "テキストファイルを読み込む";
+  | "プロジェクト読み込み"
+  | "テキスト読み込む";
 
 export type HotkeyCombo = string;

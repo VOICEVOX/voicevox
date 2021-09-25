@@ -163,21 +163,17 @@ export default defineComponent({
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
 
-    // hotkeys handled by mousetrap
+    // hotkeys handled by Mousetrap
     const hotkeyActions = [
       () => {
-        generateAndSaveAllAudio();
-      },
-      () => {
-        focusCell({ audioKey: activeAudioKey.value! });
-        return false;
+        if (activeAudioKey.value !== undefined) {
+          focusCell({ audioKey: activeAudioKey.value });
+        }
+        return false; // this is the same with event.preventDefault()
       },
     ];
 
-    const hotkeyActionKeys: HotkeyAction[] = [
-      "書き出し",
-      "テキスト欄にフォーカスを戻す",
-    ];
+    const hotkeyActionKeys: HotkeyAction[] = ["テキスト欄にフォーカスを戻す"];
 
     watchHotkeys(hotkeyActionKeys, hotkeyActions);
 
@@ -250,6 +246,8 @@ export default defineComponent({
       audioCellRefs[activeAudioKey.value!].removeCell();
     };
 
+    // convert the hotkey array to Map to get value with keys easier
+    // this only happens here where we deal with native methods
     const hotkeySettingsMap = computed(
       () =>
         new Map(
@@ -257,30 +255,36 @@ export default defineComponent({
         )
     );
 
-    // hotkeys handled by native, for they involves with input elements
+    // hotkeys handled by native, for they are made to be working while focusing input elements
     const hotkeyActionsNative = [
       (event: KeyboardEvent) => {
         if (
+          !event.isComposing &&
           parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
         ) {
           addAudioItem();
+          event.preventDefault();
         }
       },
       (event: KeyboardEvent) => {
         if (
+          !event.isComposing &&
           parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
         ) {
           removeAudioItem();
+          event.preventDefault();
         }
       },
       (event: KeyboardEvent) => {
         if (
+          !event.isComposing &&
           parseCombo(event) ==
-          hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
+            hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
         ) {
           if (document.activeElement instanceof HTMLInputElement) {
             document.activeElement.blur();
           }
+          event.preventDefault();
         }
       },
     ];

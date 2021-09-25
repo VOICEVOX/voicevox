@@ -36,10 +36,11 @@ import {
 } from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import Mousetrap from "mousetrap";
 import { SaveResultObject } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
+import { watchHotkeys } from "@/store/setting";
+import { HotkeyAction } from "@/type/preload";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -54,7 +55,6 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
-  shortCut?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -85,6 +85,63 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
     const projectName = computed(() => store.getters[PROJECT_NAME]);
 
+    const createNewProject = async () => {
+      await store.dispatch(CREATE_NEW_PROJECT, {});
+    };
+
+    const generateAndSaveAllAudio = async () => {
+      const result: Array<SaveResultObject> = await store.dispatch(
+        GENERATE_AND_SAVE_ALL_AUDIO,
+        {
+          encoding: store.state.savingSetting.fileEncoding,
+        }
+      );
+
+      let successArray: Array<string | undefined> = [];
+      let writeErrorArray: Array<string | undefined> = [];
+      let engineErrorArray: Array<string | undefined> = [];
+      for (const item of result) {
+        switch (item.result) {
+          case "SUCCESS":
+            successArray.push(item.path);
+            break;
+          case "WRITE_ERROR":
+            writeErrorArray.push(item.path);
+            break;
+          case "ENGINE_ERROR":
+            engineErrorArray.push(item.path);
+            break;
+        }
+      }
+
+      if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+        $q.dialog({
+          component: SaveAllResultDialog,
+          componentProps: {
+            successArray: successArray,
+            writeErrorArray: writeErrorArray,
+            engineErrorArray: engineErrorArray,
+          },
+        });
+      }
+    };
+
+    const importTextFile = () => {
+      store.dispatch(IMPORT_FROM_FILE, {});
+    };
+
+    const saveProject = () => {
+      store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
+    };
+
+    const saveProjectAs = () => {
+      store.dispatch(SAVE_PROJECT_FILE, {});
+    };
+
+    const importProject = () => {
+      store.dispatch(LOAD_PROJECT_FILE, {});
+    };
+
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -93,84 +150,33 @@ export default defineComponent({
           {
             type: "button",
             label: "新規プロジェクト",
-            shortCut: "Ctrl+N",
-            onClick: async () => {
-              await store.dispatch(CREATE_NEW_PROJECT, {});
-            },
+            onClick: createNewProject,
           },
           {
             type: "button",
             label: "音声書き出し",
-            shortCut: "Ctrl+E",
-            onClick: async () => {
-              const result: Array<SaveResultObject> = await store.dispatch(
-                GENERATE_AND_SAVE_ALL_AUDIO,
-                {
-                  encoding: store.state.savingSetting.fileEncoding,
-                }
-              );
-
-              let successArray: Array<string | undefined> = [];
-              let writeErrorArray: Array<string | undefined> = [];
-              let engineErrorArray: Array<string | undefined> = [];
-              for (const item of result) {
-                switch (item.result) {
-                  case "SUCCESS":
-                    successArray.push(item.path);
-                    break;
-                  case "WRITE_ERROR":
-                    writeErrorArray.push(item.path);
-                    break;
-                  case "ENGINE_ERROR":
-                    engineErrorArray.push(item.path);
-                    break;
-                }
-              }
-
-              if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-                $q.dialog({
-                  component: SaveAllResultDialog,
-                  componentProps: {
-                    successArray: successArray,
-                    writeErrorArray: writeErrorArray,
-                    engineErrorArray: engineErrorArray,
-                  },
-                });
-              }
-            },
+            onClick: generateAndSaveAllAudio,
           },
           {
             type: "button",
-            label: "テキスト読み込み",
-            shortCut: "",
-            onClick: () => {
-              store.dispatch(IMPORT_FROM_FILE, {});
-            },
+            label: "テキスト読み込む",
+            onClick: importTextFile,
           },
           { type: "separator" },
           {
             type: "button",
             label: "プロジェクトを上書き保存",
-            shortCut: "Ctrl+S",
-            onClick: () => {
-              store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
-            },
+            onClick: saveProject,
           },
           {
             type: "button",
             label: "プロジェクトを名前を付けて保存",
-            shortCut: "Ctrl+Shift+S",
-            onClick: () => {
-              store.dispatch(SAVE_PROJECT_FILE, {});
-            },
+            onClick: saveProjectAs,
           },
           {
             type: "button",
             label: "プロジェクト読み込み",
-            shortCut: "Ctrl+O",
-            onClick: () => {
-              store.dispatch(LOAD_PROJECT_FILE, {});
-            },
+            onClick: importProject,
           },
         ],
       },
@@ -200,46 +206,25 @@ export default defineComponent({
       }
     };
 
-    // メニューバー中のホットキー有効化
-    const _enableHotKey = (items: any) => {
-      items.forEach((item: MenuItemData) => {
-        if (item.type === "root") {
-          _enableHotKey(item.subMenu);
-          return;
-        }
-        if (item.type === "button" && item.shortCut) {
-          Mousetrap.bind(item.shortCut.toLowerCase(), () => {
-            if (!uiLocked.value) item.onClick();
-          });
-          return;
-        }
-      });
-    };
-    _enableHotKey(menudata.value);
+    const hotkeyActions = [
+      createNewProject,
+      generateAndSaveAllAudio,
+      importTextFile,
+      saveProject,
+      saveProjectAs,
+      importProject,
+    ];
 
-    // reactively reassign hotkeys to menubar
-    const menubarhotkeyIndexes = [12, 0, 16, 14, 13, 15];
-    const menubarActionIndex = [0, 1, 2, 4, 5, 6];
+    const menubarhotkeyKeys: HotkeyAction[] = [
+      "新規プロジェクト",
+      "音声書き出し",
+      "テキスト読み込む",
+      "プロジェクトを上書き保存",
+      "プロジェクトを名前を付けて保存",
+      "プロジェクト読み込み",
+    ];
 
-    for (let i = 0; i < menubarhotkeyIndexes.length; i++) {
-      store.watch(
-        (state) => {
-          return state.hotkeySettings[menubarhotkeyIndexes[i]];
-        },
-        (newVal, oldVal) => {
-          if (oldVal !== undefined) {
-            Mousetrap.unbind(
-              oldVal.combination.toLowerCase().replace(" ", "+")
-            );
-          }
-          // the menudata has to be explicitly casted to any for it has a separator element
-          const actionIndex = menubarActionIndex[i];
-          (menudata.value[0] as any).subMenu[actionIndex].shortCut =
-            newVal.combination.replace(" ", "+");
-          _enableHotKey([(menudata.value[0] as any).subMenu[actionIndex]]);
-        }
-      );
-    }
+    watchHotkeys(menubarhotkeyKeys, hotkeyActions);
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

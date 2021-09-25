@@ -209,9 +209,8 @@ export default defineComponent({
       },
     ];
 
-    // records the corresponding hotkey index in local storage
-    // for example, action 'play and stop' has index 2 in hotkeySettings of config.json
-    // meanwhile is the first in actions
+    // The corresponding action keys with action callbacks
+    // it's worth noticing that even with keys, their order should be matched
     const hotkeyActionKeys: HotkeyAction[] = [
       "再生/停止",
       "一つだけ書き出し",
