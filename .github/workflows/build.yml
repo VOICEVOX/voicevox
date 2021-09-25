@@ -118,10 +118,11 @@ jobs:
         shell: bash
         run: |
           mkdir -p voicevox_engine/download
-      - name: Dump VOICEVOX ENGINE repo URL to calc hash
-        shell: bash
-        run: |
-          echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
+
+      # - name: Dump VOICEVOX ENGINE repo URL to calc hash
+      #   shell: bash
+      #   run: |
+      #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
       # - uses: actions/cache@master
       #   id: voicevox-engine-cache
       #   with:
@@ -199,6 +200,11 @@ jobs:
       - name: Build Electron
         shell: bash
         run: npm run electron:build_pnever -- --prepackaged "prepackaged"
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
 
       - name: Upload Windows nsis-web archives artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
