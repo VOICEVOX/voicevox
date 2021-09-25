@@ -17,6 +17,7 @@ jobs:
       cache-version: v2
       VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
     strategy:
+      fail-fast: false
       matrix:
         voicevox_engine_version: [0.5.2-aoirint-57]
         artifact_name:
