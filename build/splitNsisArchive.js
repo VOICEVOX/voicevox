@@ -10,7 +10,8 @@ const createIni = (sizes, hashes) => {
   return ini.join("\r\n") + "\r\n";
 };
 
-exports.default = async function (buildResult) {
+// target: electron-builder.Target
+exports.default = async function (target) {
   const projectVersion = process.env.npm_package_version;
   if (projectVersion === undefined) {
     const ErrorMessage = "Project version is undefined.";
@@ -19,11 +20,11 @@ exports.default = async function (buildResult) {
   }
   const segmentSize = 1 * 1024 ** 3; // 1GB
   const fileName = `voicevox-${projectVersion}-x64.nsis.7z`; // target file name
-  const targetDirectory = path.resolve(buildResult.outDir, "nsis-web"); // for nsis-web
+  const targetDirectory = target.outDir; // for nsis-web
   const outputDirectory = path.resolve(targetDirectory, "out");
   const inputFile = path.resolve(targetDirectory, fileName);
 
-  console.log("Split file.");
+  console.log("Splitting NSIS Archive...");
   const inputStream = fs.createReadStream(inputFile, {
     encoding: null,
     highWaterMark: segmentSize,
@@ -67,6 +68,6 @@ exports.default = async function (buildResult) {
   inputStream.on("end", () => {
     const iniFilePath = path.resolve(outputDirectory, fileName).concat(".ini");
     fs.writeFileSync(iniFilePath, createIni(sizes, hashes));
-    console.log("Split Finished.");
+    console.log("Splitted NSIS Archive.");
   });
 };
