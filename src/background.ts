@@ -141,7 +141,7 @@ const store = new Store<{
       },
       {
         action: "プロジェクトを読み込む",
-        combination: "Ctrl+O",
+        combination: "Ctrl O",
       },
       {
         action: "テキストファイルを読み込む",
