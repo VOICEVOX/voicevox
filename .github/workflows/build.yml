@@ -9,66 +9,20 @@ on:
       - created
 
 jobs:
-  build:
+  build-unpacked:
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
       cache-version: v2
-      VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
     strategy:
       fail-fast: false
       matrix:
-        voicevox_engine_version: [0.5.2-aoirint-57]
-        artifact_name:
-          - windows-cpu-nsis-web
-          - windows-nvidia-nsis-web
-        include:
-          - artifact_name: windows-cpu-nsis-web
-            voicevox_engine_artifact_name: windows-cpu
-            os: windows-2019
-          - artifact_name: windows-nvidia-nsis-web
-            voicevox_engine_artifact_name: windows-nvidia
-            os: windows-2019
+        os: [windows-2019]
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
-
-      - name: Create directory voicevox_engine/download
-        shell: bash
-        run: |
-          mkdir -p voicevox_engine/download
-
-      - name: Dump VOICEVOX ENGINE repo URL to calc hash
-        shell: bash
-        run: |
-          echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
-
-      # - uses: actions/cache@master
-      #   id: voicevox-engine-cache
-      #   with:
-      #     path: voicevox_engine/download
-      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
-
-      - name: Download VOICEVOX ENGINE
-        # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
-        shell: bash
-        env:
-          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
-        run: |
-          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
-          cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
-
-      - name: Extract VOICEVOX ENGINE
-        shell: bash
-        run: |
-          # Extract first file to extract all parts
-          # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
-          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
-
-          # remove downloads to free space
-          rm -rf voicevox_engine/download
 
       - name: Output Node version
         id: node-version
@@ -114,23 +68,12 @@ jobs:
 
       - name: Build Electron
         shell: bash
-        env:
-          VOICEVOX_ENGINE_DIR: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
-          ORIGINAL_ENGINE_DIR_TO_REMOVE: voicevox_engine/${{ matrix.voicevox_engine_artifact_name }}
-        run: npm run electron:build_pnever
+        run: npm run electron:build_pnever -- --dir
 
-      - name: Upload Windows nsis-web archives artifact
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+      - name: Upload Windows Unpacked
+        if: startsWith(matrix.os, 'windows-')
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.artifact_name }}-archives
+          name: windows-unpacked
           path: |
-            dist_electron/nsis-web/out/*.7z.*
-
-      - name: Upload Windows nsis-web installer artifact
-        if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.artifact_name }}-installer
-          path: |
-            dist_electron/nsis-web/*.exe
+            dist_electron/win-unpacked
