@@ -9,7 +9,7 @@ on:
       - created
 
 jobs:
-  build-unpacked:
+  build-noengine-cache:
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -70,10 +70,149 @@ jobs:
         shell: bash
         run: npm run electron:build_pnever -- --dir
 
-      - name: Upload Windows Unpacked
+      - name: Upload Windows NoEngine Cache
         if: startsWith(matrix.os, 'windows-')
         uses: actions/upload-artifact@v2
         with:
-          name: windows-unpacked
+          name: windows-noengine-cache
           path: |
-            dist_electron/win-unpacked
+            dist_electron/
+            dist/
+
+  build:
+    needs: [build-noengine-cache]
+    env:
+      CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
+      ELECTRON_CACHE: .cache/electron
+      ELECTRON_BUILDER_CACHE: .cache/electron-builder
+      cache-version: v2
+      VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
+    strategy:
+      fail-fast: false
+      matrix:
+        voicevox_engine_version: [0.5.2-aoirint-57]
+        artifact_name:
+          - windows-cpu-nsis-web
+          - windows-nvidia-nsis-web
+        include:
+          - artifact_name: windows-cpu-nsis-web
+            noengine_artifact_name: windows-noengine-cache
+            voicevox_engine_artifact_name: windows-cpu
+            os: windows-2019
+          - artifact_name: windows-nvidia-nsis-web
+            noengine_artifact_name: windows-noengine-cache
+            voicevox_engine_artifact_name: windows-nvidia
+            os: windows-2019
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Download and extract artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.noengine_artifact_name }}
+          path: ./
+
+      # Download VOICEVOX ENGINE
+      - name: Create directory voicevox_engine/download
+        shell: bash
+        run: |
+          mkdir -p voicevox_engine/download
+      - name: Dump VOICEVOX ENGINE repo URL to calc hash
+        shell: bash
+        run: |
+          echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
+      # - uses: actions/cache@master
+      #   id: voicevox-engine-cache
+      #   with:
+      #     path: voicevox_engine/download
+      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
+
+      - name: Download VOICEVOX ENGINE
+        # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
+        run: |
+          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_artifact_name }}.7z.txt"
+          cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
+
+      - name: Extract VOICEVOX ENGINE
+        shell: bash
+        run: |
+          # Extract first file to extract all parts
+          # Destination: voicevox/${{ matrix.voicevox_engine_artifact_name }}/
+          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+          # remove downloads to free space
+          rm -rf voicevox_engine/download
+
+      - name: Move VOICEVOX ENGINE to win-unpacked
+        shell: bash
+        if: startsWith(matrix.noengine_artifact_name, 'windows-')
+        run: |
+          mv voicevox_engine/* dist_electron/win-unpacked/
+          rm -rf voicevox_engine
+
+      - name: Output Node version
+        id: node-version
+        shell: bash
+        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+
+      - name: Set NODE_VERSION output
+        uses: actions/setup-node@master
+        with:
+          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+
+      - name: Cache Node packages
+        uses: actions/cache@master
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-node-
+
+      - name: Cache Electron
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
+
+      - name: Cache Electron-Builder
+        uses: actions/cache@master
+        with:
+          path: ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
+      - name: Build Electron
+        shell: bash
+        run: npm run electron:build_pnever
+
+      - name: Upload Windows nsis-web archives artifact
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-archives
+          path: |
+            dist_electron/nsis-web/out/*.7z.*
+
+      - name: Upload Windows nsis-web installer artifact
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-installer
+          path: |
+            dist_electron/nsis-web/*.exe
