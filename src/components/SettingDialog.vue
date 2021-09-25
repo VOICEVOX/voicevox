@@ -424,12 +424,14 @@ export default defineComponent({
                 flat: true,
                 textColor: "secondary",
               },
-            }).onOk(() => {
-              changeHotkeySettings(duplicated!, "");
-              changeHotkeySettings(action, lastRecord.value).then(() => {
-                lastAction.value = null;
-              });
-            });
+            })
+              .onOk(() => {
+                changeHotkeySettings(duplicated!, "");
+                changeHotkeySettings(action, lastRecord.value).then(() => {
+                  lastAction.value = null;
+                });
+              })
+              .onCancel(() => (lastAction.value = null));
           } else {
             changeHotkeySettings(action, lastRecord.value).then(() => {
               lastAction.value = null;
