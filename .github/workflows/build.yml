@@ -24,12 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Output Node version
+      - name: Set output Node version
         id: node-version
         shell: bash
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
-      - uses: actions/setup-node@master
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
@@ -200,12 +201,12 @@ jobs:
         run: |
           df -h
 
-      - name: Output Node version
+      - name: Set output Node version
         id: node-version
         shell: bash
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
-      - name: Set NODE_VERSION output
+      - name: Setup Node
         uses: actions/setup-node@master
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
