@@ -89,13 +89,13 @@ jobs:
       matrix:
         voicevox_engine_version: [0.5.2-aoirint-57]
         artifact_name:
-          - windows-cpu-prepackage
+          # - windows-cpu-prepackage
           - windows-nvidia-prepackage
         include:
-          - artifact_name: windows-cpu-prepackage
-            noengine_artifact_name: windows-noengine-prepackage
-            voicevox_engine_asset_name: windows-cpu
-            os: windows-2019
+          # - artifact_name: windows-cpu-prepackage
+          #   noengine_artifact_name: windows-noengine-prepackage
+          #   voicevox_engine_asset_name: windows-cpu
+          #   os: windows-2019
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
@@ -176,12 +176,12 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
-          - windows-cpu-nsis-web
+          # - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
-          - artifact_name: windows-cpu-nsis-web
-            engine_artifact_name: windows-cpu-prepackage
-            os: windows-2019
+          # - artifact_name: windows-cpu-nsis-web
+          #   engine_artifact_name: windows-cpu-prepackage
+          #   os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
             os: windows-2019
