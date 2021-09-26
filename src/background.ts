@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting } from "./type/preload";
+import { CharacterInfo, SavingSetting, Preset } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -44,6 +44,7 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
+  presets: Record<number, Preset[]>;
 }>({
   schema: {
     useGpu: {
@@ -58,6 +59,25 @@ const store = new Store<{
         fixedExportDir: { type: "string" },
       },
     },
+    presets: {
+      type: "object",
+      patternProperties: {
+        "[0-9]+": {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              characterIndex: { type: "number" },
+              speedScale: { type: "number" },
+              pitchScale: { type: "number" },
+              intonationScale: { type: "number" },
+              vokumeScale: { type: "number" },
+            },
+          },
+        },
+      },
+    },
   },
   defaults: {
     useGpu: false,
@@ -67,6 +87,7 @@ const store = new Store<{
       avoidOverwrite: false,
       fixedExportDir: "",
     },
+    presets: {},
   },
 });
 
@@ -390,6 +411,13 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   } else {
     win.setAlwaysOnTop(true);
   }
+});
+
+ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
+  if (newPresets !== undefined) {
+    store.set("presets", newPresets);
+  }
+  return store.get("presets");
 });
 
 // app callback

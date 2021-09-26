@@ -11,7 +11,11 @@ import {
   commandMutationsCreator,
 } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
+import {
+  CharacterInfo,
+  Encoding as EncodingType,
+  Preset,
+} from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 // TODO: 0.5.0マイグレーションに必要
@@ -124,6 +128,8 @@ const SET_AUDIO_POST_PHONEME_LENGTH = "SET_AUDIO_POST_PHONEME_LENGTH";
 
 // actions
 export const REGISTER_AUDIO_ITEM = "REGISTER_AUDIO_ITEM";
+
+export const SET_AUDIO_PRESET = "SET_AUDIO_PRESET";
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
@@ -247,6 +253,16 @@ export const audioStore = typeAsStoreOptions({
       }: { audioKey: string; postPhonemeLength: number }
     ) => {
       draft.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
+    },
+    [SET_AUDIO_PRESET]: (
+      draft,
+      { audioId, preset }: { audioId: string; preset: Preset }
+    ) => {
+      const query = draft.audioItems[audioId].query;
+      query!.intonationScale = preset.intonationScale;
+      query!.pitchScale = preset.pitchScale;
+      query!.speedScale = preset.speedScale;
+      query!.volumeScale = preset.volumeScale;
     },
   },
 
@@ -937,6 +953,7 @@ export const COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH =
   "COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH";
 export const COMMAND_SET_AUDIO_POST_PHONEME_LENGTH =
   "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH";
+export const COMMAND_SET_AUDIO_PRESET = "COMMAND_SET_AUDIO_PRESET";
 
 export const audioCommandStore = typeAsStoreOptions({
   actions: {
@@ -1001,6 +1018,23 @@ export const audioCommandStore = typeAsStoreOptions({
     ) => {
       commit(COMMAND_SET_AUDIO_POST_PHONEME_LENGTH, payload);
     },
+    [COMMAND_SET_AUDIO_PRESET]: (
+      { commit, state },
+      {
+        audioId,
+        characterIndex,
+        presetIndex,
+      }: { audioId: string; characterIndex: number; presetIndex: number }
+    ) => {
+      if (state.presets?.[characterIndex]?.[presetIndex] === undefined) {
+        window.electron.logError(
+          `No exist preset ${characterIndex}-${presetIndex}`
+        );
+        return;
+      }
+      const preset = state.presets[characterIndex][presetIndex];
+      commit(COMMAND_SET_AUDIO_PRESET, { audioId, preset });
+    },
   },
   mutations: commandMutationsCreator({
     [COMMAND_REGISTER_AUDIO_ITEM]: (
@@ -1051,6 +1085,12 @@ export const audioCommandStore = typeAsStoreOptions({
       payload: { audioKey: string; postPhonemeLength: number }
     ) => {
       audioStore.mutations[SET_AUDIO_POST_PHONEME_LENGTH](draft, payload);
+    },
+    [COMMAND_SET_AUDIO_PRESET]: (
+      draft,
+      payload: { audioId: string; preset: Preset }
+    ) => {
+      audioStore.mutations[SET_AUDIO_PRESET](draft, payload);
     },
   }),
 } as const);

@@ -126,6 +126,13 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  SAVING_PRESETS: {
+    args: [
+      obj: { newPresets?: Record<number, import("@/type/preload").Preset[]> }
+    ];
+    return: Record<number, import("@/type/preload").Preset[]>;
+  };
 };
 
 /**

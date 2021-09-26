@@ -12,6 +12,7 @@ import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
 import { uiStore } from "./ui";
 import { settingStore } from "./setting";
+import { presetStore } from "./preset";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
@@ -54,6 +55,7 @@ export const store = createStore<State>({
     ...commandStore.getters,
     ...projectStore.getters,
     ...settingStore.getters,
+    ...presetStore.getters,
   },
 
   mutations: {
@@ -63,6 +65,7 @@ export const store = createStore<State>({
     ...projectStore.mutations,
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
+    ...presetStore.mutations,
   },
 
   actions: {
@@ -72,6 +75,7 @@ export const store = createStore<State>({
     ...projectStore.actions,
     ...settingStore.actions,
     ...audioCommandStore.actions,
+    ...presetStore.actions,
     [GET_POLICY_TEXT]: async () => {
       return await window.electron.getPolicyText();
     },

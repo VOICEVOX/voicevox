@@ -1,6 +1,61 @@
 <template>
   <div class="root full-height q-py-sm" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
+      <span class="text-body1 q-mb-xs">presetList</span>
+      <p>{{ presetList }}</p>
+
+      <div class="row no-wrap full-width">
+        <div
+          class="no-margin no-padding full-width"
+          @wheel="setPresetByScroll($event.deltaY)"
+        >
+          <q-select
+            v-model="presetSelectModel"
+            :options="presetList"
+            class="overflow-hidden"
+            outlined
+            dense
+            @update:model-value="onChangePreset"
+          >
+            <template v-slot:selected-item="scope">
+              <div class="preset-select-label">
+                {{ scope.opt.label }}
+              </div>
+            </template>
+          </q-select>
+        </div>
+
+        <q-btn
+          icon="add_circle_outline"
+          unelevated
+          flat
+          padding="0.5rem"
+          @click="() => (showsPresetNameDialog = true)"
+        ></q-btn>
+      </div>
+
+      <q-dialog v-model="showsPresetNameDialog" persistent>
+        <q-card style="min-width: 350px">
+          <q-card-section>
+            <div class="text-h6">プリセット名</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <q-input
+              dense
+              v-model="presetName"
+              autofocus
+              @keyup.enter="presetNameDialog = false"
+            />
+          </q-card-section>
+
+          <q-card-actions align="right" class="text-primary">
+            <q-btn flat label="キャンセル" v-close-popup />
+            <q-btn flat label="確定" @click="addPreset()" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
       <span class="text-body1 q-mb-xs"
         >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
       >
@@ -16,7 +71,15 @@
         @change="setAudioSpeedScale"
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
         @pan="setPanning(previewAudioSpeedScale, $event)"
-      />
+      >
+        <template v-slot:no-option>
+          <q-item>
+            <q-item-section class="text-italic text-grey">
+              プリセットはありません
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-slider>
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
@@ -127,7 +190,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from "vue";
+import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
@@ -137,8 +200,11 @@ import {
   COMMAND_SET_AUDIO_VOLUME_SCALE,
   COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH,
   COMMAND_SET_AUDIO_POST_PHONEME_LENGTH,
+  COMMAND_SET_AUDIO_PRESET,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
+import { Preset } from "@/type/preload";
+import { SAVE_PRESETS } from "@/store/preset";
 import { AudioQuery } from "@/openapi";
 import { PreviewableValue } from "@/helpers/previewableValue";
 
@@ -205,6 +271,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         speedScale,
       });
+      onChangeParameter();
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
@@ -213,6 +280,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         pitchScale,
       });
+      onChangeParameter();
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
@@ -221,6 +289,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         intonationScale,
       });
+      onChangeParameter();
     };
 
     const setAudioVolumeScale = (volumeScale: number) => {
@@ -229,6 +298,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         volumeScale,
       });
+      onChangeParameter();
     };
 
     const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
@@ -316,6 +386,123 @@ export default defineComponent({
       }
     };
 
+    const presetList = computed<{ label: string; value: number }[] | undefined>(
+      () =>
+        audioItem.value?.characterIndex !== undefined
+          ? store.state.presets?.[audioItem.value.characterIndex]?.map(
+              (e, index) => ({
+                label: e.name,
+                value: index,
+              })
+            )
+          : undefined
+    );
+
+    const presets = computed(() => store.state.presets);
+
+    const notSelectedPreset = {
+      label: "プリセットを選択",
+      value: undefined,
+    };
+
+    const presetSelectModel =
+      ref<{
+        label: string;
+        value: number | undefined;
+      }>(notSelectedPreset);
+
+    const onChangePreset = (e: {
+      label: string;
+      value: number | undefined;
+    }): void => {
+      if (audioItem.value?.characterIndex === undefined) return;
+
+      store.dispatch(COMMAND_SET_AUDIO_PRESET, {
+        audioId: activeAudioKey.value,
+        characterIndex: audioItem.value.characterIndex,
+        presetIndex: e.value,
+      });
+
+      presetSelectModel.value = e;
+    };
+
+    const onChangeParameter = () => {
+      presetSelectModel.value = notSelectedPreset;
+    };
+
+    const addPreset = () => {
+      console.log("addPreset");
+      if (
+        audioItem.value?.characterIndex === undefined ||
+        previewAudioPitchScale.currentValue.value === undefined ||
+        previewAudioIntonationScale.currentValue.value === undefined ||
+        previewAudioSpeedScale.currentValue.value === undefined ||
+        previewAudioVolumeScale.currentValue.value === undefined
+      )
+        return;
+      const newPreset = {
+        name: presetName.value,
+        charactorIndex: audioItem.value?.characterIndex,
+        speedScale: previewAudioSpeedScale.currentValue.value,
+        pitchScale: previewAudioPitchScale.currentValue.value,
+        intonationScale: previewAudioIntonationScale.currentValue.value,
+        volumeScale: previewAudioVolumeScale.currentValue.value,
+      } as Preset;
+
+      const charaPreset =
+        presets.value !== undefined &&
+        presets.value[audioItem.value.characterIndex] !== undefined
+          ? presets.value[audioItem.value.characterIndex]
+          : [];
+
+      // const updatePresets = {
+      //   [audioItem.value.characterIndex]: [newPreset, ...charaPreset],
+      //   ...presets.value,
+      // };
+      const updatePresets = JSON.parse(JSON.stringify(presets.value)) as Record<
+        number,
+        Preset[]
+      >;
+
+      // if-elseでよくね？
+      if (updatePresets[audioItem.value.characterIndex] === undefined) {
+        updatePresets[audioItem.value.characterIndex] = [];
+      }
+      updatePresets[audioItem.value.characterIndex] = [
+        ...updatePresets[audioItem.value.characterIndex],
+        newPreset,
+      ];
+
+      store.dispatch(SAVE_PRESETS, { newPresets: updatePresets });
+
+      presetSelectModel.value = {
+        label: newPreset.name,
+        value: charaPreset.length,
+      };
+    };
+
+    const showsPresetNameDialog = ref(false);
+    const presetName = ref("");
+
+    const setPresetByScroll = (deltaY: number) => {
+      const isUp = deltaY > 0;
+      const presetNumber = presetList.value?.length;
+      const nowIndex = presetSelectModel.value.value ?? -1;
+
+      if (presetNumber === 0 || presetNumber === undefined) return;
+
+      const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
+      if (newIndex < 0 || presetNumber <= newIndex) return;
+
+      if (
+        presetList.value === undefined ||
+        presetList.value[newIndex] === undefined
+      )
+        return;
+      presetSelectModel.value = presetList.value[newIndex];
+      onChangePreset(presetList.value[newIndex]);
+    };
+
     return {
       activeAudioKey,
       uiLocked,
@@ -336,6 +523,14 @@ export default defineComponent({
       setAudioPostPhonemeLength,
       setAudioInfoByScroll,
       setPanning,
+      presetList,
+      presetSelectModel,
+      onChangePreset,
+      addPreset,
+      presets,
+      showsPresetNameDialog,
+      presetName,
+      setPresetByScroll,
     };
   },
 });
@@ -352,5 +547,13 @@ export default defineComponent({
   gap: 15px 0;
   overflow: hidden;
   bottom: 0;
+}
+
+.preset-select-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: fit-content;
+  max-width: 8rem;
 }
 </style>

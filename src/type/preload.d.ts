@@ -43,6 +43,9 @@ export interface Sandbox {
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  savingPresets(
+    newPresets?: Recode<number, Preset[]>
+  ): Promise<Recode<number, Preset[]>>;
 }
 
 export type AppInfos = {
@@ -76,4 +79,13 @@ export type SavingSetting = {
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
+};
+
+export type Preset = {
+  name: string;
+  characterIndex?: number;
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
 };

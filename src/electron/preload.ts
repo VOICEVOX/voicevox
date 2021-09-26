@@ -163,6 +163,10 @@ const api: Sandbox = {
   changePinWindow: () => {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
+
+  savingPresets: (newPresets) => {
+    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
