@@ -360,6 +360,8 @@ jobs:
         shell: bash
         run: |
           for appImageFile in artifact/*.AppImage; do
+            echo "Splitting ${appImageFile}"
+
             # compressed to artifact/MyArtifact.AppImage.7z.001, artifact/MyArtifact.AppImage.7z.002, ...
             7z -v1g a "${appImageFile}.7z" "${appImageFile}"
 
