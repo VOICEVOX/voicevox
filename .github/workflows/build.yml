@@ -111,16 +111,16 @@ jobs:
         # voicevox_engine_version:
         #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
         artifact_name:
-          - linux-cpu-appimage
-          - linux-nvidia-appimage
+          - linux-cpu-prepackage
+          - linux-nvidia-prepackage
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
         include:
-          - artifact_name: linux-cpu-appimage
+          - artifact_name: linux-cpu-prepackage
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-cpu
             os: ubuntu-18.04
-          - artifact_name: linux-nvidia-appimage
+          - artifact_name: linux-nvidia-prepackage
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-nvidia
             os: ubuntu-18.04
