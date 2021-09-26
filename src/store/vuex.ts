@@ -13,7 +13,7 @@ import {
   MutationTree as OriginalMutationTree,
 } from "vuex";
 
-export type PayloadFunction = (payload?: any) => any;
+export type PayloadFunction = (payload?: Record<string, any>) => any;
 
 export type GettersBase = Record<string, any>;
 export type ActionsBase = Record<string, PayloadFunction>;
