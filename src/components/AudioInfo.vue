@@ -437,37 +437,30 @@ export default defineComponent({
     const addPreset = () => {
       console.log("addPreset");
 
-      if (
-        audioItem.value?.characterIndex === undefined ||
-        previewAudioPitchScale.currentValue.value === undefined ||
-        previewAudioIntonationScale.currentValue.value === undefined ||
-        previewAudioSpeedScale.currentValue.value === undefined ||
-        previewAudioVolumeScale.currentValue.value === undefined
-      )
-        return;
+      if (audioItem.value?.characterIndex === undefined) return;
+      const characterIndex = audioItem.value.characterIndex;
+
       const newPreset = {
         name: presetName.value,
-        charactorIndex: audioItem.value?.characterIndex,
-        speedScale: previewAudioSpeedScale.currentValue.value,
-        pitchScale: previewAudioPitchScale.currentValue.value,
-        intonationScale: previewAudioIntonationScale.currentValue.value,
-        volumeScale: previewAudioVolumeScale.currentValue.value,
+        charactorIndex: characterIndex,
+        speedScale: previewAudioSpeedScale.currentValue.value!,
+        pitchScale: previewAudioPitchScale.currentValue.value!,
+        intonationScale: previewAudioIntonationScale.currentValue.value!,
+        volumeScale: previewAudioVolumeScale.currentValue.value!,
       } as Preset;
 
       const charaPreset =
         presets.value !== undefined &&
-        presets.value[audioItem.value.characterIndex] !== undefined
+        presets.value[characterIndex] !== undefined
           ? (JSON.parse(
-              JSON.stringify(presets.value[audioItem.value.characterIndex])
+              JSON.stringify(presets.value[characterIndex])
             ) as Preset[])
           : [];
 
       charaPreset.push(newPreset);
 
-      console.log(charaPreset);
-
       store.dispatch(SAVE_PRESETS, {
-        characterIndex: audioItem.value.characterIndex,
+        characterIndex,
         presetsData: charaPreset,
       });
 
