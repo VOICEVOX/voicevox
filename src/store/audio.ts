@@ -294,7 +294,7 @@ export type AudioCommandActions = {
   }): void;
 };
 
-export type audioCommandMutations = {
+export type AudioCommandMutations = {
   COMMAND_REGISTER_AUDIO_ITEM: {
     audioItem: AudioItem;
     audioKey: string;
