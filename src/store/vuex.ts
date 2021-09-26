@@ -13,7 +13,18 @@ import {
   MutationTree as OriginalMutationTree,
 } from "vuex";
 
-export class Store<S, G, A, M> extends BaseStore<S> {
+export type PayloadFunction = (payload?: any) => any;
+
+export type GettersBase = Record<string, any>;
+export type ActionsBase = Record<string, PayloadFunction>;
+export type MutationsBase = Record<string, Record<string, any> | undefined>;
+
+export class Store<
+  S,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+> extends BaseStore<S> {
   constructor(options: OriginalStoreOptions<S>) {
     super(options);
   }
@@ -29,9 +40,12 @@ export class Store<S, G, A, M> extends BaseStore<S> {
   commit: Commit<M>;
 }
 
-export function createStore<S, G, A, M>(
-  options: StoreOptions<S, G, A, M>
-): Store<S, G, A, M> {
+export function createStore<
+  S,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+>(options: StoreOptions<S, G, A, M>): Store<S, G, A, M> {
   // optionsをOriginalStoreOptions<S>で型キャストしないとTS2589を吐く
   return baseCreateStore<S>(options as OriginalStoreOptions<S>) as Store<
     S,
@@ -41,31 +55,35 @@ export function createStore<S, G, A, M>(
   >;
 }
 
-export function useStore<S, G, A, M>(
-  injectKey?: InjectionKey<Store<S, G, A, M>> | string
-): Store<S, G, A, M> {
+export function useStore<
+  S,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+>(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
   return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
 }
 
-export interface Dispatch<A = any> {
+export interface Dispatch<A extends ActionsBase> {
   // TODO: payloadWithType方式の対応
   <T extends keyof A>(
-    type: A extends Record<string, any> ? T : string,
-    payload: A extends Record<string, any> ? Parameters<A[T]>[0] : any,
+    type: T,
+    payload: Parameters<A[T]>[0],
     options?: DispatchOptions
-  ): Promise<ReturnType<A extends Record<string, any> ? A[T] : any>>;
+  ): Promise<ReturnType<A[T]>>;
 }
 
-export interface Commit<M = any> {
+export interface Commit<M extends MutationsBase> {
   // TODO: payloadWithType方式の対応
-  <T extends keyof M>(
-    type: M extends Record<string, any> ? T : string,
-    payload: M extends Record<string, any> ? Parameters<M[T]>[0] : any,
-    options?: CommitOptions
-  ): void;
+  <T extends keyof M>(type: T, payload: M[T], options?: CommitOptions): void;
 }
 
-export interface StoreOptions<S, G, A, M> {
+export interface StoreOptions<
+  S,
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+> {
   state: S | (() => S);
   getters?: GetterTree<S, S, G>;
   actions?: ActionTree<S, S, A, M>;
@@ -76,9 +94,12 @@ export interface StoreOptions<S, G, A, M> {
   devtools?: boolean;
 }
 
-export type PayloadFunction = (payload?: any) => any;
-
-export interface ActionContext<S, R, A, M> {
+export interface ActionContext<
+  S,
+  R,
+  A extends ActionsBase,
+  M extends MutationsBase
+> {
   dispatch: Dispatch<A>;
   commit: Commit<M>;
   state: S;
@@ -87,50 +108,62 @@ export interface ActionContext<S, R, A, M> {
   rootGetters: any;
 }
 
-export type ActionHandler<S, R, P extends PayloadFunction, A, M> = (
+export type ActionHandler<
+  S,
+  R,
+  A extends ActionsBase,
+  M extends MutationsBase,
+  K extends keyof A
+> = (
   this: Store<S, any, A, M>,
   injectee: ActionContext<S, R, A, M>,
-  payload: Parameters<P>[0]
-) => ReturnType<P>;
-export interface ActionObject<S, R, P extends PayloadFunction, A, M> {
+  payload: Parameters<A[K]>[0]
+) => ReturnType<A[K]>;
+export interface ActionObject<
+  S,
+  R,
+  A extends ActionsBase,
+  M extends MutationsBase,
+  K extends keyof A
+> {
   root?: boolean;
-  handler: ActionHandler<S, R, P, A, M>;
+  handler: ActionHandler<S, R, A, M, K>;
 }
 
-export type Getter<S, R, P extends PayloadFunction> = (
+export type Getter<S, R, G extends GettersBase, K extends keyof G> = (
   state: S,
-  getters: Parameters<P>[0],
+  getters: G,
   rootState: R,
   rootGetters: any
-) => ReturnType<P>;
-export type Action<S, R, P extends PayloadFunction, A, M> =
-  | ActionHandler<S, R, P, A, M>
-  | ActionObject<S, R, P, A, M>;
-export type Mutation<S, P extends PayloadFunction> = (
-  state: S,
-  payload: Parameters<P>[0]
-) => ReturnType<P>;
+) => G[K];
+export type Action<
+  S,
+  R,
+  A extends ActionsBase,
+  M extends MutationsBase,
+  K extends keyof A
+> = ActionHandler<S, R, A, M, K> | ActionObject<S, R, A, M, K>;
+export type Mutation<S, P> = (state: S, payload: P) => void;
 
-export type GetterTree<S, R, G> = G extends Record<string, PayloadFunction>
+export type GetterTree<S, R, G> = G extends GettersBase
   ? GetterTree<S, R, G>
   : OriginalGetterTree<S, R>;
 
-export type CustomGetterTree<S, R, G extends Record<string, PayloadFunction>> =
-  {
-    [K in keyof G]: Getter<S, R, G[K]>;
-  };
+export type CustomGetterTree<S, R, G extends GettersBase> = {
+  [K in keyof G]: Getter<S, R, G, K>;
+};
 
-export type ActionTree<S, R, A, M> = A extends Record<string, PayloadFunction>
+export type ActionTree<S, R, A, M extends MutationsBase> = A extends ActionsBase
   ? CustomActionTree<S, R, A, M>
   : OriginalActionTree<S, R>;
 
 export type CustomActionTree<
   S,
   R,
-  A extends Record<string, PayloadFunction>,
-  M
+  A extends ActionsBase,
+  M extends MutationsBase
 > = {
-  [K in keyof A]: Action<S, R, A[K], A, M>;
+  [K in keyof A]: Action<S, R, A, M, K>;
 };
 
 export type MutationTree<S, M> = M extends Record<string, PayloadFunction>
