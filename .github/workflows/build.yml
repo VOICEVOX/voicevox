@@ -267,7 +267,7 @@ jobs:
         run: |
           df -h
 
-      - name: Upload Windows nsis-web artifact
+      - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
         with:
@@ -276,6 +276,37 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
 
+
+  upload-distributable-to-release:
+    if: github.event.release.tag_name != '' # If release
+    needs: [build-distributable]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04]
+        artifact_name:
+          # - windows-cpu-nsis-web
+          - windows-nvidia-nsis-web
+        include:
+          # - artifact_name: windows-cpu-nsis-web
+          - artifact_name: windows-nvidia-nsis-web
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Download and extract distributable artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ./artifact
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
+      # Windows NSIS Web
       # FIXME: rename archives and installer before upload to separate cpu, gpu distribution
       - name: Upload Windows nsis-web archives to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -284,7 +315,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: dist_electron/nsis-web/out/*.7z.*
+          file: artifact/out/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -293,4 +324,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: dist_electron/nsis-web/*.exe
+          file: artifact/*.exe
