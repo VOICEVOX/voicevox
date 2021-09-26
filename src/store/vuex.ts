@@ -65,17 +65,29 @@ export function useStore<
 }
 
 export interface Dispatch<A extends ActionsBase> {
-  // TODO: payloadWithType方式の対応
   <T extends keyof A>(
     type: T,
     payload: Parameters<A[T]>[0],
     options?: DispatchOptions
   ): Promise<ReturnType<A[T]>>;
+  <T extends keyof A>(
+    payloadWithType: { type: T } & (Parameters<A[T]>[0] extends undefined
+      ? // eslint-disable-next-line @typescript-eslint/ban-types
+        {}
+      : Parameters<A[T]>[0]),
+    options?: DispatchOptions
+  ): Promise<ReturnType<A[T]>>;
 }
 
 export interface Commit<M extends MutationsBase> {
-  // TODO: payloadWithType方式の対応
   <T extends keyof M>(type: T, payload: M[T], options?: CommitOptions): void;
+  <T extends keyof M>(
+    payloadWithType: { type: T } & (M[T] extends undefined
+      ? // eslint-disable-next-line @typescript-eslint/ban-types
+        {}
+      : M[T]),
+    options?: CommitOptions
+  ): void;
 }
 
 export interface StoreOptions<
