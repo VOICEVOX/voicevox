@@ -89,10 +89,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        voicevox_engine_repo_url:
-          - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
-        voicevox_engine_version:
-          - ${{ env.VOICEVOX_ENGINE_VERSION }}
+        # FIXME: env cannot be referenced in matrix
+        # voicevox_engine_repo_url:
+        #   - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
+        # voicevox_engine_version:
+        #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
         artifact_name:
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
@@ -125,19 +126,19 @@ jobs:
       # - name: Dump VOICEVOX ENGINE repo URL to calc hash
       #   shell: bash
       #   run: |
-      #     echo "${{ matrix.voicevox_engine_repo_url }}" > voicevox_engine/repo_url.txt
+      #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
       # - name: Cache VOICEVOX ENGINE
       #   uses: actions/cache@master
       #   id: voicevox-engine-cache
       #   with:
       #     path: voicevox_engine/download
-      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ matrix.voicevox_engine_version }}
+      #     key: ${{ env.cache-version }}-voicevox-engine-${{ hashFiles('voicevox_engine/repo_url.txt') }}-${{ env.VOICEVOX_ENGINE_VERSION }}
 
       - name: Download VOICEVOX ENGINE
         # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
         shell: bash
         env:
-          VOICEVOX_ENGINE_RELEASE_URL: ${{ matrix.voicevox_engine_repo_url }}/releases/download/${{ matrix.voicevox_engine_version }}
+          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ env.VOICEVOX_ENGINE_VERSION }}
         run: |
           curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_asset_name }}.7z.txt"
           cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
