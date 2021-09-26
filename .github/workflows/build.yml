@@ -360,12 +360,12 @@ jobs:
         shell: bash
         run: |
           for appImageFile in artifact/*.AppImage; do
-            # compressed to artifact/myartifact.AppImage.7z.001, artifact/myartifact.AppImage.7z.002, ...
+            # compressed to artifact/MyArtifact.AppImage.7z.001, artifact/MyArtifact.AppImage.7z.002, ...
             7z -v1g a "${appImageFile}.7z" "${appImageFile}"
 
             # Output splitted archive list to artifact/myartifact.7z.txt
-            ls ${{ matrix.artifact_name }}.7z.* > archives.txt
-            mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
+            ls ${appImageFile}.7z.* > archives.txt
+            mv archives.txt "artifact/${{ matrix.artifact_name }}.7z.txt"
           done
 
       - name: Show disk space (debug info)
