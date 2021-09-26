@@ -260,6 +260,64 @@ export type AudioActions = {
   CHECK_FILE_EXISTS(payload: { file: string }): boolean;
 };
 
+export type AudioCommandGetters = Record<string, never>;
+
+export type AudioCommandActions = {
+  COMMAND_REGISTER_AUDIO_ITEM(payload: {
+    audioItem: AudioItem;
+    prevAudioKey: string | undefined;
+  }): string;
+  COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
+  COMMAND_SET_AUDIO_SPEED_SCALE(payload: {
+    audioKey: string;
+    speedScale: number;
+  }): void;
+  COMMAND_SET_AUDIO_PITCH_SCALE(payload: {
+    audioKey: string;
+    pitchScale: number;
+  }): void;
+  COMMAND_SET_AUDIO_INTONATION_SCALE(payload: {
+    audioKey: string;
+    intonationScale: number;
+  }): void;
+  COMMAND_SET_AUDIO_VOLUME_SCALE(payload: {
+    audioKey: string;
+    volumeScale: number;
+  }): void;
+  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH(payload: {
+    audioKey: string;
+    prePhonemeLength: number;
+  }): void;
+  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH(payload: {
+    audioKey: string;
+    postPhonemeLength: number;
+  }): void;
+};
+
+export type audioCommandMutations = {
+  COMMAND_REGISTER_AUDIO_ITEM: {
+    audioItem: AudioItem;
+    audioKey: string;
+    prevAudioKey: string | undefined;
+  };
+  COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
+  COMMAND_SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
+  COMMAND_SET_AUDIO_PITCH_SCALE: { audioKey: string; pitchScale: number };
+  COMMAND_SET_AUDIO_INTONATION_SCALE: {
+    audioKey: string;
+    intonationScale: number;
+  };
+  COMMAND_SET_AUDIO_VOLUME_SCALE: { audioKey: string; volumeScale: number };
+  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
+    audioKey: string;
+    prePhonemeLength: number;
+  };
+  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
+    audioKey: string;
+    postPhonemeLength: number;
+  };
+};
+
 export const audioStore = typeAsStoreOptions({
   getters: {
     [ACTIVE_AUDIO_KEY](state) {
