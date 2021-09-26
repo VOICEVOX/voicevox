@@ -8,6 +8,10 @@ on:
     types:
       - created
 
+env:
+  VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
+  VOICEVOX_ENGINE_VERSION: check-2021-09-25
+
 jobs:
   build-noengine-prepackage:
     env:
@@ -82,12 +86,13 @@ jobs:
 
   build-engine-prepackage:
     needs: [build-noengine-prepackage]
-    env:
-      VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
     strategy:
       fail-fast: false
       matrix:
-        voicevox_engine_version: [check-2021-09-25]
+        voicevox_engine_repo_url:
+          - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
+        voicevox_engine_version:
+          - ${{ env.VOICEVOX_ENGINE_VERSION }}
         artifact_name:
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
@@ -120,7 +125,7 @@ jobs:
       # - name: Dump VOICEVOX ENGINE repo URL to calc hash
       #   shell: bash
       #   run: |
-      #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
+      #     echo "${{ matrix.voicevox_engine_repo_url }}" > voicevox_engine/repo_url.txt
       # - name: Cache VOICEVOX ENGINE
       #   uses: actions/cache@master
       #   id: voicevox-engine-cache
@@ -132,7 +137,7 @@ jobs:
         # if: steps.voicevox-engine-cache.outputs.cache-hit != 'true'
         shell: bash
         env:
-          VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ matrix.voicevox_engine_version }}
+          VOICEVOX_ENGINE_RELEASE_URL: ${{ matrix.voicevox_engine_repo_url }}/releases/download/${{ matrix.voicevox_engine_version }}
         run: |
           curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_asset_name }}.7z.txt"
           cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
