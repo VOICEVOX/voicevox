@@ -304,7 +304,7 @@ jobs:
           path: |
             dist_electron/*.AppImage
 
-      - name: Upload Windows nsis-web artifact
+      - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
         with:
@@ -313,6 +313,78 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
 
+
+  upload-distributable-to-release:
+    if: github.event.release.tag_name != '' # If release
+    needs: [build-distributable]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04]
+        artifact_name:
+          - linux-cpu-appimage
+          - linux-nvidia-appimage
+          # - windows-cpu-nsis-web
+          - windows-nvidia-nsis-web
+        include:
+          - artifact_name: linux-cpu-appimage
+          - artifact_name: linux-nvidia-appimage
+          # - artifact_name: windows-cpu-nsis-web
+          - artifact_name: windows-nvidia-nsis-web
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Download and extract distributable artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ./artifact
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
+      # Linux AppImage
+      - name: Install dependencies for Linux AppImage Upload
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Split AppImage artifact
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          for appImageFile in artifact/*.AppImage; do
+            # compressed to artifact/myartifact.AppImage.7z.001, artifact/myartifact.AppImage.7z.002, ...
+            7z -v1g a "${appImageFile}.7z" "${appImageFile}"
+
+            # Output splitted archive list to artifact/myartifact.7z.txt
+            ls ${{ matrix.artifact_name }}.7z.* > archives.txt
+            mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
+          done
+
+      - name: Show disk space (debug info)
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          df -h
+
+      - name: Upload Linux AppImage splitted archives to Release assets
+        if: endsWith(matrix.artifact_name, '-appimage')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.7z.*
+
+
+      # Windows NSIS Web
       # FIXME: rename archives and installer before upload to separate cpu, gpu distribution
       - name: Upload Windows nsis-web archives to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -321,7 +393,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: dist_electron/nsis-web/out/*.7z.*
+          file: artifact/out/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -330,4 +402,4 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: dist_electron/nsis-web/*.exe
+          file: artifact/*.exe
