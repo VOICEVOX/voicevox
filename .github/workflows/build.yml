@@ -80,6 +80,13 @@ jobs:
         run: |
           df -h
 
+      - name: Overwrite .env.production for Linux
+        if: startsWith(matrix.os, 'ubuntu-')
+        shell: bash
+        run: |
+          echo "ENGINE_PATH=./run" > .env.production
+          echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
+
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         shell: bash
