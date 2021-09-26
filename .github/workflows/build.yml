@@ -210,9 +210,17 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
+          - linux-cpu-appimage
+          - linux-nvidia-appimage
           # - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
+          - artifact_name: linux-cpu-appimage
+            engine_artifact_name: linux-cpu-prepackage
+            os: ubuntu-18.04
+          - artifact_name: linux-nvidia-appimage
+            engine_artifact_name: linux-nvidia-prepackage
+            os: ubuntu-18.04
           # - artifact_name: windows-cpu-nsis-web
           #   engine_artifact_name: windows-cpu-prepackage
           #   os: windows-2019
@@ -287,6 +295,14 @@ jobs:
         shell: bash
         run: |
           df -h
+
+      - name: Upload Linux AppImage artifact
+        if: endsWith(matrix.artifact_name, '-appimage')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist_electron/*.AppImage
 
       - name: Upload Windows nsis-web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
