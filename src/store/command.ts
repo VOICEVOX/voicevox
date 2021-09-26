@@ -177,6 +177,23 @@ const recordOperations =
     };
   };
 
+export type CommandGetters = {
+  CAN_UNDO: boolean;
+  CAN_REDO: boolean;
+};
+
+export type CommandMutations = {
+  OLD_PUSH_COMMAND: { command: OldCommand<State> };
+  UNDO: undefined;
+  REDO: undefined;
+  CLEAR_COMMANDS: undefined;
+};
+
+export type CommandActions = {
+  UNDO(): void;
+  REDO(): void;
+};
+
 export const commandStore = {
   getters: {
     [CAN_UNDO](state) {
