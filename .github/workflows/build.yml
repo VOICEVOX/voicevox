@@ -83,11 +83,11 @@ jobs:
   build-engine-prepackage:
     needs: [build-noengine-prepackage]
     env:
-      VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
+      VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
     strategy:
       fail-fast: false
       matrix:
-        voicevox_engine_version: [0.5.2-aoirint-57]
+        voicevox_engine_version: [check-2021-09-25]
         artifact_name:
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
