@@ -22,7 +22,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        artifact_name:
+          - windows-noengine-prepackage
+        include:
+          - artifact_name: windows-noengine-prepackage
+            artifact_path: dist_electron/win-unpacked
+            os: windows-2019
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -71,17 +76,17 @@ jobs:
         run: |
           df -h
 
+      # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         shell: bash
         run: npm run electron:build_pnever -- --dir
 
-      - name: Upload Windows NoEngine Prepackage
-        if: startsWith(matrix.os, 'windows-')
+      - name: Upload NoEngine Prepackage
         uses: actions/upload-artifact@v2
         with:
-          name: windows-noengine-prepackage
+          name: ${{ matrix.artifact_name }}
           path: |
-            dist_electron/win-unpacked
+            ${{ matrix.artifact_path }}
 
 
   build-engine-prepackage:
