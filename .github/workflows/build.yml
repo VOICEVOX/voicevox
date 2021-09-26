@@ -23,8 +23,12 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
+          - linux-noengine-prepackage
           - windows-noengine-prepackage
         include:
+          - artifact_name: linux-noengine-prepackage
+            artifact_path: dist_electron/linux-unpacked
+            os: ubuntu-18.04
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
             os: windows-2019
@@ -100,9 +104,19 @@ jobs:
         # voicevox_engine_version:
         #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
         artifact_name:
+          - linux-cpu-appimage
+          - linux-nvidia-appimage
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
         include:
+          - artifact_name: linux-cpu-appimage
+            noengine_artifact_name: linux-noengine-prepackage
+            voicevox_engine_asset_name: linux-cpu
+            os: ubuntu-18.04
+          - artifact_name: linux-nvidia-appimage
+            noengine_artifact_name: linux-noengine-prepackage
+            voicevox_engine_asset_name: linux-nvidia
+            os: ubuntu-18.04
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
