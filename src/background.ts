@@ -415,7 +415,7 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
 
 ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
   if (newPresets !== undefined) {
-    store.set("presets", newPresets);
+    store.set(`presets.${newPresets.characterIndex}`, newPresets.presetsData);
   }
   return store.get("presets");
 });

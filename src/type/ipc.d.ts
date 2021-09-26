@@ -129,7 +129,12 @@ type IpcIHData = {
 
   SAVING_PRESETS: {
     args: [
-      obj: { newPresets?: Record<number, import("@/type/preload").Preset[]> }
+      obj: {
+        newPresets?: {
+          characterIndex: number;
+          presetsData: import("@/type/preload").Preset[];
+        };
+      }
     ];
     return: Record<number, import("@/type/preload").Preset[]>;
   };

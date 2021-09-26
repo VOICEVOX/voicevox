@@ -45,7 +45,8 @@
               dense
               v-model="presetName"
               autofocus
-              @keyup.enter="presetNameDialog = false"
+              @keyup.enter="addPreset()"
+              v-close-popup
             />
           </q-card-section>
 
@@ -426,12 +427,16 @@ export default defineComponent({
       presetSelectModel.value = e;
     };
 
+    const showsPresetNameDialog = ref(false);
+    const presetName = ref("");
+
     const onChangeParameter = () => {
       presetSelectModel.value = notSelectedPreset;
     };
 
     const addPreset = () => {
       console.log("addPreset");
+
       if (
         audioItem.value?.characterIndex === undefined ||
         previewAudioPitchScale.currentValue.value === undefined ||
@@ -452,37 +457,28 @@ export default defineComponent({
       const charaPreset =
         presets.value !== undefined &&
         presets.value[audioItem.value.characterIndex] !== undefined
-          ? presets.value[audioItem.value.characterIndex]
+          ? (JSON.parse(
+              JSON.stringify(presets.value[audioItem.value.characterIndex])
+            ) as Preset[])
           : [];
 
-      // const updatePresets = {
-      //   [audioItem.value.characterIndex]: [newPreset, ...charaPreset],
-      //   ...presets.value,
-      // };
-      const updatePresets = JSON.parse(JSON.stringify(presets.value)) as Record<
-        number,
-        Preset[]
-      >;
+      charaPreset.push(newPreset);
 
-      // if-elseでよくね？
-      if (updatePresets[audioItem.value.characterIndex] === undefined) {
-        updatePresets[audioItem.value.characterIndex] = [];
-      }
-      updatePresets[audioItem.value.characterIndex] = [
-        ...updatePresets[audioItem.value.characterIndex],
-        newPreset,
-      ];
+      console.log(charaPreset);
 
-      store.dispatch(SAVE_PRESETS, { newPresets: updatePresets });
+      store.dispatch(SAVE_PRESETS, {
+        characterIndex: audioItem.value.characterIndex,
+        presetsData: charaPreset,
+      });
 
       presetSelectModel.value = {
         label: newPreset.name,
-        value: charaPreset.length,
-      };
+        value: charaPreset.length - 1,
     };
 
-    const showsPresetNameDialog = ref(false);
-    const presetName = ref("");
+      showsPresetNameDialog.value = false;
+      presetName.value = "";
+    };
 
     const setPresetByScroll = (deltaY: number) => {
       const isUp = deltaY > 0;

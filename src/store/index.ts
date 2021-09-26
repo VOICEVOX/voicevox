@@ -47,6 +47,7 @@ export const store = createStore<State>({
       avoidOverwrite: false,
     },
     isPinned: false,
+    presets: {},
   },
 
   getters: {

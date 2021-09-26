@@ -13,24 +13,26 @@ export const presetStore = {
       state,
       { newPresets }: { newPresets: Record<number, Preset[]> }
     ) => {
-      console.log(newPresets);
       state.presets = newPresets;
     },
   },
   actions: {
     [GET_PRESETS]: async (context) => {
       const newPresets = await window.electron.savingPresets();
-      console.log(newPresets);
       if (newPresets === undefined) return;
       context.commit(SET_PRESETS, { newPresets });
     },
 
     [SAVE_PRESETS]: (
       context,
-      { newPresets }: { newPresets: Record<number, Preset[]> }
+      {
+        characterIndex,
+        presetsData,
+      }: { characterIndex: number; presetsData: Preset[] }
     ) => {
+      console.log(characterIndex, presetsData);
       window.electron
-        .savingPresets(newPresets)
+        .savingPresets({ characterIndex, presetsData })
         .then((e) => context.commit(SET_PRESETS, { newPresets: e }));
     },
   },

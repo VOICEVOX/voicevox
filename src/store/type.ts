@@ -28,7 +28,7 @@ export type State = {
   projectFilePath?: string;
   savingSetting: SavingSetting;
   isPinned: boolean;
-  presets?: Record<number, Preset[]>;
+  presets: Record<number, Preset[]>;
 };
 
 export type AudioItem = {
