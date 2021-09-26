@@ -366,15 +366,17 @@ jobs:
         if: endsWith(matrix.artifact_name, '-appimage')
         shell: bash
         run: |
-          for appImageFile in artifact/*.AppImage; do
+          cd artifact/
+
+          for appImageFile in *.AppImage; do
             echo "Splitting ${appImageFile}"
 
-            # compressed to artifact/MyArtifact.AppImage.7z.001, artifact/MyArtifact.AppImage.7z.002, ...
+            # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             7z -v1g a "${appImageFile}.7z" "${appImageFile}"
 
-            # Output splitted archive list to artifact/myartifact.7z.txt
+            # Output splitted archive list to myartifact.7z.txt
             ls ${appImageFile}.7z.* > archives.txt
-            mv archives.txt "artifact/${{ matrix.artifact_name }}.7z.txt"
+            mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
           done
 
       - name: Show disk space (debug info)
