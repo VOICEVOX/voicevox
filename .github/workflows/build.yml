@@ -185,6 +185,13 @@ jobs:
           mv voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/* prepackage/
           rm -rf voicevox_engine
 
+      - name: Recover file permissions
+        if: startsWith(matrix.artifact_name, 'linux-')
+        shell: bash
+        run: |
+          chmod +x prepackage/voicevox
+          chmod +x prepackage/run
+
       - name: Show disk space (debug info)
         shell: bash
         run: |
