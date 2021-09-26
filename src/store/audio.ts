@@ -68,16 +68,6 @@ function buildFileName(state: State, audioKey: string) {
   );
 }
 
-function copyAccentPhrasesPart(
-  source: AccentPhrase[],
-  target: AccentPhrase[],
-  indexes: number[]
-) {
-  for (const index of indexes) {
-    target[index] = source[index];
-  }
-}
-
 export const SET_ENGINE_STATE = "SET_ENGINE_STATE";
 export const START_WAITING_ENGINE = "START_WAITING_ENGINE";
 export const ACTIVE_AUDIO_KEY = "ACTIVE_AUDIO_KEY";
@@ -94,6 +84,7 @@ export const FETCH_ACCENT_PHRASES = "FETCH_ACCENT_PHRASES";
 export const FETCH_AND_SET_ACCENT_PHRASES = "FETCH_AND_SET_ACCENT_PHRASES";
 export const FETCH_MORA_DATA = "FETCH_MORA_DATA";
 export const FETCH_AND_SET_MORA_DATA = "FETCH_AND_SET_MORA_DATA";
+export const FETCH_AND_COPY_MORA_DATA = "FETCH_AND_COPY_MORA_DATA";
 export const HAVE_AUDIO_QUERY = "HAVE_AUDIO_QUERY";
 export const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
 export const FETCH_AUDIO_QUERY = "FETCH_AUDIO_QUERY";
@@ -567,6 +558,30 @@ export const audioStore = typeAsStoreOptions({
         dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases });
       });
     },
+    [FETCH_AND_COPY_MORA_DATA]: async (
+      { dispatch },
+      {
+        accentPhrases,
+        characterIndex,
+        copyIndexes,
+      }: {
+        accentPhrases: AccentPhrase[];
+        characterIndex: number;
+        copyIndexes: number[];
+      }
+    ) => {
+      const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
+        FETCH_MORA_DATA,
+        {
+          accentPhrases,
+          characterIndex,
+        }
+      );
+      for (const index of copyIndexes) {
+        accentPhrases[index] = fetchedAccentPhrases[index];
+      }
+      return accentPhrases;
+    },
     [FETCH_AUDIO_QUERY]: (
       { state },
       { text, characterIndex }: { text: string; characterIndex: number }
@@ -957,17 +972,15 @@ export const audioCommandStore = typeAsStoreOptions({
         try {
           const characterIndex: number =
             state.audioItems[audioKey].characterIndex ?? 0;
-          const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
-            FETCH_MORA_DATA,
-            { accentPhrases: newAccentPhrases, characterIndex }
-          );
-          copyAccentPhrasesPart(fetchedAccentPhrases, newAccentPhrases, [
-            accentPhraseIndex,
-          ]);
+          const resultAccentPhrases = await dispatch(FETCH_AND_COPY_MORA_DATA, {
+            accentPhrases: newAccentPhrases,
+            characterIndex,
+            copyIndexes: [accentPhraseIndex],
+          });
 
           commit(COMMAND_CHANGE_ACCENT, {
             audioKey,
-            accentPhrases: newAccentPhrases,
+            accentPhrases: resultAccentPhrases,
           });
         } catch (error) {
           commit(COMMAND_CHANGE_ACCENT, {
@@ -1067,18 +1080,14 @@ export const audioCommandStore = typeAsStoreOptions({
       }
 
       try {
-        const fetchedAccentPhrases = await dispatch(FETCH_MORA_DATA, {
+        const resultAccentPhrases = await dispatch(FETCH_AND_COPY_MORA_DATA, {
           accentPhrases: newAccentPhrases,
           characterIndex,
+          copyIndexes: changeIndexes,
         });
-        copyAccentPhrasesPart(
-          fetchedAccentPhrases,
-          newAccentPhrases,
-          changeIndexes
-        );
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
           audioKey,
-          accentPhrases: newAccentPhrases,
+          accentPhrases: resultAccentPhrases,
         });
       } catch (error) {
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
