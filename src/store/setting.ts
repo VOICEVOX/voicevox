@@ -5,19 +5,6 @@ import { State } from "./type";
 export const GET_SAVING_SETTING_DATA = "GET_SAVING_SETTING_DATA";
 export const SET_SAVING_SETTING_DATA = "SET_SAVING_SETTING_DATA";
 
-export type SettingGetters = {
-  GET_SAVING_SETTING_DATA: SavingSetting;
-};
-
-export type SettingMutations = {
-  SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
-};
-
-export type SettingActions = {
-  GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(): void;
-};
-
 export const settingStore = {
   getters: {
     [GET_SAVING_SETTING_DATA](state) {

@@ -13,11 +13,6 @@ import {
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
-import {
-  SettingActions,
-  SettingGetters,
-  SettingMutations,
-} from "@/store/setting";
 import { UiActions, UiGetters, UiMutations } from "@/store/ui";
 
 export type State = {
@@ -356,6 +351,23 @@ export type ProjectActions = {
   CREATE_NEW_PROJECT(payload: { confirm?: boolean }): void;
   LOAD_PROJECT_FILE(payload: { filePath?: string; confirm?: boolean }): void;
   SAVE_PROJECT_FILE(payload: { overwrite?: boolean }): void;
+};
+
+/*
+ * Setting Store Types
+ */
+
+export type SettingGetters = {
+  GET_SAVING_SETTING_DATA: SavingSetting;
+};
+
+export type SettingMutations = {
+  SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
+};
+
+export type SettingActions = {
+  GET_SAVING_SETTING_DATA(): void;
+  SET_SAVING_SETTING_DATA(): void;
 };
 
 export type AllGetters = AudioGetters &
