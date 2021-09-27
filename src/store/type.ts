@@ -95,6 +95,8 @@ export type AudioMutations = {
     audioKey: string;
     postPhonemeLength: number;
   };
+  SET_AUDIO_QUERY: { audioKey: string; audioQuery: AudioQuery };
+  SET_AUDIO_CHARACTER_INDEX: { audioKey: string; characterIndex: number };
   SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
   SET_AUDIO_MORA_DATA: {
     audioKey: string;
@@ -108,14 +110,6 @@ export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
   SET_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
-  SET_AUDIO_CHARACTER_INDEX(payload: {
-    audioKey: string;
-    characterIndex: number;
-  }): void;
-  CHANGE_CHARACTER_INDEX(payload: {
-    audioKey: string;
-    characterIndex: number;
-  }): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
@@ -150,10 +144,6 @@ export type AudioActions = {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
   }): AccentPhrase[];
-  FETCH_AND_SET_MORA_DATA(payload: {
-    audioKey: string;
-    changeIndexes?: number[];
-  }): void;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
@@ -203,6 +193,10 @@ export type AudioCommandActions = {
     prevAudioKey: string | undefined;
   }): string;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
+  COMMAND_CHANGE_CHARACTER_INDEX(payload: {
+    audioKey: string;
+    characterIndex: number;
+  }): void;
   COMMAND_CHANGE_ACCENT(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -261,6 +255,22 @@ export type AudioCommandMutations = {
     prevAudioKey: string | undefined;
   };
   COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
+  COMMAND_CHANGE_CHARACTER_INDEX: {
+    characterIndex: number;
+    audioKey: string;
+  } & (
+    | {
+        update: "CharacterIndex";
+      }
+    | {
+        update: "AccentPhrases";
+        accentPhrases: AccentPhrase[];
+      }
+    | {
+        update: "AudioQuery";
+        query: AudioQuery;
+      }
+  );
   COMMAND_CHANGE_ACCENT: {
     audioKey: string;
     accentPhrases: AccentPhrase[];
