@@ -5,8 +5,30 @@ import {
   createCommandMutationTree,
   PayloadRecipeTree,
   PayloadMutationTree,
+  CommandGetters,
+  CommandMutations,
+  CommandActions,
 } from "./command";
 import { CharacterInfo, SavingSetting } from "@/type/preload";
+import {
+  AudioActions,
+  AudioCommandActions,
+  AudioCommandMutations,
+  AudioGetters,
+  AudioMutations,
+} from "@/store/audio";
+import {
+  SettingActions,
+  SettingGetters,
+  SettingMutations,
+} from "@/store/setting";
+import { UiActions, UiGetters, UiMutations } from "@/store/ui";
+import {
+  ProjectActions,
+  ProjectGetters,
+  ProjectMutations,
+} from "@/store/project";
+import { IndexActions, IndexGetters, IndexMutations } from "@/store/index";
 
 export type State = {
   engineState: EngineState;
@@ -53,6 +75,30 @@ export type SaveResult =
   | "ENGINE_ERROR"
   | "CANCELED";
 export type SaveResultObject = { result: SaveResult; path: string | undefined };
+
+export type AllGetters = AudioGetters &
+  AudioCommandActions &
+  CommandGetters &
+  IndexGetters &
+  ProjectGetters &
+  SettingGetters &
+  UiGetters;
+
+export type AllMutations = AudioMutations &
+  AudioCommandMutations &
+  CommandMutations &
+  IndexMutations &
+  ProjectMutations &
+  SettingMutations &
+  UiMutations;
+
+export type AllActions = AudioActions &
+  AudioCommandActions &
+  CommandActions &
+  IndexActions &
+  ProjectActions &
+  SettingActions &
+  UiActions;
 
 export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
   arg: Arg
