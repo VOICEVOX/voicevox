@@ -158,6 +158,13 @@ export type AudioMutations = {
     audioKey: string;
     postPhonemeLength: number;
   };
+  SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
+  SET_AUDIO_MORA_DATA: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    moraIndex: number;
+    pitch: number;
+  };
 };
 
 export type AudioActions = {
@@ -178,7 +185,7 @@ export type AudioActions = {
     prevAudioKey: string | undefined;
   }): string;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
-  GET_AUDIO_CACHE(payload: { audioKey: string }): void;
+  GET_AUDIO_CACHE(payload: { audioKey: string }): Blob | null;
   SET_ACCENT_PHRASES(payload: {
     audioKey: string;
     accentPhrases: AccentPhrase[];
@@ -190,50 +197,36 @@ export type AudioActions = {
     popUntilPause: boolean;
   }): void;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
-  FETCH_ACCENT_PHRASES(payload: { audioKey: string }): void;
-  FETCH_SINGLE_ACCENT_PHRASE(payload: {
+  FETCH_ACCENT_PHRASES(payload: {
+    text: string;
+    characterIndex: number;
+    isKana: boolean | undefined;
+  }): AccentPhrase[];
+  FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
+  FETCH_AND_SET_SINGLE_ACCENT_PHRASE(payload: {
     audioKey: string;
     newPronunciation: string;
     accentPhraseIndex: number;
     popUntilPause: boolean;
   }): void;
   FETCH_MORA_DATA(payload: {
+    accentPhrases: AccentPhrase[];
+    characterIndex: number;
+  }): AccentPhrase[];
+  FETCH_AND_SET_MORA_DATA(payload: {
     audioKey: string;
     changeIndexes?: number[];
   }): void;
-  FETCH_AUDIO_QUERY(payload: { audioKey: string }): void;
-  SET_AUDIO_ACCENT(payload: {
-    audioKey: string;
-    accentPhraseIndex: number;
-    accent: number;
-  }): void;
-  TOGGLE_ACCENT_PHRASE_SPLIT(
-    payload:
-      | {
-          audioKey: string;
-          accentPhraseIndex: number;
-          isPause: false;
-          moraIndex: number;
-        }
-      | {
-          audioKey: string;
-          accentPhraseIndex: number;
-          isPause: true;
-          moraIndex: undefined;
-        }
-  ): void;
-  CHANGE_ACCENT_PHRASE_SPLIT(payload: {
-    audioKey: string;
-    accentPhraseIndex: number;
-    moraIndex: number | null;
-    isPause: boolean;
-  }): void;
-  SET_AUDIO_MORA_DATA(payload: {
-    audioKey: string;
-    accentPhraseIndex: number;
-    moraIndex: number;
-    pitch: number;
-  }): void;
+  FETCH_AND_COPY_MORA_DATA(payload: {
+    accentPhrases: AccentPhrase[];
+    characterIndex: number;
+    copyIndexes: number[];
+  }): AccentPhrase[];
+  FETCH_AUDIO_QUERY(payload: {
+    text: string;
+    characterIndex: number;
+  }): AudioQuery;
+  FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
   GENERATE_AND_SAVE_AUDIO(payload: {
     audioKey: string;
@@ -268,6 +261,31 @@ export type AudioCommandActions = {
     prevAudioKey: string | undefined;
   }): string;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
+  COMMAND_CHANGE_ACCENT(payload: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    accent: number;
+  }): void;
+  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT(
+    payload: {
+      audioKey: string;
+      accentPhraseIndex: number;
+    } & (
+      | {
+          isPause: false;
+          moraIndex: number;
+        }
+      | {
+          isPause: true;
+        }
+    )
+  ): void;
+  COMMAND_SET_AUDIO_MORA_DATA(payload: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    moraIndex: number;
+    pitch: number;
+  }): void;
   COMMAND_SET_AUDIO_SPEED_SCALE(payload: {
     audioKey: string;
     speedScale: number;
@@ -301,6 +319,20 @@ export type AudioCommandMutations = {
     prevAudioKey: string | undefined;
   };
   COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
+  COMMAND_CHANGE_ACCENT: {
+    audioKey: string;
+    accentPhrases: AccentPhrase[];
+  };
+  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT: {
+    audioKey: string;
+    accentPhrases: AccentPhrase[];
+  };
+  COMMAND_SET_AUDIO_MORA_DATA: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    moraIndex: number;
+    pitch: number;
+  };
   COMMAND_SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
   COMMAND_SET_AUDIO_PITCH_SCALE: { audioKey: string; pitchScale: number };
   COMMAND_SET_AUDIO_INTONATION_SCALE: {
