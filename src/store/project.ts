@@ -18,6 +18,20 @@ export const SET_PROJECT_FILEPATH = "SET_PROJECT_FILEPATH";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
+export type ProjectGetters = {
+  PROJECT_NAME: string | undefined;
+};
+
+export type ProjectMutations = {
+  SET_PROJECT_FILEPATH: { filePath: string };
+};
+
+export type ProjectActions = {
+  CREATE_NEW_PROJECT(payload: { confirm?: boolean }): void;
+  LOAD_PROJECT_FILE(payload: { filePath?: string; confirm?: boolean }): void;
+  SAVE_PROJECT_FILE(payload: { overwrite?: boolean }): void;
+};
+
 export const projectStore = {
   getters: {
     [PROJECT_NAME](state) {
