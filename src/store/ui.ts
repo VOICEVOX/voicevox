@@ -27,6 +27,37 @@ export function createUILockAction<S, P>(
   };
 }
 
+export type UiGetters = {
+  UI_LOCKED: boolean;
+  SHOULD_SHOW_PANES: boolean;
+};
+
+export type UiMutations = {
+  LOCK_UI: undefined;
+  UNLOCK_UI: undefined;
+  IS_HELP_DIALOG_OPEN: { isHelpDialogOpen: boolean };
+  IS_SETTING_DIALOG_OPEN: { isSettingDialogOpen: boolean };
+  SET_USE_GPU: { useGpu: boolean };
+  DETECT_UNMAXIMIZED: undefined;
+  DETECT_MAXIMIZED: undefined;
+  DETECT_PINNED: undefined;
+  DETECT_UNPINNED: undefined;
+};
+
+export type UiActions = {
+  LOCK_UI(): void;
+  UNLOCK_UI(): void;
+  ASYNC_UI_LOCK(payload: { callback: () => Promise<void> }): void;
+  IS_HELP_DIALOG_OPEN(payload: { isHelpDialogOpen: boolean }): void;
+  IS_SETTING_DIALOG_OPEN(payload: { isSettingDialogOpen: boolean }): void;
+  GET_USE_GPU(): void;
+  SET_USE_GPU(payload: { useGpu: boolean }): void;
+  DETECT_UNMAXIMIZED(): void;
+  DETECT_MAXIMIZED(): void;
+  DETECT_PINNED(): void;
+  DETECT_UNPINNED(): void;
+};
+
 export const uiStore = {
   getters: {
     [UI_LOCKED](state) {
