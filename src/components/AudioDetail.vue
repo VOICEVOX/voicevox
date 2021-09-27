@@ -93,6 +93,8 @@
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
                 auto-save
+                transition-show="none"
+                transition-hide="none"
                 v-slot="scope"
                 @save="handleChangePronounce($event, accentPhraseIndex)"
               >
@@ -153,13 +155,13 @@ import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
-  CHANGE_ACCENT,
-  SET_AUDIO_MORA_DATA,
-  CHANGE_ACCENT_PHRASE_SPLIT,
+  COMMAND_CHANGE_ACCENT,
+  COMMAND_SET_AUDIO_MORA_DATA,
+  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
-  FETCH_SINGLE_ACCENT_PHRASE,
+  FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -214,7 +216,7 @@ export default defineComponent({
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const changeAccent = (accentPhraseIndex: number, accent: number) => {
-      store.dispatch(CHANGE_ACCENT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         accent,
@@ -226,7 +228,7 @@ export default defineComponent({
       isPause: boolean,
       moraIndex?: number
     ) => {
-      store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -239,7 +241,7 @@ export default defineComponent({
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(SET_AUDIO_MORA_DATA, {
+      store.dispatch(COMMAND_SET_AUDIO_MORA_DATA, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -345,7 +347,7 @@ export default defineComponent({
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
-      store.dispatch(FETCH_SINGLE_ACCENT_PHRASE, {
+      store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
@@ -460,15 +462,15 @@ $pitch-label-height: 24px;
           grid-row-start: 3;
           text-align: center;
           color: global.$secondary;
-          transition: color 0.5s;
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: $teal;
-          transition: color 0.5s;
+          color: global.$secondary;
+          font-weight: bold;
+          cursor: pointer;
         }
         &.splitter-cell {
           min-width: 10px;

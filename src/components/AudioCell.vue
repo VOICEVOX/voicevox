@@ -71,13 +71,13 @@
 import { computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import {
-  FETCH_ACCENT_PHRASES,
-  FETCH_AUDIO_QUERY,
+  FETCH_AND_SET_ACCENT_PHRASES,
+  FETCH_AND_SET_AUDIO_QUERY,
   GENERATE_AND_SAVE_AUDIO,
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
-  CHANGE_CHARACTER_INDEX,
+  COMMAND_CHANGE_CHARACTER_INDEX,
   COMMAND_REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -133,13 +133,15 @@ export default defineComponent({
     };
     const updateAudioQuery = async () => {
       if (!haveAudioQuery.value) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+        store.dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey: props.audioKey });
       } else {
-        store.dispatch(FETCH_ACCENT_PHRASES, { audioKey: props.audioKey });
+        store.dispatch(FETCH_AND_SET_ACCENT_PHRASES, {
+          audioKey: props.audioKey,
+        });
       }
     };
     const changeCharacterIndex = (characterIndex: number) => {
-      store.dispatch(CHANGE_CHARACTER_INDEX, {
+      store.dispatch(COMMAND_CHANGE_CHARACTER_INDEX, {
         audioKey: props.audioKey,
         characterIndex,
       });
@@ -277,7 +279,7 @@ export default defineComponent({
     onMounted(() => {
       // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
       if (audioItem.value.query == undefined) {
-        store.dispatch(FETCH_AUDIO_QUERY, { audioKey: props.audioKey });
+        store.dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey: props.audioKey });
       }
     });
 

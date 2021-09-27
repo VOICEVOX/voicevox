@@ -1,16 +1,16 @@
 <template>
   <q-dialog
     maximized
-    persistent
+    seamless
+    transition-show="none"
+    transition-hide="none"
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
-    transition-show="slide-up"
-    transition-hide="slide-down"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
       <q-header class="q-pa-sm" elevated>
         <q-toolbar>
-          <q-toolbar-title class="text-secondary">オプション</q-toolbar-title>
+          <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
           <q-space />
           <!-- close button -->
           <q-btn
@@ -25,153 +25,138 @@
         <q-page ref="scroller" class="relative-absolute-wrapper scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
-            <q-card class="setting-card">
-              <q-card-section class="bg-nvidia">
+            <q-card flat class="setting-card">
+              <q-card-actions>
                 <div class="text-h5">エンジン</div>
-                <div class="text-subtitle2">
-                  GPUモードには <b>NVIDIA&trade;</b> GPUが必要です
-                </div>
-              </q-card-section>
-
-              <q-separator />
-              <q-card-actions class="q-px-md">
-                <q-radio
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>エンジンモード</div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
                   v-model="engineMode"
-                  color="green"
-                  val="switchCPU"
-                  label="CPU"
-                />
-                <q-radio
-                  v-model="engineMode"
-                  color="green"
-                  val="switchGPU"
-                  label="GPU"
-                />
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  :options="[
+                    { label: 'CPU', value: 'switchCPU' },
+                    { label: 'GPU', value: 'switchGPU' },
+                  ]"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    GPUモードの利用には NVIDIA&trade; GPU が必要です
+                  </q-tooltip>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
+
             <!-- Saving Card -->
-            <q-card class="setting-card">
-              <q-card-section class="bg-blue">
+            <q-card flat class="setting-card">
+              <q-card-actions>
                 <div class="text-h5">保存</div>
-              </q-card-section>
-              <q-list>
-                <q-expansion-item
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>文字コード</div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  :model-value="savingSetting.fileEncoding"
+                  @update:model-value="
+                    handleSavingSettingChange('fileEncoding', $event)
+                  "
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  :options="[
+                    { label: 'UTF-8', value: 'UTF-8' },
+                    { label: 'Shift_JIS', value: 'Shift_JIS' },
+                  ]"
+                />
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>書き出し先を固定</div>
+                <q-space />
+                <q-input
                   dense
-                  dense-toggle
-                  expand-separator
-                  group="saving-group"
-                  label="文字コード"
-                  expand-icon-class="text-black"
+                  v-if="savingSetting.fixedExportEnabled"
+                  maxheight="10px"
+                  label="書き出し先のフォルダ"
+                  hide-bottom-space
+                  readonly
+                  :model-value="savingSetting.fixedExportDir"
+                  :input-style="{
+                    width: `${savingSetting.fixedExportDir.length / 2 + 1}em`,
+                    minWidth: '150px',
+                    maxWidth: '450px',
+                  }"
+                  @update:model-value="
+                    handleSavingSettingChange('fixedExportDir', $event)
+                  "
                 >
-                  <q-card>
-                    <q-card-section>
-                      <q-btn-toggle
-                        :model-value="savingSetting.fileEncoding"
-                        toggle-color="blue"
-                        :options="[
-                          { label: 'UTF-8', value: 'UTF-8' },
-                          { label: 'Shift_JIS', value: 'Shift_JIS' },
-                        ]"
-                        @update:model-value="
-                          handleSavingSettingChange('fileEncoding', $event)
-                        "
-                      />
-                    </q-card-section>
-                  </q-card>
-                </q-expansion-item>
+                  <template v-slot:append>
+                    <q-btn
+                      square
+                      dense
+                      flat
+                      color="primary"
+                      icon="folder_open"
+                      @click="openFileExplore"
+                    >
+                      <q-tooltip :delay="500" anchor="bottom left">
+                        フォルダ選択
+                      </q-tooltip>
+                    </q-btn>
+                  </template>
+                </q-input>
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.fixedExportEnabled"
+                  @update:model-value="
+                    handleSavingSettingChange('fixedExportEnabled', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    v-if="!savingSetting.fixedExportEnabled"
+                  >
+                    音声ファイルを設定したフォルダに書き出す
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
 
-                <q-expansion-item
-                  dense
-                  dense-toggle
-                  expand-separator
-                  group="saving-group"
-                  label="書き出し先を固定"
-                  expand-icon-class="text-black"
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>上書き防止</div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.avoidOverwrite"
+                  @update:model-value="
+                    handleSavingSettingChange('avoidOverwrite', $event)
+                  "
                 >
-                  <q-card>
-                    <q-card-section>
-                      <q-toggle
-                        name="enabled"
-                        align="left"
-                        dense
-                        color="blue"
-                        :model-value="savingSetting.fixedExportEnabled"
-                        :label="
-                          savingSetting.fixedExportEnabled
-                            ? '固定する'
-                            : '固定しない'
-                        "
-                        @update:model-value="
-                          handleSavingSettingChange(
-                            'fixedExportEnabled',
-                            $event
-                          )
-                        "
-                      />
-                      <q-input
-                        unelevated
-                        dense
-                        no-error-icon
-                        v-model="savingSetting.fixedExportDir"
-                        label="書き出し先のフォルダ"
-                        error-message="フォルダが見つかりません"
-                        :rules="[inputCheckDirExists]"
-                        @update:model-value="
-                          handleSavingSettingChange('fixedExportDir', $event)
-                        "
-                        color="blue"
-                      >
-                        <template v-slot:after>
-                          <q-btn
-                            square
-                            dense
-                            flat
-                            color="blue"
-                            icon="folder_open"
-                            @click="openFileExplore"
-                          >
-                            <q-tooltip
-                              :delay="500"
-                              class="bg-blue text-body2"
-                              anchor="bottom right"
-                            >
-                              フォルダ選択
-                            </q-tooltip>
-                          </q-btn>
-                        </template>
-                      </q-input>
-                      音声ファイルを設定したフォルダに書き出す
-                    </q-card-section>
-                  </q-card>
-                </q-expansion-item>
-
-                <q-expansion-item
-                  dense
-                  dense-toggle
-                  expand-separator
-                  group="saving-group"
-                  label="上書き防止"
-                  expand-icon-class="text-black"
-                >
-                  <q-card>
-                    <q-card-section>
-                      <q-checkbox
-                        class="q-pl-md q-pb-sm"
-                        dense
-                        color="blue"
-                        :model-value="savingSetting.avoidOverwrite"
-                        @update:model-value="
-                          handleSavingSettingChange('avoidOverwrite', $event)
-                        "
-                      />
-                      <q-separator color="black" />
-                      <div class="q-pt-sm">
-                        上書きせずにファイルを連番にします
-                      </div>
-                    </q-card-section>
-                  </q-card>
-                </q-expansion-item>
-              </q-list>
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    上書きせずにファイルを連番で保存します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
           </div>
         </q-page>
@@ -184,7 +169,7 @@
 import { defineComponent, computed, onUpdated } from "vue";
 import { useStore } from "@/store";
 import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
-import { CHECK_FILE_EXISTS, RESTART_ENGINE } from "@/store/audio";
+import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
 import {
   GET_SAVING_SETTING_DATA,
@@ -283,19 +268,9 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      if (key === "fixedExportDir") {
-        inputCheckDirExists(data.toString()).then((res) => {
-          if (res) {
-            store.dispatch(SET_SAVING_SETTING_DATA, {
-              data: { ...savingSetting.value, [key]: data },
-            });
-          }
-        });
-      } else {
-        store.dispatch(SET_SAVING_SETTING_DATA, {
-          data: { ...savingSetting.value, [key]: data },
-        });
-      }
+      store.dispatch(SET_SAVING_SETTING_DATA, {
+        data: { ...savingSetting.value, [key]: data },
+      });
     };
 
     const openFileExplore = async () => {
@@ -303,18 +278,10 @@ export default defineComponent({
         title: "書き出し先のフォルダを選択",
       });
       if (path) {
-        inputCheckDirExists(path).then((res) => {
-          if (res) {
-            store.dispatch(SET_SAVING_SETTING_DATA, {
-              data: { ...savingSetting.value, fixedExportDir: path },
-            });
-          }
+        store.dispatch(SET_SAVING_SETTING_DATA, {
+          data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
-    };
-
-    const inputCheckDirExists = (dir: string) => {
-      return store.dispatch(CHECK_FILE_EXISTS, { file: dir });
     };
 
     onUpdated(() => {
@@ -328,7 +295,6 @@ export default defineComponent({
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
-      inputCheckDirExists,
     };
   },
 });
@@ -340,31 +306,5 @@ export default defineComponent({
 
 .setting-card {
   width: 100%;
-  max-width: 265px;
-}
-
-.text-nvidia {
-  color: #76b900;
-}
-
-.bg-nvidia {
-  background: #76b900;
-}
-
-.q-expansion-item {
-  background-color: white;
-  color: black;
-}
-
-.q-expansion-item--expanded {
-  border: 1px solid #000000;
-  border-color: $blue;
-  background-color: white;
-  color: $blue;
-}
-
-.q-expansion-item * {
-  background-color: white;
-  color: black;
 }
 </style>
