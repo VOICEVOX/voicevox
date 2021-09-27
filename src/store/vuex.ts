@@ -99,7 +99,7 @@ export interface StoreOptions<
   A extends ActionsBase,
   M extends MutationsBase
 > {
-  state: S | (() => S);
+  state?: S | (() => S);
   getters?: GetterTree<S, S, G>;
   actions?: ActionTree<S, S, A, M>;
   mutations?: MutationTree<S, M>;
@@ -161,7 +161,7 @@ export type Action<
 export type Mutation<S, P> = (state: S, payload: P) => void;
 
 export type GetterTree<S, R, G> = G extends GettersBase
-  ? GetterTree<S, R, G>
+  ? CustomGetterTree<S, R, G>
   : OriginalGetterTree<S, R>;
 
 export type CustomGetterTree<S, R, G extends GettersBase> = {
@@ -181,10 +181,10 @@ export type CustomActionTree<
   [K in keyof A]: Action<S, R, A, M, K>;
 };
 
-export type MutationTree<S, M> = M extends Record<string, PayloadFunction>
+export type MutationTree<S, M> = M extends MutationsBase
   ? CustomMutationTree<S, M>
   : OriginalMutationTree<S>;
 
-export type CustomMutationTree<S, M extends Record<string, PayloadFunction>> = {
+export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M[K]>;
 };
