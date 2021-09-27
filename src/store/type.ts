@@ -5,9 +5,7 @@ import {
   createCommandMutationTree,
   PayloadRecipeTree,
   PayloadMutationTree,
-  CommandGetters,
-  CommandMutations,
-  CommandActions,
+  OldCommand,
 } from "./command";
 import {
   CharacterInfo,
@@ -303,6 +301,27 @@ export type AudioCommandMutations = {
     audioKey: string;
     postPhonemeLength: number;
   };
+};
+
+/*
+ * Command Store Types
+ */
+
+export type CommandGetters = {
+  CAN_UNDO: boolean;
+  CAN_REDO: boolean;
+};
+
+export type CommandMutations = {
+  OLD_PUSH_COMMAND: { command: OldCommand<State> };
+  UNDO: undefined;
+  REDO: undefined;
+  CLEAR_COMMANDS: undefined;
+};
+
+export type CommandActions = {
+  UNDO(): void;
+  REDO(): void;
 };
 
 export type AllGetters = AudioGetters &

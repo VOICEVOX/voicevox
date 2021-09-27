@@ -26,7 +26,7 @@ export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
  * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
  * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
  * */
-class OldCommand<S> {
+export class OldCommand<S> {
   undoOperations: Operation[];
   redoOperations: Operation[];
 
@@ -176,23 +176,6 @@ const recordOperations =
       undoOperations: undoPatches.map(patchToOperation),
     };
   };
-
-export type CommandGetters = {
-  CAN_UNDO: boolean;
-  CAN_REDO: boolean;
-};
-
-export type CommandMutations = {
-  OLD_PUSH_COMMAND: { command: OldCommand<State> };
-  UNDO: undefined;
-  REDO: undefined;
-  CLEAR_COMMANDS: undefined;
-};
-
-export type CommandActions = {
-  UNDO(): void;
-  REDO(): void;
-};
 
 export const commandStore = {
   getters: {
