@@ -325,7 +325,7 @@ export type CommandActions = {
 };
 
 export type AllGetters = AudioGetters &
-  AudioCommandActions &
+  AudioCommandGetters &
   CommandGetters &
   IndexGetters &
   ProjectGetters &
