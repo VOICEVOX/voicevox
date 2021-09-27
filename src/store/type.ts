@@ -11,6 +11,7 @@ import {
   CharacterInfo,
   Encoding as EncodingType,
   SavingSetting,
+  UpdateInfo,
 } from "@/type/preload";
 import {
   SettingActions,
@@ -23,7 +24,6 @@ import {
   ProjectGetters,
   ProjectMutations,
 } from "@/store/project";
-import { IndexActions, IndexGetters, IndexMutations } from "@/store/index";
 
 export type State = {
   engineState: EngineState;
@@ -322,6 +322,27 @@ export type CommandMutations = {
 export type CommandActions = {
   UNDO(): void;
   REDO(): void;
+};
+
+/*
+ * Index Store Types
+ */
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type IndexGetters = {};
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type IndexMutations = {};
+
+export type IndexActions = {
+  GET_POLICY_TEXT(): string;
+  GET_OSS_LICENSES(): Record<string, string>[];
+  GET_UPDATE_INFOS(): UpdateInfo[];
+  SHOW_WARNING_DIALOG(payload: {
+    title: string;
+    message: string;
+  }): Electron.MessageBoxReturnValue;
+  LOG_ERROR(payload: unknown[]): void;
 };
 
 export type AllGetters = AudioGetters &
