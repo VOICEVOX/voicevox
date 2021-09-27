@@ -19,11 +19,6 @@ import {
   SettingMutations,
 } from "@/store/setting";
 import { UiActions, UiGetters, UiMutations } from "@/store/ui";
-import {
-  ProjectActions,
-  ProjectGetters,
-  ProjectMutations,
-} from "@/store/project";
 
 export type State = {
   engineState: EngineState;
@@ -343,6 +338,24 @@ export type IndexActions = {
     message: string;
   }): Electron.MessageBoxReturnValue;
   LOG_ERROR(payload: unknown[]): void;
+};
+
+/*
+ * Project Store Types
+ */
+
+export type ProjectGetters = {
+  PROJECT_NAME: string | undefined;
+};
+
+export type ProjectMutations = {
+  SET_PROJECT_FILEPATH: { filePath: string };
+};
+
+export type ProjectActions = {
+  CREATE_NEW_PROJECT(payload: { confirm?: boolean }): void;
+  LOAD_PROJECT_FILE(payload: { filePath?: string; confirm?: boolean }): void;
+  SAVE_PROJECT_FILE(payload: { overwrite?: boolean }): void;
 };
 
 export type AllGetters = AudioGetters &
