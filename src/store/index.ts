@@ -12,6 +12,7 @@ import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
 import { uiStore } from "./ui";
 import { settingStore } from "./setting";
+import { UpdateInfo } from "@/type/preload";
 
 export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
 export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
@@ -22,6 +23,23 @@ export const LOG_ERROR = "LOG_ERROR";
 const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<Store<State>> = Symbol();
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type IndexGetters = {};
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type IndexMutations = {};
+
+export type IndexActions = {
+  GET_POLICY_TEXT(): string;
+  GET_OSS_LICENSES(): Record<string, string>[];
+  GET_UPDATE_INFOS(): UpdateInfo[];
+  SHOW_WARNING_DIALOG(payload: {
+    title: string;
+    message: string;
+  }): Electron.MessageBoxReturnValue;
+  LOG_ERROR(payload: unknown[]): void;
+};
 
 export const store = createStore<State>({
   state: {
