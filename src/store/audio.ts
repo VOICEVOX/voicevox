@@ -253,7 +253,8 @@ export type AudioActions = {
   CHECK_FILE_EXISTS(payload: { file: string }): boolean;
 };
 
-export type AudioCommandGetters = Record<string, never>;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type AudioCommandGetters = {};
 
 export type AudioCommandActions = {
   COMMAND_REGISTER_AUDIO_ITEM(payload: {
