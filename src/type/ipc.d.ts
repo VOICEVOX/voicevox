@@ -132,11 +132,12 @@ type IpcIHData = {
       obj: {
         newPresets?: {
           characterIndex: number;
-          presetsData: import("@/type/preload").Preset[];
+          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetKeys: string[];
         };
       }
     ];
-    return: Record<number, import("@/type/preload").Preset[]>;
+    return: import("@/type/preload").PresetConfig;
   };
 };
 

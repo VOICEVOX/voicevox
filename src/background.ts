@@ -16,7 +16,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import { logError } from "./electron/log";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting, Preset } from "./type/preload";
+import { CharacterInfo, SavingSetting, PresetConfig } from "./type/preload";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -44,7 +44,7 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
-  presets: Record<number, Preset[]>;
+  presets: PresetConfig;
 }>({
   schema: {
     useGpu: {
@@ -61,18 +61,34 @@ const store = new Store<{
     },
     presets: {
       type: "object",
-      patternProperties: {
-        "[0-9]+": {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              characterIndex: { type: "number" },
-              speedScale: { type: "number" },
-              pitchScale: { type: "number" },
-              intonationScale: { type: "number" },
-              vokumeScale: { type: "number" },
+      properties: {
+        items: {
+          type: "object",
+          patternProperties: {
+            "[0-9]+": {
+              type: "object",
+              patternProperties: {
+                ".+": {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    characterIndex: { type: "number" },
+                    speedScale: { type: "number" },
+                    pitchScale: { type: "number" },
+                    intonationScale: { type: "number" },
+                    vokumeScale: { type: "number" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        keys: {
+          type: "object",
+          patternProperties: {
+            "[0-9]+": {
+              type: "array",
+              items: { type: "string" },
             },
           },
         },
@@ -87,7 +103,10 @@ const store = new Store<{
       avoidOverwrite: false,
       fixedExportDir: "",
     },
-    presets: {},
+    presets: {
+      items: {},
+      keys: {},
+    },
   },
 });
 
@@ -415,7 +434,14 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
 
 ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
   if (newPresets !== undefined) {
-    store.set(`presets.${newPresets.characterIndex}`, newPresets.presetsData);
+    store.set(
+      `presets.items.${newPresets.characterIndex}`,
+      newPresets.presetItems
+    );
+    store.set(
+      `presets.keys.${newPresets.characterIndex}`,
+      newPresets.presetKeys
+    );
   }
   return store.get("presets");
 });

@@ -36,13 +36,15 @@ export type State = {
   projectFilePath?: string;
   savingSetting: SavingSetting;
   isPinned: boolean;
-  presets: Record<number, Preset[]>;
+  presetItems: Record<number, Record<string, Preset>>;
+  presetKeys: Record<number, string[]>;
 };
 
 export type AudioItem = {
   text: string;
   characterIndex?: number;
   query?: AudioQuery;
+  presetId?: string;
 };
 
 export type AudioState = {
@@ -106,6 +108,10 @@ export type AudioMutations = {
     accentPhraseIndex: number;
     moraIndex: number;
     pitch: number;
+  };
+  SET_AUDIO_PRESET: {
+    audioId: string;
+    presetId: string;
   };
 };
 
@@ -249,6 +255,10 @@ export type AudioCommandActions = {
     audioKey: string;
     postPhonemeLength: number;
   }): void;
+  COMMAND_SET_AUDIO_PRESET(payload: {
+    audioId: string;
+    presetId: string;
+  }): void;
 };
 
 export type AudioCommandMutations = {
@@ -302,6 +312,10 @@ export type AudioCommandMutations = {
   COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
     audioKey: string;
     postPhonemeLength: number;
+  };
+  COMMAND_SET_AUDIO_PRESET: {
+    audioId: string;
+    presetId: string;
   };
 };
 

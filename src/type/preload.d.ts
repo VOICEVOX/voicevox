@@ -45,8 +45,9 @@ export interface Sandbox {
   changePinWindow(): void;
   savingPresets(newPresets?: {
     characterIndex: number;
-    presetsData: Preset[];
-  }): Promise<Recode<number, Preset[]>>;
+    presetItems: Record<string, Preset>;
+    presetKeys: string[];
+  }): Promise<PresetConfig>;
 }
 
 export type AppInfos = {
@@ -84,9 +85,13 @@ export type SavingSetting = {
 
 export type Preset = {
   name: string;
-  characterIndex?: number;
   speedScale: number;
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+};
+
+export type PresetConfig = {
+  items: Record<number, Record<string, Preset>>;
+  keys: Record<number, string[]>;
 };

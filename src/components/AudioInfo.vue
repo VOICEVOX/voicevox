@@ -2,7 +2,7 @@
   <div class="root full-height q-py-md" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs">presetList</span>
-      <p>{{ presetList }}</p>
+      <!-- <p>{{ presetList }}</p> -->
 
       <div class="row no-wrap full-width">
         <div
@@ -21,6 +21,13 @@
               <div class="preset-select-label">
                 {{ scope.opt.label }}
               </div>
+            </template>
+            <template v-slot:no-option>
+              <q-item>
+                <q-item-section class="text-grey">
+                  プリセットはありません
+                </q-item-section>
+              </q-item>
             </template>
           </q-select>
         </div>
@@ -205,10 +212,9 @@ import {
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import { Preset } from "@/type/preload";
-import { SAVE_PRESETS } from "@/store/preset";
+import { ADD_PRESET } from "@/store/preset";
 import { AudioQuery } from "@/openapi";
 import { PreviewableValue } from "@/helpers/previewableValue";
-
 export default defineComponent({
   name: "AudioInfo",
 
@@ -387,52 +393,67 @@ export default defineComponent({
       }
     };
 
-    const presetList = computed<{ label: string; value: number }[] | undefined>(
-      () =>
-        audioItem.value?.characterIndex !== undefined
-          ? store.state.presets?.[audioItem.value.characterIndex]?.map(
-              (e, index) => ({
-                label: e.name,
-                value: index,
-              })
-            )
-          : undefined
-    );
+    const presetItems = computed(() => store.state.presetItems);
+    const presetKeys = computed(() => store.state.presetKeys);
 
-    const presets = computed(() => store.state.presets);
+    const presetList = computed(() => {
+      if (audioItem.value?.characterIndex === undefined) return undefined;
+      const characterIndex = audioItem.value.characterIndex;
+      return presetKeys.value?.[audioItem.value.characterIndex]?.map((e) => ({
+        label: presetItems.value[characterIndex][e].name,
+        value: e,
+      }));
+    });
+
+    const characterIndex = computed(() => audioItem.value?.characterIndex);
+    const presetId = computed(() => audioItem.value?.presetId);
 
     const notSelectedPreset = {
       label: "プリセットを選択",
       value: undefined,
     };
 
-    const presetSelectModel =
-      ref<{
-        label: string;
-        value: number | undefined;
-      }>(notSelectedPreset);
+    const presetSelectModel = computed(() => {
+      if (
+        characterIndex.value === undefined ||
+        presetId.value === undefined ||
+        presetItems.value[characterIndex.value] === undefined ||
+        presetItems.value[characterIndex.value][presetId.value] === undefined
+      )
+        return notSelectedPreset;
+      return {
+        label: presetItems.value[characterIndex.value][presetId.value].name,
+        value: presetId.value,
+      };
+    });
 
     const onChangePreset = (e: {
       label: string;
-      value: number | undefined;
+      value: string | undefined;
     }): void => {
       if (audioItem.value?.characterIndex === undefined) return;
 
+      console.log("onchangepreset", e.value);
+
       store.dispatch(COMMAND_SET_AUDIO_PRESET, {
         audioId: activeAudioKey.value,
-        characterIndex: audioItem.value.characterIndex,
-        presetIndex: e.value,
+        presetId: e.value,
       });
-
-      presetSelectModel.value = e;
     };
+
+    const onChangeParameter = () => {
+      if (audioItem.value?.presetId === undefined) return;
+
+      store.dispatch(COMMAND_SET_AUDIO_PRESET, {
+        audioId: activeAudioKey.value,
+        presetId: undefined,
+      });
+    };
+
+    // audioItem内のPresetIdを書き換えるaction, mutationを作る
 
     const showsPresetNameDialog = ref(false);
     const presetName = ref("");
-
-    const onChangeParameter = () => {
-      presetSelectModel.value = notSelectedPreset;
-    };
 
     const addPreset = () => {
       console.log("addPreset");
@@ -442,44 +463,42 @@ export default defineComponent({
 
       const newPreset = {
         name: presetName.value,
-        charactorIndex: characterIndex,
         speedScale: previewAudioSpeedScale.currentValue.value!,
         pitchScale: previewAudioPitchScale.currentValue.value!,
         intonationScale: previewAudioIntonationScale.currentValue.value!,
         volumeScale: previewAudioVolumeScale.currentValue.value!,
       } as Preset;
 
-      const charaPreset =
-        presets.value !== undefined &&
-        presets.value[characterIndex] !== undefined
-          ? (JSON.parse(
-              JSON.stringify(presets.value[characterIndex])
-            ) as Preset[])
-          : [];
-
-      charaPreset.push(newPreset);
-
-      store.dispatch(SAVE_PRESETS, {
+      store.dispatch(ADD_PRESET, {
         characterIndex,
-        presetsData: charaPreset,
-      });
+        presetData: newPreset,
 
-      presetSelectModel.value = {
-        label: newPreset.name,
-        value: charaPreset.length - 1,
-    };
+        audioId: activeAudioKey.value,
+      });
 
       showsPresetNameDialog.value = false;
       presetName.value = "";
     };
 
     const setPresetByScroll = (deltaY: number) => {
-      const isUp = deltaY > 0;
-      const presetNumber = presetList.value?.length;
-      const nowIndex = presetSelectModel.value.value ?? -1;
+      if (characterIndex.value === undefined) return;
 
+      const presetNumber = presetList.value?.length;
       if (presetNumber === 0 || presetNumber === undefined) return;
 
+      let nowIndex: number;
+      if (
+        presetSelectModel.value.value === undefined ||
+        presetKeys.value[characterIndex.value] === undefined
+      ) {
+        nowIndex = -1;
+      } else {
+        nowIndex = presetKeys.value[characterIndex.value]?.indexOf(
+          presetSelectModel.value.value
+        );
+      }
+
+      const isUp = deltaY > 0;
       const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
       if (newIndex < 0 || presetNumber <= newIndex) return;
 
@@ -488,7 +507,7 @@ export default defineComponent({
         presetList.value[newIndex] === undefined
       )
         return;
-      presetSelectModel.value = presetList.value[newIndex];
+
       onChangePreset(presetList.value[newIndex]);
     };
 
@@ -516,10 +535,10 @@ export default defineComponent({
       presetSelectModel,
       onChangePreset,
       addPreset,
-      presets,
       showsPresetNameDialog,
       presetName,
       setPresetByScroll,
+      onChangeParameter,
     };
   },
 });
