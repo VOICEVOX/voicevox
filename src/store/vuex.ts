@@ -13,11 +13,11 @@ import {
   MutationTree as OriginalMutationTree,
 } from "vuex";
 
-export type PayloadFunction = (payload?: Record<string, any>) => any;
+export type PayloadFunction = (payload?: any) => any;
 
 export type GettersBase = Record<string, any>;
 export type ActionsBase = Record<string, PayloadFunction>;
-export type MutationsBase = Record<string, Record<string, any> | undefined>;
+export type MutationsBase = Record<string, any>;
 
 export class Store<
   S,
@@ -71,10 +71,13 @@ export interface Dispatch<A extends ActionsBase> {
     options?: DispatchOptions
   ): Promise<ReturnType<A[T]>>;
   <T extends keyof A>(
-    payloadWithType: { type: T } & (Parameters<A[T]>[0] extends undefined
-      ? // eslint-disable-next-line @typescript-eslint/ban-types
-        {}
-      : Parameters<A[T]>[0]),
+    payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
+      string,
+      any
+    >
+      ? Parameters<A[T]>[0]
+      : // eslint-disable-next-line @typescript-eslint/ban-types
+        {}),
     options?: DispatchOptions
   ): Promise<ReturnType<A[T]>>;
 }
@@ -82,10 +85,10 @@ export interface Dispatch<A extends ActionsBase> {
 export interface Commit<M extends MutationsBase> {
   <T extends keyof M>(type: T, payload: M[T], options?: CommitOptions): void;
   <T extends keyof M>(
-    payloadWithType: { type: T } & (M[T] extends undefined
-      ? // eslint-disable-next-line @typescript-eslint/ban-types
-        {}
-      : M[T]),
+    payloadWithType: { type: T } & (M[T] extends Record<string, any>
+      ? M[T]
+      : // eslint-disable-next-line @typescript-eslint/ban-types
+        {}),
     options?: CommitOptions
   ): void;
 }
