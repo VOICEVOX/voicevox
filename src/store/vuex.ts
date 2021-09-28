@@ -100,9 +100,9 @@ export interface StoreOptions<
   M extends MutationsBase
 > {
   state?: S | (() => S);
-  getters?: GetterTree<S, S, G>;
-  actions?: ActionTree<S, S, A, M>;
-  mutations?: MutationTree<S, M>;
+  getters: GetterTree<S, S, G>;
+  actions: ActionTree<S, S, A, M>;
+  mutations: MutationTree<S, M>;
   modules?: ModuleTree<S>;
   plugins?: Plugin<S>[];
   strict?: boolean;
