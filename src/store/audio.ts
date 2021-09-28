@@ -499,7 +499,7 @@ export const audioStore: StoreOptions<
             dispatch(SET_SINGLE_ACCENT_PHRASE, {
               audioKey: audioKey,
               accentPhraseIndex,
-              accentPhrases: accentPhrases,
+              accentPhrases,
               popUntilPause,
             });
           });
