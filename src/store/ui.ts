@@ -5,7 +5,13 @@ import {
   MutationsBase,
   StoreOptions,
 } from "./vuex";
-import { AudioGetters, State, UiActions, UiGetters, UiMutations } from "./type";
+import {
+  State,
+  UiActions,
+  UiGetters,
+  UiMutations,
+  useAllStoreGetter,
+} from "./type";
 import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";
@@ -53,9 +59,9 @@ export const uiStore: StoreOptions<State, UiGetters, UiActions, UiMutations> = {
     [UI_LOCKED](state) {
       return state.uiLockCount > 0;
     },
-    [SHOULD_SHOW_PANES](_, getters) {
+    [SHOULD_SHOW_PANES]: useAllStoreGetter((_, getters) => {
       return getters[ACTIVE_AUDIO_KEY] != undefined;
-    },
+    }),
   },
 
   mutations: {
@@ -151,9 +157,4 @@ export const uiStore: StoreOptions<State, UiGetters, UiActions, UiMutations> = {
       commit(DETECT_UNPINNED, undefined);
     },
   },
-} as StoreOptions<
-  State,
-  Partial<AudioGetters> & UiGetters,
-  UiActions,
-  UiMutations
->;
+};

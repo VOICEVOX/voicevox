@@ -11,7 +11,7 @@ import {
   ProjectGetters,
   ProjectActions,
   ProjectMutations,
-  AudioActions,
+  useAllStoreAction,
 } from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -46,194 +46,201 @@ export const projectStore: StoreOptions<
   },
 
   actions: {
-    [CREATE_NEW_PROJECT]: createUILockAction(
-      async (context, { confirm }: { confirm?: boolean }) => {
-        if (
-          confirm !== false &&
-          !(await window.electron.showConfirmDialog({
-            title: "警告",
-            message:
-              "保存されていないプロジェクトの変更は破棄されます。\n" +
-              "よろしいですか？",
-          }))
-        ) {
-          return;
-        }
-
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
-
-        const audioItem: AudioItem = { text: "", characterIndex: 0 };
-        await context.dispatch(REGISTER_AUDIO_ITEM, {
-          audioItem,
-        });
-
-        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
-      }
-    ),
-    [LOAD_PROJECT_FILE]: createUILockAction(
-      async (
-        context,
-        { filePath, confirm }: { filePath?: string; confirm?: boolean }
-      ) => {
-        if (!filePath) {
-          // Select and load a project File.
-          const ret = await window.electron.showProjectLoadDialog({
-            title: "プロジェクトファイルの選択",
-          });
-          if (ret == undefined || ret?.length == 0) {
-            return;
-          }
-          filePath = ret[0];
-        }
-
-        const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
-
-        try {
-          const buf = await window.electron.readFile({ filePath });
-          const text = new TextDecoder("utf-8").decode(buf).trim();
-          const obj = JSON.parse(text);
-
-          // appVersion Validation check
-          if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
-            throw new Error(
-              projectFileErrorMsg +
-                " The appVersion of the project file should be string"
-            );
-          }
-          const appVersionList = versionTextParse(obj.appVersion);
-          const nowAppInfo = await window.electron.getAppInfos();
-          const nowAppVersionList = versionTextParse(nowAppInfo.version);
-          if (appVersionList == null || nowAppVersionList == null) {
-            throw new Error(
-              projectFileErrorMsg +
-                ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
-            );
-          }
-
-          // Migration
-          if (appVersionList < [0, 4, 0]) {
-            for (const audioItemsKey in obj.audioItems) {
-              if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
-                obj.audioItems[audioItemsKey].characterIndex =
-                  obj.audioItems[audioItemsKey].charactorIndex;
-                delete obj.audioItems[audioItemsKey].charactorIndex;
-              }
-            }
-            for (const audioItemsKey in obj.audioItems) {
-              if (obj.audioItems[audioItemsKey].query != null) {
-                obj.audioItems[audioItemsKey].query.volumeScale = 1;
-                obj.audioItems[audioItemsKey].query.prePhonemeLength = 0.1;
-                obj.audioItems[audioItemsKey].query.postPhonemeLength = 0.1;
-                obj.audioItems[audioItemsKey].query.outputSamplingRate =
-                  DEFAULT_SAMPLING_RATE;
-              }
-            }
-          }
-
-          if (appVersionList < [0, 5, 0]) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
-              if (audioItem.query != null) {
-                audioItem.query.outputStereo = false;
-                for (const accentPhrase of audioItem.query.accentPhrases) {
-                  if (accentPhrase.pauseMora) {
-                    accentPhrase.pauseMora.vowelLength = 0;
-                  }
-                  for (const mora of accentPhrase.moras) {
-                    if (mora.consonant) {
-                      mora.consonantLength = 0;
-                    }
-                    mora.vowelLength = 0;
-                  }
-                }
-              }
-
-              // set phoneme length
-              await context
-                .dispatch(FETCH_MORA_DATA, {
-                  accentPhrases: audioItem.query!.accentPhrases,
-                  characterIndex: audioItem.characterIndex!,
-                })
-                .then((accentPhrases: AccentPhrase[]) => {
-                  accentPhrases.forEach((newAccentPhrase, i) => {
-                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
-                    if (newAccentPhrase.pauseMora) {
-                      oldAccentPhrase.pauseMora.vowelLength =
-                        newAccentPhrase.pauseMora.vowelLength;
-                    }
-                    newAccentPhrase.moras.forEach((mora, j) => {
-                      if (mora.consonant) {
-                        oldAccentPhrase.moras[j].consonantLength =
-                          mora.consonantLength;
-                      }
-                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
-                    });
-                  });
-                });
-            }
-          }
-
-          // Validation check
-          const ajv = new Ajv();
-          const validate = ajv.compile(projectSchema);
-          if (!validate(obj)) {
-            throw validate.errors;
-          }
-          if (!obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)) {
-            throw new Error(
-              projectFileErrorMsg +
-                " Every audioKey in audioKeys should be a key of audioItems"
-            );
-          }
-          if (
-            !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].characterIndex != undefined
-            )
-          ) {
-            throw new Error(
-              'Every audioItem should have a "characterIndex" attribute.'
-            );
-          }
-
+    [CREATE_NEW_PROJECT]: useAllStoreAction(
+      createUILockAction(
+        async (context, { confirm }: { confirm?: boolean }) => {
           if (
             confirm !== false &&
             !(await window.electron.showConfirmDialog({
               title: "警告",
               message:
-                "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
+                "保存されていないプロジェクトの変更は破棄されます。\n" +
                 "よろしいですか？",
             }))
           ) {
             return;
           }
+
           await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
 
-          const { audioItems, audioKeys } = obj as ProjectType;
+          const audioItem: AudioItem = { text: "", characterIndex: 0 };
+          await context.dispatch(REGISTER_AUDIO_ITEM, {
+            audioItem,
+          });
 
-          let prevAudioKey = undefined;
-          for (const audioKey of audioKeys) {
-            const audioItem = audioItems[audioKey];
-            prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
-              prevAudioKey,
-              audioItem,
+          context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+        }
+      )
+    ),
+    [LOAD_PROJECT_FILE]: useAllStoreAction(
+      createUILockAction(
+        async (
+          context,
+          { filePath, confirm }: { filePath?: string; confirm?: boolean }
+        ) => {
+          if (!filePath) {
+            // Select and load a project File.
+            const ret = await window.electron.showProjectLoadDialog({
+              title: "プロジェクトファイルの選択",
+            });
+            if (ret == undefined || ret?.length == 0) {
+              return;
+            }
+            filePath = ret[0];
+          }
+
+          const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
+
+          try {
+            const buf = await window.electron.readFile({ filePath });
+            const text = new TextDecoder("utf-8").decode(buf).trim();
+            const obj = JSON.parse(text);
+
+            // appVersion Validation check
+            if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
+              throw new Error(
+                projectFileErrorMsg +
+                  " The appVersion of the project file should be string"
+              );
+            }
+            const appVersionList = versionTextParse(obj.appVersion);
+            const nowAppInfo = await window.electron.getAppInfos();
+            const nowAppVersionList = versionTextParse(nowAppInfo.version);
+            if (appVersionList == null || nowAppVersionList == null) {
+              throw new Error(
+                projectFileErrorMsg +
+                  ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
+              );
+            }
+
+            // Migration
+            if (appVersionList < [0, 4, 0]) {
+              for (const audioItemsKey in obj.audioItems) {
+                if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
+                  obj.audioItems[audioItemsKey].characterIndex =
+                    obj.audioItems[audioItemsKey].charactorIndex;
+                  delete obj.audioItems[audioItemsKey].charactorIndex;
+                }
+              }
+              for (const audioItemsKey in obj.audioItems) {
+                if (obj.audioItems[audioItemsKey].query != null) {
+                  obj.audioItems[audioItemsKey].query.volumeScale = 1;
+                  obj.audioItems[audioItemsKey].query.prePhonemeLength = 0.1;
+                  obj.audioItems[audioItemsKey].query.postPhonemeLength = 0.1;
+                  obj.audioItems[audioItemsKey].query.outputSamplingRate =
+                    DEFAULT_SAMPLING_RATE;
+                }
+              }
+            }
+
+            if (appVersionList < [0, 5, 0]) {
+              for (const audioItemsKey in obj.audioItems) {
+                const audioItem = obj.audioItems[audioItemsKey];
+                if (audioItem.query != null) {
+                  audioItem.query.outputStereo = false;
+                  for (const accentPhrase of audioItem.query.accentPhrases) {
+                    if (accentPhrase.pauseMora) {
+                      accentPhrase.pauseMora.vowelLength = 0;
+                    }
+                    for (const mora of accentPhrase.moras) {
+                      if (mora.consonant) {
+                        mora.consonantLength = 0;
+                      }
+                      mora.vowelLength = 0;
+                    }
+                  }
+                }
+
+                // set phoneme length
+                await context
+                  .dispatch(FETCH_MORA_DATA, {
+                    accentPhrases: audioItem.query!.accentPhrases,
+                    characterIndex: audioItem.characterIndex!,
+                  })
+                  .then(async (accentPhrases: Promise<AccentPhrase[]>) => {
+                    (await accentPhrases).forEach((newAccentPhrase, i) => {
+                      const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                      if (newAccentPhrase.pauseMora) {
+                        oldAccentPhrase.pauseMora.vowelLength =
+                          newAccentPhrase.pauseMora.vowelLength;
+                      }
+                      newAccentPhrase.moras.forEach((mora, j) => {
+                        if (mora.consonant) {
+                          oldAccentPhrase.moras[j].consonantLength =
+                            mora.consonantLength;
+                        }
+                        oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      });
+                    });
+                  });
+              }
+            }
+
+            // Validation check
+            const ajv = new Ajv();
+            const validate = ajv.compile(projectSchema);
+            if (!validate(obj)) {
+              throw validate.errors;
+            }
+            if (
+              !obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)
+            ) {
+              throw new Error(
+                projectFileErrorMsg +
+                  " Every audioKey in audioKeys should be a key of audioItems"
+              );
+            }
+            if (
+              !obj.audioKeys.every(
+                (audioKey) =>
+                  obj.audioItems[audioKey].characterIndex != undefined
+              )
+            ) {
+              throw new Error(
+                'Every audioItem should have a "characterIndex" attribute.'
+              );
+            }
+
+            if (
+              confirm !== false &&
+              !(await window.electron.showConfirmDialog({
+                title: "警告",
+                message:
+                  "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
+                  "よろしいですか？",
+              }))
+            ) {
+              return;
+            }
+            await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
+
+            const { audioItems, audioKeys } = obj as ProjectType;
+
+            let prevAudioKey = undefined;
+            for (const audioKey of audioKeys) {
+              const audioItem = audioItems[audioKey];
+              prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
+                prevAudioKey,
+                audioItem,
+              });
+            }
+            context.commit(SET_PROJECT_FILEPATH, { filePath });
+          } catch (err) {
+            window.electron.logError(err);
+            const message = (() => {
+              if (typeof err === "string") return err;
+              if (!(err instanceof Error)) return "エラーが発生しました。";
+              if (err.message.startsWith(projectFileErrorMsg))
+                return "ファイルフォーマットが正しくありません。";
+              return err.message;
+            })();
+            await window.electron.showErrorDialog({
+              title: "エラー",
+              message,
             });
           }
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
-        } catch (err) {
-          window.electron.logError(err);
-          const message = (() => {
-            if (typeof err === "string") return err;
-            if (!(err instanceof Error)) return "エラーが発生しました。";
-            if (err.message.startsWith(projectFileErrorMsg))
-              return "ファイルフォーマットが正しくありません。";
-            return err.message;
-          })();
-          await window.electron.showErrorDialog({
-            title: "エラー",
-            message,
-          });
         }
-      }
+      )
     ),
     [SAVE_PROJECT_FILE]: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
@@ -266,12 +273,7 @@ export const projectStore: StoreOptions<
       }
     ),
   },
-} as StoreOptions<
-  State,
-  ProjectGetters,
-  Partial<AudioActions> & ProjectActions,
-  ProjectMutations
->;
+};
 
 const moraSchema = {
   properties: {
