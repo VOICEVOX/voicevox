@@ -1,8 +1,21 @@
 import { InjectionKey } from "vue";
 import { createLogger } from "vuex";
-import { createStore, Store, useStore as baseUseStore } from "./vuex";
+import {
+  createStore,
+  Store,
+  StoreOptions,
+  useStore as baseUseStore,
+} from "./vuex";
 
-import { AllActions, AllGetters, AllMutations, State } from "./type";
+import {
+  AllActions,
+  AllGetters,
+  AllMutations,
+  IndexActions,
+  IndexGetters,
+  IndexMutations,
+  State,
+} from "./type";
 import { commandStore } from "./command";
 import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
@@ -20,6 +33,36 @@ const isDevelopment = process.env.NODE_ENV == "development";
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
 > = Symbol();
+
+export const indexStore: StoreOptions<
+  State,
+  IndexGetters,
+  IndexActions,
+  IndexMutations
+> = {
+  getters: {},
+  mutations: {},
+  actions: {
+    [GET_POLICY_TEXT]: async () => {
+      return await window.electron.getPolicyText();
+    },
+    [GET_OSS_LICENSES]: async () => {
+      return await window.electron.getOssLicenses();
+    },
+    [GET_UPDATE_INFOS]: async () => {
+      return await window.electron.getUpdateInfos();
+    },
+    [SHOW_WARNING_DIALOG]: async (
+      context,
+      { title, message }: { title: string; message: string }
+    ) => {
+      return await window.electron.showWarningDialog({ title, message });
+    },
+    [LOG_ERROR]: (_, ...params: unknown[]) => {
+      window.electron.logError(...params);
+    },
+  },
+};
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
@@ -53,6 +96,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...projectStore.getters,
     ...settingStore.getters,
     ...audioCommandStore.getters,
+    ...indexStore.getters,
   },
 
   mutations: {
@@ -62,6 +106,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...projectStore.mutations,
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
+    ...indexStore.mutations,
   },
 
   actions: {
@@ -71,24 +116,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...projectStore.actions,
     ...settingStore.actions,
     ...audioCommandStore.actions,
-    [GET_POLICY_TEXT]: async () => {
-      return await window.electron.getPolicyText();
-    },
-    [GET_OSS_LICENSES]: async () => {
-      return await window.electron.getOssLicenses();
-    },
-    [GET_UPDATE_INFOS]: async () => {
-      return await window.electron.getUpdateInfos();
-    },
-    [SHOW_WARNING_DIALOG]: async (
-      context,
-      { title, message }: { title: string; message: string }
-    ) => {
-      return await window.electron.showWarningDialog({ title, message });
-    },
-    [LOG_ERROR]: (_, ...params: unknown[]) => {
-      window.electron.logError(...params);
-    },
+    ...indexStore.actions,
   },
   plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",
