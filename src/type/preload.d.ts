@@ -44,9 +44,8 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   savingPresets(newPresets?: {
-    characterIndex: number;
     presetItems: Record<string, Preset>;
-    presetKeys: string[];
+    presetKeys: Record<number, string[]>;
   }): Promise<PresetConfig>;
 }
 
@@ -85,6 +84,7 @@ export type SavingSetting = {
 
 export type Preset = {
   name: string;
+  characterIndex: number;
   speedScale: number;
   pitchScale: number;
   intonationScale: number;
@@ -92,6 +92,6 @@ export type Preset = {
 };
 
 export type PresetConfig = {
-  items: Record<number, Record<string, Preset>>;
+  items: Record<string, Preset>;
   keys: Record<number, string[]>;
 };

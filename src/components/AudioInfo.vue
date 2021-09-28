@@ -15,7 +15,6 @@
             class="overflow-hidden"
             outlined
             dense
-            @update:model-value="onChangePreset"
           >
             <template v-slot:selected-item="scope">
               <div class="preset-select-label">
@@ -398,9 +397,8 @@ export default defineComponent({
 
     const presetList = computed(() => {
       if (audioItem.value?.characterIndex === undefined) return undefined;
-      const characterIndex = audioItem.value.characterIndex;
-      return presetKeys.value?.[audioItem.value.characterIndex]?.map((e) => ({
-        label: presetItems.value[characterIndex][e].name,
+      return presetKeys.value[audioItem.value.characterIndex]?.map((e) => ({
+        label: presetItems.value[e].name,
         value: e,
       }));
     });
@@ -413,18 +411,24 @@ export default defineComponent({
       value: undefined,
     };
 
-    const presetSelectModel = computed(() => {
-      if (
-        characterIndex.value === undefined ||
-        presetId.value === undefined ||
-        presetItems.value[characterIndex.value] === undefined ||
-        presetItems.value[characterIndex.value][presetId.value] === undefined
-      )
-        return notSelectedPreset;
-      return {
-        label: presetItems.value[characterIndex.value][presetId.value].name,
-        value: presetId.value,
-      };
+    const presetSelectModel = computed({
+      get: () => {
+        if (
+          characterIndex.value === undefined ||
+          presetId.value === undefined ||
+          presetItems.value[presetId.value] === undefined ||
+          presetKeys.value[characterIndex.value] === undefined ||
+          !presetKeys.value[characterIndex.value].includes(presetId.value)
+        )
+          return notSelectedPreset;
+        return {
+          label: presetItems.value[presetId.value].name,
+          value: presetId.value,
+        };
+      },
+      set: (newVal: { label: string; value: string | undefined }) => {
+        onChangePreset(newVal);
+      },
     });
 
     const onChangePreset = (e: {
@@ -463,6 +467,7 @@ export default defineComponent({
 
       const newPreset = {
         name: presetName.value,
+        characterIndex,
         speedScale: previewAudioSpeedScale.currentValue.value!,
         pitchScale: previewAudioPitchScale.currentValue.value!,
         intonationScale: previewAudioIntonationScale.currentValue.value!,

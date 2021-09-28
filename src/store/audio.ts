@@ -262,9 +262,8 @@ export const audioStore = typeAsStoreOptions({
       if (presetId === undefined) return;
 
       const query = draft.audioItems[audioId].query;
-      const characterIndex = draft.audioItems[audioId].characterIndex!;
 
-      const preset = draft.presetItems[characterIndex][presetId];
+      const preset = draft.presetItems[presetId];
       query!.intonationScale = preset.intonationScale;
       query!.pitchScale = preset.pitchScale;
       query!.speedScale = preset.speedScale;
@@ -1200,14 +1199,12 @@ export const audioCommandStore = typeAsStoreOptions({
     ) => {
       if (presetId !== undefined) {
         if (
-          state.presetItems?.[state.audioItems[audioId].characterIndex!]?.[
+          state.presetItems[presetId] === undefined ||
+          !state.presetKeys[state.audioItems[audioId].characterIndex!].includes(
             presetId
-          ] === undefined
+          )
         ) {
-          window.electron.logError(
-            `No exist preset ${state.audioItems[audioId]
-              .characterIndex!}-${presetId}`
-          );
+          window.electron.logError(`No exist preset ${presetId}`);
           return;
         }
       }

@@ -36,7 +36,7 @@ export type State = {
   projectFilePath?: string;
   savingSetting: SavingSetting;
   isPinned: boolean;
-  presetItems: Record<number, Record<string, Preset>>;
+  presetItems: Record<string, Preset>;
   presetKeys: Record<number, string[]>;
 };
 

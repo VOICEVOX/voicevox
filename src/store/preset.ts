@@ -16,7 +16,7 @@ export const presetStore = {
   mutations: {
     [SET_PRESET_ITEMS]: (
       state,
-      { presetItems }: { presetItems: Record<number, Record<string, Preset>> }
+      { presetItems }: { presetItems: Record<string, Preset> }
     ) => {
       state.presetItems = presetItems;
     },
@@ -44,17 +44,14 @@ export const presetStore = {
     [SAVE_PRESET_CONFIG]: async (
       context,
       {
-        characterIndex,
         presetItems,
         presetKeys,
       }: {
-        characterIndex: number;
         presetItems: Record<string, Preset>;
-        presetKeys: string[];
+        presetKeys: Record<number, string[]>;
       }
     ) => {
       const result = await window.electron.savingPresets({
-        characterIndex,
         presetItems,
         presetKeys,
       });
@@ -65,31 +62,27 @@ export const presetStore = {
     [ADD_PRESET]: async (
       context,
       {
-        characterIndex,
         presetData,
         audioId,
       }: { characterIndex: number; presetData: Preset; audioId?: string }
     ) => {
-      const items =
-        context.state.presetItems[characterIndex] !== undefined
-          ? (JSON.parse(
-              JSON.stringify(context.state.presetItems[characterIndex])
-            ) as Record<string, Preset>)
-          : {};
-      const keys =
-        context.state.presetKeys[characterIndex] !== undefined
-          ? (JSON.parse(
-              JSON.stringify(context.state.presetKeys[characterIndex])
-            ) as string[])
-          : [];
+      const characterIndex = presetData.characterIndex;
+
+      const items = JSON.parse(
+        JSON.stringify(context.state.presetItems)
+      ) as Record<string, Preset>;
+
+      const keys = JSON.parse(
+        JSON.stringify(context.state.presetKeys)
+      ) as Record<number, string[]>;
+      if (keys[characterIndex] === undefined) keys[characterIndex] = [];
 
       const newKey = uuidv4();
 
       items[newKey] = presetData;
-      keys.push(newKey);
+      keys[characterIndex].push(newKey);
 
       await context.dispatch(SAVE_PRESET_CONFIG, {
-        characterIndex,
         presetItems: items,
         presetKeys: keys,
       });

@@ -65,23 +65,20 @@ const store = new Store<{
         items: {
           type: "object",
           patternProperties: {
-            "[0-9]+": {
+            // uuid
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
               type: "object",
-              patternProperties: {
-                ".+": {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    characterIndex: { type: "number" },
-                    speedScale: { type: "number" },
-                    pitchScale: { type: "number" },
-                    intonationScale: { type: "number" },
-                    vokumeScale: { type: "number" },
-                  },
-                },
+              properties: {
+                name: { type: "string" },
+                characterIndex: { type: "number" },
+                speedScale: { type: "number" },
+                pitchScale: { type: "number" },
+                intonationScale: { type: "number" },
+                vokumeScale: { type: "number" },
               },
             },
           },
+          additionalProperties: false,
         },
         keys: {
           type: "object",
@@ -434,14 +431,8 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
 
 ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
   if (newPresets !== undefined) {
-    store.set(
-      `presets.items.${newPresets.characterIndex}`,
-      newPresets.presetItems
-    );
-    store.set(
-      `presets.keys.${newPresets.characterIndex}`,
-      newPresets.presetKeys
-    );
+    store.set("presets.items", newPresets.presetItems);
+    store.set("presets.keys", newPresets.presetKeys);
   }
   return store.get("presets");
 });
