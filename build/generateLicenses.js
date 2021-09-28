@@ -28,9 +28,12 @@ const customFormat = JSON.stringify({
 
 // https://github.com/davglass/license-checker
 // npm install -g license-checker
-const licenseJson = execSync(`license-checker --production --excludePrivatePackages --json --customPath ${customFormat}`, {
-  encoding: "utf-8"
-});
+const licenseJson = execSync(
+  `license-checker --production --excludePrivatePackages --json --customPath ${customFormat}`,
+  {
+    encoding: "utf-8"
+  }
+);
 
 const checkerLicenses = JSON.parse(licenseJson);
 
