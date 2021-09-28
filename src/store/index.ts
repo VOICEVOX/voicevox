@@ -8,9 +8,11 @@ import {
 } from "./vuex";
 
 import {
+  actionsMixer,
   AllActions,
   AllGetters,
   AllMutations,
+  gettersMixer,
   IndexActions,
   IndexGetters,
   IndexMutations,
@@ -89,7 +91,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     isPinned: false,
   },
 
-  getters: {
+  getters: gettersMixer({
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
@@ -97,7 +99,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
-  },
+  }),
 
   mutations: {
     ...uiStore.mutations,
@@ -109,7 +111,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.mutations,
   },
 
-  actions: {
+  actions: actionsMixer({
     ...uiStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
@@ -117,7 +119,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.actions,
     ...audioCommandStore.actions,
     ...indexStore.actions,
-  },
+  }),
   plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",
 });
