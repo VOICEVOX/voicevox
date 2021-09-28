@@ -708,7 +708,7 @@ export const audioStore: StoreOptions<
     [GENERATE_AND_SAVE_ALL_AUDIO]: createUILockAction(
       async (
         { state, dispatch },
-        { dirPath, encoding }: { dirPath?: string; encoding: EncodingType }
+        { dirPath, encoding }: { dirPath?: string; encoding?: EncodingType }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;

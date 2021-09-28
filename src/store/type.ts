@@ -168,7 +168,7 @@ export type AudioActions = {
   }): SaveResultObject;
   GENERATE_AND_SAVE_ALL_AUDIO(payload: {
     dirPath?: string;
-    encoding: EncodingType;
+    encoding?: EncodingType;
   }): SaveResultObject[] | undefined;
   IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
   PLAY_AUDIO(payload: { audioKey: string }): boolean;
