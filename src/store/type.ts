@@ -1,4 +1,4 @@
-import { MutationTree, MutationsBase } from "./vuex";
+import { MutationTree, MutationsBase, Action } from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import {
@@ -436,6 +436,10 @@ export type AllActions = AudioActions &
   ProjectActions &
   SettingActions &
   UiActions;
+
+export const useAllStoreAction = <K extends keyof AllActions>(
+  arg: Action<State, State, AllActions, AllMutations, K>
+): Action<State, State, AllActions, AllMutations, K> => arg;
 
 export const commandMutationsCreator = <M extends MutationsBase>(
   arg: PayloadRecipeTree<State, M>
