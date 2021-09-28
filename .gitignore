@@ -38,3 +38,6 @@ data/
 
 # release
 electron-builder.yml
+
+# generated licenses.json
+/licenses.json
