@@ -133,7 +133,7 @@ const store = new Store<{
       },
       {
         action: "プロジェクトを名前を付けて保存",
-        combination: "Ctrl+Shift+S",
+        combination: "Ctrl Shift S",
       },
       {
         action: "プロジェクトを上書き保存",
