@@ -40,4 +40,4 @@ data/
 electron-builder.yml
 
 # generated licenses.json
-/licenses.json
+/*licenses.json
