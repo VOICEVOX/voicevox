@@ -449,10 +449,10 @@ export const audioStore: StoreOptions<
       return dispatch(FETCH_ACCENT_PHRASES, {
         text: audioItem.text,
         characterIndex: audioItem.characterIndex!,
-      }).then(async (accentPhrases) =>
+      }).then((accentPhrases) =>
         dispatch(SET_ACCENT_PHRASES, {
           audioKey,
-          accentPhrases: await accentPhrases,
+          accentPhrases,
         })
       );
     },
@@ -495,11 +495,11 @@ export const audioStore: StoreOptions<
               isKana: false,
             });
           })
-          .then(async (accentPhrases) => {
+          .then((accentPhrases) => {
             dispatch(SET_SINGLE_ACCENT_PHRASE, {
               audioKey: audioKey,
               accentPhraseIndex,
-              accentPhrases: await accentPhrases,
+              accentPhrases: accentPhrases,
               popUntilPause,
             });
           });
@@ -592,8 +592,8 @@ export const audioStore: StoreOptions<
       return dispatch(FETCH_AUDIO_QUERY, {
         text: audioItem.text,
         characterIndex: audioItem.characterIndex!,
-      }).then(async (audioQuery) =>
-        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery: await audioQuery })
+      }).then((audioQuery) =>
+        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
       );
     },
     [GENERATE_AUDIO]: createUILockAction(

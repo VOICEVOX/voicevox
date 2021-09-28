@@ -157,8 +157,8 @@ export const projectStore: StoreOptions<
                     accentPhrases: audioItem.query!.accentPhrases,
                     characterIndex: audioItem.characterIndex!,
                   })
-                  .then(async (accentPhrases: Promise<AccentPhrase[]>) => {
-                    (await accentPhrases).forEach((newAccentPhrase, i) => {
+                  .then((accentPhrases: AccentPhrase[]) => {
+                    accentPhrases.forEach((newAccentPhrase, i) => {
                       const oldAccentPhrase = audioItem.query.accentPhrases[i];
                       if (newAccentPhrase.pauseMora) {
                         oldAccentPhrase.pauseMora.vowelLength =
