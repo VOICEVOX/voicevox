@@ -421,6 +421,15 @@ export type AllGetters = AudioGetters &
   SettingGetters &
   UiGetters;
 
+export type UnionGetters =
+  | AudioGetters
+  | AudioCommandGetters
+  | CommandGetters
+  | IndexGetters
+  | ProjectGetters
+  | SettingGetters
+  | UiGetters;
+
 export type AllMutations = AudioMutations &
   AudioCommandMutations &
   CommandMutations &
@@ -429,6 +438,15 @@ export type AllMutations = AudioMutations &
   SettingMutations &
   UiMutations;
 
+export type UnionMutations =
+  | AudioMutations
+  | AudioCommandMutations
+  | CommandMutations
+  | IndexMutations
+  | ProjectMutations
+  | SettingMutations
+  | UiMutations;
+
 export type AllActions = AudioActions &
   AudioCommandActions &
   CommandActions &
@@ -436,6 +454,15 @@ export type AllActions = AudioActions &
   ProjectActions &
   SettingActions &
   UiActions;
+
+export type UnionActions =
+  | AudioActions
+  | AudioCommandActions
+  | CommandActions
+  | IndexActions
+  | ProjectActions
+  | SettingActions
+  | UiActions;
 
 export const useAllStoreAction = <K extends keyof AllActions>(
   arg: Action<State, State, AllActions, AllMutations, K>
