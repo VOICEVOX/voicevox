@@ -3,7 +3,7 @@ name: build
 on:
   push:
     branches:
-      # - main
+      - main
   release:
     types:
       - created
@@ -110,15 +110,23 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
-            os: windows-2019
+            os: ubuntu-18.04
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
-            os: windows-2019
+            os: ubuntu-18.04
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      - name: Setup Node 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Install asar
+        run: npm install -g asar
 
       - name: Download and extract noengine-prepackage artifact
         uses: actions/download-artifact@v2
@@ -155,17 +163,35 @@ jobs:
       - name: Extract VOICEVOX ENGINE
         shell: bash
         run: |
+          mkdir -p voicevox_engine/tmp
+
           # Extract first file to extract all parts
-          # Destination: voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/
-          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+          # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
+          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/tmp/
+
+          mv voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/* voicevox_engine/voicevox_engine
 
           # remove downloads to free space
-          rm -rf voicevox_engine/download
+          rm -rf voicevox_engine/download voicevox_engine/tmp
+
+      - name: Merge licenses.json (ENGINE, VOICEVOX)
+        shell: bash
+        run: |
+          # Unpack asar
+          asar extract prepackage/resources/app.asar prepackage/resources/app
+          rm prepackage/resources/app.asar
+
+          mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
+          npm run license:merge -- -o prepackage/resources/app/licenses.json -i engine_licenses.json -i prepackage/resources/app/licenses.json
+
+          # Repack asar
+          asar pack prepackage/resources/app prepackage/resources/app.asar
+          rm -rf prepackage/resources/app
 
       - name: Merge VOICEVOX ENGINE into prepackage/
         shell: bash
         run: |
-          mv voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/* prepackage/
+          mv voicevox_engine/voicevox_engine/* prepackage/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
