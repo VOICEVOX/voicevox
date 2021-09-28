@@ -149,7 +149,7 @@ export default defineComponent({
     const store = useStore();
 
     // accent phrase
-    const activeAudioKey = computed<string | null>(
+    const activeAudioKey = computed<string | undefined>(
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
