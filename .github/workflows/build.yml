@@ -169,6 +169,7 @@ jobs:
           # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
           7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/tmp/
 
+          mkdir -p voicevox_engine/voicevox_engine
           mv voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/* voicevox_engine/voicevox_engine
 
           # remove downloads to free space
