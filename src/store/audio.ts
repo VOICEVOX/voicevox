@@ -100,9 +100,6 @@ export const PUT_TEXTS = "PUT_TEXTS";
 export const OPEN_TEXT_EDIT_CONTEXT_MENU = "OPEN_TEXT_EDIT_CONTEXT_MENU";
 export const DETECTED_ENGINE_ERROR = "DETECTED_ENGINE_ERROR";
 export const RESTART_ENGINE = "RESTART_ENGINE";
-export const FETCH_AND_SET_SINGLE_ACCENT_PHRASE =
-  "FETCH_AND_SET_SINGLE_ACCENT_PHRASE";
-export const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 export const CHECK_FILE_EXISTS = "CHECK_FILE_EXISTS";
 
 // mutations
@@ -117,6 +114,7 @@ const SET_AUDIO_POST_PHONEME_LENGTH = "SET_AUDIO_POST_PHONEME_LENGTH";
 const SET_AUDIO_QUERY = "SET_AUDIO_QUERY";
 const SET_AUDIO_CHARACTER_INDEX = "SET_AUDIO_CHARACTER_INDEX";
 const SET_ACCENT_PHRASES = "SET_ACCENT_PHRASES";
+const SET_SINGLE_ACCENT_PHRASE = "SET_SINGLE_ACCENT_PHRASE";
 const SET_AUDIO_MORA_DATA = "SET_AUDIO_MORA_DATA";
 
 // actions
@@ -209,43 +207,43 @@ export const audioStore = typeAsStoreOptions({
       state.audioItems[audioKey].query!.speedScale = speedScale;
     },
     [SET_AUDIO_PITCH_SCALE]: (
-      draft,
+      state,
       { audioKey, pitchScale }: { audioKey: string; pitchScale: number }
     ) => {
-      draft.audioItems[audioKey].query!.pitchScale = pitchScale;
+      state.audioItems[audioKey].query!.pitchScale = pitchScale;
     },
     [SET_AUDIO_INTONATION_SCALE]: (
-      draft,
+      state,
       {
         audioKey,
         intonationScale,
       }: { audioKey: string; intonationScale: number }
     ) => {
-      draft.audioItems[audioKey].query!.intonationScale = intonationScale;
+      state.audioItems[audioKey].query!.intonationScale = intonationScale;
     },
     [SET_AUDIO_VOLUME_SCALE]: (
-      draft,
+      state,
       { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
     ) => {
-      draft.audioItems[audioKey].query!.volumeScale = volumeScale;
+      state.audioItems[audioKey].query!.volumeScale = volumeScale;
     },
     [SET_AUDIO_PRE_PHONEME_LENGTH]: (
-      draft,
+      state,
       {
         audioKey,
         prePhonemeLength,
       }: { audioKey: string; prePhonemeLength: number }
     ) => {
-      draft.audioItems[audioKey].query!.prePhonemeLength = prePhonemeLength;
+      state.audioItems[audioKey].query!.prePhonemeLength = prePhonemeLength;
     },
     [SET_AUDIO_POST_PHONEME_LENGTH]: (
-      draft,
+      state,
       {
         audioKey,
         postPhonemeLength,
       }: { audioKey: string; postPhonemeLength: number }
     ) => {
-      draft.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
+      state.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
     },
     [SET_AUDIO_QUERY]: (
       state,
@@ -267,6 +265,41 @@ export const audioStore = typeAsStoreOptions({
       }: { audioKey: string; accentPhrases: AccentPhrase[] }
     ) => {
       state.audioItems[audioKey].query!.accentPhrases = accentPhrases;
+    },
+    [SET_SINGLE_ACCENT_PHRASE]: (
+      state,
+      {
+        audioKey,
+        accentPhraseIndex,
+        accentPhrases,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        accentPhrases: AccentPhrase[];
+      }
+    ) => {
+      state.audioItems[audioKey].query!.accentPhrases.splice(
+        accentPhraseIndex,
+        1,
+        ...accentPhrases
+      );
+    },
+    [SET_AUDIO_MORA_DATA]: (
+      state,
+      {
+        audioKey,
+        accentPhraseIndex,
+        moraIndex,
+        pitch,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        pitch: number;
+      }
+    ) => {
+      const query = state.audioItems[audioKey].query!;
+      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
     [SET_AUDIO_MORA_DATA]: (
       state,
@@ -371,35 +404,6 @@ export const audioStore = typeAsStoreOptions({
     ) => {
       commit(SET_ACCENT_PHRASES, payload);
     },
-    [SET_SINGLE_ACCENT_PHRASE]: oldCreateCommandAction(
-      (
-        draft,
-        {
-          audioKey,
-          accentPhraseIndex,
-          accentPhrases,
-          popUntilPause,
-        }: {
-          audioKey: string;
-          accentPhraseIndex: number;
-          accentPhrases: AccentPhrase[];
-          popUntilPause: boolean;
-        }
-      ) => {
-        if (popUntilPause) {
-          while (
-            accentPhrases[accentPhrases.length - 1].pauseMora === undefined
-          ) {
-            accentPhrases.pop();
-          }
-        }
-        draft.audioItems[audioKey].query!.accentPhrases.splice(
-          accentPhraseIndex,
-          1,
-          ...accentPhrases
-        );
-      }
-    ),
     [SET_AUDIO_QUERY]: (
       { commit },
       payload: { audioKey: string; audioQuery: AudioQuery }
@@ -440,70 +444,6 @@ export const audioStore = typeAsStoreOptions({
       }).then((accentPhrases) =>
         dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
       );
-    },
-    [FETCH_AND_SET_SINGLE_ACCENT_PHRASE]: (
-      { state, dispatch },
-      {
-        audioKey,
-        newPronunciation,
-        accentPhraseIndex,
-        popUntilPause,
-      }: {
-        audioKey: string;
-        newPronunciation: string;
-        accentPhraseIndex: number;
-        popUntilPause: boolean;
-      }
-    ) => {
-      const audioItem = state.audioItems[audioKey];
-
-      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
-      // 「読み仮名」としてこれを処理する
-      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
-      if (kanaRegex.test(newPronunciation)) {
-        // ひらがなが混ざっている場合はカタカナに変換
-        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
-          return String.fromCharCode(s.charCodeAt(0) + 0x60);
-        });
-        // アクセントを末尾につけaccent phraseの生成をリクエスト
-        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
-        return dispatch(FETCH_ACCENT_PHRASES, {
-          text: katakana + "'",
-          characterIndex: audioItem.characterIndex!,
-          isKana: true,
-        })
-          .catch(() => {
-            // fallback
-            return dispatch(FETCH_ACCENT_PHRASES, {
-              text: newPronunciation,
-              characterIndex: audioItem.characterIndex!,
-              isKana: false,
-            });
-          })
-          .then((accentPhrases) => {
-            dispatch(SET_SINGLE_ACCENT_PHRASE, {
-              audioKey: audioKey,
-              accentPhraseIndex,
-              accentPhrases,
-              popUntilPause,
-            });
-          });
-      }
-
-      return api
-        .accentPhrasesAccentPhrasesPost({
-          text: newPronunciation,
-          speaker:
-            state.characterInfos![audioItem.characterIndex!].metas.speaker,
-        })
-        .then((accentPhrases) => {
-          dispatch(SET_SINGLE_ACCENT_PHRASE, {
-            audioKey: audioKey,
-            accentPhraseIndex,
-            accentPhrases,
-            popUntilPause,
-          });
-        });
     },
     [FETCH_MORA_DATA]: (
       { state },
@@ -882,6 +822,8 @@ export const COMMAND_CHANGE_CHARACTER_INDEX = "COMMAND_CHANGE_CHARACTER_INDEX";
 export const COMMAND_CHANGE_ACCENT = "COMMAND_CHANGE_ACCENT";
 export const COMMAND_CHANGE_ACCENT_PHRASE_SPLIT =
   "COMMAND_CHANGE_ACCENT_PHRASE_SPLIT";
+export const COMMAND_CHANGE_SINGLE_ACCENT_PHRASE =
+  "COMMAND_CHANGE_SINGLE_ACCENT_PHRASE";
 export const COMMAND_SET_AUDIO_MORA_DATA = "COMMAND_SET_AUDIO_MORA_DATA";
 export const COMMAND_SET_AUDIO_SPEED_SCALE = "COMMAND_SET_AUDIO_SPEED_SCALE";
 export const COMMAND_SET_AUDIO_PITCH_SCALE = "COMMAND_SET_AUDIO_PITCH_SCALE";
@@ -1117,6 +1059,69 @@ export const audioCommandStore = typeAsStoreOptions({
         throw error;
       }
     },
+    [COMMAND_CHANGE_SINGLE_ACCENT_PHRASE]: async (
+      { state, dispatch, commit },
+      {
+        audioKey,
+        newPronunciation,
+        accentPhraseIndex,
+        popUntilPause,
+      }: {
+        audioKey: string;
+        newPronunciation: string;
+        accentPhraseIndex: number;
+        popUntilPause: boolean;
+      }
+    ) => {
+      const characterIndex = state.audioItems[audioKey].characterIndex;
+
+      let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+
+      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
+      // 「読み仮名」としてこれを処理する
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        // ひらがなが混ざっている場合はカタカナに変換
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
+        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
+        newAccentPhrasesSegment = (await dispatch(FETCH_ACCENT_PHRASES, {
+          text: katakana + "'",
+          characterIndex,
+          isKana: true,
+        }).catch(
+          // fallback
+          () =>
+            dispatch(FETCH_ACCENT_PHRASES, {
+              text: newPronunciation,
+              characterIndex,
+              isKana: false,
+            })
+        )) as AccentPhrase[];
+      } else {
+        newAccentPhrasesSegment = (await dispatch(FETCH_ACCENT_PHRASES, {
+          text: newPronunciation,
+          characterIndex: characterIndex,
+        })) as AccentPhrase[];
+      }
+
+      if (popUntilPause) {
+        while (
+          newAccentPhrasesSegment[newAccentPhrasesSegment.length - 1]
+            .pauseMora === undefined
+        ) {
+          newAccentPhrasesSegment.pop();
+        }
+      }
+
+      commit(COMMAND_CHANGE_SINGLE_ACCENT_PHRASE, {
+        audioKey,
+        accentPhraseIndex,
+        accentPhrases: newAccentPhrasesSegment,
+      });
+    },
     [COMMAND_SET_AUDIO_MORA_DATA]: (
       { commit },
       payload: {
@@ -1234,6 +1239,16 @@ export const audioCommandStore = typeAsStoreOptions({
       }
     ) => {
       audioStore.mutations[SET_ACCENT_PHRASES](draft, payload);
+    },
+    [COMMAND_CHANGE_SINGLE_ACCENT_PHRASE]: (
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        accentPhrases: AccentPhrase[];
+      }
+    ) => {
+      audioStore.mutations[SET_SINGLE_ACCENT_PHRASE](draft, payload);
     },
     [COMMAND_SET_AUDIO_MORA_DATA]: (
       draft,
