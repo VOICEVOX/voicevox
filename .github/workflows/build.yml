@@ -9,8 +9,8 @@ on:
       - created
 
 env:
-  VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: check-2021-09-25
+  VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
+  VOICEVOX_ENGINE_VERSION: 0.5.2-aoirint-60
 
 jobs:
   build-noengine-prepackage:
