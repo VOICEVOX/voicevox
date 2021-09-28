@@ -1,5 +1,11 @@
-import { Action, ActionContext, StoreOptions } from "vuex";
-import { State } from "./type";
+import {
+  Action,
+  ActionContext,
+  ActionsBase,
+  MutationsBase,
+  StoreOptions,
+} from "./vuex";
+import { AudioGetters, State, UiActions, UiGetters, UiMutations } from "./type";
 import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";
@@ -16,18 +22,33 @@ export const DETECT_PINNED = "DETECT_PINNED";
 export const DETECT_UNPINNED = "DETECT_UNPINNED";
 export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
 
-export function createUILockAction<S, P>(
-  action: (context: ActionContext<S, S>, payload: P) => Promise<any>
-): Action<S, S> {
-  return (context, payload: P) => {
-    context.commit(LOCK_UI);
+export function createUILockAction<
+  S,
+  A extends ActionsBase,
+  M extends MutationsBase,
+  K extends keyof ActionsBase
+>(
+  action: (
+    context: ActionContext<
+      S,
+      S,
+      A,
+      M extends UiMutations ? M : M & UiMutations
+    >,
+    payload: Parameters<A[K]>[0]
+  ) => ReturnType<A[K]> extends Promise<any>
+    ? ReturnType<A[K]>
+    : Promise<ReturnType<A[K]>>
+): Action<S, S, A, M extends UiMutations ? M : M & UiMutations, K> {
+  return (context, payload: Parameters<A[K]>[0]) => {
+    context.commit(LOCK_UI, undefined);
     return action(context, payload).finally(() => {
-      context.commit(UNLOCK_UI);
+      context.commit(UNLOCK_UI, undefined);
     });
   };
 }
 
-export const uiStore = {
+export const uiStore: StoreOptions<State, UiGetters, UiActions, UiMutations> = {
   getters: {
     [UI_LOCKED](state) {
       return state.uiLockCount > 0;
@@ -75,10 +96,10 @@ export const uiStore = {
 
   actions: {
     [LOCK_UI]({ commit }) {
-      commit(LOCK_UI);
+      commit(LOCK_UI, undefined);
     },
     [UNLOCK_UI]({ commit }) {
-      commit(UNLOCK_UI);
+      commit(UNLOCK_UI, undefined);
     },
     [ASYNC_UI_LOCK]: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
@@ -91,8 +112,8 @@ export const uiStore = {
     ) {
       if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-      if (isHelpDialogOpen) commit(LOCK_UI);
-      else commit(UNLOCK_UI);
+      if (isHelpDialogOpen) commit(LOCK_UI, undefined);
+      else commit(UNLOCK_UI, undefined);
 
       commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
     },
@@ -102,8 +123,8 @@ export const uiStore = {
     ) {
       if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-      if (isSettingDialogOpen) commit(LOCK_UI);
-      else commit(UNLOCK_UI);
+      if (isSettingDialogOpen) commit(LOCK_UI, undefined);
+      else commit(UNLOCK_UI, undefined);
 
       commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
     },
@@ -118,16 +139,21 @@ export const uiStore = {
       });
     },
     async [DETECT_UNMAXIMIZED]({ commit }) {
-      commit(DETECT_UNMAXIMIZED);
+      commit(DETECT_UNMAXIMIZED, undefined);
     },
     async [DETECT_MAXIMIZED]({ commit }) {
-      commit(DETECT_MAXIMIZED);
+      commit(DETECT_MAXIMIZED, undefined);
     },
     async [DETECT_PINNED]({ commit }) {
-      commit(DETECT_PINNED);
+      commit(DETECT_PINNED, undefined);
     },
     async [DETECT_UNPINNED]({ commit }) {
-      commit(DETECT_UNPINNED);
+      commit(DETECT_UNPINNED, undefined);
     },
   },
-} as StoreOptions<State>;
+} as StoreOptions<
+  State,
+  Partial<AudioGetters> & UiGetters,
+  UiActions,
+  UiMutations
+>;

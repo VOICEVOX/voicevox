@@ -1,12 +1,8 @@
 import { InjectionKey } from "vue";
-import {
-  createLogger,
-  createStore,
-  Store,
-  useStore as baseUseStore,
-} from "vuex";
+import { createLogger } from "vuex";
+import { createStore, Store, useStore as baseUseStore } from "./vuex";
 
-import { State } from "./type";
+import { AllActions, AllGetters, AllMutations, State } from "./type";
 import { commandStore } from "./command";
 import { audioStore, audioCommandStore } from "./audio";
 import { projectStore } from "./project";
@@ -21,9 +17,11 @@ export const LOG_ERROR = "LOG_ERROR";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
-export const storeKey: InjectionKey<Store<State>> = Symbol();
+export const storeKey: InjectionKey<
+  Store<State, AllGetters, AllActions, AllMutations>
+> = Symbol();
 
-export const store = createStore<State>({
+export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
     engineState: "STARTING",
     audioItems: {},

@@ -7,12 +7,18 @@ import {
   EngineState,
   SaveResultObject,
   State,
-  typeAsStoreOptions,
   commandMutationsCreator,
+  AudioGetters,
+  AudioActions,
+  AudioMutations,
+  AudioCommandActions,
+  AudioCommandGetters,
+  AudioCommandMutations,
 } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { StoreOptions } from "@/store/vuex";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -127,7 +133,12 @@ SET_ACCENT_PHRASES;
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
-export const audioStore = typeAsStoreOptions({
+export const audioStore: StoreOptions<
+  State,
+  AudioGetters,
+  AudioActions,
+  AudioMutations
+> = {
   getters: {
     [ACTIVE_AUDIO_KEY](state) {
       return state._activeAudioKey !== undefined &&
@@ -288,7 +299,7 @@ export const audioStore = typeAsStoreOptions({
   },
 
   actions: {
-    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }, _) => {
+    [START_WAITING_ENGINE]: createUILockAction(async ({ state, commit }) => {
       let engineState = state.engineState;
       for (let i = 0; i < 100; i++) {
         engineState = state.engineState;
@@ -345,7 +356,7 @@ export const audioStore = typeAsStoreOptions({
       {
         audioItem,
         prevAudioKey,
-      }: { audioItem: AudioItem; prevAudioKey: string | undefined }
+      }: { audioItem: AudioItem; prevAudioKey?: string }
     ) {
       const audioKey = uuidv4();
       commit(INSERT_AUDIO_ITEM, { audioItem, audioKey, prevAudioKey });
@@ -412,7 +423,7 @@ export const audioStore = typeAsStoreOptions({
         text,
         characterIndex,
         isKana,
-      }: { text: string; characterIndex: number; isKana: boolean | undefined }
+      }: { text: string; characterIndex: number; isKana?: boolean }
     ) => {
       return api
         .accentPhrasesAccentPhrasesPost({
@@ -436,9 +447,12 @@ export const audioStore = typeAsStoreOptions({
 
       return dispatch(FETCH_ACCENT_PHRASES, {
         text: audioItem.text,
-        characterIndex: audioItem.characterIndex,
-      }).then((accentPhrases) =>
-        dispatch(SET_ACCENT_PHRASES, { audioKey, accentPhrases })
+        characterIndex: audioItem.characterIndex!,
+      }).then(async (accentPhrases) =>
+        dispatch(SET_ACCENT_PHRASES, {
+          audioKey,
+          accentPhrases: await accentPhrases,
+        })
       );
     },
     [FETCH_AND_SET_SINGLE_ACCENT_PHRASE]: (
@@ -480,11 +494,11 @@ export const audioStore = typeAsStoreOptions({
               isKana: false,
             });
           })
-          .then((accentPhrases) => {
+          .then(async (accentPhrases) => {
             dispatch(SET_SINGLE_ACCENT_PHRASE, {
               audioKey: audioKey,
               accentPhraseIndex,
-              accentPhrases,
+              accentPhrases: await accentPhrases,
               popUntilPause,
             });
           });
@@ -576,9 +590,9 @@ export const audioStore = typeAsStoreOptions({
 
       return dispatch(FETCH_AUDIO_QUERY, {
         text: audioItem.text,
-        characterIndex: audioItem.characterIndex,
-      }).then((audioQuery) =>
-        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
+        characterIndex: audioItem.characterIndex!,
+      }).then(async (audioQuery) =>
+        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery: await audioQuery })
       );
     },
     [GENERATE_AUDIO]: createUILockAction(
@@ -615,7 +629,7 @@ export const audioStore = typeAsStoreOptions({
           encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
-        const blobPromise: Promise<Blob> = dispatch(GENERATE_AUDIO, {
+        const blobPromise = dispatch(GENERATE_AUDIO, {
           audioKey,
         });
 
@@ -866,14 +880,14 @@ export const audioStore = typeAsStoreOptions({
       await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
       window.electron
         .restartEngine()
-        .then(() => dispatch(START_WAITING_ENGINE))
-        .catch(() => dispatch(DETECTED_ENGINE_ERROR));
+        .then(() => dispatch(START_WAITING_ENGINE, undefined))
+        .catch(() => dispatch(DETECTED_ENGINE_ERROR, undefined));
     },
     [CHECK_FILE_EXISTS]({ commit }, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
     },
   },
-} as const);
+};
 
 // commands
 export const COMMAND_REGISTER_AUDIO_ITEM = "COMMAND_REGISTER_AUDIO_ITEM";
@@ -893,7 +907,13 @@ export const COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH =
 export const COMMAND_SET_AUDIO_POST_PHONEME_LENGTH =
   "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH";
 
-export const audioCommandStore = typeAsStoreOptions({
+export const audioCommandStore: StoreOptions<
+  State,
+  AudioCommandGetters,
+  AudioCommandActions,
+  AudioCommandMutations
+> = {
+  getters: {},
   actions: {
     [COMMAND_REGISTER_AUDIO_ITEM]: (
       { commit },
@@ -943,13 +963,10 @@ export const audioCommandStore = typeAsStoreOptions({
           });
         } else {
           const text = state.audioItems[audioKey].text;
-          const query: AudioQuery | undefined = await dispatch(
-            FETCH_AUDIO_QUERY,
-            {
-              text: text,
-              characterIndex: characterIndex,
-            }
-          );
+          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+            text: text,
+            characterIndex: characterIndex,
+          });
           commit(COMMAND_CHANGE_CHARACTER_INDEX, {
             characterIndex,
             audioKey,
@@ -988,11 +1005,14 @@ export const audioCommandStore = typeAsStoreOptions({
         try {
           const characterIndex: number =
             state.audioItems[audioKey].characterIndex ?? 0;
-          const resultAccentPhrases = await dispatch(FETCH_AND_COPY_MORA_DATA, {
-            accentPhrases: newAccentPhrases,
-            characterIndex,
-            copyIndexes: [accentPhraseIndex],
-          });
+          const resultAccentPhrases: AccentPhrase[] = await dispatch(
+            FETCH_AND_COPY_MORA_DATA,
+            {
+              accentPhrases: newAccentPhrases,
+              characterIndex,
+              copyIndexes: [accentPhraseIndex],
+            }
+          );
 
           commit(COMMAND_CHANGE_ACCENT, {
             audioKey,
@@ -1100,11 +1120,14 @@ export const audioCommandStore = typeAsStoreOptions({
       }
 
       try {
-        const resultAccentPhrases = await dispatch(FETCH_AND_COPY_MORA_DATA, {
-          accentPhrases: newAccentPhrases,
-          characterIndex,
-          copyIndexes: changeIndexes,
-        });
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          FETCH_AND_COPY_MORA_DATA,
+          {
+            accentPhrases: newAccentPhrases,
+            characterIndex,
+            copyIndexes: changeIndexes,
+          }
+        );
         commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
           audioKey,
           accentPhrases: resultAccentPhrases,
@@ -1283,4 +1306,9 @@ export const audioCommandStore = typeAsStoreOptions({
       audioStore.mutations[SET_AUDIO_POST_PHONEME_LENGTH](draft, payload);
     },
   }),
-} as const);
+} as StoreOptions<
+  State,
+  AudioCommandGetters,
+  Partial<AudioActions> & AudioCommandActions,
+  AudioCommandMutations
+>;

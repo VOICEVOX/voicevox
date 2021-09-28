@@ -1,16 +1,23 @@
-import { StoreOptions } from "vuex";
+import { StoreOptions } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import {
   REGISTER_AUDIO_ITEM,
   REMOVE_ALL_AUDIO_ITEM,
   FETCH_MORA_DATA,
 } from "@/store/audio";
-import { State, AudioItem } from "@/store/type";
+import {
+  State,
+  AudioItem,
+  ProjectGetters,
+  ProjectActions,
+  ProjectMutations,
+  AudioActions,
+} from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
-export const CREATE_NEW_PROJECT = "NEW_PROJECT";
+export const CREATE_NEW_PROJECT = "CREATE_NEW_PROJECT";
 export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
 export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
 export const PROJECT_NAME = "PROJECT_NAME";
@@ -18,7 +25,12 @@ export const SET_PROJECT_FILEPATH = "SET_PROJECT_FILEPATH";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
-export const projectStore = {
+export const projectStore: StoreOptions<
+  State,
+  ProjectGetters,
+  ProjectActions,
+  ProjectMutations
+> = {
   getters: {
     [PROJECT_NAME](state) {
       return state.projectFilePath !== undefined
@@ -28,7 +40,7 @@ export const projectStore = {
   },
 
   mutations: {
-    [SET_PROJECT_FILEPATH](state, { filePath }: { filePath: string }) {
+    [SET_PROJECT_FILEPATH](state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
   },
@@ -48,7 +60,7 @@ export const projectStore = {
           return;
         }
 
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
+        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
 
         const audioItem: AudioItem = { text: "", characterIndex: 0 };
         await context.dispatch(REGISTER_AUDIO_ITEM, {
@@ -194,7 +206,7 @@ export const projectStore = {
           ) {
             return;
           }
-          await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+          await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
@@ -254,7 +266,12 @@ export const projectStore = {
       }
     ),
   },
-} as StoreOptions<State>;
+} as StoreOptions<
+  State,
+  ProjectGetters,
+  Partial<AudioActions> & ProjectActions,
+  ProjectMutations
+>;
 
 const moraSchema = {
   properties: {
