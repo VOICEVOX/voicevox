@@ -113,10 +113,10 @@ export type AudioActions = {
   REMOVE_ALL_AUDIO_ITEM(): void;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
-    prevAudioKey: string | undefined;
+    prevAudioKey?: string;
   }): string;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
-  GET_AUDIO_CACHE(payload: { audioKey: string }): Blob | null;
+  GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
   SET_ACCENT_PHRASES(payload: {
     audioKey: string;
     accentPhrases: AccentPhrase[];
@@ -131,8 +131,8 @@ export type AudioActions = {
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
     characterIndex: number;
-    isKana: boolean | undefined;
-  }): AccentPhrase[];
+    isKana?: boolean;
+  }): Promise<AccentPhrase[]>;
   FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
   FETCH_AND_SET_SINGLE_ACCENT_PHRASE(payload: {
     audioKey: string;
@@ -143,16 +143,16 @@ export type AudioActions = {
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
-  }): AccentPhrase[];
+  }): Promise<AccentPhrase[]>;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
     copyIndexes: number[];
-  }): AccentPhrase[];
+  }): Promise<AccentPhrase[]>;
   FETCH_AUDIO_QUERY(payload: {
     text: string;
     characterIndex: number;
-  }): AudioQuery;
+  }): Promise<AudioQuery>;
   FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
   GENERATE_AND_SAVE_AUDIO(payload: {
@@ -163,7 +163,7 @@ export type AudioActions = {
   GENERATE_AND_SAVE_ALL_AUDIO(payload: {
     dirPath?: string;
     encoding: EncodingType;
-  }): SaveResultObject[];
+  }): SaveResultObject[] | undefined;
   IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
   PLAY_AUDIO(payload: { audioKey: string }): boolean;
   STOP_AUDIO(payload: { audioKey: string }): void;
@@ -177,7 +177,7 @@ export type AudioActions = {
   OPEN_TEXT_EDIT_CONTEXT_MENU(): void;
   DETECTED_ENGINE_ERROR(): void;
   RESTART_ENGINE(): void;
-  CHECK_FILE_EXISTS(payload: { file: string }): boolean;
+  CHECK_FILE_EXISTS(payload: { file: string }): Promise<boolean>;
 };
 
 /*
@@ -334,13 +334,13 @@ export type IndexGetters = {};
 export type IndexMutations = {};
 
 export type IndexActions = {
-  GET_POLICY_TEXT(): string;
-  GET_OSS_LICENSES(): Record<string, string>[];
-  GET_UPDATE_INFOS(): UpdateInfo[];
+  GET_POLICY_TEXT(): Promise<string>;
+  GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
+  GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
   SHOW_WARNING_DIALOG(payload: {
     title: string;
     message: string;
-  }): Electron.MessageBoxReturnValue;
+  }): Promise<Electron.MessageBoxReturnValue>;
   LOG_ERROR(payload: unknown[]): void;
 };
 
@@ -353,7 +353,7 @@ export type ProjectGetters = {
 };
 
 export type ProjectMutations = {
-  SET_PROJECT_FILEPATH: { filePath: string };
+  SET_PROJECT_FILEPATH: { filePath?: string };
 };
 
 export type ProjectActions = {
@@ -376,7 +376,7 @@ export type SettingMutations = {
 
 export type SettingActions = {
   GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(): void;
+  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
 };
 
 /*
