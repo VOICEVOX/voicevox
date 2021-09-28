@@ -32,6 +32,7 @@ export class Store<
   readonly getters!: G;
 
   // 既に型がつけられているものを上書きすることになるので、TS2564を吐く、それの回避
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   dispatch: Dispatch<A>;
