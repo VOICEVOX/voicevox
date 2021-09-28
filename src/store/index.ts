@@ -52,6 +52,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...commandStore.getters,
     ...projectStore.getters,
     ...settingStore.getters,
+    ...audioCommandStore.getters,
   },
 
   mutations: {
