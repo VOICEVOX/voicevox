@@ -26,7 +26,7 @@ export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
  * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
  * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
  * */
-class OldCommand<S> {
+export class OldCommand<S> {
   undoOperations: Operation[];
   redoOperations: Operation[];
 
