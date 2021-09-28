@@ -1,4 +1,8 @@
-import { MutationTree, MutationsBase, Action } from "./vuex";
+import {
+  MutationTree,
+  MutationsBase,
+  Getter,
+} from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import {
@@ -463,6 +467,18 @@ export type UnionActions =
   | ProjectActions
   | SettingActions
   | UiActions;
+
+export const useAllStoreGetter = <G extends UnionGetters, K extends keyof G>(
+  arg: (
+    state: State,
+    getters: AllGetters,
+    rootState: State,
+    rootGetters: any
+  ) => G[K]
+): Getter<State, State, G, K> => {
+  return (state, getters, rootState, rootGetters) =>
+    arg(state, getters as AllGetters, rootState, rootGetters);
+};
 
 export const useAllStoreAction = <K extends keyof AllActions>(
   arg: Action<State, State, AllActions, AllMutations, K>
