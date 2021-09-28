@@ -347,7 +347,7 @@ export type IndexActions = {
     title: string;
     message: string;
   }): Promise<Electron.MessageBoxReturnValue>;
-  LOG_ERROR(payload: unknown[]): void;
+  LOG_ERROR(...payload: unknown[]): void;
 };
 
 /*
