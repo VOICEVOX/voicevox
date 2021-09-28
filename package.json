@@ -81,6 +81,7 @@
     "sass-loader": "^8.0.2",
     "spectron": "14.0.0",
     "typescript": "^4.2.4",
-    "vue-cli-plugin-electron-builder": "~2.0.0"
+    "vue-cli-plugin-electron-builder": "~2.0.0",
+    "yargs": "^17.2.1"
   }
 }
