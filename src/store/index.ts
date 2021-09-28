@@ -55,7 +55,7 @@ export const indexStore: StoreOptions<
       return await window.electron.getUpdateInfos();
     },
     [SHOW_WARNING_DIALOG]: async (
-      context,
+      _,
       { title, message }: { title: string; message: string }
     ) => {
       return await window.electron.showWarningDialog({ title, message });
