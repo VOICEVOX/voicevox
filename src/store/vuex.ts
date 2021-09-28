@@ -19,6 +19,8 @@ export type GettersBase = Record<string, any>;
 export type ActionsBase = Record<string, PayloadFunction>;
 export type MutationsBase = Record<string, any>;
 
+export type PromiseType<T> = T extends Promise<infer P> ? P : T;
+
 export class Store<
   S,
   G extends GettersBase,
@@ -70,7 +72,7 @@ export interface Dispatch<A extends ActionsBase> {
     type: T,
     payload: Parameters<A[T]>[0],
     options?: DispatchOptions
-  ): Promise<ReturnType<A[T]>>;
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
   <T extends keyof A>(
     payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
       string,
@@ -80,7 +82,7 @@ export interface Dispatch<A extends ActionsBase> {
       : // eslint-disable-next-line @typescript-eslint/ban-types
         {}),
     options?: DispatchOptions
-  ): Promise<ReturnType<A[T]>>;
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
 export interface Commit<M extends MutationsBase> {
