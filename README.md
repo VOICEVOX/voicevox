@@ -34,6 +34,15 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 npm run electron:build
 ```
 
+## 依存ライブラリのライセンス情報の生成
+
+```bash
+# get licenses.json from voicevox_engine as engine_licenses.json
+
+npm run license:generate -- -o voicevox_licenses.json
+npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
+```
+
 ## コードフォーマット
 
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
