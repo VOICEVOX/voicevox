@@ -401,11 +401,11 @@ ipcMainHandle(
       });
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info("Killing current ENGINE process...");
+      log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
       treeKill(engineProcess.pid, (error) => {
-        // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
-        if (error !== null) {
-          log.error("Failed to restart ENGINE");
+        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+        if (error != null) {
+          log.error("Failed to kill ENGINE");
           log.error(error);
 
           reject();
