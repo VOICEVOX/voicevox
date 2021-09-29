@@ -440,13 +440,27 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("quit", () => {
-  willQuitEngine = true;
-  try {
-    engineProcess.pid != undefined && treeKill(engineProcess.pid);
-  } catch (e: unknown) {
-    log.error("engine kill error");
-    log.error(e);
+let engineRunning = true;
+
+// Called before window closing
+app.on("before-quit", (event) => {
+  // ENGINE running
+  if (engineRunning) {
+    event.preventDefault();
+
+    engineProcess.once('close', () => {
+      engineRunning = false;
+      log.info('Quiting app');
+      app.quit()
+    })
+
+    willQuitEngine = true;
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error) {
+      log.error("engine kill error");
+      log.error(error);
+    }
   }
 });
 
