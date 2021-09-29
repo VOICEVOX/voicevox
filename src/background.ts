@@ -375,11 +375,13 @@ ipcMainHandle(
   "RESTART_ENGINE",
   () =>
     new Promise((resolve, reject) => {
-      log.info(`Restarting ENGINE (previous exit code: ${engineProcess.exitCode})`)
+      log.info(
+        `Restarting ENGINE (previous exit code: ${engineProcess.exitCode})`
+      );
 
       // エンジンのプロセスが存在しない（すでに終了している）場合
       if (engineProcess.exitCode !== null) {
-        log.info(`ENGINE process is not started yet. Starting ENGINE...`)
+        log.info(`ENGINE process is not started yet. Starting ENGINE...`);
 
         runEngine();
         resolve();
@@ -392,18 +394,18 @@ ipcMainHandle(
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
       engineProcess.once("close", () => {
-        log.info(`ENGINE process killed. Starting a new ENGINE...`)
+        log.info(`ENGINE process killed. Starting a new ENGINE...`);
 
         runEngine();
         resolve();
       });
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info(`Killing current ENGINE process...`)
+      log.info(`Killing current ENGINE process...`);
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
         if (error !== null) {
-          log.error(`Failed to restart ENGINE`)
+          log.error(`Failed to restart ENGINE`);
           log.error(error);
 
           reject();
@@ -451,16 +453,16 @@ app.on("window-all-closed", () => {
 // Called before window closing
 app.on("before-quit", (event) => {
   if (shouldKillEngineBeforeQuit) {
-    log.info("Killing ENGINE before app quit")
+    log.info("Killing ENGINE before app quit");
     event.preventDefault();
 
     engineProcess.once("close", () => {
       shouldKillEngineBeforeQuit = false;
-      log.info("ENGINE killed. Quiting app")
+      log.info("ENGINE killed. Quiting app");
       app.quit(); // attempt to quit app again (shouldKillEngineBeforeQuit == false)
     });
 
-    log.info("Killing ENGINE...")
+    log.info("Killing ENGINE...");
     willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
