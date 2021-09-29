@@ -12,6 +12,10 @@ env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.6.0-aoirint-1
 
+  # FIXME: implement build with production resources in Hiroshiba/voicevox
+  # Temporarily, skip uploading to GitHub Release (use Artifact instead)
+  SKIP_UPLOADING_RELEASE_ASSET: 1
+
 jobs:
   build-noengine-prepackage:
     env:
@@ -311,10 +315,9 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
 
-  # FIXME: build with production resources in Hiroshiba/voicevox
-  # Temporarily, skip uploading to GitHub Release (use Artifact instead)
+
   upload-distributable-to-release:
-    if: false && (github.event.release.tag_name != '') # If release
+    if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && github.event.release.tag_name != '' # If release
     needs: [build-distributable]
     strategy:
       fail-fast: false
