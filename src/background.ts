@@ -375,8 +375,12 @@ ipcMainHandle(
   "RESTART_ENGINE",
   () =>
     new Promise((resolve, reject) => {
-      // エンジンのプロセスが存在しない場合
+      log.info(`Restarting ENGINE (previous exit code: ${engineProcess.exitCode})`)
+
+      // エンジンのプロセスが存在しない（すでに終了している）場合
       if (engineProcess.exitCode !== null) {
+        log.info(`ENGINE process is not started yet. Starting ENGINE...`)
+
         runEngine();
         resolve();
         return;
