@@ -73,24 +73,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
-import {
-  FETCH_AND_SET_ACCENT_PHRASES,
-  FETCH_AND_SET_AUDIO_QUERY,
-  GENERATE_AND_SAVE_AUDIO,
-  HAVE_AUDIO_QUERY,
-  SET_ACTIVE_AUDIO_KEY,
-  SET_AUDIO_TEXT,
-  COMMAND_CHANGE_SPEAKER,
-  COMMAND_REGISTER_AUDIO_ITEM,
-  PLAY_AUDIO,
-  STOP_AUDIO,
-  COMMAND_REMOVE_AUDIO_ITEM,
-  IS_ACTIVE,
-  PUT_TEXTS,
-  OPEN_TEXT_EDIT_CONTEXT_MENU,
-} from "@/store/audio";
 import { AudioItem } from "@/store/type";
-import { UI_LOCKED } from "@/store/ui";
 import { CharacterInfo } from "@/type/preload";
 import { QInput } from "quasar";
 
@@ -114,9 +97,9 @@ export default defineComponent({
       () => store.state.audioStates[props.audioKey].nowGenerating
     );
 
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
     const haveAudioQuery = computed(() =>
-      store.getters[HAVE_AUDIO_QUERY](props.audioKey)
+      store.getters.HAVE_AUDIO_QUERY(props.audioKey)
     );
 
     const selectedCharacterInfo = computed(() =>
@@ -133,36 +116,41 @@ export default defineComponent({
 
     // TODO: change audio textにしてvuexに載せ替える
     const setAudioText = async (text: string) => {
-      await store.dispatch(SET_AUDIO_TEXT, { audioKey: props.audioKey, text });
+      await store.dispatch("SET_AUDIO_TEXT", {
+        audioKey: props.audioKey,
+        text,
+      });
     };
     const updateAudioQuery = async () => {
       if (!haveAudioQuery.value) {
-        store.dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey: props.audioKey });
+        store.dispatch("FETCH_AND_SET_AUDIO_QUERY", {
+          audioKey: props.audioKey,
+        });
       } else {
-        store.dispatch(FETCH_AND_SET_ACCENT_PHRASES, {
+        store.dispatch("FETCH_AND_SET_ACCENT_PHRASES", {
           audioKey: props.audioKey,
         });
       }
     };
     const changeSpeaker = (speaker: number) => {
-      store.dispatch(COMMAND_CHANGE_SPEAKER, {
+      store.dispatch("COMMAND_CHANGE_SPEAKER", {
         audioKey: props.audioKey,
         speaker,
       });
     };
     const setActiveAudioKey = () => {
-      store.dispatch(SET_ACTIVE_AUDIO_KEY, { audioKey: props.audioKey });
+      store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
     };
     const save = () => {
-      store.dispatch(GENERATE_AND_SAVE_AUDIO, { audioKey: props.audioKey });
+      store.dispatch("GENERATE_AND_SAVE_AUDIO", { audioKey: props.audioKey });
     };
 
     const play = () => {
-      store.dispatch(PLAY_AUDIO, { audioKey: props.audioKey });
+      store.dispatch("PLAY_AUDIO", { audioKey: props.audioKey });
     };
 
     const stop = () => {
-      store.dispatch(STOP_AUDIO, { audioKey: props.audioKey });
+      store.dispatch("STOP_AUDIO", { audioKey: props.audioKey });
     };
 
     // コピペしたときに句点と改行で区切る
@@ -185,7 +173,7 @@ export default defineComponent({
             updateAudioQuery();
           }
 
-          store.dispatch(PUT_TEXTS, {
+          store.dispatch("PUT_TEXTS", {
             texts,
             speaker: audioItem.value.speaker,
             prevAudioKey,
@@ -195,7 +183,7 @@ export default defineComponent({
     };
 
     // 選択されている
-    const isActive = computed(() => store.getters[IS_ACTIVE](props.audioKey));
+    const isActive = computed(() => store.getters.IS_ACTIVE(props.audioKey));
 
     // 上下に移動
     const audioKeys = computed(() => store.state.audioKeys);
@@ -229,7 +217,9 @@ export default defineComponent({
           emit("focusCell", { audioKey: audioKeys.value[index + 1] });
         }
 
-        store.dispatch(COMMAND_REMOVE_AUDIO_ITEM, { audioKey: props.audioKey });
+        store.dispatch("COMMAND_REMOVE_AUDIO_ITEM", {
+          audioKey: props.audioKey,
+        });
       }
     };
 
@@ -240,14 +230,14 @@ export default defineComponent({
 
     // テキスト編集エリアの右クリック
     const onRightClickTextField = () => {
-      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU, undefined);
+      store.dispatch("OPEN_TEXT_EDIT_CONTEXT_MENU", undefined);
     };
 
     // 下にセルを追加
     const addCellBellow = async () => {
       const speaker = store.state.audioItems[props.audioKey].speaker;
       const audioItem: AudioItem = { text: "", speaker: speaker };
-      await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
+      await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: props.audioKey,
       });
@@ -282,7 +272,9 @@ export default defineComponent({
     onMounted(() => {
       // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
       if (audioItem.value.query == undefined) {
-        store.dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey: props.audioKey });
+        store.dispatch("FETCH_AND_SET_AUDIO_QUERY", {
+          audioKey: props.audioKey,
+        });
       }
     });
 

@@ -22,22 +22,9 @@
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
-import { UI_LOCKED } from "@/store/ui";
-import {
-  SAVE_PROJECT_FILE,
-  LOAD_PROJECT_FILE,
-  PROJECT_NAME,
-  CREATE_NEW_PROJECT,
-} from "@/store/project";
-import {
-  GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
-  RESTART_ENGINE,
-} from "@/store/audio";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import Mousetrap from "mousetrap";
-import { SaveResultObject } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
@@ -82,8 +69,8 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const projectName = computed(() => store.getters[PROJECT_NAME]);
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const projectName = computed(() => store.getters.PROJECT_NAME);
 
     const menudata = ref<MenuItemData[]>([
       {
@@ -95,7 +82,7 @@ export default defineComponent({
             label: "新規プロジェクト",
             shortCut: "Ctrl+N",
             onClick: async () => {
-              await store.dispatch(CREATE_NEW_PROJECT, {});
+              await store.dispatch("CREATE_NEW_PROJECT", {});
             },
           },
           {
@@ -103,9 +90,12 @@ export default defineComponent({
             label: "音声書き出し",
             shortCut: "Ctrl+E",
             onClick: async () => {
-              const result = await store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
-                encoding: store.state.savingSetting.fileEncoding,
-              });
+              const result = await store.dispatch(
+                "GENERATE_AND_SAVE_ALL_AUDIO",
+                {
+                  encoding: store.state.savingSetting.fileEncoding,
+                }
+              );
 
               let successArray: Array<string | undefined> = [];
               let writeErrorArray: Array<string | undefined> = [];
@@ -142,7 +132,7 @@ export default defineComponent({
             type: "button",
             label: "テキスト読み込み",
             onClick: () => {
-              store.dispatch(IMPORT_FROM_FILE, {});
+              store.dispatch("IMPORT_FROM_FILE", {});
             },
           },
           { type: "separator" },
@@ -151,7 +141,7 @@ export default defineComponent({
             label: "プロジェクトを上書き保存",
             shortCut: "Ctrl+S",
             onClick: () => {
-              store.dispatch(SAVE_PROJECT_FILE, { overwrite: true });
+              store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
             },
           },
           {
@@ -159,7 +149,7 @@ export default defineComponent({
             label: "プロジェクトを名前を付けて保存",
             shortCut: "Ctrl+Shift+S",
             onClick: () => {
-              store.dispatch(SAVE_PROJECT_FILE, {});
+              store.dispatch("SAVE_PROJECT_FILE", {});
             },
           },
           {
@@ -167,7 +157,7 @@ export default defineComponent({
             label: "プロジェクト読み込み",
             shortCut: "Ctrl+O",
             onClick: () => {
-              store.dispatch(LOAD_PROJECT_FILE, {});
+              store.dispatch("LOAD_PROJECT_FILE", {});
             },
           },
         ],
@@ -179,7 +169,7 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch(RESTART_ENGINE, undefined),
+            onClick: () => store.dispatch("RESTART_ENGINE", undefined),
           },
         ],
       },
