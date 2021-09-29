@@ -93,7 +93,7 @@ export function oldCreateCommandAction<S, P>(
 ): Action<S, S> {
   const commandFactory = oldCreateCommandFactory(recipeWithPayload);
   return ({ state, commit }, payload: P) => {
-    commit(OLD_PUSH_COMMAND, { command: commandFactory(state, payload) });
+    commit("OLD_PUSH_COMMAND", { command: commandFactory(state, payload) });
   };
 }
 
@@ -216,10 +216,10 @@ export const commandStore: VoiceVoxStoreOptions<
 
   actions: {
     UNDO({ commit }) {
-      commit(UNDO, undefined);
+      commit("UNDO", undefined);
     },
     REDO({ commit }) {
-      commit(REDO, undefined);
+      commit("REDO", undefined);
     },
   },
 };

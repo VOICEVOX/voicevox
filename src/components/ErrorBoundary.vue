@@ -4,14 +4,14 @@
 
 <script lang="ts">
 import { defineComponent, onErrorCaptured, onMounted } from "vue";
-import { useStore, LOG_ERROR } from "@/store";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "ErrorBoundary",
   setup() {
     const store = useStore();
     const logError = (error: Error): void => {
-      store.dispatch(LOG_ERROR, error.stack);
+      store.dispatch("LOG_ERROR", error.stack);
     };
 
     onMounted(() => {

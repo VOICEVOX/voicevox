@@ -330,12 +330,12 @@ export const audioStore: VoiceVoxStoreOptions<
           continue;
         }
         engineState = "READY";
-        commit(SET_ENGINE_STATE, { engineState });
+        commit("SET_ENGINE_STATE", { engineState });
         break;
       }
 
       if (engineState !== "READY") {
-        commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
+        commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
       }
     }),
     LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
@@ -352,7 +352,7 @@ export const audioStore: VoiceVoxStoreOptions<
         })
       );
 
-      commit(SET_CHARACTER_INFOS, { characterInfos });
+      commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
     SET_AUDIO_TEXT: oldCreateCommandAction(
       (draft, { audioKey, text }: { audioKey: string; text: string }) => {
@@ -374,12 +374,12 @@ export const audioStore: VoiceVoxStoreOptions<
       }: { audioItem: AudioItem; prevAudioKey?: string }
     ) {
       const audioKey = uuidv4();
-      commit(INSERT_AUDIO_ITEM, { audioItem, audioKey, prevAudioKey });
+      commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
     SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
-      commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
+      commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
     },
     async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
@@ -395,13 +395,13 @@ export const audioStore: VoiceVoxStoreOptions<
       { commit },
       payload: { audioKey: string; accentPhrases: AccentPhrase[] }
     ) {
-      commit(SET_ACCENT_PHRASES, payload);
+      commit("SET_ACCENT_PHRASES", payload);
     },
     SET_AUDIO_QUERY(
       { commit },
       payload: { audioKey: string; audioQuery: AudioQuery }
     ) {
-      commit(SET_AUDIO_QUERY, payload);
+      commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
       { state },
@@ -431,11 +431,11 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       const audioItem = state.audioItems[audioKey];
 
-      return dispatch(FETCH_ACCENT_PHRASES, {
+      return dispatch("FETCH_ACCENT_PHRASES", {
         text: audioItem.text,
         speaker: audioItem.speaker!,
       }).then((accentPhrases) =>
-        dispatch(SET_ACCENT_PHRASES, {
+        dispatch("SET_ACCENT_PHRASES", {
           audioKey,
           accentPhrases,
         })
@@ -476,7 +476,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ) {
       const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
-        FETCH_MORA_DATA,
+        "FETCH_MORA_DATA",
         {
           accentPhrases,
           speaker,
@@ -510,11 +510,11 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       const audioItem = state.audioItems[audioKey];
 
-      return dispatch(FETCH_AUDIO_QUERY, {
+      return dispatch("FETCH_AUDIO_QUERY", {
         text: audioItem.text,
         speaker: audioItem.speaker!,
       }).then((audioQuery) =>
-        dispatch(SET_AUDIO_QUERY, { audioKey, audioQuery })
+        dispatch("SET_AUDIO_QUERY", { audioKey, audioQuery })
       );
     },
     GENERATE_AUDIO: createUILockAction(
@@ -550,7 +550,7 @@ export const audioStore: VoiceVoxStoreOptions<
           encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
-        const blobPromise = dispatch(GENERATE_AUDIO, {
+        const blobPromise = dispatch("GENERATE_AUDIO", {
           audioKey,
         });
 
@@ -573,7 +573,7 @@ export const audioStore: VoiceVoxStoreOptions<
         if (state.savingSetting.avoidOverwrite) {
           let tail = 1;
           const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch(CHECK_FILE_EXISTS, { file: filePath })) {
+          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
             filePath = name + "[" + tail.toString() + "]" + ".wav";
             tail += 1;
           }
@@ -640,7 +640,7 @@ export const audioStore: VoiceVoxStoreOptions<
         if (dirPath) {
           const promises = state.audioKeys.map((audioKey, index) => {
             const name = buildFileName(state, audioKey);
-            return dispatch(GENERATE_AND_SAVE_AUDIO, {
+            return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
               filePath: path.join(dirPath!, name),
               encoding,
@@ -669,7 +669,7 @@ export const audioStore: VoiceVoxStoreOptions<
         const audioItems = parseTextFile(body, state.characterInfos);
         return Promise.all(
           audioItems.map((item) =>
-            dispatch(REGISTER_AUDIO_ITEM, { audioItem: item })
+            dispatch("REGISTER_AUDIO_ITEM", { audioItem: item })
           )
         );
       }
@@ -680,11 +680,11 @@ export const audioStore: VoiceVoxStoreOptions<
         audioElem.pause();
 
         // 音声用意
-        let blob = await dispatch(GET_AUDIO_CACHE, { audioKey });
+        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
-          commit(SET_AUDIO_NOW_GENERATING, { audioKey, nowGenerating: true });
-          blob = await dispatch(GENERATE_AUDIO, { audioKey });
-          commit(SET_AUDIO_NOW_GENERATING, {
+          commit("SET_AUDIO_NOW_GENERATING", { audioKey, nowGenerating: true });
+          blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
             nowGenerating: false,
           });
@@ -696,7 +696,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
-          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: true });
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
         };
         audioElem.addEventListener("play", played);
 
@@ -709,7 +709,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }).finally(async () => {
           audioElem.removeEventListener("play", played);
           audioElem.removeEventListener("pause", paused);
-          commit(SET_AUDIO_NOW_PLAYING, { audioKey, nowPlaying: false });
+          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
         });
 
         audioElem.play();
@@ -723,25 +723,25 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
-        commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: true });
+        commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
         try {
           for (const audioKey of state.audioKeys) {
-            commit(SET_ACTIVE_AUDIO_KEY, { audioKey });
-            const isEnded = await dispatch(PLAY_AUDIO, { audioKey });
+            commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+            const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
             if (!isEnded) {
               break;
             }
           }
         } finally {
-          commit(SET_ACTIVE_AUDIO_KEY, { audioKey: currentAudioKey });
-          commit(SET_NOW_PLAYING_CONTINUOUSLY, { nowPlaying: false });
+          commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+          commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
         }
       }
     ),
     STOP_CONTINUOUSLY_AUDIO({ state, dispatch }) {
       for (const audioKey of state.audioKeys) {
         if (state.audioStates[audioKey].nowPlaying) {
-          dispatch(STOP_AUDIO, { audioKey });
+          dispatch("STOP_AUDIO", { audioKey });
         }
       }
     },
@@ -767,7 +767,7 @@ export const audioStore: VoiceVoxStoreOptions<
               text: texts[i],
               speaker: speaker,
             };
-            prevAudioKey = await dispatch(REGISTER_AUDIO_ITEM, {
+            prevAudioKey = await dispatch("REGISTER_AUDIO_ITEM", {
               audioItem: audioItem,
               prevAudioKey: prevAudioKey,
             });
@@ -777,7 +777,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
         return Promise.all(
           addedAudioKeys.map((audioKey) =>
-            dispatch(FETCH_AND_SET_AUDIO_QUERY, { audioKey })
+            dispatch("FETCH_AND_SET_AUDIO_QUERY", { audioKey })
           )
         );
       }
@@ -788,23 +788,23 @@ export const audioStore: VoiceVoxStoreOptions<
     DETECTED_ENGINE_ERROR({ state, commit }) {
       switch (state.engineState) {
         case "STARTING":
-          commit(SET_ENGINE_STATE, { engineState: "FAILED_STARTING" });
+          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
           break;
         case "READY":
-          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
           break;
         default:
-          commit(SET_ENGINE_STATE, { engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
       }
     },
     async RESTART_ENGINE({ dispatch, commit }) {
-      await commit(SET_ENGINE_STATE, { engineState: "STARTING" });
+      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
       window.electron
         .restartEngine()
-        .then(() => dispatch(START_WAITING_ENGINE, undefined))
-        .catch(() => dispatch(DETECTED_ENGINE_ERROR, undefined));
+        .then(() => dispatch("START_WAITING_ENGINE", undefined))
+        .catch(() => dispatch("DETECTED_ENGINE_ERROR", undefined));
     },
-    CHECK_FILE_EXISTS({ commit }, { file }: { file: string }) {
+    CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
     },
   },
@@ -848,7 +848,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       const audioKey = uuidv4();
-      commit(COMMAND_REGISTER_AUDIO_ITEM, {
+      commit("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         audioKey,
         prevAudioKey,
@@ -857,7 +857,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       return audioKey;
     },
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
-      commit(COMMAND_REMOVE_AUDIO_ITEM, payload);
+      commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
     },
     async COMMAND_CHANGE_SPEAKER(
       { state, dispatch, commit },
@@ -868,13 +868,13 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;
           const newAccentPhrases: AccentPhrase[] = await dispatch(
-            FETCH_MORA_DATA,
+            "FETCH_MORA_DATA",
             {
               accentPhrases,
               speaker,
             }
           );
-          commit(COMMAND_CHANGE_SPEAKER, {
+          commit("COMMAND_CHANGE_SPEAKER", {
             speaker: speaker,
             audioKey: audioKey,
             update: "AccentPhrases",
@@ -882,11 +882,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           });
         } else {
           const text = state.audioItems[audioKey].text;
-          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+          const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text: text,
             speaker: speaker,
           });
-          commit(COMMAND_CHANGE_SPEAKER, {
+          commit("COMMAND_CHANGE_SPEAKER", {
             speaker,
             audioKey,
             update: "AudioQuery",
@@ -894,7 +894,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           });
         }
       } catch (error) {
-        commit(COMMAND_CHANGE_SPEAKER, {
+        commit("COMMAND_CHANGE_SPEAKER", {
           speaker,
           audioKey,
           update: "Speaker",
@@ -924,7 +924,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         try {
           const speaker: number = state.audioItems[audioKey].speaker!;
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
-            FETCH_AND_COPY_MORA_DATA,
+            "FETCH_AND_COPY_MORA_DATA",
             {
               accentPhrases: newAccentPhrases,
               speaker,
@@ -932,12 +932,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             }
           );
 
-          commit(COMMAND_CHANGE_ACCENT, {
+          commit("COMMAND_CHANGE_ACCENT", {
             audioKey,
             accentPhrases: resultAccentPhrases,
           });
         } catch (error) {
-          commit(COMMAND_CHANGE_ACCENT, {
+          commit("COMMAND_CHANGE_ACCENT", {
             audioKey,
             accentPhrases: newAccentPhrases,
           });
@@ -1038,19 +1038,19 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       try {
         const resultAccentPhrases: AccentPhrase[] = await dispatch(
-          FETCH_AND_COPY_MORA_DATA,
+          "FETCH_AND_COPY_MORA_DATA",
           {
             accentPhrases: newAccentPhrases,
             speaker,
             copyIndexes: changeIndexes,
           }
         );
-        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+        commit("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
           audioKey,
           accentPhrases: resultAccentPhrases,
         });
       } catch (error) {
-        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+        commit("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
           audioKey,
           accentPhrases: newAccentPhrases,
         });
@@ -1085,21 +1085,21 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
         // アクセントを末尾につけaccent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
-        newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
+        newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: katakana + "'",
           speaker,
           isKana: true,
         }).catch(
           // fallback
           () =>
-            dispatch(FETCH_ACCENT_PHRASES, {
+            dispatch("FETCH_ACCENT_PHRASES", {
               text: newPronunciation,
               speaker,
               isKana: false,
             })
         );
       } else {
-        newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
+        newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: newPronunciation,
           speaker: speaker,
         });
@@ -1114,7 +1114,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       }
 
-      commit(COMMAND_CHANGE_SINGLE_ACCENT_PHRASE, {
+      commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
         audioKey,
         accentPhraseIndex,
         accentPhrases: newAccentPhrasesSegment,
@@ -1129,43 +1129,43 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         pitch: number;
       }
     ) {
-      commit(COMMAND_SET_AUDIO_MORA_DATA, payload);
+      commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
     },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       { commit },
       payload: { audioKey: string; speedScale: number }
     ) {
-      commit(COMMAND_SET_AUDIO_SPEED_SCALE, payload);
+      commit("COMMAND_SET_AUDIO_SPEED_SCALE", payload);
     },
     COMMAND_SET_AUDIO_PITCH_SCALE(
       { commit },
       payload: { audioKey: string; pitchScale: number }
     ) {
-      commit(COMMAND_SET_AUDIO_PITCH_SCALE, payload);
+      commit("COMMAND_SET_AUDIO_PITCH_SCALE", payload);
     },
     COMMAND_SET_AUDIO_INTONATION_SCALE(
       { commit },
       payload: { audioKey: string; intonationScale: number }
     ) {
-      commit(COMMAND_SET_AUDIO_INTONATION_SCALE, payload);
+      commit("COMMAND_SET_AUDIO_INTONATION_SCALE", payload);
     },
     COMMAND_SET_AUDIO_VOLUME_SCALE(
       { commit },
       payload: { audioKey: string; volumeScale: number }
     ) {
-      commit(COMMAND_SET_AUDIO_VOLUME_SCALE, payload);
+      commit("COMMAND_SET_AUDIO_VOLUME_SCALE", payload);
     },
     COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH(
       { commit },
       payload: { audioKey: string; prePhonemeLength: number }
     ) {
-      commit(COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH, payload);
+      commit("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", payload);
     },
     COMMAND_SET_AUDIO_POST_PHONEME_LENGTH(
       { commit },
       payload: { audioKey: string; postPhonemeLength: number }
     ) {
-      commit(COMMAND_SET_AUDIO_POST_PHONEME_LENGTH, payload);
+      commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
   },
   mutations: commandMutationsCreator({
@@ -1177,10 +1177,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         prevAudioKey: string | undefined;
       }
     ) {
-      audioStore.mutations[INSERT_AUDIO_ITEM](draft, payload);
+      audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
-      audioStore.mutations[REMOVE_AUDIO_ITEM](draft, payload);
+      audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
     },
     COMMAND_CHANGE_SPEAKER(
       draft,
@@ -1203,12 +1203,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         speaker: payload.speaker,
       });
       if (payload.update == "AccentPhrases") {
-        audioStore.mutations[SET_ACCENT_PHRASES](draft, {
+        audioStore.mutations.SET_ACCENT_PHRASES(draft, {
           audioKey: payload.audioKey,
           accentPhrases: payload.accentPhrases,
         });
       } else if (payload.update == "AudioQuery") {
-        audioStore.mutations[SET_AUDIO_QUERY](draft, {
+        audioStore.mutations.SET_AUDIO_QUERY(draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
         });
@@ -1224,7 +1224,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations[SET_ACCENT_PHRASES](draft, {
+      audioStore.mutations.SET_ACCENT_PHRASES(draft, {
         audioKey,
         accentPhrases,
       });
@@ -1236,7 +1236,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations[SET_ACCENT_PHRASES](draft, payload);
+      audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
     },
     COMMAND_CHANGE_SINGLE_ACCENT_PHRASE(
       draft,
@@ -1246,7 +1246,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations[SET_SINGLE_ACCENT_PHRASE](draft, payload);
+      audioStore.mutations.SET_SINGLE_ACCENT_PHRASE(draft, payload);
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       draft,
@@ -1257,43 +1257,43 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         pitch: number;
       }
     ) {
-      audioStore.mutations[SET_AUDIO_MORA_DATA](draft, payload);
+      audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);
     },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       draft,
       payload: { audioKey: string; speedScale: number }
     ) {
-      audioStore.mutations[SET_AUDIO_SPEED_SCALE](draft, payload);
+      audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, payload);
     },
     COMMAND_SET_AUDIO_PITCH_SCALE(
       draft,
       payload: { audioKey: string; pitchScale: number }
     ) {
-      audioStore.mutations[SET_AUDIO_PITCH_SCALE](draft, payload);
+      audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, payload);
     },
     COMMAND_SET_AUDIO_INTONATION_SCALE(
       draft,
       payload: { audioKey: string; intonationScale: number }
     ) {
-      audioStore.mutations[SET_AUDIO_INTONATION_SCALE](draft, payload);
+      audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, payload);
     },
     COMMAND_SET_AUDIO_VOLUME_SCALE(
       draft,
       payload: { audioKey: string; volumeScale: number }
     ) {
-      audioStore.mutations[SET_AUDIO_VOLUME_SCALE](draft, payload);
+      audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, payload);
     },
     COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH(
       draft,
       payload: { audioKey: string; prePhonemeLength: number }
     ) {
-      audioStore.mutations[SET_AUDIO_PRE_PHONEME_LENGTH](draft, payload);
+      audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, payload);
     },
     COMMAND_SET_AUDIO_POST_PHONEME_LENGTH(
       draft,
       payload: { audioKey: string; postPhonemeLength: number }
     ) {
-      audioStore.mutations[SET_AUDIO_POST_PHONEME_LENGTH](draft, payload);
+      audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
     },
   }),
 };

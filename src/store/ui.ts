@@ -8,7 +8,6 @@ import {
   UiMutations,
   VoiceVoxStoreOptions,
 } from "./type";
-import { ACTIVE_AUDIO_KEY } from "./audio";
 
 export const UI_LOCKED = "UI_LOCKED";
 export const SHOULD_SHOW_PANES = "SHOULD_SHOW_PANES";
@@ -33,9 +32,9 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
     : Promise<ReturnType<A[K]>>
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
-    context.commit(LOCK_UI, undefined);
+    context.commit("LOCK_UI", undefined);
     return action(context, payload).finally(() => {
-      context.commit(UNLOCK_UI, undefined);
+      context.commit("UNLOCK_UI", undefined);
     });
   };
 }
@@ -47,7 +46,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         return state.uiLockCount > 0;
       },
       SHOULD_SHOW_PANES(_, getters) {
-        return getters[ACTIVE_AUDIO_KEY] != undefined;
+        return getters.ACTIVE_AUDIO_KEY != undefined;
       },
     },
 
@@ -89,10 +88,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
     actions: {
       LOCK_UI({ commit }) {
-        commit(LOCK_UI, undefined);
+        commit("LOCK_UI", undefined);
       },
       UNLOCK_UI({ commit }) {
-        commit(UNLOCK_UI, undefined);
+        commit("UNLOCK_UI", undefined);
       },
       ASYNC_UI_LOCK: createUILockAction(
         async (_, { callback }: { callback: () => Promise<void> }) => {
@@ -105,10 +104,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-        if (isHelpDialogOpen) commit(LOCK_UI, undefined);
-        else commit(UNLOCK_UI, undefined);
+        if (isHelpDialogOpen) commit("LOCK_UI", undefined);
+        else commit("UNLOCK_UI", undefined);
 
-        commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
+        commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
       },
       IS_SETTING_DIALOG_OPEN(
         { state, commit },
@@ -116,32 +115,32 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-        if (isSettingDialogOpen) commit(LOCK_UI, undefined);
-        else commit(UNLOCK_UI, undefined);
+        if (isSettingDialogOpen) commit("LOCK_UI", undefined);
+        else commit("UNLOCK_UI", undefined);
 
-        commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
+        commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
       },
       async GET_USE_GPU({ commit }) {
-        commit(SET_USE_GPU, {
+        commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(),
         });
       },
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
-        commit(SET_USE_GPU, {
+        commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
       async DETECT_UNMAXIMIZED({ commit }) {
-        commit(DETECT_UNMAXIMIZED, undefined);
+        commit("DETECT_UNMAXIMIZED", undefined);
       },
       async DETECT_MAXIMIZED({ commit }) {
-        commit(DETECT_MAXIMIZED, undefined);
+        commit("DETECT_MAXIMIZED", undefined);
       },
       async DETECT_PINNED({ commit }) {
-        commit(DETECT_PINNED, undefined);
+        commit("DETECT_PINNED", undefined);
       },
       async DETECT_UNPINNED({ commit }) {
-        commit(DETECT_UNPINNED, undefined);
+        commit("DETECT_UNPINNED", undefined);
       },
     },
   };

@@ -1,10 +1,5 @@
 import { createUILockAction } from "@/store/ui";
 import {
-  REGISTER_AUDIO_ITEM,
-  REMOVE_ALL_AUDIO_ITEM,
-  FETCH_MORA_DATA,
-} from "@/store/audio";
-import {
   AudioItem,
   ProjectGetters,
   ProjectActions,
@@ -57,14 +52,14 @@ export const projectStore: VoiceVoxStoreOptions<
           return;
         }
 
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
         const audioItem: AudioItem = { text: "", speaker: 0 };
-        await context.dispatch(REGISTER_AUDIO_ITEM, {
+        await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
 
-        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+        context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
       }
     ),
     LOAD_PROJECT_FILE: createUILockAction(
@@ -147,7 +142,7 @@ export const projectStore: VoiceVoxStoreOptions<
 
               // set phoneme length
               await context
-                .dispatch(FETCH_MORA_DATA, {
+                .dispatch("FETCH_MORA_DATA", {
                   accentPhrases: audioItem.query!.accentPhrases,
                   speaker: audioItem.speaker!,
                 })
@@ -203,19 +198,19 @@ export const projectStore: VoiceVoxStoreOptions<
           ) {
             return;
           }
-          await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
           let prevAudioKey = undefined;
           for (const audioKey of audioKeys) {
             const audioItem = audioItems[audioKey];
-            prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
+            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
               prevAudioKey,
               audioItem,
             });
           }
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -257,7 +252,7 @@ export const projectStore: VoiceVoxStoreOptions<
         ).buffer;
         window.electron.writeFile({ filePath, buffer: buf });
         if (!context.state.projectFilePath) {
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
         return;
       }
