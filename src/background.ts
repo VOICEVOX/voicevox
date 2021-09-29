@@ -105,12 +105,15 @@ async function runEngine() {
     });
   }
 
+  const useGpu = store.get("useGpu")
+  log.info(`ENGINE will start in ${useGpu ? 'GPU' : 'CPU'} mode`)
+
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
     process.env.ENGINE_PATH ?? "run.exe"
   );
-  const args = store.get("useGpu") ? ["--use_gpu"] : null;
+  const args = useGpu ? ["--use_gpu"] : null;
   engineProcess = execFile(
     enginePath,
     args,
