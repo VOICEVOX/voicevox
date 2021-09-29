@@ -100,11 +100,14 @@ export interface StoreOptions<
   S,
   G extends GettersBase,
   A extends ActionsBase,
-  M extends MutationsBase
+  M extends MutationsBase,
+  SG extends GettersBase = G,
+  SA extends ActionsBase = A,
+  SM extends MutationsBase = M
 > {
   state?: S | (() => S);
-  getters: GetterTree<S, S, G>;
-  actions: ActionTree<S, S, A, M>;
+  getters: GetterTree<S, S, G, SG>;
+  actions: ActionTree<S, S, A, SG, SA, SM>;
   mutations: MutationTree<S, M>;
   modules?: ModuleTree<S>;
   plugins?: Plugin<S>[];
@@ -115,13 +118,14 @@ export interface StoreOptions<
 export interface ActionContext<
   S,
   R,
-  A extends ActionsBase,
-  M extends MutationsBase
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase
 > {
-  dispatch: Dispatch<A>;
-  commit: Commit<M>;
+  dispatch: Dispatch<SA>;
+  commit: Commit<SM>;
   state: S;
-  getters: any;
+  getters: SG;
   rootState: R;
   rootGetters: any;
 }
@@ -129,59 +133,77 @@ export interface ActionContext<
 export type ActionHandler<
   S,
   R,
-  A extends ActionsBase,
-  M extends MutationsBase,
-  K extends keyof A
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA
 > = (
-  this: Store<S, any, A, M>,
-  injectee: ActionContext<S, R, A, M>,
-  payload: Parameters<A[K]>[0]
-) => ReturnType<A[K]>;
+  this: Store<S, SG, SA, SM>,
+  injectee: ActionContext<S, R, SG, SA, SM>,
+  payload: Parameters<SA[K]>[0]
+) => ReturnType<SA[K]>;
 export interface ActionObject<
   S,
   R,
-  A extends ActionsBase,
-  M extends MutationsBase,
-  K extends keyof A
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA
 > {
   root?: boolean;
-  handler: ActionHandler<S, R, A, M, K>;
+  handler: ActionHandler<S, R, SG, SA, SM, K>;
 }
 
-export type Getter<S, R, G extends GettersBase, K extends keyof G> = (
+export type Getter<S, R, G, K extends keyof G, SG extends GettersBase> = (
   state: S,
-  getters: G,
+  getters: SG,
   rootState: R,
   rootGetters: any
-) => G[K];
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+) => SG[K];
+
 export type Action<
   S,
   R,
   A extends ActionsBase,
-  M extends MutationsBase,
-  K extends keyof A
-> = ActionHandler<S, R, A, M, K> | ActionObject<S, R, A, M, K>;
+  K extends keyof A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+> = ActionHandler<S, R, SG, SA, SM, K> | ActionObject<S, R, SG, SA, SM, K>;
 export type Mutation<S, P> = (state: S, payload: P) => void;
 
-export type GetterTree<S, R, G> = G extends GettersBase
-  ? CustomGetterTree<S, R, G>
+export type GetterTree<S, R, G, SG = G> = G extends GettersBase
+  ? CustomGetterTree<S, R, G, SG>
   : OriginalGetterTree<S, R>;
 
-export type CustomGetterTree<S, R, G extends GettersBase> = {
-  [K in keyof G]: Getter<S, R, G, K>;
+export type CustomGetterTree<
+  S,
+  R,
+  G extends GettersBase,
+  SG extends GettersBase
+> = {
+  [K in keyof G]: Getter<S, R, G, K, SG>;
 };
 
-export type ActionTree<S, R, A, M extends MutationsBase> = A extends ActionsBase
-  ? CustomActionTree<S, R, A, M>
+export type ActionTree<S, R, A, SG, SA, SM> = A extends ActionsBase
+  ? SA extends ActionsBase
+    ? CustomActionTree<S, R, A, SG, SA, SM>
+    : OriginalActionTree<S, R>
   : OriginalActionTree<S, R>;
 
 export type CustomActionTree<
   S,
   R,
   A extends ActionsBase,
-  M extends MutationsBase
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase
 > = {
-  [K in keyof A]: Action<S, R, A, M, K>;
+  [K in keyof A]: Action<S, R, A, K, SG, SA, SM>;
 };
 
 export type MutationTree<S, M> = M extends MutationsBase

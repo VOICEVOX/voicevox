@@ -11,8 +11,11 @@
             clickable
             v-close-popup
             active-class="selected-character-item"
-            :active="index === selectedCharacterInfo.metas.speaker"
-            @click="changeCharacterIndex(index)"
+            :active="
+              characterInfo.metas.speaker ===
+              selectedCharacterInfo.metas.speaker
+            "
+            @click="changeSpeaker(characterInfo.metas.speaker)"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
@@ -77,7 +80,7 @@ import {
   HAVE_AUDIO_QUERY,
   SET_ACTIVE_AUDIO_KEY,
   SET_AUDIO_TEXT,
-  COMMAND_CHANGE_CHARACTER_INDEX,
+  COMMAND_CHANGE_SPEAKER,
   COMMAND_REGISTER_AUDIO_ITEM,
   PLAY_AUDIO,
   STOP_AUDIO,
@@ -117,9 +120,10 @@ export default defineComponent({
     );
 
     const selectedCharacterInfo = computed(() =>
-      characterInfos.value != undefined &&
-      audioItem.value.characterIndex != undefined
-        ? characterInfos.value[audioItem.value.characterIndex]
+      characterInfos.value != undefined && audioItem.value.speaker != undefined
+        ? characterInfos.value.find(
+            (info) => info.metas.speaker == audioItem.value.speaker
+          )
         : undefined
     );
 
@@ -140,10 +144,10 @@ export default defineComponent({
         });
       }
     };
-    const changeCharacterIndex = (characterIndex: number) => {
-      store.dispatch(COMMAND_CHANGE_CHARACTER_INDEX, {
+    const changeSpeaker = (speaker: number) => {
+      store.dispatch(COMMAND_CHANGE_SPEAKER, {
         audioKey: props.audioKey,
-        characterIndex,
+        speaker,
       });
     };
     const setActiveAudioKey = () => {
@@ -183,7 +187,7 @@ export default defineComponent({
 
           store.dispatch(PUT_TEXTS, {
             texts,
-            characterIndex: audioItem.value.characterIndex,
+            speaker: audioItem.value.speaker,
             prevAudioKey,
           });
         }
@@ -241,9 +245,8 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const characterIndex =
-        store.state.audioItems[props.audioKey].characterIndex;
-      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
+      const speaker = store.state.audioItems[props.audioKey].speaker;
+      const audioItem: AudioItem = { text: "", speaker: speaker };
       await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: props.audioKey,
@@ -294,7 +297,7 @@ export default defineComponent({
       characterIconUrl,
       setAudioText,
       updateAudioQuery,
-      changeCharacterIndex,
+      changeSpeaker,
       setActiveAudioKey,
       save,
       play,
