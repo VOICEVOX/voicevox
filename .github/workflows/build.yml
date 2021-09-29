@@ -145,6 +145,7 @@ jobs:
             ${{ env.cache-version }}-node-
 
       - name: Install asar
+        shell: bash
         run: npm install -g asar
 
       - name: Install dependencies
