@@ -123,10 +123,23 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Setup Node 14.x
-        uses: actions/setup-node@v1
+      - name: Set output Node version
+        id: node-version
+        shell: bash
+        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+
+      - name: Setup Node
+        uses: actions/setup-node@master
         with:
-          node-version: 14
+          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+
+      - name: Cache Node packages
+        uses: actions/cache@master
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-node-
 
       - name: Install asar
         run: npm install -g asar
@@ -134,6 +147,11 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: npm ci
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
 
       - name: Download and extract noengine-prepackage artifact
         uses: actions/download-artifact@v2
