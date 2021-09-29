@@ -43,7 +43,7 @@ export type State = {
 
 export type AudioItem = {
   text: string;
-  characterIndex?: number;
+  speaker?: number;
   query?: AudioQuery;
 };
 
@@ -101,7 +101,7 @@ export type AudioMutations = {
     postPhonemeLength: number;
   };
   SET_AUDIO_QUERY: { audioKey: string; audioQuery: AudioQuery };
-  SET_AUDIO_CHARACTER_INDEX: { audioKey: string; characterIndex: number };
+  SET_AUDIO_SPEAKER: { audioKey: string; speaker: number };
   SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
   SET_SINGLE_ACCENT_PHRASE: {
     audioKey: string;
@@ -134,22 +134,22 @@ export type AudioActions = {
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
-    characterIndex: number;
+    speaker: number;
     isKana?: boolean;
   }): Promise<AccentPhrase[]>;
   FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    characterIndex: number;
+    speaker: number;
   }): Promise<AccentPhrase[]>;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    characterIndex: number;
+    speaker: number;
     copyIndexes: number[];
   }): Promise<AccentPhrase[]>;
   FETCH_AUDIO_QUERY(payload: {
     text: string;
-    characterIndex: number;
+    speaker: number;
   }): Promise<AudioQuery>;
   FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
@@ -169,7 +169,7 @@ export type AudioActions = {
   STOP_CONTINUOUSLY_AUDIO(): void;
   PUT_TEXTS(payload: {
     texts: string[];
-    characterIndex: number | undefined;
+    speaker: number | undefined;
     prevAudioKey: string | undefined;
   }): void[];
   OPEN_TEXT_EDIT_CONTEXT_MENU(): void;
@@ -191,10 +191,7 @@ export type AudioCommandActions = {
     prevAudioKey: string | undefined;
   }): string;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
-  COMMAND_CHANGE_CHARACTER_INDEX(payload: {
-    audioKey: string;
-    characterIndex: number;
-  }): void;
+  COMMAND_CHANGE_SPEAKER(payload: { audioKey: string; speaker: number }): void;
   COMMAND_CHANGE_ACCENT(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -259,12 +256,12 @@ export type AudioCommandMutations = {
     prevAudioKey: string | undefined;
   };
   COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
-  COMMAND_CHANGE_CHARACTER_INDEX: {
-    characterIndex: number;
+  COMMAND_CHANGE_SPEAKER: {
+    speaker: number;
     audioKey: string;
   } & (
     | {
-        update: "CharacterIndex";
+        update: "Speaker";
       }
     | {
         update: "AccentPhrases";

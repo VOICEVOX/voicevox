@@ -226,9 +226,8 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value!;
-      const characterIndex =
-        store.state.audioItems[prevAudioKey].characterIndex;
-      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
+      const speaker = store.state.audioItems[prevAudioKey].speaker;
+      const audioItem: AudioItem = { text: "", speaker: speaker };
       const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
         audioItem,
         prevAudioKey: activeAudioKey.value,
@@ -272,7 +271,7 @@ export default defineComponent({
     // プロジェクトを初期化
     onMounted(async () => {
       await store.dispatch(LOAD_CHARACTER, undefined);
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
+      const audioItem: AudioItem = { text: "", speaker: 0 };
       const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
         audioItem,
       });

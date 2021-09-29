@@ -26,10 +26,10 @@ export default defineComponent({
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const characterIndex = audioItem?.characterIndex;
+      const speaker = audioItem?.speaker;
 
-      return characterIndex !== undefined
-        ? characterInfos[characterIndex]
+      return speaker !== undefined
+        ? characterInfos.find((info) => info.metas.speaker == speaker)
         : undefined;
     });
 

@@ -59,7 +59,7 @@ export const projectStore: VoiceVoxStoreOptions<
 
         await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
 
-        const audioItem: AudioItem = { text: "", characterIndex: 0 };
+        const audioItem: AudioItem = { text: "", speaker: 0 };
         await context.dispatch(REGISTER_AUDIO_ITEM, {
           audioItem,
         });
@@ -149,7 +149,7 @@ export const projectStore: VoiceVoxStoreOptions<
               await context
                 .dispatch(FETCH_MORA_DATA, {
                   accentPhrases: audioItem.query!.accentPhrases,
-                  characterIndex: audioItem.characterIndex!,
+                  speaker: audioItem.speaker!,
                 })
                 .then((accentPhrases: AccentPhrase[]) => {
                   accentPhrases.forEach((newAccentPhrase, i) => {
@@ -184,11 +184,11 @@ export const projectStore: VoiceVoxStoreOptions<
           }
           if (
             !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].characterIndex != undefined
+              (audioKey) => obj.audioItems[audioKey].speaker != undefined
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "characterIndex" attribute.'
+              'Every audioItem should have a "speaker" attribute.'
             );
           }
 
@@ -314,7 +314,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
-    characterIndex: { type: "int32" },
+    speaker: { type: "int32" },
     query: audioQuerySchema,
   },
 } as const;
