@@ -106,7 +106,7 @@ async function runEngine() {
   }
 
   const useGpu = store.get("useGpu");
-  log.info(`ENGINE will start in ${useGpu ? "GPU" : "CPU"} mode`);
+  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -447,14 +447,16 @@ app.on("window-all-closed", () => {
 // Called before window closing
 app.on("before-quit", (event) => {
   if (shouldKillEngineBeforeQuit) {
+    log.info("Killing ENGINE before app quit")
     event.preventDefault();
 
     engineProcess.once("close", () => {
       shouldKillEngineBeforeQuit = false;
-      log.info("Quiting app");
+      log.info("ENGINE killed. Quiting app")
       app.quit(); // attempt to quit app again (shouldKillEngineBeforeQuit == false)
     });
 
+    log.info("Killing ENGINE...")
     willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
