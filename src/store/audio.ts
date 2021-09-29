@@ -301,23 +301,6 @@ export const audioStore = typeAsStoreOptions({
       const query = state.audioItems[audioKey].query!;
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
-    [SET_AUDIO_MORA_DATA]: (
-      state,
-      {
-        audioKey,
-        accentPhraseIndex,
-        moraIndex,
-        pitch,
-      }: {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number;
-        pitch: number;
-      }
-    ) => {
-      const query = state.audioItems[audioKey].query!;
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
-    },
   },
 
   actions: {
