@@ -374,7 +374,7 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 ipcMainHandle(
   "RESTART_ENGINE",
   () =>
-    new Promise((resolve, reject) => {
+    new Promise<void>((resolve, reject) => {
       log.info(
         `Restarting ENGINE (previous exit code: ${engineProcess.exitCode})`
       );
