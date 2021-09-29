@@ -365,7 +365,7 @@ jobs:
 
 
   upload-distributable-to-release:
-    if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && github.event.release.tag_name != '' # If release
+    if: github.event.release.tag_name != '' # If release
     needs: [build-distributable]
     strategy:
       fail-fast: false
@@ -428,8 +428,16 @@ jobs:
         run: |
           df -h
 
+      - name: Upload Linux AppImage Release artifact
+        if: env.SKIP_UPLOADING_RELEASE_ASSET == '1' && endsWith(matrix.artifact_name, '-appimage')
+        uses: actions/upload-artifact@v2
+        with:
+        name: ${{ matrix.artifact_name }}-release
+        path: |
+          artifact/*.7z.*
+
       - name: Upload Linux AppImage splitted archives to Release assets
-        if: endsWith(matrix.artifact_name, '-appimage')
+        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-appimage')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -440,7 +448,7 @@ jobs:
       # Windows NSIS Web
       # FIXME: rename archives and installer before upload to separate cpu, gpu distribution
       - name: Upload Windows nsis-web archives to Release assets
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -449,7 +457,7 @@ jobs:
           file: artifact/out/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
