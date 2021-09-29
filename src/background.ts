@@ -84,7 +84,7 @@ const store = new Store<{
 
 // engine
 let willQuitEngine = false;
-let engineRunning = false;
+let shouldKillEngineBeforeQuit = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   willQuitEngine = false;
@@ -115,7 +115,7 @@ async function runEngine() {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
-  engineRunning = true;
+  shouldKillEngineBeforeQuit = true;
   engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
@@ -129,7 +129,7 @@ async function runEngine() {
   });
 
   engineProcess.on("close", (code, signal) => {
-    engineRunning = false;
+    shouldKillEngineBeforeQuit = false;
 
     log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
     log.info(`ENGINE: exited with code ${code}`);
@@ -446,11 +446,11 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (engineRunning) {
+  if (shouldKillEngineBeforeQuit) {
     event.preventDefault();
 
     engineProcess.once("close", () => {
-      engineRunning = false;
+      shouldKillEngineBeforeQuit = false;
       log.info("Quiting app");
       app.quit();
     });
