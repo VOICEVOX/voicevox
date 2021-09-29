@@ -432,9 +432,9 @@ jobs:
         if: env.SKIP_UPLOADING_RELEASE_ASSET == '1' && endsWith(matrix.artifact_name, '-appimage')
         uses: actions/upload-artifact@v2
         with:
-        name: ${{ matrix.artifact_name }}-release
-        path: |
-          artifact/*.7z.*
+          name: ${{ matrix.artifact_name }}-release
+          path: |
+            artifact/*.7z.*
 
       - name: Upload Linux AppImage splitted archives to Release assets
         if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-appimage')
