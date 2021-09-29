@@ -448,11 +448,11 @@ app.on("before-quit", (event) => {
   if (engineRunning) {
     event.preventDefault();
 
-    engineProcess.once('close', () => {
+    engineProcess.once("close", () => {
       engineRunning = false;
-      log.info('Quiting app');
-      app.quit()
-    })
+      log.info("Quiting app");
+      app.quit();
+    });
 
     willQuitEngine = true;
     try {
