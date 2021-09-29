@@ -346,6 +346,10 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
 
+ipcMainHandle("LOG_INFO", (_, ...params) => {
+  log.info(...params);
+});
+
 /**
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。

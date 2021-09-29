@@ -326,7 +326,7 @@ export const audioStore: VoiceVoxStoreOptions<
           await api.versionVersionGet();
         } catch {
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          console.log("waiting engine...");
+          window.electron.logInfo("waiting engine...");
           continue;
         }
         engineState = "READY";

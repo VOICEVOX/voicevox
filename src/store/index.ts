@@ -23,6 +23,7 @@ export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
 export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
 export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
 export const LOG_ERROR = "LOG_ERROR";
+export const LOG_INFO = "LOG_INFO";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -55,6 +56,9 @@ export const indexStore: VoiceVoxStoreOptions<
     },
     [LOG_ERROR]: (_, ...params: unknown[]) => {
       window.electron.logError(...params);
+    },
+    [LOG_INFO]: (_, ...params: unknown[]) => {
+      window.electron.logInfo(...params);
     },
   },
 };
