@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import { useStore, GET_UPDATE_INFOS } from "@/store";
+import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { UpdateInfo } from "../type/preload";
 
@@ -26,7 +26,7 @@ export default defineComponent({
 
     const infos = ref<UpdateInfo[]>();
     store
-      .dispatch(GET_UPDATE_INFOS, undefined)
+      .dispatch("GET_UPDATE_INFOS", undefined)
       .then((obj) => (infos.value = obj));
 
     const html = computed(() => {

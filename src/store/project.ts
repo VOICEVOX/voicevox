@@ -1,10 +1,5 @@
 import { createUILockAction } from "@/store/ui";
 import {
-  REGISTER_AUDIO_ITEM,
-  REMOVE_ALL_AUDIO_ITEM,
-  FETCH_MORA_DATA,
-} from "@/store/audio";
-import {
   AudioItem,
   ProjectGetters,
   ProjectActions,
@@ -15,12 +10,6 @@ import {
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
-export const CREATE_NEW_PROJECT = "CREATE_NEW_PROJECT";
-export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
-export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
-export const PROJECT_NAME = "PROJECT_NAME";
-export const SET_PROJECT_FILEPATH = "SET_PROJECT_FILEPATH";
-
 const DEFAULT_SAMPLING_RATE = 24000;
 
 export const projectStore: VoiceVoxStoreOptions<
@@ -29,7 +18,7 @@ export const projectStore: VoiceVoxStoreOptions<
   ProjectMutations
 > = {
   getters: {
-    [PROJECT_NAME](state) {
+    PROJECT_NAME(state) {
       return state.projectFilePath !== undefined
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
@@ -37,13 +26,13 @@ export const projectStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    [SET_PROJECT_FILEPATH](state, { filePath }: { filePath?: string }) {
+    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
   },
 
   actions: {
-    [CREATE_NEW_PROJECT]: createUILockAction(
+    CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (
           confirm !== false &&
@@ -57,17 +46,17 @@ export const projectStore: VoiceVoxStoreOptions<
           return;
         }
 
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
         const audioItem: AudioItem = { text: "", speaker: 0 };
-        await context.dispatch(REGISTER_AUDIO_ITEM, {
+        await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
 
-        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+        context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
       }
     ),
-    [LOAD_PROJECT_FILE]: createUILockAction(
+    LOAD_PROJECT_FILE: createUILockAction(
       async (
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
@@ -147,7 +136,7 @@ export const projectStore: VoiceVoxStoreOptions<
 
               // set phoneme length
               await context
-                .dispatch(FETCH_MORA_DATA, {
+                .dispatch("FETCH_MORA_DATA", {
                   accentPhrases: audioItem.query!.accentPhrases,
                   speaker: audioItem.speaker!,
                 })
@@ -203,19 +192,19 @@ export const projectStore: VoiceVoxStoreOptions<
           ) {
             return;
           }
-          await context.dispatch(REMOVE_ALL_AUDIO_ITEM, undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
           let prevAudioKey = undefined;
           for (const audioKey of audioKeys) {
             const audioItem = audioItems[audioKey];
-            prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
+            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
               prevAudioKey,
               audioItem,
             });
           }
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -232,7 +221,7 @@ export const projectStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    [SAVE_PROJECT_FILE]: createUILockAction(
+    SAVE_PROJECT_FILE: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
@@ -257,7 +246,7 @@ export const projectStore: VoiceVoxStoreOptions<
         ).buffer;
         window.electron.writeFile({ filePath, buffer: buf });
         if (!context.state.projectFilePath) {
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
         return;
       }
