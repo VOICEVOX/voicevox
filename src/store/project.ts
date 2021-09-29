@@ -29,7 +29,7 @@ export const projectStore: VoiceVoxStoreOptions<
   ProjectMutations
 > = {
   getters: {
-    [PROJECT_NAME](state) {
+    PROJECT_NAME(state) {
       return state.projectFilePath !== undefined
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
@@ -37,13 +37,13 @@ export const projectStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    [SET_PROJECT_FILEPATH](state, { filePath }: { filePath?: string }) {
+    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
   },
 
   actions: {
-    [CREATE_NEW_PROJECT]: createUILockAction(
+    CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (
           confirm !== false &&
@@ -67,7 +67,7 @@ export const projectStore: VoiceVoxStoreOptions<
         context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
       }
     ),
-    [LOAD_PROJECT_FILE]: createUILockAction(
+    LOAD_PROJECT_FILE: createUILockAction(
       async (
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
@@ -232,7 +232,7 @@ export const projectStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    [SAVE_PROJECT_FILE]: createUILockAction(
+    SAVE_PROJECT_FILE: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {

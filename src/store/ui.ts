@@ -43,63 +43,63 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
   {
     getters: {
-      [UI_LOCKED](state) {
+      UI_LOCKED(state) {
         return state.uiLockCount > 0;
       },
-      [SHOULD_SHOW_PANES]: (_, getters) => {
+      SHOULD_SHOW_PANES(_, getters) {
         return getters[ACTIVE_AUDIO_KEY] != undefined;
       },
     },
 
     mutations: {
-      [LOCK_UI](state) {
+      LOCK_UI(state) {
         state.uiLockCount++;
       },
-      [UNLOCK_UI](state) {
+      UNLOCK_UI(state) {
         state.uiLockCount--;
       },
-      [IS_HELP_DIALOG_OPEN](
+      IS_HELP_DIALOG_OPEN(
         state,
         { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
       ) {
         state.isHelpDialogOpen = isHelpDialogOpen;
       },
-      [IS_SETTING_DIALOG_OPEN](
+      IS_SETTING_DIALOG_OPEN(
         state,
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
       },
-      [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
+      SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
-      [DETECT_UNMAXIMIZED](state) {
+      DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
       },
-      [DETECT_MAXIMIZED](state) {
+      DETECT_MAXIMIZED(state) {
         state.isMaximized = true;
       },
-      [DETECT_PINNED](state) {
+      DETECT_PINNED(state) {
         state.isPinned = true;
       },
-      [DETECT_UNPINNED](state) {
+      DETECT_UNPINNED(state) {
         state.isPinned = false;
       },
     },
 
     actions: {
-      [LOCK_UI]({ commit }) {
+      LOCK_UI({ commit }) {
         commit(LOCK_UI, undefined);
       },
-      [UNLOCK_UI]({ commit }) {
+      UNLOCK_UI({ commit }) {
         commit(UNLOCK_UI, undefined);
       },
-      [ASYNC_UI_LOCK]: createUILockAction(
+      ASYNC_UI_LOCK: createUILockAction(
         async (_, { callback }: { callback: () => Promise<void> }) => {
           await callback();
         }
       ),
-      [IS_HELP_DIALOG_OPEN](
+      IS_HELP_DIALOG_OPEN(
         { state, commit },
         { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
       ) {
@@ -110,7 +110,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
       },
-      [IS_SETTING_DIALOG_OPEN](
+      IS_SETTING_DIALOG_OPEN(
         { state, commit },
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
@@ -121,26 +121,26 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
       },
-      async [GET_USE_GPU]({ commit }) {
+      async GET_USE_GPU({ commit }) {
         commit(SET_USE_GPU, {
           useGpu: await window.electron.useGpu(),
         });
       },
-      async [SET_USE_GPU]({ commit }, { useGpu }: { useGpu: boolean }) {
+      async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit(SET_USE_GPU, {
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
-      async [DETECT_UNMAXIMIZED]({ commit }) {
+      async DETECT_UNMAXIMIZED({ commit }) {
         commit(DETECT_UNMAXIMIZED, undefined);
       },
-      async [DETECT_MAXIMIZED]({ commit }) {
+      async DETECT_MAXIMIZED({ commit }) {
         commit(DETECT_MAXIMIZED, undefined);
       },
-      async [DETECT_PINNED]({ commit }) {
+      async DETECT_PINNED({ commit }) {
         commit(DETECT_PINNED, undefined);
       },
-      async [DETECT_UNPINNED]({ commit }) {
+      async DETECT_UNPINNED({ commit }) {
         commit(DETECT_UNPINNED, undefined);
       },
     },

@@ -15,12 +15,12 @@ export const settingStore: VoiceVoxStoreOptions<
   SettingMutations
 > = {
   getters: {
-    [GET_SAVING_SETTING_DATA](state) {
+    GET_SAVING_SETTING_DATA(state) {
       return state.savingSetting;
     },
   },
   mutations: {
-    [SET_SAVING_SETTING_DATA](
+    SET_SAVING_SETTING_DATA(
       state,
       { savingSetting }: { savingSetting: SavingSetting }
     ) {
@@ -28,16 +28,13 @@ export const settingStore: VoiceVoxStoreOptions<
     },
   },
   actions: {
-    [GET_SAVING_SETTING_DATA]: ({ commit }) => {
+    GET_SAVING_SETTING_DATA({ commit }) {
       const newData = window.electron.savingSetting();
       newData.then((savingSetting) => {
         commit(SET_SAVING_SETTING_DATA, { savingSetting: savingSetting });
       });
     },
-    [SET_SAVING_SETTING_DATA]: (
-      { commit },
-      { data }: { data: SavingSetting }
-    ) => {
+    SET_SAVING_SETTING_DATA({ commit }, { data }: { data: SavingSetting }) {
       const newData = window.electron.savingSetting(data);
       newData.then((savingSetting) => {
         commit(SET_SAVING_SETTING_DATA, { savingSetting: savingSetting });

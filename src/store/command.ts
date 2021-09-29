@@ -182,43 +182,43 @@ export const commandStore: VoiceVoxStoreOptions<
   CommandMutations
 > = {
   getters: {
-    [CAN_UNDO](state) {
+    CAN_UNDO(state) {
       return state.undoCommands.length > 0;
     },
-    [CAN_REDO](state) {
+    CAN_REDO(state) {
       return state.redoCommands.length > 0;
     },
   },
 
   mutations: {
-    [OLD_PUSH_COMMAND](state, { command }: { command: OldCommand<State> }) {
+    OLD_PUSH_COMMAND(state, { command }: { command: OldCommand<State> }) {
       OldCommand.redo(state, command);
     },
-    [UNDO]: (state) => {
+    UNDO(state) {
       const command = state.undoCommands.pop();
       if (command != null) {
         state.redoCommands.push(command);
         applyPatch(state, command.undoOperations);
       }
     },
-    [REDO]: (state) => {
+    REDO(state) {
       const command = state.redoCommands.pop();
       if (command != null) {
         state.undoCommands.push(command);
         applyPatch(state, command.redoOperations);
       }
     },
-    [CLEAR_COMMANDS]: (state) => {
+    CLEAR_COMMANDS(state) {
       state.redoCommands.splice(0);
       state.undoCommands.splice(0);
     },
   },
 
   actions: {
-    [UNDO]: ({ commit }) => {
+    UNDO({ commit }) {
       commit(UNDO, undefined);
     },
-    [REDO]: ({ commit }) => {
+    REDO({ commit }) {
       commit(REDO, undefined);
     },
   },
