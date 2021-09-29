@@ -9,8 +9,8 @@ on:
       - created
 
 env:
-  VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: check-2021-09-25
+  VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
+  VOICEVOX_ENGINE_VERSION: 0.6.0-aoirint-1
 
 jobs:
   build-noengine-prepackage:
@@ -87,6 +87,15 @@ jobs:
           echo "ENGINE_PATH=./run" > .env.production
           echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
 
+      - name: Generate public/licenses.json
+        shell: bash
+        run: npm run license:generate -- -o public/licenses.json
+
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         shell: bash
@@ -127,15 +136,27 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
-            os: windows-2019
+            os: ubuntu-18.04
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
-            os: windows-2019
+            os: ubuntu-18.04
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      - name: Setup Node 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Install asar
+        run: npm install -g asar
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
 
       - name: Download and extract noengine-prepackage artifact
         uses: actions/download-artifact@v2
@@ -172,17 +193,36 @@ jobs:
       - name: Extract VOICEVOX ENGINE
         shell: bash
         run: |
+          mkdir -p voicevox_engine/tmp
+
           # Extract first file to extract all parts
-          # Destination: voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/
-          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/
+          # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
+          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/tmp/
+
+          mkdir -p voicevox_engine/voicevox_engine
+          mv voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/* voicevox_engine/voicevox_engine
 
           # remove downloads to free space
-          rm -rf voicevox_engine/download
+          rm -rf voicevox_engine/download voicevox_engine/tmp
+
+      - name: Merge licenses.json (ENGINE, VOICEVOX)
+        shell: bash
+        run: |
+          # Unpack asar
+          asar extract prepackage/resources/app.asar prepackage/resources/app
+          rm prepackage/resources/app.asar
+
+          mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
+          npm run license:merge -- -o prepackage/resources/app/licenses.json -i engine_licenses.json -i prepackage/resources/app/licenses.json
+
+          # Repack asar
+          asar pack prepackage/resources/app prepackage/resources/app.asar
+          rm -rf prepackage/resources/app
 
       - name: Merge VOICEVOX ENGINE into prepackage/
         shell: bash
         run: |
-          mv voicevox_engine/${{ matrix.voicevox_engine_asset_name }}/* prepackage/
+          mv voicevox_engine/voicevox_engine/* prepackage/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
@@ -320,9 +360,10 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
 
-
+  # FIXME: build with production resources in Hiroshiba/voicevox
+  # Temporarily, skip uploading to GitHub Release (use Artifact instead)
   upload-distributable-to-release:
-    if: github.event.release.tag_name != '' # If release
+    if: false && (github.event.release.tag_name != '') # If release
     needs: [build-distributable]
     strategy:
       fail-fast: false

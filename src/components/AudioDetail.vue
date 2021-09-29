@@ -155,9 +155,9 @@ import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import {
   ACTIVE_AUDIO_KEY,
-  CHANGE_ACCENT,
+  COMMAND_CHANGE_ACCENT,
   COMMAND_SET_AUDIO_MORA_DATA,
-  CHANGE_ACCENT_PHRASE_SPLIT,
+  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT,
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
@@ -204,7 +204,7 @@ export default defineComponent({
     };
 
     // accent phrase
-    const activeAudioKey = computed<string | null>(
+    const activeAudioKey = computed<string | undefined>(
       () => store.getters[ACTIVE_AUDIO_KEY]
     );
     const uiLocked = computed(() => store.getters[UI_LOCKED]);
@@ -216,7 +216,7 @@ export default defineComponent({
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const changeAccent = (accentPhraseIndex: number, accent: number) => {
-      store.dispatch(CHANGE_ACCENT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         accent,
@@ -228,11 +228,12 @@ export default defineComponent({
       isPause: boolean,
       moraIndex?: number
     ) => {
-      store.dispatch(CHANGE_ACCENT_PHRASE_SPLIT, {
+      store.dispatch(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
-        moraIndex,
-        isPause,
+        ...(!isPause
+          ? { isPause, moraIndex: moraIndex as number }
+          : { isPause }),
       });
     };
 
@@ -348,7 +349,7 @@ export default defineComponent({
         popUntilPause = true;
       }
       store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
-        audioKey: activeAudioKey.value,
+        audioKey: activeAudioKey.value!,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
         popUntilPause,

@@ -1,8 +1,16 @@
-import { Action, StoreOptions } from "vuex";
+import { Action } from "vuex";
+import { StoreOptions } from "./vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
-import { State, Command } from "./type";
+import {
+  State,
+  Command,
+  CommandGetters,
+  CommandActions,
+  CommandMutations,
+} from "./type";
+import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
 
 enablePatches();
 enableMapSet();
@@ -26,7 +34,7 @@ export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
  * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
  * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
  * */
-class OldCommand<S> {
+export class OldCommand<S> {
   undoOperations: Operation[];
   redoOperations: Operation[];
 
@@ -88,11 +96,10 @@ export function oldCreateCommandAction<S, P>(
   };
 }
 
-export type PayloadRecipe<S, P extends Record<string, unknown> | undefined> = (
-  draft: Draft<S>,
-  payload: P
-) => void;
-export type PayloadRecipeTree<S> = Record<string, PayloadRecipe<S, any>>;
+export type PayloadRecipe<S, P> = (draft: Draft<S>, payload: P) => void;
+export type PayloadRecipeTree<S, M> = {
+  [K in keyof M]: PayloadRecipe<S, M[K]>;
+};
 export type PayloadMutation<S, P extends Record<string, unknown> | undefined> =
   (state: S, payload: P) => void;
 export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
@@ -101,15 +108,6 @@ interface UndoRedoState {
   undoCommands: Command[];
   redoCommands: Command[];
 }
-
-type CreatePayloadMutationTree<
-  S extends UndoRedoState,
-  Arg extends PayloadRecipeTree<S>
-> = {
-  [K in keyof Arg]: Arg[K] extends PayloadRecipe<S, infer P>
-    ? PayloadMutation<S, P>
-    : PayloadMutation<S, undefined>;
-};
 
 /**
  * レシピをプロパティに持つオブジェクトから操作を記録するMutationをプロパティにもつオブジェクトを返す関数
@@ -120,16 +118,16 @@ type CreatePayloadMutationTree<
  */
 export const createCommandMutationTree = <
   S extends UndoRedoState,
-  Arg extends PayloadRecipeTree<S>
+  M extends MutationsBase
 >(
-  payloadRecipeTree: Arg
-): CreatePayloadMutationTree<S, Arg> =>
+  payloadRecipeTree: PayloadRecipeTree<S, M>
+): MutationTree<S, M> =>
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
       createCommandMutation(val),
     ])
-  ) as CreatePayloadMutationTree<S, Arg>;
+  ) as MutationTree<S, M>;
 
 /**
  * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
@@ -139,10 +137,10 @@ export const createCommandMutationTree = <
  * @returns レシピと同じPayloadの型を持つMutation.
  */
 export const createCommandMutation =
-  <S extends UndoRedoState, P extends Record<string, unknown> | undefined>(
-    payloadRecipe: PayloadRecipe<S, P>
-  ): PayloadMutation<S, P> =>
-  (state: S, payload: P): void => {
+  <S extends UndoRedoState, M extends MutationsBase, K extends keyof M>(
+    payloadRecipe: PayloadRecipe<S, M[K]>
+  ): Mutation<S, M[K]> =>
+  (state: S, payload: M[K]): void => {
     const command = recordOperations(payloadRecipe)(state, payload);
     applyPatch(state, command.redoOperations);
     state.undoCommands.push(command);
@@ -161,10 +159,10 @@ const patchToOperation = (patch: Patch): Operation => ({
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
 const recordOperations =
-  <S, P extends Record<string, unknown> | undefined>(
-    recipe: PayloadRecipe<S, P>
+  <S extends UndoRedoState, M extends MutationsBase, K extends keyof M>(
+    recipe: PayloadRecipe<S, M[K]>
   ) =>
-  (state: S, payload: P): Command => {
+  (state: S, payload: M[K]): Command => {
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
       // Taking snapshots has negative effects on performance.
       // This approach may cause a bottleneck.
@@ -177,7 +175,12 @@ const recordOperations =
     };
   };
 
-export const commandStore = {
+export const commandStore: StoreOptions<
+  State,
+  CommandGetters,
+  CommandActions,
+  CommandMutations
+> = {
   getters: {
     [CAN_UNDO](state) {
       return state.undoCommands.length > 0;
@@ -213,10 +216,10 @@ export const commandStore = {
 
   actions: {
     [UNDO]: ({ commit }) => {
-      commit(UNDO);
+      commit(UNDO, undefined);
     },
     [REDO]: ({ commit }) => {
-      commit(REDO);
+      commit(REDO, undefined);
     },
   },
-} as StoreOptions<State>;
+};
