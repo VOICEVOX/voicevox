@@ -104,6 +104,11 @@ export type AudioMutations = {
   SET_AUDIO_QUERY: { audioKey: string; audioQuery: AudioQuery };
   SET_AUDIO_CHARACTER_INDEX: { audioKey: string; characterIndex: number };
   SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
+  SET_SINGLE_ACCENT_PHRASE: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    accentPhrases: AccentPhrase[];
+  };
   SET_AUDIO_MORA_DATA: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -127,12 +132,6 @@ export type AudioActions = {
     audioKey: string;
     accentPhrases: AccentPhrase[];
   }): void;
-  SET_SINGLE_ACCENT_PHRASE(payload: {
-    audioKey: string;
-    accentPhraseIndex: number;
-    accentPhrases: AccentPhrase[];
-    popUntilPause: boolean;
-  }): void;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
@@ -140,12 +139,6 @@ export type AudioActions = {
     isKana?: boolean;
   }): Promise<AccentPhrase[]>;
   FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
-  FETCH_AND_SET_SINGLE_ACCENT_PHRASE(payload: {
-    audioKey: string;
-    newPronunciation: string;
-    accentPhraseIndex: number;
-    popUntilPause: boolean;
-  }): void;
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
@@ -222,6 +215,12 @@ export type AudioCommandActions = {
         }
     )
   ): void;
+  COMMAND_CHANGE_SINGLE_ACCENT_PHRASE(payload: {
+    audioKey: string;
+    newPronunciation: string;
+    accentPhraseIndex: number;
+    popUntilPause: boolean;
+  }): void;
   COMMAND_SET_AUDIO_MORA_DATA(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -283,6 +282,11 @@ export type AudioCommandMutations = {
   };
   COMMAND_CHANGE_ACCENT_PHRASE_SPLIT: {
     audioKey: string;
+    accentPhrases: AccentPhrase[];
+  };
+  COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
+    audioKey: string;
+    accentPhraseIndex: number;
     accentPhrases: AccentPhrase[];
   };
   COMMAND_SET_AUDIO_MORA_DATA: {
