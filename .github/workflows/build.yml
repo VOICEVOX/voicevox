@@ -311,7 +311,8 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
 
-
+  # FIXME: build with production resources in Hiroshiba/voicevox
+  # Temporarily, skip uploading to GitHub Release (use Artifact instead)
   upload-distributable-to-release:
     if: false && (github.event.release.tag_name != '') # If release
     needs: [build-distributable]
