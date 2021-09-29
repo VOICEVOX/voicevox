@@ -1,22 +1,16 @@
 import { InjectionKey } from "vue";
 import { createLogger } from "vuex";
-import {
-  createStore,
-  Store,
-  StoreOptions,
-  useStore as baseUseStore,
-} from "./vuex";
+import { createStore, Store, useStore as baseUseStore } from "./vuex";
 
 import {
-  actionsMixer,
   AllActions,
   AllGetters,
   AllMutations,
-  gettersMixer,
   IndexActions,
   IndexGetters,
   IndexMutations,
   State,
+  VoiceVoxStoreOptions,
 } from "./type";
 import { commandStore } from "./command";
 import { audioStore, audioCommandStore } from "./audio";
@@ -36,8 +30,7 @@ export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
 > = Symbol();
 
-export const indexStore: StoreOptions<
-  State,
+export const indexStore: VoiceVoxStoreOptions<
   IndexGetters,
   IndexActions,
   IndexMutations
@@ -91,7 +84,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     isPinned: false,
   },
 
-  getters: gettersMixer({
+  getters: {
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
@@ -99,7 +92,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
-  }),
+  },
 
   mutations: {
     ...uiStore.mutations,
@@ -111,7 +104,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.mutations,
   },
 
-  actions: actionsMixer({
+  actions: {
     ...uiStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
@@ -119,7 +112,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.actions,
     ...audioCommandStore.actions,
     ...indexStore.actions,
-  }),
+  },
   plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",
 });
