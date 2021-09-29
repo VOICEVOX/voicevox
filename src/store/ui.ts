@@ -1,16 +1,12 @@
+import { Action, ActionContext, ActionsBase } from "./vuex";
 import {
-  Action,
-  ActionContext,
-  ActionsBase,
-  MutationsBase,
-  StoreOptions,
-} from "./vuex";
-import {
-  State,
+  AllActions,
+  AllGetters,
+  AllMutations,
   UiActions,
   UiGetters,
   UiMutations,
-  useAllStoreGetter,
+  VoiceVoxStoreOptions,
 } from "./type";
 import { ACTIVE_AUDIO_KEY } from "./audio";
 
@@ -28,24 +24,14 @@ export const DETECT_PINNED = "DETECT_PINNED";
 export const DETECT_UNPINNED = "DETECT_UNPINNED";
 export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
 
-export function createUILockAction<
-  S,
-  A extends ActionsBase,
-  M extends MutationsBase,
-  K extends keyof ActionsBase
->(
+export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
-    context: ActionContext<
-      S,
-      S,
-      A,
-      M extends UiMutations ? M : M & UiMutations
-    >,
+    context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0]
   ) => ReturnType<A[K]> extends Promise<any>
     ? ReturnType<A[K]>
     : Promise<ReturnType<A[K]>>
-): Action<S, S, A, M extends UiMutations ? M : M & UiMutations, K> {
+): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
     context.commit(LOCK_UI, undefined);
     return action(context, payload).finally(() => {
@@ -54,107 +40,108 @@ export function createUILockAction<
   };
 }
 
-export const uiStore: StoreOptions<State, UiGetters, UiActions, UiMutations> = {
-  getters: {
-    [UI_LOCKED](state) {
-      return state.uiLockCount > 0;
+export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
+  {
+    getters: {
+      [UI_LOCKED](state) {
+        return state.uiLockCount > 0;
+      },
+      [SHOULD_SHOW_PANES]: (_, getters) => {
+        return getters[ACTIVE_AUDIO_KEY] != undefined;
+      },
     },
-    [SHOULD_SHOW_PANES]: useAllStoreGetter((_, getters) => {
-      return getters[ACTIVE_AUDIO_KEY] != undefined;
-    }),
-  },
 
-  mutations: {
-    [LOCK_UI](state) {
-      state.uiLockCount++;
+    mutations: {
+      [LOCK_UI](state) {
+        state.uiLockCount++;
+      },
+      [UNLOCK_UI](state) {
+        state.uiLockCount--;
+      },
+      [IS_HELP_DIALOG_OPEN](
+        state,
+        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
+      ) {
+        state.isHelpDialogOpen = isHelpDialogOpen;
+      },
+      [IS_SETTING_DIALOG_OPEN](
+        state,
+        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
+      ) {
+        state.isSettingDialogOpen = isSettingDialogOpen;
+      },
+      [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
+        state.useGpu = useGpu;
+      },
+      [DETECT_UNMAXIMIZED](state) {
+        state.isMaximized = false;
+      },
+      [DETECT_MAXIMIZED](state) {
+        state.isMaximized = true;
+      },
+      [DETECT_PINNED](state) {
+        state.isPinned = true;
+      },
+      [DETECT_UNPINNED](state) {
+        state.isPinned = false;
+      },
     },
-    [UNLOCK_UI](state) {
-      state.uiLockCount--;
-    },
-    [IS_HELP_DIALOG_OPEN](
-      state,
-      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-    ) {
-      state.isHelpDialogOpen = isHelpDialogOpen;
-    },
-    [IS_SETTING_DIALOG_OPEN](
-      state,
-      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-    ) {
-      state.isSettingDialogOpen = isSettingDialogOpen;
-    },
-    [SET_USE_GPU](state, { useGpu }: { useGpu: boolean }) {
-      state.useGpu = useGpu;
-    },
-    [DETECT_UNMAXIMIZED](state) {
-      state.isMaximized = false;
-    },
-    [DETECT_MAXIMIZED](state) {
-      state.isMaximized = true;
-    },
-    [DETECT_PINNED](state) {
-      state.isPinned = true;
-    },
-    [DETECT_UNPINNED](state) {
-      state.isPinned = false;
-    },
-  },
 
-  actions: {
-    [LOCK_UI]({ commit }) {
-      commit(LOCK_UI, undefined);
-    },
-    [UNLOCK_UI]({ commit }) {
-      commit(UNLOCK_UI, undefined);
-    },
-    [ASYNC_UI_LOCK]: createUILockAction(
-      async (_, { callback }: { callback: () => Promise<void> }) => {
-        await callback();
-      }
-    ),
-    [IS_HELP_DIALOG_OPEN](
-      { state, commit },
-      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-    ) {
-      if (state.isHelpDialogOpen === isHelpDialogOpen) return;
+    actions: {
+      [LOCK_UI]({ commit }) {
+        commit(LOCK_UI, undefined);
+      },
+      [UNLOCK_UI]({ commit }) {
+        commit(UNLOCK_UI, undefined);
+      },
+      [ASYNC_UI_LOCK]: createUILockAction(
+        async (_, { callback }: { callback: () => Promise<void> }) => {
+          await callback();
+        }
+      ),
+      [IS_HELP_DIALOG_OPEN](
+        { state, commit },
+        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
+      ) {
+        if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-      if (isHelpDialogOpen) commit(LOCK_UI, undefined);
-      else commit(UNLOCK_UI, undefined);
+        if (isHelpDialogOpen) commit(LOCK_UI, undefined);
+        else commit(UNLOCK_UI, undefined);
 
-      commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
-    },
-    [IS_SETTING_DIALOG_OPEN](
-      { state, commit },
-      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-    ) {
-      if (state.isSettingDialogOpen === isSettingDialogOpen) return;
+        commit(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen });
+      },
+      [IS_SETTING_DIALOG_OPEN](
+        { state, commit },
+        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
+      ) {
+        if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-      if (isSettingDialogOpen) commit(LOCK_UI, undefined);
-      else commit(UNLOCK_UI, undefined);
+        if (isSettingDialogOpen) commit(LOCK_UI, undefined);
+        else commit(UNLOCK_UI, undefined);
 
-      commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
+        commit(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen });
+      },
+      async [GET_USE_GPU]({ commit }) {
+        commit(SET_USE_GPU, {
+          useGpu: await window.electron.useGpu(),
+        });
+      },
+      async [SET_USE_GPU]({ commit }, { useGpu }: { useGpu: boolean }) {
+        commit(SET_USE_GPU, {
+          useGpu: await window.electron.useGpu(useGpu),
+        });
+      },
+      async [DETECT_UNMAXIMIZED]({ commit }) {
+        commit(DETECT_UNMAXIMIZED, undefined);
+      },
+      async [DETECT_MAXIMIZED]({ commit }) {
+        commit(DETECT_MAXIMIZED, undefined);
+      },
+      async [DETECT_PINNED]({ commit }) {
+        commit(DETECT_PINNED, undefined);
+      },
+      async [DETECT_UNPINNED]({ commit }) {
+        commit(DETECT_UNPINNED, undefined);
+      },
     },
-    async [GET_USE_GPU]({ commit }) {
-      commit(SET_USE_GPU, {
-        useGpu: await window.electron.useGpu(),
-      });
-    },
-    async [SET_USE_GPU]({ commit }, { useGpu }: { useGpu: boolean }) {
-      commit(SET_USE_GPU, {
-        useGpu: await window.electron.useGpu(useGpu),
-      });
-    },
-    async [DETECT_UNMAXIMIZED]({ commit }) {
-      commit(DETECT_UNMAXIMIZED, undefined);
-    },
-    async [DETECT_MAXIMIZED]({ commit }) {
-      commit(DETECT_MAXIMIZED, undefined);
-    },
-    async [DETECT_PINNED]({ commit }) {
-      commit(DETECT_PINNED, undefined);
-    },
-    async [DETECT_UNPINNED]({ commit }) {
-      commit(DETECT_UNPINNED, undefined);
-    },
-  },
-};
+  };

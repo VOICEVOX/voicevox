@@ -1,10 +1,9 @@
 import {
   MutationTree,
   MutationsBase,
-  Action,
-  Getter,
-  ActionTree,
-  GetterTree,
+  GettersBase,
+  ActionsBase,
+  StoreOptions,
 } from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
@@ -475,28 +474,11 @@ export type UnionActions =
   | SettingActions
   | UiActions;
 
-export const useAllStoreGetter = <G extends UnionGetters, K extends keyof G>(
-  arg: (
-    state: State,
-    getters: AllGetters,
-    rootState: State,
-    rootGetters: any
-  ) => G[K]
-): Getter<State, State, G, K> => {
-  return (state, getters, rootState, rootGetters) =>
-    arg(state, getters as AllGetters, rootState, rootGetters);
-};
-
-export const useAllStoreAction = <K extends keyof AllActions>(
-  arg: Action<State, State, AllActions, AllMutations, K>
-): Action<State, State, AllActions, AllMutations, K> => arg;
-
-export const gettersMixer = (arg: GetterTree<State, State, UnionGetters>) =>
-  arg as GetterTree<State, State, AllGetters>;
-
-export const actionsMixer = (
-  arg: ActionTree<State, State, UnionActions, UnionMutations>
-) => arg as ActionTree<State, State, AllActions, AllMutations>;
+export type VoiceVoxStoreOptions<
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+> = StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations>;
 
 export const commandMutationsCreator = <M extends MutationsBase>(
   arg: PayloadRecipeTree<State, M>
