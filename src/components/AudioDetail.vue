@@ -161,7 +161,7 @@ import {
   PLAY_AUDIO,
   STOP_AUDIO,
   GENERATE_AND_SAVE_AUDIO,
-  FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
+  COMMAND_CHANGE_SINGLE_ACCENT_PHRASE,
 } from "@/store/audio";
 import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
@@ -348,7 +348,7 @@ export default defineComponent({
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
-      store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
+      store.dispatch(COMMAND_CHANGE_SINGLE_ACCENT_PHRASE, {
         audioKey: activeAudioKey.value!,
         newPronunciation,
         accentPhraseIndex: phraseIndex,

@@ -14,8 +14,9 @@ const argv = yargs(hideBin(process.argv))
 
 const { execSync } = require("child_process");
 const fs = require("fs");
+const tmp = require("tmp");
 
-const customFormat = JSON.stringify({
+const customFormat = {
   name: "",
   version: "",
   description: "",
@@ -24,12 +25,15 @@ const customFormat = JSON.stringify({
   licenseFile: "none",
   licenseText: "none",
   licenseModified: "no"
-});
+};
+
+const customFormatFile = tmp.fileSync();
+fs.writeFileSync(customFormatFile.name, JSON.stringify(customFormat));
 
 // https://github.com/davglass/license-checker
 // npm install -g license-checker
 const licenseJson = execSync(
-  `license-checker --production --excludePrivatePackages --json --customPath ${customFormat}`,
+  `license-checker --production --excludePrivatePackages --json --customPath ${customFormatFile.name}`,
   {
     encoding: "utf-8"
   }
