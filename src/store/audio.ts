@@ -14,12 +14,11 @@ import {
   AudioCommandActions,
   AudioCommandGetters,
   AudioCommandMutations,
-  useAllStoreAction,
+  VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
 import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { StoreOptions } from "@/store/vuex";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -132,8 +131,7 @@ SET_ACCENT_PHRASES;
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
-export const audioStore: StoreOptions<
-  State,
+export const audioStore: VoiceVoxStoreOptions<
   AudioGetters,
   AudioActions,
   AudioMutations
@@ -833,8 +831,7 @@ export const COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH =
 export const COMMAND_SET_AUDIO_POST_PHONEME_LENGTH =
   "COMMAND_SET_AUDIO_POST_PHONEME_LENGTH";
 
-export const audioCommandStore: StoreOptions<
-  State,
+export const audioCommandStore: VoiceVoxStoreOptions<
   AudioCommandGetters,
   AudioCommandActions,
   AudioCommandMutations
@@ -866,282 +863,269 @@ export const audioCommandStore: StoreOptions<
     ) => {
       commit(COMMAND_REMOVE_AUDIO_ITEM, payload);
     },
-    [COMMAND_CHANGE_CHARACTER_INDEX]: useAllStoreAction(
-      async (
-        { state, dispatch, commit },
-        {
-          audioKey,
-          characterIndex,
-        }: { audioKey: string; characterIndex: number }
-      ) => {
-        const query = state.audioItems[audioKey].query;
-        try {
-          if (query !== undefined) {
-            const accentPhrases = query.accentPhrases;
-            const newAccentPhrases: AccentPhrase[] = await dispatch(
-              FETCH_MORA_DATA,
-              {
-                accentPhrases,
-                characterIndex,
-              }
-            );
-            commit(COMMAND_CHANGE_CHARACTER_INDEX, {
-              characterIndex: characterIndex,
-              audioKey: audioKey,
-              update: "AccentPhrases",
-              accentPhrases: newAccentPhrases,
-            });
-          } else {
-            const text = state.audioItems[audioKey].text;
-            const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
-              text: text,
-              characterIndex: characterIndex,
-            });
-            commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+    [COMMAND_CHANGE_CHARACTER_INDEX]: async (
+      { state, dispatch, commit },
+      { audioKey, characterIndex }: { audioKey: string; characterIndex: number }
+    ) => {
+      const query = state.audioItems[audioKey].query;
+      try {
+        if (query !== undefined) {
+          const accentPhrases = query.accentPhrases;
+          const newAccentPhrases: AccentPhrase[] = await dispatch(
+            FETCH_MORA_DATA,
+            {
+              accentPhrases,
               characterIndex,
-              audioKey,
-              update: "AudioQuery",
-              query,
-            });
-          }
-        } catch (error) {
+            }
+          );
+          commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+            characterIndex: characterIndex,
+            audioKey: audioKey,
+            update: "AccentPhrases",
+            accentPhrases: newAccentPhrases,
+          });
+        } else {
+          const text = state.audioItems[audioKey].text;
+          const query: AudioQuery = await dispatch(FETCH_AUDIO_QUERY, {
+            text: text,
+            characterIndex: characterIndex,
+          });
           commit(COMMAND_CHANGE_CHARACTER_INDEX, {
             characterIndex,
             audioKey,
-            update: "CharacterIndex",
+            update: "AudioQuery",
+            query,
           });
-          throw error;
         }
-      }
-    ),
-    [COMMAND_CHANGE_ACCENT]: useAllStoreAction(
-      async (
-        { state, dispatch, commit },
-        {
+      } catch (error) {
+        commit(COMMAND_CHANGE_CHARACTER_INDEX, {
+          characterIndex,
           audioKey,
-          accentPhraseIndex,
-          accent,
-        }: {
-          audioKey: string;
-          accentPhraseIndex: number;
-          accent: number;
-        }
-      ) => {
-        const query = state.audioItems[audioKey].query;
-        if (query !== undefined) {
-          const newAccentPhrases: AccentPhrase[] = JSON.parse(
-            JSON.stringify(query.accentPhrases)
-          );
-          newAccentPhrases[accentPhraseIndex].accent = accent;
-
-          try {
-            const characterIndex: number =
-              state.audioItems[audioKey].characterIndex ?? 0;
-            const resultAccentPhrases: AccentPhrase[] = await dispatch(
-              FETCH_AND_COPY_MORA_DATA,
-              {
-                accentPhrases: newAccentPhrases,
-                characterIndex,
-                copyIndexes: [accentPhraseIndex],
-              }
-            );
-
-            commit(COMMAND_CHANGE_ACCENT, {
-              audioKey,
-              accentPhrases: resultAccentPhrases,
-            });
-          } catch (error) {
-            commit(COMMAND_CHANGE_ACCENT, {
-              audioKey,
-              accentPhrases: newAccentPhrases,
-            });
-            throw error;
-          }
-        }
+          update: "CharacterIndex",
+        });
+        throw error;
       }
-    ),
-    [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: useAllStoreAction(
-      async (
-        { state, dispatch, commit },
-        payload: {
-          audioKey: string;
-          accentPhraseIndex: number;
-        } & (
-          | {
-              isPause: false;
-              moraIndex: number;
-            }
-          | {
-              isPause: true;
-            }
-        )
-      ) => {
-        const { audioKey, accentPhraseIndex } = payload;
-        const query: AudioQuery | undefined = state.audioItems[audioKey].query;
-        const characterIndex: number =
-          state.audioItems[audioKey].characterIndex ?? 0;
-        if (query === undefined) {
-          throw Error(
-            "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
-          );
-        }
+    },
+    [COMMAND_CHANGE_ACCENT]: async (
+      { state, dispatch, commit },
+      {
+        audioKey,
+        accentPhraseIndex,
+        accent,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        accent: number;
+      }
+    ) => {
+      const query = state.audioItems[audioKey].query;
+      if (query !== undefined) {
         const newAccentPhrases: AccentPhrase[] = JSON.parse(
           JSON.stringify(query.accentPhrases)
         );
-        const changeIndexes = [accentPhraseIndex];
-        // toggleAccentPhrase to newAccentPhrases and recored changeIndexes
-        {
-          const mergeAccent = (
-            accentPhrases: AccentPhrase[],
-            accentPhraseIndex: number
-          ) => {
-            const newAccentPhrase: AccentPhrase = {
-              moras: [
-                ...accentPhrases[accentPhraseIndex].moras,
-                ...accentPhrases[accentPhraseIndex + 1].moras,
-              ],
-              accent: accentPhrases[accentPhraseIndex].accent,
-              pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
-            };
-            accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
-          };
-          const splitAccent = (
-            accentPhrases: AccentPhrase[],
-            accentPhraseIndex: number,
-            moraIndex: number
-          ) => {
-            const newAccentPhrase1: AccentPhrase = {
-              moras: accentPhrases[accentPhraseIndex].moras.slice(
-                0,
-                moraIndex + 1
-              ),
-              accent:
-                accentPhrases[accentPhraseIndex].accent > moraIndex
-                  ? moraIndex + 1
-                  : accentPhrases[accentPhraseIndex].accent,
-              pauseMora: undefined,
-            };
-            const newAccentPhrase2: AccentPhrase = {
-              moras: accentPhrases[accentPhraseIndex].moras.slice(
-                moraIndex + 1
-              ),
-              accent:
-                accentPhrases[accentPhraseIndex].accent > moraIndex + 1
-                  ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
-                  : 1,
-              pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
-            };
-            accentPhrases.splice(
-              accentPhraseIndex,
-              1,
-              newAccentPhrase1,
-              newAccentPhrase2
-            );
-          };
-
-          if (payload.isPause) {
-            mergeAccent(newAccentPhrases, accentPhraseIndex);
-          } else {
-            const moraIndex: number = payload.moraIndex;
-            if (
-              moraIndex ===
-              newAccentPhrases[accentPhraseIndex].moras.length - 1
-            ) {
-              mergeAccent(newAccentPhrases, accentPhraseIndex);
-            } else {
-              splitAccent(newAccentPhrases, accentPhraseIndex, moraIndex);
-              changeIndexes.push(accentPhraseIndex + 1);
-            }
-          }
-        }
+        newAccentPhrases[accentPhraseIndex].accent = accent;
 
         try {
+          const characterIndex: number =
+            state.audioItems[audioKey].characterIndex ?? 0;
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
             FETCH_AND_COPY_MORA_DATA,
             {
               accentPhrases: newAccentPhrases,
               characterIndex,
-              copyIndexes: changeIndexes,
+              copyIndexes: [accentPhraseIndex],
             }
           );
-          commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+
+          commit(COMMAND_CHANGE_ACCENT, {
             audioKey,
             accentPhrases: resultAccentPhrases,
           });
         } catch (error) {
-          commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+          commit(COMMAND_CHANGE_ACCENT, {
             audioKey,
             accentPhrases: newAccentPhrases,
           });
           throw error;
         }
       }
-    ),
-    [COMMAND_CHANGE_SINGLE_ACCENT_PHRASE]: useAllStoreAction(
-      async (
-        { state, dispatch, commit },
-        {
-          audioKey,
-          newPronunciation,
-          accentPhraseIndex,
-          popUntilPause,
-        }: {
-          audioKey: string;
-          newPronunciation: string;
-          accentPhraseIndex: number;
-          popUntilPause: boolean;
-        }
-      ) => {
-        const characterIndex = state.audioItems[audioKey].characterIndex!;
-
-        let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
-
-        // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
-        // 「読み仮名」としてこれを処理する
-        const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
-        if (kanaRegex.test(newPronunciation)) {
-          // ひらがなが混ざっている場合はカタカナに変換
-          const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
-            return String.fromCharCode(s.charCodeAt(0) + 0x60);
-          });
-          // アクセントを末尾につけaccent phraseの生成をリクエスト
-          // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
-          newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
-            text: katakana + "'",
-            characterIndex,
-            isKana: true,
-          }).catch(
-            // fallback
-            () =>
-              dispatch(FETCH_ACCENT_PHRASES, {
-                text: newPronunciation,
-                characterIndex,
-                isKana: false,
-              })
+    },
+    [COMMAND_CHANGE_ACCENT_PHRASE_SPLIT]: async (
+      { state, dispatch, commit },
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+      } & (
+        | {
+            isPause: false;
+            moraIndex: number;
+          }
+        | {
+            isPause: true;
+          }
+      )
+    ) => {
+      const { audioKey, accentPhraseIndex } = payload;
+      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      const characterIndex: number =
+        state.audioItems[audioKey].characterIndex ?? 0;
+      if (query === undefined) {
+        throw Error(
+          "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
+        );
+      }
+      const newAccentPhrases: AccentPhrase[] = JSON.parse(
+        JSON.stringify(query.accentPhrases)
+      );
+      const changeIndexes = [accentPhraseIndex];
+      // toggleAccentPhrase to newAccentPhrases and recored changeIndexes
+      {
+        const mergeAccent = (
+          accentPhrases: AccentPhrase[],
+          accentPhraseIndex: number
+        ) => {
+          const newAccentPhrase: AccentPhrase = {
+            moras: [
+              ...accentPhrases[accentPhraseIndex].moras,
+              ...accentPhrases[accentPhraseIndex + 1].moras,
+            ],
+            accent: accentPhrases[accentPhraseIndex].accent,
+            pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
+          };
+          accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
+        };
+        const splitAccent = (
+          accentPhrases: AccentPhrase[],
+          accentPhraseIndex: number,
+          moraIndex: number
+        ) => {
+          const newAccentPhrase1: AccentPhrase = {
+            moras: accentPhrases[accentPhraseIndex].moras.slice(
+              0,
+              moraIndex + 1
+            ),
+            accent:
+              accentPhrases[accentPhraseIndex].accent > moraIndex
+                ? moraIndex + 1
+                : accentPhrases[accentPhraseIndex].accent,
+            pauseMora: undefined,
+          };
+          const newAccentPhrase2: AccentPhrase = {
+            moras: accentPhrases[accentPhraseIndex].moras.slice(moraIndex + 1),
+            accent:
+              accentPhrases[accentPhraseIndex].accent > moraIndex + 1
+                ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
+                : 1,
+            pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
+          };
+          accentPhrases.splice(
+            accentPhraseIndex,
+            1,
+            newAccentPhrase1,
+            newAccentPhrase2
           );
-        } else {
-          newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
-            text: newPronunciation,
-            characterIndex: characterIndex,
-          });
-        }
+        };
 
-        if (popUntilPause) {
-          while (
-            newAccentPhrasesSegment[newAccentPhrasesSegment.length - 1]
-              .pauseMora === undefined
+        if (payload.isPause) {
+          mergeAccent(newAccentPhrases, accentPhraseIndex);
+        } else {
+          const moraIndex: number = payload.moraIndex;
+          if (
+            moraIndex ===
+            newAccentPhrases[accentPhraseIndex].moras.length - 1
           ) {
-            newAccentPhrasesSegment.pop();
+            mergeAccent(newAccentPhrases, accentPhraseIndex);
+          } else {
+            splitAccent(newAccentPhrases, accentPhraseIndex, moraIndex);
+            changeIndexes.push(accentPhraseIndex + 1);
           }
         }
+      }
 
-        commit(COMMAND_CHANGE_SINGLE_ACCENT_PHRASE, {
+      try {
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          FETCH_AND_COPY_MORA_DATA,
+          {
+            accentPhrases: newAccentPhrases,
+            characterIndex,
+            copyIndexes: changeIndexes,
+          }
+        );
+        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
           audioKey,
-          accentPhraseIndex,
-          accentPhrases: newAccentPhrasesSegment,
+          accentPhrases: resultAccentPhrases,
+        });
+      } catch (error) {
+        commit(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
+        throw error;
+      }
+    },
+    [COMMAND_CHANGE_SINGLE_ACCENT_PHRASE]: async (
+      { state, dispatch, commit },
+      {
+        audioKey,
+        newPronunciation,
+        accentPhraseIndex,
+        popUntilPause,
+      }: {
+        audioKey: string;
+        newPronunciation: string;
+        accentPhraseIndex: number;
+        popUntilPause: boolean;
+      }
+    ) => {
+      const characterIndex = state.audioItems[audioKey].characterIndex!;
+
+      let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
+
+      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)のみで構成される場合、
+      // 「読み仮名」としてこれを処理する
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4]+$/;
+      if (kanaRegex.test(newPronunciation)) {
+        // ひらがなが混ざっている場合はカタカナに変換
+        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
+          return String.fromCharCode(s.charCodeAt(0) + 0x60);
+        });
+        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
+        newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
+          text: katakana + "'",
+          characterIndex,
+          isKana: true,
+        }).catch(
+          // fallback
+          () =>
+            dispatch(FETCH_ACCENT_PHRASES, {
+              text: newPronunciation,
+              characterIndex,
+              isKana: false,
+            })
+        );
+      } else {
+        newAccentPhrasesSegment = await dispatch(FETCH_ACCENT_PHRASES, {
+          text: newPronunciation,
+          characterIndex: characterIndex,
         });
       }
-    ),
+
+      if (popUntilPause) {
+        while (
+          newAccentPhrasesSegment[newAccentPhrasesSegment.length - 1]
+            .pauseMora === undefined
+        ) {
+          newAccentPhrasesSegment.pop();
+        }
+      }
+
+      commit(COMMAND_CHANGE_SINGLE_ACCENT_PHRASE, {
+        audioKey,
+        accentPhraseIndex,
+        accentPhrases: newAccentPhrasesSegment,
+      });
+    },
     [COMMAND_SET_AUDIO_MORA_DATA]: (
       { commit },
       payload: {

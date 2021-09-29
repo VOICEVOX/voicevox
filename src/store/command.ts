@@ -1,5 +1,4 @@
 import { Action } from "vuex";
-import { StoreOptions } from "./vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
@@ -10,6 +9,7 @@ import {
   CommandActions,
   CommandMutations,
   AllMutations,
+  VoiceVoxStoreOptions,
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
 
@@ -176,8 +176,7 @@ const recordOperations =
     };
   };
 
-export const commandStore: StoreOptions<
-  State,
+export const commandStore: VoiceVoxStoreOptions<
   CommandGetters,
   CommandActions,
   CommandMutations
