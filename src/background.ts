@@ -1,6 +1,6 @@
 "use strict";
 
-import { execFile, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
@@ -112,21 +112,32 @@ async function runEngine() {
     appDirPath,
     process.env.ENGINE_PATH ?? "run.exe"
   );
-  const args = useGpu ? ["--use_gpu"] : null;
-  engineProcess = execFile(
-    enginePath,
-    args,
-    { cwd: path.dirname(enginePath) },
-    () => {
-      if (!willQuitEngine) {
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
-        dialog.showErrorBox(
-          "音声合成エンジンエラー",
-          "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-        );
-      }
+  const args = useGpu ? ["--use_gpu"] : [];
+
+  engineProcess = spawn(enginePath, args, {
+    cwd: path.dirname(enginePath)
+  });
+
+  engineProcess.stdout?.on('data', (data) => {
+    log.info('ENGINE: ' + data.toString('utf-8'));
+  });
+
+  engineProcess.stderr?.on('data', (data) => {
+    log.error('ENGINE: ' + data.toString('utf-8'));
+  });
+
+  engineProcess.on('close', (code, signal) => {
+    log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE: exited with code ${code}`);
+
+    if (!willQuitEngine) {
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+      dialog.showErrorBox(
+        "音声合成エンジンエラー",
+        "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+      );
     }
-  );
+  });
 }
 
 // temp dir
