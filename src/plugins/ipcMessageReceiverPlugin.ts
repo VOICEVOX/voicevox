@@ -3,7 +3,10 @@ import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 
 export const ipcMessageReceiver: Plugin = {
-  install: (_, options: { store: Store<State, AllGetters, AllActions, AllMutations> }) => {
+  install: (
+    _,
+    options: { store: Store<State, AllGetters, AllActions, AllMutations> }
+  ) => {
     window.electron.onReceivedIPCMsg(
       "LOAD_PROJECT_FILE",
       (_, { filePath, confirm } = {}) =>
