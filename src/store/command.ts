@@ -9,6 +9,7 @@ import {
   CommandGetters,
   CommandActions,
   CommandMutations,
+  AllMutations,
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
 
@@ -137,10 +138,10 @@ export const createCommandMutationTree = <
  * @returns レシピと同じPayloadの型を持つMutation.
  */
 export const createCommandMutation =
-  <S extends UndoRedoState, M extends MutationsBase, K extends keyof M>(
-    payloadRecipe: PayloadRecipe<S, M[K]>
-  ): Mutation<S, M[K]> =>
-  (state: S, payload: M[K]): void => {
+  <S extends UndoRedoState, P extends AllMutations[keyof AllMutations]>(
+    payloadRecipe: PayloadRecipe<S, P>
+  ): Mutation<S, P> =>
+  (state: S, payload: P): void => {
     const command = recordOperations(payloadRecipe)(state, payload);
     applyPatch(state, command.redoOperations);
     state.undoCommands.push(command);
@@ -159,10 +160,10 @@ const patchToOperation = (patch: Patch): Operation => ({
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
 const recordOperations =
-  <S extends UndoRedoState, M extends MutationsBase, K extends keyof M>(
-    recipe: PayloadRecipe<S, M[K]>
+  <S, P extends AllMutations[keyof AllMutations]>(
+    recipe: PayloadRecipe<S, P>
   ) =>
-  (state: S, payload: M[K]): Command => {
+  (state: S, payload: P): Command => {
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
       // Taking snapshots has negative effects on performance.
       // This approach may cause a bottleneck.
