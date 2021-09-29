@@ -391,20 +391,16 @@ ipcMainHandle(
 
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
-      const closeListenerCallBack = () => {
+      engineProcess.once("close", () => {
         runEngine();
         resolve();
-      };
-      engineProcess.once("close", closeListenerCallBack);
+      });
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
         if (error !== null) {
           log.error(error);
-
-          // 再起動用に設定したclose listenerを削除。
-          engineProcess.removeListener("close", closeListenerCallBack);
 
           reject();
         }
