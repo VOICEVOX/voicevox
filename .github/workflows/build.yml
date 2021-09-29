@@ -147,6 +147,9 @@ jobs:
         run: |
           mkdir -p voicevox_engine/download
 
+      # NOTE: VOICEVOX ENGINE should not be cached since it has a size of several GB
+      # and actions/cache has a limit of 5GB per repository.
+      # https://github.com/actions/cache#cache-limits
       # - name: Dump VOICEVOX ENGINE repo URL to calc hash
       #   shell: bash
       #   run: |
