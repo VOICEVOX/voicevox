@@ -25,7 +25,9 @@ export default defineComponent({
     const store = useStore();
 
     const infos = ref<UpdateInfo[]>();
-    store.dispatch(GET_UPDATE_INFOS).then((obj) => (infos.value = obj));
+    store
+      .dispatch(GET_UPDATE_INFOS, undefined)
+      .then((obj) => (infos.value = obj));
 
     const html = computed(() => {
       if (!infos.value) return "";

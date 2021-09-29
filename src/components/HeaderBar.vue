@@ -93,14 +93,14 @@ export default defineComponent({
     );
 
     const undo = () => {
-      store.dispatch(UNDO);
+      store.dispatch(UNDO, undefined);
     };
     const redo = () => {
-      store.dispatch(REDO);
+      store.dispatch(REDO, undefined);
     };
     const playContinuously = async () => {
       try {
-        await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+        await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, undefined);
       } catch {
         $q.dialog({
           title: "再生に失敗しました",
@@ -114,7 +114,7 @@ export default defineComponent({
       }
     };
     const stopContinuously = () => {
-      store.dispatch(STOP_CONTINUOUSLY_AUDIO, {});
+      store.dispatch(STOP_CONTINUOUSLY_AUDIO, undefined);
     };
     const openHelpDialog = () => {
       store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: true });

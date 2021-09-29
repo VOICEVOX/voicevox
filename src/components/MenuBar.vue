@@ -103,27 +103,26 @@ export default defineComponent({
             label: "音声書き出し",
             shortCut: "Ctrl+E",
             onClick: async () => {
-              const result: Array<SaveResultObject> = await store.dispatch(
-                GENERATE_AND_SAVE_ALL_AUDIO,
-                {
-                  encoding: store.state.savingSetting.fileEncoding,
-                }
-              );
+              const result = await store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {
+                encoding: store.state.savingSetting.fileEncoding,
+              });
 
               let successArray: Array<string | undefined> = [];
               let writeErrorArray: Array<string | undefined> = [];
               let engineErrorArray: Array<string | undefined> = [];
-              for (const item of result) {
-                switch (item.result) {
-                  case "SUCCESS":
-                    successArray.push(item.path);
-                    break;
-                  case "WRITE_ERROR":
-                    writeErrorArray.push(item.path);
-                    break;
-                  case "ENGINE_ERROR":
-                    engineErrorArray.push(item.path);
-                    break;
+              if (result) {
+                for (const item of result) {
+                  switch (item.result) {
+                    case "SUCCESS":
+                      successArray.push(item.path);
+                      break;
+                    case "WRITE_ERROR":
+                      writeErrorArray.push(item.path);
+                      break;
+                    case "ENGINE_ERROR":
+                      engineErrorArray.push(item.path);
+                      break;
+                  }
                 }
               }
 
@@ -180,7 +179,7 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch(RESTART_ENGINE),
+            onClick: () => store.dispatch(RESTART_ENGINE, undefined),
           },
         ],
       },

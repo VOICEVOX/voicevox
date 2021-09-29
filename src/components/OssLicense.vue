@@ -51,7 +51,9 @@ export default defineComponent({
     const store = useStore();
 
     let licenses = ref<Record<string, string>[]>();
-    store.dispatch(GET_OSS_LICENSES).then((obj) => (licenses.value = obj));
+    store
+      .dispatch(GET_OSS_LICENSES, undefined)
+      .then((obj) => (licenses.value = obj));
 
     const detailIndex = ref<number | undefined>(undefined);
 

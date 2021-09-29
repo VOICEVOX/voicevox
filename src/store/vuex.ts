@@ -19,6 +19,8 @@ export type GettersBase = Record<string, any>;
 export type ActionsBase = Record<string, PayloadFunction>;
 export type MutationsBase = Record<string, any>;
 
+export type PromiseType<T> = T extends Promise<infer P> ? P : T;
+
 export class Store<
   S,
   G extends GettersBase,
@@ -32,6 +34,7 @@ export class Store<
   readonly getters!: G;
 
   // 既に型がつけられているものを上書きすることになるので、TS2564を吐く、それの回避
+
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   dispatch: Dispatch<A>;
@@ -69,7 +72,7 @@ export interface Dispatch<A extends ActionsBase> {
     type: T,
     payload: Parameters<A[T]>[0],
     options?: DispatchOptions
-  ): Promise<ReturnType<A[T]>>;
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
   <T extends keyof A>(
     payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
       string,
@@ -79,7 +82,7 @@ export interface Dispatch<A extends ActionsBase> {
       : // eslint-disable-next-line @typescript-eslint/ban-types
         {}),
     options?: DispatchOptions
-  ): Promise<ReturnType<A[T]>>;
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
 export interface Commit<M extends MutationsBase> {
@@ -99,10 +102,10 @@ export interface StoreOptions<
   A extends ActionsBase,
   M extends MutationsBase
 > {
-  state: S | (() => S);
-  getters?: GetterTree<S, S, G>;
-  actions?: ActionTree<S, S, A, M>;
-  mutations?: MutationTree<S, M>;
+  state?: S | (() => S);
+  getters: GetterTree<S, S, G>;
+  actions: ActionTree<S, S, A, M>;
+  mutations: MutationTree<S, M>;
   modules?: ModuleTree<S>;
   plugins?: Plugin<S>[];
   strict?: boolean;
@@ -161,7 +164,7 @@ export type Action<
 export type Mutation<S, P> = (state: S, payload: P) => void;
 
 export type GetterTree<S, R, G> = G extends GettersBase
-  ? GetterTree<S, R, G>
+  ? CustomGetterTree<S, R, G>
   : OriginalGetterTree<S, R>;
 
 export type CustomGetterTree<S, R, G extends GettersBase> = {
@@ -181,10 +184,10 @@ export type CustomActionTree<
   [K in keyof A]: Action<S, R, A, M, K>;
 };
 
-export type MutationTree<S, M> = M extends Record<string, PayloadFunction>
+export type MutationTree<S, M> = M extends MutationsBase
   ? CustomMutationTree<S, M>
   : OriginalMutationTree<S>;
 
-export type CustomMutationTree<S, M extends Record<string, PayloadFunction>> = {
+export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M[K]>;
 };
