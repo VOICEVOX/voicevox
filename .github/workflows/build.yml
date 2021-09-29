@@ -10,7 +10,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.5.2-aoirint-60
+  VOICEVOX_ENGINE_VERSION: 0.6.0-aoirint-1
 
 jobs:
   build-noengine-prepackage:
