@@ -21,15 +21,14 @@ import log from "electron-log";
 import dayjs from "dayjs";
 
 // silly以上のログをコンソールに出力
-log.transports.console.format = '[{h}:{i}:{s}.{ms}] [{level}] {text}';
-log.transports.console.level = 'silly';
+log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+log.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
-const prefix = dayjs().format('YYYYMMDD_HHmmss');
-log.transports.file.format = '[{h}:{i}:{s}.{ms}] [{level}] {text}';
-log.transports.file.level = 'warn';
+const prefix = dayjs().format("YYYYMMDD_HHmmss");
+log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
-
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -105,8 +104,8 @@ async function runEngine() {
     });
   }
 
-  const useGpu = store.get("useGpu")
-  log.info(`ENGINE will start in ${useGpu ? 'GPU' : 'CPU'} mode`)
+  const useGpu = store.get("useGpu");
+  log.info(`ENGINE will start in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
