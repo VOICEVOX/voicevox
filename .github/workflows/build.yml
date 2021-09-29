@@ -98,6 +98,9 @@ jobs:
 
 
   build-engine-prepackage:
+    env:
+      cache-version: v2
+
     needs: [build-noengine-prepackage]
     strategy:
       fail-fast: false
