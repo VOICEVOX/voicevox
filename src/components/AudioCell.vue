@@ -236,7 +236,7 @@ export default defineComponent({
 
     // テキスト編集エリアの右クリック
     const onRightClickTextField = () => {
-      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU);
+      store.dispatch(OPEN_TEXT_EDIT_CONTEXT_MENU, undefined);
     };
 
     // 下にセルを追加

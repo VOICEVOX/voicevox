@@ -1,11 +1,21 @@
 import { SavingSetting } from "@/type/preload";
-import { StoreOptions } from "vuex";
-import { State } from "./type";
+import { StoreOptions } from "./vuex";
+import {
+  SettingActions,
+  SettingGetters,
+  SettingMutations,
+  State,
+} from "./type";
 
 export const GET_SAVING_SETTING_DATA = "GET_SAVING_SETTING_DATA";
 export const SET_SAVING_SETTING_DATA = "SET_SAVING_SETTING_DATA";
 
-export const settingStore = {
+export const settingStore: StoreOptions<
+  State,
+  SettingGetters,
+  SettingActions,
+  SettingMutations
+> = {
   getters: {
     [GET_SAVING_SETTING_DATA](state) {
       return state.savingSetting;
@@ -36,4 +46,4 @@ export const settingStore = {
       });
     },
   },
-} as StoreOptions<State>;
+};

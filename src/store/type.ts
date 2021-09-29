@@ -1,10 +1,16 @@
-import { StoreOptions, ActionTree, MutationTree } from "vuex";
+import {
+  MutationTree,
+  MutationsBase,
+  Action,
+  Getter,
+  ActionTree,
+  GetterTree,
+} from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import {
   createCommandMutationTree,
   PayloadRecipeTree,
-  PayloadMutationTree,
   OldCommand,
 } from "./command";
 import {
@@ -113,10 +119,10 @@ export type AudioActions = {
   REMOVE_ALL_AUDIO_ITEM(): void;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
-    prevAudioKey: string | undefined;
+    prevAudioKey?: string;
   }): string;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
-  GET_AUDIO_CACHE(payload: { audioKey: string }): Blob | null;
+  GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
   SET_ACCENT_PHRASES(payload: {
     audioKey: string;
     accentPhrases: AccentPhrase[];
@@ -131,8 +137,8 @@ export type AudioActions = {
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
     characterIndex: number;
-    isKana: boolean | undefined;
-  }): AccentPhrase[];
+    isKana?: boolean;
+  }): Promise<AccentPhrase[]>;
   FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
   FETCH_AND_SET_SINGLE_ACCENT_PHRASE(payload: {
     audioKey: string;
@@ -143,16 +149,16 @@ export type AudioActions = {
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
-  }): AccentPhrase[];
+  }): Promise<AccentPhrase[]>;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     characterIndex: number;
     copyIndexes: number[];
-  }): AccentPhrase[];
+  }): Promise<AccentPhrase[]>;
   FETCH_AUDIO_QUERY(payload: {
     text: string;
     characterIndex: number;
-  }): AudioQuery;
+  }): Promise<AudioQuery>;
   FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
   GENERATE_AND_SAVE_AUDIO(payload: {
@@ -162,8 +168,8 @@ export type AudioActions = {
   }): SaveResultObject;
   GENERATE_AND_SAVE_ALL_AUDIO(payload: {
     dirPath?: string;
-    encoding: EncodingType;
-  }): SaveResultObject[];
+    encoding?: EncodingType;
+  }): SaveResultObject[] | undefined;
   IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
   PLAY_AUDIO(payload: { audioKey: string }): boolean;
   STOP_AUDIO(payload: { audioKey: string }): void;
@@ -177,7 +183,7 @@ export type AudioActions = {
   OPEN_TEXT_EDIT_CONTEXT_MENU(): void;
   DETECTED_ENGINE_ERROR(): void;
   RESTART_ENGINE(): void;
-  CHECK_FILE_EXISTS(payload: { file: string }): boolean;
+  CHECK_FILE_EXISTS(payload: { file: string }): Promise<boolean>;
 };
 
 /*
@@ -334,14 +340,14 @@ export type IndexGetters = {};
 export type IndexMutations = {};
 
 export type IndexActions = {
-  GET_POLICY_TEXT(): string;
-  GET_OSS_LICENSES(): Record<string, string>[];
-  GET_UPDATE_INFOS(): UpdateInfo[];
+  GET_POLICY_TEXT(): Promise<string>;
+  GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
+  GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
   SHOW_WARNING_DIALOG(payload: {
     title: string;
     message: string;
-  }): Electron.MessageBoxReturnValue;
-  LOG_ERROR(payload: unknown[]): void;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  LOG_ERROR(...payload: unknown[]): void;
 };
 
 /*
@@ -353,7 +359,7 @@ export type ProjectGetters = {
 };
 
 export type ProjectMutations = {
-  SET_PROJECT_FILEPATH: { filePath: string };
+  SET_PROJECT_FILEPATH: { filePath?: string };
 };
 
 export type ProjectActions = {
@@ -376,7 +382,7 @@ export type SettingMutations = {
 
 export type SettingActions = {
   GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(): void;
+  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
 };
 
 /*
@@ -422,6 +428,15 @@ export type AllGetters = AudioGetters &
   SettingGetters &
   UiGetters;
 
+export type UnionGetters =
+  | AudioGetters
+  | AudioCommandGetters
+  | CommandGetters
+  | IndexGetters
+  | ProjectGetters
+  | SettingGetters
+  | UiGetters;
+
 export type AllMutations = AudioMutations &
   AudioCommandMutations &
   CommandMutations &
@@ -429,6 +444,15 @@ export type AllMutations = AudioMutations &
   ProjectMutations &
   SettingMutations &
   UiMutations;
+
+export type UnionMutations =
+  | AudioMutations
+  | AudioCommandMutations
+  | CommandMutations
+  | IndexMutations
+  | ProjectMutations
+  | SettingMutations
+  | UiMutations;
 
 export type AllActions = AudioActions &
   AudioCommandActions &
@@ -438,16 +462,38 @@ export type AllActions = AudioActions &
   SettingActions &
   UiActions;
 
-export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsMutationTree = <Arg extends MutationTree<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsActionTree = <Arg extends ActionTree<State, State>>(
-  arg: Arg
-): Arg => arg;
+export type UnionActions =
+  | AudioActions
+  | AudioCommandActions
+  | CommandActions
+  | IndexActions
+  | ProjectActions
+  | SettingActions
+  | UiActions;
 
-export const commandMutationsCreator = <Arg extends PayloadRecipeTree<State>>(
-  arg: Arg
-): PayloadMutationTree<State> => createCommandMutationTree<State, Arg>(arg);
+export const useAllStoreGetter = <G extends UnionGetters, K extends keyof G>(
+  arg: (
+    state: State,
+    getters: AllGetters,
+    rootState: State,
+    rootGetters: any
+  ) => G[K]
+): Getter<State, State, G, K> => {
+  return (state, getters, rootState, rootGetters) =>
+    arg(state, getters as AllGetters, rootState, rootGetters);
+};
+
+export const useAllStoreAction = <K extends keyof AllActions>(
+  arg: Action<State, State, AllActions, AllMutations, K>
+): Action<State, State, AllActions, AllMutations, K> => arg;
+
+export const gettersMixer = (arg: GetterTree<State, State, UnionGetters>) =>
+  arg as GetterTree<State, State, AllGetters>;
+
+export const actionsMixer = (
+  arg: ActionTree<State, State, UnionActions, UnionMutations>
+) => arg as ActionTree<State, State, AllActions, AllMutations>;
+
+export const commandMutationsCreator = <M extends MutationsBase>(
+  arg: PayloadRecipeTree<State, M>
+): MutationTree<State, M> => createCommandMutationTree<State, M>(arg);
