@@ -10,12 +10,6 @@ import {
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
-export const CREATE_NEW_PROJECT = "CREATE_NEW_PROJECT";
-export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
-export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
-export const PROJECT_NAME = "PROJECT_NAME";
-export const SET_PROJECT_FILEPATH = "SET_PROJECT_FILEPATH";
-
 const DEFAULT_SAMPLING_RATE = 24000;
 
 export const projectStore: VoiceVoxStoreOptions<

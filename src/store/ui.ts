@@ -9,20 +9,6 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 
-export const UI_LOCKED = "UI_LOCKED";
-export const SHOULD_SHOW_PANES = "SHOULD_SHOW_PANES";
-export const LOCK_UI = "LOCK_UI";
-export const UNLOCK_UI = "UNLOCK_UI";
-export const ASYNC_UI_LOCK = "ASYNC_UI_LOCK";
-export const GET_USE_GPU = "GET_USE_GPU";
-export const SET_USE_GPU = "SET_USE_GPU";
-export const IS_HELP_DIALOG_OPEN = "IS_HELP_DIALOG_OPEN";
-export const DETECT_UNMAXIMIZED = "DETECT_UNMAXIMIZED";
-export const DETECT_MAXIMIZED = "DETECT_MAXIMIZED";
-export const DETECT_PINNED = "DETECT_PINNED";
-export const DETECT_UNPINNED = "DETECT_UNPINNED";
-export const IS_SETTING_DIALOG_OPEN = "IS_SETTING_DIALOG_OPEN";
-
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,

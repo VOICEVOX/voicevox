@@ -19,18 +19,6 @@ enableMapSet();
 const immer = new Immer();
 immer.setAutoFreeze(false);
 
-export const CAN_UNDO = "CAN_UNDO";
-export const CAN_REDO = "CAN_REDO";
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-export const OLD_PUSH_COMMAND = "OLD_PUSH_COMMAND";
-export const UNDO = "UNDO";
-export const REDO = "REDO";
-export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
-
 /**
  * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
  * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。

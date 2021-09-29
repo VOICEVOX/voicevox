@@ -6,9 +6,6 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 
-export const GET_SAVING_SETTING_DATA = "GET_SAVING_SETTING_DATA";
-export const SET_SAVING_SETTING_DATA = "SET_SAVING_SETTING_DATA";
-
 export const settingStore: VoiceVoxStoreOptions<
   SettingGetters,
   SettingActions,
