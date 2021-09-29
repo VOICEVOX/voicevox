@@ -115,18 +115,18 @@ async function runEngine() {
   const args = useGpu ? ["--use_gpu"] : [];
 
   engineProcess = spawn(enginePath, args, {
-    cwd: path.dirname(enginePath)
+    cwd: path.dirname(enginePath),
   });
 
-  engineProcess.stdout?.on('data', (data) => {
-    log.info('ENGINE: ' + data.toString('utf-8'));
+  engineProcess.stdout?.on("data", (data) => {
+    log.info("ENGINE: " + data.toString("utf-8"));
   });
 
-  engineProcess.stderr?.on('data', (data) => {
-    log.error('ENGINE: ' + data.toString('utf-8'));
+  engineProcess.stderr?.on("data", (data) => {
+    log.error("ENGINE: " + data.toString("utf-8"));
   });
 
-  engineProcess.on('close', (code, signal) => {
+  engineProcess.on("close", (code, signal) => {
     log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
     log.info(`ENGINE: exited with code ${code}`);
 
