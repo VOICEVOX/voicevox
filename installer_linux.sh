@@ -73,7 +73,8 @@ chmod +x "${APPIMAGE}"
 DESKTOP_FILE=$(ls squashfs-root/*.desktop | head -n1)
 chmod +x "${DESKTOP_FILE}"
 
-sed -i "s/Exec=.*/Exec=\/home\/$USER\/.voicevox\/${APPIMAGE}/" "${DESKTOP_FILE}"
+ESCAPED_HOME=$(echo "$HOME" | sed 's/\//\\\//g')
+sed -i "s/Exec=.*/Exec=${ESCAPED_HOME}\/.voicevox\/${APPIMAGE}/" "${DESKTOP_FILE}"
 
 mv "${DESKTOP_FILE}" "$HOME/.local/share/applications/"
 
