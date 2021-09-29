@@ -458,7 +458,7 @@ app.on("before-quit", (event) => {
 
     engineProcess.once("close", () => {
       shouldKillEngineBeforeQuit = false;
-      log.info("ENGINE killed. Quiting app");
+      log.info("ENGINE killed. Quitting app");
       app.quit(); // attempt to quit app again (shouldKillEngineBeforeQuit == false)
     });
 
