@@ -19,18 +19,6 @@ enableMapSet();
 const immer = new Immer();
 immer.setAutoFreeze(false);
 
-export const CAN_UNDO = "CAN_UNDO";
-export const CAN_REDO = "CAN_REDO";
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-export const OLD_PUSH_COMMAND = "OLD_PUSH_COMMAND";
-export const UNDO = "UNDO";
-export const REDO = "REDO";
-export const CLEAR_COMMANDS = "CLEAR_COMMANDS";
-
 /**
  * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
  * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
@@ -93,7 +81,7 @@ export function oldCreateCommandAction<S, P>(
 ): Action<S, S> {
   const commandFactory = oldCreateCommandFactory(recipeWithPayload);
   return ({ state, commit }, payload: P) => {
-    commit(OLD_PUSH_COMMAND, { command: commandFactory(state, payload) });
+    commit("OLD_PUSH_COMMAND", { command: commandFactory(state, payload) });
   };
 }
 
@@ -182,44 +170,44 @@ export const commandStore: VoiceVoxStoreOptions<
   CommandMutations
 > = {
   getters: {
-    [CAN_UNDO](state) {
+    CAN_UNDO(state) {
       return state.undoCommands.length > 0;
     },
-    [CAN_REDO](state) {
+    CAN_REDO(state) {
       return state.redoCommands.length > 0;
     },
   },
 
   mutations: {
-    [OLD_PUSH_COMMAND](state, { command }: { command: OldCommand<State> }) {
+    OLD_PUSH_COMMAND(state, { command }: { command: OldCommand<State> }) {
       OldCommand.redo(state, command);
     },
-    [UNDO]: (state) => {
+    UNDO(state) {
       const command = state.undoCommands.pop();
       if (command != null) {
         state.redoCommands.push(command);
         applyPatch(state, command.undoOperations);
       }
     },
-    [REDO]: (state) => {
+    REDO(state) {
       const command = state.redoCommands.pop();
       if (command != null) {
         state.undoCommands.push(command);
         applyPatch(state, command.redoOperations);
       }
     },
-    [CLEAR_COMMANDS]: (state) => {
+    CLEAR_COMMANDS(state) {
       state.redoCommands.splice(0);
       state.undoCommands.splice(0);
     },
   },
 
   actions: {
-    [UNDO]: ({ commit }) => {
-      commit(UNDO, undefined);
+    UNDO({ commit }) {
+      commit("UNDO", undefined);
     },
-    [REDO]: ({ commit }) => {
-      commit(REDO, undefined);
+    REDO({ commit }) {
+      commit("REDO", undefined);
     },
   },
 };
