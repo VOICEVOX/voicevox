@@ -107,6 +107,7 @@ jobs:
         #   - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
         # voicevox_engine_version:
         #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
+        os: [ubuntu-18.04]
         artifact_name:
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
@@ -114,11 +115,9 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
-            os: ubuntu-18.04
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
-            os: ubuntu-18.04
 
     runs-on: ${{ matrix.os }}
     steps:
