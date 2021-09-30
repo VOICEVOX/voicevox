@@ -78,8 +78,8 @@ chmod +x "${APPIMAGE}"
 DESKTOP_FILE=$(ls squashfs-root/*.desktop | head -n1)
 chmod +x "${DESKTOP_FILE}"
 
-ESCAPED_HOME=$(echo "$HOME" | sed 's/\//\\\//g')
-sed -i "s/Exec=.*/Exec=${ESCAPED_HOME}\/.voicevox\/${APPIMAGE}/" "${DESKTOP_FILE}"
+ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
+sed -i "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE}/" "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
 mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
