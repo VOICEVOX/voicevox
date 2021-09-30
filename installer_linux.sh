@@ -20,7 +20,7 @@ LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
     # releases/tag/{version}
-    RELEASE_TAG_URL=$(curl -sL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
+    RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
 
     # extract version (release tag name) from URL
     VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
