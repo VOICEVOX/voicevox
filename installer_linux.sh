@@ -8,9 +8,6 @@ NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
 REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
 
-VERSION=0.6.1-aoirint-28
-REPO_URL=https://github.com/aoirint/voicevox
-
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
