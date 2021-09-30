@@ -375,7 +375,7 @@ ipcMainHandle(
   "RESTART_ENGINE",
   () =>
     new Promise<void>((resolve, reject) => {
-      log.info(`Restarting ENGINE (last exit code: ${engineProcess.exitCode})`);
+      log.info(`Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`);
 
       // エンジンのプロセスが存在しない（すでに終了している）場合
       if (engineProcess.exitCode !== null) {
