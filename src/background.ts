@@ -380,7 +380,7 @@ ipcMainHandle(
       const engineKilled = engineProcess.signalCode !== null;
 
       if (engineExited || engineKilled) {
-        log.info("ENGINE process is not started yet. Starting ENGINE...");
+        log.info("ENGINE process is not started yet or already killed. Starting ENGINE...");
 
         runEngine();
         resolve();
