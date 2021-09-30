@@ -50,6 +50,9 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_ERROR(_, ...params: unknown[]) {
       window.electron.logError(...params);
     },
+    LOG_INFO(_, ...params: unknown[]) {
+      window.electron.logInfo(...params);
+    },
   },
 };
 
