@@ -375,7 +375,9 @@ ipcMainHandle(
   "RESTART_ENGINE",
   () =>
     new Promise<void>((resolve, reject) => {
-      log.info(`Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`);
+      log.info(
+        `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+      );
 
       // エンジンのプロセスが存在しない（すでに終了している）場合
       if (engineProcess.exitCode !== null) {
@@ -450,7 +452,9 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  log.info(`Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`);
+  log.info(
+    `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+  );
 
   if (shouldKillEngineBeforeQuit) {
     log.info("Killing ENGINE before app quit");
