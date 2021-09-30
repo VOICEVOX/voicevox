@@ -68,6 +68,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     nowPlayingContinuously: false,
     undoCommands: [],
     redoCommands: [],
+    useUndoRedo: isDevelopment,
     useGpu: false,
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,

@@ -32,6 +32,7 @@ export type State = {
   nowPlayingContinuously: boolean;
   undoCommands: Command[];
   redoCommands: Command[];
+  useUndoRedo: boolean;
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
