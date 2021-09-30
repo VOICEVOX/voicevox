@@ -450,7 +450,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  log.info(`Quitting app (ENGINE last exit code: ${engineProcess.exitCode})`);
+  log.info(`Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`);
 
   if (shouldKillEngineBeforeQuit) {
     log.info("Killing ENGINE before app quit");
