@@ -105,7 +105,7 @@ async function runEngine() {
   }
 
   const useGpu = store.get("useGpu");
-  log.info(`ENGINE will start in ${useGpu ? "GPU" : "CPU"} mode`);
+  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -370,9 +370,17 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 ipcMainHandle(
   "RESTART_ENGINE",
   () =>
-    new Promise((resolve, reject) => {
-      // エンジンのプロセスが存在しない場合
-      if (engineProcess.exitCode !== null) {
+    new Promise<void>((resolve, reject) => {
+      log.info(
+        `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+      );
+
+      // エンジンのプロセスが存在しない（すでに終了している）場合
+      const engineExited = engineProcess.exitCode !== null;
+
+      if (engineExited) {
+        log.info("ENGINE process is not started yet. Starting ENGINE...");
+
         runEngine();
         resolve();
         return;
@@ -383,20 +391,20 @@ ipcMainHandle(
 
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
-      const closeListenerCallBack = () => {
+      engineProcess.once("close", () => {
+        log.info("ENGINE process killed. Starting a new ENGINE...");
+
         runEngine();
         resolve();
-      };
-      engineProcess.once("close", closeListenerCallBack);
+      });
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+      log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
       treeKill(engineProcess.pid, (error) => {
-        // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
-        if (error !== null) {
+        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+        if (error != null) {
+          log.error("Failed to kill ENGINE");
           log.error(error);
-
-          // 再起動用に設定したclose listenerを削除。
-          engineProcess.removeListener("close", closeListenerCallBack);
 
           reject();
         }
@@ -440,13 +448,33 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("quit", () => {
-  willQuitEngine = true;
-  try {
-    engineProcess.pid != undefined && treeKill(engineProcess.pid);
-  } catch (e: unknown) {
-    log.error("engine kill error");
-    log.error(e);
+// Called before window closing
+app.on("before-quit", (event) => {
+  // considering the case that ENGINE process killed after checking process status
+  engineProcess.once("close", () => {
+    log.info("ENGINE killed. Quitting app");
+    app.quit(); // attempt to quit app again
+  });
+
+  log.info(
+    `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+  );
+
+  const engineNotExited = engineProcess.exitCode === null;
+  const engineNotKilled = engineProcess.signalCode === null;
+
+  if (engineNotExited && engineNotKilled) {
+    log.info("Killing ENGINE before app quit");
+    event.preventDefault();
+
+    log.info(`Killing ENGINE (PID=${engineProcess.pid})...`);
+    willQuitEngine = true;
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error: unknown) {
+      log.error("engine kill error");
+      log.error(error);
+    }
   }
 });
 
