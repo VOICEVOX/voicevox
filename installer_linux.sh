@@ -61,7 +61,7 @@ echo "${VERSION}" > VERSION
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
-    echo "Extacting splitted archives"
+    echo "Removing splitted archives"
 
     for filename in ${ARCHIVE_LIST[@]}; do
         echo "Removing ${filename}"
