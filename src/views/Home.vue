@@ -112,7 +112,7 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore, SHOW_WARNING_DIALOG } from "@/store";
+import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -122,21 +122,6 @@ import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { AudioItem } from "@/store/type";
-import { LOAD_PROJECT_FILE } from "@/store/project";
-import {
-  ACTIVE_AUDIO_KEY,
-  GENERATE_AND_SAVE_ALL_AUDIO,
-  IMPORT_FROM_FILE,
-  LOAD_CHARACTER,
-  REGISTER_AUDIO_ITEM,
-  COMMAND_REGISTER_AUDIO_ITEM,
-} from "@/store/audio";
-import {
-  UI_LOCKED,
-  IS_HELP_DIALOG_OPEN,
-  SHOULD_SHOW_PANES,
-  IS_SETTING_DIALOG_OPEN,
-} from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -160,7 +145,7 @@ export default defineComponent({
 
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     // add hotkeys
     Mousetrap.bind(["ctrl+e"], () => {
@@ -172,7 +157,7 @@ export default defineComponent({
     });
 
     const generateAndSaveAllAudio = () => {
-      store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});
+      store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {});
     };
 
     // view
@@ -222,14 +207,13 @@ export default defineComponent({
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
-      () => store.getters[ACTIVE_AUDIO_KEY]
+      () => store.getters.ACTIVE_AUDIO_KEY
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value!;
-      const characterIndex =
-        store.state.audioItems[prevAudioKey].characterIndex;
-      const audioItem: AudioItem = { text: "", characterIndex: characterIndex };
-      const newAudioKey = await store.dispatch(COMMAND_REGISTER_AUDIO_ITEM, {
+      const speaker = store.state.audioItems[prevAudioKey].speaker;
+      const audioItem: AudioItem = { text: "", speaker: speaker };
+      const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
       });
@@ -238,7 +222,7 @@ export default defineComponent({
 
     // Pane
     const shouldShowPanes = computed<boolean>(
-      () => store.getters[SHOULD_SHOW_PANES]
+      () => store.getters.SHOULD_SHOW_PANES
     );
     watch(shouldShowPanes, (val, old) => {
       if (val === old) return;
@@ -271,9 +255,9 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch(LOAD_CHARACTER, undefined);
-      const audioItem: AudioItem = { text: "", characterIndex: 0 };
-      const newAudioKey = await store.dispatch(REGISTER_AUDIO_ITEM, {
+      await store.dispatch("LOAD_CHARACTER", undefined);
+      const audioItem: AudioItem = { text: "", speaker: 0 };
+      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,
       });
       focusCell({ audioKey: newAudioKey });
@@ -286,14 +270,14 @@ export default defineComponent({
     const isHelpDialogOpenComputed = computed({
       get: () => store.state.isHelpDialogOpen,
       set: (val) =>
-        store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: val }),
+        store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: val }),
     });
 
     // show setting dialog
     const isSettingDialogOpenComputed = computed({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>
-        store.dispatch(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen: val }),
+        store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
     });
 
     // ドラッグ＆ドロップ
@@ -303,13 +287,13 @@ export default defineComponent({
       const file = event.dataTransfer.files[0];
       switch (path.extname(file.name)) {
         case ".txt":
-          store.dispatch(IMPORT_FROM_FILE, { filePath: file.path });
+          store.dispatch("IMPORT_FROM_FILE", { filePath: file.path });
           break;
         case ".vvproj":
-          store.dispatch(LOAD_PROJECT_FILE, { filePath: file.path });
+          store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
           break;
         default:
-          store.dispatch(SHOW_WARNING_DIALOG, {
+          store.dispatch("SHOW_WARNING_DIALOG", {
             title: "対応していないファイルです",
             message:
               "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",

@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts">
-import { GET_OSS_LICENSES, useStore } from "@/store";
+import { useStore } from "@/store";
 import { defineComponent, ref } from "vue";
 
 export default defineComponent({
@@ -52,7 +52,7 @@ export default defineComponent({
 
     let licenses = ref<Record<string, string>[]>();
     store
-      .dispatch(GET_OSS_LICENSES, undefined)
+      .dispatch("GET_OSS_LICENSES", undefined)
       .then((obj) => (licenses.value = obj));
 
     const detailIndex = ref<number | undefined>(undefined);

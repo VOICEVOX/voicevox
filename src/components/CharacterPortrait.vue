@@ -11,7 +11,6 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { ACTIVE_AUDIO_KEY } from "@/store/audio";
 
 export default defineComponent({
   name: "CharacterPortrait",
@@ -21,15 +20,14 @@ export default defineComponent({
 
     const characterInfo = computed(() => {
       const characterInfos = store.state.characterInfos || [];
-      const activeAudioKey: string | undefined =
-        store.getters[ACTIVE_AUDIO_KEY];
+      const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const characterIndex = audioItem?.characterIndex;
+      const speaker = audioItem?.speaker;
 
-      return characterIndex !== undefined
-        ? characterInfos[characterIndex]
+      return speaker !== undefined
+        ? characterInfos.find((info) => info.metas.speaker == speaker)
         : undefined;
     });
 

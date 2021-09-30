@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-import { useStore, GET_POLICY_TEXT } from "@/store";
+import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 export default defineComponent({
@@ -27,7 +27,7 @@ export default defineComponent({
 
     onMounted(async () => {
       policy.value = md.render(
-        await store.dispatch(GET_POLICY_TEXT, undefined)
+        await store.dispatch("GET_POLICY_TEXT", undefined)
       );
     });
 
