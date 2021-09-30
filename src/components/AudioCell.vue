@@ -41,7 +41,7 @@
       :disable="uiLocked"
       :error="audioItem.text.length >= 80"
       :model-value="audioItem.text"
-      @update:model-value="updateAudioText"
+      @update:model-value="changeAudioText"
       debounce="500"
       @keydown.prevent.enter.exact=""
       @paste="pasteOnAudioCell"
@@ -112,7 +112,7 @@ export default defineComponent({
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
-    const updateAudioText = async (text: string) => {
+    const changeAudioText = async (text: string) => {
       await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
         audioKey: props.audioKey,
         text,
@@ -155,7 +155,7 @@ export default defineComponent({
           if (audioItem.value.text == "") {
             const text = texts.shift();
             if (text == undefined) return;
-            updateAudioText(text);
+            changeAudioText(text);
           }
 
           store.dispatch("PUT_TEXTS", {
@@ -272,7 +272,7 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
-      updateAudioText,
+      changeAudioText,
       changeSpeaker,
       setActiveAudioKey,
       save,
