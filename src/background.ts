@@ -448,6 +448,11 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
+  engineProcess.once("close", () => {
+    log.info("ENGINE killed. Quitting app");
+    app.quit(); // attempt to quit app again
+  });
+
   log.info(
     `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
   );
@@ -458,11 +463,6 @@ app.on("before-quit", (event) => {
   if (engineNotExited && engineNotKilled) {
     log.info("Killing ENGINE before app quit");
     event.preventDefault();
-
-    engineProcess.once("close", () => {
-      log.info("ENGINE killed. Quitting app");
-      app.quit(); // attempt to quit app again
-    });
 
     log.info(`Killing ENGINE (PID=${engineProcess.pid})...`);
     willQuitEngine = true;
