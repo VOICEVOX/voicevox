@@ -41,8 +41,9 @@
       :disable="uiLocked"
       :error="audioItem.text.length >= 80"
       :model-value="audioItem.text"
-      @update:model-value="setAudioText"
-      @change="willRemove || updateAudioQuery($event)"
+      @update:model-value="changeAudioText"
+      debounce="500"
+      @keydown.prevent.enter.exact=""
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.shift.delete.exact="removeCell"
@@ -98,9 +99,6 @@ export default defineComponent({
     );
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
-    const haveAudioQuery = computed(() =>
-      store.getters.HAVE_AUDIO_QUERY(props.audioKey)
-    );
 
     const selectedCharacterInfo = computed(() =>
       characterInfos.value != undefined && audioItem.value.speaker != undefined
@@ -114,23 +112,11 @@ export default defineComponent({
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
-    // TODO: change audio textにしてvuexに載せ替える
-    const setAudioText = async (text: string) => {
-      await store.dispatch("SET_AUDIO_TEXT", {
+    const changeAudioText = async (text: string) => {
+      await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
         audioKey: props.audioKey,
         text,
       });
-    };
-    const updateAudioQuery = async () => {
-      if (!haveAudioQuery.value) {
-        store.dispatch("FETCH_AND_SET_AUDIO_QUERY", {
-          audioKey: props.audioKey,
-        });
-      } else {
-        store.dispatch("FETCH_AND_SET_ACCENT_PHRASES", {
-          audioKey: props.audioKey,
-        });
-      }
     };
     const changeSpeaker = (speaker: number) => {
       store.dispatch("COMMAND_CHANGE_SPEAKER", {
@@ -169,8 +155,7 @@ export default defineComponent({
           if (audioItem.value.text == "") {
             const text = texts.shift();
             if (text == undefined) return;
-            setAudioText(text);
-            updateAudioQuery();
+            changeAudioText(text);
           }
 
           store.dispatch("PUT_TEXTS", {
@@ -287,8 +272,7 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
-      setAudioText,
-      updateAudioQuery,
+      changeAudioText,
       changeSpeaker,
       setActiveAudioKey,
       save,
