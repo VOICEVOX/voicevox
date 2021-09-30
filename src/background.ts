@@ -448,7 +448,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  // considering the case that the process killed after checking process status
+  // considering the case that ENGINE killed after checking process status
   engineProcess.once("close", () => {
     log.info("ENGINE killed. Quitting app");
     app.quit(); // attempt to quit app again
