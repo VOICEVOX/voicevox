@@ -12,6 +12,10 @@ APP_DIR=${APP_DIR:-$HOME/.voicevox}
 # keep archive if [ ${KEEP_ARCHIVE} = 1 ]
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 
+DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
+ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
+
+
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
@@ -77,12 +81,10 @@ chmod +x "${DESKTOP_FILE}"
 ESCAPED_HOME=$(echo "$HOME" | sed 's/\//\\\//g')
 sed -i "s/Exec=.*/Exec=${ESCAPED_HOME}\/.voicevox\/${APPIMAGE}/" "${DESKTOP_FILE}"
 
-DESKTOP_ENTRY_INSTALL_DIR=$HOME/.local/share/applications
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
 mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
 
 # Install icon
-ICON_INSTALL_DIR=$HOME/.local/share/icons
 mkdir -p "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
 cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
