@@ -3,10 +3,11 @@
 
 set -eux
 
-KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
 REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
+
+KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
