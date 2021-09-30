@@ -7,6 +7,7 @@ KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
 REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
+APP_DIR=${APP_DIR:-$HOME/.voicevox}
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
@@ -21,10 +22,9 @@ fi
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
-APPDIR=$HOME/.voicevox
-mkdir -p "${APPDIR}"
+mkdir -p "${APP_DIR}"
 
-cd "${APPDIR}"
+cd "${APP_DIR}"
 
 # Download archive list
 echo "Downloading ${ARCHIVE_LIST_URL}"
