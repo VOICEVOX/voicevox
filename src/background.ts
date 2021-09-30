@@ -452,8 +452,8 @@ app.on("before-quit", (event) => {
     `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
   );
 
-  const engineNotExited = engineProcess.exitCode === null
-  const engineNotKilled = engineProcess.signalCode === null
+  const engineNotExited = engineProcess.exitCode === null;
+  const engineNotKilled = engineProcess.signalCode === null;
 
   if (engineNotExited && engineNotKilled) {
     log.info("Killing ENGINE before app quit");
