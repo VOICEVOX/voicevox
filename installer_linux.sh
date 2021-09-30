@@ -7,8 +7,10 @@ NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
 REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
 
-KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
+# Install directory
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
+# keep archive if [ ${KEEP_ARCHIVE} = 1 ]
+KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
