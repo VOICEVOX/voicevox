@@ -55,8 +55,14 @@ done
 FIRST_ARCHIVE=${ARCHIVE_LIST[0]}
 7z x "${FIRST_ARCHIVE}" -y
 
+# Dump version
+echo "Dumping version"
+echo "${VERSION}" > VERSION
+
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
+    echo "Extacting splitted archives"
+
     for filename in ${ARCHIVE_LIST[@]}; do
         echo "Removing ${filename}"
         rm -f "${filename}"
@@ -67,6 +73,8 @@ fi
 rm -f "list.txt"
 
 # Extract desktop entry
+echo "Extacting desktop entry"
+
 APPIMAGE=$(echo "${FIRST_ARCHIVE}" | sed 's/\(.*.AppImage\).*/\1/')
 chmod +x "${APPIMAGE}"
 
@@ -75,6 +83,8 @@ chmod +x "${APPIMAGE}"
 ./${APPIMAGE} --appimage-extract '*.png' # symbolic link to icon
 
 # Install desktop entry
+echo "Installing desktop entry"
+
 DESKTOP_FILE=$(ls squashfs-root/*.desktop | head -n1)
 chmod +x "${DESKTOP_FILE}"
 
@@ -85,9 +95,14 @@ mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
 mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
 
 # Install icon
+echo "Installing icon"
+
 mkdir -p "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
 cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 
 # Remove extract dir
+echo "Removing temporal directory"
 rm -rf squashfs-root
+
+echo "All done! VOICEVOX ${VERSION} installed."
