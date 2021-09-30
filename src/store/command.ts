@@ -1,4 +1,4 @@
-import { Action } from "vuex";
+import { Action, Store } from "vuex";
 
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
@@ -85,7 +85,7 @@ export function oldCreateCommandAction<S, P>(
   };
 }
 
-export type PayloadRecipe<S, P> = (draft: Draft<S>, payload: P) => void;
+export type PayloadRecipe<S, P> = (draft: S, payload: P) => void;
 export type PayloadRecipeTree<S, M> = {
   [K in keyof M]: PayloadRecipe<S, M[K]>;
 };
@@ -96,6 +96,7 @@ export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
 interface UndoRedoState {
   undoCommands: Command[];
   redoCommands: Command[];
+  useUndoRedo: boolean;
 }
 
 /**
@@ -130,10 +131,14 @@ export const createCommandMutation =
     payloadRecipe: PayloadRecipe<S, P>
   ): Mutation<S, P> =>
   (state: S, payload: P): void => {
-    const command = recordOperations(payloadRecipe)(state, payload);
-    applyPatch(state, command.redoOperations);
-    state.undoCommands.push(command);
-    state.redoCommands.splice(0);
+    if (state.useUndoRedo) {
+      const command = recordOperations(payloadRecipe)(state, payload);
+      applyPatch(state, command.redoOperations);
+      state.undoCommands.push(command);
+      state.redoCommands.splice(0);
+    } else {
+      payloadRecipe(state, payload);
+    }
   };
 
 const patchToOperation = (patch: Patch): Operation => ({
@@ -155,8 +160,8 @@ const recordOperations =
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
       // Taking snapshots has negative effects on performance.
       // This approach may cause a bottleneck.
-      JSON.parse(JSON.stringify(state)) as State,
-      (draft: Draft<S>) => recipe(draft, payload)
+      JSON.parse(JSON.stringify(state)) as S,
+      (draft: S) => recipe(draft, payload)
     );
     return {
       redoOperations: doPatches.map(patchToOperation),

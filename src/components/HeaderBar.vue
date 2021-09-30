@@ -22,7 +22,7 @@
 
       <q-space />
       <q-btn
-        v-if="isDevelopment"
+        v-if="useUndoRedo"
         unelevated
         color="white"
         text-color="secondary"
@@ -32,7 +32,7 @@
         >元に戻す</q-btn
       >
       <q-btn
-        v-if="isDevelopment"
+        v-if="useUndoRedo"
         unelevated
         color="white"
         text-color="secondary"
@@ -73,7 +73,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const isDevelopment = process.env.NODE_ENV === "development";
+    const useUndoRedo = computed(() => store.state.useUndoRedo);
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
@@ -114,7 +114,7 @@ export default defineComponent({
     };
 
     return {
-      isDevelopment,
+      useUndoRedo,
       uiLocked,
       canUndo,
       canRedo,
