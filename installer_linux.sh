@@ -19,6 +19,8 @@ ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
+    echo "Checking the latest version"
+
     # releases/tag/{version}
     RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
 
@@ -26,6 +28,7 @@ if [ -z "${VERSION}" ]; then
     VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
 fi
 
+echo "Install version: ${VERSION}"
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
