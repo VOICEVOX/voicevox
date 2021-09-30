@@ -77,11 +77,15 @@ chmod +x "${DESKTOP_FILE}"
 ESCAPED_HOME=$(echo "$HOME" | sed 's/\//\\\//g')
 sed -i "s/Exec=.*/Exec=${ESCAPED_HOME}\/.voicevox\/${APPIMAGE}/" "${DESKTOP_FILE}"
 
-mv "${DESKTOP_FILE}" "$HOME/.local/share/applications/"
+DESKTOP_ENTRY_INSTALL_DIR=$HOME/.local/share/applications
+mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
+mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
 
 # Install icon
-cp -r squashfs-root/usr/share/icons/* "$HOME/.local/share/icons/"
-cp squashfs-root/*.png "$HOME/.local/share/icons/"
+ICON_INSTALL_DIR=$HOME/.local/share/icons
+mkdir -p "${ICON_INSTALL_DIR}"
+cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
+cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 
 # Remove extract dir
 rm -rf squashfs-root
