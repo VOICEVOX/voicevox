@@ -466,7 +466,7 @@ app.on("before-quit", (event) => {
     willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
-    } catch (error) {
+    } catch (error: unknown) {
       log.error("engine kill error");
       log.error(error);
     }
