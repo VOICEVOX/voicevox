@@ -1,10 +1,53 @@
 <template>
   <div class="root full-height q-py-md" v-show="activeAudioKey" v-if="query">
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs">presetList</span>
+      <div class="row no-wrap">
+        <div class="text-body1 q-mb-xs">プリセット</div>
+        <q-space />
+
+        <q-btn-dropdown dense flat icon="more_vert">
+          <q-list>
+            <q-item
+              clickable
+              v-close-popup
+              @click="showsPresetNameDialog = true"
+            >
+              <q-item-section avatar>
+                <q-avatar
+                  icon="add_circle_outline"
+                  color="primary"
+                  text-color="secondary"
+                ></q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>プリセット登録</q-item-label>
+                <q-item-label caption
+                  >現在の設定をプリセットに追加
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              clickable
+              v-close-popup
+              @click="showsPresetEditDialog = true"
+            >
+              <q-item-section avatar>
+                <q-avatar
+                  icon="edit_note"
+                  color="primary"
+                  text-color="secondary"
+                ></q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>プリセット管理</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </div>
       <!-- <p>{{ presetList }}</p> -->
 
-      <div class="row no-wrap full-width">
+      <div class="full-width q-mb-sm">
         <div
           class="no-margin no-padding full-width"
           @wheel="setPresetByScroll($event.deltaY)"
@@ -13,6 +56,7 @@
             v-model="presetSelectModel"
             :options="presetList"
             class="overflow-hidden"
+            popup-content-class="text-secondary"
             outlined
             dense
           >
@@ -30,20 +74,13 @@
             </template>
           </q-select>
         </div>
-
-        <q-btn
-          icon="add_circle_outline"
-          unelevated
-          flat
-          padding="0.5rem"
-          @click="() => (showsPresetNameDialog = true)"
-        ></q-btn>
       </div>
+      <PresetDialog v-model:open-dialog="showsPresetEditDialog" />
 
-      <q-dialog v-model="showsPresetNameDialog" persistent>
+      <q-dialog v-model="showsPresetNameDialog">
         <q-card style="min-width: 350px">
           <q-card-section>
-            <div class="text-h6">プリセット名</div>
+            <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -52,11 +89,12 @@
               v-model="presetName"
               autofocus
               @keyup.enter="addPreset()"
+              label="タイトル"
               v-close-popup
             />
           </q-card-section>
 
-          <q-card-actions align="right" class="text-primary">
+          <q-card-actions align="right" class="text-secondary">
             <q-btn flat label="キャンセル" v-close-popup />
             <q-btn flat label="確定" @click="addPreset()" v-close-popup />
           </q-card-actions>
@@ -214,8 +252,13 @@ import { Preset } from "@/type/preload";
 import { ADD_PRESET } from "@/store/preset";
 import { AudioQuery } from "@/openapi";
 import { PreviewableValue } from "@/helpers/previewableValue";
+import PresetDialog from "./PresetDialog.vue";
 export default defineComponent({
   name: "AudioInfo",
+
+  components: {
+    PresetDialog,
+  },
 
   setup() {
     const store = useStore();
@@ -437,8 +480,6 @@ export default defineComponent({
     }): void => {
       if (audioItem.value?.characterIndex === undefined) return;
 
-      console.log("onchangepreset", e.value);
-
       store.dispatch(COMMAND_SET_AUDIO_PRESET, {
         audioId: activeAudioKey.value,
         presetId: e.value,
@@ -458,10 +499,9 @@ export default defineComponent({
 
     const showsPresetNameDialog = ref(false);
     const presetName = ref("");
+    const showsPresetEditDialog = ref(false);
 
     const addPreset = () => {
-      console.log("addPreset");
-
       if (audioItem.value?.characterIndex === undefined) return;
       const characterIndex = audioItem.value.characterIndex;
 
@@ -542,6 +582,7 @@ export default defineComponent({
       addPreset,
       showsPresetNameDialog,
       presetName,
+      showsPresetEditDialog,
       setPresetByScroll,
       onChangeParameter,
     };
