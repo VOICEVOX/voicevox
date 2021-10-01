@@ -15,6 +15,39 @@ KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 
+echo "Checking installer prerequisites..."
+
+EXTRACT_7Z=
+if command -v 7z &> /dev/null; then
+  # Ubuntu/Debian p7zip-full
+  EXTRACT_7Z=7z
+elif command -v 7zr &> /dev/null; then
+  # Ubuntu/Debian p7zip
+  EXTRACT_7Z=7zr
+elif command -v 7za &> /dev/null; then
+  # CentOS/Fedora
+  EXTRACT_7Z=7za
+else
+  echo ""
+  echo "* Command '7z', '7zr' or '7za' not found"
+  echo ""
+  echo "Required to extract compressed files"
+  echo ""
+  echo "Ubuntu/Debian:"
+  echo "    sudo apt install p7zip"
+  echo ""
+  echo "CentOS (Enable EPEL repository):"
+  echo "    sudo dnf install epel-release && sudo dnf install p7zip"
+  echo "    sudo yum install epel-release && sudo yum install p7zip"
+  echo ""
+  echo "Fedora:"
+  echo "    sudo dnf install p7zip"
+  echo "    sudo yum install p7zip"
+  echo ""
+  exit 1
+fi
+echo "7z command: ${EXTRACT_7Z}"
+
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
@@ -61,7 +94,7 @@ done
 
 # Extract archives
 FIRST_ARCHIVE=${ARCHIVE_LIST[0]}
-7z x "${FIRST_ARCHIVE}" -y
+${EXTRACT_7Z} x "${FIRST_ARCHIVE}" -y
 
 # Dump version
 echo "Dumping version"
