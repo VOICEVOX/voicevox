@@ -15,11 +15,10 @@ KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 
-
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
-    echo "Checking the latest version"
+    echo "Checking the latest version: ${LATEST_RELEASE_URL}"
 
     # releases/tag/{version}
     RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
