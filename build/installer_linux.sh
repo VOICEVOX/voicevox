@@ -33,16 +33,16 @@ if ! command -v curl &> /dev/null; then
   exit 1
 fi
 
-EXTRACT_7Z=
+COMMAND_7Z=
 if command -v 7z &> /dev/null; then
   # Ubuntu/Debian p7zip-full
-  EXTRACT_7Z=7z
+  COMMAND_7Z=7z
 elif command -v 7zr &> /dev/null; then
   # Ubuntu/Debian p7zip
-  EXTRACT_7Z=7zr
+  COMMAND_7Z=7zr
 elif command -v 7za &> /dev/null; then
   # CentOS/Fedora
-  EXTRACT_7Z=7za
+  COMMAND_7Z=7za
 else
   echo ""
   echo "* Command '7z', '7zr' or '7za' not found"
@@ -62,7 +62,7 @@ else
   echo ""
   exit 1
 fi
-echo "7z command: ${EXTRACT_7Z}"
+echo "7z command: ${COMMAND_7Z}"
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
@@ -110,7 +110,7 @@ done
 
 # Extract archives
 FIRST_ARCHIVE=${ARCHIVE_LIST[0]}
-${EXTRACT_7Z} x "${FIRST_ARCHIVE}" -y
+${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
 
 # Dump version
 echo "Dumping version"
