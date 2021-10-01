@@ -141,10 +141,10 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
     fi
 
     if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "Verification skipped"
+        echo "File verification skipped"
     else
         if [ "$SIZE" != "x" ]; then
-            echo "Verify size == $SIZE"
+            echo "Verifying size == $SIZE"
             DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
@@ -160,7 +160,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
         fi
 
         if [ "$HASH" != "x" ]; then
-            echo "Verify hash == $HASH"
+            echo "Verifying hash == $HASH"
             DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '{print $1}' | tr a-z A-Z)
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
                 echo "Hash ok"
