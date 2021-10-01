@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VOICEVOX Installer Script
 
-set -eux
+set -eu
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
