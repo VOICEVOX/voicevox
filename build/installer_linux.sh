@@ -11,6 +11,8 @@ REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
 # keep archive if [ ${KEEP_ARCHIVE} = 1 ]
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
+REUSE_LIST=${REUSE_LIST:-}
+SKIP_VERIFY=${SKIP_VERIFY:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
@@ -93,30 +95,89 @@ mkdir -p "${APP_DIR}"
 cd "${APP_DIR}"
 
 # Download archive list
-echo "Downloading ${ARCHIVE_LIST_URL}"
-curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
+if [ "$REUSE_LIST" != "1" ]; then
+    echo "Downloading ${ARCHIVE_LIST_URL}"
+    curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
+fi
 
 echo ""
-echo "Download list"
-ARCHIVE_LIST=($(cat "list.txt"))
-for filename in ${ARCHIVE_LIST[@]}; do
-  echo "* ${filename}"
+echo "List of splitted archives"
+readarray ARCHIVE_LIST < "list.txt"
+
+if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
+    # No size/hash information
+    # filename
+    _IFS=$IFS
+    IFS=$'\n'
+    ARCHIVE_NAME_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}"; done))
+    ARCHIVE_SIZE_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "x"; done))
+    ARCHIVE_HASH_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "x"; done))
+    IFS=$_IFS
+else
+    # filename<TAB>size<TAB>hash
+    ARCHIVE_NAME_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f1; done))
+    ARCHIVE_SIZE_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f2; done))
+    ARCHIVE_HASH_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f3 | tr a-z A-Z; done))
+fi
+echo ""
+
+for index in ${!ARCHIVE_NAME_LIST[@]}; do
+    echo "$index. ${ARCHIVE_NAME_LIST[$index]} ${ARCHIVE_SIZE_LIST[$index]} ${ARCHIVE_HASH_LIST[$index]}"
 done
 echo ""
 
 # Download archives
-for filename in ${ARCHIVE_LIST[@]}; do
-    URL=${RELEASE_URL}/${filename}
+for index in "${!ARCHIVE_NAME_LIST[@]}"; do
+    FILENAME=${ARCHIVE_NAME_LIST[$index]}
+    SIZE=${ARCHIVE_SIZE_LIST[$index]}
+    HASH=${ARCHIVE_HASH_LIST[$index]}
+
+    URL=${RELEASE_URL}/${FILENAME}
 
     echo "Downloading ${URL}"
-    if [ ! -f "${filename}" ]; then
-        curl --fail -L -C - -o "${filename}.tmp" "${URL}"
-        mv "${filename}.tmp" "${filename}"
+    if [ ! -f "${FILENAME}" ]; then
+        curl --fail -L -C - -o "${FILENAME}.tmp" "${URL}"
+        mv "${FILENAME}.tmp" "${FILENAME}"
+    fi
+
+    if [ "$SKIP_VERIFY" = "1" ]; then
+        echo "Verification skipped"
+    else
+        if [ "$SIZE" != "x" ]; then
+            echo "Verify size == $SIZE"
+            DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
+
+            if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
+                echo "Size ok"
+            else
+                echo "Invalid size: $DOWNLOADED_SIZE != $SIZE"
+                echo "Remove the corrupted file and restart installer"
+                echo ""
+                echo "    rm $(realpath "$FILENAME")"
+                echo ""
+                exit 1
+            fi
+        fi
+
+        if [ "$HASH" != "x" ]; then
+            echo "Verify hash == $HASH"
+            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '{print $1}' | tr a-z A-Z)
+            if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
+                echo "Hash ok"
+            else
+                echo "Invalid hash: $DOWNLOADED_HASH != $HASH"
+                echo "Remove the corrupted file and restart installer"
+                echo ""
+                echo "    rm $(realpath "$FILENAME")"
+                echo ""
+                exit 1
+            fi
+        fi
     fi
 done
 
 # Extract archives
-FIRST_ARCHIVE=${ARCHIVE_LIST[0]}
+FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 ${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
 
 # Dump version
