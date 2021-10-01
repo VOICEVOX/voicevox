@@ -66,9 +66,12 @@ export function useStore<
 }
 
 export interface Dispatch<A extends ActionsBase> {
-  <T extends keyof A>(type: T, payload: Parameters<A[T]>[0]): Promise<
-    PromiseType<ReturnType<A[T]>>
-  >;
+  <T extends keyof A>(
+    type: T,
+    ...payload: Parameters<A[T]>[0] extends undefined
+      ? void[]
+      : [Parameters<A[T]>[0]]
+  ): Promise<PromiseType<ReturnType<A[T]>>>;
   <T extends keyof A>(
     payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
       string,
@@ -81,7 +84,10 @@ export interface Dispatch<A extends ActionsBase> {
 }
 
 export interface Commit<M extends MutationsBase> {
-  <T extends keyof M>(type: T, payload: M[T]): void;
+  <T extends keyof M>(
+    type: T,
+    ...payload: M[T] extends undefined ? void[] : [M[T]]
+  ): void;
   <T extends keyof M>(
     payloadWithType: { type: T } & (M[T] extends Record<string, any>
       ? M[T]
