@@ -140,6 +140,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
         mv "${FILENAME}.tmp" "${FILENAME}"
     fi
 
+    # File verification (size, md5 hash)
     if [ "$SKIP_VERIFY" = "1" ]; then
         echo "File verification skipped"
     else
@@ -151,7 +152,8 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
                 echo "Size ok"
             else
                 echo "Invalid size: $DOWNLOADED_SIZE != $SIZE"
-                echo "Remove the corrupted file and restart installer"
+                echo ""
+                echo "Remove the corrupted file and restart installer!"
                 echo ""
                 echo "    rm $(realpath "$FILENAME")"
                 echo ""
@@ -166,7 +168,8 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
                 echo "Hash ok"
             else
                 echo "Invalid hash: $DOWNLOADED_HASH != $HASH"
-                echo "Remove the corrupted file and restart installer"
+                echo ""
+                echo "Remove the corrupted file and restart installer!"
                 echo ""
                 echo "    rm $(realpath "$FILENAME")"
                 echo ""
