@@ -28,6 +28,7 @@ if ! command -v curl &> /dev/null; then
   echo ""
   echo "CentOS/Fedora:"
   echo "    sudo dnf install curl"
+  echo "Or"
   echo "    sudo yum install curl"
   echo ""
   exit 1
@@ -57,10 +58,12 @@ else
   echo ""
   echo "CentOS (Enable EPEL repository):"
   echo "    sudo dnf install epel-release && sudo dnf install p7zip"
+  echo "Or"
   echo "    sudo yum install epel-release && sudo yum install p7zip"
   echo ""
   echo "Fedora:"
   echo "    sudo dnf install p7zip"
+  echo "Or"
   echo "    sudo yum install p7zip"
   echo ""
   exit 1
