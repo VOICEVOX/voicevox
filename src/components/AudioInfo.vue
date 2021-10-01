@@ -237,19 +237,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
-import {
-  ACTIVE_AUDIO_KEY,
-  COMMAND_SET_AUDIO_INTONATION_SCALE,
-  COMMAND_SET_AUDIO_PITCH_SCALE,
-  COMMAND_SET_AUDIO_SPEED_SCALE,
-  COMMAND_SET_AUDIO_VOLUME_SCALE,
-  COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH,
-  COMMAND_SET_AUDIO_POST_PHONEME_LENGTH,
-  COMMAND_SET_AUDIO_PRESET,
-} from "@/store/audio";
-import { UI_LOCKED } from "@/store/ui";
 import { Preset } from "@/type/preload";
-import { ADD_PRESET } from "@/store/preset";
 import { AudioQuery } from "@/openapi";
 import { PreviewableValue } from "@/helpers/previewableValue";
 import PresetDialog from "./PresetDialog.vue";
@@ -439,14 +427,14 @@ export default defineComponent({
     const presetKeys = computed(() => store.state.presetKeys);
 
     const presetList = computed(() => {
-      if (audioItem.value?.characterIndex === undefined) return undefined;
-      return presetKeys.value[audioItem.value.characterIndex]?.map((e) => ({
+      if (audioItem.value?.speaker === undefined) return undefined;
+      return presetKeys.value[audioItem.value.speaker]?.map((e) => ({
         label: presetItems.value[e].name,
         value: e,
       }));
     });
 
-    const characterIndex = computed(() => audioItem.value?.characterIndex);
+    const characterIndex = computed(() => audioItem.value?.speaker);
     const presetId = computed(() => audioItem.value?.presetId);
 
     const notSelectedPreset = {
@@ -478,10 +466,10 @@ export default defineComponent({
       label: string;
       value: string | undefined;
     }): void => {
-      if (audioItem.value?.characterIndex === undefined) return;
+      if (audioItem.value?.speaker === undefined) return;
 
-      store.dispatch(COMMAND_SET_AUDIO_PRESET, {
-        audioId: activeAudioKey.value,
+      store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+        audioId: activeAudioKey.value!,
         presetId: e.value,
       });
     };
@@ -489,8 +477,8 @@ export default defineComponent({
     const onChangeParameter = () => {
       if (audioItem.value?.presetId === undefined) return;
 
-      store.dispatch(COMMAND_SET_AUDIO_PRESET, {
-        audioId: activeAudioKey.value,
+      store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+        audioId: activeAudioKey.value!,
         presetId: undefined,
       });
     };
@@ -502,8 +490,8 @@ export default defineComponent({
     const showsPresetEditDialog = ref(false);
 
     const addPreset = () => {
-      if (audioItem.value?.characterIndex === undefined) return;
-      const characterIndex = audioItem.value.characterIndex;
+      if (audioItem.value?.speaker === undefined) return;
+      const characterIndex = audioItem.value.speaker;
 
       const newPreset = {
         name: presetName.value,
@@ -514,8 +502,7 @@ export default defineComponent({
         volumeScale: previewAudioVolumeScale.currentValue.value!,
       } as Preset;
 
-      store.dispatch(ADD_PRESET, {
-        characterIndex,
+      store.dispatch("ADD_PRESET", {
         presetData: newPreset,
 
         audioId: activeAudioKey.value,

@@ -123,7 +123,7 @@ export type AudioMutations = {
   };
   SET_AUDIO_PRESET: {
     audioId: string;
-    presetId: string;
+    presetId: string | undefined;
   };
 };
 
@@ -255,7 +255,7 @@ export type AudioCommandActions = {
   }): void;
   COMMAND_SET_AUDIO_PRESET(payload: {
     audioId: string;
-    presetId: string;
+    presetId: string | undefined;
   }): void;
 };
 
@@ -331,7 +331,7 @@ export type AudioCommandMutations = {
   };
   COMMAND_SET_AUDIO_PRESET: {
     audioId: string;
-    presetId: string;
+    presetId: string | undefined;
   };
 };
 
@@ -448,13 +448,31 @@ export type UiActions = {
   DETECT_UNPINNED(): void;
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type PresetGetters = {};
+
+export type PresetMutations = {
+  SET_PRESET_ITEMS: { presetItems: Record<string, Preset> };
+  SET_PRESET_KEYS: { presetKeys: Record<number, string[]> };
+};
+
+export type PresetActions = {
+  GET_PRESET_CONFIG(): void;
+  SAVE_PRESET_CONFIG(payload: {
+    presetItems: Record<string, Preset>;
+    presetKeys: Record<number, string[]>;
+  }): void;
+  ADD_PRESET(payload: { presetData: Preset; audioId?: string }): void;
+};
+
 export type AllGetters = AudioGetters &
   AudioCommandGetters &
   CommandGetters &
   IndexGetters &
   ProjectGetters &
   SettingGetters &
-  UiGetters;
+  UiGetters &
+  PresetGetters;
 
 export type UnionGetters =
   | AudioGetters
@@ -463,7 +481,8 @@ export type UnionGetters =
   | IndexGetters
   | ProjectGetters
   | SettingGetters
-  | UiGetters;
+  | UiGetters
+  | PresetGetters;
 
 export type AllMutations = AudioMutations &
   AudioCommandMutations &
@@ -471,7 +490,8 @@ export type AllMutations = AudioMutations &
   IndexMutations &
   ProjectMutations &
   SettingMutations &
-  UiMutations;
+  UiMutations &
+  PresetMutations;
 
 export type UnionMutations =
   | AudioMutations
@@ -480,7 +500,8 @@ export type UnionMutations =
   | IndexMutations
   | ProjectMutations
   | SettingMutations
-  | UiMutations;
+  | UiMutations
+  | PresetMutations;
 
 export type AllActions = AudioActions &
   AudioCommandActions &
@@ -488,7 +509,8 @@ export type AllActions = AudioActions &
   IndexActions &
   ProjectActions &
   SettingActions &
-  UiActions;
+  UiActions &
+  PresetActions;
 
 export type UnionActions =
   | AudioActions
@@ -497,7 +519,8 @@ export type UnionActions =
   | IndexActions
   | ProjectActions
   | SettingActions
-  | UiActions;
+  | UiActions
+  | PresetActions;
 
 export type VoiceVoxStoreOptions<
   G extends GettersBase,

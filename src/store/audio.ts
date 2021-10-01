@@ -17,11 +17,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
-import {
-  CharacterInfo,
-  Encoding as EncodingType,
-  Preset,
-} from "@/type/preload";
+import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 const api = new DefaultApi(
@@ -213,7 +209,7 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       state.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
     },
-    [SET_AUDIO_PRESET]: (
+    SET_AUDIO_PRESET: (
       draft,
       { audioId, presetId }: { audioId: string; presetId: string | undefined }
     ) => {
@@ -1138,7 +1134,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
-    [COMMAND_SET_AUDIO_PRESET]: (
+    COMMAND_SET_AUDIO_PRESET: (
       { commit, state },
       {
         audioId,
@@ -1151,7 +1147,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (presetId !== undefined) {
         if (
           state.presetItems[presetId] === undefined ||
-          !state.presetKeys[state.audioItems[audioId].characterIndex!].includes(
+          !state.presetKeys[state.audioItems[audioId].speaker!].includes(
             presetId
           )
         ) {
@@ -1159,7 +1155,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           return;
         }
       }
-      commit(COMMAND_SET_AUDIO_PRESET, { audioId, presetId });
+      commit("COMMAND_SET_AUDIO_PRESET", { audioId, presetId });
     },
   },
   mutations: commandMutationsCreator({
@@ -1321,14 +1317,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
     },
-    [COMMAND_SET_AUDIO_PRESET]: (
+    COMMAND_SET_AUDIO_PRESET: (
       draft,
       payload: {
         audioId: string;
         presetId: string | undefined;
       }
     ) => {
-      audioStore.mutations[SET_AUDIO_PRESET](draft, payload);
+      audioStore.mutations["SET_AUDIO_PRESET"](draft, payload);
     },
   }),
 };
