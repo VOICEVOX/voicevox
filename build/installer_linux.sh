@@ -19,7 +19,7 @@ echo "Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
   echo ""
-  echo "Command 'curl' not found"
+  echo "* Command 'curl' not found"
   echo ""
   echo "Required to download VOICEVOX"
   echo ""
