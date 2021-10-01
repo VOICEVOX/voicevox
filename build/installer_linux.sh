@@ -87,6 +87,7 @@ echo "Install version: ${VERSION}"
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
+echo "Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
 
 cd "${APP_DIR}"
