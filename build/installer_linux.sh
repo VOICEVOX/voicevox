@@ -33,8 +33,11 @@ if ! command -v curl &> /dev/null; then
   exit 1
 fi
 
-COMMAND_7Z=
-if command -v 7z &> /dev/null; then
+COMMAND_7Z=${COMMAND_7Z:-}
+if [ ! -z "${COMMAND_7Z}" ]; then
+  # use env var
+  :
+elif command -v 7z &> /dev/null; then
   # Ubuntu/Debian p7zip-full
   COMMAND_7Z=7z
 elif command -v 7zr &> /dev/null; then
