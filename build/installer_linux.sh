@@ -18,55 +18,55 @@ ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 echo "Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
-  echo ""
-  echo "* Command 'curl' not found"
-  echo ""
-  echo "Required to download VOICEVOX"
-  echo ""
-  echo "Ubuntu/Debian:"
-  echo "    sudo apt install curl"
-  echo ""
-  echo "CentOS/Fedora:"
-  echo "    sudo dnf install curl"
-  echo "Or"
-  echo "    sudo yum install curl"
-  echo ""
-  exit 1
+    echo ""
+    echo "* Command 'curl' not found"
+    echo ""
+    echo "Required to download VOICEVOX"
+    echo ""
+    echo "Ubuntu/Debian:"
+    echo "    sudo apt install curl"
+    echo ""
+    echo "CentOS/Fedora:"
+    echo "    sudo dnf install curl"
+    echo "Or"
+    echo "    sudo yum install curl"
+    echo ""
+    exit 1
 fi
 
 COMMAND_7Z=${COMMAND_7Z:-}
 if [ ! -z "${COMMAND_7Z}" ]; then
-  # use env var
-  :
+    # use env var
+    :
 elif command -v 7z &> /dev/null; then
-  # Ubuntu/Debian p7zip-full
-  COMMAND_7Z=7z
+    # Ubuntu/Debian p7zip-full
+    COMMAND_7Z=7z
 elif command -v 7zr &> /dev/null; then
-  # Ubuntu/Debian p7zip
-  COMMAND_7Z=7zr
+    # Ubuntu/Debian p7zip
+    COMMAND_7Z=7zr
 elif command -v 7za &> /dev/null; then
-  # CentOS/Fedora
-  COMMAND_7Z=7za
+    # CentOS/Fedora
+    COMMAND_7Z=7za
 else
-  echo ""
-  echo "* Command '7z', '7zr' or '7za' not found"
-  echo ""
-  echo "Required to extract compressed files"
-  echo ""
-  echo "Ubuntu/Debian:"
-  echo "    sudo apt install p7zip"
-  echo ""
-  echo "CentOS (Enable EPEL repository):"
-  echo "    sudo dnf install epel-release && sudo dnf install p7zip"
-  echo "Or"
-  echo "    sudo yum install epel-release && sudo yum install p7zip"
-  echo ""
-  echo "Fedora:"
-  echo "    sudo dnf install p7zip"
-  echo "Or"
-  echo "    sudo yum install p7zip"
-  echo ""
-  exit 1
+    echo ""
+    echo "* Command '7z', '7zr' or '7za' not found"
+    echo ""
+    echo "Required to extract compressed files"
+    echo ""
+    echo "Ubuntu/Debian:"
+    echo "    sudo apt install p7zip"
+    echo ""
+    echo "CentOS (Enable EPEL repository):"
+    echo "    sudo dnf install epel-release && sudo dnf install p7zip"
+    echo "Or"
+    echo "    sudo yum install epel-release && sudo yum install p7zip"
+    echo ""
+    echo "Fedora:"
+    echo "    sudo dnf install p7zip"
+    echo "Or"
+    echo "    sudo yum install p7zip"
+    echo ""
+    exit 1
 fi
 echo "7z command: ${COMMAND_7Z}"
 
