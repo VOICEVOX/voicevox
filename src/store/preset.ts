@@ -37,8 +37,12 @@ export const presetStore = {
         presetConfig.keys === undefined
       )
         return;
-      context.commit(SET_PRESET_ITEMS, { presetItems: presetConfig.items });
-      context.commit(SET_PRESET_KEYS, { presetKeys: presetConfig.keys });
+      context.commit(SET_PRESET_ITEMS, {
+        presetItems: presetConfig.items,
+      });
+      context.commit(SET_PRESET_KEYS, {
+        presetKeys: presetConfig.keys,
+      });
     },
 
     [SAVE_PRESET_CONFIG]: async (
@@ -52,8 +56,8 @@ export const presetStore = {
       }
     ) => {
       const result = await window.electron.savingPresets({
-        presetItems,
-        presetKeys,
+        presetItems: JSON.parse(JSON.stringify(presetItems)),
+        presetKeys: JSON.parse(JSON.stringify(presetKeys)),
       });
       context.commit(SET_PRESET_ITEMS, { presetItems: result.items });
       context.commit(SET_PRESET_KEYS, { presetKeys: result.keys });
@@ -68,23 +72,23 @@ export const presetStore = {
     ) => {
       const characterIndex = presetData.characterIndex;
 
-      const items = JSON.parse(
-        JSON.stringify(context.state.presetItems)
-      ) as Record<string, Preset>;
+      const presetItems = { ...context.state.presetItems };
 
-      const keys = JSON.parse(
-        JSON.stringify(context.state.presetKeys)
-      ) as Record<number, string[]>;
-      if (keys[characterIndex] === undefined) keys[characterIndex] = [];
+      const presetKeys = { ...context.state.presetKeys };
+
+      presetKeys[characterIndex] =
+        presetKeys[characterIndex] !== undefined
+          ? [...context.state.presetKeys[characterIndex]]
+          : [];
 
       const newKey = uuidv4();
 
-      items[newKey] = presetData;
-      keys[characterIndex].push(newKey);
+      presetItems[newKey] = presetData;
+      presetKeys[characterIndex].push(newKey);
 
       await context.dispatch(SAVE_PRESET_CONFIG, {
-        presetItems: items,
-        presetKeys: keys,
+        presetItems,
+        presetKeys,
       });
 
       if (audioId !== undefined) {
