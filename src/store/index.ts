@@ -18,12 +18,6 @@ import { projectStore } from "./project";
 import { uiStore } from "./ui";
 import { settingStore } from "./setting";
 
-export const GET_POLICY_TEXT = "GET_POLICY_TEXT";
-export const GET_OSS_LICENSES = "GET_OSS_LICENSES";
-export const GET_UPDATE_INFOS = "GET_UPDATE_INFOS";
-export const SHOW_WARNING_DIALOG = "SHOW_WARNING_DIALOG";
-export const LOG_ERROR = "LOG_ERROR";
-
 const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<
@@ -38,23 +32,26 @@ export const indexStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
-    [GET_POLICY_TEXT]: async () => {
+    async GET_POLICY_TEXT() {
       return await window.electron.getPolicyText();
     },
-    [GET_OSS_LICENSES]: async () => {
+    async GET_OSS_LICENSES() {
       return await window.electron.getOssLicenses();
     },
-    [GET_UPDATE_INFOS]: async () => {
+    async GET_UPDATE_INFOS() {
       return await window.electron.getUpdateInfos();
     },
-    [SHOW_WARNING_DIALOG]: async (
+    async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }
-    ) => {
+    ) {
       return await window.electron.showWarningDialog({ title, message });
     },
-    [LOG_ERROR]: (_, ...params: unknown[]) => {
+    LOG_ERROR(_, ...params: unknown[]) {
       window.electron.logError(...params);
+    },
+    LOG_INFO(_, ...params: unknown[]) {
+      window.electron.logInfo(...params);
     },
   },
 };
@@ -71,6 +68,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     nowPlayingContinuously: false,
     undoCommands: [],
     redoCommands: [],
+    useUndoRedo: isDevelopment,
     useGpu: false,
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,

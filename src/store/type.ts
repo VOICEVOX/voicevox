@@ -32,6 +32,7 @@ export type State = {
   nowPlayingContinuously: boolean;
   undoCommands: Command[];
   redoCommands: Command[];
+  useUndoRedo: boolean;
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
@@ -91,6 +92,7 @@ export type AudioMutations = {
     prevAudioKey: string | undefined;
   };
   REMOVE_AUDIO_ITEM: { audioKey: string };
+  SET_AUDIO_TEXT: { audioKey: string; text: string };
   SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
   SET_AUDIO_PITCH_SCALE: { audioKey: string; pitchScale: number };
   SET_AUDIO_INTONATION_SCALE: { audioKey: string; intonationScale: number };
@@ -119,7 +121,6 @@ export type AudioMutations = {
 export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
-  SET_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
@@ -127,17 +128,12 @@ export type AudioActions = {
   }): string;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
   GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
-  SET_ACCENT_PHRASES(payload: {
-    audioKey: string;
-    accentPhrases: AccentPhrase[];
-  }): void;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
     speaker: number;
     isKana?: boolean;
   }): Promise<AccentPhrase[]>;
-  FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
     speaker: number;
@@ -191,6 +187,7 @@ export type AudioCommandActions = {
     prevAudioKey: string | undefined;
   }): string;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
+  COMMAND_CHANGE_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
   COMMAND_CHANGE_SPEAKER(payload: { audioKey: string; speaker: number }): void;
   COMMAND_CHANGE_ACCENT(payload: {
     audioKey: string;
@@ -256,6 +253,19 @@ export type AudioCommandMutations = {
     prevAudioKey: string | undefined;
   };
   COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
+  COMMAND_CHANGE_AUDIO_TEXT: { audioKey: string; text: string } & (
+    | {
+        update: "Text";
+      }
+    | {
+        update: "AccentPhrases";
+        accentPhrases: AccentPhrase[];
+      }
+    | {
+        update: "AudioQuery";
+        query: AudioQuery;
+      }
+  );
   COMMAND_CHANGE_SPEAKER: {
     speaker: number;
     audioKey: string;
@@ -348,6 +358,7 @@ export type IndexActions = {
     message: string;
   }): Promise<Electron.MessageBoxReturnValue>;
   LOG_ERROR(...payload: unknown[]): void;
+  LOG_INFO(...payload: unknown[]): void;
 };
 
 /*
