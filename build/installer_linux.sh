@@ -41,7 +41,13 @@ cd "${APP_DIR}"
 echo "Downloading ${ARCHIVE_LIST_URL}"
 curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
 
+echo ""
+echo "Download list"
 ARCHIVE_LIST=($(cat "list.txt"))
+for filename in ${ARCHIVE_LIST[@]}; do
+  echo "* ${filename}"
+done
+echo ""
 
 # Download archives
 for filename in ${ARCHIVE_LIST[@]}; do
