@@ -375,11 +375,14 @@ ipcMainHandle(
         `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
       );
 
-      // エンジンのプロセスが存在しない（すでに終了している）場合
+      // エンジンのプロセスがすでに終了している、またはkillされている場合
       const engineExited = engineProcess.exitCode !== null;
+      const engineKilled = engineProcess.signalCode !== null;
 
-      if (engineExited) {
-        log.info("ENGINE process is not started yet. Starting ENGINE...");
+      if (engineExited || engineKilled) {
+        log.info(
+          "ENGINE process is not started yet or already killed. Starting ENGINE..."
+        );
 
         runEngine();
         resolve();
