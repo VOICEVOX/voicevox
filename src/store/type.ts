@@ -1,10 +1,15 @@
-import { StoreOptions, ActionTree, MutationTree } from "vuex";
+import {
+  MutationTree,
+  MutationsBase,
+  GettersBase,
+  ActionsBase,
+  StoreOptions,
+} from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import {
   createCommandMutationTree,
   PayloadRecipeTree,
-  PayloadMutationTree,
   OldCommand,
 } from "./command";
 
@@ -29,6 +34,7 @@ export type State = {
   nowPlayingContinuously: boolean;
   undoCommands: Command[];
   redoCommands: Command[];
+  useUndoRedo: boolean;
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
@@ -42,7 +48,7 @@ export type State = {
 
 export type AudioItem = {
   text: string;
-  characterIndex?: number;
+  speaker?: number;
   query?: AudioQuery;
   presetId?: string;
 };
@@ -91,6 +97,7 @@ export type AudioMutations = {
     prevAudioKey: string | undefined;
   };
   REMOVE_AUDIO_ITEM: { audioKey: string };
+  SET_AUDIO_TEXT: { audioKey: string; text: string };
   SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
   SET_AUDIO_PITCH_SCALE: { audioKey: string; pitchScale: number };
   SET_AUDIO_INTONATION_SCALE: { audioKey: string; intonationScale: number };
@@ -101,8 +108,13 @@ export type AudioMutations = {
     postPhonemeLength: number;
   };
   SET_AUDIO_QUERY: { audioKey: string; audioQuery: AudioQuery };
-  SET_AUDIO_CHARACTER_INDEX: { audioKey: string; characterIndex: number };
+  SET_AUDIO_SPEAKER: { audioKey: string; speaker: number };
   SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
+  SET_SINGLE_ACCENT_PHRASE: {
+    audioKey: string;
+    accentPhraseIndex: number;
+    accentPhrases: AccentPhrase[];
+  };
   SET_AUDIO_MORA_DATA: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -118,50 +130,32 @@ export type AudioMutations = {
 export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
-  SET_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
-    prevAudioKey: string | undefined;
+    prevAudioKey?: string;
   }): string;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
-  GET_AUDIO_CACHE(payload: { audioKey: string }): Blob | null;
-  SET_ACCENT_PHRASES(payload: {
-    audioKey: string;
-    accentPhrases: AccentPhrase[];
-  }): void;
-  SET_SINGLE_ACCENT_PHRASE(payload: {
-    audioKey: string;
-    accentPhraseIndex: number;
-    accentPhrases: AccentPhrase[];
-    popUntilPause: boolean;
-  }): void;
+  GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
-    characterIndex: number;
-    isKana: boolean | undefined;
-  }): AccentPhrase[];
-  FETCH_AND_SET_ACCENT_PHRASES(payload: { audioKey: string }): void;
-  FETCH_AND_SET_SINGLE_ACCENT_PHRASE(payload: {
-    audioKey: string;
-    newPronunciation: string;
-    accentPhraseIndex: number;
-    popUntilPause: boolean;
-  }): void;
+    speaker: number;
+    isKana?: boolean;
+  }): Promise<AccentPhrase[]>;
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    characterIndex: number;
-  }): AccentPhrase[];
+    speaker: number;
+  }): Promise<AccentPhrase[]>;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    characterIndex: number;
+    speaker: number;
     copyIndexes: number[];
-  }): AccentPhrase[];
+  }): Promise<AccentPhrase[]>;
   FETCH_AUDIO_QUERY(payload: {
     text: string;
-    characterIndex: number;
-  }): AudioQuery;
+    speaker: number;
+  }): Promise<AudioQuery>;
   FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
   GENERATE_AND_SAVE_AUDIO(payload: {
@@ -171,8 +165,8 @@ export type AudioActions = {
   }): SaveResultObject;
   GENERATE_AND_SAVE_ALL_AUDIO(payload: {
     dirPath?: string;
-    encoding: EncodingType;
-  }): SaveResultObject[];
+    encoding?: EncodingType;
+  }): SaveResultObject[] | undefined;
   IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
   PLAY_AUDIO(payload: { audioKey: string }): boolean;
   STOP_AUDIO(payload: { audioKey: string }): void;
@@ -180,13 +174,13 @@ export type AudioActions = {
   STOP_CONTINUOUSLY_AUDIO(): void;
   PUT_TEXTS(payload: {
     texts: string[];
-    characterIndex: number | undefined;
+    speaker: number | undefined;
     prevAudioKey: string | undefined;
   }): void[];
   OPEN_TEXT_EDIT_CONTEXT_MENU(): void;
   DETECTED_ENGINE_ERROR(): void;
   RESTART_ENGINE(): void;
-  CHECK_FILE_EXISTS(payload: { file: string }): boolean;
+  CHECK_FILE_EXISTS(payload: { file: string }): Promise<boolean>;
 };
 
 /*
@@ -202,10 +196,8 @@ export type AudioCommandActions = {
     prevAudioKey: string | undefined;
   }): string;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
-  COMMAND_CHANGE_CHARACTER_INDEX(payload: {
-    audioKey: string;
-    characterIndex: number;
-  }): void;
+  COMMAND_CHANGE_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
+  COMMAND_CHANGE_SPEAKER(payload: { audioKey: string; speaker: number }): void;
   COMMAND_CHANGE_ACCENT(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -225,6 +217,12 @@ export type AudioCommandActions = {
         }
     )
   ): void;
+  COMMAND_CHANGE_SINGLE_ACCENT_PHRASE(payload: {
+    audioKey: string;
+    newPronunciation: string;
+    accentPhraseIndex: number;
+    popUntilPause: boolean;
+  }): void;
   COMMAND_SET_AUDIO_MORA_DATA(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -268,12 +266,25 @@ export type AudioCommandMutations = {
     prevAudioKey: string | undefined;
   };
   COMMAND_REMOVE_AUDIO_ITEM: { audioKey: string };
-  COMMAND_CHANGE_CHARACTER_INDEX: {
-    characterIndex: number;
+  COMMAND_CHANGE_AUDIO_TEXT: { audioKey: string; text: string } & (
+    | {
+        update: "Text";
+      }
+    | {
+        update: "AccentPhrases";
+        accentPhrases: AccentPhrase[];
+      }
+    | {
+        update: "AudioQuery";
+        query: AudioQuery;
+      }
+  );
+  COMMAND_CHANGE_SPEAKER: {
+    speaker: number;
     audioKey: string;
   } & (
     | {
-        update: "CharacterIndex";
+        update: "Speaker";
       }
     | {
         update: "AccentPhrases";
@@ -290,6 +301,11 @@ export type AudioCommandMutations = {
   };
   COMMAND_CHANGE_ACCENT_PHRASE_SPLIT: {
     audioKey: string;
+    accentPhrases: AccentPhrase[];
+  };
+  COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
+    audioKey: string;
+    accentPhraseIndex: number;
     accentPhrases: AccentPhrase[];
   };
   COMMAND_SET_AUDIO_MORA_DATA: {
@@ -351,14 +367,15 @@ export type IndexGetters = {};
 export type IndexMutations = {};
 
 export type IndexActions = {
-  GET_POLICY_TEXT(): string;
-  GET_OSS_LICENSES(): Record<string, string>[];
-  GET_UPDATE_INFOS(): UpdateInfo[];
+  GET_POLICY_TEXT(): Promise<string>;
+  GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
+  GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
   SHOW_WARNING_DIALOG(payload: {
     title: string;
     message: string;
-  }): Electron.MessageBoxReturnValue;
-  LOG_ERROR(payload: unknown[]): void;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  LOG_ERROR(...payload: unknown[]): void;
+  LOG_INFO(...payload: unknown[]): void;
 };
 
 /*
@@ -370,7 +387,7 @@ export type ProjectGetters = {
 };
 
 export type ProjectMutations = {
-  SET_PROJECT_FILEPATH: { filePath: string };
+  SET_PROJECT_FILEPATH: { filePath?: string };
 };
 
 export type ProjectActions = {
@@ -393,7 +410,7 @@ export type SettingMutations = {
 
 export type SettingActions = {
   GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(): void;
+  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
 };
 
 /*
@@ -439,6 +456,15 @@ export type AllGetters = AudioGetters &
   SettingGetters &
   UiGetters;
 
+export type UnionGetters =
+  | AudioGetters
+  | AudioCommandGetters
+  | CommandGetters
+  | IndexGetters
+  | ProjectGetters
+  | SettingGetters
+  | UiGetters;
+
 export type AllMutations = AudioMutations &
   AudioCommandMutations &
   CommandMutations &
@@ -446,6 +472,15 @@ export type AllMutations = AudioMutations &
   ProjectMutations &
   SettingMutations &
   UiMutations;
+
+export type UnionMutations =
+  | AudioMutations
+  | AudioCommandMutations
+  | CommandMutations
+  | IndexMutations
+  | ProjectMutations
+  | SettingMutations
+  | UiMutations;
 
 export type AllActions = AudioActions &
   AudioCommandActions &
@@ -455,16 +490,21 @@ export type AllActions = AudioActions &
   SettingActions &
   UiActions;
 
-export const typeAsStoreOptions = <Arg extends StoreOptions<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsMutationTree = <Arg extends MutationTree<State>>(
-  arg: Arg
-): Arg => arg;
-export const typeAsActionTree = <Arg extends ActionTree<State, State>>(
-  arg: Arg
-): Arg => arg;
+export type UnionActions =
+  | AudioActions
+  | AudioCommandActions
+  | CommandActions
+  | IndexActions
+  | ProjectActions
+  | SettingActions
+  | UiActions;
 
-export const commandMutationsCreator = <Arg extends PayloadRecipeTree<State>>(
-  arg: Arg
-): PayloadMutationTree<State> => createCommandMutationTree<State, Arg>(arg);
+export type VoiceVoxStoreOptions<
+  G extends GettersBase,
+  A extends ActionsBase,
+  M extends MutationsBase
+> = StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations>;
+
+export const commandMutationsCreator = <M extends MutationsBase>(
+  arg: PayloadRecipeTree<State, M>
+): MutationTree<State, M> => createCommandMutationTree<State, M>(arg);
