@@ -149,7 +149,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
             DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "Size ok"
+                echo "Size OK"
             else
                 echo "Invalid size: $DOWNLOADED_SIZE != $SIZE"
                 echo ""
@@ -165,7 +165,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
             echo "Verifying hash == $HASH"
             DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '{print $1}' | tr a-z A-Z)
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "Hash ok"
+                echo "Hash OK"
             else
                 echo "Invalid hash: $DOWNLOADED_HASH != $HASH"
                 echo ""
