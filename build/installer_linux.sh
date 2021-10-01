@@ -17,6 +17,22 @@ ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 
 echo "Checking installer prerequisites..."
 
+if ! command -v curl &> /dev/null; then
+  echo ""
+  echo "Command 'curl' not found"
+  echo ""
+  echo "Required to download VOICEVOX"
+  echo ""
+  echo "Ubuntu/Debian:"
+  echo "    sudo apt install curl"
+  echo ""
+  echo "CentOS/Fedora:"
+  echo "    sudo dnf install curl"
+  echo "    sudo yum install curl"
+  echo ""
+  exit 1
+fi
+
 EXTRACT_7Z=
 if command -v 7z &> /dev/null; then
   # Ubuntu/Debian p7zip-full
