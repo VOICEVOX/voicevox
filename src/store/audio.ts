@@ -156,6 +156,12 @@ export const audioStore: VoiceVoxStoreOptions<
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
     },
+    SET_AUDIO_TEXT(
+      state,
+      { audioKey, text }: { audioKey: string; text: string }
+    ) {
+      state.audioItems[audioKey].text = text;
+    },
     SET_AUDIO_SPEED_SCALE(
       state,
       { audioKey, speedScale }: { audioKey: string; speedScale: number }
@@ -300,11 +306,6 @@ export const audioStore: VoiceVoxStoreOptions<
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
-    SET_AUDIO_TEXT: oldCreateCommandAction(
-      (draft, { audioKey, text }: { audioKey: string; text: string }) => {
-        draft.audioItems[audioKey].text = text;
-      }
-    ),
     REMOVE_ALL_AUDIO_ITEM: oldCreateCommandAction((draft) => {
       for (const audioKey of draft.audioKeys) {
         delete draft.audioItems[audioKey];
@@ -337,12 +338,6 @@ export const audioStore: VoiceVoxStoreOptions<
         return null;
       }
     },
-    SET_ACCENT_PHRASES(
-      { commit },
-      payload: { audioKey: string; accentPhrases: AccentPhrase[] }
-    ) {
-      commit("SET_ACCENT_PHRASES", payload);
-    },
     SET_AUDIO_QUERY(
       { commit },
       payload: { audioKey: string; audioQuery: AudioQuery }
@@ -370,22 +365,6 @@ export const audioStore: VoiceVoxStoreOptions<
           );
           throw error;
         });
-    },
-    FETCH_AND_SET_ACCENT_PHRASES(
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
-    ) {
-      const audioItem = state.audioItems[audioKey];
-
-      return dispatch("FETCH_ACCENT_PHRASES", {
-        text: audioItem.text,
-        speaker: audioItem.speaker!,
-      }).then((accentPhrases) =>
-        dispatch("SET_ACCENT_PHRASES", {
-          audioKey,
-          accentPhrases,
-        })
-      );
     },
     FETCH_MORA_DATA(
       { state },
@@ -705,11 +684,11 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       ) => {
         const arrLen = texts.length;
-        speaker == undefined ? 0 : speaker;
+        speaker = speaker ?? 0;
         const addedAudioKeys = [];
         for (let i = 0; i < arrLen; i++) {
           if (texts[i] != "") {
-            const audioItem = {
+            const audioItem: AudioItem = {
               text: texts[i],
               speaker: speaker,
             };
@@ -784,6 +763,48 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
       commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
+    },
+    async COMMAND_CHANGE_AUDIO_TEXT(
+      { state, commit, dispatch },
+      { audioKey, text }: { audioKey: string; text: string }
+    ) {
+      const speaker = state.audioItems[audioKey].speaker!;
+      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      try {
+        if (query !== undefined) {
+          const accentPhrases: AccentPhrase[] = await dispatch(
+            "FETCH_ACCENT_PHRASES",
+            {
+              text,
+              speaker,
+            }
+          );
+          commit("COMMAND_CHANGE_AUDIO_TEXT", {
+            audioKey,
+            text,
+            update: "AccentPhrases",
+            accentPhrases,
+          });
+        } else {
+          const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+            text,
+            speaker,
+          });
+          commit("COMMAND_CHANGE_AUDIO_TEXT", {
+            audioKey,
+            text,
+            update: "AudioQuery",
+            query: newAudioQuery,
+          });
+        }
+      } catch (error) {
+        commit("COMMAND_CHANGE_AUDIO_TEXT", {
+          audioKey,
+          text,
+          update: "Text",
+        });
+        throw error;
+      }
     },
     async COMMAND_CHANGE_SPEAKER(
       { state, dispatch, commit },
@@ -1107,6 +1128,38 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
+    },
+    COMMAND_CHANGE_AUDIO_TEXT(
+      draft,
+      payload: { audioKey: string; text: string } & (
+        | {
+            update: "Text";
+          }
+        | {
+            update: "AccentPhrases";
+            accentPhrases: AccentPhrase[];
+          }
+        | {
+            update: "AudioQuery";
+            query: AudioQuery;
+          }
+      )
+    ) {
+      audioStore.mutations.SET_AUDIO_TEXT(draft, {
+        audioKey: payload.audioKey,
+        text: payload.text,
+      });
+      if (payload.update == "AccentPhrases") {
+        audioStore.mutations.SET_ACCENT_PHRASES(draft, {
+          audioKey: payload.audioKey,
+          accentPhrases: payload.accentPhrases,
+        });
+      } else if (payload.update == "AudioQuery") {
+        audioStore.mutations.SET_AUDIO_QUERY(draft, {
+          audioKey: payload.audioKey,
+          audioQuery: payload.query,
+        });
+      }
     },
     COMMAND_CHANGE_SPEAKER(
       draft,
