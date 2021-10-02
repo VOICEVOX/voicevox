@@ -726,8 +726,8 @@ export const audioStore: VoiceVoxStoreOptions<
       await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
       window.electron
         .restartEngine()
-        .then(() => dispatch("START_WAITING_ENGINE", undefined))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR", undefined));
+        .then(() => dispatch("START_WAITING_ENGINE"))
+        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);

@@ -26,9 +26,7 @@ export default defineComponent({
     const md = useMarkdownIt();
 
     onMounted(async () => {
-      policy.value = md.render(
-        await store.dispatch("GET_POLICY_TEXT", undefined)
-      );
+      policy.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
     });
 
     return {
