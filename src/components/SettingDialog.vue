@@ -168,13 +168,7 @@
 <script lang="ts">
 import { defineComponent, computed, onUpdated } from "vue";
 import { useStore } from "@/store";
-import { ASYNC_UI_LOCK, SET_USE_GPU } from "@/store/ui";
-import { RESTART_ENGINE } from "@/store/audio";
 import { useQuasar } from "quasar";
-import {
-  GET_SAVING_SETTING_DATA,
-  SET_SAVING_SETTING_DATA,
-} from "@/store/setting";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -206,8 +200,8 @@ export default defineComponent({
       if (store.state.useGpu === useGpu) return;
 
       const change = async () => {
-        await store.dispatch(SET_USE_GPU, { useGpu });
-        store.dispatch(RESTART_ENGINE);
+        await store.dispatch("SET_USE_GPU", { useGpu });
+        store.dispatch("RESTART_ENGINE", undefined);
 
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
@@ -220,7 +214,7 @@ export default defineComponent({
       };
 
       const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch(ASYNC_UI_LOCK, {
+        store.dispatch("ASYNC_UI_LOCK", {
           callback: async () => {
             $q.loading.show({
               spinnerColor: "primary",
@@ -262,13 +256,13 @@ export default defineComponent({
     };
 
     const restartEngineProcess = () => {
-      store.dispatch(RESTART_ENGINE);
+      store.dispatch("RESTART_ENGINE", undefined);
     };
 
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      store.dispatch(SET_SAVING_SETTING_DATA, {
+      store.dispatch("SET_SAVING_SETTING_DATA", {
         data: { ...savingSetting.value, [key]: data },
       });
     };
@@ -278,14 +272,14 @@ export default defineComponent({
         title: "書き出し先のフォルダを選択",
       });
       if (path) {
-        store.dispatch(SET_SAVING_SETTING_DATA, {
+        store.dispatch("SET_SAVING_SETTING_DATA", {
           data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
     };
 
     onUpdated(() => {
-      store.dispatch(GET_SAVING_SETTING_DATA);
+      store.dispatch("GET_SAVING_SETTING_DATA", undefined);
     });
 
     return {

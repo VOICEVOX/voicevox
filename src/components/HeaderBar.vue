@@ -22,7 +22,7 @@
 
       <q-space />
       <q-btn
-        v-if="isDevelopment"
+        v-if="useUndoRedo"
         unelevated
         color="white"
         text-color="secondary"
@@ -32,7 +32,7 @@
         >元に戻す</q-btn
       >
       <q-btn
-        v-if="isDevelopment"
+        v-if="useUndoRedo"
         unelevated
         color="white"
         text-color="secondary"
@@ -66,16 +66,6 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { CAN_REDO, CAN_UNDO, REDO, UNDO } from "@/store/command";
-import {
-  UI_LOCKED,
-  IS_HELP_DIALOG_OPEN,
-  IS_SETTING_DIALOG_OPEN,
-} from "@/store/ui";
-import {
-  PLAY_CONTINUOUSLY_AUDIO,
-  STOP_CONTINUOUSLY_AUDIO,
-} from "@/store/audio";
 import { useQuasar } from "quasar";
 
 export default defineComponent({
@@ -83,24 +73,24 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const isDevelopment = process.env.NODE_ENV === "development";
+    const useUndoRedo = computed(() => store.state.useUndoRedo);
 
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
-    const canUndo = computed(() => store.getters[CAN_UNDO]);
-    const canRedo = computed(() => store.getters[CAN_REDO]);
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const canUndo = computed(() => store.getters.CAN_UNDO);
+    const canRedo = computed(() => store.getters.CAN_REDO);
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
 
     const undo = () => {
-      store.dispatch(UNDO);
+      store.dispatch("UNDO", undefined);
     };
     const redo = () => {
-      store.dispatch(REDO);
+      store.dispatch("REDO", undefined);
     };
     const playContinuously = async () => {
       try {
-        await store.dispatch(PLAY_CONTINUOUSLY_AUDIO, {});
+        await store.dispatch("PLAY_CONTINUOUSLY_AUDIO", undefined);
       } catch {
         $q.dialog({
           title: "再生に失敗しました",
@@ -114,17 +104,17 @@ export default defineComponent({
       }
     };
     const stopContinuously = () => {
-      store.dispatch(STOP_CONTINUOUSLY_AUDIO, {});
+      store.dispatch("STOP_CONTINUOUSLY_AUDIO", undefined);
     };
     const openHelpDialog = () => {
-      store.dispatch(IS_HELP_DIALOG_OPEN, { isHelpDialogOpen: true });
+      store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
     };
     const openSettingDialog = () => {
-      store.dispatch(IS_SETTING_DIALOG_OPEN, { isSettingDialogOpen: true });
+      store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: true });
     };
 
     return {
-      isDevelopment,
+      useUndoRedo,
       uiLocked,
       canUndo,
       canRedo,

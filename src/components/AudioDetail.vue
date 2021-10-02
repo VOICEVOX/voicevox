@@ -153,17 +153,6 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
-import {
-  ACTIVE_AUDIO_KEY,
-  COMMAND_CHANGE_ACCENT,
-  COMMAND_SET_AUDIO_MORA_DATA,
-  COMMAND_CHANGE_ACCENT_PHRASE_SPLIT,
-  PLAY_AUDIO,
-  STOP_AUDIO,
-  GENERATE_AND_SAVE_AUDIO,
-  FETCH_AND_SET_SINGLE_ACCENT_PHRASE,
-} from "@/store/audio";
-import { UI_LOCKED } from "@/store/ui";
 import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
@@ -204,10 +193,10 @@ export default defineComponent({
     };
 
     // accent phrase
-    const activeAudioKey = computed<string | null>(
-      () => store.getters[ACTIVE_AUDIO_KEY]
+    const activeAudioKey = computed<string | undefined>(
+      () => store.getters.ACTIVE_AUDIO_KEY
     );
-    const uiLocked = computed(() => store.getters[UI_LOCKED]);
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     const audioItem = computed(() =>
       activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
@@ -216,7 +205,7 @@ export default defineComponent({
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const changeAccent = (accentPhraseIndex: number, accent: number) => {
-      store.dispatch(COMMAND_CHANGE_ACCENT, {
+      store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         accent,
@@ -228,11 +217,12 @@ export default defineComponent({
       isPause: boolean,
       moraIndex?: number
     ) => {
-      store.dispatch(COMMAND_CHANGE_ACCENT_PHRASE_SPLIT, {
+      store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
-        moraIndex,
-        isPause,
+        ...(!isPause
+          ? { isPause, moraIndex: moraIndex as number }
+          : { isPause }),
       });
     };
 
@@ -241,7 +231,7 @@ export default defineComponent({
       moraIndex: number,
       pitch: number
     ) => {
-      store.dispatch(COMMAND_SET_AUDIO_MORA_DATA, {
+      store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
@@ -252,7 +242,7 @@ export default defineComponent({
     // audio play
     const play = async () => {
       try {
-        await store.dispatch(PLAY_AUDIO, {
+        await store.dispatch("PLAY_AUDIO", {
           audioKey: activeAudioKey.value!,
         });
       } catch (e) {
@@ -269,13 +259,13 @@ export default defineComponent({
     };
 
     const stop = () => {
-      store.dispatch(STOP_AUDIO, { audioKey: activeAudioKey.value! });
+      store.dispatch("STOP_AUDIO", { audioKey: activeAudioKey.value! });
     };
 
     // save
     const save = async () => {
       const result: SaveResultObject = await store.dispatch(
-        GENERATE_AND_SAVE_AUDIO,
+        "GENERATE_AND_SAVE_AUDIO",
         {
           audioKey: activeAudioKey.value!,
           encoding: store.state.savingSetting.fileEncoding,
@@ -347,8 +337,8 @@ export default defineComponent({
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
-      store.dispatch(FETCH_AND_SET_SINGLE_ACCENT_PHRASE, {
-        audioKey: activeAudioKey.value,
+      store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+        audioKey: activeAudioKey.value!,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
         popUntilPause,

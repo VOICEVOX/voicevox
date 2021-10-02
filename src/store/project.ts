@@ -1,26 +1,24 @@
-import { StoreOptions } from "vuex";
 import { createUILockAction } from "@/store/ui";
 import {
-  REGISTER_AUDIO_ITEM,
-  REMOVE_ALL_AUDIO_ITEM,
-  FETCH_MORA_DATA,
-} from "@/store/audio";
-import { State, AudioItem } from "@/store/type";
+  AudioItem,
+  ProjectGetters,
+  ProjectActions,
+  ProjectMutations,
+  VoiceVoxStoreOptions,
+} from "@/store/type";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
-export const CREATE_NEW_PROJECT = "NEW_PROJECT";
-export const LOAD_PROJECT_FILE = "LOAD_PROJECT_FILE";
-export const SAVE_PROJECT_FILE = "SAVE_PROJECT_FILE";
-export const PROJECT_NAME = "PROJECT_NAME";
-export const SET_PROJECT_FILEPATH = "SET_PROJECT_FILEPATH";
-
 const DEFAULT_SAMPLING_RATE = 24000;
 
-export const projectStore = {
+export const projectStore: VoiceVoxStoreOptions<
+  ProjectGetters,
+  ProjectActions,
+  ProjectMutations
+> = {
   getters: {
-    [PROJECT_NAME](state) {
+    PROJECT_NAME(state) {
       return state.projectFilePath !== undefined
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
@@ -28,13 +26,13 @@ export const projectStore = {
   },
 
   mutations: {
-    [SET_PROJECT_FILEPATH](state, { filePath }: { filePath: string }) {
+    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
   },
 
   actions: {
-    [CREATE_NEW_PROJECT]: createUILockAction(
+    CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (
           confirm !== false &&
@@ -48,17 +46,17 @@ export const projectStore = {
           return;
         }
 
-        await context.dispatch(REMOVE_ALL_AUDIO_ITEM, {});
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
-        const audioItem: AudioItem = { text: "", characterIndex: 0 };
-        await context.dispatch(REGISTER_AUDIO_ITEM, {
+        const audioItem: AudioItem = { text: "", speaker: 0 };
+        await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
 
-        context.commit(SET_PROJECT_FILEPATH, { filePath: undefined });
+        context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
       }
     ),
-    [LOAD_PROJECT_FILE]: createUILockAction(
+    LOAD_PROJECT_FILE: createUILockAction(
       async (
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
@@ -138,9 +136,9 @@ export const projectStore = {
 
               // set phoneme length
               await context
-                .dispatch(FETCH_MORA_DATA, {
+                .dispatch("FETCH_MORA_DATA", {
                   accentPhrases: audioItem.query!.accentPhrases,
-                  characterIndex: audioItem.characterIndex!,
+                  speaker: audioItem.speaker!,
                 })
                 .then((accentPhrases: AccentPhrase[]) => {
                   accentPhrases.forEach((newAccentPhrase, i) => {
@@ -175,11 +173,11 @@ export const projectStore = {
           }
           if (
             !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].characterIndex != undefined
+              (audioKey) => obj.audioItems[audioKey].speaker != undefined
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "characterIndex" attribute.'
+              'Every audioItem should have a "speaker" attribute.'
             );
           }
 
@@ -194,19 +192,19 @@ export const projectStore = {
           ) {
             return;
           }
-          await context.dispatch(REMOVE_ALL_AUDIO_ITEM);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
           let prevAudioKey = undefined;
           for (const audioKey of audioKeys) {
             const audioItem = audioItems[audioKey];
-            prevAudioKey = await context.dispatch(REGISTER_AUDIO_ITEM, {
+            prevAudioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
               prevAudioKey,
               audioItem,
             });
           }
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -223,7 +221,7 @@ export const projectStore = {
         }
       }
     ),
-    [SAVE_PROJECT_FILE]: createUILockAction(
+    SAVE_PROJECT_FILE: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
@@ -248,13 +246,13 @@ export const projectStore = {
         ).buffer;
         window.electron.writeFile({ filePath, buffer: buf });
         if (!context.state.projectFilePath) {
-          context.commit(SET_PROJECT_FILEPATH, { filePath });
+          context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
         return;
       }
     ),
   },
-} as StoreOptions<State>;
+};
 
 const moraSchema = {
   properties: {
@@ -305,7 +303,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
-    characterIndex: { type: "int32" },
+    speaker: { type: "int32" },
     query: audioQuerySchema,
   },
 } as const;

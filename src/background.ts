@@ -1,6 +1,6 @@
 "use strict";
 
-import { execFile, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
@@ -13,10 +13,22 @@ import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-import { logError } from "./electron/log";
 
 import fs from "fs";
 import { CharacterInfo, SavingSetting } from "./type/preload";
+
+import log from "electron-log";
+import dayjs from "dayjs";
+
+// silly以上のログをコンソールに出力
+log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+log.transports.console.level = "silly";
+
+// warn以上のログをファイルに出力
+const prefix = dayjs().format("YYYYMMDD_HHmmss");
+log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+log.transports.file.level = "warn";
+log.transports.file.fileName = `${prefix}_error.log`;
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
@@ -26,10 +38,10 @@ let win: BrowserWindow;
 if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
 
 process.on("uncaughtException", (error) => {
-  logError(error);
+  log.error(error);
 });
 process.on("unhandledRejection", (reason) => {
-  logError(reason);
+  log.error(reason);
 });
 
 // 設定
@@ -92,26 +104,40 @@ async function runEngine() {
     });
   }
 
+  const useGpu = store.get("useGpu");
+  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
+
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
     process.env.ENGINE_PATH ?? "run.exe"
   );
-  const args = store.get("useGpu") ? ["--use_gpu"] : null;
-  engineProcess = execFile(
-    enginePath,
-    args,
-    { cwd: path.dirname(enginePath) },
-    () => {
-      if (!willQuitEngine) {
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR");
-        dialog.showErrorBox(
-          "音声合成エンジンエラー",
-          "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-        );
-      }
+  const args = useGpu ? ["--use_gpu"] : [];
+
+  engineProcess = spawn(enginePath, args, {
+    cwd: path.dirname(enginePath),
+  });
+
+  engineProcess.stdout?.on("data", (data) => {
+    log.info("ENGINE: " + data.toString("utf-8"));
+  });
+
+  engineProcess.stderr?.on("data", (data) => {
+    log.error("ENGINE: " + data.toString("utf-8"));
+  });
+
+  engineProcess.on("close", (code, signal) => {
+    log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE: exited with code ${code}`);
+
+    if (!willQuitEngine) {
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+      dialog.showErrorBox(
+        "音声合成エンジンエラー",
+        "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+      );
     }
-  );
+  });
 }
 
 // temp dir
@@ -330,7 +356,11 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 });
 
 ipcMainHandle("LOG_ERROR", (_, ...params) => {
-  logError(...params);
+  log.error(...params);
+});
+
+ipcMainHandle("LOG_INFO", (_, ...params) => {
+  log.info(...params);
 });
 
 /**
@@ -340,9 +370,20 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
 ipcMainHandle(
   "RESTART_ENGINE",
   () =>
-    new Promise((resolve, reject) => {
-      // エンジンのプロセスが存在しない場合
-      if (engineProcess.exitCode !== null) {
+    new Promise<void>((resolve, reject) => {
+      log.info(
+        `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+      );
+
+      // エンジンのプロセスがすでに終了している、またはkillされている場合
+      const engineExited = engineProcess.exitCode !== null;
+      const engineKilled = engineProcess.signalCode !== null;
+
+      if (engineExited || engineKilled) {
+        log.info(
+          "ENGINE process is not started yet or already killed. Starting ENGINE..."
+        );
+
         runEngine();
         resolve();
         return;
@@ -353,20 +394,28 @@ ipcMainHandle(
 
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
-      const closeListenerCallBack = () => {
+      const restartEngineOnProcessClosedCallback = () => {
+        log.info("ENGINE process killed. Restarting ENGINE...");
+
         runEngine();
         resolve();
       };
-      engineProcess.once("close", closeListenerCallBack);
+      engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+      log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
       treeKill(engineProcess.pid, (error) => {
-        // error変数の値がnull以外であればkillコマンドが失敗したことを意味します。
-        if (error !== null) {
-          console.log(error);
+        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+        if (error != null) {
+          log.error("Failed to kill ENGINE");
+          log.error(error);
 
-          // 再起動用に設定したclose listenerを削除。
-          engineProcess.removeListener("close", closeListenerCallBack);
+          // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
+          // listenerを削除してENGINEの意図しない再起動を防止
+          engineProcess.removeListener(
+            "close",
+            restartEngineOnProcessClosedCallback
+          );
 
           reject();
         }
@@ -410,12 +459,33 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("quit", () => {
-  willQuitEngine = true;
-  try {
-    engineProcess.pid != undefined && treeKill(engineProcess.pid);
-  } catch {
-    logError("engine kill error");
+// Called before window closing
+app.on("before-quit", (event) => {
+  // considering the case that ENGINE process killed after checking process status
+  engineProcess.once("close", () => {
+    log.info("ENGINE killed. Quitting app");
+    app.quit(); // attempt to quit app again
+  });
+
+  log.info(
+    `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+  );
+
+  const engineNotExited = engineProcess.exitCode === null;
+  const engineNotKilled = engineProcess.signalCode === null;
+
+  if (engineNotExited && engineNotKilled) {
+    log.info("Killing ENGINE before app quit");
+    event.preventDefault();
+
+    log.info(`Killing ENGINE (PID=${engineProcess.pid})...`);
+    willQuitEngine = true;
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error: unknown) {
+      log.error("engine kill error");
+      log.error(error);
+    }
   }
 });
 
@@ -429,7 +499,7 @@ app.on("ready", async () => {
       await installExtension(VUEJS3_DEVTOOLS);
     } catch (e: unknown) {
       if (e instanceof Error) {
-        logError("Vue Devtools failed to install:", e.toString());
+        log.error("Vue Devtools failed to install:", e.toString());
       }
     }
   }
