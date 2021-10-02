@@ -485,12 +485,12 @@ export default defineComponent({
     };
 
     // for later developers, in case anyone wants to add a readonly hotkey
-    const readonlyHotkeyIndexes: number[] = [];
+    const readonlyHotkeyKeys: string[] = [];
 
     const checkHotkeyReadonly = (action: string) => {
       let flag = false;
-      readonlyHotkeyIndexes.forEach((index) => {
-        if (hotkeyRows.value[index].action == action) {
+      readonlyHotkeyKeys.forEach((key) => {
+        if (key == action) {
           flag = true;
         }
       });
