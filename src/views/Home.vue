@@ -287,7 +287,7 @@ export default defineComponent({
       const file = event.dataTransfer.files[0];
       switch (path.extname(file.name)) {
         case ".txt":
-          store.dispatch("IMPORT_FROM_FILE", { filePath: file.path });
+          store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
           break;
         case ".vvproj":
           store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
