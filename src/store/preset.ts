@@ -1,4 +1,3 @@
-import { StoreOptions } from "vuex";
 import {
   PresetGetters,
   PresetActions,
@@ -6,15 +5,8 @@ import {
   VoiceVoxStoreOptions,
 } from "@/store/type";
 import { Preset } from "@/type/preload";
-import { COMMAND_SET_AUDIO_PRESET } from "./audio";
 
 import { v4 as uuidv4 } from "uuid";
-
-export const SET_PRESET_ITEMS = "SET_PRESET_ITEMS";
-export const SET_PRESET_KEYS = "SET_PRESET_KEYS";
-export const GET_PRESET_CONFIG = "GET_PRESET_CONFIG";
-export const SAVE_PRESET_CONFIG = "SAVE_PRESET_CONFIG";
-export const ADD_PRESET = "ADD_PRESET";
 
 export const presetStore: VoiceVoxStoreOptions<
   PresetGetters,
@@ -92,13 +84,13 @@ export const presetStore: VoiceVoxStoreOptions<
       presetItems[newKey] = presetData;
       presetKeys[characterIndex].push(newKey);
 
-      await context.dispatch(SAVE_PRESET_CONFIG, {
+      await context.dispatch("SAVE_PRESET_CONFIG", {
         presetItems,
         presetKeys,
       });
 
       if (audioId !== undefined) {
-        context.dispatch(COMMAND_SET_AUDIO_PRESET, {
+        context.dispatch("COMMAND_SET_AUDIO_PRESET", {
           audioId,
           presetId: newKey,
         });

@@ -77,8 +77,6 @@ function buildFileName(state: State, audioKey: string) {
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
-export const SET_AUDIO_PRESET = "SET_AUDIO_PRESET";
-
 export const audioStore: VoiceVoxStoreOptions<
   AudioGetters,
   AudioActions,
@@ -752,8 +750,6 @@ export const audioStore: VoiceVoxStoreOptions<
     },
   },
 };
-
-export const COMMAND_SET_AUDIO_PRESET = "COMMAND_SET_AUDIO_PRESET";
 
 export const audioCommandStore: VoiceVoxStoreOptions<
   AudioCommandGetters,

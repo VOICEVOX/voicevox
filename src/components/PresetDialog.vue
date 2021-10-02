@@ -54,8 +54,6 @@
 import { defineComponent, computed, ref, toRef } from "vue";
 import { useStore } from "@/store";
 
-import { SAVE_PRESET_CONFIG } from "@/store/preset";
-
 export default defineComponent({
   name: "PresetDialog",
 
@@ -104,7 +102,7 @@ export default defineComponent({
       ];
       newKeys[characterSelect.value.value].splice(index, 1);
 
-      store.dispatch(SAVE_PRESET_CONFIG, {
+      store.dispatch("SAVE_PRESET_CONFIG", {
         presetItems: newItems,
         presetKeys: newKeys,
       });
