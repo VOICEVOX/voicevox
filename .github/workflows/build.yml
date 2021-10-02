@@ -276,12 +276,18 @@ jobs:
       # - VOICEVOX/
       #   - voicevox
       #   - run
+      - name: Set BUILD_IDENTIFIER env var
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Create Linux tar.gz
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          tar cf voicevox-${{ github.ref }}.tar.gz VOICEVOX/
+          tar cf voicevox-${{ env.BUILD_IDENTIFIER }}.tar.gz VOICEVOX/
 
       - name: Show disk space (debug info)
         if: startsWith(matrix.artifact_name, 'linux-') # linux
@@ -294,7 +300,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-targz
-          path: voicevox-${{ github.ref }}.tar.gz
+          path: voicevox-${{ env.BUILD_IDENTIFIER }}.tar.gz
 
 
   build-distributable:
