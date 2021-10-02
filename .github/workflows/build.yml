@@ -265,6 +265,37 @@ jobs:
           path: |
             prepackage/
 
+      - name: Recover file permissions
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          chmod +x prepackage/voicevox
+          chmod +x prepackage/run
+
+      # voicevox-x.x.x.tar.gz
+      # - VOICEVOX/
+      #   - voicevox
+      #   - run
+      - name: Create Linux tar.gz
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          mv prepackage VOICEVOX
+          tar cf voicevox-${{ github.ref }}.tar.gz VOICEVOX/
+
+      - name: Show disk space (debug info)
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          df -h
+
+      - name: Upload Linux tar.gz artifact
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-targz
+          path: voicevox-${{ github.ref }}.tar.gz
+
 
   build-distributable:
     if: github.event.release.tag_name != '' # If release
