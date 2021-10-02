@@ -85,7 +85,7 @@ export type SavingSetting = {
 
 export type Preset = {
   name: string;
-  characterIndex: number;
+  speaker: number;
   speedScale: number;
   pitchScale: number;
   intonationScale: number;

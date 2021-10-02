@@ -68,21 +68,21 @@ export const presetStore: VoiceVoxStoreOptions<
       context,
       { presetData, audioId }: { presetData: Preset; audioId?: string }
     ) => {
-      const characterIndex = presetData.characterIndex;
+      const speaker = presetData.speaker;
 
       const presetItems = { ...context.state.presetItems };
 
       const presetKeys = { ...context.state.presetKeys };
 
-      presetKeys[characterIndex] =
-        presetKeys[characterIndex] !== undefined
-          ? [...context.state.presetKeys[characterIndex]]
+      presetKeys[speaker] =
+        presetKeys[speaker] !== undefined
+          ? [...context.state.presetKeys[speaker]]
           : [];
 
       const newKey = uuidv4();
 
       presetItems[newKey] = presetData;
-      presetKeys[characterIndex].push(newKey);
+      presetKeys[speaker].push(newKey);
 
       await context.dispatch("SAVE_PRESET_CONFIG", {
         presetItems,

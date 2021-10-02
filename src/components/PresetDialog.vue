@@ -7,8 +7,8 @@
       <q-card-actions class="q-px-md q-py-sm">
         <div class="full-width row wrap justify-between">
           <q-select
-            :options="characterList"
-            v-model="characterSelect"
+            :options="speakerList"
+            v-model="speakerSelect"
             class="col-md-4 col-sm-5 col -xs-10 q-pr-sm q-pb-sm"
             label="キャラクター"
           >
@@ -73,17 +73,17 @@ export default defineComponent({
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
 
-    const characterList = computed(() =>
+    const speakerList = computed(() =>
       store.state.characterInfos?.map((i) => ({
         label: i.metas.name,
         value: i.metas.speaker,
       }))
     );
-    const characterSelect = ref<{ label: string; value: number }>();
+    const speakerSelect = ref<{ label: string; value: number }>();
 
     const presetList = computed(() =>
-      characterSelect.value !== undefined
-        ? presetKeys.value[characterSelect.value.value]?.map((e) => ({
+      speakerSelect.value !== undefined
+        ? presetKeys.value[speakerSelect.value.value]?.map((e) => ({
             ...presetItems.value[e],
             key: e,
           }))
@@ -91,16 +91,16 @@ export default defineComponent({
     );
 
     const deletePreset = (key: string, index: number) => {
-      if (characterSelect.value === undefined) return;
+      if (speakerSelect.value === undefined) return;
 
       const newItems = { ...presetItems.value };
       delete newItems[key];
 
       const newKeys = { ...presetKeys.value };
-      newKeys[characterSelect.value.value] = [
-        ...presetKeys.value[characterSelect.value.value],
+      newKeys[speakerSelect.value.value] = [
+        ...presetKeys.value[speakerSelect.value.value],
       ];
-      newKeys[characterSelect.value.value].splice(index, 1);
+      newKeys[speakerSelect.value.value].splice(index, 1);
 
       store.dispatch("SAVE_PRESET_CONFIG", {
         presetItems: newItems,
@@ -110,8 +110,8 @@ export default defineComponent({
 
     return {
       updateOpenDialog,
-      characterList,
-      characterSelect,
+      speakerList,
+      speakerSelect,
       presetList,
       openDialogModel,
       deletePreset,

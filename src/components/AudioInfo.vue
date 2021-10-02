@@ -434,7 +434,7 @@ export default defineComponent({
       }));
     });
 
-    const characterIndex = computed(() => audioItem.value?.speaker);
+    const speaker = computed(() => audioItem.value?.speaker);
     const presetId = computed(() => audioItem.value?.presetId);
 
     const notSelectedPreset = {
@@ -445,11 +445,11 @@ export default defineComponent({
     const presetSelectModel = computed({
       get: () => {
         if (
-          characterIndex.value === undefined ||
+          speaker.value === undefined ||
           presetId.value === undefined ||
           presetItems.value[presetId.value] === undefined ||
-          presetKeys.value[characterIndex.value] === undefined ||
-          !presetKeys.value[characterIndex.value].includes(presetId.value)
+          presetKeys.value[speaker.value] === undefined ||
+          !presetKeys.value[speaker.value].includes(presetId.value)
         )
           return notSelectedPreset;
         return {
@@ -483,19 +483,17 @@ export default defineComponent({
       });
     };
 
-    // audioItem内のPresetIdを書き換えるaction, mutationを作る
-
     const showsPresetNameDialog = ref(false);
     const presetName = ref("");
     const showsPresetEditDialog = ref(false);
 
     const addPreset = () => {
       if (audioItem.value?.speaker === undefined) return;
-      const characterIndex = audioItem.value.speaker;
+      const speaker = audioItem.value.speaker;
 
       const newPreset = {
         name: presetName.value,
-        characterIndex,
+        speaker,
         speedScale: previewAudioSpeedScale.currentValue.value!,
         pitchScale: previewAudioPitchScale.currentValue.value!,
         intonationScale: previewAudioIntonationScale.currentValue.value!,
@@ -513,7 +511,7 @@ export default defineComponent({
     };
 
     const setPresetByScroll = (deltaY: number) => {
-      if (characterIndex.value === undefined) return;
+      if (speaker.value === undefined) return;
 
       const presetNumber = presetList.value?.length;
       if (presetNumber === 0 || presetNumber === undefined) return;
@@ -521,11 +519,11 @@ export default defineComponent({
       let nowIndex: number;
       if (
         presetSelectModel.value.value === undefined ||
-        presetKeys.value[characterIndex.value] === undefined
+        presetKeys.value[speaker.value] === undefined
       ) {
         nowIndex = -1;
       } else {
-        nowIndex = presetKeys.value[characterIndex.value]?.indexOf(
+        nowIndex = presetKeys.value[speaker.value]?.indexOf(
           presetSelectModel.value.value
         );
       }
