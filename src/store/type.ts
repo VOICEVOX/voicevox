@@ -122,7 +122,7 @@ export type AudioMutations = {
     pitch: number;
   };
   SET_AUDIO_PRESET: {
-    audioId: string;
+    audioKey: string;
     presetId: string | undefined;
   };
 };
@@ -254,7 +254,7 @@ export type AudioCommandActions = {
     postPhonemeLength: number;
   }): void;
   COMMAND_SET_AUDIO_PRESET(payload: {
-    audioId: string;
+    audioKey: string;
     presetId: string | undefined;
   }): void;
 };
@@ -330,7 +330,7 @@ export type AudioCommandMutations = {
     postPhonemeLength: number;
   };
   COMMAND_SET_AUDIO_PRESET: {
-    audioId: string;
+    audioKey: string;
     presetId: string | undefined;
   };
 };
@@ -462,7 +462,7 @@ export type PresetActions = {
     presetItems: Record<string, Preset>;
     presetKeys: Record<number, string[]>;
   }): void;
-  ADD_PRESET(payload: { presetData: Preset; audioId?: string }): void;
+  ADD_PRESET(payload: { presetData: Preset; audioKey?: string }): void;
 };
 
 export type AllGetters = AudioGetters &

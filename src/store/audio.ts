@@ -209,13 +209,13 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_AUDIO_PRESET: (
       draft,
-      { audioId, presetId }: { audioId: string; presetId: string | undefined }
+      { audioKey, presetId }: { audioKey: string; presetId: string | undefined }
     ) => {
-      draft.audioItems[audioId].presetId = presetId;
+      draft.audioItems[audioKey].presetId = presetId;
 
       if (presetId === undefined) return;
 
-      const query = draft.audioItems[audioId].query;
+      const query = draft.audioItems[audioKey].query;
 
       const preset = draft.presetItems[presetId];
       query!.intonationScale = preset.intonationScale;
@@ -1133,17 +1133,17 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_SET_AUDIO_PRESET: (
       { commit, state },
       {
-        audioId,
+        audioKey,
         presetId,
       }: {
-        audioId: string;
+        audioKey: string;
         presetId: string | undefined;
       }
     ) => {
       if (presetId !== undefined) {
         if (
           state.presetItems[presetId] === undefined ||
-          !state.presetKeys[state.audioItems[audioId].speaker!].includes(
+          !state.presetKeys[state.audioItems[audioKey].speaker!].includes(
             presetId
           )
         ) {
@@ -1151,7 +1151,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           return;
         }
       }
-      commit("COMMAND_SET_AUDIO_PRESET", { audioId, presetId });
+      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetId });
     },
   },
   mutations: commandMutationsCreator({
@@ -1316,7 +1316,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_SET_AUDIO_PRESET: (
       draft,
       payload: {
-        audioId: string;
+        audioKey: string;
         presetId: string | undefined;
       }
     ) => {

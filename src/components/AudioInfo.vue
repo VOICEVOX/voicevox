@@ -469,7 +469,7 @@ export default defineComponent({
       if (audioItem.value?.speaker === undefined) return;
 
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioId: activeAudioKey.value!,
+        audioKey: activeAudioKey.value!,
         presetId: e.value,
       });
     };
@@ -478,7 +478,7 @@ export default defineComponent({
       if (audioItem.value?.presetId === undefined) return;
 
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioId: activeAudioKey.value!,
+        audioKey: activeAudioKey.value!,
         presetId: undefined,
       });
     };
@@ -503,7 +503,7 @@ export default defineComponent({
       store.dispatch("ADD_PRESET", {
         presetData: newPreset,
 
-        audioId: activeAudioKey.value,
+        audioKey: activeAudioKey.value,
       });
 
       showsPresetNameDialog.value = false;

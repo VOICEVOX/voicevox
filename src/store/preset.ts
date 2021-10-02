@@ -66,7 +66,7 @@ export const presetStore: VoiceVoxStoreOptions<
 
     ADD_PRESET: async (
       context,
-      { presetData, audioId }: { presetData: Preset; audioId?: string }
+      { presetData, audioKey }: { presetData: Preset; audioKey?: string }
     ) => {
       const speaker = presetData.speaker;
 
@@ -89,9 +89,9 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys,
       });
 
-      if (audioId !== undefined) {
+      if (audioKey !== undefined) {
         context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-          audioId,
+          audioKey,
           presetId: newKey,
         });
       }
