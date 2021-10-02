@@ -384,16 +384,16 @@ export type ProjectActions = {
  */
 
 export type SettingGetters = {
-  GET_SAVING_SETTING_DATA: SavingSetting;
+  GET_SAVING_SETTING: SavingSetting;
 };
 
 export type SettingMutations = {
-  SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
+  SET_SAVING_SETTING: { savingSetting: SavingSetting };
 };
 
 export type SettingActions = {
-  GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
+  GET_SAVING_SETTING(): void;
+  SET_SAVING_SETTING(payload: { data: SavingSetting }): void;
 };
 
 /*

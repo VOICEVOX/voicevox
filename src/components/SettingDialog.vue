@@ -262,7 +262,7 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      store.dispatch("SET_SAVING_SETTING_DATA", {
+      store.dispatch("SET_SAVING_SETTING", {
         data: { ...savingSetting.value, [key]: data },
       });
     };
@@ -272,14 +272,14 @@ export default defineComponent({
         title: "書き出し先のフォルダを選択",
       });
       if (path) {
-        store.dispatch("SET_SAVING_SETTING_DATA", {
+        store.dispatch("SET_SAVING_SETTING", {
           data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
     };
 
     onUpdated(() => {
-      store.dispatch("GET_SAVING_SETTING_DATA", undefined);
+      store.dispatch("GET_SAVING_SETTING", undefined);
     });
 
     return {
