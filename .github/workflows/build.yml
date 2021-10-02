@@ -479,8 +479,12 @@ jobs:
             # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             7z -v1g a "${appImageFile}.7z" "${appImageFile}"
 
-            # Output splitted archive list to myartifact.7z.txt
-            ls ${appImageFile}.7z.* > archives.txt
+            # Output splitted archive name/size/hash list to myartifact.7z.txt
+            ls ${appImageFile}.7z.* > archives_name.txt
+            md5sum *.7z.* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
+            stat --printf="%s\n" *.7z.* > archives_size.txt
+            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
+
             mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
           done
 
