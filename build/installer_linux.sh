@@ -13,6 +13,7 @@ APP_DIR=${APP_DIR:-$HOME/.voicevox}
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 REUSE_LIST=${REUSE_LIST:-}
 SKIP_VERIFY=${SKIP_VERIFY:-}
+IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
@@ -71,6 +72,31 @@ else
     exit 1
 fi
 echo "7z command: ${COMMAND_7Z}"
+
+
+echo "Checking runtime prerequisites..."
+
+if ldconfig -p | grep libsndfile\.so &> /dev/null; then
+    echo "* libsndfile: OK"
+else
+    echo ""
+    echo "* libsndfile: not found"
+    echo ""
+    echo "Required to run VOICEVOX ENGINE"
+    echo ""
+    echo "Ubuntu/Debian:"
+    echo "    sudo apt install libsndfile1"
+    echo ""
+    echo "CentOS/Fedora:"
+    echo "    sudo dnf install libsndfile"
+    echo "Or"
+    echo "    sudo yum install libsndfile"
+    echo ""
+    if [ "${IGNORE_RTCOND}" != "1" ];
+        exit 1
+    fi
+fi
+
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
