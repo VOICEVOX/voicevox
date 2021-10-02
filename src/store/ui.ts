@@ -18,9 +18,9 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
     : Promise<ReturnType<A[K]>>
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
-    context.commit("LOCK_UI", undefined);
+    context.commit("LOCK_UI");
     return action(context, payload).finally(() => {
-      context.commit("UNLOCK_UI", undefined);
+      context.commit("UNLOCK_UI");
     });
   };
 }
@@ -74,10 +74,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
     actions: {
       LOCK_UI({ commit }) {
-        commit("LOCK_UI", undefined);
+        commit("LOCK_UI");
       },
       UNLOCK_UI({ commit }) {
-        commit("UNLOCK_UI", undefined);
+        commit("UNLOCK_UI");
       },
       ASYNC_UI_LOCK: createUILockAction(
         async (_, { callback }: { callback: () => Promise<void> }) => {
@@ -90,8 +90,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-        if (isHelpDialogOpen) commit("LOCK_UI", undefined);
-        else commit("UNLOCK_UI", undefined);
+        if (isHelpDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
 
         commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
       },
@@ -101,8 +101,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-        if (isSettingDialogOpen) commit("LOCK_UI", undefined);
-        else commit("UNLOCK_UI", undefined);
+        if (isSettingDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
       },
@@ -117,16 +117,16 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         });
       },
       async DETECT_UNMAXIMIZED({ commit }) {
-        commit("DETECT_UNMAXIMIZED", undefined);
+        commit("DETECT_UNMAXIMIZED");
       },
       async DETECT_MAXIMIZED({ commit }) {
-        commit("DETECT_MAXIMIZED", undefined);
+        commit("DETECT_MAXIMIZED");
       },
       async DETECT_PINNED({ commit }) {
-        commit("DETECT_PINNED", undefined);
+        commit("DETECT_PINNED");
       },
       async DETECT_UNPINNED({ commit }) {
-        commit("DETECT_UNPINNED", undefined);
+        commit("DETECT_UNPINNED");
       },
     },
   };

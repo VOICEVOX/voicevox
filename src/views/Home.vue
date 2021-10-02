@@ -255,7 +255,7 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER", undefined);
+      await store.dispatch("LOAD_CHARACTER");
       const audioItem: AudioItem = { text: "", speaker: 0 };
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,

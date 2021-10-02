@@ -204,10 +204,10 @@ export const commandStore: VoiceVoxStoreOptions<
 
   actions: {
     UNDO({ commit }) {
-      commit("UNDO", undefined);
+      commit("UNDO");
     },
     REDO({ commit }) {
-      commit("REDO", undefined);
+      commit("REDO");
     },
   },
 };
