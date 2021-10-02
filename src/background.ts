@@ -375,11 +375,14 @@ ipcMainHandle(
         `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
       );
 
-      // エンジンのプロセスが存在しない（すでに終了している）場合
+      // エンジンのプロセスがすでに終了している、またはkillされている場合
       const engineExited = engineProcess.exitCode !== null;
+      const engineKilled = engineProcess.signalCode !== null;
 
-      if (engineExited) {
-        log.info("ENGINE process is not started yet. Starting ENGINE...");
+      if (engineExited || engineKilled) {
+        log.info(
+          "ENGINE process is not started yet or already killed. Starting ENGINE..."
+        );
 
         runEngine();
         resolve();
@@ -391,12 +394,13 @@ ipcMainHandle(
 
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
-      engineProcess.once("close", () => {
-        log.info("ENGINE process killed. Starting a new ENGINE...");
+      const restartEngineOnProcessClosedCallback = () => {
+        log.info("ENGINE process killed. Restarting ENGINE...");
 
         runEngine();
         resolve();
-      });
+      };
+      engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
       log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
@@ -405,6 +409,13 @@ ipcMainHandle(
         if (error != null) {
           log.error("Failed to kill ENGINE");
           log.error(error);
+
+          // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
+          // listenerを削除してENGINEの意図しない再起動を防止
+          engineProcess.removeListener(
+            "close",
+            restartEngineOnProcessClosedCallback
+          );
 
           reject();
         }
