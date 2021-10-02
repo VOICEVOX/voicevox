@@ -50,7 +50,7 @@ export const settingStore = {
       const hotkeys = window.electron.hotkeySettings();
       hotkeys.then((value) => {
         value.forEach((item) => {
-          if (hotkeyFunctionCache[item.action]) {
+          if (hotkeyFunctionCache[item.action] !== undefined) {
             Mousetrap.bind(
               hotkey2Combo(item.combination),
               hotkeyFunctionCache[item.action]
@@ -69,11 +69,18 @@ export const settingStore = {
       const hotkeys = window.electron.hotkeySettings(data);
       state.hotkeySettings.forEach((item) => {
         if (item.action == data.action) {
-          Mousetrap.unbind(hotkey2Combo(item.combination));
-          Mousetrap.bind(
-            hotkey2Combo(data.combination),
-            hotkeyFunctionCache[data.action]
-          );
+          // pass the hotkey actions implemented with native js
+          if (hotkeyFunctionCache[data.action] !== undefined) {
+            if (item.combination != "") {
+              Mousetrap.unbind(hotkey2Combo(item.combination));
+            }
+            if (data.combination != "") {
+              Mousetrap.bind(
+                hotkey2Combo(data.combination),
+                hotkeyFunctionCache[data.action]
+              );
+            }
+          }
         }
       });
       hotkeys.then((value) => {
