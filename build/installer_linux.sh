@@ -92,7 +92,7 @@ else
     echo "Or"
     echo "    sudo yum install libsndfile"
     echo ""
-    if [ "${IGNORE_RTCOND}" != "1" ];
+    if [ "${IGNORE_RTCOND}" != "1" ]; then
         exit 1
     fi
 fi
