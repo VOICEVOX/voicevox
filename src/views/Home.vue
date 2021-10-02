@@ -139,7 +139,7 @@ import {
 } from "@/store/ui";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import { watchHotkeys, parseCombo } from "@/store/setting";
+import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
@@ -175,7 +175,7 @@ export default defineComponent({
 
     const hotkeyActionKeys: HotkeyAction[] = ["テキスト欄にフォーカスを戻す"];
 
-    watchHotkeys(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
 
     const generateAndSaveAllAudio = () => {
       store.dispatch(GENERATE_AND_SAVE_ALL_AUDIO, {});

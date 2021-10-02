@@ -1,13 +1,14 @@
 import { HotkeyAction, HotkeySetting, SavingSetting } from "@/type/preload";
 import { StoreOptions } from "vuex";
 import { State } from "./type";
-import { useStore } from "@/store";
 import Mousetrap from "mousetrap";
 
 export const GET_SAVING_SETTING = "GET_SAVING_SETTING";
 export const SET_SAVING_SETTING = "SET_SAVING_SETTING";
 export const GET_HOTKEY_SETTINGS = "GET_HOTKEY_SETTINGS";
 export const SET_HOTKEY_SETTINGS = "SET_HOTKEY_SETTINGS";
+
+const hotkeyFunctionCache: Record<string, () => any> = {};
 
 export const settingStore = {
   getters: {
@@ -46,54 +47,56 @@ export const settingStore = {
       });
     },
     [GET_HOTKEY_SETTINGS]: ({ commit }) => {
-      const hotkey = window.electron.hotkeySettings();
-      hotkey.then((value) => {
+      const hotkeys = window.electron.hotkeySettings();
+      hotkeys.then((value) => {
+        value.forEach((item) => {
+          if (hotkeyFunctionCache[item.action]) {
+            Mousetrap.bind(
+              hotkey2Combo(item.combination),
+              hotkeyFunctionCache[item.action]
+            );
+          }
+        });
         commit(SET_HOTKEY_SETTINGS, {
           hotkeySettings: value,
         });
       });
     },
-    [SET_HOTKEY_SETTINGS]: ({ commit }, { data }: { data: HotkeySetting }) => {
-      const newHotkeys = window.electron.hotkeySettings(data);
-      newHotkeys.then((hotkeySettings) => {
+    [SET_HOTKEY_SETTINGS]: (
+      { state, commit },
+      { data }: { data: HotkeySetting }
+    ) => {
+      const hotkeys = window.electron.hotkeySettings(data);
+      state.hotkeySettings.forEach((item) => {
+        if (item.action == data.action) {
+          Mousetrap.unbind(hotkey2Combo(item.combination));
+          Mousetrap.bind(
+            hotkey2Combo(data.combination),
+            hotkeyFunctionCache[data.action]
+          );
+        }
+      });
+      hotkeys.then((value) => {
         commit(SET_HOTKEY_SETTINGS, {
-          hotkeySettings: hotkeySettings,
+          hotkeySettings: value,
         });
       });
-      return newHotkeys;
+      return hotkeys;
     },
   },
 } as StoreOptions<State>;
 
-export const watchHotkeys = (
+export const setHotkeyFunctions = (
   actionKeys: HotkeyAction[],
   hotkeyActionFunctions: (() => any)[]
 ): void => {
-  const store = useStore();
   for (let i = 0; i < actionKeys.length; i++) {
-    store.watch(
-      (state) => {
-        for (let j = 0; j < state.hotkeySettings.length; j++) {
-          if (state.hotkeySettings[j].action == actionKeys[i]) {
-            return state.hotkeySettings[j];
-          }
-        }
-      },
-      (newVal, oldVal) => {
-        if (oldVal !== undefined) {
-          Mousetrap.unbind(oldVal.combination.toLowerCase().replace(" ", "+"));
-        }
-        if (newVal !== undefined) {
-          if (newVal.combination != "") {
-            Mousetrap.bind(
-              newVal.combination.toLowerCase().replace(" ", "+"),
-              hotkeyActionFunctions[i]
-            );
-          }
-        }
-      }
-    );
+    hotkeyFunctionCache[actionKeys[i]] = hotkeyActionFunctions[i];
   }
+};
+
+const hotkey2Combo = (hotkeyCombo: string) => {
+  return hotkeyCombo.toLowerCase().replace(" ", "+");
 };
 
 export const parseCombo = (event: KeyboardEvent): string => {

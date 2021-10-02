@@ -39,7 +39,7 @@ import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { SaveResultObject } from "@/store/type";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
-import { watchHotkeys } from "@/store/setting";
+import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction } from "@/type/preload";
 
 type MenuItemBase<T extends string> = {
@@ -215,7 +215,7 @@ export default defineComponent({
       importProject,
     ];
 
-    const menubarhotkeyKeys: HotkeyAction[] = [
+    const hotkeyActionKeys: HotkeyAction[] = [
       "新規プロジェクト",
       "音声書き出し",
       "テキスト読み込む",
@@ -224,7 +224,7 @@ export default defineComponent({
       "プロジェクト読み込み",
     ];
 
-    watchHotkeys(menubarhotkeyKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

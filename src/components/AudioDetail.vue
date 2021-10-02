@@ -168,7 +168,7 @@ import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { watchHotkeys } from "@/store/setting";
+import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
@@ -218,7 +218,7 @@ export default defineComponent({
       "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
     ];
 
-    watchHotkeys(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
 
     // detail selector
     type DetailTypes = "accent" | "intonation";

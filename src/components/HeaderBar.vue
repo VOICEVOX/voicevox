@@ -77,7 +77,7 @@ import {
   STOP_CONTINUOUSLY_AUDIO,
 } from "@/store/audio";
 import { useQuasar } from "quasar";
-import { watchHotkeys } from "@/store/setting";
+import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
@@ -123,7 +123,7 @@ export default defineComponent({
       "やり直す",
     ];
 
-    watchHotkeys(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
 
     const undo = () => {
       store.dispatch(UNDO);
