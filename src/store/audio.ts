@@ -1111,9 +1111,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           state.characterInfos
         );
         const audioKeys: string[] = audioItems.map(() => uuidv4());
+        const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
+          audioItem,
+          audioKey: audioKeys[index],
+        }));
         commit("COMMAND_IMPORT_FROM_FILE", {
-          audioKeys,
-          audioItems,
+          audioKeyItemPairs,
         });
         return audioKeys;
       }
@@ -1281,14 +1284,13 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_IMPORT_FROM_FILE(
       draft,
       {
-        audioKeys,
-        audioItems,
-      }: { audioKeys: string[]; audioItems: AudioItem[] }
+        audioKeyItemPairs,
+      }: { audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] }
     ) {
-      for (let i = 0; i < Math.min(audioKeys.length, audioItems.length); i++) {
+      for (const { audioKey, audioItem } of audioKeyItemPairs) {
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, {
-          audioKey: audioKeys[i],
-          audioItem: audioItems[i],
+          audioKey: audioKey,
+          audioItem: audioItem,
           prevAudioKey: undefined,
         });
       }

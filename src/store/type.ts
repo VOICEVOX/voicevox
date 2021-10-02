@@ -317,8 +317,7 @@ export type AudioCommandMutations = {
     postPhonemeLength: number;
   };
   COMMAND_IMPORT_FROM_FILE: {
-    audioKeys: string[];
-    audioItems: AudioItem[];
+    audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
   };
 };
 
