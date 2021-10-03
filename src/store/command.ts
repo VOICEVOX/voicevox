@@ -1,5 +1,5 @@
 import { Action, Store } from "vuex";
-
+import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
 import {
@@ -160,7 +160,7 @@ const recordOperations =
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
       // Taking snapshots has negative effects on performance.
       // This approach may cause a bottleneck.
-      JSON.parse(JSON.stringify(state)) as S,
+      toRaw(state) as S,
       (draft: S) => recipe(draft, payload)
     );
     return {
