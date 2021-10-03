@@ -167,7 +167,6 @@ export type AudioActions = {
     dirPath?: string;
     encoding?: EncodingType;
   }): SaveResultObject[] | undefined;
-  IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
   PLAY_AUDIO(payload: { audioKey: string }): boolean;
   STOP_AUDIO(payload: { audioKey: string }): void;
   PLAY_CONTINUOUSLY_AUDIO(): void;
@@ -257,6 +256,7 @@ export type AudioCommandActions = {
     audioKey: string;
     presetKey: string | undefined;
   }): void;
+  COMMAND_IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
 };
 
 export type AudioCommandMutations = {
@@ -332,6 +332,9 @@ export type AudioCommandMutations = {
   COMMAND_SET_AUDIO_PRESET: {
     audioKey: string;
     presetKey: string | undefined;
+  };
+  COMMAND_IMPORT_FROM_FILE: {
+    audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
   };
 };
 
