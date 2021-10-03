@@ -169,7 +169,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const hotkeyMap = new Map<HotkeyAction, () => any>([
+    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
       [
         "再生/停止",
         () => {

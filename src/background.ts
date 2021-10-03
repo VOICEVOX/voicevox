@@ -514,10 +514,11 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");
-    for (let i = 0; i < hotkeySettings.length; i++) {
-      if (hotkeySettings[i].action == newData.action) {
-        hotkeySettings[i].combination = newData.combination;
-      }
+    const hotkeySetting = hotkeySettings.find(
+      (hotkey) => hotkey.action == newData.action
+    );
+    if (hotkeySetting !== undefined) {
+      hotkeySetting.combination = newData.combination;
     }
     store.set("hotkeySettings", hotkeySettings);
   }

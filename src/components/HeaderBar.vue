@@ -84,12 +84,12 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const hotkeyMap = new Map<HotkeyAction, () => any>([
+    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
       // play/stop continuously
       [
         "連続再生/停止",
         () => {
-          if (nowPlayingContinuously.value) {
+          if (nowPlayingContinuously.value && !uiLocked.value) {
             stopContinuously();
           } else {
             playContinuously();
@@ -119,10 +119,14 @@ export default defineComponent({
     setHotkeyFunctions(hotkeyMap);
 
     const undo = () => {
-      store.dispatch("UNDO");
+      if (useUndoRedo.value) {
+        store.dispatch("UNDO");
+      }
     };
     const redo = () => {
-      store.dispatch("REDO");
+      if (useUndoRedo.value) {
+        store.dispatch("REDO");
+      }
     };
     const playContinuously = async () => {
       try {

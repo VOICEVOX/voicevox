@@ -149,7 +149,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     // hotkeys handled by Mousetrap
-    const hotkeyMap = new Map<HotkeyAction, () => any>([
+    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
       [
         "テキスト欄にフォーカスを戻す",
         () => {

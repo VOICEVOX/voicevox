@@ -46,30 +46,25 @@ export const settingStore: VoiceVoxStoreOptions<
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
       });
     },
-    GET_HOTKEY_SETTINGS({ commit }) {
+    GET_HOTKEY_SETTINGS({ commit, dispatch }) {
       const hotkeys = window.electron.hotkeySettings();
       hotkeys.then((value) => {
-        value.forEach((item) => {
-          if (hotkeyFunctionCache[item.action] !== undefined) {
-            Mousetrap.bind(
-              hotkey2Combo(item.combination),
-              hotkeyFunctionCache[item.action]
-            );
-          }
-        });
         commit("SET_HOTKEY_SETTINGS", {
           hotkeySettings: value,
+        });
+        value.forEach((hotkey) => {
+          dispatch("SET_HOTKEY_SETTINGS", { data: hotkey });
         });
       });
     },
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
       const hotkeys = window.electron.hotkeySettings(data);
-      state.hotkeySettings.forEach((item) => {
-        if (item.action == data.action) {
+      state.hotkeySettings.forEach((oldData) => {
+        if (oldData.action == data.action) {
           // pass the hotkey actions implemented with native js
           if (hotkeyFunctionCache[data.action] !== undefined) {
-            if (item.combination != "") {
-              Mousetrap.unbind(hotkey2Combo(item.combination));
+            if (oldData.combination != "") {
+              Mousetrap.unbind(hotkey2Combo(oldData.combination));
             }
             if (data.combination != "") {
               Mousetrap.bind(
@@ -91,7 +86,7 @@ export const settingStore: VoiceVoxStoreOptions<
 };
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => any>
+  hotkeyMap: Map<HotkeyAction, () => void | boolean>
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
