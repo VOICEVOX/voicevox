@@ -237,7 +237,7 @@ import { defineComponent, computed, onUpdated, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeyCombo, HotkeySetting } from "@/type/preload";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",

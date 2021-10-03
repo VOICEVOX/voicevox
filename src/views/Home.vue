@@ -122,7 +122,6 @@ import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { AudioItem } from "@/store/type";
-import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction } from "@/type/preload";

@@ -153,12 +153,11 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
-import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction, HotkeyCombo } from "@/type/preload";
+import { HotkeyAction } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -208,14 +207,6 @@ export default defineComponent({
     ]);
 
     setHotkeyFunctions(hotkeyMap);
-
-    Mousetrap.bind("1", () => {
-      selectedDetail.value = "accent";
-    });
-
-    Mousetrap.bind("2", () => {
-      selectedDetail.value = "intonation";
-    });
 
     // detail selector
     type DetailTypes = "accent" | "intonation";
