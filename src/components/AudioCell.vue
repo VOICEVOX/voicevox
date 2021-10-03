@@ -158,9 +158,9 @@ export default defineComponent({
             changeAudioText(text);
           }
 
-          store.dispatch("PUT_TEXTS", {
+          store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            speaker: audioItem.value.speaker,
+            speaker: audioItem.value.speaker!,
             prevAudioKey,
           });
         }
