@@ -46,36 +46,36 @@
         </q-btn-dropdown>
       </div>
 
-      <div class="full-width q-mb-sm">
-        <div
-          class="no-margin no-padding full-width"
-          @wheel="setPresetByScroll($event.deltaY)"
+      <div
+        class="no-margin no-padding full-width"
+        @wheel="setPresetByScroll($event.deltaY)"
+      >
+        <q-select
+          v-model="presetSelectModel"
+          :options="presetList"
+          class="overflow-hidden"
+          popup-content-class="text-secondary"
+          outlined
+          dense
         >
-          <q-select
-            v-model="presetSelectModel"
-            :options="presetList"
-            class="overflow-hidden"
-            popup-content-class="text-secondary"
-            outlined
-            dense
-          >
-            <template v-slot:selected-item="scope">
-              <div class="preset-select-label">
-                {{ scope.opt.label }}
-              </div>
-            </template>
-            <template v-slot:no-option>
-              <q-item>
-                <q-item-section class="text-grey">
-                  プリセットはありません
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-        </div>
+          <template v-slot:selected-item="scope">
+            <div class="preset-select-label">
+              {{ scope.opt.label }}
+            </div>
+          </template>
+          <template v-slot:no-option>
+            <q-item>
+              <q-item-section class="text-grey">
+                プリセットはありません
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
       </div>
-      <PresetDialog v-model:open-dialog="showsPresetEditDialog" />
+      <!-- プリセット管理ダイアログ -->
+      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
 
+      <!-- プリセット登録ダイアログ -->
       <q-dialog v-model="showsPresetNameDialog" @escape-key="onPressEscape">
         <q-card style="min-width: 350px">
           <q-card-section>
@@ -99,7 +99,9 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
+    </div>
 
+    <div class="q-mx-md">
       <span class="text-body1 q-mb-xs"
         >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
       >
@@ -116,13 +118,6 @@
         @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
         @pan="setPanning(previewAudioSpeedScale, $event)"
       >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-italic text-grey">
-              プリセットはありません
-            </q-item-section>
-          </q-item>
-        </template>
       </q-slider>
     </div>
     <div class="q-px-md">
@@ -239,12 +234,12 @@ import { useStore } from "@/store";
 import { Preset } from "@/type/preload";
 import { AudioQuery } from "@/openapi";
 import { PreviewableValue } from "@/helpers/previewableValue";
-import PresetDialog from "./PresetDialog.vue";
+import PresetManageDialog from "./PresetManageDialog.vue";
 export default defineComponent({
   name: "AudioInfo",
 
   components: {
-    PresetDialog,
+    PresetManageDialog,
   },
 
   setup() {
@@ -425,16 +420,16 @@ export default defineComponent({
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
 
+    const speaker = computed(() => audioItem.value?.speaker);
+    const audioPresetKey = computed(() => audioItem.value?.presetKey);
+
     const presetList = computed(() => {
-      if (audioItem.value?.speaker === undefined) return undefined;
-      return presetKeys.value[audioItem.value.speaker]?.map((e) => ({
+      if (speaker.value === undefined) return undefined;
+      return presetKeys.value[speaker.value]?.map((e) => ({
         label: presetItems.value[e].name,
         key: e,
       }));
     });
-
-    const speaker = computed(() => audioItem.value?.speaker);
-    const audioPresetKey = computed(() => audioItem.value?.presetKey);
 
     const notSelectedPreset = {
       label: "プリセットを選択",
@@ -465,8 +460,6 @@ export default defineComponent({
       label: string;
       key: string | undefined;
     }): void => {
-      if (audioItem.value?.speaker === undefined) return;
-
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: activeAudioKey.value!,
         presetKey: e.key,
@@ -474,7 +467,7 @@ export default defineComponent({
     };
 
     const onChangeParameter = () => {
-      if (audioItem.value?.presetKey === undefined) return;
+      if (audioPresetKey.value === undefined) return;
 
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: activeAudioKey.value!,
@@ -521,13 +514,10 @@ export default defineComponent({
       if (presetNumber === 0 || presetNumber === undefined) return;
 
       let nowIndex: number;
-      if (
-        presetSelectModel.value.key === undefined ||
-        presetKeys.value[speaker.value] === undefined
-      ) {
+      if (presetSelectModel.value.key === undefined) {
         nowIndex = -1;
       } else {
-        nowIndex = presetKeys.value[speaker.value]?.indexOf(
+        nowIndex = presetKeys.value[speaker.value].indexOf(
           presetSelectModel.value.key
         );
       }
@@ -567,14 +557,12 @@ export default defineComponent({
       setPanning,
       presetList,
       presetSelectModel,
-      onChangePreset,
+      setPresetByScroll,
       addPreset,
       showsPresetNameDialog,
       presetName,
       onPressEscape,
       showsPresetEditDialog,
-      setPresetByScroll,
-      onChangeParameter,
     };
   },
 });

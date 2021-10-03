@@ -75,9 +75,7 @@ export const presetStore: VoiceVoxStoreOptions<
       const presetKeys = { ...context.state.presetKeys };
 
       presetKeys[speaker] =
-        presetKeys[speaker] !== undefined
-          ? [...context.state.presetKeys[speaker]]
-          : [];
+        presetKeys[speaker] !== undefined ? [...presetKeys[speaker]] : [];
 
       const newKey = uuidv4();
 
@@ -89,6 +87,8 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys,
       });
 
+      // プリセットを登録したときのAudioItemに登録したプリセットを紐付けたいが、uuidが取れる場所がここしかなかったため仕方なく実装
+      // プリセット(管理)のロジックにAudioのロジックが入り込んでしまっているので、対象方ができ次第変更する
       if (audioKey !== undefined) {
         context.dispatch("COMMAND_SET_AUDIO_PRESET", {
           audioKey,
