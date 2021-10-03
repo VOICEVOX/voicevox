@@ -89,10 +89,12 @@ export default defineComponent({
       [
         "連続再生/停止",
         () => {
-          if (nowPlayingContinuously.value && !uiLocked.value) {
-            stopContinuously();
-          } else {
-            playContinuously();
+          if (!uiLocked.value) {
+            if (nowPlayingContinuously.value) {
+              stopContinuously();
+            } else {
+              playContinuously();
+            }
           }
         },
       ],

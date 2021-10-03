@@ -181,6 +181,7 @@ export default defineComponent({
       (event: KeyboardEvent) => {
         if (
           !event.isComposing &&
+          !uiLocked.value &&
           parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
         ) {
           addAudioItem();
@@ -190,6 +191,7 @@ export default defineComponent({
       (event: KeyboardEvent) => {
         if (
           !event.isComposing &&
+          !uiLocked.value &&
           parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
         ) {
           removeAudioItem();
@@ -199,6 +201,7 @@ export default defineComponent({
       (event: KeyboardEvent) => {
         if (
           !event.isComposing &&
+          !uiLocked.value &&
           parseCombo(event) ==
             hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
         ) {

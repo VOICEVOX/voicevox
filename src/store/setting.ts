@@ -7,7 +7,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 
-const hotkeyFunctionCache: Record<string, () => any> = {};
+const hotkeyFunctionCache: Record<string, () => void | boolean> = {};
 
 export const settingStore: VoiceVoxStoreOptions<
   SettingGetters,
