@@ -45,7 +45,6 @@
           </q-list>
         </q-btn-dropdown>
       </div>
-      <!-- <p>{{ presetList }}</p> -->
 
       <div class="full-width q-mb-sm">
         <div
@@ -77,7 +76,7 @@
       </div>
       <PresetDialog v-model:open-dialog="showsPresetEditDialog" />
 
-      <q-dialog v-model="showsPresetNameDialog">
+      <q-dialog v-model="showsPresetNameDialog" @escape-key="onPressEscape">
         <q-card style="min-width: 350px">
           <q-card-section>
             <div class="text-h6">プリセット登録</div>
@@ -430,61 +429,66 @@ export default defineComponent({
       if (audioItem.value?.speaker === undefined) return undefined;
       return presetKeys.value[audioItem.value.speaker]?.map((e) => ({
         label: presetItems.value[e].name,
-        value: e,
+        key: e,
       }));
     });
 
     const speaker = computed(() => audioItem.value?.speaker);
-    const presetId = computed(() => audioItem.value?.presetId);
+    const audioPresetKey = computed(() => audioItem.value?.presetKey);
 
     const notSelectedPreset = {
       label: "プリセットを選択",
-      value: undefined,
+      key: undefined,
     };
 
     const presetSelectModel = computed({
       get: () => {
         if (
           speaker.value === undefined ||
-          presetId.value === undefined ||
-          presetItems.value[presetId.value] === undefined ||
+          audioPresetKey.value === undefined ||
+          presetItems.value[audioPresetKey.value] === undefined ||
           presetKeys.value[speaker.value] === undefined ||
-          !presetKeys.value[speaker.value].includes(presetId.value)
+          !presetKeys.value[speaker.value].includes(audioPresetKey.value)
         )
           return notSelectedPreset;
         return {
-          label: presetItems.value[presetId.value].name,
-          value: presetId.value,
+          label: presetItems.value[audioPresetKey.value].name,
+          key: audioPresetKey.value,
         };
       },
-      set: (newVal: { label: string; value: string | undefined }) => {
+      set: (newVal: { label: string; key: string | undefined }) => {
         onChangePreset(newVal);
       },
     });
 
     const onChangePreset = (e: {
       label: string;
-      value: string | undefined;
+      key: string | undefined;
     }): void => {
       if (audioItem.value?.speaker === undefined) return;
 
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: activeAudioKey.value!,
-        presetId: e.value,
+        presetKey: e.key,
       });
     };
 
     const onChangeParameter = () => {
-      if (audioItem.value?.presetId === undefined) return;
+      if (audioItem.value?.presetKey === undefined) return;
 
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: activeAudioKey.value!,
-        presetId: undefined,
+        presetKey: undefined,
       });
     };
 
     const showsPresetNameDialog = ref(false);
     const presetName = ref("");
+    const onPressEscape = () => {
+      presetName.value = "";
+      showsPresetNameDialog.value = false;
+    };
+
     const showsPresetEditDialog = ref(false);
 
     const addPreset = () => {
@@ -518,13 +522,13 @@ export default defineComponent({
 
       let nowIndex: number;
       if (
-        presetSelectModel.value.value === undefined ||
+        presetSelectModel.value.key === undefined ||
         presetKeys.value[speaker.value] === undefined
       ) {
         nowIndex = -1;
       } else {
         nowIndex = presetKeys.value[speaker.value]?.indexOf(
-          presetSelectModel.value.value
+          presetSelectModel.value.key
         );
       }
 
@@ -567,6 +571,7 @@ export default defineComponent({
       addPreset,
       showsPresetNameDialog,
       presetName,
+      onPressEscape,
       showsPresetEditDialog,
       setPresetByScroll,
       onChangeParameter,

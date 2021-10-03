@@ -2,7 +2,7 @@
   <q-dialog :model-value="openDialog" @update:model-value="updateOpenDialog">
     <q-card class="setting-card q-pa-md" style="width: 700px; max-width: 80vw">
       <q-card-actions>
-        <div class="text-h5">プリセット編集</div>
+        <div class="text-h5">プリセット管理</div>
       </q-card-actions>
       <q-card-actions class="q-px-md q-py-sm">
         <div class="full-width row wrap justify-between">
@@ -76,14 +76,14 @@ export default defineComponent({
     const speakerList = computed(() =>
       store.state.characterInfos?.map((i) => ({
         label: i.metas.name,
-        value: i.metas.speaker,
+        speaker: i.metas.speaker,
       }))
     );
-    const speakerSelect = ref<{ label: string; value: number }>();
+    const speakerSelect = ref<{ label: string; speaker: number }>();
 
     const presetList = computed(() =>
       speakerSelect.value !== undefined
-        ? presetKeys.value[speakerSelect.value.value]?.map((e) => ({
+        ? presetKeys.value[speakerSelect.value.speaker]?.map((e) => ({
             ...presetItems.value[e],
             key: e,
           }))
@@ -97,10 +97,10 @@ export default defineComponent({
       delete newItems[key];
 
       const newKeys = { ...presetKeys.value };
-      newKeys[speakerSelect.value.value] = [
-        ...presetKeys.value[speakerSelect.value.value],
+      newKeys[speakerSelect.value.speaker] = [
+        ...presetKeys.value[speakerSelect.value.speaker],
       ];
-      newKeys[speakerSelect.value.value].splice(index, 1);
+      newKeys[speakerSelect.value.speaker].splice(index, 1);
 
       store.dispatch("SAVE_PRESET_CONFIG", {
         presetItems: newItems,
