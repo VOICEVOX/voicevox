@@ -201,7 +201,7 @@ export default defineComponent({
 
       const change = async () => {
         await store.dispatch("SET_USE_GPU", { useGpu });
-        store.dispatch("RESTART_ENGINE", undefined);
+        store.dispatch("RESTART_ENGINE");
 
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
@@ -256,7 +256,7 @@ export default defineComponent({
     };
 
     const restartEngineProcess = () => {
-      store.dispatch("RESTART_ENGINE", undefined);
+      store.dispatch("RESTART_ENGINE");
     };
 
     const savingSetting = computed(() => store.state.savingSetting);
@@ -279,7 +279,7 @@ export default defineComponent({
     };
 
     onUpdated(() => {
-      store.dispatch("GET_SAVING_SETTING_DATA", undefined);
+      store.dispatch("GET_SAVING_SETTING_DATA");
     });
 
     return {

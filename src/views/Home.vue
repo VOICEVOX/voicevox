@@ -255,7 +255,7 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER", undefined);
+      await store.dispatch("LOAD_CHARACTER");
       const audioItem: AudioItem = { text: "", speaker: 0 };
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,
@@ -287,7 +287,7 @@ export default defineComponent({
       const file = event.dataTransfer.files[0];
       switch (path.extname(file.name)) {
         case ".txt":
-          store.dispatch("IMPORT_FROM_FILE", { filePath: file.path });
+          store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
           break;
         case ".vvproj":
           store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
