@@ -158,7 +158,7 @@ import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeyCombo } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -170,45 +170,44 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const hotkeyActions = [
-      // play and stop
-      () => {
-        if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-          play();
-        } else {
-          stop();
-        }
-      },
-      // save single audio
-      () => {
-        if (!uiLocked.value) {
-          save();
-        }
-      },
-      // switch to accent
-      () => {
-        if (!uiLocked.value) {
-          selectedDetail.value = "accent";
-        }
-      },
-      // switch to intonation
-      () => {
-        if (!uiLocked.value) {
-          selectedDetail.value = "intonation";
-        }
-      },
-    ];
+    const hotkeyMap = new Map<HotkeyAction, () => any>([
+      [
+        "再生/停止",
+        () => {
+          if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+            play();
+          } else {
+            stop();
+          }
+        },
+      ],
+      [
+        "一つだけ書き出し",
+        () => {
+          if (!uiLocked.value) {
+            save();
+          }
+        },
+      ],
+      [
+        "ｱｸｾﾝﾄ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "accent";
+          }
+        },
+      ],
+      [
+        "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "intonation";
+          }
+        },
+      ],
+    ]);
 
-    // The corresponding action keys with action callbacks
-    // it's worth noticing that even with keys, their order should be matched
-    const hotkeyActionKeys: HotkeyAction[] = [
-      "再生/停止",
-      "一つだけ書き出し",
-      "ｱｸｾﾝﾄ欄を表示",
-      "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    ];
-
-    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyMap);
 
     Mousetrap.bind("1", () => {
       selectedDetail.value = "accent";

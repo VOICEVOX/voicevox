@@ -91,12 +91,11 @@ export const settingStore: VoiceVoxStoreOptions<
 };
 
 export const setHotkeyFunctions = (
-  actionKeys: HotkeyAction[],
-  hotkeyActionFunctions: (() => any)[]
+  hotkeyMap: Map<HotkeyAction, () => any>
 ): void => {
-  for (let i = 0; i < actionKeys.length; i++) {
-    hotkeyFunctionCache[actionKeys[i]] = hotkeyActionFunctions[i];
-  }
+  hotkeyMap.forEach((value, key) => {
+    hotkeyFunctionCache[key] = value;
+  });
 };
 
 const hotkey2Combo = (hotkeyCombo: string) => {

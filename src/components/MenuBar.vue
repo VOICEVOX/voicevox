@@ -210,25 +210,16 @@ export default defineComponent({
       }
     };
 
-    const hotkeyActions = [
-      createNewProject,
-      generateAndSaveAllAudio,
-      importTextFile,
-      saveProject,
-      saveProjectAs,
-      importProject,
-    ];
+    const hotkeyMap = new Map<HotkeyAction, () => any>([
+      ["新規プロジェクト", createNewProject],
+      ["音声書き出し", generateAndSaveAllAudio],
+      ["テキスト読み込む", importTextFile],
+      ["プロジェクトを上書き保存", saveProject],
+      ["プロジェクトを名前を付けて保存", saveProjectAs],
+      ["プロジェクト読み込み", importProject],
+    ]);
 
-    const hotkeyActionKeys: HotkeyAction[] = [
-      "新規プロジェクト",
-      "音声書き出し",
-      "テキスト読み込む",
-      "プロジェクトを上書き保存",
-      "プロジェクトを名前を付けて保存",
-      "プロジェクト読み込み",
-    ];
-
-    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyMap);
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

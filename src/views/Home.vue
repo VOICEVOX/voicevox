@@ -150,18 +150,19 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     // hotkeys handled by Mousetrap
-    const hotkeyActions = [
-      () => {
-        if (activeAudioKey.value !== undefined) {
-          focusCell({ audioKey: activeAudioKey.value });
-        }
-        return false; // this is the same with event.preventDefault()
-      },
-    ];
+    const hotkeyMap = new Map<HotkeyAction, () => any>([
+      [
+        "テキスト欄にフォーカスを戻す",
+        () => {
+          if (activeAudioKey.value !== undefined) {
+            focusCell({ audioKey: activeAudioKey.value });
+          }
+          return false; // this is the same with event.preventDefault()
+        },
+      ],
+    ]);
 
-    const hotkeyActionKeys: HotkeyAction[] = ["テキスト欄にフォーカスを戻す"];
-
-    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyMap);
 
     const removeAudioItem = async () => {
       audioCellRefs[activeAudioKey.value!].removeCell();

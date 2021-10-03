@@ -84,36 +84,39 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const hotkeyActions = [
+    const hotkeyMap = new Map<HotkeyAction, () => any>([
       // play/stop continuously
-      () => {
-        if (nowPlayingContinuously.value) {
-          stopContinuously();
-        } else {
-          playContinuously();
-        }
-      },
+      [
+        "連続再生/停止",
+        () => {
+          if (nowPlayingContinuously.value) {
+            stopContinuously();
+          } else {
+            playContinuously();
+          }
+        },
+      ],
       // undo
-      () => {
-        if (!uiLocked.value && canUndo.value) {
-          undo();
-        }
-      },
+      [
+        "元に戻す",
+        () => {
+          if (!uiLocked.value && canUndo.value) {
+            undo();
+          }
+        },
+      ],
       // redo
-      () => {
-        if (!uiLocked.value && canRedo.value) {
-          redo();
-        }
-      },
-    ];
+      [
+        "やり直す",
+        () => {
+          if (!uiLocked.value && canRedo.value) {
+            redo();
+          }
+        },
+      ],
+    ]);
 
-    const hotkeyActionKeys: HotkeyAction[] = [
-      "連続再生/停止",
-      "元に戻す",
-      "やり直す",
-    ];
-
-    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
+    setHotkeyFunctions(hotkeyMap);
 
     const undo = () => {
       store.dispatch("UNDO", undefined);
