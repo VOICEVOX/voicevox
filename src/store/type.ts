@@ -50,7 +50,7 @@ export type AudioItem = {
   text: string;
   speaker?: number;
   query?: AudioQuery;
-  presetId?: string;
+  presetKey?: string;
 };
 
 export type AudioState = {
@@ -123,7 +123,7 @@ export type AudioMutations = {
   };
   SET_AUDIO_PRESET: {
     audioKey: string;
-    presetId: string | undefined;
+    presetKey: string | undefined;
   };
 };
 
@@ -255,7 +255,7 @@ export type AudioCommandActions = {
   }): void;
   COMMAND_SET_AUDIO_PRESET(payload: {
     audioKey: string;
-    presetId: string | undefined;
+    presetKey: string | undefined;
   }): void;
 };
 
@@ -331,7 +331,7 @@ export type AudioCommandMutations = {
   };
   COMMAND_SET_AUDIO_PRESET: {
     audioKey: string;
-    presetId: string | undefined;
+    presetKey: string | undefined;
   };
 };
 

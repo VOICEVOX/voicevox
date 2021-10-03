@@ -209,15 +209,18 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_AUDIO_PRESET: (
       draft,
-      { audioKey, presetId }: { audioKey: string; presetId: string | undefined }
+      {
+        audioKey,
+        presetKey,
+      }: { audioKey: string; presetKey: string | undefined }
     ) => {
-      draft.audioItems[audioKey].presetId = presetId;
+      draft.audioItems[audioKey].presetKey = presetKey;
 
-      if (presetId === undefined) return;
+      if (presetKey === undefined) return;
 
       const query = draft.audioItems[audioKey].query;
 
-      const preset = draft.presetItems[presetId];
+      const preset = draft.presetItems[presetKey];
       query!.intonationScale = preset.intonationScale;
       query!.pitchScale = preset.pitchScale;
       query!.speedScale = preset.speedScale;
@@ -1134,24 +1137,24 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { commit, state },
       {
         audioKey,
-        presetId,
+        presetKey,
       }: {
         audioKey: string;
-        presetId: string | undefined;
+        presetKey: string | undefined;
       }
     ) => {
-      if (presetId !== undefined) {
+      if (presetKey !== undefined) {
         if (
-          state.presetItems[presetId] === undefined ||
+          state.presetItems[presetKey] === undefined ||
           !state.presetKeys[state.audioItems[audioKey].speaker!].includes(
-            presetId
+            presetKey
           )
         ) {
-          window.electron.logError(`No exist preset ${presetId}`);
+          window.electron.logError(`No exist preset ${presetKey}`);
           return;
         }
       }
-      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetId });
+      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
     },
   },
   mutations: commandMutationsCreator({
@@ -1317,7 +1320,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       draft,
       payload: {
         audioKey: string;
-        presetId: string | undefined;
+        presetKey: string | undefined;
       }
     ) => {
       audioStore.mutations["SET_AUDIO_PRESET"](draft, payload);

@@ -92,7 +92,7 @@ export const presetStore: VoiceVoxStoreOptions<
       if (audioKey !== undefined) {
         context.dispatch("COMMAND_SET_AUDIO_PRESET", {
           audioKey,
-          presetId: newKey,
+          presetKey: newKey,
         });
       }
     },
