@@ -272,16 +272,25 @@ jobs:
           chmod +x prepackage/voicevox
           chmod +x prepackage/run
 
-      # voicevox-x.x.x.tar.gz
-      # - VOICEVOX/
-      #   - voicevox
-      #   - run
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
         run: |
           echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
+      # Create tar.gz for Linux
+      #
+      # Due to GitHub Actions limitation (https://github.com/actions/upload-artifact/issues/38),
+      # file permissions are lost in actions/upload-artifact.
+      # To distribute binaries (voicevox, run) with execute permission,
+      # we need to pack all the files in tarball (tar.gz) before uploading.
+      # https://github.com/actions/upload-artifact/blob/11e311c8b504ea40cbed20583a64d75b4735cff3/README.md#maintaining-file-permissions-and-case-sensitive-files
+      #
+      # voicevox-x.x.x.tar.gz
+      # - VOICEVOX/
+      #   - voicevox
+      #   - run
+      #
       - name: Create Linux tar.gz
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
