@@ -15,6 +15,7 @@ import {
 import {
   CharacterInfo,
   Encoding as EncodingType,
+  HotkeySetting,
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
@@ -39,6 +40,7 @@ export type State = {
   isMaximized: boolean;
   projectFilePath?: string;
   savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
   isPinned: boolean;
 };
 
@@ -389,11 +391,16 @@ export type SettingGetters = {
 
 export type SettingMutations = {
   SET_SAVING_SETTING: { savingSetting: SavingSetting };
+  SET_HOTKEY_SETTINGS: { hotkeySettings: HotkeySetting[] };
 };
 
 export type SettingActions = {
   GET_SAVING_SETTING(): void;
   SET_SAVING_SETTING(payload: { data: SavingSetting }): void;
+  GET_HOTKEY_SETTINGS(): void;
+  SET_HOTKEY_SETTINGS(payload: {
+    data: HotkeySetting;
+  }): Promise<HotkeySetting[]>;
 };
 
 /*

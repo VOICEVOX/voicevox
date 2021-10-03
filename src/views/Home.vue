@@ -125,6 +125,8 @@ import { AudioItem } from "@/store/type";
 import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
+import { HotkeyAction } from "@/type/preload";
+import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
   name: "Home",
@@ -147,17 +149,71 @@ export default defineComponent({
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    // add hotkeys
-    Mousetrap.bind(["ctrl+e"], () => {
-      generateAndSaveAllAudio();
-    });
+    // hotkeys handled by Mousetrap
+    const hotkeyActions = [
+      () => {
+        if (activeAudioKey.value !== undefined) {
+          focusCell({ audioKey: activeAudioKey.value });
+        }
+        return false; // this is the same with event.preventDefault()
+      },
+    ];
 
-    Mousetrap.bind("shift+enter", () => {
-      addAudioItem();
-    });
+    const hotkeyActionKeys: HotkeyAction[] = ["テキスト欄にフォーカスを戻す"];
 
-    const generateAndSaveAllAudio = () => {
-      store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {});
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
+
+    const removeAudioItem = async () => {
+      audioCellRefs[activeAudioKey.value!].removeCell();
+    };
+
+    // convert the hotkey array to Map to get value with keys easier
+    // this only happens here where we deal with native methods
+    const hotkeySettingsMap = computed(
+      () =>
+        new Map(
+          store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
+        )
+    );
+
+    // hotkeys handled by native, for they are made to be working while focusing input elements
+    const hotkeyActionsNative = [
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
+        ) {
+          addAudioItem();
+          event.preventDefault();
+        }
+      },
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
+        ) {
+          removeAudioItem();
+          event.preventDefault();
+        }
+      },
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          parseCombo(event) ==
+            hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
+        ) {
+          if (document.activeElement instanceof HTMLInputElement) {
+            document.activeElement.blur();
+          }
+          event.preventDefault();
+        }
+      },
+    ];
+
+    window.onload = () => {
+      hotkeyActionsNative.forEach((item) => {
+        document.addEventListener("keyup", item);
+      });
     };
 
     // view
@@ -311,7 +367,6 @@ export default defineComponent({
       focusCell,
       changeAudioDetailPaneMaxHeight,
       resizeObserverRef,
-      generateAndSaveAllAudio,
       MIN_PORTRAIT_PANE_WIDTH,
       MAX_PORTRAIT_PANE_WIDTH,
       portraitPaneWidth,

@@ -80,6 +80,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
       avoidOverwrite: false,
     },
     isPinned: false,
+    hotkeySettings: [],
   },
 
   getters: {

@@ -67,6 +67,8 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { setHotkeyFunctions } from "@/store/setting";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   setup() {
@@ -81,6 +83,37 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+
+    const hotkeyActions = [
+      // play/stop continuously
+      () => {
+        if (nowPlayingContinuously.value) {
+          stopContinuously();
+        } else {
+          playContinuously();
+        }
+      },
+      // undo
+      () => {
+        if (!uiLocked.value && canUndo.value) {
+          undo();
+        }
+      },
+      // redo
+      () => {
+        if (!uiLocked.value && canRedo.value) {
+          redo();
+        }
+      },
+    ];
+
+    const hotkeyActionKeys: HotkeyAction[] = [
+      "連続再生/停止",
+      "元に戻す",
+      "やり直す",
+    ];
+
+    setHotkeyFunctions(hotkeyActionKeys, hotkeyActions);
 
     const undo = () => {
       store.dispatch("UNDO", undefined);
