@@ -119,7 +119,7 @@ export default defineComponent({
 
     const importTextFile = () => {
       if (!uiLocked.value) {
-        store.dispatch("IMPORT_FROM_FILE", {});
+        store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
       }
     };
 
@@ -191,7 +191,7 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch("RESTART_ENGINE", undefined),
+            onClick: () => store.dispatch("RESTART_ENGINE"),
           },
         ],
       },

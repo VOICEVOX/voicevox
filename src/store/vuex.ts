@@ -3,8 +3,6 @@ import {
   Store as BaseStore,
   createStore as baseCreateStore,
   useStore as baseUseStore,
-  DispatchOptions,
-  CommitOptions,
   ModuleTree,
   Plugin,
   StoreOptions as OriginalStoreOptions,
@@ -70,8 +68,9 @@ export function useStore<
 export interface Dispatch<A extends ActionsBase> {
   <T extends keyof A>(
     type: T,
-    payload: Parameters<A[T]>[0],
-    options?: DispatchOptions
+    ...payload: Parameters<A[T]>[0] extends undefined
+      ? void[]
+      : [Parameters<A[T]>[0]]
   ): Promise<PromiseType<ReturnType<A[T]>>>;
   <T extends keyof A>(
     payloadWithType: { type: T } & (Parameters<A[T]>[0] extends Record<
@@ -80,19 +79,20 @@ export interface Dispatch<A extends ActionsBase> {
     >
       ? Parameters<A[T]>[0]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {}),
-    options?: DispatchOptions
+        {})
   ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
 export interface Commit<M extends MutationsBase> {
-  <T extends keyof M>(type: T, payload: M[T], options?: CommitOptions): void;
+  <T extends keyof M>(
+    type: T,
+    ...payload: M[T] extends undefined ? void[] : [M[T]]
+  ): void;
   <T extends keyof M>(
     payloadWithType: { type: T } & (M[T] extends Record<string, any>
       ? M[T]
       : // eslint-disable-next-line @typescript-eslint/ban-types
-        {}),
-    options?: CommitOptions
+        {})
   ): void;
 }
 

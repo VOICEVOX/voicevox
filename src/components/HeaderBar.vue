@@ -119,14 +119,14 @@ export default defineComponent({
     setHotkeyFunctions(hotkeyMap);
 
     const undo = () => {
-      store.dispatch("UNDO", undefined);
+      store.dispatch("UNDO");
     };
     const redo = () => {
-      store.dispatch("REDO", undefined);
+      store.dispatch("REDO");
     };
     const playContinuously = async () => {
       try {
-        await store.dispatch("PLAY_CONTINUOUSLY_AUDIO", undefined);
+        await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
       } catch {
         $q.dialog({
           title: "再生に失敗しました",
@@ -140,7 +140,7 @@ export default defineComponent({
       }
     };
     const stopContinuously = () => {
-      store.dispatch("STOP_CONTINUOUSLY_AUDIO", undefined);
+      store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
     const openHelpDialog = () => {
       store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
