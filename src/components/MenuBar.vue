@@ -42,7 +42,6 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
-  shortCut?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -149,13 +148,11 @@ export default defineComponent({
           {
             type: "button",
             label: "新規プロジェクト",
-            shortCut: "Ctrl+N",
             onClick: createNewProject,
           },
           {
             type: "button",
             label: "音声書き出し",
-            shortCut: "Ctrl+E",
             onClick: generateAndSaveAllAudio,
           },
           {
@@ -167,19 +164,16 @@ export default defineComponent({
           {
             type: "button",
             label: "プロジェクトを上書き保存",
-            shortCut: "Ctrl+S",
             onClick: saveProject,
           },
           {
             type: "button",
             label: "プロジェクトを名前を付けて保存",
-            shortCut: "Ctrl+Shift+S",
             onClick: saveProjectAs,
           },
           {
             type: "button",
             label: "プロジェクト読み込み",
-            shortCut: "Ctrl+O",
             onClick: importProject,
           },
         ],
