@@ -132,7 +132,7 @@ export default defineComponent({
             type: "button",
             label: "テキスト読み込み",
             onClick: () => {
-              store.dispatch("IMPORT_FROM_FILE", {});
+              store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
             },
           },
           { type: "separator" },
@@ -169,7 +169,7 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch("RESTART_ENGINE", undefined),
+            onClick: () => store.dispatch("RESTART_ENGINE"),
           },
         ],
       },
