@@ -101,8 +101,6 @@ interface UndoRedoState {
 
 /**
  * レシピをプロパティに持つオブジェクトから操作を記録するMutationをプロパティにもつオブジェクトを返す関数
- * @see {@link recordOperations} - 返されるMutationはStateのスナップショットを撮ります.
- * これはパフォーマンス上のボトルネックを引き起こし得ます。
  * @param payloadRecipeTree - レシピをプロパティに持つオブジェクト
  * @returns Mutationを持つオブジェクト(MutationTree)
  */
@@ -121,8 +119,6 @@ export const createCommandMutationTree = <
 
 /**
  * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
- * @see {@link recordOperations} - 返されるMutationはStateのスナップショットを撮ります.
- * これはパフォーマンス上のボトルネックを引き起こし得ます。
  * @param payloadRecipe - 操作を記録するレシピ
  * @returns レシピと同じPayloadの型を持つMutation.
  */
@@ -148,7 +144,6 @@ const patchToOperation = (patch: Patch): Operation => ({
 });
 
 /**
- * この関数はStateのスナップショットを撮ります. これはパフォーマンス上のボトルネックを引き起こし得ます。
  * @param recipe - 操作を記録したいレシピ関数
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
@@ -158,8 +153,6 @@ const recordOperations =
   ) =>
   (state: S, payload: P): Command => {
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
-      // Taking snapshots has negative effects on performance.
-      // This approach may cause a bottleneck.
       toRaw(state) as S,
       (draft: S) => recipe(draft, payload)
     );
