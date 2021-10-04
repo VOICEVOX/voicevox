@@ -79,7 +79,7 @@ export default defineComponent({
       if (hotkey === undefined) {
         return "";
       } else {
-        return hotkey;
+        return hotkey.replace(" ", "+");
       }
     };
     if (props.menudata.type === "root") {

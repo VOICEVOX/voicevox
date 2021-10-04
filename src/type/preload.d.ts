@@ -106,7 +106,7 @@ export type HotkeyAction =
 
 export type HotkeyCombo = string;
 
-export type hotkeyReturnType =
+export type HotkeyReturnType =
   | void
   | boolean
   | Promise<void>

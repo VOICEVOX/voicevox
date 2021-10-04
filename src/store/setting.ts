@@ -1,6 +1,6 @@
 import {
   HotkeyAction,
-  hotkeyReturnType,
+  HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
 } from "@/type/preload";
@@ -12,7 +12,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 
-const hotkeyFunctionCache: Record<string, () => hotkeyReturnType> = {};
+const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
 export const settingStore: VoiceVoxStoreOptions<
   SettingGetters,
@@ -91,7 +91,7 @@ export const settingStore: VoiceVoxStoreOptions<
 };
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => hotkeyReturnType>
+  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
