@@ -332,6 +332,7 @@ export type AudioCommandMutations = {
   COMMAND_SET_AUDIO_PRESET: {
     audioKey: string;
     presetKey: string | undefined;
+    preset?: Preset;
   };
   COMMAND_IMPORT_FROM_FILE: {
     audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];

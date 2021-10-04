@@ -305,6 +305,7 @@ const audioItemSchema = {
   optionalProperties: {
     speaker: { type: "int32" },
     query: audioQuerySchema,
+    presetKey: { type: "string" },
   },
 } as const;
 

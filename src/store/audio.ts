@@ -17,8 +17,13 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
+import {
+  CharacterInfo,
+  Encoding as EncodingType,
+  Preset,
+} from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { nothing } from "immer";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -214,17 +219,11 @@ export const audioStore: VoiceVoxStoreOptions<
         presetKey,
       }: { audioKey: string; presetKey: string | undefined }
     ) => {
-      draft.audioItems[audioKey].presetKey = presetKey;
-
-      if (presetKey === undefined) return;
-
-      const query = draft.audioItems[audioKey].query;
-
-      const preset = draft.presetItems[presetKey];
-      query!.intonationScale = preset.intonationScale;
-      query!.pitchScale = preset.pitchScale;
-      query!.speedScale = preset.speedScale;
-      query!.volumeScale = preset.volumeScale;
+      if (presetKey === undefined) {
+        draft.audioItems[audioKey].presetKey = nothing as unknown as undefined;
+      } else {
+        draft.audioItems[audioKey].presetKey = presetKey;
+      }
     },
     SET_AUDIO_QUERY(
       state,
@@ -1119,7 +1118,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         presetKey: string | undefined;
       }
     ) => {
-      if (presetKey !== undefined) {
+      if (presetKey === undefined) {
+        commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
+      } else {
         if (
           state.presetItems[presetKey] === undefined ||
           !state.presetKeys[state.audioItems[audioKey].speaker!].includes(
@@ -1129,8 +1130,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           window.electron.logError(`No exist preset ${presetKey}`);
           return;
         }
+        commit("COMMAND_SET_AUDIO_PRESET", {
+          audioKey,
+          presetKey,
+          preset: state.presetItems[presetKey],
+        });
       }
-      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
     },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async ({ state, commit }, { filePath }: { filePath?: string }) => {
@@ -1325,12 +1330,35 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_SET_AUDIO_PRESET: (
       draft,
-      payload: {
+      {
+        audioKey,
+        presetKey,
+        preset,
+      }: {
         audioKey: string;
         presetKey: string | undefined;
+        preset?: Preset;
       }
     ) => {
-      audioStore.mutations["SET_AUDIO_PRESET"](draft, payload);
+      audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
+      if (presetKey === undefined || preset === undefined) return;
+
+      audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, {
+        audioKey,
+        pitchScale: preset.pitchScale,
+      });
+      audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, {
+        audioKey,
+        intonationScale: preset?.intonationScale,
+      });
+      audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, {
+        audioKey,
+        speedScale: preset?.speedScale,
+      });
+      audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, {
+        audioKey,
+        volumeScale: preset?.volumeScale,
+      });
     },
     COMMAND_IMPORT_FROM_FILE(
       draft,
