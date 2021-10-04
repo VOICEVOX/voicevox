@@ -105,3 +105,9 @@ export type HotkeyAction =
   | "テキスト読み込む";
 
 export type HotkeyCombo = string;
+
+export type hotkeyReturnType =
+  | void
+  | boolean
+  | Promise<void>
+  | Promise<boolean>;

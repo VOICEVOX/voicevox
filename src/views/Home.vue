@@ -124,7 +124,7 @@ import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, hotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -149,7 +149,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     // hotkeys handled by Mousetrap
-    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+    const hotkeyMap = new Map<HotkeyAction, () => hotkeyReturnType>([
       [
         "テキスト欄にフォーカスを戻す",
         () => {

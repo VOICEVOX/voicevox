@@ -26,7 +26,7 @@ import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, hotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 type MenuItemBase<T extends string> = {
@@ -204,7 +204,7 @@ export default defineComponent({
       }
     };
 
-    const hotkeyMap = new Map<HotkeyAction, () => void>([
+    const hotkeyMap = new Map<HotkeyAction, () => hotkeyReturnType>([
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
       ["テキスト読み込む", importTextFile],

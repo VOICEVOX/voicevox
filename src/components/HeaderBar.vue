@@ -68,7 +68,7 @@ import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, hotkeyReturnType } from "@/type/preload";
 
 export default defineComponent({
   setup() {
@@ -84,7 +84,7 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+    const hotkeyMap = new Map<HotkeyAction, () => hotkeyReturnType>([
       // play/stop continuously
       [
         "連続再生/停止",
