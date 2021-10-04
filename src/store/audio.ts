@@ -624,10 +624,12 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
-        if (currentAudioKey === undefined) return;
+        window.electron.logInfo(currentAudioKey);
 
-        const index = state.audioKeys.findIndex((v) => v === currentAudioKey);
-        if (index === -1) return;
+        let index = 0;
+        if (currentAudioKey !== undefined) {
+          index = state.audioKeys.findIndex((v) => v === currentAudioKey);
+        }
 
         commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
         try {
