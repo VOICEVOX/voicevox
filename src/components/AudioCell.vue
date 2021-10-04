@@ -158,11 +158,13 @@ export default defineComponent({
             changeAudioText(text);
           }
 
-          store.dispatch("PUT_TEXTS", {
+          const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            speaker: audioItem.value.speaker,
+            speaker: audioItem.value.speaker!,
             prevAudioKey,
           });
+          if (audioKeys)
+            emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
         }
       }
     };
