@@ -90,6 +90,8 @@ export type Preset = {
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
 };
 
 export type PresetConfig = {

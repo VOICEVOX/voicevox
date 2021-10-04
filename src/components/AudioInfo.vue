@@ -76,27 +76,22 @@
       <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
-      <q-dialog v-model="showsPresetNameDialog" @escape-key="onPressEscape">
+      <q-dialog v-model="showsPresetNameDialog" @escape-key="onCancel">
         <q-card style="min-width: 350px">
           <q-card-section>
             <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
-          <q-card-section class="q-pt-none">
-            <q-input
-              dense
-              v-model="presetName"
-              autofocus
-              @keyup.enter="addPreset()"
-              label="タイトル"
-              v-close-popup
-            />
-          </q-card-section>
+          <q-form @submit.prevent.once="addPreset()">
+            <q-card-section class="q-pt-none">
+              <q-input dense v-model="presetName" autofocus label="タイトル" />
+            </q-card-section>
 
-          <q-card-actions align="right" class="text-secondary">
-            <q-btn flat label="キャンセル" v-close-popup />
-            <q-btn flat label="確定" @click="addPreset()" v-close-popup />
-          </q-card-actions>
+            <q-card-actions align="right" class="text-secondary">
+              <q-btn flat label="キャンセル" @click="onCancel" v-close-popup />
+              <q-btn flat label="確定" type="submit" v-close-popup />
+            </q-card-actions>
+          </q-form>
         </q-card>
       </q-dialog>
     </div>
@@ -229,7 +224,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { Preset } from "@/type/preload";
 import { AudioQuery } from "@/openapi";
@@ -338,6 +333,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         prePhonemeLength,
       });
+      onChangeParameter();
     };
 
     const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
@@ -346,6 +342,7 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         postPhonemeLength,
       });
+      onChangeParameter();
     };
 
     type InfoType =
@@ -477,7 +474,7 @@ export default defineComponent({
 
     const showsPresetNameDialog = ref(false);
     const presetName = ref("");
-    const onPressEscape = () => {
+    const onCancel = () => {
       presetName.value = "";
       showsPresetNameDialog.value = false;
     };
@@ -485,6 +482,7 @@ export default defineComponent({
     const showsPresetEditDialog = ref(false);
 
     const addPreset = () => {
+      showsPresetNameDialog.value = false;
       if (audioItem.value?.speaker === undefined) return;
       const speaker = audioItem.value.speaker;
 
@@ -495,6 +493,8 @@ export default defineComponent({
         pitchScale: previewAudioPitchScale.currentValue.value!,
         intonationScale: previewAudioIntonationScale.currentValue.value!,
         volumeScale: previewAudioVolumeScale.currentValue.value!,
+        prePhonemeLength: previewAudioPrePhonemeLength.currentValue.value!,
+        postPhonemeLength: previewAudioPostPhonemeLength.currentValue.value!,
       } as Preset;
 
       store.dispatch("ADD_PRESET", {
@@ -503,7 +503,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value,
       });
 
-      showsPresetNameDialog.value = false;
       presetName.value = "";
     };
 
@@ -561,7 +560,7 @@ export default defineComponent({
       addPreset,
       showsPresetNameDialog,
       presetName,
-      onPressEscape,
+      onCancel,
       showsPresetEditDialog,
     };
   },

@@ -1343,21 +1343,38 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
       if (presetKey === undefined || preset === undefined) return;
 
+      const {
+        pitchScale,
+        intonationScale,
+        speedScale,
+        volumeScale,
+        prePhonemeLength,
+        postPhonemeLength,
+      } = preset;
+
       audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, {
         audioKey,
-        pitchScale: preset.pitchScale,
+        pitchScale,
       });
       audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, {
         audioKey,
-        intonationScale: preset?.intonationScale,
+        intonationScale,
       });
       audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, {
         audioKey,
-        speedScale: preset?.speedScale,
+        speedScale,
       });
       audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, {
         audioKey,
-        volumeScale: preset?.volumeScale,
+        volumeScale,
+      });
+      audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, {
+        audioKey,
+        prePhonemeLength,
+      });
+      audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, {
+        audioKey,
+        postPhonemeLength,
       });
     },
     COMMAND_IMPORT_FROM_FILE(
