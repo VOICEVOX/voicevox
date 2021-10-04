@@ -6,7 +6,7 @@ services:
     # If you don't have node_modules, use "npm ci", install node_modules into the yor directory. 
     # Use command bellow
     # `docker-compose up -d --build`
-    # The container will stop automaticaly after install
+    # The container will stop automatically after install
     # If you have node_modules already, you comment out '# command: "npm ci"'
 
     # command: "npm ci"
@@ -20,7 +20,7 @@ services:
     # command: "/bin/sh"
 
 
-    # If you want test automaticaly (test runs when you save any files), use this command property and view logs
+    # If you want test automatically (test runs when you save any files), use this command property and view logs
     # Use Command bellow 
     # `docker logs --tail 1000 -f voicevox_test_1`
 
