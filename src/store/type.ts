@@ -91,6 +91,10 @@ export type AudioMutations = {
     audioKey: string;
     prevAudioKey: string | undefined;
   };
+  INSERT_AUDIO_ITEMS: {
+    audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+    prevAudioKey: string | undefined;
+  };
   REMOVE_AUDIO_ITEM: { audioKey: string };
   SET_AUDIO_TEXT: { audioKey: string; text: string };
   SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };

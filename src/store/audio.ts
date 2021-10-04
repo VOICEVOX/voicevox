@@ -151,6 +151,30 @@ export const audioStore: VoiceVoxStoreOptions<
         nowGenerating: false,
       };
     },
+    INSERT_AUDIO_ITEMS(
+      state,
+      {
+        prevAudioKey,
+        audioKeyItemPairs,
+      }: {
+        audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+        prevAudioKey: string | undefined;
+      }
+    ) {
+      const index =
+        prevAudioKey !== undefined
+          ? state.audioKeys.indexOf(prevAudioKey) + 1
+          : state.audioKeys.length;
+      const audioKeys = audioKeyItemPairs.map((pair) => pair.audioKey);
+      state.audioKeys.splice(index, 0, ...audioKeys);
+      for (const { audioKey, audioItem } of audioKeyItemPairs) {
+        state.audioItems[audioKey] = audioItem;
+        state.audioStates[audioKey] = {
+          nowPlaying: false,
+          nowGenerating: false,
+        };
+      }
+    },
     REMOVE_AUDIO_ITEM(state, { audioKey }: { audioKey: string }) {
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
@@ -1285,31 +1309,25 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKeyItemPairs,
       }: { audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] }
     ) {
-      for (const { audioKey, audioItem } of audioKeyItemPairs) {
-        audioStore.mutations.INSERT_AUDIO_ITEM(draft, {
-          audioKey: audioKey,
-          audioItem: audioItem,
-          prevAudioKey: undefined,
-        });
-      }
+      audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
+        audioKeyItemPairs,
+        prevAudioKey: undefined,
+      });
     },
     COMMAND_PUT_TEXTS(
       draft,
-      payload: {
+      {
+        audioKeyItemPairs,
+        prevAudioKey,
+      }: {
         audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
         prevAudioKey: string;
       }
     ) {
-      let prevAudioKey = payload.prevAudioKey;
-
-      for (const { audioKey, audioItem } of payload.audioKeyItemPairs) {
-        audioStore.mutations.INSERT_AUDIO_ITEM(draft, {
-          audioKey,
-          audioItem,
-          prevAudioKey,
-        });
-        prevAudioKey = audioKey;
-      }
+      audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
+        audioKeyItemPairs,
+        prevAudioKey,
+      });
     },
   }),
 };
