@@ -1,17 +1,12 @@
 import { createLogger } from "vuex";
-import { indexStore } from "../../../src/store/index";
-import { createStore } from "../../../src/store/vuex";
-import {
-  AllActions,
-  AllGetters,
-  AllMutations,
-  State,
-} from "../../../src/store/type";
-import { commandStore } from "../../../src/store/command";
-import { audioStore, audioCommandStore } from "../../../src/store/audio";
-import { projectStore } from "../../../src/store/project";
-import { uiStore } from "../../../src/store/ui";
-import { settingStore } from "../../../src/store/setting";
+import { indexStore } from "@/store/index";
+import { createStore } from "@/store/vuex";
+import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
+import { commandStore } from "@/store/command";
+import { audioStore, audioCommandStore } from "@/store/audio";
+import { projectStore } from "@/store/project";
+import { uiStore } from "@/store/ui";
+import { settingStore } from "@/store/setting";
 import { assert } from "chai";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
