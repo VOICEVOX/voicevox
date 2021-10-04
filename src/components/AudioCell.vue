@@ -152,6 +152,12 @@ export default defineComponent({
           blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
 
           const prevAudioKey = props.audioKey;
+          if (audioItem.value.text == "") {
+            const text = texts.shift();
+            if (text == undefined) return;
+            changeAudioText(text);
+          }
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
             speaker: audioItem.value.speaker!,
