@@ -204,7 +204,7 @@ export default defineComponent({
       }
     };
 
-    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+    const hotkeyMap = new Map<HotkeyAction, () => void>([
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
       ["テキスト読み込む", importTextFile],
