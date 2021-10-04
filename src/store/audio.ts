@@ -220,7 +220,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }: { audioKey: string; presetKey: string | undefined }
     ) => {
       if (presetKey === undefined) {
-        draft.audioItems[audioKey].presetKey = nothing as unknown as undefined;
+        delete draft.audioItems[audioKey].presetKey;
       } else {
         draft.audioItems[audioKey].presetKey = presetKey;
       }
