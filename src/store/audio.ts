@@ -1297,36 +1297,72 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: { audioKey: string; speedScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_PITCH_SCALE(
       draft,
       payload: { audioKey: string; pitchScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_INTONATION_SCALE(
       draft,
       payload: { audioKey: string; intonationScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_VOLUME_SCALE(
       draft,
       payload: { audioKey: string; volumeScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH(
       draft,
       payload: { audioKey: string; prePhonemeLength: number }
     ) {
       audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_POST_PHONEME_LENGTH(
       draft,
       payload: { audioKey: string; postPhonemeLength: number }
     ) {
       audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
+      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
+        audioStore.mutations.SET_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+          presetKey: undefined,
+        });
+      }
     },
     COMMAND_SET_AUDIO_PRESET: (
       draft,

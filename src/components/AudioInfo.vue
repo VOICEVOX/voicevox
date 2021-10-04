@@ -297,7 +297,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         speedScale,
       });
-      onChangeParameter();
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
@@ -306,7 +305,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         pitchScale,
       });
-      onChangeParameter();
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
@@ -315,7 +313,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         intonationScale,
       });
-      onChangeParameter();
     };
 
     const setAudioVolumeScale = (volumeScale: number) => {
@@ -324,7 +321,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         volumeScale,
       });
-      onChangeParameter();
     };
 
     const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
@@ -333,7 +329,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         prePhonemeLength,
       });
-      onChangeParameter();
     };
 
     const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
@@ -342,7 +337,6 @@ export default defineComponent({
         audioKey: activeAudioKey.value!,
         postPhonemeLength,
       });
-      onChangeParameter();
     };
 
     type InfoType =
@@ -460,15 +454,6 @@ export default defineComponent({
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: activeAudioKey.value!,
         presetKey: e.key,
-      });
-    };
-
-    const onChangeParameter = () => {
-      if (audioPresetKey.value === undefined) return;
-
-      store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioKey: activeAudioKey.value!,
-        presetKey: undefined,
       });
     };
 
