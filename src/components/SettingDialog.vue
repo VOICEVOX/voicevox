@@ -458,7 +458,9 @@ export default defineComponent({
     };
 
     const deleteHotkey = (action: string) => {
-      changeHotkeySettings(action, "");
+      if (lastAction.value === action) {
+        changeHotkeySettings(action, "");
+      }
     };
 
     const getHotkeyColor = (action: string, combo: string) => {
