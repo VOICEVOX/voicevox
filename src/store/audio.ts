@@ -648,9 +648,16 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
+
+        let index = 0;
+        if (currentAudioKey !== undefined) {
+          index = state.audioKeys.findIndex((v) => v === currentAudioKey);
+        }
+
         commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
         try {
-          for (const audioKey of state.audioKeys) {
+          for (let i = index; i < state.audioKeys.length; ++i) {
+            const audioKey = state.audioKeys[i];
             commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
             const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
             if (!isEnded) {
