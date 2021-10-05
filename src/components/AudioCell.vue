@@ -118,6 +118,7 @@ export default defineComponent({
       isChangeFlag.value = true;
     };
     watch(
+      // `audioItem` becomes undefined just before the component is unmounted.
       () => audioItem.value?.text,
       (newText) => {
         if (!isChangeFlag.value && newText !== undefined) {
