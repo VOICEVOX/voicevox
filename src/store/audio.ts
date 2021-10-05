@@ -337,6 +337,23 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       draft.audioKeys.splice(0, draft.audioKeys.length);
     }),
+    async GENERATE_AUDIO_ITEM(
+      { dispatch },
+      payload: { text?: string; speaker?: number }
+    ) {
+      const text = payload.text ?? "";
+      const speaker = payload.speaker ?? 0;
+      const query = await dispatch("FETCH_AUDIO_QUERY", {
+        text,
+        speaker,
+      }).catch(() => undefined);
+      const audioItem: AudioItem = {
+        text,
+        speaker,
+        query,
+      };
+      return audioItem;
+    },
     REGISTER_AUDIO_ITEM(
       { commit },
       {

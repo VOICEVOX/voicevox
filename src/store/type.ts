@@ -126,6 +126,10 @@ export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
+  GENERATE_AUDIO_ITEM(payload: {
+    text?: string;
+    speaker?: number;
+  }): Promise<AudioItem>;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey?: string;
