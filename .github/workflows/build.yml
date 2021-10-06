@@ -136,11 +136,9 @@ jobs:
           - artifact_name: linux-cpu-prepackage
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-cpu
-            os: ubuntu-18.04
           - artifact_name: linux-nvidia-prepackage
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-nvidia
-            os: ubuntu-18.04
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
@@ -324,27 +322,42 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
-          # - linux-cpu-appimage
+          - linux-cpu-appimage
           - linux-nvidia-appimage
-          # - windows-cpu-nsis-web
+          - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
-          # - artifact_name: linux-cpu-appimage
-          #   engine_artifact_name: linux-cpu-prepackage
-          #   os: ubuntu-18.04
+          - artifact_name: linux-cpu-appimage
+            engine_artifact_name: linux-cpu-prepackage
+            package_name: voicevox_cpu
+            os: ubuntu-18.04
           - artifact_name: linux-nvidia-appimage
             engine_artifact_name: linux-nvidia-prepackage
+            package_name: voicevox
             os: ubuntu-18.04
-          # - artifact_name: windows-cpu-nsis-web
-          #   engine_artifact_name: windows-cpu-prepackage
-          #   os: windows-2019
+          - artifact_name: windows-cpu-nsis-web
+            engine_artifact_name: windows-cpu-prepackage
+            package_name: voicevox_cpu
+            os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
+            package_name: voicevox
             os: windows-2019
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      # If CPU/GPU build have the same package name,
+      # NSIS installer and 7z files have the duplicated names.
+      # We should have the difference package names between CPU/GPU build
+      # because the same name files cannot be uploaded to one GitHub Release.
+      - name: Replace package name
+        shell: bash
+        run: |
+          # GPU: "name": "voicevox" => "name": "voicevox"
+          # CPU: "name": "voicevox" => "name": "voicevox_cpu"
+          sed 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/'
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
