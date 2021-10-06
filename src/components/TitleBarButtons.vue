@@ -150,14 +150,27 @@ import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
 export default defineComponent({
   name: "TitleBarButtons",
   setup() {
-    const closeWindow = () => window.electron.closeWindow();
+    const store = useStore();
+
+    const closeWindow = async () => {
+      if (
+        store.getters.IS_EDITED &&
+        !(await window.electron.showConfirmDialog({
+          title: "警告",
+          message:
+            "プロジェクトの変更が保存されていません。\n" +
+            "変更を破棄してもよろしいですか？",
+        }))
+      ) {
+        return;
+      }
+      window.electron.closeWindow();
+    };
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
     const changePinWindow = () => {
       window.electron.changePinWindow();
     };
-
-    const store = useStore();
 
     const isPinned = computed(() => store.state.isPinned);
 
