@@ -10,10 +10,13 @@
       @mouseover="reassignSubMenuOpen(i)"
     />
     <q-space />
-    <div v-if="projectName !== undefined" class="window-title">
-      {{ projectName + " - VOICEVOX" }}
+    <div class="window-title">
+      {{
+        (isEdited ? "*" : "") +
+        (projectName !== undefined ? projectName + " - " : "") +
+        "VOICEVOX"
+      }}
     </div>
-    <div v-else class="window-title">VOICEVOX</div>
     <q-space />
     <title-bar-buttons />
   </q-bar>
@@ -71,6 +74,7 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
+    const isEdited = computed(() => store.getters.IS_EDITED);
 
     const menudata = ref<MenuItemData[]>([
       {
@@ -217,6 +221,7 @@ export default defineComponent({
     return {
       uiLocked,
       projectName,
+      isEdited,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,

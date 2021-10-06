@@ -157,6 +157,7 @@ const recordOperations =
       (draft: S) => recipe(draft, payload)
     );
     return {
+      unixMillisec: new Date().getTime(),
       redoOperations: doPatches.map(patchToOperation),
       undoOperations: undoPatches.map(patchToOperation),
     };
@@ -173,6 +174,13 @@ export const commandStore: VoiceVoxStoreOptions<
     },
     CAN_REDO(state) {
       return state.redoCommands.length > 0;
+    },
+    LAST_COMMAND_UNIX_MILLISEC(state) {
+      if (state.undoCommands.length === 0) {
+        return null;
+      } else {
+        return state.undoCommands[state.undoCommands.length - 1].unixMillisec;
+      }
     },
   },
 
