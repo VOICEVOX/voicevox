@@ -330,18 +330,22 @@ jobs:
           - artifact_name: linux-cpu-appimage
             engine_artifact_name: linux-cpu-prepackage
             package_name: voicevox-cpu
+            product_name: VOICEVOX CPU
             os: ubuntu-18.04
           - artifact_name: linux-nvidia-appimage
             engine_artifact_name: linux-nvidia-prepackage
             package_name: voicevox
+            product_name: VOICEVOX
             os: ubuntu-18.04
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
             package_name: voicevox-cpu
+            product_name: VOICEVOX CPU
             os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
             package_name: voicevox
+            product_name: VOICEVOX
             os: windows-2019
 
     runs-on: ${{ matrix.os }}
@@ -349,15 +353,18 @@ jobs:
       - uses: actions/checkout@master
 
       # If the CPU/GPU builds have the same package name,
-      # the NSIS installer and the 7z files have duplicate names.
+      # the NSIS installers and the 7z files have duplicate names.
+      # For Linux, If they have the same product name,
+      # the AppImages have duplicate names.
       # Files with the same name cannot be uploaded to a single GitHub Release,
-      # so different package names should be used for CPU/GPU builds.
+      # so different package/product names should be used for CPU/GPU builds.
       - name: Replace package name
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
