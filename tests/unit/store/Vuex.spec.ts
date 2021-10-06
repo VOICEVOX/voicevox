@@ -7,6 +7,7 @@ import { audioStore, audioCommandStore } from "@/store/audio";
 import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
+import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
@@ -37,6 +38,8 @@ describe("store/vuex.js test", () => {
           avoidOverwrite: false,
         },
         isPinned: false,
+        presetItems: {},
+        presetKeys: {},
       },
       getters: {
         ...uiStore.getters,
@@ -46,6 +49,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.getters,
         ...audioCommandStore.getters,
         ...indexStore.getters,
+        ...presetStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -55,6 +59,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
         ...indexStore.mutations,
+        ...presetStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -64,6 +69,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.actions,
         ...audioCommandStore.actions,
         ...indexStore.actions,
+        ...presetStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
@@ -97,5 +103,9 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.equal(store.state.isPinned, false);
+    assert.isObject(store.state.presetItems);
+    assert.isEmpty(store.state.presetItems);
+    assert.isObject(store.state.presetKeys);
+    assert.isEmpty(store.state.presetKeys);
   });
 });

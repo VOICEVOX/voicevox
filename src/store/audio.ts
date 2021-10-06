@@ -23,8 +23,6 @@ import {
   Preset,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { nothing } from "immer";
-
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
 );
