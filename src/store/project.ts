@@ -25,20 +25,10 @@ export const projectStore: VoiceVoxStoreOptions<
         : undefined;
     },
     IS_EDITED(state, getters) {
-      const savedHistory = state.savedProjectHistory;
-      const currentHistory = getters.HISTORY;
-      if (savedHistory.length !== currentHistory.length) {
-        return true;
-      }
-      for (let i = 0; i < savedHistory.length; i++) {
-        if (
-          savedHistory[i].name !== currentHistory[i].name ||
-          savedHistory[i].unixMillisec !== currentHistory[i].unixMillisec
-        ) {
-          return true;
-        }
-      }
-      return false;
+      return (
+        getters.LAST_COMMAND_UNIX_MILLISEC !==
+        state.savedLastCommandUnixMillisec
+      );
     },
   },
 
@@ -46,8 +36,8 @@ export const projectStore: VoiceVoxStoreOptions<
     SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
-    SET_SAVEDHISTORY(state, history) {
-      state.savedProjectHistory = history;
+    SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
+      state.savedLastCommandUnixMillisec = unixMillisec;
     },
   },
 
@@ -75,7 +65,7 @@ export const projectStore: VoiceVoxStoreOptions<
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("SET_SAVEDHISTORY", []);
+        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
       }
     ),
@@ -229,7 +219,7 @@ export const projectStore: VoiceVoxStoreOptions<
             });
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
-          context.commit("SET_SAVEDHISTORY", []);
+          context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
         } catch (err) {
           window.electron.logError(err);
@@ -274,7 +264,10 @@ export const projectStore: VoiceVoxStoreOptions<
         if (!context.state.projectFilePath) {
           context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
-        context.commit("SET_SAVEDHISTORY", context.getters.HISTORY);
+        context.commit(
+          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+          context.getters.LAST_COMMAND_UNIX_MILLISEC
+        );
         return;
       }
     ),

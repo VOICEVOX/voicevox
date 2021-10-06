@@ -38,7 +38,7 @@ export type State = {
   isSettingDialogOpen: boolean;
   isMaximized: boolean;
   projectFilePath?: string;
-  savedProjectHistory: { name: string; unixMillisec: number }[];
+  savedLastCommandUnixMillisec: number | null;
   savingSetting: SavingSetting;
   isPinned: boolean;
 };
@@ -55,7 +55,6 @@ export type AudioState = {
 };
 
 export type Command = {
-  name: string;
   unixMillisec: number;
   undoOperations: Operation[];
   redoOperations: Operation[];
@@ -339,7 +338,7 @@ export type AudioCommandMutations = {
 export type CommandGetters = {
   CAN_UNDO: boolean;
   CAN_REDO: boolean;
-  HISTORY: { name: string; unixMillisec: number }[];
+  LAST_COMMAND_UNIX_MILLISEC: number | null;
 };
 
 export type CommandMutations = {
@@ -387,7 +386,7 @@ export type ProjectGetters = {
 
 export type ProjectMutations = {
   SET_PROJECT_FILEPATH: { filePath?: string };
-  SET_SAVEDHISTORY: { name: string; unixMillisec: number }[];
+  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: number | null;
 };
 
 export type ProjectActions = {
