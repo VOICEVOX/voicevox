@@ -456,14 +456,14 @@ jobs:
       matrix:
         os: [ubuntu-18.04]
         artifact_name:
-          # - linux-cpu-appimage
+          - linux-cpu-appimage
           - linux-nvidia-appimage
-          # - windows-cpu-nsis-web
+          - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
-          # - artifact_name: linux-cpu-appimage
+          - artifact_name: linux-cpu-appimage
           - artifact_name: linux-nvidia-appimage
-          # - artifact_name: windows-cpu-nsis-web
+          - artifact_name: windows-cpu-nsis-web
           - artifact_name: windows-nvidia-nsis-web
 
     runs-on: ${{ matrix.os }}
