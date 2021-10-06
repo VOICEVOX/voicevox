@@ -329,7 +329,7 @@ jobs:
         include:
           - artifact_name: linux-cpu-appimage
             engine_artifact_name: linux-cpu-prepackage
-            package_name: voicevox_cpu
+            package_name: voicevox-cpu
             os: ubuntu-18.04
           - artifact_name: linux-nvidia-appimage
             engine_artifact_name: linux-nvidia-prepackage
@@ -337,7 +337,7 @@ jobs:
             os: ubuntu-18.04
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
-            package_name: voicevox_cpu
+            package_name: voicevox-cpu
             os: windows-2019
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
@@ -356,7 +356,7 @@ jobs:
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
-          # CPU: "name": "voicevox" => "name": "voicevox_cpu"
+          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
