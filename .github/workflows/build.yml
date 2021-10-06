@@ -28,18 +28,43 @@ jobs:
       matrix:
         artifact_name:
           - linux-noengine-prepackage
+          - linux-noengine-cpu-prepackage
           - windows-noengine-prepackage
+          - windows-noengine-cpu-prepackage
         include:
           - artifact_name: linux-noengine-prepackage
             artifact_path: dist_electron/linux-unpacked
+            package_name: voicevox
+            product_name: VOICEVOX
+            os: ubuntu-18.04
+          - artifact_name: linux-noengine-cpu-prepackage
+            artifact_path: dist_electron/linux-unpacked
+            package_name: voicevox-cpu
+            product_name: VOICEVOX CPU
             os: ubuntu-18.04
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
+            package_name: voicevox
+            product_name: VOICEVOX
+            os: windows-2019
+          - artifact_name: windows-noengine-cpu-prepackage
+            artifact_path: dist_electron/win-unpacked
+            package_name: voicevox-cpu
+            product_name: VOICEVOX CPU
             os: windows-2019
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      # Rename executable file
+      - name: Replace package name
+        shell: bash
+        run: |
+          # GPU: "name": "voicevox" => "name": "voicevox"
+          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Set output Node version
         id: node-version
@@ -134,13 +159,13 @@ jobs:
           - windows-nvidia-prepackage
         include:
           - artifact_name: linux-cpu-prepackage
-            noengine_artifact_name: linux-noengine-prepackage
+            noengine_artifact_name: linux-noengine-cpu-prepackage
             voicevox_engine_asset_name: linux-cpu
           - artifact_name: linux-nvidia-prepackage
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-nvidia
           - artifact_name: windows-cpu-prepackage
-            noengine_artifact_name: windows-noengine-prepackage
+            noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
@@ -352,12 +377,12 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      # If the CPU/GPU builds have the same package name,
-      # the NSIS installers and the 7z files have duplicate names.
-      # For Linux, If they have the same product name,
-      # the AppImages have duplicate names.
-      # Files with the same name cannot be uploaded to a single GitHub Release,
-      # so different package/product names should be used for CPU/GPU builds.
+      # NOTE: If the CPU/GPU builds have the same package name,
+      #       the NSIS installers and the 7z files have duplicate names.
+      #       For Linux, If they have the same product name,
+      #       the AppImages have duplicate names.
+      #       Files with the same name cannot be uploaded to a single GitHub Release,
+      #       so different package/product names should be used for CPU/GPU builds.
       - name: Replace package name
         shell: bash
         run: |
