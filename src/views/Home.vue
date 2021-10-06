@@ -213,7 +213,7 @@ export default defineComponent({
       const prevAudioKey = activeAudioKey.value;
       let speaker = 0;
       if (prevAudioKey !== undefined) {
-        store.state.audioItems[prevAudioKey].speaker;
+        speaker = store.state.audioItems[prevAudioKey].speaker || 0;
       }
       const audioItem: AudioItem = { text: "", speaker: speaker };
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
