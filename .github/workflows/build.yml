@@ -534,9 +534,9 @@ jobs:
             7z -v1g a "${appImageFile}.7z" "${appImageFile}"
 
             # Output splitted archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls ${appImageFile}.7z.* > archives_name.txt
-            stat --printf="%s\n" *.7z.* > archives_size.txt
-            md5sum *.7z.* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
+            ls "${appImageFile}.7z".* > archives_name.txt
+            stat --printf="%s\n" "${appImageFile}.7z".* > archives_size.txt
+            md5sum "${appImageFile}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
 
             paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
 
