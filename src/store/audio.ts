@@ -156,6 +156,30 @@ export const audioStore: VoiceVoxStoreOptions<
         nowGenerating: false,
       };
     },
+    INSERT_AUDIO_ITEMS(
+      state,
+      {
+        prevAudioKey,
+        audioKeyItemPairs,
+      }: {
+        audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+        prevAudioKey: string | undefined;
+      }
+    ) {
+      const index =
+        prevAudioKey !== undefined
+          ? state.audioKeys.indexOf(prevAudioKey) + 1
+          : state.audioKeys.length;
+      const audioKeys = audioKeyItemPairs.map((pair) => pair.audioKey);
+      state.audioKeys.splice(index, 0, ...audioKeys);
+      for (const { audioKey, audioItem } of audioKeyItemPairs) {
+        state.audioItems[audioKey] = audioItem;
+        state.audioStates[audioKey] = {
+          nowPlaying: false,
+          nowGenerating: false,
+        };
+      }
+    },
     REMOVE_AUDIO_ITEM(state, { audioKey }: { audioKey: string }) {
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
@@ -642,9 +666,16 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
+
+        let index = 0;
+        if (currentAudioKey !== undefined) {
+          index = state.audioKeys.findIndex((v) => v === currentAudioKey);
+        }
+
         commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
         try {
-          for (const audioKey of state.audioKeys) {
+          for (let i = index; i < state.audioKeys.length; ++i) {
+            const audioKey = state.audioKeys[i];
             commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
             const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
             if (!isEnded) {
@@ -664,43 +695,6 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     },
-    PUT_TEXTS: createUILockAction(
-      async (
-        { dispatch },
-        {
-          texts,
-          speaker,
-          prevAudioKey,
-        }: {
-          texts: string[];
-          speaker: number | undefined;
-          prevAudioKey: string | undefined;
-        }
-      ) => {
-        const arrLen = texts.length;
-        speaker = speaker ?? 0;
-        const addedAudioKeys = [];
-        for (let i = 0; i < arrLen; i++) {
-          if (texts[i] != "") {
-            const audioItem: AudioItem = {
-              text: texts[i],
-              speaker: speaker,
-            };
-            prevAudioKey = await dispatch("REGISTER_AUDIO_ITEM", {
-              audioItem: audioItem,
-              prevAudioKey: prevAudioKey,
-            });
-            addedAudioKeys.push(prevAudioKey);
-          }
-        }
-
-        return Promise.all(
-          addedAudioKeys.map((audioKey) =>
-            dispatch("FETCH_AND_SET_AUDIO_QUERY", { audioKey })
-          )
-        );
-      }
-    ),
     OPEN_TEXT_EDIT_CONTEXT_MENU() {
       window.electron.openTextEditContextMenu();
     },
@@ -1168,6 +1162,41 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         return audioKeys;
       }
     ),
+    COMMAND_PUT_TEXTS: createUILockAction(
+      async (
+        { commit },
+        {
+          prevAudioKey,
+          texts,
+          speaker,
+        }: {
+          prevAudioKey: string;
+          texts: string[];
+          speaker: number;
+        }
+      ) => {
+        const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
+          texts
+            .filter((text) => text != "")
+            .map((text) => {
+              const audioKey: string = uuidv4();
+              const audioItem: AudioItem = {
+                text,
+                speaker,
+              };
+              return {
+                audioKey,
+                audioItem,
+              };
+            });
+        const audioKeys = audioKeyItemPairs.map((value) => value.audioKey);
+        commit("COMMAND_PUT_TEXTS", {
+          prevAudioKey,
+          audioKeyItemPairs,
+        });
+        return audioKeys;
+      }
+    ),
   },
   mutations: commandMutationsCreator({
     COMMAND_REGISTER_AUDIO_ITEM(
@@ -1419,13 +1448,25 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKeyItemPairs,
       }: { audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] }
     ) {
-      for (const { audioKey, audioItem } of audioKeyItemPairs) {
-        audioStore.mutations.INSERT_AUDIO_ITEM(draft, {
-          audioKey: audioKey,
-          audioItem: audioItem,
-          prevAudioKey: undefined,
-        });
+      audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
+        audioKeyItemPairs,
+        prevAudioKey: undefined,
+      });
+    },
+    COMMAND_PUT_TEXTS(
+      draft,
+      {
+        audioKeyItemPairs,
+        prevAudioKey,
+      }: {
+        audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+        prevAudioKey: string;
       }
+    ) {
+      audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
+        audioKeyItemPairs,
+        prevAudioKey,
+      });
     },
   }),
 };
