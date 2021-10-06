@@ -113,7 +113,7 @@ export const createCommandMutationTree = <
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
-      createCommandMutation(val),
+      createCommandMutation(key, val),
     ])
   ) as MutationTree<S, M>;
 
@@ -124,11 +124,12 @@ export const createCommandMutationTree = <
  */
 export const createCommandMutation =
   <S extends UndoRedoState, P extends AllMutations[keyof AllMutations]>(
+    key: string,
     payloadRecipe: PayloadRecipe<S, P>
   ): Mutation<S, P> =>
   (state: S, payload: P): void => {
     if (state.useUndoRedo) {
-      const command = recordOperations(payloadRecipe)(state, payload);
+      const command = recordOperations(key, payloadRecipe)(state, payload);
       applyPatch(state, command.redoOperations);
       state.undoCommands.push(command);
       state.redoCommands.splice(0);
@@ -149,6 +150,7 @@ const patchToOperation = (patch: Patch): Operation => ({
  */
 const recordOperations =
   <S, P extends AllMutations[keyof AllMutations]>(
+    key: string,
     recipe: PayloadRecipe<S, P>
   ) =>
   (state: S, payload: P): Command => {
@@ -157,6 +159,8 @@ const recordOperations =
       (draft: S) => recipe(draft, payload)
     );
     return {
+      name: key,
+      unixMillisec: new Date().getTime(),
       redoOperations: doPatches.map(patchToOperation),
       undoOperations: undoPatches.map(patchToOperation),
     };
@@ -173,6 +177,12 @@ export const commandStore: VoiceVoxStoreOptions<
     },
     CAN_REDO(state) {
       return state.redoCommands.length > 0;
+    },
+    HISTORY(state) {
+      return state.undoCommands.map(({ name, unixMillisec }) => ({
+        name,
+        unixMillisec,
+      }));
     },
   },
 
