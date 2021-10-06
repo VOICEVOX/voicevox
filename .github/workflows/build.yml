@@ -357,7 +357,7 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox_cpu"
-          sed 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/'
+          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
