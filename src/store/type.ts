@@ -91,6 +91,10 @@ export type AudioMutations = {
     audioKey: string;
     prevAudioKey: string | undefined;
   };
+  INSERT_AUDIO_ITEMS: {
+    audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+    prevAudioKey: string | undefined;
+  };
   REMOVE_AUDIO_ITEM: { audioKey: string };
   SET_AUDIO_TEXT: { audioKey: string; text: string };
   SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
@@ -162,11 +166,6 @@ export type AudioActions = {
   STOP_AUDIO(payload: { audioKey: string }): void;
   PLAY_CONTINUOUSLY_AUDIO(): void;
   STOP_CONTINUOUSLY_AUDIO(): void;
-  PUT_TEXTS(payload: {
-    texts: string[];
-    speaker: number | undefined;
-    prevAudioKey: string | undefined;
-  }): void[];
   OPEN_TEXT_EDIT_CONTEXT_MENU(): void;
   DETECTED_ENGINE_ERROR(): void;
   RESTART_ENGINE(): void;
@@ -244,6 +243,11 @@ export type AudioCommandActions = {
     postPhonemeLength: number;
   }): void;
   COMMAND_IMPORT_FROM_FILE(payload: { filePath?: string }): string[] | void;
+  COMMAND_PUT_TEXTS(payload: {
+    prevAudioKey: string;
+    texts: string[];
+    speaker: number;
+  }): string[];
 };
 
 export type AudioCommandMutations = {
@@ -318,6 +322,10 @@ export type AudioCommandMutations = {
   };
   COMMAND_IMPORT_FROM_FILE: {
     audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+  };
+  COMMAND_PUT_TEXTS: {
+    audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+    prevAudioKey: string;
   };
 };
 
