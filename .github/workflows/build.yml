@@ -348,10 +348,10 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      # If CPU/GPU build have the same package name,
-      # NSIS installer and 7z files have the duplicated names.
-      # We should have the difference package names between CPU/GPU build
-      # because the same name files cannot be uploaded to one GitHub Release.
+      # If the CPU/GPU builds have the same package name,
+      # the NSIS installer and the 7z files have duplicate names.
+      # Files with the same name cannot be uploaded to a single GitHub Release,
+      # so different package names should be used for CPU/GPU builds.
       - name: Replace package name
         shell: bash
         run: |
