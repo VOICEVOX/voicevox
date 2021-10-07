@@ -95,6 +95,9 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ACTIVE: (state) => (audioKey: string) => {
       return state._activeAudioKey === audioKey;
     },
+    IS_ENGINE_READY: (state) => {
+      return state.engineState === "READY";
+    }
   },
 
   mutations: {
@@ -338,15 +341,17 @@ export const audioStore: VoiceVoxStoreOptions<
       draft.audioKeys.splice(0, draft.audioKeys.length);
     }),
     async GENERATE_AUDIO_ITEM(
-      { dispatch },
+      { getters, dispatch },
       payload: { text?: string; speaker?: number }
     ) {
       const text = payload.text ?? "";
       const speaker = payload.speaker ?? 0;
-      const query = await dispatch("FETCH_AUDIO_QUERY", {
-        text,
-        speaker,
-      }).catch(() => undefined);
+      const query = getters.IS_ENGINE_READY
+        ? await dispatch("FETCH_AUDIO_QUERY", {
+            text,
+            speaker,
+          }).catch(() => undefined)
+        : undefined;
       const audioItem: AudioItem = {
         text,
         speaker,

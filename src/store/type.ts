@@ -74,6 +74,7 @@ export type AudioGetters = {
   ACTIVE_AUDIO_KEY: string | undefined;
   HAVE_AUDIO_QUERY: (audioKey: string) => boolean;
   IS_ACTIVE: (audioKey: string) => boolean;
+  IS_ENGINE_READY: boolean;
 };
 
 export type AudioMutations = {
