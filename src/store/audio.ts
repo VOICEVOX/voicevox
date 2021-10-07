@@ -97,7 +97,7 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     IS_ENGINE_READY: (state) => {
       return state.engineState === "READY";
-    }
+    },
   },
 
   mutations: {
