@@ -1102,7 +1102,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
-      async ({ state, commit }, { filePath }: { filePath?: string }) => {
+      async (
+        { state, commit, dispatch },
+        { filePath }: { filePath?: string }
+      ) => {
         if (!filePath) {
           filePath = await window.electron.showImportFileDialog({
             title: "セリフ読み込み",
@@ -1117,9 +1120,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             await window.electron.readFile({ filePath })
           );
         }
-        const audioItems: AudioItem[] = parseTextFile(
-          body,
-          state.characterInfos
+        const audioItems: AudioItem[] = await Promise.all(
+          parseTextFile(body, state.characterInfos).map(({ text, speaker }) =>
+            dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
+          )
         );
         const audioKeys: string[] = audioItems.map(() => uuidv4());
         const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
@@ -1134,7 +1138,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ),
     COMMAND_PUT_TEXTS: createUILockAction(
       async (
-        { commit },
+        { commit, dispatch },
         {
           prevAudioKey,
           texts,
@@ -1146,19 +1150,24 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
-          texts
-            .filter((text) => text != "")
-            .map((text) => {
-              const audioKey: string = uuidv4();
-              const audioItem: AudioItem = {
-                text,
-                speaker,
-              };
-              return {
-                audioKey,
-                audioItem,
-              };
-            });
+          await Promise.all(
+            texts
+              .filter((text) => text != "")
+              .map(async (text) => {
+                const audioKey: string = uuidv4();
+                const audioItem: AudioItem = await dispatch(
+                  "GENERATE_AUDIO_ITEM",
+                  {
+                    text,
+                    speaker,
+                  }
+                );
+                return {
+                  audioKey,
+                  audioItem,
+                };
+              })
+          );
         const audioKeys = audioKeyItemPairs.map((value) => value.audioKey);
         commit("COMMAND_PUT_TEXTS", {
           prevAudioKey,

@@ -48,7 +48,10 @@ export const projectStore: VoiceVoxStoreOptions<
 
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
-        const audioItem: AudioItem = { text: "", speaker: 0 };
+        const audioItem: AudioItem = await context.dispatch(
+          "GENERATE_AUDIO_ITEM",
+          {}
+        );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
