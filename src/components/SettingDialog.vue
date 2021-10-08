@@ -233,7 +233,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onUpdated, ref } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { parseCombo } from "@/store/setting";
@@ -493,10 +493,6 @@ export default defineComponent({
       });
       return flag;
     };
-
-    onUpdated(() => {
-      store.dispatch("GET_SAVING_SETTING");
-    });
 
     return {
       settingDialogOpenedComputed,
