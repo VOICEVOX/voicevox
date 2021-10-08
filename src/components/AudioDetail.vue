@@ -9,6 +9,7 @@
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
+            <q-tab name="duration" label="話速" />
           </q-tabs>
         </div>
       </div>
@@ -172,7 +173,7 @@ export default defineComponent({
     });
 
     // detail selector
-    type DetailTypes = "accent" | "intonation" | "play" | "save";
+    type DetailTypes = "accent" | "intonation" | "duration" | "play" | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "intonation";
