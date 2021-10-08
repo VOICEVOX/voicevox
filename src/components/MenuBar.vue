@@ -8,6 +8,9 @@
       :disable="uiLocked"
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
+      @mouseleave="
+        root.type === 'button' ? (subMenuOpenFlags[i] = false) : undefined
+      "
     />
     <q-space />
     <div class="window-title">
@@ -176,6 +179,22 @@ export default defineComponent({
             onClick: () => store.dispatch("RESTART_ENGINE"),
           },
         ],
+      },
+      {
+        type: "button",
+        label: "設定",
+        onClick: () => {
+          store.dispatch("IS_SETTING_DIALOG_OPEN", {
+            isSettingDialogOpen: true,
+          });
+        },
+      },
+      {
+        type: "button",
+        label: "ヘルプ",
+        onClick: () => {
+          store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
+        },
       },
     ]);
 
