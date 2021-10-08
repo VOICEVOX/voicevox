@@ -200,21 +200,13 @@
                       <q-td
                         no-hover
                         key="combination"
-                        :class="
-                          getHotkeyColor(
-                            props.row.action,
-                            props.row.combination
-                          )
-                        "
                         :props="props"
-                        @click="
-                          toggleShowRecorded(
-                            $event,
+                        @dblclick="
+                          openHotkeyDialog(
                             props.row.action,
                             props.row.combination
                           )
                         "
-                        @dblclick="deleteHotkey(props.row.action)"
                       >
                         {{
                           getHotkeyText(props.row.action, props.row.combination)
@@ -229,15 +221,81 @@
         </q-page>
       </q-page-container>
     </q-layout>
+    <q-dialog
+      no-esc-dismiss
+      transition-show="none"
+      transition-hide="none"
+      :model-value="isHotkeyDialogOpened"
+      @update:model-value="closeHotkeyDialog"
+    >
+      <q-card class="q-py-sm q-px-md">
+        <q-card-actions align="center">
+          <div class="text-h6">
+            Press desired key combination, then press ENTER
+          </div>
+        </q-card-actions>
+        <q-card-actions align="center">
+          <q-chip v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
+            {{ hotkey }}
+          </q-chip>
+        </q-card-actions>
+        <q-card-actions align="center">
+          <q-btn
+            padding="xs md"
+            label="delete this hotkey"
+            unelevated
+            color="primary"
+            text-color="black"
+            @click="
+              deleteHotkey();
+              closeHotkeyDialog();
+            "
+            :disabled="lastRecord == ''"
+          />
+        </q-card-actions>
+      </q-card>
+      <q-dialog
+        transition-show="none"
+        transition-hide="none"
+        :model-value="isHotkeyDuplicatedDialogOpened"
+        @update:model-value="closeHotkeyDuplicatedDialog(false)"
+      >
+        <q-card class="q-py-sm q-px-md">
+          <q-card-actions>
+            <div class="text-h6">
+              You have a conflict for
+              <q-chip :label="lastRecord" /><br />
+            </div>
+          </q-card-actions>
+          <q-card-actions>
+            <div>Choose one action to keep</div>
+          </q-card-actions>
+          <q-card-actions align="center">
+            <q-chip
+              clickable
+              square
+              :label="lastAction"
+              @click="solveDuplicated(true)"
+            />
+            <q-chip
+              clickable
+              square
+              :label="lastDuplicated.action"
+              @click="solveDuplicated(false)"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </q-dialog>
   </q-dialog>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, Ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -257,6 +315,9 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
+
+    const isHotkeyDialogOpened = ref(false);
+    const isHotkeyDuplicatedDialogOpened = ref(false);
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
@@ -364,91 +425,43 @@ export default defineComponent({
       },
     ]);
 
-    let lastAction = ref<string | null>(null);
-    let lastRecord = ref("");
-
-    const toggleShowRecorded = (
-      event: MouseEvent,
-      action: HotkeyAction,
-      combo: string
-    ) => {
-      if (event.target instanceof HTMLElement) {
-        if (checkHotkeyReadonly(action)) return;
-        if (lastAction.value === null) {
-          lastRecord.value = combo;
-          lastAction.value = action;
-        } else if (lastAction.value != action) {
-          return;
-        } else {
-          // verify if there's a duplicated combo
-          let duplicated: HotkeyAction | null = null;
-          hotkeyRows.value.forEach((value) => {
-            if (
-              value.combination == lastRecord.value &&
-              value.action != action &&
-              value.combination != ""
-            ) {
-              duplicated = value.action;
-            }
-          });
-          if (duplicated !== null) {
-            $q.dialog({
-              title: "重複のショートカット",
-              message:
-                "設置するショートカットキー <b>" +
-                action +
-                ": " +
-                lastRecord.value +
-                "</b> は <b>" +
-                duplicated +
-                "</b> と同じです、そっちのを削除しますか？",
-              html: true,
-              persistent: true,
-              focus: "none",
-              style: {
-                width: "90vw",
-                maxWidth: "90vw",
-              },
-              ok: {
-                label: "削除する",
-                flat: true,
-                textColor: "secondary",
-              },
-              cancel: {
-                label: "キャンセル",
-                flat: true,
-                textColor: "secondary",
-              },
-            })
-              .onOk(() => {
-                changeHotkeySettings(duplicated!, "");
-                changeHotkeySettings(action, lastRecord.value).then(() => {
-                  lastAction.value = null;
-                });
-              })
-              .onCancel(() => (lastAction.value = null));
-          } else {
-            changeHotkeySettings(action, lastRecord.value).then(() => {
-              lastAction.value = null;
-            });
-          }
-          event.target.style.color = "";
-        }
-      }
-    };
+    const lastAction = ref("");
+    const lastRecord = ref("");
+    const lastDuplicated: Ref<HotkeySetting | undefined> = ref(undefined);
 
     const recordCombination = (event: KeyboardEvent) => {
-      if (lastAction.value === null) {
+      if (!isHotkeyDialogOpened.value || isHotkeyDuplicatedDialogOpened.value) {
         return;
       } else {
         let recordedCombo = parseCombo(event);
-        lastRecord.value = recordedCombo;
+        if (recordedCombo == "Enter") {
+          changeHotkeySettings(lastAction.value, lastRecord.value, true)?.then(
+            () => {
+              closeHotkeyDialog();
+            }
+          );
+          return;
+        } else {
+          lastRecord.value = recordedCombo;
+        }
         event.preventDefault();
       }
     };
     document.addEventListener("keydown", recordCombination);
 
-    const changeHotkeySettings = (action: string, combo: string) => {
+    const changeHotkeySettings = (
+      action: string,
+      combo: string,
+      checkDuplicated: boolean
+    ) => {
+      if (checkDuplicated) {
+        const duplicated = findDuplicatedHotkey();
+        if (duplicated !== undefined && combo != "") {
+          lastDuplicated.value = duplicated;
+          isHotkeyDuplicatedDialogOpened.value = true;
+          return;
+        }
+      }
       return store.dispatch("SET_HOTKEY_SETTINGS", {
         data: {
           action: action as HotkeyAction,
@@ -457,26 +470,25 @@ export default defineComponent({
       });
     };
 
-    const deleteHotkey = (action: string) => {
-      if (lastAction.value === action) {
-        changeHotkeySettings(action, "");
-      }
+    const findDuplicatedHotkey = () => {
+      return store.state.hotkeySettings.find((item) => {
+        return (
+          item.combination == lastRecord.value &&
+          item.action != lastAction.value
+        );
+      });
     };
 
-    const getHotkeyColor = (action: string, combo: string) => {
-      if (action == lastAction.value) {
-        if (combo == lastRecord.value) return "text-grey";
-        else return "text-primary";
+    const deleteHotkey = () => {
+      if (lastDuplicated.value !== undefined) {
+        changeHotkeySettings(lastDuplicated.value.action, "", false);
       } else {
-        return "text-black";
+        changeHotkeySettings(lastAction.value, "", false);
       }
     };
 
     const getHotkeyText = (action: string, combo: string) => {
       if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
-      if (action == lastAction.value) {
-        combo = lastRecord.value;
-      }
       if (combo == "") return "未設定";
       else return combo;
     };
@@ -494,8 +506,45 @@ export default defineComponent({
       return flag;
     };
 
+    const openHotkeyDialog = (action: string, combo: string) => {
+      lastAction.value = action;
+      lastRecord.value = combo;
+      isHotkeyDialogOpened.value = true;
+    };
+
+    const closeHotkeyDialog = () => {
+      lastAction.value = "";
+      lastRecord.value = "";
+      isHotkeyDialogOpened.value = false;
+    };
+
+    const closeHotkeyDuplicatedDialog = (closeParent: boolean) => {
+      lastDuplicated.value = undefined;
+      isHotkeyDuplicatedDialogOpened.value = false;
+      if (closeParent) {
+        closeHotkeyDialog();
+      }
+    };
+
+    const solveDuplicated = (isDelete: boolean) => {
+      if (lastDuplicated.value) {
+        if (isDelete) {
+          deleteHotkey();
+          changeHotkeySettings(lastAction.value, lastRecord.value, false)?.then(
+            () => {
+              closeHotkeyDuplicatedDialog(true);
+            }
+          );
+        } else {
+          closeHotkeyDuplicatedDialog(true);
+        }
+      }
+    };
+
     return {
       settingDialogOpenedComputed,
+      isHotkeyDialogOpened,
+      isHotkeyDuplicatedDialogOpened,
       engineMode,
       restartEngineProcess,
       savingSetting,
@@ -507,10 +556,15 @@ export default defineComponent({
         rowsPerPage: 0,
       }),
       hotkeyFilter: ref(""),
-      toggleShowRecorded,
       deleteHotkey,
       getHotkeyText,
-      getHotkeyColor,
+      openHotkeyDialog,
+      closeHotkeyDialog,
+      closeHotkeyDuplicatedDialog,
+      lastAction,
+      lastRecord,
+      lastDuplicated,
+      solveDuplicated,
     };
   },
 });
