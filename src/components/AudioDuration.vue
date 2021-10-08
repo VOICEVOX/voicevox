@@ -1,8 +1,24 @@
 <template>
   <!-- when it consists of consonant and vowel -->
   <div v-if="consonantPreviewValue.currentValue.value !== undefined">
+    <q-badge
+      class="value-label"
+      text-color="secondary"
+      v-if="valueLabel.consonant_visible || valueLabel.consonant_panning"
+    >
+      {{ consonantPreviewValue.currentValue.value.toPrecision(2) }}
+    </q-badge>
+    <q-badge
+      class="value-label"
+      text-color="secondary"
+      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+    >
+      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+    </q-badge>
     <!-- consonant -->
     <q-slider
+      @mouseenter="valueLabel.consonant_visible = true"
+      @mouseleave="valueLabel.consonant_visible = false"
       vertical
       reverse
       snap
@@ -17,9 +33,12 @@
       "
       @change="changeValue(parseFloat($event), 'consonant')"
       @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'consonant')"
+      @pan="setPanning($event, 'consonant')"
     />
     <!-- vowel -->
     <q-slider
+      @mouseenter="valueLabel.vowel_visible = true"
+      @mouseleave="valueLabel.vowel_visible = false"
       vertical
       reverse
       snap
@@ -34,11 +53,21 @@
       "
       @change="changeValue(parseFloat($event), 'vowel')"
       @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
+      @pan="setPanning($event, 'vowel')"
     />
   </div>
   <!-- when it's vowel only -->
   <div v-else>
+    <q-badge
+      class="value-label"
+      text-color="secondary"
+      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+    >
+      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+    </q-badge>
     <q-slider
+      @mouseenter="valueLabel.vowel_visible = true"
+      @mouseleave="valueLabel.vowel_visible = false"
       vertical
       reverse
       snap
@@ -52,13 +81,14 @@
       "
       @change="changeValue(parseFloat($event), 'vowel')"
       @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
+      @pan="setPanning($event, 'vowel')"
     />
   </div>
 </template>
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, onMounted, onUnmounted } from "vue";
+import { defineComponent, onMounted, onUnmounted, reactive } from "vue";
 
 export default defineComponent({
   name: "AudioDuration",
@@ -120,7 +150,6 @@ export default defineComponent({
       switch (type) {
         case "consonant": {
           newValue = props.consonant! - (deltaY > 0 ? step : -step);
-
           break;
         }
         case "vowel": {
@@ -128,14 +157,41 @@ export default defineComponent({
           break;
         }
       }
-      newValue = Math.round(newValue * 1e4) / 1e4;
-      if (
-        !props.uiLocked &&
-        !shiftKeyFlag &&
-        props.max >= newValue &&
-        newValue >= props.min
-      )
-        changeValue(newValue, type);
+      newValue = Math.round(newValue * 1e3) / 1e3;
+      if (!props.uiLocked && !shiftKeyFlag && props.max >= newValue)
+        changeValue(newValue > 0 ? newValue : 0, type);
+    };
+
+    const valueLabel = reactive({
+      consonant_visible: false,
+      consonant_panning: false,
+      vowel_visible: false,
+      vowel_panning: false,
+    });
+
+    const setPanning = (panningPhase: string, type: string) => {
+      switch (type) {
+        case "consonant": {
+          if (panningPhase === "start") {
+            valueLabel.consonant_panning = true;
+            consonantPreviewValue.startPreview();
+          } else {
+            valueLabel.vowel_panning = false;
+            vowelPreviewValue.stopPreview();
+          }
+          break;
+        }
+        case "vowel": {
+          if (panningPhase === "start") {
+            valueLabel.vowel_panning = true;
+            vowelPreviewValue.startPreview();
+          } else {
+            valueLabel.vowel_panning = false;
+            vowelPreviewValue.stopPreview();
+          }
+          break;
+        }
+      }
     };
 
     return {
@@ -143,6 +199,8 @@ export default defineComponent({
       vowelPreviewValue,
       changeValue,
       changeValueByScroll,
+      setPanning,
+      valueLabel,
     };
   },
 });
