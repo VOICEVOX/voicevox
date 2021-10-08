@@ -1,4 +1,5 @@
 <template>
+  <!-- when it consists of consonant and vowel -->
   <div v-if="consonantPreviewValue.currentValue.value !== undefined">
     <!-- consonant -->
     <q-slider
@@ -15,6 +16,7 @@
         consonantPreviewValue.setPreviewValue(parseFloat($event))
       "
       @change="changeValue(parseFloat($event), 'consonant')"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'consonant')"
     />
     <!-- vowel -->
     <q-slider
@@ -31,8 +33,10 @@
         vowelPreviewValue.setPreviewValue(parseFloat($event))
       "
       @change="changeValue(parseFloat($event), 'vowel')"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
     />
   </div>
+  <!-- when it's vowel only -->
   <div v-else>
     <q-slider
       vertical
@@ -47,6 +51,7 @@
         vowelPreviewValue.setPreviewValue(parseFloat($event))
       "
       @change="changeValue(parseFloat($event), 'vowel')"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
     />
   </div>
 </template>
@@ -104,10 +109,40 @@ export default defineComponent({
         type
       );
     };
+
+    const changeValueByScroll = (
+      deltaY: number,
+      withDetailedStep: boolean,
+      type: string
+    ) => {
+      const step = withDetailedStep ? props.step / 10 : props.step;
+      let newValue = 0;
+      switch (type) {
+        case "consonant": {
+          newValue = props.consonant! - (deltaY > 0 ? step : -step);
+
+          break;
+        }
+        case "vowel": {
+          newValue = props.vowel - (deltaY > 0 ? step : -step);
+          break;
+        }
+      }
+      newValue = Math.round(newValue * 1e4) / 1e4;
+      if (
+        !props.uiLocked &&
+        !shiftKeyFlag &&
+        props.max >= newValue &&
+        newValue >= props.min
+      )
+        changeValue(newValue, type);
+    };
+
     return {
       consonantPreviewValue,
       vowelPreviewValue,
       changeValue,
+      changeValueByScroll,
     };
   },
 });

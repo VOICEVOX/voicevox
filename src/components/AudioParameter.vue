@@ -82,10 +82,15 @@ export default defineComponent({
     };
 
     const changeValueByScroll = (deltaY: number, withDetailedStep: boolean) => {
-      const step = withDetailedStep ? 0.01 : 0.1;
+      const step = withDetailedStep ? props.step / 10 : props.step;
       let newValue = props.value - (deltaY > 0 ? step : -step);
       newValue = Math.round(newValue * 1e2) / 1e2;
-      if (!props.uiLocked && !shiftKeyFlag && 6.5 >= newValue && newValue >= 3)
+      if (
+        !props.uiLocked &&
+        !shiftKeyFlag &&
+        props.max >= newValue &&
+        newValue >= props.max
+      )
         changeValue(newValue);
     };
 

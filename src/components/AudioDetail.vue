@@ -66,7 +66,8 @@
                 :vowel="mora.vowelLength"
                 :uiLocked="uiLocked"
                 :min="0"
-                :max="0.3"
+                :max="0.25"
+                :step="0.01"
                 @changeValue="changeMoraData"
               />
             </div>
