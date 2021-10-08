@@ -50,6 +50,27 @@
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
+          <template v-if="selectedDetail === 'duration'">
+            <div
+              v-for="(mora, moraIndex) in accentPhrase.moras"
+              :key="moraIndex"
+              class="q-mb-sm pitch-cell"
+              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+            >
+              <!-- div for input width -->
+              <audio-duration
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :accentPhrase="accentPhrase"
+                :consonant="mora.consonantLength"
+                :vowel="mora.vowelLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                @changeValue="changeMoraData"
+              />
+            </div>
+          </template>
           <template
             v-for="(mora, moraIndex) in accentPhrase.moras"
             :key="moraIndex"
@@ -145,9 +166,10 @@ import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import AudioDuration from "./AudioDuration.vue";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter },
+  components: { AudioAccent, AudioParameter, AudioDuration },
 
   name: "AudioDetail",
 
@@ -216,13 +238,15 @@ export default defineComponent({
     const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
-      pitch: number
+      data: number,
+      type: string
     ) => {
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: activeAudioKey.value!,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       });
     };
 

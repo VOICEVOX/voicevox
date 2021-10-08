@@ -1,61 +1,65 @@
 <template>
-  <div
-    @mouseenter="valueLabel.visible = true"
-    @mouseleave="valueLabel.visible = false"
-  >
-    <q-badge
-      class="value-label"
-      text-color="secondary"
-      v-if="!disable && (valueLabel.visible || valueLabel.panning)"
-    >
-      {{ previewValue.currentValue.value.toPrecision(3) }}
-    </q-badge>
+  <div v-if="consonantPreviewValue.currentValue.value !== undefined">
     <!-- consonant -->
     <q-slider
       vertical
       reverse
       snap
-      color="grey-7"
       :min="min"
       :max="max"
       :step="step"
-      :disable="disable || uiLocked"
+      :disable="uiLocked"
       style="clip-path: inset(-50% 50% -50% -50%)"
-      :model-value="previewValue.currentValue.value"
-      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
-      @change="changeValue(parseFloat($event))"
-      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
-      @pan="setPanning"
+      :model-value="consonantPreviewValue.currentValue.value"
+      @update:model-value="
+        consonantPreviewValue.setPreviewValue(parseFloat($event))
+      "
+      @change="changeValue(parseFloat($event), 'consonant')"
     />
     <!-- vowel -->
     <q-slider
       vertical
       reverse
       snap
-      color="grey-6"
       :min="min"
       :max="max"
       :step="step"
-      :disable="disable || uiLocked"
+      :disable="uiLocked"
       style="clip-path: inset(-50% -50% -50% 50%)"
-      :model-value="previewValue.currentValue.value"
-      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
-      @change="changeValue(parseFloat($event))"
-      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
-      @pan="setPanning"
+      :model-value="vowelPreviewValue.currentValue.value"
+      @update:model-value="
+        vowelPreviewValue.setPreviewValue(parseFloat($event))
+      "
+      @change="changeValue(parseFloat($event), 'vowel')"
+    />
+  </div>
+  <div v-else>
+    <q-slider
+      vertical
+      reverse
+      snap
+      :min="min"
+      :max="max"
+      :step="step"
+      :disable="uiLocked"
+      :model-value="vowelPreviewValue.currentValue.value"
+      @update:model-value="
+        vowelPreviewValue.setPreviewValue(parseFloat($event))
+      "
+      @change="changeValue(parseFloat($event), 'vowel')"
     />
   </div>
 </template>
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, reactive, onMounted, onUnmounted } from "vue";
+import { defineComponent, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
   name: "AudioDuration",
 
   props: {
-    consonant: { type: Number, required: true },
+    consonant: { type: Number, required: false },
     vowel: { type: Number, required: true },
     accentPhraseIndex: { type: Number, required: true },
     moraIndex: { type: Number, required: true },
@@ -63,7 +67,6 @@ export default defineComponent({
     min: { type: Number, default: 0.0 },
     max: { type: Number, default: 10.0 },
     step: { type: Number, default: 0.01 },
-    disable: { type: Boolean, default: false },
   },
   emits: ["changeValue"],
 
@@ -92,24 +95,19 @@ export default defineComponent({
     const consonantPreviewValue = new PreviewableValue(() => props.consonant);
     const vowelPreviewValue = new PreviewableValue(() => props.vowel);
 
-    const changeConsonant = (newValue: number) => {
+    const changeValue = (newValue: number, type: string) => {
       emit(
         "changeValue",
         props.accentPhraseIndex,
         props.moraIndex,
         newValue,
-        "consonant"
+        type
       );
     };
-
-    const changeVowel = (newValue: number) => {
-      emit(
-        "changeValue",
-        props.accentPhraseIndex,
-        props.moraIndex,
-        newValue,
-        "vowel"
-      );
+    return {
+      consonantPreviewValue,
+      vowelPreviewValue,
+      changeValue,
     };
   },
 });

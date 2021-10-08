@@ -276,16 +276,31 @@ export const audioStore: VoiceVoxStoreOptions<
         audioKey,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       }: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: string;
       }
     ) {
       const query = state.audioItems[audioKey].query!;
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+      switch (type) {
+        case "pitch":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
+          break;
+        case "consonant":
+          query.accentPhrases[accentPhraseIndex].moras[
+            moraIndex
+          ].consonantLength = data;
+          break;
+        case "vowel":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowelLength =
+            data;
+          break;
+      }
     },
   },
 
@@ -1043,7 +1058,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: string;
       }
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
@@ -1269,7 +1285,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: string;
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);
