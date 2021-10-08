@@ -1,0 +1,33 @@
+version: '3'
+services:
+  test:
+    build: . 
+    working_dir: /work
+    # If you don't have node_modules, use "npm ci", install node_modules into the yor directory. 
+    # Use command bellow
+    # `docker-compose up -d --build`
+    # The container will stop automatically after install
+    # If you have node_modules already, you comment out '# command: "npm ci"'
+
+    # command: "npm ci"
+
+
+    # After node_modules install, use command bellow to exec "/bin/sh" and the container will remain. 
+    # `docker-compose up -d`
+    # To access container, use command bellow
+    # `docker exec -it voicevox_test_1 /bin/bash`
+
+    # command: "/bin/sh"
+
+
+    # If you want test automatically (test runs when you save any files), use this command property and view logs
+    # Use Command bellow 
+    # `docker logs --tail 1000 -f voicevox_test_1`
+
+    command: "npm run test-watch:unit "
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/work:cache
+    tty: true
+    stdin_open: true

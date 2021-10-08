@@ -9,8 +9,8 @@ on:
       - created
 
 env:
-  VOICEVOX_ENGINE_REPO_URL: "https://github.com/aoirint/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.6.0-aoirint-1
+  VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
+  VOICEVOX_ENGINE_VERSION: check-2021-09-29
 
   # FIXME: implement build with production resources in Hiroshiba/voicevox
   # Temporarily, skip uploading to GitHub Release (use Artifact instead)
@@ -27,8 +27,12 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
+          - linux-noengine-prepackage
           - windows-noengine-prepackage
         include:
+          - artifact_name: linux-noengine-prepackage
+            artifact_path: dist_electron/linux-unpacked
+            os: ubuntu-18.04
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
             os: windows-2019
@@ -75,6 +79,18 @@ jobs:
         shell: bash
         run: npm ci
 
+      - name: Show disk space (debug info)
+        shell: bash
+        run: |
+          df -h
+
+      - name: Overwrite .env.production for Linux
+        if: startsWith(matrix.os, 'ubuntu-')
+        shell: bash
+        run: |
+          echo "ENGINE_PATH=./run" > .env.production
+          echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
+
       - name: Generate public/licenses.json
         shell: bash
         run: npm run license:generate -- -o public/licenses.json
@@ -112,9 +128,19 @@ jobs:
         #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
         os: [ubuntu-18.04]
         artifact_name:
+          - linux-cpu-prepackage
+          - linux-nvidia-prepackage
           - windows-cpu-prepackage
           - windows-nvidia-prepackage
         include:
+          - artifact_name: linux-cpu-prepackage
+            noengine_artifact_name: linux-noengine-prepackage
+            voicevox_engine_asset_name: linux-cpu
+            os: ubuntu-18.04
+          - artifact_name: linux-nvidia-prepackage
+            noengine_artifact_name: linux-noengine-prepackage
+            voicevox_engine_asset_name: linux-nvidia
+            os: ubuntu-18.04
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-cpu
@@ -170,8 +196,8 @@ jobs:
           mkdir -p voicevox_engine/download
 
       # NOTE: VOICEVOX ENGINE should not be cached since it has a size of several GB
-      # and actions/cache has a limit of 5GB per repository.
-      # https://github.com/actions/cache#cache-limits
+      #       and actions/cache has a limit of 5GB per repository.
+      #       https://github.com/actions/cache#cache-limits
       # - name: Dump VOICEVOX ENGINE repo URL to calc hash
       #   shell: bash
       #   run: |
@@ -239,6 +265,52 @@ jobs:
           path: |
             prepackage/
 
+      - name: Recover file permissions
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          chmod +x prepackage/voicevox
+          chmod +x prepackage/run
+
+      - name: Set BUILD_IDENTIFIER env var
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      # Create tar.gz for Linux
+      #
+      # Due to GitHub Actions limitation (https://github.com/actions/upload-artifact/issues/38),
+      # file permissions are lost in actions/upload-artifact.
+      # To distribute binaries (voicevox, run) with execute permission,
+      # we need to pack all the files in tarball (tar.gz) before uploading.
+      # https://github.com/actions/upload-artifact/blob/11e311c8b504ea40cbed20583a64d75b4735cff3/README.md#maintaining-file-permissions-and-case-sensitive-files
+      #
+      # voicevox-x.x.x.tar.gz
+      # - VOICEVOX/
+      #   - voicevox
+      #   - run
+      #
+      - name: Create Linux tar.gz
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          mv prepackage VOICEVOX
+          tar cf voicevox-${{ env.BUILD_IDENTIFIER }}.tar.gz VOICEVOX/
+
+      - name: Show disk space (debug info)
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        shell: bash
+        run: |
+          df -h
+
+      - name: Upload Linux tar.gz artifact
+        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-targz
+          path: voicevox-${{ env.BUILD_IDENTIFIER }}.tar.gz
+
 
   build-distributable:
     if: github.event.release.tag_name != '' # If release
@@ -252,9 +324,17 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
+          # - linux-cpu-appimage
+          - linux-nvidia-appimage
           # - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
+          # - artifact_name: linux-cpu-appimage
+          #   engine_artifact_name: linux-cpu-prepackage
+          #   os: ubuntu-18.04
+          - artifact_name: linux-nvidia-appimage
+            engine_artifact_name: linux-nvidia-prepackage
+            os: ubuntu-18.04
           # - artifact_name: windows-cpu-nsis-web
           #   engine_artifact_name: windows-cpu-prepackage
           #   os: windows-2019
@@ -271,6 +351,13 @@ jobs:
         with:
           name: ${{ matrix.engine_artifact_name }}
           path: ./prepackage
+
+      - name: Recover file permissions
+        if: endsWith(matrix.artifact_name, '-appimage') # linux
+        shell: bash
+        run: |
+          chmod +x prepackage/voicevox
+          chmod +x prepackage/run
 
       - name: Show disk space (debug info)
         shell: bash
@@ -330,6 +417,14 @@ jobs:
         run: |
           df -h
 
+      - name: Upload Linux AppImage artifact
+        if: endsWith(matrix.artifact_name, '-appimage')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist_electron/*.AppImage
+
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
@@ -348,9 +443,13 @@ jobs:
       matrix:
         os: [ubuntu-18.04]
         artifact_name:
+          # - linux-cpu-appimage
+          - linux-nvidia-appimage
           # - windows-cpu-nsis-web
           - windows-nvidia-nsis-web
         include:
+          # - artifact_name: linux-cpu-appimage
+          - artifact_name: linux-nvidia-appimage
           # - artifact_name: windows-cpu-nsis-web
           - artifact_name: windows-nvidia-nsis-web
 
@@ -368,6 +467,59 @@ jobs:
         shell: bash
         run: |
           df -h
+
+      # Linux AppImage
+      - name: Install dependencies for Linux AppImage Upload
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Split AppImage artifact
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          cd artifact/
+
+          for appImageFile in *.AppImage; do
+            echo "Splitting ${appImageFile}"
+
+            # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
+            7z -v1g a "${appImageFile}.7z" "${appImageFile}"
+
+            # Output splitted archive name<TAB>size<TAB>hash list to myartifact.7z.txt
+            ls ${appImageFile}.7z.* > archives_name.txt
+            stat --printf="%s\n" *.7z.* > archives_size.txt
+            md5sum *.7z.* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
+
+            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
+
+            mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
+          done
+
+      - name: Show disk space (debug info)
+        if: endsWith(matrix.artifact_name, '-appimage')
+        shell: bash
+        run: |
+          df -h
+
+      - name: Upload Linux AppImage Release artifact
+        if: env.SKIP_UPLOADING_RELEASE_ASSET == '1' && endsWith(matrix.artifact_name, '-appimage')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-release
+          path: |
+            artifact/*.7z.*
+
+      - name: Upload Linux AppImage splitted archives to Release assets
+        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-appimage')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.7z.*
 
       # Windows NSIS Web
       # FIXME: rename archives and installer before upload to separate cpu, gpu distribution

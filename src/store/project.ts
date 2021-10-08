@@ -9,6 +9,7 @@ import {
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
+import { getBaseTransformPreset } from "@vue/compiler-core";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -23,11 +24,20 @@ export const projectStore: VoiceVoxStoreOptions<
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
     },
+    IS_EDITED(state, getters) {
+      return (
+        getters.LAST_COMMAND_UNIX_MILLISEC !==
+        state.savedLastCommandUnixMillisec
+      );
+    },
   },
 
   mutations: {
     SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
+    },
+    SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
+      state.savedLastCommandUnixMillisec = unixMillisec;
     },
   },
 
@@ -36,11 +46,12 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { confirm }: { confirm?: boolean }) => {
         if (
           confirm !== false &&
+          context.getters.IS_EDITED &&
           !(await window.electron.showConfirmDialog({
             title: "警告",
             message:
-              "保存されていないプロジェクトの変更は破棄されます。\n" +
-              "よろしいですか？",
+              "プロジェクトの変更が保存されていません。\n" +
+              "変更を破棄してもよろしいですか？",
           }))
         ) {
           return;
@@ -54,6 +65,8 @@ export const projectStore: VoiceVoxStoreOptions<
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        context.commit("CLEAR_COMMANDS");
       }
     ),
     LOAD_PROJECT_FILE: createUILockAction(
@@ -183,11 +196,12 @@ export const projectStore: VoiceVoxStoreOptions<
 
           if (
             confirm !== false &&
+            context.getters.IS_EDITED &&
             !(await window.electron.showConfirmDialog({
               title: "警告",
               message:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-                "よろしいですか？",
+                "変更を破棄してもよろしいですか？",
             }))
           ) {
             return;
@@ -205,6 +219,8 @@ export const projectStore: VoiceVoxStoreOptions<
             });
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
+          context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+          context.commit("CLEAR_COMMANDS");
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -248,6 +264,10 @@ export const projectStore: VoiceVoxStoreOptions<
         if (!context.state.projectFilePath) {
           context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
+        context.commit(
+          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+          context.getters.LAST_COMMAND_UNIX_MILLISEC
+        );
         return;
       }
     ),
