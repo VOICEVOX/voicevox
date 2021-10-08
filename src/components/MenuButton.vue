@@ -14,6 +14,7 @@
     text-color="secondary"
     class="full-height cursor-pointer no-border-radius"
     :class="selected ? 'active-menu' : 'bg-transparent'"
+    @click="menudata.type === 'button' && btnOnClick()"
   >
     {{ menudata.label }}
     <q-menu
@@ -101,6 +102,16 @@ export default defineComponent({
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,
+      };
+    } else if (props.menudata.type === "button") {
+      const btnOnClick = () => {
+        if (props.menudata.type !== "button") return;
+
+        props.menudata.onClick();
+      };
+
+      return {
+        btnOnClick,
       };
     }
   },
