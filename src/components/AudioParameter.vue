@@ -14,10 +14,28 @@
       vertical
       reverse
       snap
+      color="grey-7"
       :min="min"
       :max="max"
       :step="step"
       :disable="disable || uiLocked"
+      style="clip-path: inset(-50% 50% -50% -50%)"
+      :model-value="previewValue.currentValue.value"
+      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
+      @change="changeValue(parseFloat($event))"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
+      @pan="setPanning"
+    />
+    <q-slider
+      vertical
+      reverse
+      snap
+      color="grey-6"
+      :min="min"
+      :max="max"
+      :step="step"
+      :disable="disable || uiLocked"
+      style="clip-path: inset(-50% -50% -50% 50%)"
       :model-value="previewValue.currentValue.value"
       @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
       @change="changeValue(parseFloat($event))"
