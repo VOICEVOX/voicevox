@@ -1125,11 +1125,15 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             await window.electron.readFile({ filePath })
           );
         }
-        const audioItems: AudioItem[] = await Promise.all(
-          parseTextFile(body, state.characterInfos).map(({ text, speaker }) =>
-            dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
-          )
-        );
+        const audioItems: AudioItem[] = [];
+        for (const { text, speaker } of parseTextFile(
+          body,
+          state.characterInfos
+        )) {
+          audioItems.push(
+            await dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
+          );
+        }
         const audioKeys: string[] = audioItems.map(() => uuidv4());
         const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
           audioItem,
@@ -1155,24 +1159,18 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
-          await Promise.all(
-            texts
-              .filter((text) => text != "")
-              .map(async (text) => {
-                const audioKey: string = uuidv4();
-                const audioItem: AudioItem = await dispatch(
-                  "GENERATE_AUDIO_ITEM",
-                  {
-                    text,
-                    speaker,
-                  }
-                );
-                return {
-                  audioKey,
-                  audioItem,
-                };
-              })
-          );
+          [];
+        for (const text of texts.filter((value) => value != "")) {
+          const audioKey: string = uuidv4();
+          const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+            text,
+            speaker,
+          });
+          audioKeyItemPairs.push({
+            audioKey,
+            audioItem,
+          });
+        }
         const audioKeys = audioKeyItemPairs.map((value) => value.audioKey);
         commit("COMMAND_PUT_TEXTS", {
           prevAudioKey,
