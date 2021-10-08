@@ -6,40 +6,36 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
-            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+          <q-tabs
+            vertical
+            dense
+            class="text-secondary"
+            v-model="selectedDetail"
+          >
+            <q-tab icon="timeline" name="accent">
+              <q-tooltip
+                anchor="center right"
+                self="center left"
+                transition-show="none"
+                transition-hide="none"
+              >
+                アクセント
+              </q-tooltip>
+            </q-tab>
+            <q-tab icon="piano" name="intonation">
+              <q-tooltip
+                anchor="center right"
+                self="center left"
+                transition-show="none"
+                transition-hide="none"
+              >
+                イントネーション
+              </q-tooltip>
+            </q-tab>
           </q-tabs>
         </div>
-        <div class="play-button-wrapper">
-          <template v-if="!nowPlayingContinuously">
-            <q-btn
-              v-if="!nowPlaying && !nowGenerating"
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="play_arrow"
-              @click="play"
-            ></q-btn>
-            <q-btn
-              v-else
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="stop"
-              @click="stop"
-            ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
-            ></q-btn>
-          </template>
-        </div>
       </div>
+
       <div class="overflow-hidden-y accent-phrase-table">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
@@ -146,6 +142,20 @@
           </template>
         </div>
       </div>
+      <div class="side">
+        <div class="detail-selector">
+          <q-tabs
+            vertical
+            dense
+            class="text-secondary"
+            :model-value="selectedDetail"
+            @update:model-value="tabAction"
+          >
+            <q-tab icon="play_arrow" name="play" :disable="uiLocked" />
+            <q-tab icon="download" name="save" :disable="uiLocked" />
+          </q-tabs>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -186,7 +196,7 @@ export default defineComponent({
     });
 
     // detail selector
-    type DetailTypes = "accent" | "intonation";
+    type DetailTypes = "accent" | "intonation" | "play" | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "intonation";
@@ -237,6 +247,17 @@ export default defineComponent({
         moraIndex,
         pitch,
       });
+    };
+
+    const tabAction = (actionType: DetailTypes) => {
+      switch (actionType) {
+        case "play":
+          play();
+          break;
+        case "save":
+          save();
+          break;
+      }
     };
 
     // audio play
@@ -388,6 +409,7 @@ export default defineComponent({
       handleChangePronounce,
       handleHoverText,
       getHoveredClass,
+      tabAction,
     };
   },
 });
