@@ -6,32 +6,9 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs
-            vertical
-            dense
-            class="text-secondary"
-            v-model="selectedDetail"
-          >
-            <q-tab icon="timeline" name="accent">
-              <q-tooltip
-                anchor="center right"
-                self="center left"
-                transition-show="none"
-                transition-hide="none"
-              >
-                アクセント
-              </q-tooltip>
-            </q-tab>
-            <q-tab icon="piano" name="intonation">
-              <q-tooltip
-                anchor="center right"
-                self="center left"
-                transition-show="none"
-                transition-hide="none"
-              >
-                イントネーション
-              </q-tooltip>
-            </q-tab>
+          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
+            <q-tab name="accent" label="ｱｸｾﾝﾄ" />
+            <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
           </q-tabs>
         </div>
       </div>
@@ -146,7 +123,6 @@
         <div class="detail-selector">
           <q-tabs
             vertical
-            dense
             class="text-secondary"
             :model-value="selectedDetail"
             @update:model-value="tabAction"
