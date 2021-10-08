@@ -352,11 +352,14 @@ export const audioStore: VoiceVoxStoreOptions<
             speaker,
           }).catch(() => undefined)
         : undefined;
+
       const audioItem: AudioItem = {
         text,
         speaker,
-        query,
       };
+      if (query != undefined) {
+        audioItem.query = query;
+      }
       return audioItem;
     },
     REGISTER_AUDIO_ITEM(
