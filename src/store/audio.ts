@@ -95,6 +95,9 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ACTIVE: (state) => (audioKey: string) => {
       return state._activeAudioKey === audioKey;
     },
+    IS_ENGINE_READY: (state) => {
+      return state.engineState === "READY";
+    },
   },
 
   mutations: {
@@ -337,6 +340,28 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       draft.audioKeys.splice(0, draft.audioKeys.length);
     }),
+    async GENERATE_AUDIO_ITEM(
+      { getters, dispatch },
+      payload: { text?: string; speaker?: number }
+    ) {
+      const text = payload.text ?? "";
+      const speaker = payload.speaker ?? 0;
+      const query = getters.IS_ENGINE_READY
+        ? await dispatch("FETCH_AUDIO_QUERY", {
+            text,
+            speaker,
+          }).catch(() => undefined)
+        : undefined;
+
+      const audioItem: AudioItem = {
+        text,
+        speaker,
+      };
+      if (query != undefined) {
+        audioItem.query = query;
+      }
+      return audioItem;
+    },
     REGISTER_AUDIO_ITEM(
       { commit },
       {
@@ -1085,7 +1110,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
-      async ({ state, commit }, { filePath }: { filePath?: string }) => {
+      async (
+        { state, commit, dispatch },
+        { filePath }: { filePath?: string }
+      ) => {
         if (!filePath) {
           filePath = await window.electron.showImportFileDialog({
             title: "セリフ読み込み",
@@ -1100,10 +1128,15 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             await window.electron.readFile({ filePath })
           );
         }
-        const audioItems: AudioItem[] = parseTextFile(
+        const audioItems: AudioItem[] = [];
+        for (const { text, speaker } of parseTextFile(
           body,
           state.characterInfos
-        );
+        )) {
+          audioItems.push(
+            await dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
+          );
+        }
         const audioKeys: string[] = audioItems.map(() => uuidv4());
         const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
           audioItem,
@@ -1117,7 +1150,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ),
     COMMAND_PUT_TEXTS: createUILockAction(
       async (
-        { commit },
+        { commit, dispatch },
         {
           prevAudioKey,
           texts,
@@ -1129,19 +1162,18 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
-          texts
-            .filter((text) => text != "")
-            .map((text) => {
-              const audioKey: string = uuidv4();
-              const audioItem: AudioItem = {
-                text,
-                speaker,
-              };
-              return {
-                audioKey,
-                audioItem,
-              };
-            });
+          [];
+        for (const text of texts.filter((value) => value != "")) {
+          const audioKey: string = uuidv4();
+          const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+            text,
+            speaker,
+          });
+          audioKeyItemPairs.push({
+            audioKey,
+            audioItem,
+          });
+        }
         const audioKeys = audioKeyItemPairs.map((value) => value.audioKey);
         commit("COMMAND_PUT_TEXTS", {
           prevAudioKey,
