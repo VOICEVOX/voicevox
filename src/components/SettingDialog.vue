@@ -22,7 +22,7 @@
             />
           </q-toolbar>
         </q-header>
-        <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+        <q-page ref="scroller" class="scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
@@ -189,7 +189,7 @@
                   :columns="hotkeyColumns"
                   row-key="hotkeyIndexes"
                   v-model:pagination="hotkeyPagination"
-                  class="setting-card bg-grey-3"
+                  class="hotkey-table bg-grey-3"
                 >
                   <template v-slot:body="props">
                     <q-tr :props="props">
@@ -573,8 +573,13 @@ export default defineComponent({
 @use '@/styles' as global;
 @import "~quasar/src/css/variables";
 
-.setting-card {
+.hotkey-table {
   width: 100%;
+}
+
+.setting-card {
+  @extend .hotkey-table;
+  min-width: 475px;
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {
@@ -589,12 +594,11 @@ export default defineComponent({
 
 .root {
   .scroller {
-    width: 100%;
-    overflow: auto;
-    position: relative;
+    overflow-y: scroll;
     > div {
       position: absolute;
-      inset: 0;
+      left: 0;
+      right: 0;
     }
   }
 }
