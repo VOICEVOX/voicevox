@@ -20,14 +20,20 @@
     <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
       <div class="q-pa-md">
         <q-list v-if="detailIndex === undefined">
-          <q-item
+          <!-- TODO: スタイルとキャラクターが一対一対応してしまって同じキャラクターのライセンスが表示されてしまう -->
+          <!-- というのを防ぐために、スタイル数の4ごとにライセンスを表示する。 -->
+          <template
             v-for="(characterInfo, index) in characterInfos"
             :key="index"
-            clickable
-            @click="selectCharacterInfIndex(index)"
           >
-            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
-          </q-item>
+            <q-item
+              v-if="index % 4 == 0"
+              clickable
+              @click="selectCharacterInfIndex(index)"
+            >
+              <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
+            </q-item>
+          </template>
         </q-list>
         <div
           v-else
