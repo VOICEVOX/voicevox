@@ -338,11 +338,11 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     },
     async GENERATE_AUDIO_ITEM(
-      { getters, dispatch },
+      { state, getters, dispatch },
       payload: { text?: string; speaker?: number }
     ) {
       const text = payload.text ?? "";
-      const speaker = payload.speaker ?? 0;
+      const speaker = payload.speaker ?? state.characterInfos![0].metas.speaker;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
