@@ -520,7 +520,9 @@ jobs:
           - windows-cpu-nsis-web
         include:
           - artifact_name: linux-nvidia-appimage
+            appimage_7z_name: VOICEVOX.AppImage
           - artifact_name: linux-cpu-appimage
+            appimage_7z_name: VOICEVOX-CPU.AppImage
           - artifact_name: windows-nvidia-nsis-web
           - artifact_name: windows-cpu-nsis-web
 
@@ -557,12 +559,12 @@ jobs:
             echo "Splitting ${appImageFile}"
 
             # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
-            7z -v1g a "${appImageFile}.7z" "${appImageFile}"
+            7z -v1g a "${{ matrix.appimage_7z_name }}.7z" "${appImageFile}"
 
             # Output splitted archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls "${appImageFile}.7z".* > archives_name.txt
-            stat --printf="%s\n" "${appImageFile}.7z".* > archives_size.txt
-            md5sum "${appImageFile}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
+            ls "${{ matrix.appimage_7z_name }}.7z".* > archives_name.txt
+            stat --printf="%s\n" "${{ matrix.appimage_7z_name }}.7z".* > archives_size.txt
+            md5sum "${{ matrix.appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
 
             paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
 
