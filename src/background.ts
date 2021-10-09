@@ -15,7 +15,7 @@ import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting, Encoding } from "./type/preload";
+import { CharacterInfo, SavingSetting } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";

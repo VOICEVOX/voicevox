@@ -62,8 +62,10 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  const character = state.characterInfos![audioItem.speaker!];
-  const characterName = character.metas.name.replace(sanitizer, "");
+  const character = state.characterInfos?.find(
+    (info) => info.metas.speaker == audioItem.speaker!
+  );
+  const characterName = character!.metas.name.replace(sanitizer, "");
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
@@ -496,7 +498,7 @@ export const audioStore: VoiceVoxStoreOptions<
         return api
           .synthesisSynthesisPost({
             audioQuery: audioItem.query!,
-            speaker: state.characterInfos![audioItem.speaker!].metas.speaker,
+            speaker: audioItem.speaker!,
           })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
