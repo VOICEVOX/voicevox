@@ -196,20 +196,26 @@
                       <q-td key="action" :props="props" no-hover>
                         {{ props.row.action }}
                       </q-td>
-                      <q-td
-                        no-hover
-                        key="combination"
-                        :props="props"
-                        @dblclick="
-                          openHotkeyDialog(
-                            props.row.action,
-                            props.row.combination
-                          )
-                        "
-                      >
-                        {{
-                          getHotkeyText(props.row.action, props.row.combination)
-                        }}
+                      <q-td no-hover key="combination" :props="props">
+                        <q-btn
+                          dense
+                          color="secondary"
+                          padding="none sm"
+                          flat
+                          no-caps
+                          :label="
+                            getHotkeyText(
+                              props.row.action,
+                              props.row.combination
+                            )
+                          "
+                          @click="
+                            openHotkeyDialog(
+                              props.row.action,
+                              props.row.combination
+                            )
+                          "
+                        />
                       </q-td>
                     </q-tr>
                   </template>

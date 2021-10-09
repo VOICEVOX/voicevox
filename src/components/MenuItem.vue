@@ -40,9 +40,9 @@
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
-    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">{{
-      getMenuBarHotkey(menudata.label)
-    }}</q-item-section>
+    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+      {{ getMenuBarHotkey(menudata.label) }}
+    </q-item-section>
   </q-item>
 </template>
 
