@@ -9,7 +9,7 @@ const VOICEVOX_ENGINE_DIR =
 // ${productName} Web Setup ${version}.${ext}
 const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
 
-// ${productName}-${version}.AppImage
+// ${productName}-${version}.${ext}
 const LINUX_ARTIFACT_NAME = process.env.LINUX_ARTIFACT_NAME;
 
 // ${packageName}
