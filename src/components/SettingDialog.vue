@@ -157,6 +157,28 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>ラブファイルを生成</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リプシンク用のlabファイルを生成します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
           </div>
         </q-page>
