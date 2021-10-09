@@ -39,7 +39,6 @@
               <audio-parameter
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
-                :accentPhrase="accentPhrase"
                 :value="mora.pitch"
                 :uiLocked="uiLocked"
                 :min="3"
@@ -61,7 +60,6 @@
               <audio-duration
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
-                :accentPhrase="accentPhrase"
                 :consonant="mora.consonantLength"
                 :vowel="mora.vowelLength"
                 :uiLocked="uiLocked"
