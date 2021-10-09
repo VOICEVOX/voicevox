@@ -498,14 +498,21 @@ jobs:
           path: |
             dist_electron/*.AppImage
 
+      - name: Create Windows NSIS Web artifact directory
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        shell: bash
+        run: |
+          mkdir -p nsis-web-artifact
+          mv dist_electron/nsis-web/out/*.7z.* nsis-web-artifact/
+          mv dist_electron/nsis-web/*.exe nsis-web-artifact/
+
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            dist_electron/nsis-web/out/*.7z.*
-            dist_electron/nsis-web/*.exe
+            nsis-web-artifact/*
 
 
   upload-distributable-to-release:
