@@ -12,6 +12,7 @@ const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
 // ${productName}-${version}.AppImage
 const LINUX_ARTIFACT_NAME = process.env.LINUX_ARTIFACT_NAME;
 
+// ${packageName}
 const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 
 module.exports = {
