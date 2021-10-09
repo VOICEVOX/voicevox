@@ -36,6 +36,7 @@ describe("store/vuex.js test", () => {
           fixedExportEnabled: false,
           fixedExportDir: "",
           avoidOverwrite: false,
+          exportLab: false,
         },
         isPinned: false,
       },
@@ -97,6 +98,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportEnabled", false);
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
+    assert.propertyVal(store.state.savingSetting, "exportLab", false);
     assert.equal(store.state.isPinned, false);
   });
 });

@@ -229,12 +229,12 @@ rm -f "list.txt"
 # Extract desktop entry
 echo "Extacting desktop entry"
 
-APPIMAGE=$(echo "${FIRST_ARCHIVE}" | sed 's/\(.*.AppImage\).*/\1/')
+APPIMAGE=$(7z l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
 chmod +x "${APPIMAGE}"
 
-./${APPIMAGE} --appimage-extract '*.desktop'
-./${APPIMAGE} --appimage-extract 'usr/share/icons/**'
-./${APPIMAGE} --appimage-extract '*.png' # symbolic link to icon
+"./${APPIMAGE}" --appimage-extract '*.desktop'
+"./${APPIMAGE}" --appimage-extract 'usr/share/icons/**'
+"./${APPIMAGE}" --appimage-extract '*.png' # symbolic link to icon
 
 # Install desktop entry
 echo "Installing desktop entry"

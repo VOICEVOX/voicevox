@@ -7,11 +7,7 @@ import {
 } from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
-import {
-  createCommandMutationTree,
-  PayloadRecipeTree,
-  OldCommand,
-} from "./command";
+import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
   Encoding as EncodingType,
@@ -347,7 +343,6 @@ export type CommandGetters = {
 };
 
 export type CommandMutations = {
-  OLD_PUSH_COMMAND: { command: OldCommand<State> };
   UNDO: undefined;
   REDO: undefined;
   CLEAR_COMMANDS: undefined;
