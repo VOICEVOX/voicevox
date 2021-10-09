@@ -521,10 +521,6 @@ export const audioStore: VoiceVoxStoreOptions<
           encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
-        const blobPromise = dispatch("GENERATE_AUDIO", {
-          audioKey,
-        });
-
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
@@ -550,7 +546,9 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
-        const blob = await blobPromise;
+        const blob = await dispatch("GENERATE_AUDIO", {
+          audioKey,
+        });
         if (!blob) {
           return { result: "ENGINE_ERROR", path: filePath };
         }
