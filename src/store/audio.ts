@@ -1,6 +1,5 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
-import { oldCreateCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
@@ -333,13 +332,11 @@ export const audioStore: VoiceVoxStoreOptions<
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
-    REMOVE_ALL_AUDIO_ITEM: oldCreateCommandAction((draft) => {
-      for (const audioKey of draft.audioKeys) {
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
+    REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
+      for (const audioKey of [...state.audioKeys]) {
+        commit("REMOVE_AUDIO_ITEM", { audioKey });
       }
-      draft.audioKeys.splice(0, draft.audioKeys.length);
-    }),
+    },
     async GENERATE_AUDIO_ITEM(
       { getters, dispatch },
       payload: { text?: string; speaker?: number }
