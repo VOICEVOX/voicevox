@@ -14,6 +14,7 @@
     text-color="secondary"
     class="full-height cursor-pointer no-border-radius"
     :class="selected ? 'active-menu' : 'bg-transparent'"
+    @click="menudata.type === 'button' && menudata.onClick()"
   >
     {{ menudata.label }}
     <q-menu

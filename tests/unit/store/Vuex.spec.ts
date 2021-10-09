@@ -30,6 +30,7 @@ describe("store/vuex.js test", () => {
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isMaximized: false,
+        savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
           fixedExportEnabled: false,

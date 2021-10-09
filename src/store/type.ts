@@ -38,6 +38,7 @@ export type State = {
   isSettingDialogOpen: boolean;
   isMaximized: boolean;
   projectFilePath?: string;
+  savedLastCommandUnixMillisec: number | null;
   savingSetting: SavingSetting;
   isPinned: boolean;
 };
@@ -54,6 +55,7 @@ export type AudioState = {
 };
 
 export type Command = {
+  unixMillisec: number;
   undoOperations: Operation[];
   redoOperations: Operation[];
 };
@@ -74,6 +76,7 @@ export type AudioGetters = {
   ACTIVE_AUDIO_KEY: string | undefined;
   HAVE_AUDIO_QUERY: (audioKey: string) => boolean;
   IS_ACTIVE: (audioKey: string) => boolean;
+  IS_ENGINE_READY: boolean;
 };
 
 export type AudioMutations = {
@@ -126,6 +129,10 @@ export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
+  GENERATE_AUDIO_ITEM(payload: {
+    text?: string;
+    speaker?: number;
+  }): Promise<AudioItem>;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey?: string;
@@ -336,6 +343,7 @@ export type AudioCommandMutations = {
 export type CommandGetters = {
   CAN_UNDO: boolean;
   CAN_REDO: boolean;
+  LAST_COMMAND_UNIX_MILLISEC: number | null;
 };
 
 export type CommandMutations = {
@@ -378,10 +386,12 @@ export type IndexActions = {
 
 export type ProjectGetters = {
   PROJECT_NAME: string | undefined;
+  IS_EDITED: boolean;
 };
 
 export type ProjectMutations = {
   SET_PROJECT_FILEPATH: { filePath?: string };
+  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: number | null;
 };
 
 export type ProjectActions = {
