@@ -99,7 +99,7 @@ export const setHotkeyFunctions = (
 };
 
 const hotkey2Combo = (hotkeyCombo: string) => {
-  return hotkeyCombo.toLowerCase().replace(" ", "+");
+  return hotkeyCombo.toLowerCase().replaceAll(" ", "+");
 };
 
 export const parseCombo = (event: KeyboardEvent): string => {
