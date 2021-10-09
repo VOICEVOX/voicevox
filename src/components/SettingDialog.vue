@@ -158,7 +158,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>ラブファイルを生成</div>
+                <div>labファイルを生成</div>
                 <q-space />
                 <q-toggle
                   name="enabled"
