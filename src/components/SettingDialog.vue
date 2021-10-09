@@ -268,7 +268,7 @@
                 closeHotkeyDialog();
               })
             "
-            :disabled="lastRecord == ''"
+            :disabled="confirmBtnEnabled"
           />
         </q-card-actions>
       </q-card>
@@ -550,6 +550,15 @@ export default defineComponent({
       }
     };
 
+    const confirmBtnEnabled = computed(() => {
+      return (
+        lastRecord.value == "" ||
+        ["Ctrl", "Shift", "Alt"].indexOf(
+          lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
+        ) > -1
+      );
+    });
+
     return {
       settingDialogOpenedComputed,
       isHotkeyDialogOpened,
@@ -575,6 +584,7 @@ export default defineComponent({
       lastDuplicated,
       solveDuplicated,
       changeHotkeySettings,
+      confirmBtnEnabled,
     };
   },
 });

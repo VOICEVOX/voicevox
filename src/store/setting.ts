@@ -121,7 +121,12 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    recordedCombo += event.key.length > 1 ? event.key : event.key.toUpperCase();
+    if (["Control", "Shift", "Alt"].indexOf(event.key) == -1) {
+      recordedCombo +=
+        event.key.length > 1 ? event.key : event.key.toUpperCase();
+    } else {
+      recordedCombo = recordedCombo.slice(0, -1);
+    }
   }
   return recordedCombo;
 };
