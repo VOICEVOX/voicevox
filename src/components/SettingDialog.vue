@@ -8,21 +8,21 @@
     v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
-      <q-header class="q-pa-sm">
-        <q-toolbar>
-          <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
-          <q-space />
-          <!-- close button -->
-          <q-btn
-            round
-            flat
-            icon="close"
-            @click="settingDialogOpenedComputed = false"
-          />
-        </q-toolbar>
-      </q-header>
-      <q-page-container>
-        <q-page ref="scroller" class="relative-absolute-wrapper scroller">
+      <q-page-container class="root">
+        <q-header class="q-pa-sm">
+          <q-toolbar>
+            <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
+            <q-space />
+            <!-- close button -->
+            <q-btn
+              round
+              flat
+              icon="close"
+              @click="settingDialogOpenedComputed = false"
+            />
+          </q-toolbar>
+        </q-header>
+        <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
@@ -56,7 +56,6 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
-
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -576,5 +575,27 @@ export default defineComponent({
 
 .setting-card {
   width: 100%;
+}
+
+.setting-dialog .q-layout-container :deep(.absolute-full) {
+  right: 0 !important;
+  .scroll {
+    left: unset !important;
+    right: unset !important;
+    width: unset !important;
+    max-height: unset;
+  }
+}
+
+.root {
+  .scroller {
+    width: 100%;
+    overflow: auto;
+    position: relative;
+    > div {
+      position: absolute;
+      inset: 0;
+    }
+  }
 }
 </style>
