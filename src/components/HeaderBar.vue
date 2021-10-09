@@ -66,6 +66,32 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    if (useUndoRedo.value) {
+      const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+        // undo
+        [
+          "元に戻す",
+          () => {
+            if (!uiLocked.value && canUndo.value) {
+              undo();
+            }
+            return false;
+          },
+        ],
+        // redo
+        [
+          "やり直す",
+          () => {
+            if (!uiLocked.value && canRedo.value) {
+              redo();
+            }
+            return false;
+          },
+        ],
+      ]);
+      setHotkeyFunctions(undoRedoHotkeyMap);
+    }
+
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // play/stop continuously
       [
@@ -77,24 +103,6 @@ export default defineComponent({
             } else {
               playContinuously();
             }
-          }
-        },
-      ],
-      // undo
-      [
-        "元に戻す",
-        () => {
-          if (!uiLocked.value && canUndo.value) {
-            undo();
-          }
-        },
-      ],
-      // redo
-      [
-        "やり直す",
-        () => {
-          if (!uiLocked.value && canRedo.value) {
-            redo();
           }
         },
       ],

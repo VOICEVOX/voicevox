@@ -35,6 +35,11 @@ export const settingStore: VoiceVoxStoreOptions<
       state,
       { hotkeySettings }: { hotkeySettings: HotkeySetting[] }
     ) {
+      if (!state.useUndoRedo) {
+        hotkeySettings = hotkeySettings.filter(
+          (hotkey) => hotkey.action != "やり直す" && hotkey.action != "元に戻す"
+        );
+      }
       state.hotkeySettings = hotkeySettings;
     },
   },
