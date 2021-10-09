@@ -41,24 +41,6 @@
         @click="redo"
         >やり直す</q-btn
       >
-      <q-btn
-        id="setting_button"
-        unelevated
-        round
-        icon="settings"
-        class="q-mr-sm"
-        :disable="uiLocked"
-        @click="openSettingDialog"
-      />
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold"
-        :disable="uiLocked"
-        @click="openHelpDialog"
-        >ヘルプ</q-btn
-      >
     </q-toolbar>
   </q-header>
 </template>
@@ -106,12 +88,6 @@ export default defineComponent({
     const stopContinuously = () => {
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
-    const openHelpDialog = () => {
-      store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
-    };
-    const openSettingDialog = () => {
-      store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: true });
-    };
 
     return {
       useUndoRedo,
@@ -123,8 +99,6 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
-      openHelpDialog,
-      openSettingDialog,
     };
   },
 });
