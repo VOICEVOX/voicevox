@@ -127,7 +127,8 @@
             :model-value="selectedDetail"
             @update:model-value="tabAction"
           >
-            <q-tab icon="play_arrow" name="play" :disable="uiLocked" />
+            <q-tab v-if="nowPlaying" icon="stop" name="stop" />
+            <q-tab v-else icon="play_arrow" name="play" :disable="uiLocked" />
             <q-tab icon="download" name="save" :disable="uiLocked" />
           </q-tabs>
         </div>
@@ -172,7 +173,7 @@ export default defineComponent({
     });
 
     // detail selector
-    type DetailTypes = "accent" | "intonation" | "play" | "save";
+    type DetailTypes = "accent" | "intonation" | "play" | "stop" | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "intonation";
@@ -229,6 +230,9 @@ export default defineComponent({
       switch (actionType) {
         case "play":
           play();
+          break;
+        case "stop":
+          stop();
           break;
         case "save":
           save();
