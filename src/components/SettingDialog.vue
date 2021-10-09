@@ -236,7 +236,7 @@
       <q-card class="q-py-sm q-px-md">
         <q-card-actions align="center">
           <div class="text-h6">
-            Press desired key combination, then press ENTER
+            Press desired key combination, then click CONFIRM
           </div>
         </q-card-actions>
         <q-card-actions align="center">
@@ -247,13 +247,26 @@
         <q-card-actions align="center">
           <q-btn
             padding="xs md"
-            label="delete this hotkey"
+            label="Delete This Hotkey"
             unelevated
-            color="primary"
+            color="grey-3"
             text-color="black"
             @click="
               deleteHotkey();
               closeHotkeyDialog();
+            "
+            :disabled="lastRecord == ''"
+          />
+          <q-btn
+            padding="xs md"
+            label="Confirm"
+            unelevated
+            color="primary"
+            text-color="black"
+            @click="
+              changeHotkeySettings(lastAction, lastRecord, true)?.then(() => {
+                closeHotkeyDialog();
+              })
             "
             :disabled="lastRecord == ''"
           />
@@ -439,16 +452,7 @@ export default defineComponent({
         return;
       } else {
         let recordedCombo = parseCombo(event);
-        if (recordedCombo == "Enter") {
-          changeHotkeySettings(lastAction.value, lastRecord.value, true)?.then(
-            () => {
-              closeHotkeyDialog();
-            }
-          );
-          return;
-        } else {
-          lastRecord.value = recordedCombo;
-        }
+        lastRecord.value = recordedCombo;
         event.preventDefault();
       }
     };
@@ -570,6 +574,7 @@ export default defineComponent({
       lastRecord,
       lastDuplicated,
       solveDuplicated,
+      changeHotkeySettings,
     };
   },
 });
