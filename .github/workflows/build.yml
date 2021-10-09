@@ -306,7 +306,7 @@ jobs:
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
         run: |
-          chmod +x prepackage/${{ matrix.package_name }}
+          chmod +x prepackage/${{ matrix.linux_executable_name }}
           chmod +x prepackage/run
 
       - name: Set BUILD_IDENTIFIER env var
@@ -421,7 +421,7 @@ jobs:
         if: endsWith(matrix.artifact_name, '-appimage') # linux
         shell: bash
         run: |
-          chmod +x prepackage/${{ matrix.package_name }}
+          chmod +x prepackage/${{ matrix.linux_executable_name }}
           chmod +x prepackage/run
 
       - name: Show disk space (debug info)
