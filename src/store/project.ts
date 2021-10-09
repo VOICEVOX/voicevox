@@ -175,6 +175,23 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
+          if (appVersionList < [0, 7, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.characterIndex != null) {
+                if (audioItem.characterIndex == 0) {
+                  // 四国めたん 0 -> 四国めたん(ノーマル) 2
+                  audioItem.speaker = 2;
+                }
+                if (audioItem.characterIndex == 1) {
+                  // ずんだもん 1 -> ずんだもん(ノーマル) 3
+                  audioItem.speaker = 3;
+                }
+                delete audioItem.characterIndex;
+              }
+            }
+          }
+
           // Validation check
           const ajv = new Ajv();
           const validate = ajv.compile(projectSchema);
