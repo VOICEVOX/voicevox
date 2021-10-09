@@ -8,12 +8,18 @@
       :disable="uiLocked"
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
+      @mouseleave="
+        root.type === 'button' ? (subMenuOpenFlags[i] = false) : undefined
+      "
     />
     <q-space />
-    <div v-if="projectName !== undefined" class="window-title">
-      {{ projectName + " - VOICEVOX" }}
+    <div class="window-title">
+      {{
+        (isEdited ? "*" : "") +
+        (projectName !== undefined ? projectName + " - " : "") +
+        "VOICEVOX"
+      }}
     </div>
-    <div v-else class="window-title">VOICEVOX</div>
     <q-space />
     <title-bar-buttons />
   </q-bar>
@@ -71,6 +77,7 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
+    const isEdited = computed(() => store.getters.IS_EDITED);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -189,6 +196,22 @@ export default defineComponent({
           },
         ],
       },
+      {
+        type: "button",
+        label: "設定",
+        onClick: () => {
+          store.dispatch("IS_SETTING_DIALOG_OPEN", {
+            isSettingDialogOpen: true,
+          });
+        },
+      },
+      {
+        type: "button",
+        label: "ヘルプ",
+        onClick: () => {
+          store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
+        },
+      },
     ]);
 
     const subMenuOpenFlags = ref(
@@ -227,6 +250,7 @@ export default defineComponent({
     return {
       uiLocked,
       projectName,
+      isEdited,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,

@@ -73,6 +73,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,
     isMaximized: false,
+    savedLastCommandUnixMillisec: null,
     savingSetting: {
       fileEncoding: "UTF-8",
       fixedExportEnabled: false,

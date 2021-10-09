@@ -39,11 +39,10 @@
       hide-bottom-space
       class="full-width"
       :disable="uiLocked"
-      :error="audioItem.text.length >= 80"
-      :model-value="audioItem.text"
-      @update:model-value="changeAudioText"
-      debounce="500"
-      @keydown.prevent.enter.exact=""
+      :error="audioTextBuffer.length >= 80"
+      :model-value="audioTextBuffer"
+      @update:model-value="setAudioTextBuffer"
+      @change="willRemove || pushAudioText($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
@@ -69,7 +68,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from "vue";
+import { computed, watch, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { CharacterInfo } from "@/type/preload";
@@ -109,12 +108,32 @@ export default defineComponent({
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
-    const changeAudioText = async (text: string) => {
-      await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
-        audioKey: props.audioKey,
-        text,
-      });
+    const audioTextBuffer = ref(audioItem.value.text);
+    const isChangeFlag = ref(false);
+    const setAudioTextBuffer = (text: string) => {
+      audioTextBuffer.value = text;
+      isChangeFlag.value = true;
     };
+    watch(
+      // `audioItem` becomes undefined just before the component is unmounted.
+      () => audioItem.value?.text,
+      (newText) => {
+        if (!isChangeFlag.value && newText !== undefined) {
+          audioTextBuffer.value = newText;
+        }
+      }
+    );
+
+    const pushAudioText = async (text: string) => {
+      if (isChangeFlag.value) {
+        isChangeFlag.value = false;
+        await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
+          audioKey: props.audioKey,
+          text: audioTextBuffer.value,
+        });
+      }
+    };
+
     const changeSpeaker = (speaker: number) => {
       store.dispatch("COMMAND_CHANGE_SPEAKER", {
         audioKey: props.audioKey,
@@ -149,17 +168,20 @@ export default defineComponent({
           blurCell(); // フォーカスを外して編集中のテキスト内容を確定させる
 
           const prevAudioKey = props.audioKey;
-          if (audioItem.value.text == "") {
+          if (audioTextBuffer.value == "") {
             const text = texts.shift();
             if (text == undefined) return;
-            changeAudioText(text);
+            setAudioTextBuffer(text);
+            await pushAudioText(text);
           }
 
-          store.dispatch("PUT_TEXTS", {
+          const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            speaker: audioItem.value.speaker,
+            speaker: audioItem.value.speaker!,
             prevAudioKey,
           });
+          if (audioKeys)
+            emit("focusCell", { audioKey: audioKeys[audioKeys.length - 1] });
         }
       }
     };
@@ -269,7 +291,9 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
-      changeAudioText,
+      audioTextBuffer,
+      setAudioTextBuffer,
+      pushAudioText,
       changeSpeaker,
       setActiveAudioKey,
       save,
