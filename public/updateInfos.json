@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.7.1",
+    "descriptions": ["複数行ペーストでエラーが出る問題を修正"],
+    "contributors": ["Segu-g"]
+  },
+  {
     "version": "0.7.0",
     "descriptions": [
       "より直感的な読み修正",
