@@ -334,6 +334,11 @@ export const audioStore: VoiceVoxStoreOptions<
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
+    GENERATE_AUDIO_KEY() {
+      const audioKey = uuidv4();
+      audioElements[audioKey] = new Audio();
+      return audioKey;
+    },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
         commit("REMOVE_AUDIO_ITEM", { audioKey });
@@ -361,16 +366,15 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       return audioItem;
     },
-    REGISTER_AUDIO_ITEM(
-      { commit },
+    async REGISTER_AUDIO_ITEM(
+      { dispatch, commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: string }
     ) {
-      const audioKey = uuidv4();
+      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
     SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
@@ -799,8 +803,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 > = {
   getters: {},
   actions: {
-    COMMAND_REGISTER_AUDIO_ITEM(
-      { commit },
+    async COMMAND_REGISTER_AUDIO_ITEM(
+      { dispatch, commit },
       {
         audioItem,
         prevAudioKey,
@@ -809,13 +813,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         prevAudioKey: string | undefined;
       }
     ) {
-      const audioKey = uuidv4();
+      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
       commit("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         audioKey,
         prevAudioKey,
       });
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
@@ -1199,7 +1202,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             await dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
           );
         }
-        const audioKeys: string[] = audioItems.map(() => uuidv4());
+        const audioKeys: string[] = await Promise.all(
+          audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
+        );
         const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
           audioItem,
           audioKey: audioKeys[index],
@@ -1226,7 +1231,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
         for (const text of texts.filter((value) => value != "")) {
-          const audioKey: string = uuidv4();
+          const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
           const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
             text,
             speaker,
