@@ -11,7 +11,7 @@
           <p>ソフトウェアの使い方は以下をご参照ください。</p>
           <p>
             <a
-              href="https://docs.google.com/document/d/1y021q5BToBTErkTQXdMac9A7JzFyJXb4fB1e9_AHe9o/edit?usp=sharing"
+              href="https://docs.google.com/document/d/1JcuuhsR69GFUyg3xmym2DZ3FTMHVSjBvfxpgZvUjhm0/edit?usp=sharing"
               target="_blank"
               >使い方</a
             >

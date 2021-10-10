@@ -20,16 +20,16 @@
     <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
       <div class="q-pa-md">
         <q-list v-if="detailIndex === undefined">
-          <q-item
+          <template
             v-for="(characterInfo, index) in characterInfos"
             :key="index"
-            clickable
-            @click="selectCharacterInfIndex(index)"
           >
-            <q-item-section>{{
-              characterInfo.metas.speakerName
-            }}</q-item-section>
-          </q-item>
+            <q-item clickable @click="selectCharacterInfIndex(index)">
+              <q-item-section>{{
+                characterInfo.metas.speakerName
+              }}</q-item-section>
+            </q-item>
+          </template>
         </q-list>
         <div
           v-else

@@ -125,6 +125,7 @@ export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
+  GENERATE_AUDIO_KEY(): string;
   GENERATE_AUDIO_ITEM(payload: {
     text?: string;
     styleId?: number;
@@ -132,7 +133,7 @@ export type AudioActions = {
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey?: string;
-  }): string;
+  }): Promise<string>;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
   GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
@@ -186,7 +187,7 @@ export type AudioCommandActions = {
   COMMAND_REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey: string | undefined;
-  }): string;
+  }): Promise<string>;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
   COMMAND_CHANGE_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
   COMMAND_CHANGE_STYLE_ID(payload: { audioKey: string; styleId: number }): void;
