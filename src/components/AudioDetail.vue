@@ -7,37 +7,33 @@
       <div class="side">
         <div class="detail-selector">
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
-            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+            <q-tab label="アクセント" name="accent" />
+            <q-tab label="イントネーション" name="intonation" />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
-          <template v-if="!nowPlayingContinuously">
-            <q-btn
-              v-if="!nowPlaying && !nowGenerating"
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="play_arrow"
-              @click="play"
-            ></q-btn>
-            <q-btn
-              v-else
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="stop"
-              @click="stop"
-            ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
-            ></q-btn>
-          </template>
+          <q-btn
+            fab
+            color="primary"
+            text-color="secondary"
+            :icon="
+              nowPlaying || nowGenerating || nowPlayingContinuously
+                ? 'stop'
+                : 'play_arrow'
+            "
+            :disable="nowPlayingContinuously"
+            @click="nowPlaying || nowGenerating ? stop() : play()"
+          />
+          <q-btn
+            round
+            aria-label="音声ファイルとして保存"
+            size="small"
+            icon="file_download"
+            @click="save()"
+            :disable="
+              nowPlaying || nowGenerating || uiLocked || nowPlayingContinuously
+            "
+          />
         </div>
       </div>
       <div class="overflow-hidden-y accent-phrase-table">
@@ -410,10 +406,15 @@ $pitch-label-height: 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    .detail-selector .q-tab--active {
-      background-color: rgba(global.$primary, 0.3);
-      :deep(.q-tab__indicator) {
-        background-color: global.$primary;
+    .detail-selector {
+      .q-tab :deep(.q-tab__label) {
+        font-size: 0.7rem;
+      }
+      .q-tab--active {
+        background-color: rgba(global.$primary, 0.3);
+        :deep(.q-tab__indicator) {
+          background-color: global.$primary;
+        }
       }
     }
     .play-button-wrapper {
