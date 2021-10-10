@@ -75,6 +75,13 @@ const store = new Store<{
         fixedExportDir: { type: "string", default: "" },
         exportLab: { type: "boolean", default: false },
       },
+      default: {
+        fileEncoding: "UTF-8",
+        fixedExportEnabled: false,
+        avoidOverwrite: false,
+        fixedExportDir: "",
+        exportLab: false,
+      },
     },
   },
 });
