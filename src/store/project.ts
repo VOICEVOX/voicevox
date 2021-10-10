@@ -154,7 +154,7 @@ export const projectStore: VoiceVoxStoreOptions<
               await context
                 .dispatch("FETCH_MORA_DATA", {
                   accentPhrases: audioItem.query!.accentPhrases,
-                  speaker: audioItem.speaker!,
+                  speaker: audioItem.characterIndex!,
                 })
                 .then((accentPhrases: AccentPhrase[]) => {
                   accentPhrases.forEach((newAccentPhrase, i) => {
