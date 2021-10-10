@@ -9,7 +9,7 @@
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
-            <q-tab name="duration" label="話速" />
+            <q-tab name="duration" label="長さ" />
           </q-tabs>
         </div>
       </div>
@@ -57,7 +57,7 @@
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
             >
               <!-- div for input width -->
-              <audio-duration
+              <audio-length
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :consonant="mora.consonantLength"
@@ -176,10 +176,10 @@ import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import AudioDuration from "./AudioDuration.vue";
+import AudioLength from "./AudioLength.vue";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter, AudioDuration },
+  components: { AudioAccent, AudioParameter, AudioLength },
 
   name: "AudioDetail",
 

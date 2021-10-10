@@ -6,14 +6,14 @@
       text-color="secondary"
       v-if="valueLabel.consonant_visible || valueLabel.consonant_panning"
     >
-      {{ consonantPreviewValue.currentValue.value.toPrecision(2) }}
+      {{ consonantPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
     <q-badge
       class="value-label"
       text-color="secondary"
       v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
     >
-      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+      {{ vowelPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
     <!-- consonant -->
     <q-slider
@@ -91,7 +91,7 @@ import { PreviewableValue } from "@/helpers/previewableValue";
 import { defineComponent, onMounted, onUnmounted, reactive } from "vue";
 
 export default defineComponent({
-  name: "AudioDuration",
+  name: "toFixed",
 
   props: {
     consonant: { type: Number, required: false },
@@ -158,8 +158,10 @@ export default defineComponent({
         }
       }
       newValue = Math.round(newValue * 1e3) / 1e3;
+      newValue = newValue > 0 ? newValue : 0;
+      newValue = newValue < 0.3 ? newValue : 0.3;
       if (!props.uiLocked && !shiftKeyFlag && props.max >= newValue)
-        changeValue(newValue > 0 ? newValue : 0, type);
+        changeValue(newValue, type);
     };
 
     const valueLabel = reactive({
