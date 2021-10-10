@@ -144,12 +144,22 @@
         <div class="detail-selector">
           <q-tabs
             vertical
-            class="text-secondary"
             :model-value="selectedDetail"
             @update:model-value="tabAction"
           >
-            <q-tab v-if="nowPlaying" icon="stop" name="stop" />
-            <q-tab v-else icon="play_arrow" name="play" :disable="uiLocked" />
+            <q-tab
+              v-if="nowPlaying"
+              icon="stop"
+              class="bg-primary text-white"
+              name="stop"
+            />
+            <q-tab
+              v-else
+              icon="play_arrow"
+              class="bg-primary text-white"
+              name="play"
+              :disable="uiLocked"
+            />
             <q-tab icon="download" name="save" :disable="uiLocked" />
           </q-tabs>
         </div>
