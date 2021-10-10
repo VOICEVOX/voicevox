@@ -1,3 +1,3 @@
-dummy1 policy
+dummy5 policy
 
 https://voicevox.hiroshiba.jp/

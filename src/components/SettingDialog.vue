@@ -175,7 +175,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    リプシンク用のlabファイルを生成します
+                    リップシンク用のlabファイルを生成します
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>

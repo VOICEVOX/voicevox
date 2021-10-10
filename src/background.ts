@@ -60,26 +60,28 @@ const store = new Store<{
   schema: {
     useGpu: {
       type: "boolean",
+      default: false,
     },
     savingSetting: {
       type: "object",
       properties: {
-        fileEncoding: { type: "string" },
-        fixedExportEnabled: { type: "boolean" },
-        avoidOverwrite: { type: "boolean" },
-        fixedExportDir: { type: "string" },
-        exportLab: { type: "boolean" },
+        fileEncoding: {
+          type: "string",
+          enum: ["UTF-8", "Shift_JIS"],
+          default: "UTF-8",
+        },
+        fixedExportEnabled: { type: "boolean", default: false },
+        avoidOverwrite: { type: "boolean", default: false },
+        fixedExportDir: { type: "string", default: "" },
+        exportLab: { type: "boolean", default: false },
       },
-    },
-  },
-  defaults: {
-    useGpu: false,
-    savingSetting: {
-      fileEncoding: "UTF-8",
-      fixedExportEnabled: false,
-      avoidOverwrite: false,
-      fixedExportDir: "",
-      exportLab: false,
+      default: {
+        fileEncoding: "UTF-8",
+        fixedExportEnabled: false,
+        avoidOverwrite: false,
+        fixedExportDir: "",
+        exportLab: false,
+      },
     },
   },
 });
