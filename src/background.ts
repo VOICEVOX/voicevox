@@ -15,7 +15,7 @@ import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting } from "./type/preload";
+import { CharacterInfo, MetasJson, SavingSetting } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
@@ -150,24 +150,30 @@ if (!fs.existsSync(tempDir)) {
 
 // キャラクター情報の読み込み
 declare let __static: string;
-const characterInfos = fs
-  .readdirSync(path.join(__static, "characters"))
-  .map((dirRelPath): CharacterInfo => {
-    const dirPath = path.join(__static, "characters", dirRelPath);
-    return {
+const characterInfos: CharacterInfo[] = [];
+for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
+  const dirPath = path.join(__static, "characters", dirRelPath);
+  const iconPath = path.join(dirPath, "icon.png");
+  const portraitPath = path.join(dirPath, "portrait.png");
+  const policy = fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8");
+  const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
+    fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
+  );
+  for (const { styleName, styleId } of styles) {
+    characterInfos.push({
       dirPath,
-      iconPath: path.join(dirPath, "icon.png"),
-      portraitPath: path.join(dirPath, "portrait.png"),
+      iconPath,
+      portraitPath,
       metas: {
-        ...JSON.parse(
-          fs.readFileSync(path.join(dirPath, "metas.json"), {
-            encoding: "utf-8",
-          })
-        ),
-        policy: fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8"),
+        speakerName,
+        speakerUuid,
+        styleName,
+        styleId,
+        policy,
       },
-    };
-  });
+    });
+  }
+}
 
 // 利用規約テキストの読み込み
 const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");

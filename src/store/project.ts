@@ -9,7 +9,6 @@ import {
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
-import { getBaseTransformPreset } from "@vue/compiler-core";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -154,7 +153,7 @@ export const projectStore: VoiceVoxStoreOptions<
               await context
                 .dispatch("FETCH_MORA_DATA", {
                   accentPhrases: audioItem.query!.accentPhrases,
-                  speaker: audioItem.speaker!,
+                  styleId: audioItem.styleId!,
                 })
                 .then((accentPhrases: AccentPhrase[]) => {
                   accentPhrases.forEach((newAccentPhrase, i) => {
@@ -192,6 +191,16 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
+          if (appVersionList < [0, 8, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.speaker !== null) {
+                audioItem.styleId = audioItem.speaker;
+                delete audioItem.speaker;
+              }
+            }
+          }
+
           // Validation check
           const ajv = new Ajv();
           const validate = ajv.compile(projectSchema);
@@ -206,11 +215,11 @@ export const projectStore: VoiceVoxStoreOptions<
           }
           if (
             !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].speaker != undefined
+              (audioKey) => obj.audioItems[audioKey].styleId != undefined
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "speaker" attribute.'
+              'Every audioItem should have a "styleId" attribute.'
             );
           }
 
@@ -343,7 +352,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
-    speaker: { type: "int32" },
+    styleId: { type: "int32" },
     query: audioQuerySchema,
   },
 } as const;

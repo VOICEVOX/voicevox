@@ -211,12 +211,12 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let speaker: number | undefined = 0;
+      let styleId: number | undefined = 0;
       if (prevAudioKey !== undefined) {
-        speaker = store.state.audioItems[prevAudioKey].speaker;
+        styleId = store.state.audioItems[prevAudioKey].styleId;
       }
       const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-        speaker,
+        styleId,
       });
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,

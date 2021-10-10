@@ -25,7 +25,7 @@ const api = new DefaultApi(
 
 async function generateUniqueId(audioItem: AudioItem) {
   const data = new TextEncoder().encode(
-    JSON.stringify([audioItem.text, audioItem.query, audioItem.speaker])
+    JSON.stringify([audioItem.text, audioItem.query, audioItem.styleId])
   );
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
@@ -38,21 +38,21 @@ function parseTextFile(
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map(
-    characterInfos?.map((info) => [info.metas.name, info.metas.speaker])
+    characterInfos?.map((info) => [info.metas.speakerName, info.metas.styleId])
   );
   if (!characters.size) return [];
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastSpeaker = 0;
+  let lastStyleId = 0;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const speaker = characters.get(splittedText);
-    if (speaker !== undefined) {
-      lastSpeaker = speaker;
+    const styleId = characters.get(splittedText);
+    if (styleId !== undefined) {
+      lastStyleId = styleId;
       continue;
     }
 
-    audioItems.push({ text: splittedText, speaker: lastSpeaker });
+    audioItems.push({ text: splittedText, styleId: lastStyleId });
   }
   return audioItems;
 }
@@ -62,8 +62,10 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  const character = state.characterInfos![audioItem.speaker!];
-  const characterName = character.metas.name.replace(sanitizer, "");
+  const character = state.characterInfos?.find(
+    (info) => info.metas.styleId === audioItem.styleId!
+  );
+  const characterName = character!.metas.speakerName.replace(sanitizer, "");
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
@@ -239,11 +241,11 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       state.audioItems[audioKey].query = audioQuery;
     },
-    SET_AUDIO_SPEAKER(
+    SET_AUDIO_STYLE_ID(
       state,
-      { audioKey, speaker }: { audioKey: string; speaker: number }
+      { audioKey, styleId }: { audioKey: string; styleId: number }
     ) {
-      state.audioItems[audioKey].speaker = speaker;
+      state.audioItems[audioKey].styleId = styleId;
     },
     SET_ACCENT_PHRASES(
       state,
@@ -339,20 +341,20 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     async GENERATE_AUDIO_ITEM(
       { getters, dispatch },
-      payload: { text?: string; speaker?: number }
+      payload: { text?: string; styleId?: number }
     ) {
       const text = payload.text ?? "";
-      const speaker = payload.speaker ?? 0;
+      const styleId = payload.styleId ?? 0;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
-            speaker,
+            styleId,
           }).catch(() => undefined)
         : undefined;
 
       const audioItem: AudioItem = {
         text,
-        speaker,
+        styleId,
       };
       if (query != undefined) {
         audioItem.query = query;
@@ -391,17 +393,17 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { state },
+      _,
       {
         text,
-        speaker,
+        styleId,
         isKana,
-      }: { text: string; speaker: number; isKana?: boolean }
+      }: { text: string; styleId: number; isKana?: boolean }
     ) {
       return api
         .accentPhrasesAccentPhrasesPost({
           text,
-          speaker: speaker,
+          speaker: styleId,
           isKana,
         })
         .catch((error) => {
@@ -413,16 +415,16 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { state },
+      _,
       {
         accentPhrases,
-        speaker,
-      }: { accentPhrases: AccentPhrase[]; speaker: number }
+        styleId,
+      }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
       return api
         .moraDataMoraDataPost({
           accentPhrase: accentPhrases,
-          speaker: speaker,
+          speaker: styleId,
         })
         .catch((error) => {
           window.electron.logError(
@@ -438,11 +440,11 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch },
       {
         accentPhrases,
-        speaker,
+        styleId,
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
-        speaker: number;
+        styleId: number;
         copyIndexes: number[];
       }
     ) {
@@ -450,7 +452,7 @@ export const audioStore: VoiceVoxStoreOptions<
         "FETCH_MORA_DATA",
         {
           accentPhrases,
-          speaker,
+          styleId,
         }
       );
       for (const index of copyIndexes) {
@@ -458,14 +460,11 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       return accentPhrases;
     },
-    FETCH_AUDIO_QUERY(
-      { state },
-      { text, speaker }: { text: string; speaker: number }
-    ) {
+    FETCH_AUDIO_QUERY(_, { text, styleId }: { text: string; styleId: number }) {
       return api
         .audioQueryAudioQueryPost({
           text,
-          speaker: speaker,
+          speaker: styleId,
         })
         .catch((error) => {
           window.electron.logError(
@@ -483,7 +482,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       return dispatch("FETCH_AUDIO_QUERY", {
         text: audioItem.text,
-        speaker: audioItem.speaker!,
+        styleId: audioItem.styleId!,
       }).then((audioQuery) =>
         dispatch("SET_AUDIO_QUERY", { audioKey, audioQuery })
       );
@@ -496,7 +495,7 @@ export const audioStore: VoiceVoxStoreOptions<
         return api
           .synthesisSynthesisPost({
             audioQuery: audioItem.query!,
-            speaker: state.characterInfos![audioItem.speaker!].metas.speaker,
+            speaker: audioItem.styleId!,
           })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
@@ -658,7 +657,7 @@ export const audioStore: VoiceVoxStoreOptions<
           });
         }
         if (dirPath) {
-          const promises = state.audioKeys.map((audioKey, index) => {
+          const promises = state.audioKeys.map((audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
@@ -809,7 +808,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
     ) {
-      const speaker = state.audioItems[audioKey].speaker!;
+      const styleId = state.audioItems[audioKey].styleId!;
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
       try {
         if (query !== undefined) {
@@ -817,7 +816,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             "FETCH_ACCENT_PHRASES",
             {
               text,
-              speaker,
+              styleId,
             }
           );
           commit("COMMAND_CHANGE_AUDIO_TEXT", {
@@ -829,7 +828,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         } else {
           const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text,
-            speaker,
+            styleId,
           });
           commit("COMMAND_CHANGE_AUDIO_TEXT", {
             audioKey,
@@ -847,9 +846,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         throw error;
       }
     },
-    async COMMAND_CHANGE_SPEAKER(
+    async COMMAND_CHANGE_STYLE_ID(
       { state, dispatch, commit },
-      { audioKey, speaker }: { audioKey: string; speaker: number }
+      { audioKey, styleId }: { audioKey: string; styleId: number }
     ) {
       const query = state.audioItems[audioKey].query;
       try {
@@ -859,11 +858,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             "FETCH_MORA_DATA",
             {
               accentPhrases,
-              speaker,
+              styleId,
             }
           );
-          commit("COMMAND_CHANGE_SPEAKER", {
-            speaker: speaker,
+          commit("COMMAND_CHANGE_STYLE_ID", {
+            styleId,
             audioKey: audioKey,
             update: "AccentPhrases",
             accentPhrases: newAccentPhrases,
@@ -872,20 +871,20 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           const text = state.audioItems[audioKey].text;
           const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text: text,
-            speaker: speaker,
+            styleId,
           });
-          commit("COMMAND_CHANGE_SPEAKER", {
-            speaker,
+          commit("COMMAND_CHANGE_STYLE_ID", {
+            styleId,
             audioKey,
             update: "AudioQuery",
             query,
           });
         }
       } catch (error) {
-        commit("COMMAND_CHANGE_SPEAKER", {
-          speaker,
+        commit("COMMAND_CHANGE_STYLE_ID", {
+          styleId,
           audioKey,
-          update: "Speaker",
+          update: "StyleId",
         });
         throw error;
       }
@@ -910,12 +909,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         newAccentPhrases[accentPhraseIndex].accent = accent;
 
         try {
-          const speaker: number = state.audioItems[audioKey].speaker!;
+          const styleId: number = state.audioItems[audioKey].styleId!;
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
             {
               accentPhrases: newAccentPhrases,
-              speaker,
+              styleId,
               copyIndexes: [accentPhraseIndex],
             }
           );
@@ -950,7 +949,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const { audioKey, accentPhraseIndex } = payload;
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
-      const speaker: number = state.audioItems[audioKey].speaker!;
+      const styleId: number = state.audioItems[audioKey].styleId!;
       if (query === undefined) {
         throw Error(
           "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
@@ -1029,7 +1028,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           "FETCH_AND_COPY_MORA_DATA",
           {
             accentPhrases: newAccentPhrases,
-            speaker,
+            styleId,
             copyIndexes: changeIndexes,
           }
         );
@@ -1059,7 +1058,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         popUntilPause: boolean;
       }
     ) {
-      const speaker = state.audioItems[audioKey].speaker!;
+      const styleId = state.audioItems[audioKey].styleId!;
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
@@ -1075,21 +1074,21 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: katakana + "'",
-          speaker,
+          styleId,
           isKana: true,
         }).catch(
           // fallback
           () =>
             dispatch("FETCH_ACCENT_PHRASES", {
               text: newPronunciation,
-              speaker,
+              styleId,
               isKana: false,
             })
         );
       } else {
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: newPronunciation,
-          speaker: speaker,
+          styleId,
         });
       }
 
@@ -1175,12 +1174,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           );
         }
         const audioItems: AudioItem[] = [];
-        for (const { text, speaker } of parseTextFile(
+        for (const { text, styleId } of parseTextFile(
           body,
           state.characterInfos
         )) {
           audioItems.push(
-            await dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
+            await dispatch("GENERATE_AUDIO_ITEM", { text, styleId })
           );
         }
         const audioKeys: string[] = audioItems.map(() => uuidv4());
@@ -1200,11 +1199,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         {
           prevAudioKey,
           texts,
-          speaker,
+          styleId,
         }: {
           prevAudioKey: string;
           texts: string[];
-          speaker: number;
+          styleId: number;
         }
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
@@ -1213,7 +1212,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           const audioKey: string = uuidv4();
           const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
             text,
-            speaker,
+            styleId,
           });
           audioKeyItemPairs.push({
             audioKey,
@@ -1275,11 +1274,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
       }
     },
-    COMMAND_CHANGE_SPEAKER(
+    COMMAND_CHANGE_STYLE_ID(
       draft,
-      payload: { speaker: number; audioKey: string } & (
+      payload: { styleId: number; audioKey: string } & (
         | {
-            update: "Speaker";
+            update: "StyleId";
           }
         | {
             update: "AccentPhrases";
@@ -1291,9 +1290,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           }
       )
     ) {
-      audioStore.mutations.SET_AUDIO_SPEAKER(draft, {
+      audioStore.mutations.SET_AUDIO_STYLE_ID(draft, {
         audioKey: payload.audioKey,
-        speaker: payload.speaker,
+        styleId: payload.styleId,
       });
       if (payload.update == "AccentPhrases") {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, {

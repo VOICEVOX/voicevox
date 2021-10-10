@@ -9,13 +9,11 @@
             v-for="(characterInfo, index) in characterInfos"
             :key="index"
             clickable
-            v-close-popup
             active-class="selected-character-item"
             :active="
-              characterInfo.metas.speaker ===
-              selectedCharacterInfo.metas.speaker
+              characterInfo.metas.speakerUuid ===
+              selectedStyle.metas.speakerUuid
             "
-            @click="changeSpeaker(characterInfo.metas.speaker)"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
@@ -27,7 +25,37 @@
                 />
               </q-avatar>
             </q-item-section>
-            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
+            <q-item-section>{{
+              characterInfo.metas.speakerName
+            }}</q-item-section>
+            <q-item-section side>
+              <q-icon name="keyboard_arrow_right" />
+            </q-item-section>
+
+            <q-menu anchor="top end" self="top start" class="character-menu">
+              <q-list>
+                <q-item
+                  v-for="(style, index) in getStyles(
+                    characterInfo.metas.speakerUuid
+                  )"
+                  :key="index"
+                  clickable
+                  v-close-popup
+                  active-class="selected-character-item"
+                  :active="style.metas.styleId === selectedStyle.metas.styleId"
+                  @click="changeStyleId(style.metas.styleId)"
+                >
+                  <q-item-section v-if="style.metas.styleName"
+                    >{{ style.metas.speakerName }} ({{
+                      style.metas.styleName
+                    }})</q-item-section
+                  >
+                  <q-item-section v-else>{{
+                    style.metas.speakerName
+                  }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
           </q-item>
         </q-list>
       </q-menu>
@@ -88,7 +116,19 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const characterInfos = computed(() => store.state.characterInfos);
+    const characterInfos = computed(() =>
+      store.state.characterInfos?.filter(
+        (info, idx, arr) =>
+          arr.findIndex(
+            (x) => info.metas.speakerUuid === x.metas.speakerUuid
+          ) === idx
+      )
+    );
+    const getStyles = (uuid: string) => {
+      return store.state.characterInfos?.filter(
+        (info) => info.metas.speakerUuid === uuid
+      );
+    };
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -99,16 +139,17 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const selectedCharacterInfo = computed(() =>
-      characterInfos.value != undefined && audioItem.value.speaker != undefined
-        ? characterInfos.value.find(
-            (info) => info.metas.speaker == audioItem.value.speaker
+    const selectedStyle = computed(() =>
+      store.state.characterInfos != undefined &&
+      audioItem.value.styleId != undefined
+        ? store.state.characterInfos.find(
+            (info) => info.metas.styleId == audioItem.value.styleId
           )
         : undefined
     );
 
     const characterIconUrl = computed(() =>
-      URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
+      URL.createObjectURL(selectedStyle.value?.iconBlob)
     );
 
     const audioTextBuffer = ref(audioItem.value.text);
@@ -117,6 +158,7 @@ export default defineComponent({
       audioTextBuffer.value = text;
       isChangeFlag.value = true;
     };
+
     watch(
       // `audioItem` becomes undefined just before the component is unmounted.
       () => audioItem.value?.text,
@@ -137,10 +179,10 @@ export default defineComponent({
       }
     };
 
-    const changeSpeaker = (speaker: number) => {
-      store.dispatch("COMMAND_CHANGE_SPEAKER", {
+    const changeStyleId = (styleId: number) => {
+      store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
-        speaker,
+        styleId,
       });
     };
     const setActiveAudioKey = () => {
@@ -180,7 +222,7 @@ export default defineComponent({
 
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            speaker: audioItem.value.speaker!,
+            styleId: audioItem.value.styleId!,
             prevAudioKey,
           });
           if (audioKeys)
@@ -242,8 +284,8 @@ export default defineComponent({
 
     // 下にセルを追加
     const addCellBellow = async () => {
-      const speaker = store.state.audioItems[props.audioKey].speaker;
-      const audioItem: AudioItem = { text: "", speaker: speaker };
+      const styleId = store.state.audioItems[props.audioKey].styleId;
+      const audioItem: AudioItem = { text: "", styleId };
       await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: props.audioKey,
@@ -287,17 +329,18 @@ export default defineComponent({
 
     return {
       characterInfos,
+      getStyles,
       audioItem,
       deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
-      selectedCharacterInfo,
+      selectedStyle,
       characterIconUrl,
       audioTextBuffer,
       setAudioTextBuffer,
       pushAudioText,
-      changeSpeaker,
+      changeStyleId,
       setActiveAudioKey,
       save,
       play,

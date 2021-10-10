@@ -13,7 +13,7 @@
         <q-toolbar-title class="text-secondary">{{
           detailIndex === undefined
             ? "音声ライブラリの利用規約"
-            : characterInfos[detailIndex].metas.name
+            : characterInfos[detailIndex].metas.speakerName
         }}</q-toolbar-title>
       </q-toolbar>
     </q-header>
@@ -26,7 +26,9 @@
             clickable
             @click="selectCharacterInfIndex(index)"
           >
-            <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
+            <q-item-section>{{
+              characterInfo.metas.speakerName
+            }}</q-item-section>
           </q-item>
         </q-list>
         <div
@@ -49,7 +51,14 @@ export default defineComponent({
     const store = useStore();
     const md = useMarkdownIt();
 
-    const characterInfos = computed(() => store.state.characterInfos);
+    const characterInfos = computed(() =>
+      store.state.characterInfos?.filter(
+        (info, idx, arr) =>
+          arr.findIndex(
+            (x) => info.metas.speakerUuid === x.metas.speakerUuid
+          ) === idx
+      )
+    );
 
     const convertMarkdown = (text: string) => {
       return md.render(text);
