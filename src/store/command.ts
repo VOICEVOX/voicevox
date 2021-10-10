@@ -1,14 +1,11 @@
-import { Action, Store } from "vuex";
 import { toRaw } from "vue";
-import { enablePatches, enableMapSet, Patch, Draft, Immer } from "immer";
+import { enablePatches, enableMapSet, Patch, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
 import {
-  State,
   Command,
   CommandGetters,
   CommandActions,
   CommandMutations,
-  AllMutations,
   VoiceVoxStoreOptions,
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
@@ -18,72 +15,6 @@ enableMapSet();
 
 const immer = new Immer();
 immer.setAutoFreeze(false);
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-export class OldCommand<S> {
-  undoOperations: Operation[];
-  redoOperations: Operation[];
-
-  constructor(state: S, recipe: (draft: Draft<S>) => void) {
-    const [_, redoPatches, undoPatches] = immer.produceWithPatches(
-      state,
-      recipe
-    );
-    this.undoOperations = OldCommand.convertPatches(undoPatches);
-    this.redoOperations = OldCommand.convertPatches(redoPatches);
-  }
-
-  static redo<S>(state: S, command: OldCommand<S>) {
-    applyPatch(state, command.redoOperations);
-  }
-  static undo<S>(state: S, command: OldCommand<S>) {
-    applyPatch(state, command.undoOperations);
-  }
-
-  static convertPatches(patches: Patch[]) {
-    return patches.map((patch) => {
-      const operation: Operation = {
-        op: patch.op,
-        path: `/${patch.path.join("/")}`,
-        value: patch.value,
-      };
-      return operation;
-    });
-  }
-}
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-type OldCommandFactory<S, P> = (state: S, payload: P) => OldCommand<S>;
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-const oldCreateCommandFactory =
-  <S, P>(
-    recipeWithPayload: (draft: Draft<S>, payload: P) => void
-  ): OldCommandFactory<S, P> =>
-  (state, payload) =>
-    new OldCommand(state, (draft) => recipeWithPayload(draft, payload));
-
-/**
- * @deprecated Action中でのCommandの作成はバグを含むので非推奨になっています。
- * 代わりに`createCommandMutationTree`, `createCommandMutation`を使用して下さい。
- * */
-export function oldCreateCommandAction<S, P>(
-  recipeWithPayload: (draft: Draft<S>, payload: P) => void
-): Action<S, S> {
-  const commandFactory = oldCreateCommandFactory(recipeWithPayload);
-  return ({ state, commit }, payload: P) => {
-    commit("OLD_PUSH_COMMAND", { command: commandFactory(state, payload) });
-  };
-}
 
 export type PayloadRecipe<S, P> = (draft: S, payload: P) => void;
 export type PayloadRecipeTree<S, M> = {
@@ -123,7 +54,7 @@ export const createCommandMutationTree = <
  * @returns レシピと同じPayloadの型を持つMutation.
  */
 export const createCommandMutation =
-  <S extends UndoRedoState, P extends AllMutations[keyof AllMutations]>(
+  <S extends UndoRedoState, P>(
     payloadRecipe: PayloadRecipe<S, P>
   ): Mutation<S, P> =>
   (state: S, payload: P): void => {
@@ -148,9 +79,7 @@ const patchToOperation = (patch: Patch): Operation => ({
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
 const recordOperations =
-  <S, P extends AllMutations[keyof AllMutations]>(
-    recipe: PayloadRecipe<S, P>
-  ) =>
+  <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [_, doPatches, undoPatches] = immer.produceWithPatches(
       toRaw(state) as S,
@@ -185,9 +114,6 @@ export const commandStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    OLD_PUSH_COMMAND(state, { command }: { command: OldCommand<State> }) {
-      OldCommand.redo(state, command);
-    },
     UNDO(state) {
       const command = state.undoCommands.pop();
       if (command != null) {

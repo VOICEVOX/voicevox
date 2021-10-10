@@ -1,6 +1,5 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
-import { oldCreateCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
@@ -333,13 +332,11 @@ export const audioStore: VoiceVoxStoreOptions<
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
-    REMOVE_ALL_AUDIO_ITEM: oldCreateCommandAction((draft) => {
-      for (const audioKey of draft.audioKeys) {
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
+    REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
+      for (const audioKey of [...state.audioKeys]) {
+        commit("REMOVE_AUDIO_ITEM", { audioKey });
       }
-      draft.audioKeys.splice(0, draft.audioKeys.length);
-    }),
+    },
     async GENERATE_AUDIO_ITEM(
       { getters, dispatch },
       payload: { text?: string; speaker?: number }
@@ -585,11 +582,60 @@ export const audioStore: VoiceVoxStoreOptions<
           });
         })();
 
+        let labBlob = new Blob();
+
+        if (state.savingSetting.exportLab) {
+          labBlob = ((): Blob => {
+            let labString = "";
+            let timestamp = 0;
+            state.audioItems[audioKey].query!.accentPhrases.forEach(
+              (accentPhrase) => {
+                accentPhrase.moras.forEach((mora) => {
+                  if (
+                    mora.consonantLength !== undefined &&
+                    mora.consonant !== undefined
+                  ) {
+                    labString += timestamp.toFixed() + " ";
+                    timestamp += mora.consonantLength * 10000000;
+                    labString += timestamp.toFixed() + " ";
+                    labString += mora.consonant + "\n";
+                  }
+                  labString += timestamp.toFixed() + " ";
+                  timestamp += mora.vowelLength * 10000000;
+                  labString += timestamp.toFixed() + " ";
+                  if (mora.vowel != "N") {
+                    labString += mora.vowel.toLowerCase() + "\n";
+                  } else {
+                    labString += mora.vowel + "\n";
+                  }
+                });
+                if (accentPhrase.pauseMora !== undefined) {
+                  labString += timestamp.toFixed() + " ";
+                  timestamp += accentPhrase.pauseMora.vowelLength * 10000000;
+                  labString += timestamp.toFixed() + " ";
+                  labString += accentPhrase.pauseMora.vowel + "\n";
+                }
+              }
+            );
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            return new Blob([bom, labString], {
+              type: "text/plain;charset=UTF-8",
+            });
+          })();
+        }
+
         try {
           window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
           });
+
+          if (state.savingSetting.exportLab) {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            });
+          }
 
           return { result: "SUCCESS", path: filePath };
         } catch (e) {

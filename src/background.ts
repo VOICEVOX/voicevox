@@ -68,6 +68,7 @@ const store = new Store<{
         fixedExportEnabled: { type: "boolean" },
         avoidOverwrite: { type: "boolean" },
         fixedExportDir: { type: "string" },
+        exportLab: { type: "boolean" },
       },
     },
   },
@@ -78,6 +79,7 @@ const store = new Store<{
       fixedExportEnabled: false,
       avoidOverwrite: false,
       fixedExportDir: "",
+      exportLab: false,
     },
   },
 });
