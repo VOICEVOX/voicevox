@@ -170,7 +170,10 @@ const characterInfos = fs
   });
 
 // 使い方テキストの読み込み
-const howToUseText = fs.readFileSync(path.join(__static, "howtouse.md"), "utf-8");
+const howToUseText = fs.readFileSync(
+  path.join(__static, "howtouse.md"),
+  "utf-8"
+);
 
 // 利用規約テキストの読み込み
 const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
