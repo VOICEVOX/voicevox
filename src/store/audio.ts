@@ -819,7 +819,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey,
         prevAudioKey,
       });
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
