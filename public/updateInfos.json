@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.7.2",
+    "descriptions": ["新規インストール時に音声が保存できない問題を修正"],
+    "contributors": ["Segu-g"]
+  },
+  {
     "version": "0.7.1",
     "descriptions": ["複数行ペーストでエラーが出る問題を修正"],
     "contributors": ["Segu-g"]
