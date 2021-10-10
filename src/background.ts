@@ -169,6 +169,9 @@ const characterInfos = fs
     };
   });
 
+// 使い方テキストの読み込み
+const howToUseText = fs.readFileSync(path.join(__static, "howtouse.md"), "utf-8");
+
 // 利用規約テキストの読み込み
 const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
 
@@ -245,6 +248,10 @@ ipcMainHandle("GET_TEMP_DIR", () => {
 
 ipcMainHandle("GET_CHARACTER_INFOS", () => {
   return characterInfos;
+});
+
+ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
+  return howToUseText;
 });
 
 ipcMainHandle("GET_POLICY_TEXT", () => {

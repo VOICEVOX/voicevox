@@ -32,6 +32,9 @@ export const indexStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
+    async GET_HOW_TO_USE_TEXT() {
+      return await window.electron.getHowToUseText();
+    },
     async GET_POLICY_TEXT() {
       return await window.electron.getPolicyText();
     },
