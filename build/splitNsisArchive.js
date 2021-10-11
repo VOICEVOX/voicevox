@@ -12,6 +12,12 @@ const createIni = (sizes, hashes) => {
 
 // target: electron-builder.Target
 exports.default = async function (target) {
+  const projectName = process.env.npm_package_name;
+  if (projectName === undefined) {
+    const ErrorMessage = "Project name is undefined.";
+    console.error(ErrorMessage);
+    throw ErrorMessage;
+  }
   const projectVersion = process.env.npm_package_version;
   if (projectVersion === undefined) {
     const ErrorMessage = "Project version is undefined.";
@@ -19,7 +25,7 @@ exports.default = async function (target) {
     throw ErrorMessage;
   }
   const segmentSize = 1 * 1024 ** 3; // 1GB
-  const fileName = `voicevox-${projectVersion}-x64.nsis.7z`; // target file name
+  const fileName = `${projectName}-${projectVersion}-x64.nsis.7z`; // target file name
   const targetDirectory = target.outDir; // for nsis-web
   const outputDirectory = path.resolve(targetDirectory, "out");
   const inputFile = path.resolve(targetDirectory, fileName);

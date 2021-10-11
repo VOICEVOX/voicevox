@@ -74,6 +74,7 @@ export type UpdateInfo = {
 export type Encoding = "UTF-8" | "Shift_JIS";
 
 export type SavingSetting = {
+  exportLab: boolean;
   fileEncoding: Encoding;
   fixedExportEnabled: boolean;
   fixedExportDir: string;

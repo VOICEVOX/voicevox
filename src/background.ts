@@ -61,14 +61,27 @@ const store = new Store<{
   schema: {
     useGpu: {
       type: "boolean",
+      default: false,
     },
     savingSetting: {
       type: "object",
       properties: {
-        fileEncoding: { type: "string" },
-        fixedExportEnabled: { type: "boolean" },
-        avoidOverwrite: { type: "boolean" },
-        fixedExportDir: { type: "string" },
+        fileEncoding: {
+          type: "string",
+          enum: ["UTF-8", "Shift_JIS"],
+          default: "UTF-8",
+        },
+        fixedExportEnabled: { type: "boolean", default: false },
+        avoidOverwrite: { type: "boolean", default: false },
+        fixedExportDir: { type: "string", default: "" },
+        exportLab: { type: "boolean", default: false },
+      },
+      default: {
+        fileEncoding: "UTF-8",
+        fixedExportEnabled: false,
+        avoidOverwrite: false,
+        fixedExportDir: "",
+        exportLab: false,
       },
     },
     hotkeySettings: {
@@ -80,86 +93,79 @@ const store = new Store<{
           combination: { type: "string" },
         },
       },
+      default: {
+        hotkeySettings: [
+          {
+            action: "音声書き出し",
+            combination: "Ctrl E",
+          },
+          {
+            action: "一つだけ書き出し",
+            combination: "",
+          },
+          {
+            action: "再生/停止",
+            combination: "Space",
+          },
+          {
+            action: "連続再生/停止",
+            combination: "",
+          },
+          {
+            action: "ｱｸｾﾝﾄ欄を表示",
+            combination: "1",
+          },
+          {
+            action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+            combination: "2",
+          },
+          {
+            action: "テキスト欄を追加",
+            combination: "Shift Enter",
+          },
+          {
+            action: "テキスト欄を削除",
+            combination: "Shift Delete",
+          },
+          {
+            action: "テキスト欄からフォーカスを外す",
+            combination: "Escape",
+          },
+          {
+            action: "テキスト欄にフォーカスを戻す",
+            combination: "Backspace",
+          },
+          {
+            action: "元に戻す",
+            combination: "Ctrl Z",
+          },
+          {
+            action: "やり直す",
+            combination: "Ctrl Y",
+          },
+          {
+            action: "新規プロジェクト",
+            combination: "Ctrl N",
+          },
+          {
+            action: "プロジェクトを名前を付けて保存",
+            combination: "Ctrl Shift S",
+          },
+          {
+            action: "プロジェクトを上書き保存",
+            combination: "Ctrl S",
+          },
+          {
+            action: "プロジェクト読み込み",
+            combination: "Ctrl O",
+          },
+          {
+            action: "テキスト読み込む",
+            combination: "",
+          },
+        ],
+      },
     },
-  },
-  defaults: {
-    useGpu: false,
-    savingSetting: {
-      fileEncoding: "UTF-8",
-      fixedExportEnabled: false,
-      avoidOverwrite: false,
-      fixedExportDir: "",
-    },
-    hotkeySettings: [
-      {
-        action: "音声書き出し",
-        combination: "Ctrl E",
-      },
-      {
-        action: "一つだけ書き出し",
-        combination: "",
-      },
-      {
-        action: "再生/停止",
-        combination: "Space",
-      },
-      {
-        action: "連続再生/停止",
-        combination: "",
-      },
-      {
-        action: "ｱｸｾﾝﾄ欄を表示",
-        combination: "1",
-      },
-      {
-        action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-        combination: "2",
-      },
-      {
-        action: "テキスト欄を追加",
-        combination: "Shift Enter",
-      },
-      {
-        action: "テキスト欄を削除",
-        combination: "Shift Delete",
-      },
-      {
-        action: "テキスト欄からフォーカスを外す",
-        combination: "Escape",
-      },
-      {
-        action: "テキスト欄にフォーカスを戻す",
-        combination: "Backspace",
-      },
-      {
-        action: "元に戻す",
-        combination: "Ctrl Z",
-      },
-      {
-        action: "やり直す",
-        combination: "Ctrl Y",
-      },
-      {
-        action: "新規プロジェクト",
-        combination: "Ctrl N",
-      },
-      {
-        action: "プロジェクトを名前を付けて保存",
-        combination: "Ctrl Shift S",
-      },
-      {
-        action: "プロジェクトを上書き保存",
-        combination: "Ctrl S",
-      },
-      {
-        action: "プロジェクト読み込み",
-        combination: "Ctrl O",
-      },
-      {
-        action: "テキスト読み込む",
-        combination: "",
-      },
-    ],
   },
 });
 

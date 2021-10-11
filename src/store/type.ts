@@ -7,11 +7,7 @@ import {
 } from "./vuex";
 import { Operation } from "rfc6902";
 import { AccentPhrase, AudioQuery } from "@/openapi";
-import {
-  createCommandMutationTree,
-  PayloadRecipeTree,
-  OldCommand,
-} from "./command";
+import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
   Encoding as EncodingType,
@@ -131,6 +127,7 @@ export type AudioActions = {
   START_WAITING_ENGINE(): void;
   LOAD_CHARACTER(): void;
   REMOVE_ALL_AUDIO_ITEM(): void;
+  GENERATE_AUDIO_KEY(): string;
   GENERATE_AUDIO_ITEM(payload: {
     text?: string;
     speaker?: number;
@@ -138,7 +135,7 @@ export type AudioActions = {
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey?: string;
-  }): string;
+  }): Promise<string>;
   SET_ACTIVE_AUDIO_KEY(payload: { audioKey?: string }): void;
   GET_AUDIO_CACHE(payload: { audioKey: string }): Promise<Blob | null>;
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
@@ -192,7 +189,7 @@ export type AudioCommandActions = {
   COMMAND_REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
     prevAudioKey: string | undefined;
-  }): string;
+  }): Promise<string>;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
   COMMAND_CHANGE_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
   COMMAND_CHANGE_SPEAKER(payload: { audioKey: string; speaker: number }): void;
@@ -349,7 +346,6 @@ export type CommandGetters = {
 };
 
 export type CommandMutations = {
-  OLD_PUSH_COMMAND: { command: OldCommand<State> };
   UNDO: undefined;
   REDO: undefined;
   CLEAR_COMMANDS: undefined;

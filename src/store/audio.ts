@@ -1,6 +1,5 @@
 import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
 import path from "path";
-import { oldCreateCommandAction } from "./command";
 import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
@@ -63,8 +62,10 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  const character = state.characterInfos![audioItem.speaker!];
-  const characterName = character.metas.name.replace(sanitizer, "");
+  const character = state.characterInfos?.find(
+    (info) => info.metas.speaker == audioItem.speaker!
+  );
+  const characterName = character!.metas.name.replace(sanitizer, "");
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
@@ -333,19 +334,22 @@ export const audioStore: VoiceVoxStoreOptions<
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
-    REMOVE_ALL_AUDIO_ITEM: oldCreateCommandAction((draft) => {
-      for (const audioKey of draft.audioKeys) {
-        delete draft.audioItems[audioKey];
-        delete draft.audioStates[audioKey];
+    GENERATE_AUDIO_KEY() {
+      const audioKey = uuidv4();
+      audioElements[audioKey] = new Audio();
+      return audioKey;
+    },
+    REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
+      for (const audioKey of [...state.audioKeys]) {
+        commit("REMOVE_AUDIO_ITEM", { audioKey });
       }
-      draft.audioKeys.splice(0, draft.audioKeys.length);
-    }),
+    },
     async GENERATE_AUDIO_ITEM(
-      { getters, dispatch },
+      { state, getters, dispatch },
       payload: { text?: string; speaker?: number }
     ) {
       const text = payload.text ?? "";
-      const speaker = payload.speaker ?? 0;
+      const speaker = payload.speaker ?? state.characterInfos![0].metas.speaker;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
@@ -362,16 +366,15 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       return audioItem;
     },
-    REGISTER_AUDIO_ITEM(
-      { commit },
+    async REGISTER_AUDIO_ITEM(
+      { dispatch, commit },
       {
         audioItem,
         prevAudioKey,
       }: { audioItem: AudioItem; prevAudioKey?: string }
     ) {
-      const audioKey = uuidv4();
+      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
     SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
@@ -499,7 +502,7 @@ export const audioStore: VoiceVoxStoreOptions<
         return api
           .synthesisSynthesisPost({
             audioQuery: audioItem.query!,
-            speaker: state.characterInfos![audioItem.speaker!].metas.speaker,
+            speaker: audioItem.speaker!,
           })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
@@ -567,6 +570,69 @@ export const audioStore: VoiceVoxStoreOptions<
           window.electron.logError(e);
 
           return { result: "WRITE_ERROR", path: filePath };
+        }
+
+        if (state.savingSetting.exportLab) {
+          const query = state.audioItems[audioKey].query!;
+          const speedScale = query.speedScale;
+
+          let labString = "";
+          let timestamp = 0;
+
+          labString += timestamp.toFixed() + " ";
+          timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+          labString += timestamp.toFixed() + " ";
+          labString += "pau" + "\n";
+
+          query.accentPhrases.forEach((accentPhrase) => {
+            accentPhrase.moras.forEach((mora) => {
+              if (
+                mora.consonantLength !== undefined &&
+                mora.consonant !== undefined
+              ) {
+                labString += timestamp.toFixed() + " ";
+                timestamp += (mora.consonantLength * 10000000) / speedScale;
+                labString += timestamp.toFixed() + " ";
+                labString += mora.consonant + "\n";
+              }
+              labString += timestamp.toFixed() + " ";
+              timestamp += (mora.vowelLength * 10000000) / speedScale;
+              labString += timestamp.toFixed() + " ";
+              if (mora.vowel != "N") {
+                labString += mora.vowel.toLowerCase() + "\n";
+              } else {
+                labString += mora.vowel + "\n";
+              }
+            });
+            if (accentPhrase.pauseMora !== undefined) {
+              labString += timestamp.toFixed() + " ";
+              timestamp +=
+                (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+              labString += timestamp.toFixed() + " ";
+              labString += accentPhrase.pauseMora.vowel + "\n";
+            }
+          });
+
+          labString += timestamp.toFixed() + " ";
+          timestamp += (query.postPhonemeLength * 10000000) / speedScale;
+          labString += timestamp.toFixed() + " ";
+          labString += "pau" + "\n";
+
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const labBlob = new Blob([bom, labString], {
+            type: "text/plain;charset=UTF-8",
+          });
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+
+            return { result: "WRITE_ERROR", path: filePath };
+          }
         }
 
         const textBlob = ((): Blob => {
@@ -737,8 +803,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 > = {
   getters: {},
   actions: {
-    COMMAND_REGISTER_AUDIO_ITEM(
-      { commit },
+    async COMMAND_REGISTER_AUDIO_ITEM(
+      { dispatch, commit },
       {
         audioItem,
         prevAudioKey,
@@ -747,13 +813,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         prevAudioKey: string | undefined;
       }
     ) {
-      const audioKey = uuidv4();
+      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
       commit("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         audioKey,
         prevAudioKey,
       });
-      audioElements[audioKey] = new Audio();
       return audioKey;
     },
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
@@ -1137,7 +1202,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             await dispatch("GENERATE_AUDIO_ITEM", { text, speaker })
           );
         }
-        const audioKeys: string[] = audioItems.map(() => uuidv4());
+        const audioKeys: string[] = await Promise.all(
+          audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
+        );
         const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
           audioItem,
           audioKey: audioKeys[index],
@@ -1164,7 +1231,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
         for (const text of texts.filter((value) => value != "")) {
-          const audioKey: string = uuidv4();
+          const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
           const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
             text,
             speaker,

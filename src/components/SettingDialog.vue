@@ -156,6 +156,28 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>labファイルを生成</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リップシンク用のlabファイルを生成します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <!-- hotkey settings card -->
             <q-card flat class="setting-card">
@@ -518,7 +540,6 @@ export default defineComponent({
     };
 
     const openHotkeyDialog = (action: string, combo: string) => {
-      console.log("Hello");
       lastAction.value = action;
       lastRecord.value = combo;
       isHotkeyDialogOpened.value = true;
@@ -526,7 +547,6 @@ export default defineComponent({
     };
 
     const closeHotkeyDialog = () => {
-      console.log("Bye");
       lastAction.value = "";
       lastRecord.value = "";
       isHotkeyDialogOpened.value = false;
