@@ -148,30 +148,30 @@ export const projectStore: VoiceVoxStoreOptions<
                     mora.vowelLength = 0;
                   }
                 }
-              }
 
-              // set phoneme length
-              await context
-                .dispatch("FETCH_MORA_DATA", {
-                  accentPhrases: audioItem.query!.accentPhrases,
-                  speaker: audioItem.speaker!,
-                })
-                .then((accentPhrases: AccentPhrase[]) => {
-                  accentPhrases.forEach((newAccentPhrase, i) => {
-                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
-                    if (newAccentPhrase.pauseMora) {
-                      oldAccentPhrase.pauseMora.vowelLength =
-                        newAccentPhrase.pauseMora.vowelLength;
-                    }
-                    newAccentPhrase.moras.forEach((mora, j) => {
-                      if (mora.consonant) {
-                        oldAccentPhrase.moras[j].consonantLength =
-                          mora.consonantLength;
+                // set phoneme length
+                await context
+                  .dispatch("FETCH_MORA_DATA", {
+                    accentPhrases: audioItem.query.accentPhrases,
+                    speaker: audioItem.characterIndex!,
+                  })
+                  .then((accentPhrases: AccentPhrase[]) => {
+                    accentPhrases.forEach((newAccentPhrase, i) => {
+                      const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                      if (newAccentPhrase.pauseMora) {
+                        oldAccentPhrase.pauseMora.vowelLength =
+                          newAccentPhrase.pauseMora.vowelLength;
                       }
-                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      newAccentPhrase.moras.forEach((mora, j) => {
+                        if (mora.consonant) {
+                          oldAccentPhrase.moras[j].consonantLength =
+                            mora.consonantLength;
+                        }
+                        oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      });
                     });
                   });
-                });
+              }
             }
           }
 
