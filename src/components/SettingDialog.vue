@@ -202,6 +202,7 @@
                           color="secondary"
                           padding="none sm"
                           flat
+                          :disable="checkHotkeyReadonly(props.row.action)"
                           no-caps
                           :label="
                             getHotkeyText(
@@ -252,7 +253,7 @@
             color="grey-3"
             text-color="black"
             @click="
-              deleteHotkey();
+              deleteHotkey(lastAction);
               closeHotkeyDialog();
             "
             :disabled="lastRecord == ''"
@@ -289,17 +290,23 @@
             <div>Choose one action to keep</div>
           </q-card-actions>
           <q-card-actions align="center">
-            <q-chip
-              clickable
+            <q-btn
+              padding="xs md"
               square
+              unelevated
+              color="grey-3"
+              text-color="black"
               :label="lastAction"
               @click="solveDuplicated(true)"
             />
-            <q-chip
-              clickable
+            <q-btn
+              padding="xs md"
               square
+              unelevated
+              color="grey-3"
+              text-color="black"
               :label="lastDuplicated.action"
-              @click="solveDuplicated(false)"
+              @click="closeHotkeyDuplicatedDialog(true)"
             />
           </q-card-actions>
         </q-card>
@@ -309,7 +316,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, Ref } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { parseCombo } from "@/store/setting";
@@ -445,7 +452,7 @@ export default defineComponent({
 
     const lastAction = ref("");
     const lastRecord = ref("");
-    const lastDuplicated: Ref<HotkeySetting | undefined> = ref(undefined);
+    const lastDuplicated = ref<HotkeySetting | undefined>(undefined);
 
     const recordCombination = (event: KeyboardEvent) => {
       if (!isHotkeyDialogOpened.value || isHotkeyDuplicatedDialogOpened.value) {
@@ -456,7 +463,6 @@ export default defineComponent({
         event.preventDefault();
       }
     };
-    document.addEventListener("keydown", recordCombination);
 
     const changeHotkeySettings = (
       action: string,
@@ -465,7 +471,7 @@ export default defineComponent({
     ) => {
       if (checkDuplicated) {
         const duplicated = findDuplicatedHotkey();
-        if (duplicated !== undefined && combo != "") {
+        if (duplicated !== undefined) {
           lastDuplicated.value = duplicated;
           isHotkeyDuplicatedDialogOpened.value = true;
           return;
@@ -488,12 +494,8 @@ export default defineComponent({
       });
     };
 
-    const deleteHotkey = () => {
-      if (lastDuplicated.value !== undefined) {
-        changeHotkeySettings(lastDuplicated.value.action, "", false);
-      } else {
-        changeHotkeySettings(lastAction.value, "", false);
-      }
+    const deleteHotkey = (action: HotkeyAction) => {
+      changeHotkeySettings(action, "", false);
     };
 
     const getHotkeyText = (action: string, combo: string) => {
@@ -516,15 +518,19 @@ export default defineComponent({
     };
 
     const openHotkeyDialog = (action: string, combo: string) => {
+      console.log("Hello");
       lastAction.value = action;
       lastRecord.value = combo;
       isHotkeyDialogOpened.value = true;
+      document.addEventListener("keydown", recordCombination);
     };
 
     const closeHotkeyDialog = () => {
+      console.log("Bye");
       lastAction.value = "";
       lastRecord.value = "";
       isHotkeyDialogOpened.value = false;
+      document.removeEventListener("keydown", recordCombination);
     };
 
     const closeHotkeyDuplicatedDialog = (closeParent: boolean) => {
@@ -535,19 +541,13 @@ export default defineComponent({
       }
     };
 
-    const solveDuplicated = (isDelete: boolean) => {
-      if (lastDuplicated.value) {
-        if (isDelete) {
-          deleteHotkey();
-          changeHotkeySettings(lastAction.value, lastRecord.value, false)?.then(
-            () => {
-              closeHotkeyDuplicatedDialog(true);
-            }
-          );
-        } else {
+    const solveDuplicated = () => {
+      deleteHotkey(lastDuplicated.value!.action);
+      changeHotkeySettings(lastAction.value, lastRecord.value, false)?.then(
+        () => {
           closeHotkeyDuplicatedDialog(true);
         }
-      }
+      );
     };
 
     const confirmBtnEnabled = computed(() => {
@@ -585,6 +585,7 @@ export default defineComponent({
       solveDuplicated,
       changeHotkeySettings,
       confirmBtnEnabled,
+      checkHotkeyReadonly,
     };
   },
 });
