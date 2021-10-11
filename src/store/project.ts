@@ -59,7 +59,10 @@ export const projectStore: VoiceVoxStoreOptions<
 
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
-        const audioItem: AudioItem = { text: "", speaker: 0 };
+        const audioItem: AudioItem = await context.dispatch(
+          "GENERATE_AUDIO_ITEM",
+          {}
+        );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
@@ -145,30 +148,47 @@ export const projectStore: VoiceVoxStoreOptions<
                     mora.vowelLength = 0;
                   }
                 }
-              }
 
-              // set phoneme length
-              await context
-                .dispatch("FETCH_MORA_DATA", {
-                  accentPhrases: audioItem.query!.accentPhrases,
-                  speaker: audioItem.speaker!,
-                })
-                .then((accentPhrases: AccentPhrase[]) => {
-                  accentPhrases.forEach((newAccentPhrase, i) => {
-                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
-                    if (newAccentPhrase.pauseMora) {
-                      oldAccentPhrase.pauseMora.vowelLength =
-                        newAccentPhrase.pauseMora.vowelLength;
-                    }
-                    newAccentPhrase.moras.forEach((mora, j) => {
-                      if (mora.consonant) {
-                        oldAccentPhrase.moras[j].consonantLength =
-                          mora.consonantLength;
+                // set phoneme length
+                await context
+                  .dispatch("FETCH_MORA_DATA", {
+                    accentPhrases: audioItem.query.accentPhrases,
+                    speaker: audioItem.characterIndex!,
+                  })
+                  .then((accentPhrases: AccentPhrase[]) => {
+                    accentPhrases.forEach((newAccentPhrase, i) => {
+                      const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                      if (newAccentPhrase.pauseMora) {
+                        oldAccentPhrase.pauseMora.vowelLength =
+                          newAccentPhrase.pauseMora.vowelLength;
                       }
-                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      newAccentPhrase.moras.forEach((mora, j) => {
+                        if (mora.consonant) {
+                          oldAccentPhrase.moras[j].consonantLength =
+                            mora.consonantLength;
+                        }
+                        oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      });
                     });
                   });
-                });
+              }
+            }
+          }
+
+          if (appVersionList < [0, 7, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.characterIndex != null) {
+                if (audioItem.characterIndex == 0) {
+                  // 四国めたん 0 -> 四国めたん(あまあま) 0
+                  audioItem.speaker = 0;
+                }
+                if (audioItem.characterIndex == 1) {
+                  // ずんだもん 1 -> ずんだもん(あまあま) 1
+                  audioItem.speaker = 1;
+                }
+                delete audioItem.characterIndex;
+              }
             }
           }
 

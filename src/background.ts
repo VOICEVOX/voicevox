@@ -15,7 +15,7 @@ import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
-import { CharacterInfo, SavingSetting } from "./type/preload";
+import { CharacterInfo, HotkeySetting, SavingSetting } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
@@ -56,28 +56,115 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
 }>({
   schema: {
     useGpu: {
       type: "boolean",
+      default: false,
     },
     savingSetting: {
       type: "object",
       properties: {
-        fileEncoding: { type: "string" },
-        fixedExportEnabled: { type: "boolean" },
-        avoidOverwrite: { type: "boolean" },
-        fixedExportDir: { type: "string" },
+        fileEncoding: {
+          type: "string",
+          enum: ["UTF-8", "Shift_JIS"],
+          default: "UTF-8",
+        },
+        fixedExportEnabled: { type: "boolean", default: false },
+        avoidOverwrite: { type: "boolean", default: false },
+        fixedExportDir: { type: "string", default: "" },
+        exportLab: { type: "boolean", default: false },
+      },
+      default: {
+        fileEncoding: "UTF-8",
+        fixedExportEnabled: false,
+        avoidOverwrite: false,
+        fixedExportDir: "",
+        exportLab: false,
       },
     },
-  },
-  defaults: {
-    useGpu: false,
-    savingSetting: {
-      fileEncoding: "UTF-8",
-      fixedExportEnabled: false,
-      avoidOverwrite: false,
-      fixedExportDir: "",
+    hotkeySettings: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          action: { type: "string" },
+          combination: { type: "string" },
+        },
+      },
+      default: {
+        hotkeySettings: [
+          {
+            action: "音声書き出し",
+            combination: "Ctrl E",
+          },
+          {
+            action: "一つだけ書き出し",
+            combination: "",
+          },
+          {
+            action: "再生/停止",
+            combination: "Space",
+          },
+          {
+            action: "連続再生/停止",
+            combination: "",
+          },
+          {
+            action: "ｱｸｾﾝﾄ欄を表示",
+            combination: "1",
+          },
+          {
+            action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+            combination: "2",
+          },
+          {
+            action: "テキスト欄を追加",
+            combination: "Shift Enter",
+          },
+          {
+            action: "テキスト欄を削除",
+            combination: "Shift Delete",
+          },
+          {
+            action: "テキスト欄からフォーカスを外す",
+            combination: "Escape",
+          },
+          {
+            action: "テキスト欄にフォーカスを戻す",
+            combination: "Backspace",
+          },
+          {
+            action: "元に戻す",
+            combination: "Ctrl Z",
+          },
+          {
+            action: "やり直す",
+            combination: "Ctrl Y",
+          },
+          {
+            action: "新規プロジェクト",
+            combination: "Ctrl N",
+          },
+          {
+            action: "プロジェクトを名前を付けて保存",
+            combination: "Ctrl Shift S",
+          },
+          {
+            action: "プロジェクトを上書き保存",
+            combination: "Ctrl S",
+          },
+          {
+            action: "プロジェクト読み込み",
+            combination: "Ctrl O",
+          },
+          {
+            action: "テキスト読み込む",
+            combination: "",
+          },
+        ],
+      },
     },
   },
 });
@@ -428,6 +515,20 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
     store.set("savingSetting", newData);
   }
   return store.get("savingSetting");
+});
+
+ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
+  if (newData !== undefined) {
+    const hotkeySettings = store.get("hotkeySettings");
+    const hotkeySetting = hotkeySettings.find(
+      (hotkey) => hotkey.action == newData.action
+    );
+    if (hotkeySetting !== undefined) {
+      hotkeySetting.combination = newData.combination;
+    }
+    store.set("hotkeySettings", hotkeySettings);
+  }
+  return store.get("hotkeySettings");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

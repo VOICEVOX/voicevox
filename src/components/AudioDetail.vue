@@ -171,12 +171,13 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
-import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import AudioLength from "./AudioLength.vue";
+import { HotkeyAction } from "@/type/preload";
+import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter, AudioLength },
@@ -187,22 +188,44 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    // add hotkeys with mousetrap
-    Mousetrap.bind("space", () => {
-      if (!nowPlaying.value && !nowGenerating.value) {
-        play();
-      } else {
-        stop();
-      }
-    });
+    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+      [
+        "再生/停止",
+        () => {
+          if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+            play();
+          } else {
+            stop();
+          }
+        },
+      ],
+      [
+        "一つだけ書き出し",
+        () => {
+          if (!uiLocked.value) {
+            save();
+          }
+        },
+      ],
+      [
+        "ｱｸｾﾝﾄ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "accent";
+          }
+        },
+      ],
+      [
+        "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "intonation";
+          }
+        },
+      ],
+    ]);
 
-    Mousetrap.bind("1", () => {
-      selectedDetail.value = "accent";
-    });
-
-    Mousetrap.bind("2", () => {
-      selectedDetail.value = "intonation";
-    });
+    setHotkeyFunctions(hotkeyMap);
 
     // detail selector
     type DetailTypes =

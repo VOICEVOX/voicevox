@@ -1,5 +1,49 @@
 [
   {
+    "version": "0.7.3",
+    "descriptions": [
+      "古いバージョンのプロジェクトファイルが読み込めない問題の修正"
+    ],
+    "contributors": ["Segu-g"]
+  },
+  {
+    "version": "0.7.2",
+    "descriptions": ["新規インストール時に音声が保存できない問題を修正"],
+    "contributors": ["Segu-g"]
+  },
+  {
+    "version": "0.7.1",
+    "descriptions": ["複数行ペーストでエラーが出る問題を修正"],
+    "contributors": ["Segu-g"]
+  },
+  {
+    "version": "0.7.0",
+    "descriptions": [
+      "より直感的な読み修正",
+      "新しいスタイルの追加",
+      "音声合成時のメモリ使用量の削減",
+      "音声合成の高速化",
+      "途中から連続再生",
+      "リップシンク用のlabファイルの生成",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "buckw6eat",
+      "Hiroshiba",
+      "madosuki",
+      "MT224244",
+      "Patchethium",
+      "raa0121",
+      "Segu-g",
+      "takana-v",
+      "y-chan",
+      "Yosshi999",
+      "yuki1229ushioda"
+    ]
+  },
+  {
     "version": "0.6.1",
     "descriptions": [
       "プロジェクトファイルが読み込めない問題の修正",
