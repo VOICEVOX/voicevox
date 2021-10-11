@@ -27,7 +27,7 @@
       flat
       round
       icon="push_pin"
-      color="black"
+      color="secondary"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
@@ -96,7 +96,7 @@
       flat
       round
       icon="push_pin"
-      color="black"
+      color="secondary"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"

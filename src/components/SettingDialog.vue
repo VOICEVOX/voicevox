@@ -7,7 +7,11 @@
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-white">
+    <q-layout
+      container
+      view="hHh Lpr fFf"
+      :class="darkMode ? 'bg-black' : 'bg-white'"
+    >
       <q-header class="q-pa-sm" elevated>
         <q-toolbar>
           <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
@@ -25,11 +29,11 @@
         <q-page ref="scroller" class="relative-absolute-wrapper scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
-            <q-card flat class="setting-card">
-              <q-card-actions>
+            <q-card flat class="setting-card" :dark="darkMode">
+              <q-card-actions :class="darkMode ? 'bg-primary' : 'bg-accent'">
                 <div class="text-h5">エンジン</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-info">
                 <div>エンジンモード</div>
                 <q-space />
                 <q-btn-toggle
@@ -59,10 +63,10 @@
 
             <!-- Saving Card -->
             <q-card flat class="setting-card">
-              <q-card-actions>
+              <q-card-actions :class="darkMode ? 'bg-primary' : 'bg-accent'">
                 <div class="text-h5">保存</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-info">
                 <div>文字コード</div>
                 <q-space />
                 <q-btn-toggle
@@ -81,7 +85,7 @@
                   ]"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-info">
                 <div>書き出し先を固定</div>
                 <q-space />
                 <q-input
@@ -137,7 +141,7 @@
                 </q-toggle>
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-info">
                 <div>上書き防止</div>
                 <q-space />
                 <q-toggle
@@ -157,7 +161,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-info">
                 <div>labファイルを生成</div>
                 <q-space />
                 <q-toggle
@@ -205,6 +209,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const $q = useQuasar();
+    const darkMode = computed(() => $q.dark.isActive);
 
     const settingDialogOpenedComputed = computed({
       get: () => props.modelValue,
@@ -311,6 +316,7 @@ export default defineComponent({
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      darkMode,
     };
   },
 });
@@ -322,5 +328,13 @@ export default defineComponent({
 
 .setting-card {
   width: 100%;
+}
+
+.setting-lines--light {
+  background-color: $grey-3;
+}
+
+.setting-lines--dark {
+  background-color: $grey-9;
 }
 </style>

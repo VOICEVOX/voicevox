@@ -5,7 +5,7 @@
         <q-btn
           unelevated
           label="戻る"
-          color="white"
+          color="accent"
           text-color="secondary"
           :disable="detailIndex === undefined"
           @click="selectLicenseIndex(undefined)"

@@ -3,7 +3,7 @@
     <q-toolbar>
       <q-btn
         unelevated
-        color="white"
+        color="accent"
         text-color="secondary"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="uiLocked"
@@ -12,7 +12,7 @@
       >
       <q-btn
         unelevated
-        color="white"
+        color="accent"
         text-color="secondary"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!nowPlayingContinuously"
@@ -24,7 +24,7 @@
       <q-btn
         v-if="useUndoRedo"
         unelevated
-        color="white"
+        color="accent"
         text-color="secondary"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canUndo || uiLocked"
@@ -34,15 +34,27 @@
       <q-btn
         v-if="useUndoRedo"
         unelevated
-        color="white"
+        color="accent"
         text-color="secondary"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canRedo || uiLocked"
         @click="redo"
         >やり直す</q-btn
       >
-      <q-btn v-if="darkMode" icon="light_mode" flat @click="darkMode = false" />
-      <q-btn v-else icon="dark_mode" flat @click="darkMode = true" />
+      <q-btn
+        v-if="darkModeComputed"
+        icon="light_mode"
+        flat
+        round
+        @click="darkModeComputed = false"
+      />
+      <q-btn
+        v-else
+        icon="dark_mode"
+        flat
+        round
+        @click="darkModeComputed = true"
+      />
     </q-toolbar>
   </q-header>
 </template>
@@ -50,7 +62,7 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
+import { useQuasar, setCssVar, colors } from "quasar";
 
 export default defineComponent({
   setup() {
@@ -62,8 +74,23 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
-    const darkMode = computed({
+
+    const { getPaletteColor } = colors;
+    const darkModeComputed = computed({
       get: () => {
+        if (store.state.darkMode) {
+          setCssVar("primary", getPaletteColor("black"));
+          setCssVar("secondary", "#ffffff");
+          setCssVar("accent", getPaletteColor("dark"));
+          setCssVar("info", getPaletteColor("grey-10"));
+          setCssVar("positive", getPaletteColor("grey-3"));
+        } else {
+          setCssVar("primary", "#a5d4ad");
+          setCssVar("secondary", "#212121");
+          setCssVar("accent", getPaletteColor("white"));
+          setCssVar("info", getPaletteColor("grey-3"));
+          setCssVar("positive", "#a5d4ad");
+        }
         $q.dark.set(store.state.darkMode);
         return store.state.darkMode;
       },
@@ -111,7 +138,7 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
-      darkMode,
+      darkModeComputed,
     };
   },
 });

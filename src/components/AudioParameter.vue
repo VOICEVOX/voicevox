@@ -14,6 +14,7 @@
       vertical
       reverse
       snap
+      color="positive"
       :min="min"
       :max="max"
       :step="step"

@@ -21,6 +21,8 @@ createApp(App)
       brand: {
         primary: "#a5d4ad",
         secondary: "#212121",
+        accent: "#ffffff",
+        info: "#eeeeee",
       },
     },
     iconSet,

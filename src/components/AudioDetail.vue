@@ -7,8 +7,8 @@
       <div class="side">
         <div class="detail-selector">
           <q-tabs vertical v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
-            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+            <q-tab label="ｱｸｾﾝﾄ" name="accent" class="text-secondary" />
+            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" class="text-secondary" />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">

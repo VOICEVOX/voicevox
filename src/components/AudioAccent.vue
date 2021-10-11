@@ -12,6 +12,7 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
+          color="positive"
           :min="1"
           :max="accentPhrase.moras.length"
           :step="1"
@@ -38,7 +39,7 @@
     }"
   >
     <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
-      <polyline :points="accentLine" stroke="black" fill="none" />
+      <polyline :points="accentLine" :stroke="positiveColor" fill="none" />
     </svg>
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
@@ -62,6 +63,7 @@
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
+import { colors } from "quasar";
 import { defineComponent, computed, onMounted, onUnmounted } from "vue";
 
 export default defineComponent({
@@ -77,6 +79,9 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const previewAccent = new PreviewableValue(() => props.accentPhrase.accent);
+    const { getPaletteColor } = colors;
+
+    const positiveColor = computed(() => getPaletteColor("positive"));
 
     // detect shift key and set flag, preventing changes in intonation while scrolling around
     let shiftKeyFlag = false;
@@ -142,6 +147,7 @@ export default defineComponent({
       changeAccentByScroll,
       accentLine,
       setPanning,
+      positiveColor,
     };
   },
 });

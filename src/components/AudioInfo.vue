@@ -7,6 +7,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="0.5"
         :max="2"
         :step="0.1"
@@ -25,6 +26,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="-0.15"
         :max="0.15"
         :step="0.01"
@@ -44,6 +46,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="0"
         :max="2"
         :step="0.01"
@@ -64,6 +67,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="0"
         :max="2"
         :step="0.1"
@@ -85,6 +89,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="0"
         :max="1.5"
         :step="0.1"
@@ -108,6 +113,7 @@
       <q-slider
         dense
         snap
+        color="positive"
         :min="0"
         :max="1.5"
         :step="0.1"

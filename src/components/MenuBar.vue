@@ -1,5 +1,5 @@
 <template>
-  <q-bar class="bg-white q-pa-none relative-position">
+  <q-bar class="q-pa-none relative-position bg-accent">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, i) of menudata"
@@ -255,10 +255,6 @@ export default defineComponent({
 .active-menu {
   background-color: rgba(global.$primary, 0.3) !important;
 }
-</style>
-
-<style lang="scss" scoped>
-@use '@/styles' as global;
 
 .q-bar {
   min-height: global.$menubar-height;
