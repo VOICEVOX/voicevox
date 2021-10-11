@@ -1094,7 +1094,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const pureKatakana = katakana
           .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
           .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-          .replace(/(?<=[ウクスツヌフムユルュゥグズヅブプ]ー*)ー/g, "ウ")
+          .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
           .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
           .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ");
 
