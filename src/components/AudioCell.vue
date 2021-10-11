@@ -52,11 +52,8 @@
       @change="willRemove || pushAudioText($event)"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
-      @keydown.shift.delete.exact="removeCell"
       @keydown.prevent.up.exact="moveUpCell"
       @keydown.prevent.down.exact="moveDownCell"
-      @keydown.shift.enter.exact="addCellBellow"
-      @keyup.escape.exact="blurCell($event)"
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
