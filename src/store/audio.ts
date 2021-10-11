@@ -546,11 +546,12 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
-        const blob = await dispatch("GENERATE_AUDIO", {
-          audioKey,
-        });
+        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
-          return { result: "ENGINE_ERROR", path: filePath };
+          blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          if (!blob) {
+            return { result: "ENGINE_ERROR", path: filePath };
+          }
         }
 
         try {
