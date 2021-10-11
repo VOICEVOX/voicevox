@@ -1,5 +1,3 @@
-# VOICEVOXの使い方 0.7.2 版
-
 ## はじめに
 
 これは[ヒホ](https://twitter.com/hiho_karuta)が開発したテキスト音声合成ソフトウェア「VOICEVOX」の使い方を紹介するドキュメントです。
