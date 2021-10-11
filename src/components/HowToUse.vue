@@ -38,3 +38,9 @@ export default defineComponent({
   }
 }
 </style>
+
+<style>
+.markdown img {
+  max-width: 50%;
+}
+</style>
