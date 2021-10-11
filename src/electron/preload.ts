@@ -167,6 +167,10 @@ const api: Sandbox = {
   changePinWindow: () => {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
+
+  darkMode: (darkMode: boolean) => {
+    return ipcRenderer.invoke("DARK_MODE", { darkMode });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

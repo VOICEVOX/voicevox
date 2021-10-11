@@ -6,7 +6,7 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
+          <q-tabs vertical v-model="selectedDetail">
             <q-tab label="ｱｸｾﾝﾄ" name="accent" />
             <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
           </q-tabs>
@@ -451,14 +451,12 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
           font-weight: bold;
           cursor: pointer;
         }

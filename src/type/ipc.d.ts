@@ -131,6 +131,11 @@ type IpcIHData = {
     args: [];
     return: void;
   };
+
+  DARK_MODE: {
+    args: [obj: { darkMode?: boolean }];
+    return: boolean;
+  };
 };
 
 /**

@@ -23,6 +23,9 @@ export const settingStore: VoiceVoxStoreOptions<
     ) {
       state.savingSetting = savingSetting;
     },
+    SET_DARK_MODE(state, { darkMode }: { darkMode: boolean }) {
+      state.darkMode = darkMode;
+    },
   },
   actions: {
     GET_SAVING_SETTING_DATA({ commit }) {
@@ -35,6 +38,17 @@ export const settingStore: VoiceVoxStoreOptions<
       const newData = window.electron.savingSetting(data);
       newData.then((savingSetting) => {
         commit("SET_SAVING_SETTING_DATA", { savingSetting: savingSetting });
+      });
+    },
+    GET_DARK_MODE({ commit }) {
+      window.electron.darkMode().then((darkMode) => {
+        commit("SET_DARK_MODE", { darkMode: darkMode });
+      });
+    },
+    SET_DARK_MODE({ commit }, { darkMode }: { darkMode: boolean }) {
+      const mode = window.electron.darkMode(darkMode);
+      mode.then((newMode) => {
+        commit("SET_DARK_MODE", { darkMode: newMode });
       });
     },
   },

@@ -39,6 +39,7 @@ describe("store/vuex.js test", () => {
           exportLab: false,
         },
         isPinned: false,
+        darkMode: false,
       },
       getters: {
         ...uiStore.getters,
@@ -100,5 +101,6 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
     assert.equal(store.state.isPinned, false);
+    assert.equal(store.state.darkMode, false);
   });
 });

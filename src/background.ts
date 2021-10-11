@@ -56,6 +56,7 @@ protocol.registerSchemesAsPrivileged([
 const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
+  darkMode: boolean;
 }>({
   schema: {
     useGpu: {
@@ -82,6 +83,10 @@ const store = new Store<{
         fixedExportDir: "",
         exportLab: false,
       },
+    },
+    darkMode: {
+      type: "boolean",
+      default: false,
     },
   },
 });
@@ -432,6 +437,13 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
     store.set("savingSetting", newData);
   }
   return store.get("savingSetting");
+});
+
+ipcMainHandle("DARK_MODE", (_, { darkMode }) => {
+  if (darkMode !== undefined) {
+    store.set("darkMode", darkMode);
+  }
+  return store.get("darkMode");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

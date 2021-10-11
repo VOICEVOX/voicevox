@@ -44,6 +44,7 @@ export interface Sandbox {
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  darkMode(darkMode?: boolean): Promise<boolean>;
 }
 
 export type AppInfos = {

@@ -37,6 +37,7 @@ export type State = {
   savedLastCommandUnixMillisec: number | null;
   savingSetting: SavingSetting;
   isPinned: boolean;
+  darkMode: boolean;
 };
 
 export type AudioItem = {
@@ -406,11 +407,14 @@ export type SettingGetters = {
 
 export type SettingMutations = {
   SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
+  SET_DARK_MODE: { darkMode: boolean };
 };
 
 export type SettingActions = {
   GET_SAVING_SETTING_DATA(): void;
   SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
+  GET_DARK_MODE(): void;
+  SET_DARK_MODE(payload: { darkMode: boolean }): void;
 };
 
 /*

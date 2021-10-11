@@ -41,6 +41,8 @@
         @click="redo"
         >やり直す</q-btn
       >
+      <q-btn v-if="darkMode" icon="light_mode" flat @click="darkMode = false" />
+      <q-btn v-else icon="dark_mode" flat @click="darkMode = true" />
     </q-toolbar>
   </q-header>
 </template>
@@ -60,6 +62,16 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
+    const darkMode = computed({
+      get: () => {
+        $q.dark.set(store.state.darkMode);
+        return store.state.darkMode;
+      },
+      set: (val) => {
+        $q.dark.set(val);
+        store.dispatch("SET_DARK_MODE", { darkMode: val });
+      },
+    });
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
@@ -99,6 +111,7 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
+      darkMode,
     };
   },
 });
