@@ -40,6 +40,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         darkMode: false,
+        hotkeySettings: [],
       },
       getters: {
         ...uiStore.getters,
@@ -102,5 +103,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
     assert.equal(store.state.isPinned, false);
     assert.equal(store.state.darkMode, false);
+    assert.isArray(store.state.hotkeySettings);
+    assert.isEmpty(store.state.hotkeySettings);
   });
 });

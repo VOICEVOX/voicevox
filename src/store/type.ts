@@ -11,6 +11,7 @@ import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
   Encoding as EncodingType,
+  HotkeySetting,
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
@@ -36,6 +37,7 @@ export type State = {
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
   savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
   isPinned: boolean;
   darkMode: boolean;
 };
@@ -402,17 +404,21 @@ export type ProjectActions = {
  */
 
 export type SettingGetters = {
-  GET_SAVING_SETTING_DATA: SavingSetting;
+  GET_SAVING_SETTING: SavingSetting;
 };
 
 export type SettingMutations = {
-  SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
-  SET_DARK_MODE: { darkMode: boolean };
+  SET_SAVING_SETTING: { savingSetting: SavingSetting };
+  SET_HOTKEY_SETTINGS: { hotkeySettings: HotkeySetting[] };
 };
 
 export type SettingActions = {
-  GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
+  GET_SAVING_SETTING(): void;
+  SET_SAVING_SETTING(payload: { data: SavingSetting }): void;
+  GET_HOTKEY_SETTINGS(): void;
+  SET_HOTKEY_SETTINGS(payload: {
+    data: HotkeySetting;
+  }): Promise<HotkeySetting[]>;
   GET_DARK_MODE(): void;
   SET_DARK_MODE(payload: { darkMode: boolean }): void;
 };

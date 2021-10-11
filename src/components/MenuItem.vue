@@ -40,13 +40,17 @@
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
-    <q-item-section side>{{ menudata.shortCut }}</q-item-section>
+    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+      {{ getMenuBarHotkey(menudata.label) }}
+    </q-item-section>
   </q-item>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref, PropType, computed, watch } from "vue";
 import type { MenuItemData } from "@/components/MenuBar.vue";
+import { useStore } from "@/store";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   name: "MenuItem",
@@ -63,6 +67,21 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const hotkeySettingsMap = computed(
+      () =>
+        new Map(
+          store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
+        )
+    );
+    const getMenuBarHotkey = (label: HotkeyAction) => {
+      const hotkey = hotkeySettingsMap.value.get(label);
+      if (hotkey === undefined) {
+        return "";
+      } else {
+        return hotkey.replaceAll(" ", "+");
+      }
+    };
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -100,8 +119,10 @@ export default defineComponent({
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,
+        getMenuBarHotkey,
       };
     }
+    return { getMenuBarHotkey };
   },
 });
 </script>

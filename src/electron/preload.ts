@@ -171,6 +171,10 @@ const api: Sandbox = {
   darkMode: (darkMode: boolean) => {
     return ipcRenderer.invoke("DARK_MODE", { darkMode });
   },
+
+  hotkeySettings: (newData) => {
+    return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

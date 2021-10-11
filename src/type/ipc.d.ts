@@ -136,6 +136,11 @@ type IpcIHData = {
     args: [obj: { darkMode?: boolean }];
     return: boolean;
   };
+
+  HOTKEY_SETTINGS: {
+    args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
+    return: import("@/type/preload").HotkeySetting[];
+  };
 };
 
 /**

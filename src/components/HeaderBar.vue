@@ -63,7 +63,8 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar, setCssVar, colors } from "quasar";
-
+import { setHotkeyFunctions } from "@/store/setting";
+import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 export default defineComponent({
   setup() {
     const store = useStore();
@@ -103,11 +104,59 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    if (useUndoRedo.value) {
+      const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+        // undo
+        [
+          "元に戻す",
+          () => {
+            if (!uiLocked.value && canUndo.value) {
+              undo();
+            }
+            return false;
+          },
+        ],
+        // redo
+        [
+          "やり直す",
+          () => {
+            if (!uiLocked.value && canRedo.value) {
+              redo();
+            }
+            return false;
+          },
+        ],
+      ]);
+      setHotkeyFunctions(undoRedoHotkeyMap);
+    }
+
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+      // play/stop continuously
+      [
+        "連続再生/停止",
+        () => {
+          if (!uiLocked.value) {
+            if (nowPlayingContinuously.value) {
+              stopContinuously();
+            } else {
+              playContinuously();
+            }
+          }
+        },
+      ],
+    ]);
+
+    setHotkeyFunctions(hotkeyMap);
+
     const undo = () => {
-      store.dispatch("UNDO");
+      if (useUndoRedo.value) {
+        store.dispatch("UNDO");
+      }
     };
     const redo = () => {
-      store.dispatch("REDO");
+      if (useUndoRedo.value) {
+        store.dispatch("REDO");
+      }
     };
     const playContinuously = async () => {
       try {
