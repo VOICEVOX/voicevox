@@ -83,7 +83,7 @@ export default defineComponent({
           setCssVar("primary", getPaletteColor("black"));
           setCssVar("secondary", "#ffffff");
           setCssVar("accent", getPaletteColor("dark"));
-          setCssVar("info", getPaletteColor("grey-10"));
+          setCssVar("info", getPaletteColor("grey-9"));
           setCssVar("positive", getPaletteColor("grey-3"));
         } else {
           setCssVar("primary", "#a5d4ad");

@@ -410,6 +410,7 @@ export type SettingGetters = {
 export type SettingMutations = {
   SET_SAVING_SETTING: { savingSetting: SavingSetting };
   SET_HOTKEY_SETTINGS: { hotkeySettings: HotkeySetting[] };
+  SET_DARK_MODE: { darkMode: boolean };
 };
 
 export type SettingActions = {

@@ -7,7 +7,7 @@
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-white">
+    <q-layout container view="hHh Lpr fFf" class="bg-accent">
       <q-page-container class="root">
         <q-header class="q-pa-sm">
           <q-toolbar>
@@ -25,8 +25,8 @@
         <q-page ref="scroller" class="scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
-            <q-card flat class="setting-card" :dark="darkMode">
-              <q-card-actions :class="darkMode ? 'bg-primary' : 'bg-accent'">
+            <q-card flat class="setting-card">
+              <q-card-actions class="bg-accent">
                 <div class="text-h5">エンジン</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-info">
@@ -58,7 +58,7 @@
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
-              <q-card-actions :class="darkMode ? 'bg-primary' : 'bg-accent'">
+              <q-card-actions class="bg-accent">
                 <div class="text-h5">保存</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-info">
@@ -181,7 +181,7 @@
             </q-card>
             <!-- hotkey settings card -->
             <q-card flat class="setting-card">
-              <q-card-actions>
+              <q-card-actions class="bg-accent">
                 <div class="text-h5">ショートカットキー</div>
                 <q-space />
                 <q-input
@@ -201,7 +201,7 @@
                   </template>
                 </q-input>
               </q-card-actions>
-              <q-card-actions class="bg-grey-3">
+              <q-card-actions class="bg-info">
                 <q-table
                   flat
                   dense
@@ -211,7 +211,7 @@
                   :columns="hotkeyColumns"
                   row-key="hotkeyIndexes"
                   v-model:pagination="hotkeyPagination"
-                  class="hotkey-table bg-grey-3"
+                  class="hotkey-table bg-info"
                 >
                   <template v-slot:body="props">
                     <q-tr :props="props">
@@ -263,7 +263,12 @@
           </div>
         </q-card-actions>
         <q-card-actions align="center">
-          <q-chip v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
+          <q-chip
+            color="secondary"
+            text-color="accent"
+            v-for="(hotkey, index) in lastRecord.split(' ')"
+            :key="index"
+          >
             {{ hotkey }}
           </q-chip>
         </q-card-actions>
@@ -272,8 +277,8 @@
             padding="xs md"
             label="Delete This Hotkey"
             unelevated
-            color="grey-3"
-            text-color="black"
+            color="info"
+            text-color="secondary"
             @click="
               deleteHotkey(lastAction);
               closeHotkeyDialog();
@@ -285,7 +290,7 @@
             label="Confirm"
             unelevated
             color="primary"
-            text-color="black"
+            text-color="secondary"
             @click="
               changeHotkeySettings(lastAction, lastRecord, true)?.then(() => {
                 closeHotkeyDialog();
@@ -305,7 +310,11 @@
           <q-card-actions>
             <div class="text-h6">
               You have a conflict for
-              <q-chip :label="lastRecord" /><br />
+              <q-chip
+                color="secondary"
+                text-color="accent"
+                :label="lastRecord"
+              /><br />
             </div>
           </q-card-actions>
           <q-card-actions>
@@ -627,6 +636,8 @@ export default defineComponent({
 
 .setting-lines--dark {
   background-color: $grey-9;
+}
+
 .setting-card {
   @extend .hotkey-table;
   min-width: 475px;
