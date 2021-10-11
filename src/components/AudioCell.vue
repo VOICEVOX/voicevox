@@ -1,5 +1,12 @@
 <template>
   <div class="audio-cell">
+    <q-icon
+      v-if="isActiveAudioCell"
+      name="arrow_right"
+      color="primary"
+      size="sm"
+      class="absolute active-arrow"
+    />
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
@@ -106,6 +113,10 @@ export default defineComponent({
 
     const characterIconUrl = computed(() =>
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
+    );
+
+    const isActiveAudioCell = computed(
+      () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
     );
 
     const audioTextBuffer = ref(audioItem.value.text);
@@ -291,6 +302,7 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       characterIconUrl,
+      isActiveAudioCell,
       audioTextBuffer,
       setAudioTextBuffer,
       pushAudioText,
@@ -324,6 +336,10 @@ export default defineComponent({
   display: flex;
   margin: 1rem 1rem;
   gap: 0px 1rem;
+  .active-arrow {
+    left: -5px;
+    height: 2rem;
+  }
   .character-button {
     border: solid 1px;
     border-color: global.$primary;
