@@ -34,6 +34,7 @@
     "electron-log": "^4.4.1",
     "electron-store": "^8.0.0",
     "encoding-japanese": "^1.0.30",
+    "github-markdown-css": "^4.0.0",
     "immer": "^9.0.2",
     "markdown-it": "^12.0.4",
     "quasar": "^2.0.3",
