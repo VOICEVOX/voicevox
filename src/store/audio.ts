@@ -304,6 +304,9 @@ export const audioStore: VoiceVoxStoreOptions<
           query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowelLength =
             data;
           break;
+        case "pause":
+          query.accentPhrases[accentPhraseIndex].pauseMora!.vowelLength = data;
+          break;
       }
     },
   },

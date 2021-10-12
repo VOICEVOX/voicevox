@@ -1,6 +1,33 @@
 <template>
+  <div v-if="isPause">
+    <q-badge
+      class="value-label"
+      text-color="secondary"
+      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+    >
+      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+    </q-badge>
+    <q-slider
+      @mouseenter="valueLabel.vowel_visible = true"
+      @mouseleave="valueLabel.vowel_visible = false"
+      vertical
+      reverse
+      snap
+      :min="min"
+      :max="max"
+      :step="step"
+      :disable="uiLocked"
+      :model-value="vowelPreviewValue.currentValue.value"
+      @update:model-value="
+        vowelPreviewValue.setPreviewValue(parseFloat($event))
+      "
+      @change="changeValue(parseFloat($event), 'vowel')"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
+      @pan="setPanning($event, 'vowel')"
+    />
+  </div>
   <!-- when it consists of consonant and vowel -->
-  <div v-if="consonantPreviewValue.currentValue.value !== undefined">
+  <div v-else-if="consonantPreviewValue.currentValue.value !== undefined">
     <q-badge
       class="value-label"
       text-color="secondary"
@@ -102,6 +129,7 @@ export default defineComponent({
     min: { type: Number, default: 0.0 },
     max: { type: Number, default: 10.0 },
     step: { type: Number, default: 0.01 },
+    isPause: { type: Boolean, default: false },
   },
   emits: ["changeValue"],
 
@@ -131,6 +159,9 @@ export default defineComponent({
     const vowelPreviewValue = new PreviewableValue(() => props.vowel);
 
     const changeValue = (newValue: number, type: string) => {
+      if (props.isPause) {
+        type = "pause";
+      }
       emit(
         "changeValue",
         props.accentPhraseIndex,

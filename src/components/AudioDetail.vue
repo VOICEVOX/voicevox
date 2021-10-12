@@ -70,6 +70,25 @@
               />
             </div>
           </template>
+          <div
+            class="q-mb-sm pitch-cell"
+            v-if="accentPhrase.pauseMora"
+            :style="{
+              'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
+            }"
+          >
+            <audio-length
+              :moraIndex="accentPhrase.moras.length"
+              :accentPhraseIndex="accentPhraseIndex"
+              :vowel="accentPhrase.pauseMora.vowelLength"
+              :uiLocked="uiLocked"
+              :min="0"
+              :max="1.0"
+              :step="0.01"
+              :isPause="true"
+              @changeValue="changeMoraData"
+            />
+          </div>
           <template
             v-for="(mora, moraIndex) in accentPhrase.moras"
             :key="moraIndex"
