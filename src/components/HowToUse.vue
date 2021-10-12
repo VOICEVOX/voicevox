@@ -6,7 +6,7 @@
       </q-toolbar>
     </q-header>
     <q-page class="relarive-absolute-wrapper scroller">
-      <div class="q-pa-md markdown" v-html="howToUse"></div>
+      <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
     </q-page>
   </div>
 </template>
@@ -38,6 +38,8 @@ export default defineComponent({
   }
 }
 </style>
+
+<style src="github-markdown-css/github-markdown.css"></style>
 
 <style>
 .markdown img {
