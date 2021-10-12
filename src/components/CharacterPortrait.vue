@@ -27,15 +27,25 @@ export default defineComponent({
       const styleId = audioItem?.styleId;
 
       return styleId !== undefined
-        ? characterInfos.find((info) => info.metas.styleId == styleId)
+        ? characterInfos.find((info) =>
+            info.metas.styles.find((style) => style.styleId === styleId)
+          )
         : undefined;
     });
 
-    const characterName = computed(() =>
-      characterInfo.value?.metas.styleName
-        ? `${characterInfo.value?.metas.speakerName} (${characterInfo.value?.metas.styleName})`
-        : characterInfo.value?.metas.speakerName
-    );
+    const characterName = computed(() => {
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      const audioItem = activeAudioKey
+        ? store.state.audioItems[activeAudioKey]
+        : undefined;
+      const styleId = audioItem?.styleId;
+      const style = characterInfo.value?.metas.styles.find(
+        (style) => style.styleId === styleId
+      );
+      return style?.styleName
+        ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
+        : characterInfo.value?.metas.speakerName;
+    });
 
     const portraitBlobUrl = computed(() => {
       const portraitBlob = characterInfo.value?.portraitBlob;

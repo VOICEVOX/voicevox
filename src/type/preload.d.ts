@@ -69,8 +69,7 @@ export type CharacterInfo = {
   metas: {
     speakerUuid: string;
     speakerName: string;
-    styleName?: string;
-    styleId: number;
+    styles: MetasJson["styles"];
     policy: string;
   };
 };

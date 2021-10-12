@@ -12,7 +12,7 @@
             active-class="selected-character-item"
             :active="
               characterInfo.metas.speakerUuid ===
-              selectedStyle.metas.speakerUuid
+              selectedCharacterInfo.metas.speakerUuid
             "
           >
             <q-item-section avatar>
@@ -35,23 +35,21 @@
             <q-menu anchor="top end" self="top start" class="character-menu">
               <q-list>
                 <q-item
-                  v-for="(style, index) in getStyles(
-                    characterInfo.metas.speakerUuid
-                  )"
+                  v-for="(style, index) in characterInfo.metas.styles"
                   :key="index"
                   clickable
                   v-close-popup
                   active-class="selected-character-item"
-                  :active="style.metas.styleId === selectedStyle.metas.styleId"
-                  @click="changeStyleId(style.metas.styleId)"
+                  :active="style.styleId === selectedStyleId"
+                  @click="changeStyleId(style.styleId)"
                 >
-                  <q-item-section v-if="style.metas.styleName"
-                    >{{ style.metas.speakerName }} ({{
-                      style.metas.styleName
+                  <q-item-section v-if="style.styleName"
+                    >{{ characterInfo.metas.speakerName }} ({{
+                      style.styleName
                     }})</q-item-section
                   >
                   <q-item-section v-else>{{
-                    style.metas.speakerName
+                    characterInfo.metas.speakerName
                   }}</q-item-section>
                 </q-item>
               </q-list>
@@ -116,19 +114,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const characterInfos = computed(() =>
-      store.state.characterInfos?.filter(
-        (info, idx, arr) =>
-          arr.findIndex(
-            (x) => info.metas.speakerUuid === x.metas.speakerUuid
-          ) === idx
-      )
-    );
-    const getStyles = (uuid: string) => {
-      return store.state.characterInfos?.filter(
-        (info) => info.metas.speakerUuid === uuid
-      );
-    };
+    const characterInfos = computed(() => store.state.characterInfos);
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -139,17 +125,20 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const selectedStyle = computed(() =>
-      store.state.characterInfos != undefined &&
-      audioItem.value.styleId != undefined
-        ? store.state.characterInfos.find(
-            (info) => info.metas.styleId == audioItem.value.styleId
+    const selectedCharacterInfo = computed(() =>
+      store.state.characterInfos !== undefined &&
+      audioItem.value.styleId !== undefined
+        ? store.state.characterInfos.find((info) =>
+            info.metas.styles.find(
+              (style) => style.styleId === audioItem.value.styleId
+            )
           )
         : undefined
     );
+    const selectedStyleId = computed(() => audioItem.value.styleId);
 
     const characterIconUrl = computed(() =>
-      URL.createObjectURL(selectedStyle.value?.iconBlob)
+      URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
 
     const audioTextBuffer = ref(audioItem.value.text);
@@ -329,13 +318,13 @@ export default defineComponent({
 
     return {
       characterInfos,
-      getStyles,
       audioItem,
       deleteButtonEnable,
       uiLocked,
       nowPlaying,
       nowGenerating,
-      selectedStyle,
+      selectedCharacterInfo,
+      selectedStyleId,
       characterIconUrl,
       audioTextBuffer,
       setAudioTextBuffer,

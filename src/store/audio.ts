@@ -37,9 +37,12 @@ function parseTextFile(
   body: string,
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
-  const characters = new Map(
-    characterInfos?.map((info) => [info.metas.speakerName, info.metas.styleId])
-  );
+  const characters = new Map<string, number>();
+  for (const info of characterInfos || []) {
+    for (const style of info.metas.styles) {
+      characters.set(info.metas.speakerName, style.styleId);
+    }
+  }
   if (!characters.size) return [];
 
   const audioItems: AudioItem[] = [];
@@ -63,7 +66,10 @@ function buildFileName(state: State, audioKey: string) {
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   const character = state.characterInfos?.find(
-    (info) => info.metas.styleId === audioItem.styleId!
+    (info, idx) =>
+      info.metas.styles.findIndex(
+        (style) => style.styleId === audioItem.styleId
+      ) === idx
   );
   const characterName = character!.metas.speakerName.replace(sanitizer, "");
   let text = audioItem.text.replace(sanitizer, "");
@@ -349,7 +355,8 @@ export const audioStore: VoiceVoxStoreOptions<
       payload: { text?: string; styleId?: number }
     ) {
       const text = payload.text ?? "";
-      const styleId = payload.styleId ?? state.characterInfos![0].metas.styleId;
+      const styleId =
+        payload.styleId ?? state.characterInfos![0].metas.styles[0].styleId;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,

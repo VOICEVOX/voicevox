@@ -51,14 +51,7 @@ export default defineComponent({
     const store = useStore();
     const md = useMarkdownIt();
 
-    const characterInfos = computed(() =>
-      store.state.characterInfos?.filter(
-        (info, idx, arr) =>
-          arr.findIndex(
-            (x) => info.metas.speakerUuid === x.metas.speakerUuid
-          ) === idx
-      )
-    );
+    const characterInfos = computed(() => store.state.characterInfos);
 
     const convertMarkdown = (text: string) => {
       return md.render(text);

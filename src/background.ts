@@ -161,20 +161,17 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
     fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
   );
-  for (const { styleName, styleId } of styles) {
-    characterInfos.push({
-      dirPath,
-      iconPath,
-      portraitPath,
-      metas: {
-        speakerName,
-        speakerUuid,
-        styleName,
-        styleId,
-        policy,
-      },
-    });
-  }
+  characterInfos.push({
+    dirPath,
+    iconPath,
+    portraitPath,
+    metas: {
+      speakerName,
+      speakerUuid,
+      styles,
+      policy,
+    },
+  });
 }
 
 // 利用規約テキストの読み込み
