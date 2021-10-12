@@ -101,7 +101,11 @@ export const settingStore: VoiceVoxStoreOptions<
         dispatch("SET_DARK_MODE", { darkMode: darkMode });
       });
     },
-    SET_DARK_MODE({ commit }, { darkMode }: { darkMode: boolean }) {
+    SET_DARK_MODE({ state, commit }, { darkMode }: { darkMode: boolean }) {
+      if (!state.useDarkMode) {
+        commit("SET_DARK_MODE", { darkMode: false });
+        return;
+      }
       const mode = window.electron.darkMode(darkMode);
       setThemeCSS(darkMode);
       mode.then((newMode) => {
@@ -156,13 +160,11 @@ export const setThemeCSS = (darkMode: boolean): void => {
     setCssVar("accent", getPaletteColor("dark"));
     setCssVar("info", getPaletteColor("grey-9"));
     setCssVar("positive", getPaletteColor("grey-3"));
-    setCssVar("brand", "#ffffff");
   } else {
     setCssVar("primary", "#a5d4ad");
     setCssVar("secondary", "#212121");
     setCssVar("accent", getPaletteColor("white"));
     setCssVar("info", getPaletteColor("grey-3"));
     setCssVar("positive", "#a5d4ad");
-    setCssVar("brand", "#a5d4ad");
   }
 };

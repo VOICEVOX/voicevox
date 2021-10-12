@@ -39,6 +39,7 @@ export type State = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   isPinned: boolean;
+  useDarkMode: boolean;
   darkMode: boolean;
 };
 

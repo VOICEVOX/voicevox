@@ -41,21 +41,23 @@
         @click="redo"
         >やり直す</q-btn
       >
-      <q-btn
-        v-if="darkModeComputed"
-        icon="light_mode"
-        flat
-        round
-        @click="darkModeComputed = false"
-      />
-      <q-btn
-        v-else
-        icon="dark_mode"
-        flat
-        color="listHeaderToolbar"
-        round
-        @click="darkModeComputed = true"
-      />
+      <div v-if="useDarkMode">
+        <q-btn
+          v-if="darkModeComputed"
+          icon="light_mode"
+          flat
+          round
+          @click="darkModeComputed = false"
+        />
+        <q-btn
+          v-else
+          icon="dark_mode"
+          flat
+          color="listHeaderToolbar"
+          round
+          @click="darkModeComputed = true"
+        />
+      </div>
     </q-toolbar>
   </q-header>
 </template>
@@ -72,6 +74,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     const useUndoRedo = computed(() => store.state.useUndoRedo);
+    const useDarkMode = computed(() => store.state.useDarkMode);
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
@@ -172,6 +175,7 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
+      useDarkMode,
       darkModeComputed,
     };
   },

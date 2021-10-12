@@ -23,6 +23,7 @@ createApp(App)
         secondary: "#212121",
         accent: "#ffffff",
         info: "#eeeeee",
+        positive: "#a5d4ad",
       },
     },
     iconSet,

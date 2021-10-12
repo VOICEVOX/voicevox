@@ -6,8 +6,13 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" class="text-secondary" />
+          <q-tabs vertical v-model="selectedDetail" indicator-color="primary">
+            <q-tab
+              label="ｱｸｾﾝﾄ"
+              name="accent"
+              class="text-secondary"
+              ripple="{color: 'primary'}"
+            />
             <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" class="text-secondary" />
           </q-tabs>
         </div>

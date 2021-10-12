@@ -82,6 +82,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
       exportLab: false,
     },
     isPinned: false,
+    useDarkMode: isDevelopment,
     darkMode: false,
     hotkeySettings: [],
   },
