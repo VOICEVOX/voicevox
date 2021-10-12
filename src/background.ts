@@ -84,6 +84,10 @@ const store = new Store<{
         exportLab: false,
       },
     },
+    // To future developers: if you are to modify the store schema with array type,
+    // for example, the hotkeySettings below,
+    // please remember to add a corresponding migration
+    // Learn more: https://github.com/sindresorhus/electron-store#migrations
     hotkeySettings: {
       type: "array",
       items: {
