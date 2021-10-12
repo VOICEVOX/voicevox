@@ -3,17 +3,24 @@
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
-      <q-menu class="character-menu">
+      <q-menu
+        class="character-menu"
+        transition-show="none"
+        transition-hide="none"
+      >
         <q-list>
           <q-item
             v-for="(characterInfo, index) in characterInfos"
             :key="index"
             clickable
+            v-close-popup
             active-class="selected-character-item"
             :active="
               characterInfo.metas.speakerUuid ===
               selectedCharacterInfo.metas.speakerUuid
             "
+            @click="changeStyleId(characterInfo.metas.styles[0].styleId)"
+            @mouseover="reassignSubMenuOpen(index)"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
@@ -32,7 +39,14 @@
               <q-icon name="keyboard_arrow_right" />
             </q-item-section>
 
-            <q-menu anchor="top end" self="top start" class="character-menu">
+            <q-menu
+              anchor="top end"
+              self="top start"
+              transition-show="none"
+              transition-hide="none"
+              class="character-menu"
+              v-model="subMenuOpenFlags[index]"
+            >
               <q-list>
                 <q-item
                   v-for="(style, index) in characterInfo.metas.styles"
@@ -140,6 +154,17 @@ export default defineComponent({
     const characterIconUrl = computed(() =>
       URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
     );
+
+    const subMenuOpenFlags = ref(
+      [...Array(characterInfos.value?.length)].map(() => false)
+    );
+
+    const reassignSubMenuOpen = (idx: number) => {
+      if (subMenuOpenFlags.value[idx]) return;
+      const arr = [...Array(characterInfos.value?.length)].map(() => false);
+      arr[idx] = true;
+      subMenuOpenFlags.value = arr;
+    };
 
     const audioTextBuffer = ref(audioItem.value.text);
     const isChangeFlag = ref(false);
@@ -326,6 +351,8 @@ export default defineComponent({
       selectedCharacterInfo,
       selectedStyleId,
       characterIconUrl,
+      subMenuOpenFlags,
+      reassignSubMenuOpen,
       audioTextBuffer,
       setAudioTextBuffer,
       pushAudioText,
