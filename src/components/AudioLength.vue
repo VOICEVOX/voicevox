@@ -189,8 +189,8 @@ export default defineComponent({
         }
       }
       newValue = Math.round(newValue * 1e3) / 1e3;
-      newValue = newValue > 0 ? newValue : 0;
-      newValue = newValue < 0.3 ? newValue : 0.3;
+      newValue = newValue > props.min ? newValue : props.min;
+      newValue = newValue < props.max ? newValue : props.max;
       if (!props.uiLocked && !shiftKeyFlag && props.max >= newValue)
         changeValue(newValue, type);
     };

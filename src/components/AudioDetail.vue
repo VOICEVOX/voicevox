@@ -84,7 +84,7 @@
               :uiLocked="uiLocked"
               :min="0"
               :max="1.0"
-              :step="0.01"
+              :step="0.1"
               :isPause="true"
               @changeValue="changeMoraData"
             />
