@@ -3,7 +3,7 @@
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+      v-if="valueLabel.vowel_visible"
     >
       {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
     </q-badge>
@@ -31,14 +31,14 @@
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="valueLabel.consonant_visible || valueLabel.consonant_panning"
+      v-if="valueLabel.consonant_visible"
     >
       {{ consonantPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+      v-if="valueLabel.vowel_visible"
     >
       {{ vowelPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
@@ -88,7 +88,7 @@
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
+      v-if="valueLabel.vowel_visible"
     >
       {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
     </q-badge>

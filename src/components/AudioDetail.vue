@@ -9,7 +9,7 @@
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
-            <q-tab name="duration" label="長さ" />
+            <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
       </div>
@@ -49,7 +49,7 @@
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
-          <template v-if="selectedDetail === 'duration'">
+          <template v-if="selectedDetail === 'length'">
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
               :key="moraIndex"
@@ -101,7 +101,7 @@
               @mouseover="handleHoverText(accentPhraseIndex, true)"
               @mouseleave="handleHoverText(accentPhraseIndex, false)"
             >
-              {{ mora.text }}
+              {{ getMoraText(mora) }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -197,6 +197,7 @@ import AudioParameter from "./AudioParameter.vue";
 import AudioLength from "./AudioLength.vue";
 import { HotkeyAction } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import { Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter, AudioLength },
@@ -250,7 +251,7 @@ export default defineComponent({
     type DetailTypes =
       | "accent"
       | "intonation"
-      | "duration"
+      | "length"
       | "play"
       | "stop"
       | "save";
@@ -450,6 +451,18 @@ export default defineComponent({
       }
     };
 
+    const getMoraText = (mora: Mora) => {
+      if (selectedDetail.value == "length") {
+        if (mora.consonant) {
+          return `${mora.consonant} ${mora.vowel}`;
+        } else {
+          return mora.vowel;
+        }
+      } else {
+        return mora.text;
+      }
+    };
+
     return {
       selectDetail,
       selectedDetail,
@@ -472,6 +485,7 @@ export default defineComponent({
       handleHoverText,
       getHoveredClass,
       tabAction,
+      getMoraText,
     };
   },
 });
