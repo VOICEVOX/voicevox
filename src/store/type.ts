@@ -369,6 +369,7 @@ export type IndexGetters = {};
 export type IndexMutations = {};
 
 export type IndexActions = {
+  GET_HOW_TO_USE_TEXT(): Promise<string>;
   GET_POLICY_TEXT(): Promise<string>;
   GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
   GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
