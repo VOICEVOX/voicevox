@@ -52,6 +52,7 @@
         v-else
         icon="dark_mode"
         flat
+        color="listHeaderToolbar"
         round
         @click="darkModeComputed = true"
       />
@@ -62,7 +63,7 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { useQuasar, setCssVar, colors } from "quasar";
+import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 export default defineComponent({
@@ -75,28 +76,12 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
-
-    const { getPaletteColor } = colors;
     const darkModeComputed = computed({
       get: () => {
-        if (store.state.darkMode) {
-          setCssVar("primary", getPaletteColor("black"));
-          setCssVar("secondary", "#ffffff");
-          setCssVar("accent", getPaletteColor("dark"));
-          setCssVar("info", getPaletteColor("grey-9"));
-          setCssVar("positive", getPaletteColor("grey-3"));
-        } else {
-          setCssVar("primary", "#a5d4ad");
-          setCssVar("secondary", "#212121");
-          setCssVar("accent", getPaletteColor("white"));
-          setCssVar("info", getPaletteColor("grey-3"));
-          setCssVar("positive", "#a5d4ad");
-        }
         $q.dark.set(store.state.darkMode);
         return store.state.darkMode;
       },
       set: (val) => {
-        $q.dark.set(val);
         store.dispatch("SET_DARK_MODE", { darkMode: val });
       },
     });

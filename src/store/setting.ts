@@ -11,6 +11,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import Mousetrap from "mousetrap";
+import { colors, setCssVar, useQuasar } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -95,13 +96,14 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       return hotkeys;
     },
-    GET_DARK_MODE({ commit }) {
+    GET_DARK_MODE({ dispatch }) {
       window.electron.darkMode().then((darkMode) => {
-        commit("SET_DARK_MODE", { darkMode: darkMode });
+        dispatch("SET_DARK_MODE", { darkMode: darkMode });
       });
     },
     SET_DARK_MODE({ commit }, { darkMode }: { darkMode: boolean }) {
       const mode = window.electron.darkMode(darkMode);
+      setThemeCSS(darkMode);
       mode.then((newMode) => {
         commit("SET_DARK_MODE", { darkMode: newMode });
       });
@@ -143,4 +145,24 @@ export const parseCombo = (event: KeyboardEvent): string => {
     }
   }
   return recordedCombo;
+};
+
+const { getPaletteColor } = colors;
+
+export const setThemeCSS = (darkMode: boolean): void => {
+  if (darkMode) {
+    setCssVar("primary", getPaletteColor("black"));
+    setCssVar("secondary", "#ffffff");
+    setCssVar("accent", getPaletteColor("dark"));
+    setCssVar("info", getPaletteColor("grey-9"));
+    setCssVar("positive", getPaletteColor("grey-3"));
+    setCssVar("brand", "#ffffff");
+  } else {
+    setCssVar("primary", "#a5d4ad");
+    setCssVar("secondary", "#212121");
+    setCssVar("accent", getPaletteColor("white"));
+    setCssVar("info", getPaletteColor("grey-3"));
+    setCssVar("positive", "#a5d4ad");
+    setCssVar("brand", "#a5d4ad");
+  }
 };

@@ -3,7 +3,7 @@
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="secondary"
+      color="positive"
       size="sm"
       class="absolute active-arrow"
     />
