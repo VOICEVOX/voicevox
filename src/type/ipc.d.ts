@@ -17,6 +17,11 @@ type IpcIHData = {
     return: import("@/type/preload").CharacterInfo[];
   };
 
+  GET_HOW_TO_USE_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_POLICY_TEXT: {
     args: [];
     return: string;
