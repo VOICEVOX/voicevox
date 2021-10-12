@@ -39,6 +39,7 @@ describe("store/vuex.js test", () => {
           exportLab: false,
         },
         isPinned: false,
+        useDarkMode: isDevelopment,
         darkMode: false,
         hotkeySettings: [],
       },
@@ -105,5 +106,6 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.darkMode, false);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
+    assert.equal(store.state.useDarkMode, false);
   });
 });
