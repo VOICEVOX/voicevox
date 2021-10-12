@@ -1089,14 +1089,15 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
           return String.fromCharCode(s.charCodeAt(0) + 0x60);
         });
-        // 長音を適切な母音に（可能な限り）変換
-        // 「ンー」などは変換されず以降のリクエストは失敗しfallbackする
+        // 長音を適切な音に変換
         const pureKatakana = katakana
           .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
           .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
           .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
           .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-          .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ");
+          .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
+          .replace(/(?<=[ン]ー*)ー/g, "ン")
+          .replace(/(?<=[ッ]ー*)ー/g, "ッ");
 
         // アクセントを末尾につけaccent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
