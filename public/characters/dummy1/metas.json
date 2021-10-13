@@ -1,4 +1,21 @@
 {
-    "name": "dummy1",
-    "speaker": 0
+    "speakerName": "dummy1",
+    "speakerUuid": "dummy1uuid",
+    "styles": [
+        {
+            "styleId": 0
+        },
+        {
+            "styleName": "style2",
+            "styleId": 2
+        },
+        {
+            "styleName": "style3",
+            "styleId": 4
+        },
+        {
+            "styleName": "style4",
+            "styleId": 6
+        }
+    ]
 }
