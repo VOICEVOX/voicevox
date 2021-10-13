@@ -182,9 +182,9 @@
                 <div>音声書き出し時にテキストファイルを出力します</div>
                 <q-space />
                 <q-toggle
-                  :model-value="savingSetting.outputText"
+                  :model-value="savingSetting.exportText"
                   @update:model-value="
-                    handleSavingSettingChange('outputText', $event)
+                    handleSavingSettingChange('exportText', $event)
                   "
                 >
                   <q-tooltip

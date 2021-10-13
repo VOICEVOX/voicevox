@@ -83,7 +83,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
       fixedExportDir: "",
       avoidOverwrite: false,
       exportLab: false,
-      outputText: true,
+      exportText: true,
     },
     isPinned: false,
     hotkeySettings: [],
