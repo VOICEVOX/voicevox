@@ -179,7 +179,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>音声書き出し時にテキストファイルを出力します</div>
+                <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.exportText"
