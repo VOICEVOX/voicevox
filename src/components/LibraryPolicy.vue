@@ -13,25 +13,21 @@
         <q-toolbar-title class="text-secondary">{{
           detailIndex === undefined
             ? "音声ライブラリの利用規約"
-            : characterInfos[detailIndex].metas.name
+            : characterInfos[detailIndex].metas.speakerName
         }}</q-toolbar-title>
       </q-toolbar>
     </q-header>
     <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
       <div class="q-pa-md">
         <q-list v-if="detailIndex === undefined">
-          <!-- TODO: スタイルとキャラクターが一対一対応してしまって同じキャラクターのライセンスが表示されてしまう -->
-          <!-- というのを防ぐために、スタイル数の4ごとにライセンスを表示する。 -->
           <template
             v-for="(characterInfo, index) in characterInfos"
             :key="index"
           >
-            <q-item
-              v-if="index % 4 == 0"
-              clickable
-              @click="selectCharacterInfIndex(index)"
-            >
-              <q-item-section>{{ characterInfo.metas.name }}</q-item-section>
+            <q-item clickable @click="selectCharacterInfIndex(index)">
+              <q-item-section>{{
+                characterInfo.metas.speakerName
+              }}</q-item-section>
             </q-item>
           </template>
         </q-list>
