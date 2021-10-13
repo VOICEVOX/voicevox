@@ -9,8 +9,8 @@
     </q-badge>
     <!-- slider for pause -->
     <q-slider
-      @mouseenter="handelMouseHover('pause', true)"
-      @mouseleave="handelMouseHover('pause', false)"
+      @mouseenter="handleMouseHover('pause', true)"
+      @mouseleave="handleMouseHover('pause', false)"
       vertical
       reverse
       snap
@@ -45,8 +45,8 @@
     </q-badge>
     <!-- consonant -->
     <q-slider
-      @mouseenter="handelMouseHover('consonant', true)"
-      @mouseleave="handelMouseHover('consonant', false)"
+      @mouseenter="handleMouseHover('consonant', true)"
+      @mouseleave="handleMouseHover('consonant', false)"
       vertical
       reverse
       snap
@@ -65,8 +65,8 @@
     />
     <!-- vowel -->
     <q-slider
-      @mouseenter="handelMouseHover('vowel', true)"
-      @mouseleave="handelMouseHover('vowel', false)"
+      @mouseenter="handleMouseHover('vowel', true)"
+      @mouseleave="handleMouseHover('vowel', false)"
       vertical
       reverse
       snap
@@ -94,8 +94,8 @@
       {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
     </q-badge>
     <q-slider
-      @mouseenter="handelMouseHover('vowel', true)"
-      @mouseleave="handelMouseHover('vowel', false)"
+      @mouseenter="handleMouseHover('vowel', true)"
+      @mouseleave="handleMouseHover('vowel', false)"
       vertical
       reverse
       snap
@@ -228,7 +228,7 @@ export default defineComponent({
       }
     };
 
-    const handelMouseHover = (phoneme: string, isOver: boolean) => {
+    const handleMouseHover = (phoneme: string, isOver: boolean) => {
       emit(
         "mouseOver",
         isOver,
@@ -253,7 +253,7 @@ export default defineComponent({
       changeValueByScroll,
       setPanning,
       valueLabel,
-      handelMouseHover,
+      handleMouseHover,
     };
   },
 });
