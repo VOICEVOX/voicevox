@@ -634,6 +634,10 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
+        if (!state.savingSetting.outputText) {
+          return { result: "SUCCESS", path: filePath };
+        }
+
         const textBlob = ((): Blob => {
           if (!encoding || encoding === "UTF-8") {
             const bom = new Uint8Array([0xef, 0xbb, 0xbf]);

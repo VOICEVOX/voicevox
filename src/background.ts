@@ -75,6 +75,7 @@ const store = new Store<{
         avoidOverwrite: { type: "boolean", default: false },
         fixedExportDir: { type: "string", default: "" },
         exportLab: { type: "boolean", default: false },
+        outputText: { type: "boolean", default: true },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -82,6 +83,7 @@ const store = new Store<{
         avoidOverwrite: false,
         fixedExportDir: "",
         exportLab: false,
+        outputText: true,
       },
     },
     // To future developers: if you are to modify the store schema with array type,

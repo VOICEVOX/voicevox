@@ -178,6 +178,26 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>音声書き出し時にテキストファイルを出力します</div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.outputText"
+                  @update:model-value="
+                    handleSavingSettingChange('outputText', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声書き出し時にテキストファイルを出力するかどうかを変更できます
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <!-- hotkey settings card -->
             <q-card flat class="setting-card">
