@@ -240,6 +240,7 @@ export default defineComponent({
         case "consonant":
           valueLabel.consonant_visible = isOver;
           break;
+        case "pause":
         case "vowel":
           valueLabel.vowel_visible = isOver;
           break;
