@@ -194,7 +194,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声書き出し時にテキストファイルを出力するかどうかを変更できます
+                    テキストをtxtファイルとして書き出します
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
