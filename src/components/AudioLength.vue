@@ -7,9 +7,10 @@
     >
       {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
     </q-badge>
+    <!-- slider for pause -->
     <q-slider
-      @mouseenter="valueLabel.vowel_visible = true"
-      @mouseleave="valueLabel.vowel_visible = false"
+      @mouseenter="handelMouseHover('pause', true)"
+      @mouseleave="handelMouseHover('pause', false)"
       vertical
       reverse
       snap
@@ -44,8 +45,8 @@
     </q-badge>
     <!-- consonant -->
     <q-slider
-      @mouseenter="valueLabel.consonant_visible = true"
-      @mouseleave="valueLabel.consonant_visible = false"
+      @mouseenter="handelMouseHover('consonant', true)"
+      @mouseleave="handelMouseHover('consonant', false)"
       vertical
       reverse
       snap
@@ -64,8 +65,8 @@
     />
     <!-- vowel -->
     <q-slider
-      @mouseenter="valueLabel.vowel_visible = true"
-      @mouseleave="valueLabel.vowel_visible = false"
+      @mouseenter="handelMouseHover('vowel', true)"
+      @mouseleave="handelMouseHover('vowel', false)"
       vertical
       reverse
       snap
@@ -93,8 +94,8 @@
       {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
     </q-badge>
     <q-slider
-      @mouseenter="valueLabel.vowel_visible = true"
-      @mouseleave="valueLabel.vowel_visible = false"
+      @mouseenter="handelMouseHover('vowel', true)"
+      @mouseleave="handelMouseHover('vowel', false)"
       vertical
       reverse
       snap
@@ -131,7 +132,7 @@ export default defineComponent({
     step: { type: Number, default: 0.01 },
     isPause: { type: Boolean, default: false },
   },
-  emits: ["changeValue"],
+  emits: ["changeValue", "mouseOver"],
 
   setup(props, { emit }) {
     // detect shift key and set flag, preventing changes in intonation while scrolling around
@@ -227,6 +228,24 @@ export default defineComponent({
       }
     };
 
+    const handelMouseHover = (phoneme: string, isOver: boolean) => {
+      emit(
+        "mouseOver",
+        isOver,
+        phoneme,
+        props.accentPhraseIndex,
+        props.moraIndex
+      );
+      switch (phoneme) {
+        case "consonant":
+          valueLabel.consonant_visible = isOver;
+          break;
+        case "vowel":
+          valueLabel.vowel_visible = isOver;
+          break;
+      }
+    };
+
     return {
       consonantPreviewValue,
       vowelPreviewValue,
@@ -234,6 +253,7 @@ export default defineComponent({
       changeValueByScroll,
       setPanning,
       valueLabel,
+      handelMouseHover,
     };
   },
 });

@@ -67,6 +67,7 @@
                 :max="0.3"
                 :step="0.01"
                 @changeValue="changeMoraData"
+                @mouseOver="handleHoverText"
               />
             </div>
           </template>
@@ -98,10 +99,10 @@
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouseover="handleHoverText(accentPhraseIndex, true)"
-              @mouseleave="handleHoverText(accentPhraseIndex, false)"
+              @mouseover="handleHoverText(true, 'accent', accentPhraseIndex)"
+              @mouseleave="handleHoverText(false, 'accent', accentPhraseIndex)"
             >
-              {{ getMoraText(mora) }}
+              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -188,7 +189,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, reactive, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
@@ -429,21 +430,59 @@ export default defineComponent({
       });
     };
 
-    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+    type hoveredType = "pause" | "accent" | "vowel" | "consonant";
 
-    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
-      if (isOver) {
-        hoveredPhraseIndex.value = phraseIndex;
-      } else {
-        hoveredPhraseIndex.value = undefined;
+    type hoveredInfoType = {
+      accentPhraseIndex: number | undefined;
+      moraIndex: number | undefined;
+      type: hoveredType;
+    };
+
+    const hoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+      type: "pause",
+    });
+
+    const handleHoverText = (
+      isOver: boolean,
+      phoneme: hoveredType,
+      phraseIndex: number,
+      moraIndex?: number
+    ) => {
+      hoveredInfo.type = phoneme;
+      switch (phoneme) {
+        case "pause":
+          break;
+        case "accent":
+          if (isOver) {
+            hoveredInfo.accentPhraseIndex = phraseIndex;
+          } else {
+            hoveredInfo.accentPhraseIndex = undefined;
+          }
+          break;
+        case "consonant":
+        case "vowel":
+          if (isOver) {
+            console.log(phoneme, phraseIndex, moraIndex);
+            hoveredInfo.accentPhraseIndex = phraseIndex;
+            hoveredInfo.moraIndex = moraIndex;
+          } else {
+            hoveredInfo.accentPhraseIndex = undefined;
+            hoveredInfo.moraIndex = undefined;
+          }
+          break;
+        default:
+          break;
       }
     };
 
     const getHoveredClass = (accentPhraseIndex: number) => {
       if (
         selectedDetail.value == "accent" &&
+        hoveredInfo.type == "accent" &&
         !uiLocked.value &&
-        accentPhraseIndex === hoveredPhraseIndex.value
+        accentPhraseIndex === hoveredInfo.accentPhraseIndex
       ) {
         return "text-cell-hovered";
       } else {
@@ -451,12 +490,35 @@ export default defineComponent({
       }
     };
 
-    const getMoraText = (mora: Mora) => {
+    const getHoveredText = (
+      mora: Mora,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
       if (selectedDetail.value == "length") {
-        if (mora.consonant) {
-          return `${mora.consonant} ${mora.vowel}`;
-        } else {
-          return mora.vowel;
+        switch (hoveredInfo.type) {
+          case "pause":
+          case "accent":
+            return mora.text;
+          case "vowel": {
+            if (
+              accentPhraseIndex === hoveredInfo.accentPhraseIndex &&
+              moraIndex === hoveredInfo.moraIndex
+            )
+              return mora.vowel.toUpperCase();
+            else return mora.text;
+          }
+          case "consonant": {
+            if (
+              accentPhraseIndex === hoveredInfo.accentPhraseIndex &&
+              moraIndex === hoveredInfo.moraIndex
+            )
+              return mora.consonant?.toUpperCase();
+            else return mora.text;
+          }
+          default:
+            console.log(hoveredInfo.type);
+            return mora.text;
         }
       } else {
         return mora.text;
@@ -485,7 +547,7 @@ export default defineComponent({
       handleHoverText,
       getHoveredClass,
       tabAction,
-      getMoraText,
+      getHoveredText,
     };
   },
 });
