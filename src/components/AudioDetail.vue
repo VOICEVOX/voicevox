@@ -464,7 +464,6 @@ export default defineComponent({
         case "consonant":
         case "vowel":
           if (isOver) {
-            console.log(phoneme, phraseIndex, moraIndex);
             hoveredInfo.accentPhraseIndex = phraseIndex;
             hoveredInfo.moraIndex = moraIndex;
           } else {
@@ -517,7 +516,6 @@ export default defineComponent({
             else return mora.text;
           }
           default:
-            console.log(hoveredInfo.type);
             return mora.text;
         }
       } else {
