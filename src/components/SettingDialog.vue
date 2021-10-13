@@ -80,7 +80,7 @@
                   ]"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-info">
+              <q-card-actions class="q-px-md q-py-none bg-info">
                 <div>書き出し先を固定</div>
                 <q-space />
                 <q-input
@@ -136,7 +136,7 @@
                 </q-toggle>
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-sm bg-info">
+              <q-card-actions class="q-px-md q-py-none bg-info">
                 <div>上書き防止</div>
                 <q-space />
                 <q-toggle
@@ -156,7 +156,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-info">
+              <q-card-actions class="q-px-md q-py-none bg-info">
                 <div>labファイルを生成</div>
                 <q-space />
                 <q-toggle

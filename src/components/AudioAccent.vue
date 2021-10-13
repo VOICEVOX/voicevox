@@ -45,7 +45,6 @@
         fill="none"
       />
     </svg>
-    {{ accentColor }}
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
     <div
