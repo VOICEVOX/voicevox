@@ -80,6 +80,7 @@ export type SavingSetting = {
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
+  exportText: boolean;
 };
 
 export type HotkeySetting = {

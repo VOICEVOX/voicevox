@@ -178,6 +178,26 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>txtファイルを書き出し</div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.exportText"
+                  @update:model-value="
+                    handleSavingSettingChange('exportText', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキストをtxtファイルとして書き出します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <!-- hotkey settings card -->
             <q-card flat class="setting-card">

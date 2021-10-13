@@ -634,34 +634,36 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
-        const textBlob = ((): Blob => {
-          if (!encoding || encoding === "UTF-8") {
-            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-            return new Blob([bom, state.audioItems[audioKey].text], {
-              type: "text/plain;charset=UTF-8",
+        if (state.savingSetting.exportText) {
+          const textBlob = ((): Blob => {
+            if (!encoding || encoding === "UTF-8") {
+              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+              return new Blob([bom, state.audioItems[audioKey].text], {
+                type: "text/plain;charset=UTF-8",
+              });
+            }
+            const sjisArray = Encoding.convert(
+              Encoding.stringToCode(state.audioItems[audioKey].text),
+              { to: "SJIS", type: "arraybuffer" }
+            );
+            return new Blob([new Uint8Array(sjisArray)], {
+              type: "text/plain;charset=Shift_JIS",
             });
+          })();
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+
+            return { result: "WRITE_ERROR", path: filePath };
           }
-          const sjisArray = Encoding.convert(
-            Encoding.stringToCode(state.audioItems[audioKey].text),
-            { to: "SJIS", type: "arraybuffer" }
-          );
-          return new Blob([new Uint8Array(sjisArray)], {
-            type: "text/plain;charset=Shift_JIS",
-          });
-        })();
-
-        try {
-          window.electron.writeFile({
-            filePath: filePath.replace(/\.wav$/, ".txt"),
-            buffer: await textBlob.arrayBuffer(),
-          });
-
-          return { result: "SUCCESS", path: filePath };
-        } catch (e) {
-          window.electron.logError(e);
-
-          return { result: "WRITE_ERROR", path: filePath };
         }
+
+        return { result: "SUCCESS", path: filePath };
       }
     ),
     GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
