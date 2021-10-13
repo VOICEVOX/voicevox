@@ -28,6 +28,7 @@
             "
             @click="changeStyleId(characterInfo.metas.styles[0].styleId)"
             @mouseover="reassignSubMenuOpen(index)"
+            @mouseleave="reassignSubMenuOpen.cancel()"
           >
             <q-item-section avatar>
               <q-avatar rounded size="2rem">
@@ -119,7 +120,7 @@ import { computed, watch, defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { CharacterInfo } from "@/type/preload";
-import { QInput } from "quasar";
+import { QInput, debounce } from "quasar";
 
 export default defineComponent({
   name: "AudioCell",
@@ -163,12 +164,12 @@ export default defineComponent({
       [...Array(characterInfos.value?.length)].map(() => false)
     );
 
-    const reassignSubMenuOpen = (idx: number) => {
+    const reassignSubMenuOpen = debounce((idx: number) => {
       if (subMenuOpenFlags.value[idx]) return;
       const arr = [...Array(characterInfos.value?.length)].map(() => false);
       arr[idx] = true;
       subMenuOpenFlags.value = arr;
-    };
+    }, 100);
 
     const isActiveAudioCell = computed(
       () => props.audioKey === store.getters.ACTIVE_AUDIO_KEY
