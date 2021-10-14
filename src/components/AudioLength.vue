@@ -210,7 +210,7 @@ export default defineComponent({
             valueLabel.consonant_panning = true;
             consonantPreviewValue.startPreview();
           } else {
-            valueLabel.vowel_panning = false;
+            valueLabel.consonant_panning = false;
             consonantPreviewValue.stopPreview();
           }
           break;
