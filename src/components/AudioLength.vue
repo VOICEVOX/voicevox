@@ -211,7 +211,7 @@ export default defineComponent({
             consonantPreviewValue.startPreview();
           } else {
             valueLabel.vowel_panning = false;
-            vowelPreviewValue.stopPreview();
+            consonantPreviewValue.stopPreview();
           }
           break;
         }
