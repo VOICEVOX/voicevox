@@ -73,7 +73,7 @@
           </template>
           <div
             class="q-mb-sm pitch-cell"
-            v-if="accentPhrase.pauseMora"
+            v-if="accentPhrase.pauseMora && selectedDetail == 'length'"
             :style="{
               'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
             }"
