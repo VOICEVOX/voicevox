@@ -1136,11 +1136,38 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       }
 
-      commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrases: newAccentPhrasesSegment,
-      });
+      const originAccentPhrases =
+        state.audioItems[audioKey].query!.accentPhrases;
+      const newAccentPhrases = [
+        ...originAccentPhrases.slice(0, accentPhraseIndex),
+        ...newAccentPhrasesSegment,
+        ...originAccentPhrases.slice(accentPhraseIndex + 1),
+      ];
+      const copyIndexes = newAccentPhrasesSegment.map(
+        (_, i) => accentPhraseIndex + i
+      );
+
+      try {
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          "FETCH_AND_COPY_MORA_DATA",
+          {
+            accentPhrases: newAccentPhrases,
+            styleId,
+            copyIndexes,
+          }
+        );
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhraseIndex,
+          accentPhrases: resultAccentPhrases,
+        });
+      } catch (error) {
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhraseIndex,
+          accentPhrases: newAccentPhrases,
+        });
+      }
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       { commit },
@@ -1375,7 +1402,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations.SET_SINGLE_ACCENT_PHRASE(draft, payload);
+      audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       draft,
