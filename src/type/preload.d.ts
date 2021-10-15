@@ -53,6 +53,15 @@ export type AppInfos = {
   version: string;
 };
 
+export type MetasJson = {
+  speakerName: string;
+  speakerUuid: string;
+  styles: {
+    styleName?: string;
+    styleId: number;
+  }[];
+};
+
 export type CharacterInfo = {
   dirPath: string;
   iconPath: string;
@@ -60,8 +69,9 @@ export type CharacterInfo = {
   iconBlob?: Blob;
   portraitBlob?: Blob;
   metas: {
-    name: string;
-    speaker: number;
+    speakerUuid: string;
+    speakerName: string;
+    styles: MetasJson["styles"];
     policy: string;
   };
 };
@@ -80,6 +90,7 @@ export type SavingSetting = {
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
+  exportText: boolean;
 };
 
 export type HotkeySetting = {

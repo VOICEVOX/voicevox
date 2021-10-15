@@ -37,6 +37,7 @@ describe("store/vuex.js test", () => {
           fixedExportDir: "",
           avoidOverwrite: false,
           exportLab: false,
+          exportText: true,
         },
         isPinned: false,
         hotkeySettings: [],
