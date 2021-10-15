@@ -33,6 +33,7 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isDefaultStyleSelectDialogOpen: boolean;
   isMaximized: boolean;
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
@@ -377,6 +378,9 @@ export type IndexActions = {
   }): Promise<Electron.MessageBoxReturnValue>;
   LOG_ERROR(...payload: unknown[]): void;
   LOG_INFO(...payload: unknown[]): void;
+  SET_DEFAULT_STYLE_IDS(
+    payload: { speakerUuid: string; defaultStyleId: number }[]
+  ): void;
 };
 
 /*
@@ -435,6 +439,9 @@ export type UiMutations = {
   UNLOCK_UI: undefined;
   IS_HELP_DIALOG_OPEN: { isHelpDialogOpen: boolean };
   IS_SETTING_DIALOG_OPEN: { isSettingDialogOpen: boolean };
+  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
+    isDefaultStyleSelectDialogOpen: boolean;
+  };
   SET_USE_GPU: { useGpu: boolean };
   DETECT_UNMAXIMIZED: undefined;
   DETECT_MAXIMIZED: undefined;
@@ -448,6 +455,9 @@ export type UiActions = {
   ASYNC_UI_LOCK(payload: { callback: () => Promise<void> }): void;
   IS_HELP_DIALOG_OPEN(payload: { isHelpDialogOpen: boolean }): void;
   IS_SETTING_DIALOG_OPEN(payload: { isSettingDialogOpen: boolean }): void;
+  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(payload: {
+    isDefaultStyleSelectDialogOpen: boolean;
+  }): void;
   GET_USE_GPU(): void;
   SET_USE_GPU(payload: { useGpu: boolean }): void;
   DETECT_UNMAXIMIZED(): void;

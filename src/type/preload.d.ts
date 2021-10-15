@@ -46,6 +46,10 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  isUnsetDefaultStyleIds(): Promise<boolean>;
+  setDefaultStyleIds(
+    defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
+  ): void;
 }
 
 export type AppInfos = {
@@ -72,6 +76,7 @@ export type CharacterInfo = {
     speakerUuid: string;
     speakerName: string;
     styles: MetasJson["styles"];
+    defaultStyleId: number;
     policy: string;
   };
 };

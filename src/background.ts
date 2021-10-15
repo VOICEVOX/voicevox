@@ -62,6 +62,10 @@ const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  defaultStyleIds: {
+    speakerUuid: string;
+    defaultStyleId: number;
+  }[];
 }>({
   schema: {
     useGpu: {
@@ -175,6 +179,17 @@ const store = new Store<{
         },
       ],
     },
+    defaultStyleIds: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          speakerUuid: { type: "string" },
+          defaultStyleId: { type: "number" },
+        },
+      },
+      default: [],
+    },
   },
 });
 
@@ -253,6 +268,10 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
     fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
   );
+  const defaultStyleId =
+    store.get("defaultStyleIds").find((x) => x.speakerUuid === speakerUuid)
+      ?.defaultStyleId || styles[0].styleId;
+
   characterInfos.push({
     dirPath,
     iconPath,
@@ -261,6 +280,7 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
       speakerName,
       speakerUuid,
       styles,
+      defaultStyleId,
       policy,
     },
   });
@@ -562,6 +582,14 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   } else {
     win.setAlwaysOnTop(true);
   }
+});
+
+ipcMainHandle("IS_UNSET_DEFAULT_STYLE_IDS", () => {
+  return store.get("defaultStyleIds").length === 0;
+});
+
+ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
+  store.set("defaultStyleIds", defaultStyleIds);
 });
 
 // app callback

@@ -141,6 +141,16 @@ type IpcIHData = {
     args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];
   };
+
+  IS_UNSET_DEFAULT_STYLE_IDS: {
+    args: [];
+    return: boolean;
+  };
+
+  SET_DEFAULT_STYLE_IDS: {
+    args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
+    return: void;
+  };
 };
 
 /**

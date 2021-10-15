@@ -56,6 +56,9 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
     },
+    SET_DEFAULT_STYLE_IDS(_, defaultStyleIds) {
+      window.electron.setDefaultStyleIds(defaultStyleIds);
+    },
   },
 };
 
@@ -75,6 +78,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     useGpu: false,
     isHelpDialogOpen: false,
     isSettingDialogOpen: false,
+    isDefaultStyleSelectDialogOpen: false,
     isMaximized: false,
     savedLastCommandUnixMillisec: null,
     savingSetting: {

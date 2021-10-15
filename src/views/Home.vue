@@ -101,6 +101,9 @@
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
+  <default-style-select-dialog
+    v-model="isDefaultStyleSelectDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -121,6 +124,7 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
+import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -139,6 +143,7 @@ export default defineComponent({
     HelpDialog,
     SettingDialog,
     CharacterPortrait,
+    DefaultStyleSelectDialog,
   },
 
   setup() {
@@ -347,6 +352,14 @@ export default defineComponent({
         store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
     });
 
+    const isDefaultStyleSelectDialogOpenComputed = computed({
+      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+          isDefaultStyleSelectDialogOpen: val,
+        }),
+    });
+
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -390,6 +403,7 @@ export default defineComponent({
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
+      isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
