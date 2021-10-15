@@ -302,7 +302,6 @@ export type AudioCommandMutations = {
   };
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
     audioKey: string;
-    accentPhraseIndex: number;
     accentPhrases: AccentPhrase[];
   };
   COMMAND_SET_AUDIO_MORA_DATA: {

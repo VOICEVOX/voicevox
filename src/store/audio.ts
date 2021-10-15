@@ -1158,13 +1158,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         );
         commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
           audioKey,
-          accentPhraseIndex,
           accentPhrases: resultAccentPhrases,
         });
       } catch (error) {
         commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
           audioKey,
-          accentPhraseIndex,
           accentPhrases: newAccentPhrases,
         });
       }
@@ -1398,7 +1396,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       draft,
       payload: {
         audioKey: string;
-        accentPhraseIndex: number;
         accentPhrases: AccentPhrase[];
       }
     ) {
