@@ -187,14 +187,14 @@ export default defineComponent({
     const closeDialog = () => {
       if (!characterInfos.value) return;
 
-      const defaultStleIds = characterInfos.value.map((info, idx) => {
+      const defaultStyleIds = characterInfos.value.map((info, idx) => {
         return {
           speakerUuid: info.metas.speakerUuid,
           defaultStyleId:
             info.metas.styles[selectedStyleIndexes.value?.[idx] || 0].styleId,
         };
       });
-      store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStleIds);
+      store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
       modelValueComputed.value = false;
     };
