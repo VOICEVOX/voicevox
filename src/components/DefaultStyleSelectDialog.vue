@@ -10,13 +10,50 @@
     <q-layout container view="hHh Lpr lff" class="bg-white">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <div class="flex items-end">
+          <div class="column">
             <q-toolbar-title class="text-secondary"
               >デフォルトのスタイルを選択してください</q-toolbar-title
             >
             <span class="text-secondary text-caption q-ml-sm">
               ※後からでも変更できます
             </span>
+          </div>
+
+          <q-space />
+
+          <div class="row items-center no-wrap">
+            <div class="text-subtitle1 text-no-wrap text-secondary q-mr-md">
+              {{ pageIndex + 1 }} / {{ characterInfos.length }}
+            </div>
+
+            <q-btn
+              unelevated
+              label="戻る"
+              color="white"
+              text-color="secondary"
+              class="text-no-wrap q-mr-sm"
+              :disable="pageIndex < 1"
+              @click="pageIndex--"
+            />
+
+            <q-btn
+              v-if="pageIndex + 1 < characterInfos.length"
+              unelevated
+              label="次へ"
+              color="white"
+              text-color="secondary"
+              class="text-no-wrap"
+              @click="pageIndex++"
+            />
+            <q-btn
+              v-else
+              unelevated
+              label="完了"
+              color="white"
+              text-color="secondary"
+              class="text-no-wrap"
+              @click="closeDialog"
+            />
           </div>
         </q-toolbar>
       </q-header>
@@ -93,45 +130,6 @@
               </q-list>
             </q-tab-panel>
           </q-tab-panels>
-
-          <q-page-sticky expand position="bottom">
-            <q-toolbar class="bg-primary">
-              <div class="text-subtitle1 text-no-wrap q-mr-sm">
-                {{ pageIndex + 1 }} / {{ characterInfos.length }}
-              </div>
-
-              <q-space />
-
-              <q-btn
-                unelevated
-                label="戻る"
-                color="white"
-                text-color="secondary"
-                class="text-no-wrap q-mr-sm"
-                :disable="pageIndex < 1"
-                @click="pageIndex--"
-              />
-
-              <q-btn
-                v-if="pageIndex + 1 < characterInfos.length"
-                unelevated
-                label="次へ"
-                color="white"
-                text-color="secondary"
-                class="text-no-wrap"
-                @click="pageIndex++"
-              />
-              <q-btn
-                v-else
-                unelevated
-                label="完了"
-                color="white"
-                text-color="secondary"
-                class="text-no-wrap"
-                @click="closeDialog"
-              />
-            </q-toolbar>
-          </q-page-sticky>
         </q-page>
       </q-page-container>
     </q-layout>
@@ -218,8 +216,9 @@ export default defineComponent({
 <style lang="scss" scoped>
 @use '@/styles' as global;
 
-$bottombar-height: 50px - global.$window-border-width;
-
+.q-toolbar div:first-child {
+  min-width: 0;
+}
 .character-portrait {
   object-fit: none;
   object-position: center top;
@@ -227,7 +226,7 @@ $bottombar-height: 50px - global.$window-border-width;
 .q-tab-panels {
   height: calc(
     100vh - #{global.$menubar-height + global.$header-height +
-      global.$window-border-width + $bottombar-height}
+      global.$window-border-width}
   );
   overflow-y: auto;
 
@@ -251,9 +250,6 @@ $bottombar-height: 50px - global.$window-border-width;
     }
   }
 }
-.q-page-sticky {
-  bottom: -#{global.$window-border-width};
-}
 
 .q-layout-container > :deep(.absolute-full) {
   right: 0 !important;
@@ -264,6 +260,9 @@ $bottombar-height: 50px - global.$window-border-width;
 }
 
 @media screen and (max-width: 700px) {
+  .q-toolbar__title {
+    font-size: 1.2rem;
+  }
   .q-drawer-container {
     display: none;
   }
@@ -276,6 +275,12 @@ $bottombar-height: 50px - global.$window-border-width;
 }
 
 @media screen and (max-width: 400px) {
+  .q-toolbar__title {
+    font-size: 1rem;
+  }
+  .q-btn {
+    padding: 0 5px;
+  }
   .style-icon {
     width: 80px !important;
     height: 80px !important;
