@@ -265,6 +265,24 @@
                 </q-table>
               </q-card-actions>
             </q-card>
+            <!-- Default Style Card -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">デフォルトスタイル</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>デフォルトスタイル設定</div>
+                <q-space />
+                <q-btn
+                  unelevated
+                  padding="xs md"
+                  label="設定画面を開く"
+                  color="white"
+                  text-color="black"
+                  @click="openDefaultStyleSelectDialog"
+                />
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -599,6 +617,12 @@ export default defineComponent({
       );
     });
 
+    const openDefaultStyleSelectDialog = () => {
+      store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+        isDefaultStyleSelectDialogOpen: true,
+      });
+    };
+
     return {
       settingDialogOpenedComputed,
       isHotkeyDialogOpened,
@@ -626,6 +650,7 @@ export default defineComponent({
       changeHotkeySettings,
       confirmBtnEnabled,
       checkHotkeyReadonly,
+      openDefaultStyleSelectDialog,
     };
   },
 });

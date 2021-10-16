@@ -590,6 +590,11 @@ ipcMainHandle("IS_UNSET_DEFAULT_STYLE_IDS", () => {
 
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   store.set("defaultStyleIds", defaultStyleIds);
+  for (const info of characterInfos) {
+    info.metas.defaultStyleId =
+      defaultStyleIds.find((x) => x.speakerUuid === info.metas.speakerUuid)
+        ?.defaultStyleId || info.metas.styles[0].styleId;
+  }
 });
 
 // app callback

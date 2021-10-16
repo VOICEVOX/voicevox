@@ -49,7 +49,7 @@ export interface Sandbox {
   isUnsetDefaultStyleIds(): Promise<boolean>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
-  ): void;
+  ): Promise<void>;
 }
 
 export type AppInfos = {

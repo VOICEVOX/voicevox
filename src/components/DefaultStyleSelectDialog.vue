@@ -197,6 +197,8 @@ export default defineComponent({
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
       modelValueComputed.value = false;
+
+      pageIndex.value = 0;
     };
 
     return {

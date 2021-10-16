@@ -23,7 +23,14 @@ export default defineComponent({
     store.dispatch("GET_USE_GPU", undefined);
     store.dispatch("GET_SAVING_SETTING", undefined);
     store.dispatch("GET_HOTKEY_SETTINGS", undefined);
-    store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", { isDefaultStyleSelectDialogOpen: true });
+    store
+      .dispatch("IS_UNSET_DEFAULT_STYLE_IDS")
+      .then((isUnsetDefaultStyleIds) => {
+        if (isUnsetDefaultStyleIds)
+          store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+            isDefaultStyleSelectDialogOpen: true,
+          });
+      });
   }
 });
 </script>

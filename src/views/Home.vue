@@ -352,6 +352,7 @@ export default defineComponent({
         store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
     });
 
+    // デフォルトスタイル選択
     const isDefaultStyleSelectDialogOpenComputed = computed({
       get: () => store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>

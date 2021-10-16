@@ -56,8 +56,12 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
     },
-    SET_DEFAULT_STYLE_IDS(_, defaultStyleIds) {
-      window.electron.setDefaultStyleIds(defaultStyleIds);
+    async IS_UNSET_DEFAULT_STYLE_IDS() {
+      return await window.electron.isUnsetDefaultStyleIds();
+    },
+    async SET_DEFAULT_STYLE_IDS({ dispatch }, defaultStyleIds) {
+      await window.electron.setDefaultStyleIds(defaultStyleIds);
+      await dispatch("LOAD_CHARACTER");
     },
   },
 };

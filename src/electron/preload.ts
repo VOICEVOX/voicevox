@@ -180,8 +180,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_IDS");
   },
 
-  setDefaultStyleIds: (defaultStyleIds) => {
-    ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+  setDefaultStyleIds: async (defaultStyleIds) => {
+    await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 };
 

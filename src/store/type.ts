@@ -378,6 +378,7 @@ export type IndexActions = {
   }): Promise<Electron.MessageBoxReturnValue>;
   LOG_ERROR(...payload: unknown[]): void;
   LOG_INFO(...payload: unknown[]): void;
+  IS_UNSET_DEFAULT_STYLE_IDS(): Promise<boolean>;
   SET_DEFAULT_STYLE_IDS(
     payload: { speakerUuid: string; defaultStyleId: number }[]
   ): void;

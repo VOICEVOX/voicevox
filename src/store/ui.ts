@@ -123,11 +123,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           isDefaultStyleSelectDialogOpen
         )
           return;
-        if (
-          isDefaultStyleSelectDialogOpen &&
-          !(await window.electron.isUnsetDefaultStyleIds())
-        )
-          return;
 
         if (isDefaultStyleSelectDialogOpen) commit("LOCK_UI");
         else commit("UNLOCK_UI");
