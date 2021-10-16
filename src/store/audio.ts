@@ -1138,6 +1138,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       const originAccentPhrases =
         state.audioItems[audioKey].query!.accentPhrases;
+
+      // https://github.com/Hiroshiba/voicevox/issues/248
+      // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
+      // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
       const newAccentPhrases = [
         ...originAccentPhrases.slice(0, accentPhraseIndex),
         ...newAccentPhrasesSegment,
