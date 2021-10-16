@@ -59,9 +59,11 @@ export default defineComponent({
 
     const detailIndex = ref<number | undefined>(undefined);
 
-    const scroller = ref<any>();
+    const scroller = ref<HTMLElement>();
     const selectCharacterInfIndex = (index: number | undefined) => {
-      scroller.value!.scrollTop = 0;
+      if (scroller.value == undefined)
+        throw new Error("scroller.value == undefined");
+      scroller.value.scrollTop = 0;
       detailIndex.value = index;
     };
 
