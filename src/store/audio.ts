@@ -1136,11 +1136,40 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       }
 
-      commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrases: newAccentPhrasesSegment,
-      });
+      const originAccentPhrases =
+        state.audioItems[audioKey].query!.accentPhrases;
+
+      // https://github.com/Hiroshiba/voicevox/issues/248
+      // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
+      // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
+      const newAccentPhrases = [
+        ...originAccentPhrases.slice(0, accentPhraseIndex),
+        ...newAccentPhrasesSegment,
+        ...originAccentPhrases.slice(accentPhraseIndex + 1),
+      ];
+      const copyIndexes = newAccentPhrasesSegment.map(
+        (_, i) => accentPhraseIndex + i
+      );
+
+      try {
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          "FETCH_AND_COPY_MORA_DATA",
+          {
+            accentPhrases: newAccentPhrases,
+            styleId,
+            copyIndexes,
+          }
+        );
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: resultAccentPhrases,
+        });
+      } catch (error) {
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
+      }
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       { commit },
@@ -1371,11 +1400,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       draft,
       payload: {
         audioKey: string;
-        accentPhraseIndex: number;
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations.SET_SINGLE_ACCENT_PHRASE(draft, payload);
+      audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       draft,
