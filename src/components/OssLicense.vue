@@ -1,43 +1,34 @@
 <template>
-  <div class="root">
-    <q-header class="q-py-sm">
-      <q-toolbar>
-        <q-btn
-          unelevated
-          label="戻る"
-          color="white"
-          text-color="secondary"
-          :disable="detailIndex === undefined"
-          @click="selectLicenseIndex(undefined)"
-        />
-        <q-toolbar-title class="text-secondary">{{
-          detailIndex === undefined
-            ? "OSSライセンス情報"
-            : licenses[detailIndex].name
-        }}</q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-    <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
-      <div class="q-pa-md">
-        <q-list v-if="detailIndex === undefined">
-          <q-item
-            v-for="(license, index) in licenses"
-            :key="index"
-            clickable
-            dense
-            @click="selectLicenseIndex(index)"
-          >
-            <q-item-section>{{
-              license.name + (license.version ? " | " + license.version : "")
-            }}</q-item-section>
-          </q-item>
-        </q-list>
-        <div v-else>
-          <pre>{{ licenses[detailIndex].text }}</pre>
+  <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+    <div class="q-pa-md">
+      <q-list v-if="detailIndex === undefined">
+        <q-item
+          v-for="(license, index) in licenses"
+          :key="index"
+          clickable
+          dense
+          @click="selectLicenseIndex(index)"
+        >
+          <q-item-section>{{
+            license.name + (license.version ? " | " + license.version : "")
+          }}</q-item-section>
+        </q-item>
+      </q-list>
+      <div v-else>
+        <div class="q-mb-md">
+          <q-btn
+            outline
+            style="color: #a5d4ad"
+            icon="keyboard_arrow_left"
+            label="前画面に戻る"
+            @click="selectLicenseIndex(undefined)"
+          />
         </div>
+        <div class="text-subtitle">{{ licenses[detailIndex].name }}</div>
+        <pre>{{ licenses[detailIndex].text }}</pre>
       </div>
-    </q-page>
-  </div>
+    </div>
+  </q-page>
 </template>
 
 <script lang="ts">
