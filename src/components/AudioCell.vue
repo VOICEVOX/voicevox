@@ -26,7 +26,7 @@
               characterInfo.metas.speakerUuid ===
               selectedCharacterInfo.metas.speakerUuid
             "
-            @click="changeStyleId(characterInfo.metas.styles[0].styleId)"
+            @click="changeStyleId(characterInfo.metas.defaultStyleId)"
             @mouseover="reassignSubMenuOpen(index)"
             @mouseleave="reassignSubMenuOpen.cancel()"
           >

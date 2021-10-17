@@ -356,7 +356,7 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       const text = payload.text ?? "";
       const styleId =
-        payload.styleId ?? state.characterInfos![0].metas.styles[0].styleId;
+        payload.styleId ?? state.characterInfos![0].metas.defaultStyleId;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
