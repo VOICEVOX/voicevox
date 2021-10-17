@@ -16,7 +16,7 @@
             outline
             style="color: #a5d4ad"
             icon="keyboard_arrow_left"
-            label="前画面に戻る"
+            label="戻る"
             @click="selectCharacterInfIndex(undefined)"
           />
         </div>
