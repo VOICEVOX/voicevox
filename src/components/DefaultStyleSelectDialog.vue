@@ -33,7 +33,7 @@
               text-color="secondary"
               class="text-no-wrap q-mr-sm"
               :disable="pageIndex < 1"
-              @click="pageIndex--"
+              @click="prevPage"
             />
 
             <q-btn
@@ -43,7 +43,7 @@
               color="white"
               text-color="secondary"
               class="text-no-wrap"
-              @click="pageIndex++"
+              @click="nextPage"
             />
             <q-btn
               v-else
@@ -108,14 +108,28 @@
                       <span class="text-caption">音声サンプル</span>
                       <div class="flex q-gutter-xs">
                         <q-btn
-                          v-for="(voiceSample, index) of voiceSamples"
-                          :key="index"
+                          v-for="voiceSampleIndex of [...Array(3).keys()]"
+                          :key="voiceSampleIndex"
                           round
                           outline
-                          icon="play_arrow"
+                          :icon="
+                            style.styleId === playing?.styleId &&
+                            voiceSampleIndex === playing.index
+                              ? 'stop'
+                              : 'play_arrow'
+                          "
                           color="primary"
                           class="voice-sample-btn"
-                          @click="play"
+                          @click="
+                            style.styleId === playing?.styleId &&
+                            voiceSampleIndex === playing.index
+                              ? stop()
+                              : play(
+                                  characterInfo.metas.speakerName,
+                                  style.styleId,
+                                  voiceSampleIndex
+                                )
+                          "
                         />
                       </div>
                     </q-item-label>
@@ -171,15 +185,42 @@ export default defineComponent({
 
     const pageIndex = ref(0);
 
-    // TODO: 仮
-    const voiceSamples = ref([...Array(3).keys()]);
-
     const getBlobUrl = (blob: Blob) => {
       return URL.createObjectURL(blob);
     };
 
-    const play = () => {
-      // TODO: 再生処理
+    const playing = ref<{ styleId: number; index: number }>();
+
+    const audio = new Audio();
+    audio.volume = 0.7;
+    audio.onended = () => stop();
+
+    const play = (characterName: string, styleId: number, index: number) => {
+      if (audio.src !== "") stop();
+
+      audio.src = `characters/${characterName}/voice_samples/${characterName}_${styleId}_${(
+        index + 1
+      )
+        .toString()
+        .padStart(3, "0")}.wav`;
+      audio.play();
+      playing.value = { styleId, index };
+    };
+    const stop = () => {
+      if (audio.src === "") return;
+
+      audio.pause();
+      audio.removeAttribute("src");
+      playing.value = undefined;
+    };
+
+    const prevPage = () => {
+      stop();
+      pageIndex.value--;
+    };
+    const nextPage = () => {
+      stop();
+      pageIndex.value++;
     };
 
     const closeDialog = () => {
@@ -194,8 +235,8 @@ export default defineComponent({
       });
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
+      stop();
       modelValueComputed.value = false;
-
       pageIndex.value = 0;
     };
 
@@ -204,9 +245,12 @@ export default defineComponent({
       characterInfos,
       selectedStyleIndexes,
       pageIndex,
-      voiceSamples,
       getBlobUrl,
+      playing,
       play,
+      stop,
+      prevPage,
+      nextPage,
       closeDialog,
     };
   },
