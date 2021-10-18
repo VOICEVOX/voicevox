@@ -1,5 +1,6 @@
 import { toRaw } from "vue";
-import { enablePatches, enableMapSet, Patch, Immer } from "immer";
+import { enablePatches, enableMapSet, Immer } from "immer";
+
 import { enablePatches as enablePatchesImpl } from "immer/src/plugins/patches";
 import { enableMapSet as enableMapSetImpl } from "immer/src/plugins/mapset";
 import { getPlugin } from "immer/src/internal";
