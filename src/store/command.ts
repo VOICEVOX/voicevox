@@ -3,12 +3,15 @@ import { enablePatches, enableMapSet, Patch, Immer } from "immer";
 import { applyPatch, Operation } from "rfc6902";
 import {
   Command,
-  CommandGetters,
   CommandActions,
+  CommandGetters,
   CommandMutations,
+  CommandStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
+
+const isDevelopment = process.env.NODE_ENV == "development";
 
 enablePatches();
 enableMapSet();
@@ -91,6 +94,12 @@ const recordOperations =
       undoOperations: undoPatches.map(patchToOperation),
     };
   };
+
+export const commandStoreState: CommandStoreState = {
+  undoCommands: [],
+  redoCommands: [],
+  useUndoRedo: isDevelopment,
+};
 
 export const commandStore: VoiceVoxStoreOptions<
   CommandGetters,

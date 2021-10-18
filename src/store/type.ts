@@ -16,31 +16,6 @@ import {
   UpdateInfo,
 } from "@/type/preload";
 
-export type State = {
-  engineState: EngineState;
-  characterInfos?: CharacterInfo[];
-  audioItems: Record<string, AudioItem>;
-  audioKeys: string[];
-  audioStates: Record<string, AudioState>;
-  _activeAudioKey?: string;
-  uiLockCount: number;
-  audioDetailPaneOffset?: number;
-  audioInfoPaneOffset?: number;
-  nowPlayingContinuously: boolean;
-  undoCommands: Command[];
-  redoCommands: Command[];
-  useUndoRedo: boolean;
-  useGpu: boolean;
-  isHelpDialogOpen: boolean;
-  isSettingDialogOpen: boolean;
-  isMaximized: boolean;
-  projectFilePath?: string;
-  savedLastCommandUnixMillisec: number | null;
-  savingSetting: SavingSetting;
-  hotkeySettings: HotkeySetting[];
-  isPinned: boolean;
-};
-
 export type AudioItem = {
   text: string;
   styleId?: number;
@@ -79,6 +54,17 @@ type StoreType<T, U extends "getter" | "mutation" | "action"> = {
 /*
  * Audio Store Types
  */
+
+export type AudioStoreState = {
+  engineState: EngineState;
+  characterInfos?: CharacterInfo[];
+  audioItems: Record<string, AudioItem>;
+  audioKeys: string[];
+  audioStates: Record<string, AudioState>;
+  _activeAudioKey?: string;
+  nowPlayingContinuously: boolean;
+};
+
 type AudioStoreTypes = {
   ACTIVE_AUDIO_KEY: {
     getter: string | undefined;
@@ -319,6 +305,11 @@ export type AudioActions = StoreType<AudioStoreTypes, "action">;
 /*
  * Audio Command Store Types
  */
+
+export type AudioCommandStoreState = {
+  //
+};
+
 type AudioCommandStoreTypes = {
   COMMAND_REGISTER_AUDIO_ITEM: {
     mutation: {
@@ -459,6 +450,13 @@ export type AudioCommandActions = StoreType<AudioCommandStoreTypes, "action">;
 /*
  * Command Store Types
  */
+
+export type CommandStoreState = {
+  undoCommands: Command[];
+  redoCommands: Command[];
+  useUndoRedo: boolean;
+};
+
 type CommandStoreTypes = {
   CAN_UNDO: {
     getter: boolean;
@@ -494,6 +492,11 @@ export type CommandActions = StoreType<CommandStoreTypes, "action">;
 /*
  * Index Store Types
  */
+
+export type IndexStoreState = {
+  //
+};
+
 type IndexStoreTypes = {
   GET_HOW_TO_USE_TEXT: {
     action(): Promise<string>;
@@ -534,6 +537,12 @@ export type IndexActions = StoreType<IndexStoreTypes, "action">;
 /*
  * Project Store Types
  */
+
+export type ProjectStoreState = {
+  projectFilePath?: string;
+  savedLastCommandUnixMillisec: number | null;
+};
+
 type ProjectStoreTypes = {
   PROJECT_NAME: {
     getter: string | undefined;
@@ -571,7 +580,13 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 /*
  * Setting Store Types
  */
-type SettingsStoreTypes = {
+
+export type SettingStoreState = {
+  savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
+};
+
+type SettingStoreTypes = {
   GET_SAVING_SETTING: {
     getter: SavingSetting;
     action(): void;
@@ -592,13 +607,23 @@ type SettingsStoreTypes = {
   };
 };
 
-export type SettingGetters = StoreType<SettingsStoreTypes, "getter">;
-export type SettingMutations = StoreType<SettingsStoreTypes, "mutation">;
-export type SettingActions = StoreType<SettingsStoreTypes, "action">;
+export type SettingGetters = StoreType<SettingStoreTypes, "getter">;
+export type SettingMutations = StoreType<SettingStoreTypes, "mutation">;
+export type SettingActions = StoreType<SettingStoreTypes, "action">;
 
 /*
  * Ui Store Types
  */
+
+export type UiStoreState = {
+  uiLockCount: number;
+  useGpu: boolean;
+  isHelpDialogOpen: boolean;
+  isSettingDialogOpen: boolean;
+  isMaximized: boolean;
+  isPinned: boolean;
+};
+
 type UiStoreTypes = {
   UI_LOCKED: {
     getter: boolean;
@@ -669,12 +694,21 @@ export type UiActions = StoreType<UiStoreTypes, "action">;
 /*
  * All Store Types
  */
+
+export type State = AudioStoreState &
+  AudioCommandStoreState &
+  CommandStoreState &
+  IndexStoreState &
+  ProjectStoreState &
+  SettingStoreState &
+  UiStoreState;
+
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
-  SettingsStoreTypes &
+  SettingStoreTypes &
   UiStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;

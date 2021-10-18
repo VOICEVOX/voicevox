@@ -7,12 +7,14 @@ import {
   SaveResultObject,
   State,
   commandMutationsCreator,
-  AudioGetters,
   AudioActions,
+  AudioGetters,
   AudioMutations,
+  AudioStoreState,
   AudioCommandActions,
   AudioCommandGetters,
   AudioCommandMutations,
+  AudioCommandStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
@@ -83,6 +85,14 @@ function buildFileName(state: State, audioKey: string) {
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
+
+export const audioStoreState: AudioStoreState = {
+  engineState: "STARTING",
+  audioItems: {},
+  audioKeys: [],
+  audioStates: {},
+  nowPlayingContinuously: false,
+};
 
 export const audioStore: VoiceVoxStoreOptions<
   AudioGetters,
@@ -800,6 +810,8 @@ export const audioStore: VoiceVoxStoreOptions<
     },
   },
 };
+
+export const audioCommandStoreState: AudioCommandStoreState = {};
 
 export const audioCommandStore: VoiceVoxStoreOptions<
   AudioCommandGetters,

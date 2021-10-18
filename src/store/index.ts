@@ -9,20 +9,23 @@ import {
   IndexActions,
   IndexGetters,
   IndexMutations,
+  IndexStoreState,
   State,
   VoiceVoxStoreOptions,
 } from "./type";
-import { commandStore } from "./command";
-import { audioStore, audioCommandStore } from "./audio";
-import { projectStore } from "./project";
-import { uiStore } from "./ui";
-import { settingStore } from "./setting";
+import { commandStoreState, commandStore } from "./command";
+import { audioStoreState, audioStore, audioCommandStore } from "./audio";
+import { projectStoreState, projectStore } from "./project";
+import { uiStoreState, uiStore } from "./ui";
+import { settingStoreState, settingStore } from "./setting";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
 > = Symbol();
+
+export const indexStoreState: IndexStoreState = {};
 
 export const indexStore: VoiceVoxStoreOptions<
   IndexGetters,
@@ -61,32 +64,13 @@ export const indexStore: VoiceVoxStoreOptions<
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
-    engineState: "STARTING",
-    audioItems: {},
-    audioKeys: [],
-    audioStates: {},
-    uiLockCount: 0,
-    audioDetailPaneOffset: undefined,
-    audioInfoPaneOffset: undefined,
-    nowPlayingContinuously: false,
-    undoCommands: [],
-    redoCommands: [],
-    useUndoRedo: isDevelopment,
-    useGpu: false,
-    isHelpDialogOpen: false,
-    isSettingDialogOpen: false,
-    isMaximized: false,
-    savedLastCommandUnixMillisec: null,
-    savingSetting: {
-      fileEncoding: "UTF-8",
-      fixedExportEnabled: false,
-      fixedExportDir: "",
-      avoidOverwrite: false,
-      exportLab: false,
-      exportText: true,
-    },
-    isPinned: false,
-    hotkeySettings: [],
+    ...uiStoreState,
+    ...audioStoreState,
+    ...commandStoreState,
+    ...projectStoreState,
+    ...settingStoreState,
+    ...audioCommandStore,
+    ...indexStoreState,
   },
 
   getters: {
