@@ -38,7 +38,6 @@
     "immer": "^9.0.2",
     "markdown-it": "^12.0.4",
     "quasar": "^2.1.2",
-    "rfc6902": "^4.0.2",
     "source-map-support": "^0.5.19",
     "systeminformation": "^5.8.0",
     "tree-kill": "^1.2.2",
