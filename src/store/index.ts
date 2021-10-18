@@ -44,6 +44,9 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_UPDATE_INFOS() {
       return await window.electron.getUpdateInfos();
     },
+    async GET_OSS_COMMUNITY_INFOS() {
+      return await window.electron.getOssCommunityInfos();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }

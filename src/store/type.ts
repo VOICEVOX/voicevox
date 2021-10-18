@@ -370,6 +370,7 @@ export type IndexActions = {
   GET_POLICY_TEXT(): Promise<string>;
   GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
   GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
+  GET_OSS_COMMUNITY_INFOS(): Promise<string>;
   SHOW_WARNING_DIALOG(payload: {
     title: string;
     message: string;
