@@ -65,20 +65,37 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
+  let styleIndex = 0;
   const character = state.characterInfos?.find((info, _) => {
     const result = info.metas.styles.findIndex(
       (style) => style.styleId === audioItem.styleId
     );
-    return result > -1 ? true : false;
+
+    if (result > -1) {
+      styleIndex = result;
+    }
+
+    return result > -1;
   });
-  const characterName = character!.metas.speakerName.replace(sanitizer, "");
+
+  if (character === undefined) {
+    throw new Error();
+  }
+
+  const characterName = character.metas.speakerName.replace(sanitizer, "");
+  const styleName = character.metas.styles[styleIndex].styleName;
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
-  return (
-    (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
-  );
+
+  const preFileName = (index + 1).toString().padStart(3, "0");
+  // デフォルトのスタイルだとstyleIdが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
+  if (styleName === undefined) {
+    return preFileName + `_${characterName}_${text}.wav`;
+  }
+
+  return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
