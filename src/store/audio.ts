@@ -65,14 +65,14 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  let styleIndex = 0;
+  let styleName: string | undefined = "";
   const character = state.characterInfos?.find((info, _) => {
     const result = info.metas.styles.findIndex(
       (style) => style.styleId === audioItem.styleId
     );
 
     if (result > -1) {
-      styleIndex = result;
+      styleName = info.metas.styles[result].styleName;
     }
 
     return result > -1;
@@ -83,7 +83,6 @@ function buildFileName(state: State, audioKey: string) {
   }
 
   const characterName = character.metas.speakerName.replace(sanitizer, "");
-  const styleName = character.metas.styles[styleIndex].styleName;
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
