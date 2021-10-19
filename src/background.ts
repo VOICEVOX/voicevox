@@ -270,7 +270,7 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   );
   const defaultStyleId =
     store.get("defaultStyleIds").find((x) => x.speakerUuid === speakerUuid)
-      ?.defaultStyleId || styles[0].styleId;
+      ?.defaultStyleId ?? styles[0].styleId;
 
   characterInfos.push({
     dirPath,
@@ -593,7 +593,7 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   for (const info of characterInfos) {
     info.metas.defaultStyleId =
       defaultStyleIds.find((x) => x.speakerUuid === info.metas.speakerUuid)
-        ?.defaultStyleId || info.metas.styles[0].styleId;
+        ?.defaultStyleId ?? info.metas.styles[0].styleId;
   }
 });
 

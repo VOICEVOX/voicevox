@@ -90,11 +90,15 @@
                 <q-item
                   v-for="(style, styleIndex) of characterInfo.metas.styles"
                   :key="styleIndex"
+                  v-ripple="isHoverableStyleItem"
+                  clickable
                   class="q-mb-md q-pa-none style-item"
-                  :class="
+                  :class="[
                     selectedStyleIndexes[characterIndex] === styleIndex &&
-                    'active-style-item'
-                  "
+                      'active-style-item',
+                    isHoverableStyleItem && 'hoverable-style-item',
+                  ]"
+                  @click="selectedStyleIndexes[characterIndex] = styleIndex"
                 >
                   <img
                     :src="getBlobUrl(characterInfo.iconBlob)"
@@ -120,7 +124,9 @@
                           "
                           color="primary"
                           class="voice-sample-btn"
-                          @click="
+                          @mouseenter="isHoverableStyleItem = false"
+                          @mouseleave="isHoverableStyleItem = true"
+                          @click.stop="
                             style.styleId === playing?.styleId &&
                             voiceSampleIndex === playing.index
                               ? stop()
@@ -133,12 +139,11 @@
                         />
                       </div>
                     </q-item-label>
-                    <div class="absolute" style="top: 0; right: 0">
-                      <q-radio
-                        v-model="selectedStyleIndexes[characterIndex]"
-                        :val="styleIndex"
-                      />
-                    </div>
+                    <q-radio
+                      class="absolute-top-right no-pointer-events"
+                      v-model="selectedStyleIndexes[characterIndex]"
+                      :val="styleIndex"
+                    />
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -189,6 +194,8 @@ export default defineComponent({
       return URL.createObjectURL(blob);
     };
 
+    const isHoverableStyleItem = ref(true);
+
     const playing = ref<{ styleId: number; index: number }>();
 
     const audio = new Audio();
@@ -226,13 +233,11 @@ export default defineComponent({
     const closeDialog = () => {
       if (!characterInfos.value) return;
 
-      const defaultStyleIds = characterInfos.value.map((info, idx) => {
-        return {
-          speakerUuid: info.metas.speakerUuid,
-          defaultStyleId:
-            info.metas.styles[selectedStyleIndexes.value?.[idx] || 0].styleId,
-        };
-      });
+      const defaultStyleIds = characterInfos.value.map((info, idx) => ({
+        speakerUuid: info.metas.speakerUuid,
+        defaultStyleId:
+          info.metas.styles[selectedStyleIndexes.value?.[idx] ?? 0].styleId,
+      }));
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
       stop();
@@ -246,6 +251,7 @@ export default defineComponent({
       selectedStyleIndexes,
       pageIndex,
       getBlobUrl,
+      isHoverableStyleItem,
       playing,
       play,
       stop,
@@ -280,6 +286,12 @@ export default defineComponent({
     overflow: hidden;
     &.active-style-item {
       box-shadow: 0 0 0 2px global.$primary;
+    }
+    &:hover :deep(.q-focus-helper) {
+      opacity: 0 !important;
+    }
+    &.hoverable-style-item:hover :deep(.q-focus-helper) {
+      opacity: 0.15 !important;
     }
     .style-icon {
       width: 100px;
