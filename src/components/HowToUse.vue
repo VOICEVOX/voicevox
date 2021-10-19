@@ -1,14 +1,7 @@
 <template>
-  <div class="root">
-    <q-header class="q-py-sm">
-      <q-toolbar>
-        <q-toolbar-title class="text-secondary">使い方</q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-    <q-page class="relarive-absolute-wrapper scroller">
-      <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
-    </q-page>
-  </div>
+  <q-page class="relarive-absolute-wrapper scroller">
+    <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
+  </q-page>
 </template>
 
 <script lang="ts">
