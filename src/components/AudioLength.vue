@@ -5,7 +5,7 @@
       text-color="secondary"
       v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
     >
-      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+      {{ vowelPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
     <!-- slider for pause -->
     <q-slider
@@ -22,8 +22,8 @@
       @update:model-value="
         vowelPreviewValue.setPreviewValue(parseFloat($event))
       "
-      @change="changeValue(parseFloat($event), 'vowel')"
-      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'vowel')"
+      @change="changeValue(parseFloat($event), 'pause')"
+      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey, 'pause')"
       @pan="setPanning($event, 'vowel')"
     />
   </div>
@@ -91,7 +91,7 @@
       text-color="secondary"
       v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
     >
-      {{ vowelPreviewValue.currentValue.value.toPrecision(2) }}
+      {{ vowelPreviewValue.currentValue.value.toFixed(3) }}
     </q-badge>
     <q-slider
       @mouseenter="handleMouseHover('vowel', true)"
@@ -160,9 +160,6 @@ export default defineComponent({
     const vowelPreviewValue = new PreviewableValue(() => props.vowel);
 
     const changeValue = (newValue: number, type: string) => {
-      if (props.isPause) {
-        type = "pause";
-      }
       emit(
         "changeValue",
         props.accentPhraseIndex,
@@ -184,6 +181,7 @@ export default defineComponent({
           newValue = props.consonant! - (deltaY > 0 ? step : -step);
           break;
         }
+        case "pause":
         case "vowel": {
           newValue = props.vowel - (deltaY > 0 ? step : -step);
           break;
