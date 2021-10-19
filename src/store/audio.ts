@@ -65,6 +65,7 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
+  // for solve conflict junk comment
   let styleIndex = 0;
   const character = state.characterInfos?.find((info, _) => {
     const result = info.metas.styles.findIndex(
