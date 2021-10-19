@@ -65,21 +65,36 @@ function buildFileName(state: State, audioKey: string) {
   const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  const character = state.characterInfos?.find(
-    (info, idx) =>
-      info.metas.styles.findIndex(
-        (style) => style.styleId === audioItem.styleId
-      ) === idx
-  );
-  if (character == undefined) throw new Error("character == undefined");
+  let styleName: string | undefined = "";
+  const character = state.characterInfos?.find((info) => {
+    const result = info.metas.styles.findIndex(
+      (style) => style.styleId === audioItem.styleId
+    );
+
+    if (result > -1) {
+      styleName = info.metas.styles[result].styleName;
+    }
+
+    return result > -1;
+  });
+
+  if (character === undefined) {
+    throw new Error();
+  }
+
   const characterName = character.metas.speakerName.replace(sanitizer, "");
   let text = audioItem.text.replace(sanitizer, "");
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
-  return (
-    (index + 1).toString().padStart(3, "0") + `_${characterName}_${text}.wav`
-  );
+
+  const preFileName = (index + 1).toString().padStart(3, "0");
+  // デフォルトのスタイルだとstyleIdが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
+  if (styleName === undefined) {
+    return preFileName + `_${characterName}_${text}.wav`;
+  }
+
+  return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -1165,11 +1180,42 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       }
 
-      commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrases: newAccentPhrasesSegment,
-      });
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      const originAccentPhrases = query.accentPhrases;
+
+      // https://github.com/Hiroshiba/voicevox/issues/248
+      // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
+      // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
+      const newAccentPhrases = [
+        ...originAccentPhrases.slice(0, accentPhraseIndex),
+        ...newAccentPhrasesSegment,
+        ...originAccentPhrases.slice(accentPhraseIndex + 1),
+      ];
+      const copyIndexes = newAccentPhrasesSegment.map(
+        (_, i) => accentPhraseIndex + i
+      );
+
+      try {
+        const resultAccentPhrases: AccentPhrase[] = await dispatch(
+          "FETCH_AND_COPY_MORA_DATA",
+          {
+            accentPhrases: newAccentPhrases,
+            styleId,
+            copyIndexes,
+          }
+        );
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: resultAccentPhrases,
+        });
+      } catch (error) {
+        commit("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+          audioKey,
+          accentPhrases: newAccentPhrases,
+        });
+      }
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       { commit },
@@ -1400,11 +1446,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       draft,
       payload: {
         audioKey: string;
-        accentPhraseIndex: number;
         accentPhrases: AccentPhrase[];
       }
     ) {
-      audioStore.mutations.SET_SINGLE_ACCENT_PHRASE(draft, payload);
+      audioStore.mutations.SET_ACCENT_PHRASES(draft, payload);
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       draft,
