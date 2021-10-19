@@ -244,6 +244,14 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "長さ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "length";
+          }
+        },
+      ],
     ]);
 
     setHotkeyFunctions(hotkeyMap);

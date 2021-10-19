@@ -130,6 +130,10 @@ const store = new Store<{
           combination: "2",
         },
         {
+          action: "長さ欄を表示",
+          combination: "2",
+        },
+        {
           action: "テキスト欄を追加",
           combination: "Shift Enter",
         },
@@ -174,6 +178,13 @@ const store = new Store<{
           combination: "",
         },
       ],
+    },
+  },
+  migrations: {
+    ">=0.7.4": (store) => {
+      const newHotkeys = store.get("hotkeySettings");
+      newHotkeys.splice(6, 0, { action: "長さ欄を表示", combination: "3" });
+      store.set("hotkeySettings", newHotkeys);
     },
   },
 });
