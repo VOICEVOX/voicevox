@@ -16,7 +16,11 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
+import {
+  CharacterInfo,
+  Encoding as EncodingType,
+  MoraDataType,
+} from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 const api = new DefaultApi(
@@ -1196,7 +1200,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhraseIndex: number;
         moraIndex: number;
         data: number;
-        type: string;
+        type: MoraDataType;
       }
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
@@ -1431,7 +1435,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         accentPhraseIndex: number;
         moraIndex: number;
         data: number;
-        type: string;
+        type: MoraDataType;
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);

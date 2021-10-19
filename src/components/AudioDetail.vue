@@ -65,7 +65,7 @@
                 :uiLocked="uiLocked"
                 :min="0"
                 :max="0.3"
-                :step="0.01"
+                :step="0.001"
                 @changeValue="changeMoraData"
                 @mouseOver="handleHoverText"
               />
@@ -85,7 +85,7 @@
               :uiLocked="uiLocked"
               :min="0"
               :max="1.0"
-              :step="0.1"
+              :step="0.01"
               :isPause="true"
               @changeValue="changeMoraData"
             />
@@ -168,17 +168,17 @@
             @update:model-value="tabAction"
           >
             <q-tab
-              v-if="nowPlaying"
-              icon="stop"
-              class="bg-primary text-white"
-              name="stop"
+              v-if="!nowPlaying && !nowGenerating"
+              icon="play_arrow"
+              class="bg-primary text-secondary"
+              name="play"
+              :disable="nowPlaying || nowGenerating || uiLocked"
             />
             <q-tab
               v-else
-              icon="play_arrow"
-              class="bg-primary text-white"
-              name="play"
-              :disable="uiLocked"
+              icon="stop"
+              class="bg-primary text-secondary"
+              name="stop"
             />
             <q-tab icon="download" name="save" :disable="uiLocked" />
           </q-tabs>
@@ -196,7 +196,7 @@ import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import AudioLength from "./AudioLength.vue";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
 
@@ -307,7 +307,7 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number,
       data: number,
-      type: string
+      type: MoraDataType
     ) => {
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: activeAudioKey.value!,
@@ -443,53 +443,59 @@ export default defineComponent({
     type hoveredInfoType = {
       accentPhraseIndex: number | undefined;
       moraIndex: number | undefined;
-      type: hoveredType;
+      type?: hoveredType;
     };
 
-    const hoveredInfo = reactive<hoveredInfoType>({
+    const accentHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+    });
+
+    const lengthHoveredInfo = reactive<hoveredInfoType>({
       accentPhraseIndex: undefined,
       moraIndex: undefined,
       type: "pause",
     });
 
-    const handleHoverText = (
+    const handleAccentHoverText = (
+      isOver: boolean,
+      phraseIndex: number,
+      moraIndex?: number
+    ) => {
+      if (isOver) {
+        accentHoveredInfo.accentPhraseIndex = phraseIndex;
+        accentHoveredInfo.moraIndex = moraIndex;
+      } else {
+        accentHoveredInfo.accentPhraseIndex = undefined;
+        accentHoveredInfo.moraIndex = moraIndex;
+      }
+    };
+
+    const handleLengthHoverText = (
       isOver: boolean,
       phoneme: hoveredType,
       phraseIndex: number,
       moraIndex?: number
     ) => {
-      hoveredInfo.type = phoneme;
-      switch (phoneme) {
-        case "pause":
-          break;
-        case "accent":
-          if (isOver) {
-            hoveredInfo.accentPhraseIndex = phraseIndex;
-          } else {
-            hoveredInfo.accentPhraseIndex = undefined;
-          }
-          break;
-        case "consonant":
-        case "vowel":
-          if (isOver) {
-            hoveredInfo.accentPhraseIndex = phraseIndex;
-            hoveredInfo.moraIndex = moraIndex;
-          } else {
-            hoveredInfo.accentPhraseIndex = undefined;
-            hoveredInfo.moraIndex = undefined;
-          }
-          break;
-        default:
-          break;
+      lengthHoveredInfo.type = phoneme;
+      if (phoneme == "pause") {
+        return;
+      } else {
+        if (isOver) {
+          lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+          lengthHoveredInfo.moraIndex = moraIndex;
+        } else {
+          lengthHoveredInfo.accentPhraseIndex = undefined;
+          lengthHoveredInfo.moraIndex = undefined;
+        }
       }
     };
 
     const getHoveredClass = (accentPhraseIndex: number) => {
       if (
-        selectedDetail.value == "accent" &&
-        hoveredInfo.type == "accent" &&
+        selectedDetail.value != "accent" &&
         !uiLocked.value &&
-        accentPhraseIndex === hoveredInfo.accentPhraseIndex
+        accentPhraseIndex === accentHoveredInfo.accentPhraseIndex
       ) {
         return "text-cell-hovered";
       } else {
@@ -502,23 +508,23 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (selectedDetail.value == "length") {
-        switch (hoveredInfo.type) {
+      if (selectedDetail.value != "length") return mora.text;
+      else {
+        switch (lengthHoveredInfo.type) {
           case "pause":
-          case "accent":
             return mora.text;
           case "vowel": {
             if (
-              accentPhraseIndex === hoveredInfo.accentPhraseIndex &&
-              moraIndex === hoveredInfo.moraIndex
+              accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+              moraIndex === lengthHoveredInfo.moraIndex
             )
               return mora.vowel.toUpperCase();
             else return mora.text;
           }
           case "consonant": {
             if (
-              accentPhraseIndex === hoveredInfo.accentPhraseIndex &&
-              moraIndex === hoveredInfo.moraIndex
+              accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+              moraIndex === lengthHoveredInfo.moraIndex
             )
               return mora.consonant?.toUpperCase();
             else return mora.text;
@@ -526,8 +532,6 @@ export default defineComponent({
           default:
             return mora.text;
         }
-      } else {
-        return mora.text;
       }
     };
 
@@ -550,10 +554,11 @@ export default defineComponent({
       nowPlayingContinuously,
       pronunciationByPhrase,
       handleChangePronounce,
-      handleHoverText,
+      handleAccentHoverText,
+      handleLengthHoverText,
       getHoveredClass,
-      tabAction,
       getHoveredText,
+      tabAction,
     };
   },
 });

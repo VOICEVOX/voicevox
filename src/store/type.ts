@@ -12,6 +12,7 @@ import {
   CharacterInfo,
   Encoding as EncodingType,
   HotkeySetting,
+  MoraDataType,
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
@@ -224,7 +225,7 @@ export type AudioCommandActions = {
     accentPhraseIndex: number;
     moraIndex: number;
     data: number;
-    type: string;
+    type: MoraDataType;
   }): void;
   COMMAND_SET_AUDIO_SPEED_SCALE(payload: {
     audioKey: string;
@@ -311,7 +312,7 @@ export type AudioCommandMutations = {
     accentPhraseIndex: number;
     moraIndex: number;
     data: number;
-    type: string;
+    type: MoraDataType;
   };
   COMMAND_SET_AUDIO_SPEED_SCALE: { audioKey: string; speedScale: number };
   COMMAND_SET_AUDIO_PITCH_SCALE: { audioKey: string; pitchScale: number };

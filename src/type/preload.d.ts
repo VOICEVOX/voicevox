@@ -125,3 +125,5 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type MoraDataType = "consonant" | "vowel" | "pitch" | "pause";

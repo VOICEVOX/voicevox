@@ -5,7 +5,7 @@
       text-color="secondary"
       v-if="valueLabel.vowel_visible || valueLabel.vowel_panning"
     >
-      {{ vowelPreviewValue.currentValue.value.toFixed(3) }}
+      {{ vowelPreviewValue.currentValue.value.toFixed(2) }}
     </q-badge>
     <!-- slider for pause -->
     <q-slider
@@ -116,6 +116,7 @@
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
+import { MoraDataType } from "@/type/preload";
 import { defineComponent, onMounted, onUnmounted, reactive } from "vue";
 
 export default defineComponent({
@@ -159,7 +160,7 @@ export default defineComponent({
     const consonantPreviewValue = new PreviewableValue(() => props.consonant);
     const vowelPreviewValue = new PreviewableValue(() => props.vowel);
 
-    const changeValue = (newValue: number, type: string) => {
+    const changeValue = (newValue: number, type: MoraDataType) => {
       emit(
         "changeValue",
         props.accentPhraseIndex,
@@ -172,9 +173,9 @@ export default defineComponent({
     const changeValueByScroll = (
       deltaY: number,
       withDetailedStep: boolean,
-      type: string
+      type: MoraDataType
     ) => {
-      const step = withDetailedStep ? props.step / 10 : props.step;
+      const step = withDetailedStep ? props.step : props.step * 10;
       let newValue = 0;
       switch (type) {
         case "consonant": {
@@ -201,7 +202,7 @@ export default defineComponent({
       vowel_panning: false,
     });
 
-    const setPanning = (panningPhase: string, type: string) => {
+    const setPanning = (panningPhase: string, type: MoraDataType) => {
       switch (type) {
         case "consonant": {
           if (panningPhase === "start") {
