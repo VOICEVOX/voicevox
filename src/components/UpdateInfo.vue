@@ -1,18 +1,9 @@
 <template>
-  <div class="root">
-    <q-header class="q-py-sm">
-      <q-toolbar>
-        <q-toolbar-title class="text-secondary"
-          >アップデート情報</q-toolbar-title
-        >
-      </q-toolbar>
-    </q-header>
-    <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
-      <div class="q-pa-md">
-        <div v-html="html"></div>
-      </div>
-    </q-page>
-  </div>
+  <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+    <div class="q-pa-md">
+      <div v-html="html"></div>
+    </div>
+  </q-page>
 </template>
 
 <script lang="ts">

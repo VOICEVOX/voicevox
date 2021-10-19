@@ -5,7 +5,7 @@ import {
   ActionsBase,
   StoreOptions,
 } from "./vuex";
-import { Operation } from "rfc6902";
+import { Patch } from "immer";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -29,8 +29,8 @@ export type AudioState = {
 
 export type Command = {
   unixMillisec: number;
-  undoOperations: Operation[];
-  redoOperations: Operation[];
+  undoPatches: Patch[];
+  redoPatches: Patch[];
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
