@@ -1,5 +1,5 @@
 <template>
-  <div class="root full-height q-py-md" v-show="activeAudioKey" v-if="query">
+  <div class="root full-height q-py-md" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
@@ -135,17 +135,18 @@ import { PreviewableValue } from "@/helpers/previewableValue";
 export default defineComponent({
   name: "AudioInfo",
 
-  setup() {
+  props: {
+    activeAudioKey: { type: String, required: true },
+  },
+
+  setup(props) {
     const store = useStore();
 
     // accent phrase
-    const activeAudioKey = computed<string | undefined>(
-      () => store.getters.ACTIVE_AUDIO_KEY
-    );
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const audioItem = computed(() =>
-      activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
+    const audioItem = computed(
+      () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
 
@@ -192,7 +193,7 @@ export default defineComponent({
     const setAudioSpeedScale = (speedScale: number) => {
       previewAudioSpeedScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         speedScale,
       });
     };
@@ -200,7 +201,7 @@ export default defineComponent({
     const setAudioPitchScale = (pitchScale: number) => {
       previewAudioPitchScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         pitchScale,
       });
     };
@@ -208,7 +209,7 @@ export default defineComponent({
     const setAudioIntonationScale = (intonationScale: number) => {
       previewAudioIntonationScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         intonationScale,
       });
     };
@@ -216,7 +217,7 @@ export default defineComponent({
     const setAudioVolumeScale = (volumeScale: number) => {
       previewAudioVolumeScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         volumeScale,
       });
     };
@@ -224,7 +225,7 @@ export default defineComponent({
     const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
       previewAudioPrePhonemeLength.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         prePhonemeLength,
       });
     };
@@ -232,7 +233,7 @@ export default defineComponent({
     const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
       previewAudioPostPhonemeLength.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         postPhonemeLength,
       });
     };
@@ -307,7 +308,6 @@ export default defineComponent({
     };
 
     return {
-      activeAudioKey,
       uiLocked,
       audioItem,
       query,

@@ -125,6 +125,11 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: process.env.NODE_ENV !== "production",
 });
 
-export const useStore = () => {
+export const useStore = (): Store<
+  State,
+  AllGetters,
+  AllActions,
+  AllMutations
+> => {
   return baseUseStore(storeKey);
 };

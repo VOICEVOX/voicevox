@@ -66,7 +66,7 @@ function buildFileName(state: State, audioKey: string) {
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
-  const character = state.characterInfos?.find((info, _) => {
+  const character = state.characterInfos?.find((info) => {
     const result = info.metas.styles.findIndex(
       (style) => style.styleId === audioItem.styleId
     );
@@ -216,13 +216,17 @@ export const audioStore: VoiceVoxStoreOptions<
       state,
       { audioKey, speedScale }: { audioKey: string; speedScale: number }
     ) {
-      state.audioItems[audioKey].query!.speedScale = speedScale;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.speedScale = speedScale;
     },
     SET_AUDIO_PITCH_SCALE(
       state,
       { audioKey, pitchScale }: { audioKey: string; pitchScale: number }
     ) {
-      state.audioItems[audioKey].query!.pitchScale = pitchScale;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.pitchScale = pitchScale;
     },
     SET_AUDIO_INTONATION_SCALE(
       state,
@@ -231,13 +235,17 @@ export const audioStore: VoiceVoxStoreOptions<
         intonationScale,
       }: { audioKey: string; intonationScale: number }
     ) {
-      state.audioItems[audioKey].query!.intonationScale = intonationScale;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.intonationScale = intonationScale;
     },
     SET_AUDIO_VOLUME_SCALE(
       state,
       { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
     ) {
-      state.audioItems[audioKey].query!.volumeScale = volumeScale;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.volumeScale = volumeScale;
     },
     SET_AUDIO_PRE_PHONEME_LENGTH(
       state,
@@ -246,7 +254,9 @@ export const audioStore: VoiceVoxStoreOptions<
         prePhonemeLength,
       }: { audioKey: string; prePhonemeLength: number }
     ) {
-      state.audioItems[audioKey].query!.prePhonemeLength = prePhonemeLength;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.prePhonemeLength = prePhonemeLength;
     },
     SET_AUDIO_POST_PHONEME_LENGTH(
       state,
@@ -255,7 +265,9 @@ export const audioStore: VoiceVoxStoreOptions<
         postPhonemeLength,
       }: { audioKey: string; postPhonemeLength: number }
     ) {
-      state.audioItems[audioKey].query!.postPhonemeLength = postPhonemeLength;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.postPhonemeLength = postPhonemeLength;
     },
     SET_AUDIO_QUERY(
       state,
@@ -276,7 +288,9 @@ export const audioStore: VoiceVoxStoreOptions<
         accentPhrases,
       }: { audioKey: string; accentPhrases: AccentPhrase[] }
     ) {
-      state.audioItems[audioKey].query!.accentPhrases = accentPhrases;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.accentPhrases = accentPhrases;
     },
     SET_SINGLE_ACCENT_PHRASE(
       state,
@@ -290,11 +304,9 @@ export const audioStore: VoiceVoxStoreOptions<
         accentPhrases: AccentPhrase[];
       }
     ) {
-      state.audioItems[audioKey].query!.accentPhrases.splice(
-        accentPhraseIndex,
-        1,
-        ...accentPhrases
-      );
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
     },
     SET_AUDIO_MORA_DATA(
       state,
@@ -310,7 +322,8 @@ export const audioStore: VoiceVoxStoreOptions<
         pitch: number;
       }
     ) {
-      const query = state.audioItems[audioKey].query!;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
       query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
     },
   },
@@ -370,9 +383,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: { text?: string; styleId?: number }
     ) {
+      if (state.characterInfos == undefined)
+        throw new Error("state.characterInfos == undefined");
+
       const text = payload.text ?? "";
       const styleId =
-        payload.styleId ?? state.characterInfos![0].metas.styles[0].styleId;
+        payload.styleId ?? state.characterInfos[0].metas.styles[0].styleId;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
@@ -506,10 +522,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { audioKey }: { audioKey: string }
     ) {
       const audioItem = state.audioItems[audioKey];
+      const styleId = audioItem.styleId;
+      if (styleId == undefined) throw new Error("styleId == undefined");
 
       return dispatch("FETCH_AUDIO_QUERY", {
         text: audioItem.text,
-        styleId: audioItem.styleId!,
+        styleId: styleId,
       }).then((audioQuery) =>
         dispatch("SET_AUDIO_QUERY", { audioKey, audioQuery })
       );
@@ -519,11 +537,14 @@ export const audioStore: VoiceVoxStoreOptions<
         const audioItem = state.audioItems[audioKey];
         const id = await generateUniqueId(audioItem);
 
+        const audioQuery = audioItem.query;
+        const speaker = audioItem.styleId;
+        if (audioQuery == undefined || speaker == undefined) {
+          return null;
+        }
+
         return api
-          .synthesisSynthesisPost({
-            audioQuery: audioItem.query!,
-            speaker: audioItem.styleId!,
-          })
+          .synthesisSynthesisPost({ audioQuery: audioQuery, speaker: speaker })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
@@ -592,7 +613,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         if (state.savingSetting.exportLab) {
-          const query = state.audioItems[audioKey].query!;
+          const query = state.audioItems[audioKey].query;
+          if (query == undefined)
+            return { result: "WRITE_ERROR", path: filePath };
           const speedScale = query.speedScale;
 
           let labString = "";
@@ -699,11 +722,12 @@ export const audioStore: VoiceVoxStoreOptions<
           });
         }
         if (dirPath) {
+          const _dirPath = dirPath;
           const promises = state.audioKeys.map((audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
-              filePath: path.join(dirPath!, name),
+              filePath: path.join(_dirPath, name),
               encoding,
             });
           });
@@ -849,7 +873,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
     ) {
-      const styleId = state.audioItems[audioKey].styleId!;
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId != undefined");
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
       try {
         if (query !== undefined) {
@@ -950,7 +975,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         newAccentPhrases[accentPhraseIndex].accent = accent;
 
         try {
-          const styleId: number = state.audioItems[audioKey].styleId!;
+          const styleId = state.audioItems[audioKey].styleId;
+          if (styleId == undefined) throw new Error("styleId != undefined");
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
             {
@@ -990,7 +1016,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const { audioKey, accentPhraseIndex } = payload;
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
-      const styleId: number = state.audioItems[audioKey].styleId!;
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId != undefined");
       if (query === undefined) {
         throw Error(
           "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
@@ -1099,7 +1126,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         popUntilPause: boolean;
       }
     ) {
-      const styleId = state.audioItems[audioKey].styleId!;
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId != undefined");
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
@@ -1152,8 +1180,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       }
 
-      const originAccentPhrases =
-        state.audioItems[audioKey].query!.accentPhrases;
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      const originAccentPhrases = query.accentPhrases;
 
       // https://github.com/Hiroshiba/voicevox/issues/248
       // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
