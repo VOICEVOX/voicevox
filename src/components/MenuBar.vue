@@ -273,7 +273,7 @@ export default defineComponent({
 .q-bar {
   min-height: global.$menubar-height;
   -webkit-app-region: drag;
-  > .q-badge {
+  > .q-btn {
     margin-left: 0;
     -webkit-app-region: no-drag;
   }

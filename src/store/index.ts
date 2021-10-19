@@ -32,6 +32,9 @@ export const indexStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
+    async GET_HOW_TO_USE_TEXT() {
+      return await window.electron.getHowToUseText();
+    },
     async GET_POLICY_TEXT() {
       return await window.electron.getPolicyText();
     },
@@ -80,6 +83,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
       fixedExportDir: "",
       avoidOverwrite: false,
       exportLab: false,
+      exportText: true,
     },
     isPinned: false,
     hotkeySettings: [],
