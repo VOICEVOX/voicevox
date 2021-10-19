@@ -5,7 +5,7 @@ import {
   ActionsBase,
   StoreOptions,
 } from "./vuex";
-import { Operation } from "rfc6902";
+import { Patch } from "immer";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -54,8 +54,8 @@ export type AudioState = {
 
 export type Command = {
   unixMillisec: number;
-  undoOperations: Operation[];
-  redoOperations: Operation[];
+  undoPatches: Patch[];
+  redoPatches: Patch[];
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
@@ -302,7 +302,6 @@ export type AudioCommandMutations = {
   };
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
     audioKey: string;
-    accentPhraseIndex: number;
     accentPhrases: AccentPhrase[];
   };
   COMMAND_SET_AUDIO_MORA_DATA: {
