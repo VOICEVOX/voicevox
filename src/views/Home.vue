@@ -81,14 +81,20 @@
                     </div>
                   </template>
                   <template #after>
-                    <audio-info />
+                    <audio-info
+                      v-if="activeAudioKey != undefined"
+                      :activeAudioKey="activeAudioKey"
+                    />
                   </template>
                 </q-splitter>
               </template>
             </q-splitter>
           </template>
           <template #after>
-            <audio-detail />
+            <audio-detail
+              v-if="activeAudioKey != undefined"
+              :activeAudioKey="activeAudioKey"
+            />
           </template>
         </q-splitter>
 
@@ -164,7 +170,8 @@ export default defineComponent({
     setHotkeyFunctions(hotkeyMap);
 
     const removeAudioItem = async () => {
-      audioCellRefs[activeAudioKey.value!].removeCell();
+      if (activeAudioKey.value == undefined) throw new Error();
+      audioCellRefs[activeAudioKey.value].removeCell();
     };
 
     // convert the hotkey array to Map to get value with keys easier
@@ -373,6 +380,7 @@ export default defineComponent({
       audioKeys,
       uiLocked,
       addAudioCellRef,
+      activeAudioKey,
       addAudioItem,
       shouldShowPanes,
       focusCell,
