@@ -17,6 +17,7 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 import fs from "fs";
 import {
   CharacterInfo,
+  DefaultStyleId,
   HotkeySetting,
   MetasJson,
   SavingSetting,
@@ -62,10 +63,7 @@ const store = new Store<{
   useGpu: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
-  defaultStyleIds: {
-    speakerUuid: string;
-    defaultStyleId: number;
-  }[];
+  defaultStyleIds: DefaultStyleId[];
 }>({
   schema: {
     useGpu: {
@@ -268,9 +266,6 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
     fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
   );
-  const defaultStyleId =
-    store.get("defaultStyleIds").find((x) => x.speakerUuid === speakerUuid)
-      ?.defaultStyleId ?? styles[0].styleId;
 
   characterInfos.push({
     dirPath,
@@ -280,7 +275,6 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
       speakerName,
       speakerUuid,
       styles,
-      defaultStyleId,
       policy,
     },
   });
@@ -588,13 +582,20 @@ ipcMainHandle("IS_UNSET_DEFAULT_STYLE_IDS", () => {
   return store.get("defaultStyleIds").length === 0;
 });
 
+ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
+  const defaultStyleIds = store.get("defaultStyleIds");
+  if (defaultStyleIds.length === 0) {
+    return characterInfos.map<DefaultStyleId>((info) => ({
+      speakerUuid: info.metas.speakerUuid,
+      defaultStyleId: info.metas.styles[0].styleId,
+    }));
+  } else {
+    return defaultStyleIds;
+  }
+});
+
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   store.set("defaultStyleIds", defaultStyleIds);
-  for (const info of characterInfos) {
-    info.metas.defaultStyleId =
-      defaultStyleIds.find((x) => x.speakerUuid === info.metas.speakerUuid)
-        ?.defaultStyleId ?? info.metas.styles[0].styleId;
-  }
 });
 
 // app callback

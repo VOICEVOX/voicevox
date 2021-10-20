@@ -10,6 +10,7 @@ import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   HotkeySetting,
   SavingSetting,
@@ -19,6 +20,7 @@ import {
 export type State = {
   engineState: EngineState;
   characterInfos?: CharacterInfo[];
+  defaultStyleIds: DefaultStyleId[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -364,8 +366,9 @@ export type CommandActions = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type IndexGetters = {};
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type IndexMutations = {};
+export type IndexMutations = {
+  SET_DEFAULT_STYLE_IDS: { defaultStyleIds: DefaultStyleId[] };
+};
 
 export type IndexActions = {
   GET_HOW_TO_USE_TEXT(): Promise<string>;
@@ -379,9 +382,8 @@ export type IndexActions = {
   LOG_ERROR(...payload: unknown[]): void;
   LOG_INFO(...payload: unknown[]): void;
   IS_UNSET_DEFAULT_STYLE_IDS(): Promise<boolean>;
-  SET_DEFAULT_STYLE_IDS(
-    payload: { speakerUuid: string; defaultStyleId: number }[]
-  ): void;
+  LOAD_DEFAULT_STYLE_IDS(): Promise<void>;
+  SET_DEFAULT_STYLE_IDS(payload: DefaultStyleId[]): void;
 };
 
 /*

@@ -156,7 +156,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, watch } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -179,14 +179,17 @@ export default defineComponent({
 
     const characterInfos = computed(() => store.state.characterInfos);
 
-    const selectedStyleIndexes = ref<number[]>();
-    watch(characterInfos, () => {
-      selectedStyleIndexes.value = characterInfos.value?.map((info) =>
-        info.metas.styles.findIndex(
-          (style) => style.styleId === info.metas.defaultStyleId
-        )
-      );
-    });
+    const selectedStyleIndexes = ref(
+      characterInfos.value?.map((info) => {
+        const defaultStyleId = store.state.defaultStyleIds.find(
+          (x) => x.speakerUuid === info.metas.speakerUuid
+        )?.defaultStyleId;
+
+        return info.metas.styles.findIndex(
+          (style) => style.styleId === defaultStyleId
+        );
+      })
+    );
 
     const pageIndex = ref(0);
 

@@ -101,7 +101,9 @@
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
+  <!-- v-ifも付けないとfalseでも動いてしまう -->
   <default-style-select-dialog
+    v-if="isDefaultStyleSelectDialogOpenComputed"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
 </template>
@@ -324,7 +326,13 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER");
+      await Promise.all([
+        store.dispatch("LOAD_CHARACTER"),
+        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
+      ]);
+      if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
+        isDefaultStyleSelectDialogOpenComputed.value = true;
+      }
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}

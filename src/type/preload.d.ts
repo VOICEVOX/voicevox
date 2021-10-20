@@ -47,6 +47,7 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   isUnsetDefaultStyleIds(): Promise<boolean>;
+  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
@@ -76,7 +77,6 @@ export type CharacterInfo = {
     speakerUuid: string;
     speakerName: string;
     styles: MetasJson["styles"];
-    defaultStyleId: number;
     policy: string;
   };
 };
@@ -96,6 +96,11 @@ export type SavingSetting = {
   fixedExportDir: string;
   avoidOverwrite: boolean;
   exportText: boolean;
+};
+
+export type DefaultStyleId = {
+  speakerUuid: string;
+  defaultStyleId: number;
 };
 
 export type HotkeySetting = {
