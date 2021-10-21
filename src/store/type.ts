@@ -10,6 +10,7 @@ import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   HotkeySetting,
   SavingSetting,
@@ -494,7 +495,7 @@ export type CommandActions = StoreType<CommandStoreTypes, "action">;
  */
 
 export type IndexStoreState = {
-  //
+  defaultStyleIds: DefaultStyleId[];
 };
 
 type IndexStoreTypes = {
@@ -516,6 +517,19 @@ type IndexStoreTypes = {
 
   GET_OSS_COMMUNITY_INFOS: {
     action(): Promise<string>;
+  };
+
+  IS_UNSET_DEFAULT_STYLE_IDS: {
+    action(): Promise<boolean>;
+  };
+
+  LOAD_DEFAULT_STYLE_IDS: {
+    action(): Promise<void>;
+  };
+
+  SET_DEFAULT_STYLE_IDS: {
+    mutation: { defaultStyleIds: DefaultStyleId[] };
+    action(payload: DefaultStyleId[]): void;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -624,6 +638,7 @@ export type UiStoreState = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isDefaultStyleSelectDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
 };
@@ -659,6 +674,11 @@ type UiStoreTypes = {
   IS_SETTING_DIALOG_OPEN: {
     mutation: { isSettingDialogOpen: boolean };
     action(payload: { isSettingDialogOpen: boolean }): void;
+  };
+
+  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
+    mutation: { isDefaultStyleSelectDialogOpen: boolean };
+    action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
   };
 
   GET_USE_GPU: {

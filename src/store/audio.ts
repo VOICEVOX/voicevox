@@ -393,12 +393,20 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: { text?: string; styleId?: number }
     ) {
+      if (state.defaultStyleIds == undefined)
+        throw new Error("state.defaultStyleIds == undefined");
       if (state.characterInfos == undefined)
         throw new Error("state.characterInfos == undefined");
+      const characterInfos = state.characterInfos;
 
       const text = payload.text ?? "";
       const styleId =
-        payload.styleId ?? state.characterInfos[0].metas.styles[0].styleId;
+        payload.styleId ??
+        state.defaultStyleIds[
+          state.defaultStyleIds.findIndex(
+            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
+          )
+        ].defaultStyleId;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
