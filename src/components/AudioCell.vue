@@ -92,7 +92,7 @@
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
       @update:model-value="setAudioTextBuffer"
-      @change="willRemove || pushAudioText($event)"
+      @change="willRemove || pushAudioText()"
       @paste="pasteOnAudioCell"
       @focus="setActiveAudioKey()"
       @keydown.prevent.up.exact="moveUpCell"
@@ -194,7 +194,7 @@ export default defineComponent({
       }
     );
 
-    const pushAudioText = async (text: string) => {
+    const pushAudioText = async () => {
       if (isChangeFlag.value) {
         isChangeFlag.value = false;
         await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
@@ -247,12 +247,14 @@ export default defineComponent({
             const text = texts.shift();
             if (text == undefined) return;
             setAudioTextBuffer(text);
-            await pushAudioText(text);
+            await pushAudioText();
           }
 
+          const styleId = audioItem.value.styleId;
+          if (styleId == undefined) throw new Error("styleId == undefined");
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            styleId: audioItem.value.styleId!,
+            styleId,
             prevAudioKey,
           });
           if (audioKeys)

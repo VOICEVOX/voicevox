@@ -600,7 +600,9 @@ export default defineComponent({
     };
 
     const solveDuplicated = () => {
-      deleteHotkey(lastDuplicated.value!.action);
+      if (lastDuplicated.value == undefined)
+        throw new Error("lastDuplicated.value == undefined");
+      deleteHotkey(lastDuplicated.value.action);
       changeHotkeySettings(lastAction.value, lastRecord.value, false)?.then(
         () => {
           closeHotkeyDuplicatedDialog(true);
