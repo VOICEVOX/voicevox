@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.7.4",
+    "descriptions": ["Linuxでエンジンが起動しない問題の修正"],
+    "contributors": []
+  },
+  {
     "version": "0.7.3",
     "descriptions": [
       "古いバージョンのプロジェクトファイルが読み込めない問題の修正"
