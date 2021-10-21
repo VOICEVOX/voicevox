@@ -16,6 +16,7 @@ describe("store/vuex.js test", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
         engineState: "STARTING",
+        defaultStyleIds: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
@@ -77,6 +78,7 @@ describe("store/vuex.js test", () => {
     assert.isObject(store);
     assert.isObject(store.state);
     assert.equal(store.state.engineState, "STARTING");
+    assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
     assert.isArray(store.state.audioKeys);
