@@ -177,7 +177,7 @@ const store = new Store<{
     },
   },
   migrations: {
-    ">=0.7.4": (store) => {
+    ">=0.7.3": (store) => {
       const newHotkeys = store.get("hotkeySettings");
       newHotkeys.splice(6, 0, { action: "長さ欄を表示", combination: "3" });
       store.set("hotkeySettings", newHotkeys);
