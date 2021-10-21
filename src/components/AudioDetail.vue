@@ -57,7 +57,7 @@
               class="q-mb-sm pitch-cell"
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
             >
-              <!-- div for input width -->
+              <!-- consonant length -->
               <audio-parameter
                 v-if="mora.consonant"
                 :moraIndex="moraIndex"
@@ -73,6 +73,7 @@
                 @changeValue="changeMoraData"
                 @mouseOver="handleLengthHoverText"
               />
+              <!-- vowel length -->
               <audio-parameter
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
@@ -96,6 +97,7 @@
               'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
             }"
           >
+            <!-- pause length -->
             <audio-parameter
               :moraIndex="accentPhrase.moras.length"
               :accentPhraseIndex="accentPhraseIndex"
@@ -221,7 +223,7 @@ import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction, MoraDataType } from "@/type/preload";
+import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
 
@@ -238,7 +240,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
         "再生/停止",
         () => {
@@ -466,7 +468,7 @@ export default defineComponent({
       });
     };
 
-    type hoveredType = "pause" | "accent" | "vowel" | "consonant";
+    type hoveredType = "vowel" | "consonant";
 
     type hoveredInfoType = {
       accentPhraseIndex: number | undefined;
@@ -481,7 +483,7 @@ export default defineComponent({
     const lengthHoveredInfo = reactive<hoveredInfoType>({
       accentPhraseIndex: undefined,
       moraIndex: undefined,
-      type: "pause",
+      type: "vowel",
     });
 
     const handleAccentHoverText = (isOver: boolean, phraseIndex: number) => {
@@ -499,16 +501,13 @@ export default defineComponent({
       moraIndex?: number
     ) => {
       lengthHoveredInfo.type = phoneme;
-      if (phoneme == "pause") {
-        return;
+      // the pause and pitch templates don't emit a mouseOver event
+      if (isOver) {
+        lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+        lengthHoveredInfo.moraIndex = moraIndex;
       } else {
-        if (isOver) {
-          lengthHoveredInfo.accentPhraseIndex = phraseIndex;
-          lengthHoveredInfo.moraIndex = moraIndex;
-        } else {
-          lengthHoveredInfo.accentPhraseIndex = undefined;
-          lengthHoveredInfo.moraIndex = undefined;
-        }
+        lengthHoveredInfo.accentPhraseIndex = undefined;
+        lengthHoveredInfo.moraIndex = undefined;
       }
     };
 
@@ -531,27 +530,17 @@ export default defineComponent({
     ) => {
       if (selectedDetail.value != "length") return mora.text;
       else {
-        switch (lengthHoveredInfo.type) {
-          case "pause":
-            return mora.text;
-          case "vowel": {
-            if (
-              accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
-              moraIndex === lengthHoveredInfo.moraIndex
-            )
-              return mora.vowel.toUpperCase();
-            else return mora.text;
+        if (
+          accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+          moraIndex === lengthHoveredInfo.moraIndex
+        ) {
+          if (lengthHoveredInfo.type == "vowel") {
+            return mora.vowel.toUpperCase();
+          } else {
+            return mora.consonant?.toUpperCase();
           }
-          case "consonant": {
-            if (
-              accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
-              moraIndex === lengthHoveredInfo.moraIndex
-            )
-              return mora.consonant?.toUpperCase();
-            else return mora.text;
-          }
-          default:
-            return mora.text;
+        } else {
+          return mora.text;
         }
       }
     };
