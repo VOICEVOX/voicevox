@@ -130,10 +130,6 @@ const store = new Store<{
           combination: "2",
         },
         {
-          action: "長さ欄を表示",
-          combination: "2",
-        },
-        {
           action: "テキスト欄を追加",
           combination: "Shift Enter",
         },

@@ -62,7 +62,7 @@
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, computed, onMounted, onUnmounted } from "vue";
+import { defineComponent, computed } from "vue";
 
 export default defineComponent({
   name: "AudioAccent",

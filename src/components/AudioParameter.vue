@@ -8,7 +8,7 @@
       text-color="secondary"
       v-if="!disable && (valueLabel.visible || valueLabel.panning)"
     >
-      {{ previewValue.currentValue.value.toFixed(type == "pitch" ? 2 : 3) }}
+      {{ previewValue.currentValue.value.toFixed(getPrecision()) }}
     </q-badge>
     <q-slider
       vertical
@@ -117,6 +117,14 @@ export default defineComponent({
       }
     };
 
+    const getPrecision = () => {
+      if (props.type == "pause" || props.type == "pitch") {
+        return 2;
+      } else {
+        return 3;
+      }
+    };
+
     return {
       previewValue,
       changeValue,
@@ -125,6 +133,7 @@ export default defineComponent({
       setPanning,
       getClipPath,
       handleMouseHover,
+      getPrecision,
     };
   },
 });
