@@ -26,7 +26,9 @@
               characterInfo.metas.speakerUuid ===
               selectedCharacterInfo.metas.speakerUuid
             "
-            @click="changeStyleId(characterInfo.metas.styles[0].styleId)"
+            @click="
+              changeStyleId(getDefaultStyleId(characterInfo.metas.speakerUuid))
+            "
             @mouseover="reassignSubMenuOpen(index)"
             @mouseleave="reassignSubMenuOpen.cancel()"
           >
@@ -208,6 +210,11 @@ export default defineComponent({
         styleId,
       });
     };
+    const getDefaultStyleId = (speakerUuid: string) => {
+      return store.state.defaultStyleIds.find(
+        (x) => x.speakerUuid === speakerUuid
+      )?.defaultStyleId;
+    };
     const setActiveAudioKey = () => {
       store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
     };
@@ -369,6 +376,7 @@ export default defineComponent({
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
+      getDefaultStyleId,
       setActiveAudioKey,
       save,
       play,

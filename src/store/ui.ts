@@ -55,6 +55,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
       },
+      IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
+        state,
+        {
+          isDefaultStyleSelectDialogOpen,
+        }: { isDefaultStyleSelectDialogOpen: boolean }
+      ) {
+        state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
+      },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
@@ -105,6 +113,23 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         else commit("UNLOCK_UI");
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
+      },
+      async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
+        { state, commit },
+        { isDefaultStyleSelectDialogOpen }
+      ) {
+        if (
+          state.isDefaultStyleSelectDialogOpen ===
+          isDefaultStyleSelectDialogOpen
+        )
+          return;
+
+        if (isDefaultStyleSelectDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+          isDefaultStyleSelectDialogOpen,
+        });
       },
       async GET_USE_GPU({ commit }) {
         commit("SET_USE_GPU", {

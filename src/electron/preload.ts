@@ -179,6 +179,18 @@ const api: Sandbox = {
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
+
+  isUnsetDefaultStyleIds: async () => {
+    return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_IDS");
+  },
+
+  getDefaultStyleIds: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_STYLE_IDS");
+  },
+
+  setDefaultStyleIds: async (defaultStyleIds) => {
+    await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

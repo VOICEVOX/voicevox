@@ -10,6 +10,7 @@ import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   HotkeySetting,
   SavingSetting,
@@ -19,6 +20,7 @@ import {
 export type State = {
   engineState: EngineState;
   characterInfos?: CharacterInfo[];
+  defaultStyleIds: DefaultStyleId[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -33,6 +35,7 @@ export type State = {
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isDefaultStyleSelectDialogOpen: boolean;
   isMaximized: boolean;
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
@@ -362,8 +365,9 @@ export type CommandActions = {
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type IndexGetters = {};
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export type IndexMutations = {};
+export type IndexMutations = {
+  SET_DEFAULT_STYLE_IDS: { defaultStyleIds: DefaultStyleId[] };
+};
 
 export type IndexActions = {
   GET_HOW_TO_USE_TEXT(): Promise<string>;
@@ -377,6 +381,9 @@ export type IndexActions = {
   }): Promise<Electron.MessageBoxReturnValue>;
   LOG_ERROR(...payload: unknown[]): void;
   LOG_INFO(...payload: unknown[]): void;
+  IS_UNSET_DEFAULT_STYLE_IDS(): Promise<boolean>;
+  LOAD_DEFAULT_STYLE_IDS(): Promise<void>;
+  SET_DEFAULT_STYLE_IDS(payload: DefaultStyleId[]): void;
 };
 
 /*
@@ -435,6 +442,9 @@ export type UiMutations = {
   UNLOCK_UI: undefined;
   IS_HELP_DIALOG_OPEN: { isHelpDialogOpen: boolean };
   IS_SETTING_DIALOG_OPEN: { isSettingDialogOpen: boolean };
+  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
+    isDefaultStyleSelectDialogOpen: boolean;
+  };
   SET_USE_GPU: { useGpu: boolean };
   DETECT_UNMAXIMIZED: undefined;
   DETECT_MAXIMIZED: undefined;
@@ -448,6 +458,9 @@ export type UiActions = {
   ASYNC_UI_LOCK(payload: { callback: () => Promise<void> }): void;
   IS_HELP_DIALOG_OPEN(payload: { isHelpDialogOpen: boolean }): void;
   IS_SETTING_DIALOG_OPEN(payload: { isSettingDialogOpen: boolean }): void;
+  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(payload: {
+    isDefaultStyleSelectDialogOpen: boolean;
+  }): void;
   GET_USE_GPU(): void;
   SET_USE_GPU(payload: { useGpu: boolean }): void;
   DETECT_UNMAXIMIZED(): void;
