@@ -47,6 +47,11 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  isUnsetDefaultStyleIds(): Promise<boolean>;
+  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
+  setDefaultStyleIds(
+    defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
+  ): Promise<void>;
 }
 
 export type AppInfos = {
@@ -92,6 +97,11 @@ export type SavingSetting = {
   fixedExportDir: string;
   avoidOverwrite: boolean;
   exportText: boolean;
+};
+
+export type DefaultStyleId = {
+  speakerUuid: string;
+  defaultStyleId: number;
 };
 
 export type HotkeySetting = {

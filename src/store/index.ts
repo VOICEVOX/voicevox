@@ -9,14 +9,15 @@ import {
   IndexActions,
   IndexGetters,
   IndexMutations,
+  IndexStoreState,
   State,
   VoiceVoxStoreOptions,
 } from "./type";
-import { commandStore } from "./command";
-import { audioStore, audioCommandStore } from "./audio";
-import { projectStore } from "./project";
-import { uiStore } from "./ui";
-import { settingStore } from "./setting";
+import { commandStoreState, commandStore } from "./command";
+import { audioStoreState, audioStore, audioCommandStore } from "./audio";
+import { projectStoreState, projectStore } from "./project";
+import { uiStoreState, uiStore } from "./ui";
+import { settingStoreState, settingStore } from "./setting";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -24,13 +25,21 @@ export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
 > = Symbol();
 
+export const indexStoreState: IndexStoreState = {
+  defaultStyleIds: [],
+};
+
 export const indexStore: VoiceVoxStoreOptions<
   IndexGetters,
   IndexActions,
   IndexMutations
 > = {
   getters: {},
-  mutations: {},
+  mutations: {
+    SET_DEFAULT_STYLE_IDS(state, { defaultStyleIds }) {
+      state.defaultStyleIds = defaultStyleIds;
+    },
+  },
   actions: {
     async GET_HOW_TO_USE_TEXT() {
       return await window.electron.getHowToUseText();
@@ -59,37 +68,29 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
     },
+    async IS_UNSET_DEFAULT_STYLE_IDS() {
+      return await window.electron.isUnsetDefaultStyleIds();
+    },
+    async LOAD_DEFAULT_STYLE_IDS({ commit }) {
+      const defaultStyleIds = await window.electron.getDefaultStyleIds();
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+    },
+    async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+      await window.electron.setDefaultStyleIds(defaultStyleIds);
+    },
   },
 };
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
-    engineState: "STARTING",
-    audioItems: {},
-    audioKeys: [],
-    audioStates: {},
-    uiLockCount: 0,
-    audioDetailPaneOffset: undefined,
-    audioInfoPaneOffset: undefined,
-    nowPlayingContinuously: false,
-    undoCommands: [],
-    redoCommands: [],
-    useUndoRedo: isDevelopment,
-    useGpu: false,
-    isHelpDialogOpen: false,
-    isSettingDialogOpen: false,
-    isMaximized: false,
-    savedLastCommandUnixMillisec: null,
-    savingSetting: {
-      fileEncoding: "UTF-8",
-      fixedExportEnabled: false,
-      fixedExportDir: "",
-      avoidOverwrite: false,
-      exportLab: false,
-      exportText: true,
-    },
-    isPinned: false,
-    hotkeySettings: [],
+    ...uiStoreState,
+    ...audioStoreState,
+    ...commandStoreState,
+    ...projectStoreState,
+    ...settingStoreState,
+    ...audioCommandStore,
+    ...indexStoreState,
   },
 
   getters: {

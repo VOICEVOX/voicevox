@@ -16,12 +16,11 @@ describe("store/vuex.js test", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
         engineState: "STARTING",
+        defaultStyleIds: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
         uiLockCount: 0,
-        audioDetailPaneOffset: undefined,
-        audioInfoPaneOffset: undefined,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
@@ -29,6 +28,7 @@ describe("store/vuex.js test", () => {
         useGpu: false,
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
+        isDefaultStyleSelectDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
@@ -76,6 +76,7 @@ describe("store/vuex.js test", () => {
     assert.isObject(store);
     assert.isObject(store.state);
     assert.equal(store.state.engineState, "STARTING");
+    assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
     assert.isArray(store.state.audioKeys);
@@ -83,8 +84,6 @@ describe("store/vuex.js test", () => {
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
     assert.equal(store.state.uiLockCount, 0);
-    assert.isUndefined(store.state.audioDetailPaneOffset);
-    assert.isUndefined(store.state.audioInfoPaneOffset);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
     assert.isEmpty(store.state.undoCommands);
@@ -94,6 +93,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
+    assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isObject(store.state.savingSetting);
     assert.propertyVal(store.state.savingSetting, "fileEncoding", "UTF-8");
