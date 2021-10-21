@@ -8,12 +8,15 @@ import { getPlugin } from "immer/src/utils/plugins";
 
 import {
   Command,
-  CommandGetters,
   CommandActions,
+  CommandGetters,
   CommandMutations,
+  CommandStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
+
+const isDevelopment = process.env.NODE_ENV == "development";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。
@@ -93,6 +96,12 @@ const recordPatches =
       undoPatches: undoPatches,
     };
   };
+
+export const commandStoreState: CommandStoreState = {
+  undoCommands: [],
+  redoCommands: [],
+  useUndoRedo: isDevelopment,
+};
 
 export const commandStore: VoiceVoxStoreOptions<
   CommandGetters,

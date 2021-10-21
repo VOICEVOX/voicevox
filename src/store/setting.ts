@@ -5,14 +5,27 @@ import {
   SavingSetting,
 } from "@/type/preload";
 import {
-  SettingActions,
   SettingGetters,
+  SettingActions,
   SettingMutations,
+  SettingStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 import Mousetrap from "mousetrap";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
+
+export const settingStoreState: SettingStoreState = {
+  savingSetting: {
+    fileEncoding: "UTF-8",
+    fixedExportEnabled: false,
+    fixedExportDir: "",
+    avoidOverwrite: false,
+    exportLab: false,
+    exportText: true,
+  },
+  hotkeySettings: [],
+};
 
 export const settingStore: VoiceVoxStoreOptions<
   SettingGetters,
