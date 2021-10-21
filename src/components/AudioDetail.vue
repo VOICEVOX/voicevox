@@ -1,8 +1,5 @@
 <template>
-  <div
-    v-show="activeAudioKey"
-    class="full-height root relarive-absolute-wrapper"
-  >
+  <div class="full-height root relarive-absolute-wrapper">
     <div>
       <div class="side">
         <div class="detail-selector">
@@ -233,7 +230,11 @@ export default defineComponent({
 
   name: "AudioDetail",
 
-  setup() {
+  props: {
+    activeAudioKey: { type: String, required: true },
+  },
+
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -298,20 +299,17 @@ export default defineComponent({
     };
 
     // accent phrase
-    const activeAudioKey = computed<string | undefined>(
-      () => store.getters.ACTIVE_AUDIO_KEY
-    );
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const audioItem = computed(() =>
-      activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
+    const audioItem = computed(
+      () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const changeAccent = (accentPhraseIndex: number, accent: number) => {
       store.dispatch("COMMAND_CHANGE_ACCENT", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
@@ -323,7 +321,7 @@ export default defineComponent({
       moraIndex?: number
     ) => {
       store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         ...(!isPause
           ? { isPause, moraIndex: moraIndex as number }
@@ -338,7 +336,7 @@ export default defineComponent({
       type: MoraDataType
     ) => {
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         moraIndex,
         data,
@@ -364,7 +362,7 @@ export default defineComponent({
     const play = async () => {
       try {
         await store.dispatch("PLAY_AUDIO", {
-          audioKey: activeAudioKey.value!,
+          audioKey: props.activeAudioKey,
         });
       } catch (e) {
         $q.dialog({
@@ -380,7 +378,7 @@ export default defineComponent({
     };
 
     const stop = () => {
-      store.dispatch("STOP_AUDIO", { audioKey: activeAudioKey.value! });
+      store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
     };
 
     // save
@@ -388,7 +386,7 @@ export default defineComponent({
       const result: SaveResultObject = await store.dispatch(
         "GENERATE_AND_SAVE_AUDIO",
         {
-          audioKey: activeAudioKey.value!,
+          audioKey: props.activeAudioKey,
           encoding: store.state.savingSetting.fileEncoding,
         }
       );
@@ -419,10 +417,10 @@ export default defineComponent({
     };
 
     const nowPlaying = computed(
-      () => store.state.audioStates[activeAudioKey.value!]?.nowPlaying
+      () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
     );
     const nowGenerating = computed(
-      () => store.state.audioStates[activeAudioKey.value!]?.nowGenerating
+      () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
     );
 
     // continuously play
@@ -451,15 +449,17 @@ export default defineComponent({
     ) => {
       let popUntilPause = false;
       newPronunciation = newPronunciation.replace(",", "、");
+      if (accentPhrases.value == undefined)
+        throw new Error("accentPhrases.value == undefined");
       if (
         newPronunciation.slice(-1) == "、" &&
-        accentPhrases.value!.length - 1 != phraseIndex
+        accentPhrases.value.length - 1 != phraseIndex
       ) {
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
       store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
         popUntilPause,
@@ -579,7 +579,6 @@ export default defineComponent({
     return {
       selectDetail,
       selectedDetail,
-      activeAudioKey,
       uiLocked,
       audioItem,
       query,

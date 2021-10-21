@@ -283,6 +283,12 @@ const howToUseText = fs.readFileSync(
   "utf-8"
 );
 
+// OSSコミュニティ情報の読み込み
+const ossCommunityInfos = fs.readFileSync(
+  path.join(__static, "ossCommunityInfos.md"),
+  "utf-8"
+);
+
 // 利用規約テキストの読み込み
 const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
 
@@ -375,6 +381,10 @@ ipcMainHandle("GET_OSS_LICENSES", () => {
 
 ipcMainHandle("GET_UPDATE_INFOS", () => {
   return updateInfos;
+});
+
+ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
+  return ossCommunityInfos;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", (_, { title, defaultPath }) => {

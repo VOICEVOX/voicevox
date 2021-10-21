@@ -44,6 +44,9 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_UPDATE_INFOS() {
       return await window.electron.getUpdateInfos();
     },
+    async GET_OSS_COMMUNITY_INFOS() {
+      return await window.electron.getOssCommunityInfos();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }
@@ -122,6 +125,11 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: process.env.NODE_ENV !== "production",
 });
 
-export const useStore = () => {
+export const useStore = (): Store<
+  State,
+  AllGetters,
+  AllActions,
+  AllMutations
+> => {
   return baseUseStore(storeKey);
 };

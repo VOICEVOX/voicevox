@@ -18,16 +18,16 @@ export class PreviewableValue {
     );
   }
 
-  setPreviewValue(newValue: number) {
+  setPreviewValue(newValue: number): void {
     this.previewValue.value = newValue;
   }
 
-  startPreview() {
+  startPreview(): void {
     this.isPreview.value = true;
     this.setPreviewValue(this.storeValue.value ?? 0.0);
   }
 
-  stopPreview() {
+  stopPreview(): void {
     this.isPreview.value = false;
   }
 }

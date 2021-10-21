@@ -31,9 +31,6 @@ export type PayloadRecipe<S, P> = (draft: S, payload: P) => void;
 export type PayloadRecipeTree<S, M> = {
   [K in keyof M]: PayloadRecipe<S, M[K]>;
 };
-export type PayloadMutation<S, P extends Record<string, unknown> | undefined> =
-  (state: S, payload: P) => void;
-export type PayloadMutationTree<S> = Record<string, PayloadMutation<S, any>>;
 
 interface UndoRedoState {
   undoCommands: Command[];
@@ -86,7 +83,7 @@ export const createCommandMutation =
 const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
-    const [_, doPatches, undoPatches] = immer.produceWithPatches(
+    const [, doPatches, undoPatches] = immer.produceWithPatches(
       toRaw(state) as S,
       (draft: S) => recipe(draft, payload)
     );
