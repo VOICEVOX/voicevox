@@ -6,6 +6,7 @@ import {
   UiActions,
   UiGetters,
   UiMutations,
+  UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 
@@ -24,6 +25,16 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
     });
   };
 }
+
+export const uiStoreState: UiStoreState = {
+  uiLockCount: 0,
+  useGpu: false,
+  isHelpDialogOpen: false,
+  isSettingDialogOpen: false,
+  isDefaultStyleSelectDialogOpen: false,
+  isMaximized: false,
+  isPinned: false,
+};
 
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
   {

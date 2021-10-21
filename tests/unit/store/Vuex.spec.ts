@@ -21,8 +21,6 @@ describe("store/vuex.js test", () => {
         audioKeys: [],
         audioStates: {},
         uiLockCount: 0,
-        audioDetailPaneOffset: undefined,
-        audioInfoPaneOffset: undefined,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
@@ -86,8 +84,6 @@ describe("store/vuex.js test", () => {
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
     assert.equal(store.state.uiLockCount, 0);
-    assert.isUndefined(store.state.audioDetailPaneOffset);
-    assert.isUndefined(store.state.audioInfoPaneOffset);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
     assert.isEmpty(store.state.undoCommands);
