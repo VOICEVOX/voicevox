@@ -49,15 +49,6 @@ export default defineComponent({
   emits: ["onUpdate:modelValue", "onChange", "onPan"],
   setup(props, context) {
     const previewValue = ref(props.modelValue);
-
-    const updatePreviewValue = (value: number) => {
-      previewValue.value = value;
-      context.emit("onUpdate:modelValue", value);
-    };
-    const changeValue = () => {
-      context.emit("onChange", previewValue.value);
-    };
-
     const isPanning = ref(false);
     const isScrolling = ref(false);
 
@@ -68,6 +59,14 @@ export default defineComponent({
         return props.modelValue;
       }
     });
+
+    const updatePreviewValue = (value: number) => {
+      previewValue.value = value;
+      context.emit("onUpdate:modelValue", value);
+    };
+    const changeValue = () => {
+      context.emit("onChange", previewValue.value);
+    };
 
     const onPan: QSliderProps["onPan"] = (phase) => {
       if (phase == "start") {
@@ -84,7 +83,7 @@ export default defineComponent({
       // end scroll
       isScrolling.value = false;
       changeValue();
-    });
+    }, 300);
 
     const onWheel = (event: Events["onWheel"]) => {
       if (props.disableScroll) return;
@@ -92,10 +91,12 @@ export default defineComponent({
       const deltaY = event.deltaY;
       const ctrlKey = event.ctrlKey;
       const step =
-        (ctrlKey ? props.scrollMinStep : props.scrollStep) ?? props.step;
-      const diff = step * Math.sign(deltaY);
+        (ctrlKey ? props.scrollMinStep : props.scrollStep) ??
+        props.scrollStep ??
+        props.step;
+      const diff = -step * Math.sign(deltaY);
       updatePreviewValue(
-        Math.max(Math.min(currentValue.value + diff, props.min), props.max)
+        Math.min(Math.max(currentValue.value + diff, props.min), props.max)
       );
       // start scroll
       isScrolling.value = true;
