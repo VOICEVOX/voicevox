@@ -1,6 +1,9 @@
 <template>
   <q-page class="relarive-absolute-wrapper scroller">
-    <div class="q-pa-md markdown" v-html="policy"></div>
+    <div
+      class="q-pa-md markdown markdown-body"
+      v-html="ossCommunityInfos"
+    ></div>
   </q-page>
 </template>
 
@@ -8,20 +11,18 @@
 import { defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
 export default defineComponent({
   setup() {
     const store = useStore();
-    const policy = ref("");
-
+    const ossCommunityInfos = ref("");
     const md = useMarkdownIt();
-
     onMounted(async () => {
-      policy.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
+      ossCommunityInfos.value = md.render(
+        await store.dispatch("GET_OSS_COMMUNITY_INFOS")
+      );
     });
-
     return {
-      policy,
+      ossCommunityInfos,
     };
   },
 });
@@ -35,3 +36,5 @@ export default defineComponent({
   }
 }
 </style>
+
+<style src="github-markdown-css/github-markdown.css"></style>

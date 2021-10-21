@@ -39,6 +39,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_CHARACTER_INFOS");
   },
 
+  getHowToUseText: async () => {
+    return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
+  },
+
   getPolicyText: async () => {
     return await ipcRendererInvoke("GET_POLICY_TEXT");
   },
@@ -49,6 +53,10 @@ const api: Sandbox = {
 
   getUpdateInfos: async () => {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
+  },
+
+  getOssCommunityInfos: async () => {
+    return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {
@@ -166,6 +174,10 @@ const api: Sandbox = {
 
   changePinWindow: () => {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+  },
+
+  hotkeySettings: (newData) => {
+    return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 };
 

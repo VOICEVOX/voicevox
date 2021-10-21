@@ -37,8 +37,10 @@ describe("store/vuex.js test", () => {
           fixedExportDir: "",
           avoidOverwrite: false,
           exportLab: false,
+          exportText: true,
         },
         isPinned: false,
+        hotkeySettings: [],
       },
       getters: {
         ...uiStore.getters,
@@ -100,5 +102,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
     assert.equal(store.state.isPinned, false);
+    assert.isArray(store.state.hotkeySettings);
+    assert.isEmpty(store.state.hotkeySettings);
   });
 });

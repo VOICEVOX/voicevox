@@ -5,12 +5,13 @@ import {
   ActionsBase,
   StoreOptions,
 } from "./vuex";
-import { Operation } from "rfc6902";
+import { Patch } from "immer";
 import { AccentPhrase, AudioQuery } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
   Encoding as EncodingType,
+  HotkeySetting,
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
@@ -36,12 +37,13 @@ export type State = {
   projectFilePath?: string;
   savedLastCommandUnixMillisec: number | null;
   savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
   isPinned: boolean;
 };
 
 export type AudioItem = {
   text: string;
-  speaker?: number;
+  styleId?: number;
   query?: AudioQuery;
 };
 
@@ -52,8 +54,8 @@ export type AudioState = {
 
 export type Command = {
   unixMillisec: number;
-  undoOperations: Operation[];
-  redoOperations: Operation[];
+  undoPatches: Patch[];
+  redoPatches: Patch[];
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
@@ -106,7 +108,7 @@ export type AudioMutations = {
     postPhonemeLength: number;
   };
   SET_AUDIO_QUERY: { audioKey: string; audioQuery: AudioQuery };
-  SET_AUDIO_SPEAKER: { audioKey: string; speaker: number };
+  SET_AUDIO_STYLE_ID: { audioKey: string; styleId: number };
   SET_ACCENT_PHRASES: { audioKey: string; accentPhrases: AccentPhrase[] };
   SET_SINGLE_ACCENT_PHRASE: {
     audioKey: string;
@@ -128,7 +130,7 @@ export type AudioActions = {
   GENERATE_AUDIO_KEY(): string;
   GENERATE_AUDIO_ITEM(payload: {
     text?: string;
-    speaker?: number;
+    styleId?: number;
   }): Promise<AudioItem>;
   REGISTER_AUDIO_ITEM(payload: {
     audioItem: AudioItem;
@@ -139,21 +141,21 @@ export type AudioActions = {
   SET_AUDIO_QUERY(payload: { audioKey: string; audioQuery: AudioQuery }): void;
   FETCH_ACCENT_PHRASES(payload: {
     text: string;
-    speaker: number;
+    styleId: number;
     isKana?: boolean;
   }): Promise<AccentPhrase[]>;
   FETCH_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    speaker: number;
+    styleId: number;
   }): Promise<AccentPhrase[]>;
   FETCH_AND_COPY_MORA_DATA(payload: {
     accentPhrases: AccentPhrase[];
-    speaker: number;
+    styleId: number;
     copyIndexes: number[];
   }): Promise<AccentPhrase[]>;
   FETCH_AUDIO_QUERY(payload: {
     text: string;
-    speaker: number;
+    styleId: number;
   }): Promise<AudioQuery>;
   FETCH_AND_SET_AUDIO_QUERY(payload: { audioKey: string }): void;
   GENERATE_AUDIO(payload: { audioKey: string }): Blob | null;
@@ -190,7 +192,7 @@ export type AudioCommandActions = {
   }): Promise<string>;
   COMMAND_REMOVE_AUDIO_ITEM(payload: { audioKey: string }): void;
   COMMAND_CHANGE_AUDIO_TEXT(payload: { audioKey: string; text: string }): void;
-  COMMAND_CHANGE_SPEAKER(payload: { audioKey: string; speaker: number }): void;
+  COMMAND_CHANGE_STYLE_ID(payload: { audioKey: string; styleId: number }): void;
   COMMAND_CHANGE_ACCENT(payload: {
     audioKey: string;
     accentPhraseIndex: number;
@@ -250,7 +252,7 @@ export type AudioCommandActions = {
   COMMAND_PUT_TEXTS(payload: {
     prevAudioKey: string;
     texts: string[];
-    speaker: number;
+    styleId: number;
   }): string[];
 };
 
@@ -274,12 +276,12 @@ export type AudioCommandMutations = {
         query: AudioQuery;
       }
   );
-  COMMAND_CHANGE_SPEAKER: {
-    speaker: number;
+  COMMAND_CHANGE_STYLE_ID: {
+    styleId: number;
     audioKey: string;
   } & (
     | {
-        update: "Speaker";
+        update: "StyleId";
       }
     | {
         update: "AccentPhrases";
@@ -300,7 +302,6 @@ export type AudioCommandMutations = {
   };
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
     audioKey: string;
-    accentPhraseIndex: number;
     accentPhrases: AccentPhrase[];
   };
   COMMAND_SET_AUDIO_MORA_DATA: {
@@ -365,9 +366,11 @@ export type IndexGetters = {};
 export type IndexMutations = {};
 
 export type IndexActions = {
+  GET_HOW_TO_USE_TEXT(): Promise<string>;
   GET_POLICY_TEXT(): Promise<string>;
   GET_OSS_LICENSES(): Promise<Record<string, string>[]>;
   GET_UPDATE_INFOS(): Promise<UpdateInfo[]>;
+  GET_OSS_COMMUNITY_INFOS(): Promise<string>;
   SHOW_WARNING_DIALOG(payload: {
     title: string;
     message: string;
@@ -401,16 +404,21 @@ export type ProjectActions = {
  */
 
 export type SettingGetters = {
-  GET_SAVING_SETTING_DATA: SavingSetting;
+  GET_SAVING_SETTING: SavingSetting;
 };
 
 export type SettingMutations = {
-  SET_SAVING_SETTING_DATA: { savingSetting: SavingSetting };
+  SET_SAVING_SETTING: { savingSetting: SavingSetting };
+  SET_HOTKEY_SETTINGS: { hotkeySettings: HotkeySetting[] };
 };
 
 export type SettingActions = {
-  GET_SAVING_SETTING_DATA(): void;
-  SET_SAVING_SETTING_DATA(payload: { data: SavingSetting }): void;
+  GET_SAVING_SETTING(): void;
+  SET_SAVING_SETTING(payload: { data: SavingSetting }): void;
+  GET_HOTKEY_SETTINGS(): void;
+  SET_HOTKEY_SETTINGS(payload: {
+    data: HotkeySetting;
+  }): Promise<HotkeySetting[]>;
 };
 
 /*

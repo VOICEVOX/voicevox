@@ -17,6 +17,11 @@ type IpcIHData = {
     return: import("@/type/preload").CharacterInfo[];
   };
 
+  GET_HOW_TO_USE_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_POLICY_TEXT: {
     args: [];
     return: string;
@@ -30,6 +35,11 @@ type IpcIHData = {
   GET_UPDATE_INFOS: {
     args: [];
     return: import("@/type/preload").UpdateInfo[];
+  };
+
+  GET_OSS_COMMUNITY_INFOS: {
+    args: [];
+    return: string;
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
@@ -130,6 +140,11 @@ type IpcIHData = {
   CHANGE_PIN_WINDOW: {
     args: [];
     return: void;
+  };
+
+  HOTKEY_SETTINGS: {
+    args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
+    return: import("@/type/preload").HotkeySetting[];
   };
 };
 
