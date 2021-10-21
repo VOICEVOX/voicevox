@@ -8,7 +8,7 @@
       text-color="secondary"
       v-if="!disable && (valueLabel.visible || valueLabel.panning)"
     >
-      {{ previewValue.currentValue.value.toFixed(getPrecision()) }}
+      {{ previewValue.currentValue.value.toFixed(precisionComputed) }}
     </q-badge>
     <q-slider
       vertical
@@ -18,7 +18,7 @@
       :max="max"
       :step="step"
       :disable="disable || uiLocked"
-      :style="getClipPath()"
+      :style="clipPathComputed"
       :model-value="previewValue.currentValue.value"
       @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
       @change="changeValue(parseFloat($event))"
@@ -31,7 +31,7 @@
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
 import { MoraDataType } from "@/type/preload";
-import { defineComponent, reactive } from "vue";
+import { computed, defineComponent, reactive } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -92,7 +92,7 @@ export default defineComponent({
       }
     };
 
-    const getClipPath = (): string => {
+    const clipPathComputed = computed((): string => {
       if (!props.clip) {
         return "";
       } else {
@@ -102,7 +102,7 @@ export default defineComponent({
           return "clip-path: inset(-50% 50% -50% -50%)";
         }
       }
-    };
+    });
 
     const handleMouseHover = (isOver: boolean) => {
       valueLabel.visible = isOver;
@@ -117,13 +117,13 @@ export default defineComponent({
       }
     };
 
-    const getPrecision = () => {
+    const precisionComputed = computed(() => {
       if (props.type == "pause" || props.type == "pitch") {
         return 2;
       } else {
         return 3;
       }
-    };
+    });
 
     return {
       previewValue,
@@ -131,9 +131,9 @@ export default defineComponent({
       changeValueByScroll,
       valueLabel,
       setPanning,
-      getClipPath,
+      clipPathComputed,
       handleMouseHover,
-      getPrecision,
+      precisionComputed,
     };
   },
 });

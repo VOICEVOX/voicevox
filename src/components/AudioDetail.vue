@@ -529,19 +529,17 @@ export default defineComponent({
       moraIndex: number
     ) => {
       if (selectedDetail.value != "length") return mora.text;
-      else {
-        if (
-          accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
-          moraIndex === lengthHoveredInfo.moraIndex
-        ) {
-          if (lengthHoveredInfo.type == "vowel") {
-            return mora.vowel.toUpperCase();
-          } else {
-            return mora.consonant?.toUpperCase();
-          }
+      if (
+        accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+        moraIndex === lengthHoveredInfo.moraIndex
+      ) {
+        if (lengthHoveredInfo.type == "vowel") {
+          return mora.vowel.toUpperCase();
         } else {
-          return mora.text;
+          return mora.consonant?.toUpperCase();
         }
+      } else {
+        return mora.text;
       }
     };
 
