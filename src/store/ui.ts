@@ -14,7 +14,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0]
-  ) => ReturnType<A[K]> extends Promise<any>
+  ) => ReturnType<A[K]> extends Promise<unknown>
     ? ReturnType<A[K]>
     : Promise<ReturnType<A[K]>>
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {

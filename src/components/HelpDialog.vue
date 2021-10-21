@@ -74,6 +74,7 @@ import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
 import UpdateInfo from "@/components/UpdateInfo.vue";
+import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
 
 type Page = {
   name: string;
@@ -116,6 +117,10 @@ export default defineComponent({
       {
         name: "アップデート情報",
         component: UpdateInfo,
+      },
+      {
+        name: "OSSコミュニティ",
+        component: OssCommunityInfo,
       },
     ];
 

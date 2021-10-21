@@ -514,6 +514,10 @@ type IndexStoreTypes = {
     action(): Promise<UpdateInfo[]>;
   };
 
+  GET_OSS_COMMUNITY_INFOS: {
+    action(): Promise<string>;
+  };
+
   SHOW_WARNING_DIALOG: {
     action(payload: {
       title: string;

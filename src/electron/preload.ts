@@ -55,6 +55,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
   },
 
+  getOssCommunityInfos: async () => {
+    return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
+  },
+
   saveTempAudioFile: async ({ relativePath, buffer }) => {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
