@@ -71,33 +71,13 @@ export default defineComponent({
     accentPhrase: { type: Object, required: true },
     accentPhraseIndex: { type: Number, required: true },
     uiLocked: { type: Boolean, required: true },
+    shiftKeyFlag: { type: Boolean, default: false },
   },
 
   emits: ["changeAccent"],
 
   setup(props, { emit }) {
     const previewAccent = new PreviewableValue(() => props.accentPhrase.accent);
-
-    // detect shift key and set flag, preventing changes in intonation while scrolling around
-    let shiftKeyFlag = false;
-
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag = false;
-    }
-
-    function setShiftKeyFlag(event: KeyboardEvent) {
-      if (event.shiftKey) shiftKeyFlag = true;
-    }
-
-    onMounted(() => {
-      window.addEventListener("keyup", handleKeyPress);
-      window.addEventListener("keydown", setShiftKeyFlag);
-    });
-
-    onUnmounted(() => {
-      window.removeEventListener("keyup", handleKeyPress);
-      window.removeEventListener("keydown", setShiftKeyFlag);
-    });
 
     const changeAccent = (accent: number) => {
       emit("changeAccent", props.accentPhraseIndex, accent);
@@ -111,7 +91,7 @@ export default defineComponent({
       let currentAccent = accent - (deltaY > 0 ? 1 : -1);
       if (
         !props.uiLocked &&
-        !shiftKeyFlag &&
+        !props.shiftKeyFlag &&
         length >= currentAccent &&
         currentAccent >= 1
       )

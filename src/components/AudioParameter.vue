@@ -1,14 +1,14 @@
 <template>
   <div
-    @mouseenter="valueLabel.visible = true"
-    @mouseleave="valueLabel.visible = false"
+    @mouseenter="handleMouseHover(true)"
+    @mouseleave="handleMouseHover(false)"
   >
     <q-badge
       class="value-label"
       text-color="secondary"
       v-if="!disable && (valueLabel.visible || valueLabel.panning)"
     >
-      {{ previewValue.currentValue.value.toPrecision(3) }}
+      {{ previewValue.currentValue.value.toFixed(type == "pitch" ? 2 : 3) }}
     </q-badge>
     <q-slider
       vertical
@@ -18,6 +18,7 @@
       :max="max"
       :step="step"
       :disable="disable || uiLocked"
+      :style="getClipPath()"
       :model-value="previewValue.currentValue.value"
       @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
       @change="changeValue(parseFloat($event))"
@@ -29,7 +30,8 @@
 
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, reactive, onMounted, onUnmounted } from "vue";
+import { MoraDataType } from "@/type/preload";
+import { defineComponent, reactive } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -43,32 +45,14 @@ export default defineComponent({
     max: { type: Number, default: 10.0 },
     step: { type: Number, default: 0.01 },
     disable: { type: Boolean, default: false },
+    type: { type: String as () => MoraDataType, default: "vowel" },
+    clip: { type: Boolean, default: false },
+    shiftKeyFlag: { type: Boolean, default: false },
   },
 
-  emits: ["changeValue"],
+  emits: ["changeValue", "mouseOver"],
 
   setup(props, { emit }) {
-    // detect shift key and set flag, preventing changes in intonation while scrolling around
-    let shiftKeyFlag = false;
-
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag = false;
-    }
-
-    function setShiftKeyFlag(event: KeyboardEvent) {
-      if (event.shiftKey) shiftKeyFlag = true;
-    }
-
-    onMounted(() => {
-      window.addEventListener("keyup", handleKeyPress);
-      window.addEventListener("keydown", setShiftKeyFlag);
-    });
-
-    onUnmounted(() => {
-      window.removeEventListener("keyup", handleKeyPress);
-      window.removeEventListener("keydown", setShiftKeyFlag);
-    });
-
     const previewValue = new PreviewableValue(() => props.value);
 
     const changeValue = (newValue: number) => {
@@ -77,16 +61,18 @@ export default defineComponent({
         props.accentPhraseIndex,
         props.moraIndex,
         newValue,
-        "pitch"
+        props.type
       );
     };
 
     const changeValueByScroll = (deltaY: number, withDetailedStep: boolean) => {
-      const step = withDetailedStep ? 0.01 : 0.1;
+      const step = withDetailedStep ? props.step : props.step * 10;
       let newValue = props.value - (deltaY > 0 ? step : -step);
-      newValue = Math.round(newValue * 1e2) / 1e2;
-      if (!props.uiLocked && !shiftKeyFlag && 6.5 >= newValue && newValue >= 3)
+      if (newValue < props.min) newValue = props.min;
+      if (newValue > props.max) newValue = props.max;
+      if (!props.uiLocked && !props.shiftKeyFlag) {
         changeValue(newValue);
+      }
     };
 
     const valueLabel = reactive({
@@ -106,12 +92,39 @@ export default defineComponent({
       }
     };
 
+    const getClipPath = (): string => {
+      if (!props.clip) {
+        return "";
+      } else {
+        if (props.type == "vowel") {
+          return "clip-path: inset(-50% -50% -50% 50%)";
+        } else {
+          return "clip-path: inset(-50% 50% -50% -50%)";
+        }
+      }
+    };
+
+    const handleMouseHover = (isOver: boolean) => {
+      valueLabel.visible = isOver;
+      if (props.type == "consonant" || props.type == "vowel") {
+        emit(
+          "mouseOver",
+          isOver,
+          props.type,
+          props.accentPhraseIndex,
+          props.moraIndex
+        );
+      }
+    };
+
     return {
       previewValue,
       changeValue,
       changeValueByScroll,
       valueLabel,
       setPanning,
+      getClipPath,
+      handleMouseHover,
     };
   },
 });

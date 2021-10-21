@@ -25,6 +25,7 @@
               :accentPhraseIndex="accentPhraseIndex"
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
+              :shiftKeyFlag="shiftKeyFlag"
               @changeAccent="changeAccent"
             />
           </template>
@@ -44,6 +45,9 @@
                 :min="3"
                 :max="6.5"
                 :disable="mora.pitch == 0.0"
+                :type="'pitch'"
+                :clip="false"
+                :shiftKeyFlag="shiftKeyFlag"
                 @changeValue="changeMoraData"
               />
             </div>
@@ -57,17 +61,34 @@
               :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
             >
               <!-- div for input width -->
-              <audio-length
+              <audio-parameter
+                v-if="mora.consonant"
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
-                :consonant="mora.consonantLength"
-                :vowel="mora.vowelLength"
+                :value="mora.consonantLength"
                 :uiLocked="uiLocked"
                 :min="0"
                 :max="0.3"
                 :step="0.001"
+                :type="'consonant'"
+                :clip="true"
+                :shiftKeyFlag="shiftKeyFlag"
                 @changeValue="changeMoraData"
-                @mouseOver="handleHoverText"
+                @mouseOver="handleLengthHoverText"
+              />
+              <audio-parameter
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :value="mora.vowelLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                :step="0.001"
+                :type="'vowel'"
+                :clip="mora.consonant ? true : false"
+                :shiftKeyFlag="shiftKeyFlag"
+                @changeValue="changeMoraData"
+                @mouseOver="handleLengthHoverText"
               />
             </div>
           </template>
@@ -78,15 +99,16 @@
               'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
             }"
           >
-            <audio-length
+            <audio-parameter
               :moraIndex="accentPhrase.moras.length"
               :accentPhraseIndex="accentPhraseIndex"
-              :vowel="accentPhrase.pauseMora.vowelLength"
+              :value="accentPhrase.pauseMora.vowelLength"
               :uiLocked="uiLocked"
               :min="0"
               :max="1.0"
               :step="0.01"
-              :isPause="true"
+              :type="'pause'"
+              :shiftKeyFlag="shiftKeyFlag"
               @changeValue="changeMoraData"
             />
           </div>
@@ -99,8 +121,8 @@
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouseover="handleHoverText(true, 'accent', accentPhraseIndex)"
-              @mouseleave="handleHoverText(false, 'accent', accentPhraseIndex)"
+              @mouseover="handleAccentHoverText(true, accentPhraseIndex)"
+              @mouseleave="handleAccentHoverText(false, accentPhraseIndex)"
             >
               {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
@@ -189,19 +211,25 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+} from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import AudioLength from "./AudioLength.vue";
 import { HotkeyAction, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter, AudioLength },
+  components: { AudioAccent, AudioParameter },
 
   name: "AudioDetail",
 
@@ -442,13 +470,12 @@ export default defineComponent({
 
     type hoveredInfoType = {
       accentPhraseIndex: number | undefined;
-      moraIndex: number | undefined;
+      moraIndex?: number | undefined;
       type?: hoveredType;
     };
 
     const accentHoveredInfo = reactive<hoveredInfoType>({
       accentPhraseIndex: undefined,
-      moraIndex: undefined,
     });
 
     const lengthHoveredInfo = reactive<hoveredInfoType>({
@@ -457,17 +484,11 @@ export default defineComponent({
       type: "pause",
     });
 
-    const handleAccentHoverText = (
-      isOver: boolean,
-      phraseIndex: number,
-      moraIndex?: number
-    ) => {
+    const handleAccentHoverText = (isOver: boolean, phraseIndex: number) => {
       if (isOver) {
         accentHoveredInfo.accentPhraseIndex = phraseIndex;
-        accentHoveredInfo.moraIndex = moraIndex;
       } else {
         accentHoveredInfo.accentPhraseIndex = undefined;
-        accentHoveredInfo.moraIndex = moraIndex;
       }
     };
 
@@ -493,7 +514,7 @@ export default defineComponent({
 
     const getHoveredClass = (accentPhraseIndex: number) => {
       if (
-        selectedDetail.value != "accent" &&
+        selectedDetail.value == "accent" &&
         !uiLocked.value &&
         accentPhraseIndex === accentHoveredInfo.accentPhraseIndex
       ) {
@@ -535,6 +556,26 @@ export default defineComponent({
       }
     };
 
+    const shiftKeyFlag = ref(false);
+
+    const setShiftKeyFlag = (event: KeyboardEvent) => {
+      shiftKeyFlag.value = event.shiftKey;
+    };
+
+    function resetShiftKeyFlag(event: KeyboardEvent) {
+      if (event.key === "Shift") shiftKeyFlag.value = false;
+    }
+
+    onMounted(() => {
+      window.addEventListener("keyup", resetShiftKeyFlag);
+      document.addEventListener("keydown", setShiftKeyFlag);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("keyup", resetShiftKeyFlag);
+      document.removeEventListener("keydown", setShiftKeyFlag);
+    });
+
     return {
       selectDetail,
       selectedDetail,
@@ -558,6 +599,7 @@ export default defineComponent({
       handleLengthHoverText,
       getHoveredClass,
       getHoveredText,
+      shiftKeyFlag,
       tabAction,
     };
   },
