@@ -37,6 +37,11 @@ type IpcIHData = {
     return: import("@/type/preload").UpdateInfo[];
   };
 
+  GET_OSS_COMMUNITY_INFOS: {
+    args: [];
+    return: string;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
