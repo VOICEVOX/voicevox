@@ -18,7 +18,11 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
+import {
+  CharacterInfo,
+  Encoding as EncodingType,
+  MoraDataType,
+} from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 const api = new DefaultApi(
@@ -324,17 +328,39 @@ export const audioStore: VoiceVoxStoreOptions<
         audioKey,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       }: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: string;
       }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+      switch (type) {
+        case "pitch":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
+          break;
+        case "consonant":
+          query.accentPhrases[accentPhraseIndex].moras[
+            moraIndex
+          ].consonantLength = data;
+          break;
+        case "vowel":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowelLength =
+            data;
+          break;
+        case "pause": {
+          const pauseMora = query.accentPhrases[accentPhraseIndex].pauseMora;
+          if (pauseMora !== undefined) {
+            pauseMora.vowelLength = data;
+          }
+          break;
+        }
+      }
     },
   },
 
@@ -1243,7 +1269,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: MoraDataType;
       }
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
@@ -1477,7 +1504,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: MoraDataType;
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);

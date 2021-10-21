@@ -116,6 +116,7 @@ export type HotkeyAction =
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
   | "ｲﾝﾄﾈｰｼｮﾝ欄を表示"
+  | "長さ欄を表示"
   | "テキスト欄を追加"
   | "テキスト欄を削除"
   | "テキスト欄からフォーカスを外す"
@@ -135,3 +136,5 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type MoraDataType = "consonant" | "vowel" | "pitch" | "pause";

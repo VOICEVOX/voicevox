@@ -13,6 +13,7 @@ import {
   DefaultStyleId,
   Encoding as EncodingType,
   HotkeySetting,
+  MoraDataType,
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
@@ -236,7 +237,8 @@ type AudioStoreTypes = {
       audioKey: string;
       accentPhraseIndex: number;
       moraIndex: number;
-      pitch: number;
+      data: number;
+      type: MoraDataType;
     };
   };
 
@@ -381,13 +383,15 @@ type AudioCommandStoreTypes = {
       audioKey: string;
       accentPhraseIndex: number;
       moraIndex: number;
-      pitch: number;
+      data: number;
+      type: MoraDataType;
     };
     action(payload: {
       audioKey: string;
       accentPhraseIndex: number;
       moraIndex: number;
-      pitch: number;
+      data: number;
+      type: MoraDataType;
     }): void;
   };
 
