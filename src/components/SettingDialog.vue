@@ -18,6 +18,7 @@
               round
               flat
               icon="close"
+              color="secondary"
               @click="settingDialogOpenedComputed = false"
             />
           </q-toolbar>
@@ -39,6 +40,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
+                  toggle-text-color="secondary"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -74,6 +76,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
+                  toggle-text-color="secondary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
