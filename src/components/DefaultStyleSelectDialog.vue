@@ -295,7 +295,10 @@ export default defineComponent({
     100vh - #{global.$menubar-height + global.$header-height +
       global.$window-border-width}
   );
-  overflow-y: auto;
+
+  > :deep(.scroll) {
+    overflow-y: scroll;
+  }
 
   .style-item {
     box-shadow: 0 0 0 1px rgba(global.$primary, 0.5);
