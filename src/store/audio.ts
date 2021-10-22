@@ -7,16 +7,22 @@ import {
   SaveResultObject,
   State,
   commandMutationsCreator,
-  AudioGetters,
   AudioActions,
+  AudioGetters,
   AudioMutations,
+  AudioStoreState,
   AudioCommandActions,
   AudioCommandGetters,
   AudioCommandMutations,
+  AudioCommandStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
 import { createUILockAction } from "./ui";
-import { CharacterInfo, Encoding as EncodingType } from "@/type/preload";
+import {
+  CharacterInfo,
+  Encoding as EncodingType,
+  MoraDataType,
+} from "@/type/preload";
 import Encoding from "encoding-japanese";
 
 const api = new DefaultApi(
@@ -99,6 +105,14 @@ function buildFileName(state: State, audioKey: string) {
 
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
+
+export const audioStoreState: AudioStoreState = {
+  engineState: "STARTING",
+  audioItems: {},
+  audioKeys: [],
+  audioStates: {},
+  nowPlayingContinuously: false,
+};
 
 export const audioStore: VoiceVoxStoreOptions<
   AudioGetters,
@@ -314,17 +328,39 @@ export const audioStore: VoiceVoxStoreOptions<
         audioKey,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       }: {
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: string;
       }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
-      query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = pitch;
+      switch (type) {
+        case "pitch":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
+          break;
+        case "consonant":
+          query.accentPhrases[accentPhraseIndex].moras[
+            moraIndex
+          ].consonantLength = data;
+          break;
+        case "vowel":
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowelLength =
+            data;
+          break;
+        case "pause": {
+          const pauseMora = query.accentPhrases[accentPhraseIndex].pauseMora;
+          if (pauseMora !== undefined) {
+            pauseMora.vowelLength = data;
+          }
+          break;
+        }
+      }
     },
   },
 
@@ -383,12 +419,20 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: { text?: string; styleId?: number }
     ) {
+      if (state.defaultStyleIds == undefined)
+        throw new Error("state.defaultStyleIds == undefined");
       if (state.characterInfos == undefined)
         throw new Error("state.characterInfos == undefined");
+      const characterInfos = state.characterInfos;
 
       const text = payload.text ?? "";
       const styleId =
-        payload.styleId ?? state.characterInfos[0].metas.styles[0].styleId;
+        payload.styleId ??
+        state.defaultStyleIds[
+          state.defaultStyleIds.findIndex(
+            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
+          )
+        ].defaultStyleId;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
@@ -841,6 +885,8 @@ export const audioStore: VoiceVoxStoreOptions<
   },
 };
 
+export const audioCommandStoreState: AudioCommandStoreState = {};
+
 export const audioCommandStore: VoiceVoxStoreOptions<
   AudioCommandGetters,
   AudioCommandActions,
@@ -1223,7 +1269,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: MoraDataType;
       }
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
@@ -1457,7 +1504,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioKey: string;
         accentPhraseIndex: number;
         moraIndex: number;
-        pitch: number;
+        data: number;
+        type: MoraDataType;
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);

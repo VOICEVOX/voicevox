@@ -1,6 +1,7 @@
 import { createUILockAction } from "@/store/ui";
 import {
   AudioItem,
+  ProjectStoreState,
   ProjectGetters,
   ProjectActions,
   ProjectMutations,
@@ -11,6 +12,10 @@ import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
 const DEFAULT_SAMPLING_RATE = 24000;
+
+export const projectStoreState: ProjectStoreState = {
+  savedLastCommandUnixMillisec: null,
+};
 
 export const projectStore: VoiceVoxStoreOptions<
   ProjectGetters,

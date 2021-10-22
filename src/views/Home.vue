@@ -107,6 +107,11 @@
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
+  <!-- v-ifも付けないとfalseでも動いてしまう -->
+  <default-style-select-dialog
+    v-if="isDefaultStyleSelectDialogOpenComputed"
+    v-model="isDefaultStyleSelectDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -127,6 +132,7 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
+import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -145,6 +151,7 @@ export default defineComponent({
     HelpDialog,
     SettingDialog,
     CharacterPortrait,
+    DefaultStyleSelectDialog,
   },
 
   setup() {
@@ -277,7 +284,7 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let styleId: number | undefined = 0;
+      let styleId: number | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
       }
@@ -326,7 +333,13 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER");
+      await Promise.all([
+        store.dispatch("LOAD_CHARACTER"),
+        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
+      ]);
+      if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
+        isDefaultStyleSelectDialogOpenComputed.value = true;
+      }
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -352,6 +365,15 @@ export default defineComponent({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>
         store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
+    });
+
+    // デフォルトスタイル選択
+    const isDefaultStyleSelectDialogOpenComputed = computed({
+      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+          isDefaultStyleSelectDialogOpen: val,
+        }),
     });
 
     // ドラッグ＆ドロップ
@@ -398,6 +420,7 @@ export default defineComponent({
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
+      isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
@@ -483,6 +506,8 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+
+    padding-bottom: 70px;
   }
   .add-button-wrapper {
     position: absolute;

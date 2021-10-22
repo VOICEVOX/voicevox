@@ -47,6 +47,11 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  isUnsetDefaultStyleIds(): Promise<boolean>;
+  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
+  setDefaultStyleIds(
+    defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
+  ): Promise<void>;
 }
 
 export type AppInfos = {
@@ -94,6 +99,11 @@ export type SavingSetting = {
   exportText: boolean;
 };
 
+export type DefaultStyleId = {
+  speakerUuid: string;
+  defaultStyleId: number;
+};
+
 export type HotkeySetting = {
   action: HotkeyAction;
   combination: HotkeyCombo;
@@ -106,6 +116,7 @@ export type HotkeyAction =
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
   | "ｲﾝﾄﾈｰｼｮﾝ欄を表示"
+  | "長さ欄を表示"
   | "テキスト欄を追加"
   | "テキスト欄を削除"
   | "テキスト欄からフォーカスを外す"
@@ -125,3 +136,5 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type MoraDataType = "consonant" | "vowel" | "pitch" | "pause";
