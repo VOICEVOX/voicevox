@@ -218,6 +218,15 @@ export default defineComponent({
               });
             },
           },
+          {
+            type: "button",
+            label: "デフォルトスタイル設定",
+            onClick() {
+              store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+                isDefaultStyleSelectDialogOpen: true,
+              });
+            },
+          },
         ],
       },
       {

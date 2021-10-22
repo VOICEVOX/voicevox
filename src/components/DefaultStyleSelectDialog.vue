@@ -11,10 +11,16 @@
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
-            <q-toolbar-title class="text-secondary"
+            <q-toolbar-title v-if="isFirstTime" class="text-secondary"
               >デフォルトのスタイルを選択してください</q-toolbar-title
             >
-            <span class="text-secondary text-caption q-ml-sm">
+            <q-toolbar-title v-else class="text-secondary"
+              >デフォルトスタイル設定</q-toolbar-title
+            >
+            <span
+              v-if="isFirstTime"
+              class="text-secondary text-caption q-ml-sm"
+            >
               ※後からでも変更できます
             </span>
           </div>
@@ -177,6 +183,13 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
+    const isFirstTime = ref(false);
+    store
+      .dispatch("IS_UNSET_DEFAULT_STYLE_IDS")
+      .then((isUnsetDefaultStyleIds) => {
+        isFirstTime.value = isUnsetDefaultStyleIds;
+      });
+
     const characterInfos = computed(() => store.state.characterInfos);
 
     const selectedStyleIndexes = ref(
@@ -250,6 +263,7 @@ export default defineComponent({
 
     return {
       modelValueComputed,
+      isFirstTime,
       characterInfos,
       selectedStyleIndexes,
       pageIndex,
@@ -319,9 +333,6 @@ export default defineComponent({
 }
 
 @media screen and (max-width: 700px) {
-  .q-toolbar__title {
-    font-size: 1.2rem;
-  }
   .q-drawer-container {
     display: none;
   }
@@ -334,9 +345,6 @@ export default defineComponent({
 }
 
 @media screen and (max-width: 400px) {
-  .q-toolbar__title {
-    font-size: 1rem;
-  }
   .q-btn {
     padding: 0 5px;
   }
