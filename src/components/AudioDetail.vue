@@ -1,5 +1,5 @@
 <template>
-  <div class="full-height root relarive-absolute-wrapper">
+  <div class="full-height root relative-absolute-wrapper">
     <div>
       <div class="side">
         <div class="detail-selector">
