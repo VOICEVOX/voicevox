@@ -1,5 +1,5 @@
 <template>
-  <q-page ref="scroller" class="relarive-absolute-wrapper scroller">
+  <q-page ref="scroller" class="relative-absolute-wrapper scroller">
     <div class="q-pa-md">
       <q-list v-if="detailIndex === undefined">
         <q-item

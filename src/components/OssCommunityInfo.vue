@@ -1,5 +1,5 @@
 <template>
-  <q-page class="relarive-absolute-wrapper scroller">
+  <q-page class="relative-absolute-wrapper scroller">
     <div
       class="q-pa-md markdown markdown-body"
       v-html="ossCommunityInfos"
