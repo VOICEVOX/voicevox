@@ -33,6 +33,9 @@ export default defineComponent({
       type: Number,
       default: 1,
     },
+    disable: {
+      type: Boolean,
+    },
     scrollStep: {
       type: Number,
       required: false,
@@ -46,7 +49,7 @@ export default defineComponent({
       default: false,
     },
   },
-  emits: ["onUpdate:modelValue", "onChange", "onPan"],
+  emits: ["update:modelValue", "change", "pan"],
   setup(props, context) {
     const previewValue = ref(props.modelValue);
     const isPanning = ref(false);
@@ -65,7 +68,7 @@ export default defineComponent({
     watch(
       () => currentValue.value,
       (value) => {
-        context.emit("onUpdate:modelValue", value);
+        context.emit("update:modelValue", value);
       }
     );
 
@@ -75,7 +78,7 @@ export default defineComponent({
     };
     const changePreviewValue = () => {
       isUpdated.value = false;
-      context.emit("onChange", previewValue.value);
+      context.emit("change", previewValue.value);
     };
 
     const onPan: QSliderProps["onPan"] = (phase) => {
@@ -86,7 +89,7 @@ export default defineComponent({
         // end panning
         isPanning.value = false;
       }
-      context.emit("onPan", phase);
+      context.emit("pan", phase);
     };
 
     const debounceScroll = debounce(() => {
@@ -96,7 +99,7 @@ export default defineComponent({
     }, 300);
 
     const onWheel = (event: Events["onWheel"]) => {
-      if (props.disableScroll) return;
+      if (props.disableScroll || props.disable) return;
       event.preventDefault();
       const deltaY = event.deltaY;
       const ctrlKey = event.ctrlKey;
@@ -117,6 +120,7 @@ export default defineComponent({
       step: props.step,
       min: props.min,
       max: props.max,
+      disable: props.disable,
       ...context.attrs,
     }));
 
