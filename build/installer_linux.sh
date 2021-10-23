@@ -228,6 +228,7 @@ if [ "${KEEP_ARCHIVE}" != "1" ]; then
 fi
 
 # Remove archive list
+echo "Removing archive list: list.txt"
 rm -f "list.txt"
 
 # Extract desktop entry
