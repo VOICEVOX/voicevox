@@ -202,7 +202,7 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "設定",
+            label: "オプション",
             onClick() {
               store.dispatch("IS_SETTING_DIALOG_OPEN", {
                 isSettingDialogOpen: true,
@@ -211,7 +211,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "ショートカットキー設定",
+            label: "ショートカットキー",
             onClick() {
               store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
                 isHotkeySettingDialogOpen: true,
@@ -220,7 +220,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "デフォルトスタイル設定",
+            label: "デフォルトスタイル",
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,

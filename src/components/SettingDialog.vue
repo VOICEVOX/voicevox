@@ -11,7 +11,9 @@
       <q-page-container class="root">
         <q-header class="q-pa-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
+            <q-toolbar-title class="text-secondary"
+              >設定 / オプション</q-toolbar-title
+            >
             <q-space />
             <!-- close button -->
             <q-btn

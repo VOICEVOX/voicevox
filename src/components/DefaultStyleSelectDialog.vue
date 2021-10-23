@@ -15,7 +15,7 @@
               >デフォルトのスタイルを選択してください</q-toolbar-title
             >
             <q-toolbar-title v-else class="text-secondary"
-              >デフォルトスタイル設定</q-toolbar-title
+              >設定 / デフォルトスタイル</q-toolbar-title
             >
             <span
               v-if="isFirstTime"

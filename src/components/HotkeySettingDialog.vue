@@ -11,7 +11,7 @@
       <q-header class="q-py-sm">
         <q-toolbar>
           <q-toolbar-title class="text-secondary"
-            >ショートカットキー設定</q-toolbar-title
+            >設定 / ショートカットキー</q-toolbar-title
           >
           <q-input
             hide-bottom-space
