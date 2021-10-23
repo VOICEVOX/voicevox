@@ -209,6 +209,9 @@ done
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 ${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
 
+APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+chmod +x "${APPIMAGE}"
+
 # Dump version
 echo "Dumping version"
 echo "${VERSION}" > VERSION
@@ -228,9 +231,6 @@ rm -f "list.txt"
 
 # Extract desktop entry
 echo "Extacting desktop entry"
-
-APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
-chmod +x "${APPIMAGE}"
 
 "./${APPIMAGE}" --appimage-extract '*.desktop'
 "./${APPIMAGE}" --appimage-extract 'usr/share/icons/**'
