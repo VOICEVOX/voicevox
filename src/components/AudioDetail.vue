@@ -1,42 +1,16 @@
 <template>
-  <div class="full-height root relarive-absolute-wrapper">
+  <div class="full-height root relative-absolute-wrapper">
     <div>
       <div class="side">
         <div class="detail-selector">
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
-            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+            <q-tab name="accent" label="ｱｸｾﾝﾄ" />
+            <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
+            <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
-        <div class="play-button-wrapper">
-          <template v-if="!nowPlayingContinuously">
-            <q-btn
-              v-if="!nowPlaying && !nowGenerating"
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="play_arrow"
-              @click="play"
-            ></q-btn>
-            <q-btn
-              v-else
-              fab
-              color="primary"
-              text-color="secondary"
-              icon="stop"
-              @click="stop"
-            ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
-            ></q-btn>
-          </template>
-        </div>
       </div>
+
       <div class="overflow-hidden-y accent-phrase-table">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
@@ -48,6 +22,7 @@
               :accentPhraseIndex="accentPhraseIndex"
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
+              :shiftKeyFlag="shiftKeyFlag"
               @changeAccent="changeAccent"
             />
           </template>
@@ -62,17 +37,80 @@
               <audio-parameter
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
-                :accentPhrase="accentPhrase"
                 :value="mora.pitch"
                 :uiLocked="uiLocked"
                 :min="3"
                 :max="6.5"
                 :disable="mora.pitch == 0.0"
+                :type="'pitch'"
+                :clip="false"
+                :shiftKeyFlag="shiftKeyFlag"
                 @changeValue="changeMoraData"
               />
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
+          <template v-if="selectedDetail === 'length'">
+            <div
+              v-for="(mora, moraIndex) in accentPhrase.moras"
+              :key="moraIndex"
+              class="q-mb-sm pitch-cell"
+              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+            >
+              <!-- consonant length -->
+              <audio-parameter
+                v-if="mora.consonant"
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :value="mora.consonantLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                :step="0.001"
+                :type="'consonant'"
+                :clip="true"
+                :shiftKeyFlag="shiftKeyFlag"
+                @changeValue="changeMoraData"
+                @mouseOver="handleLengthHoverText"
+              />
+              <!-- vowel length -->
+              <audio-parameter
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :value="mora.vowelLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                :step="0.001"
+                :type="'vowel'"
+                :clip="mora.consonant ? true : false"
+                :shiftKeyFlag="shiftKeyFlag"
+                @changeValue="changeMoraData"
+                @mouseOver="handleLengthHoverText"
+              />
+            </div>
+          </template>
+          <div
+            class="q-mb-sm pitch-cell"
+            v-if="accentPhrase.pauseMora && selectedDetail == 'length'"
+            :style="{
+              'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
+            }"
+          >
+            <!-- pause length -->
+            <audio-parameter
+              :moraIndex="accentPhrase.moras.length"
+              :accentPhraseIndex="accentPhraseIndex"
+              :value="accentPhrase.pauseMora.vowelLength"
+              :uiLocked="uiLocked"
+              :min="0"
+              :max="1.0"
+              :step="0.01"
+              :type="'pause'"
+              :shiftKeyFlag="shiftKeyFlag"
+              @changeValue="changeMoraData"
+            />
+          </div>
           <template
             v-for="(mora, moraIndex) in accentPhrase.moras"
             :key="moraIndex"
@@ -82,10 +120,10 @@
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouseover="handleHoverText(accentPhraseIndex, true)"
-              @mouseleave="handleHoverText(accentPhraseIndex, false)"
+              @mouseover="handleAccentHoverText(true, accentPhraseIndex)"
+              @mouseleave="handleAccentHoverText(false, accentPhraseIndex)"
             >
-              {{ mora.text }}
+              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -143,19 +181,51 @@
           </template>
         </div>
       </div>
+      <div class="side">
+        <div class="detail-selector">
+          <q-tabs
+            vertical
+            :model-value="selectedDetail"
+            @update:model-value="tabAction"
+          >
+            <q-tab
+              v-if="!nowPlaying && !nowGenerating"
+              icon="play_arrow"
+              class="bg-primary text-secondary"
+              name="play"
+              :disable="nowPlaying || nowGenerating || uiLocked"
+            />
+            <q-tab
+              v-else
+              icon="stop"
+              class="bg-primary text-secondary"
+              name="stop"
+            />
+            <q-tab icon="download" name="save" :disable="uiLocked" />
+          </q-tabs>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+} from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import { Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -170,7 +240,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const hotkeyMap = new Map<HotkeyAction, () => void | boolean>([
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
         "再生/停止",
         () => {
@@ -205,12 +275,26 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "長さ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "length";
+          }
+        },
+      ],
     ]);
 
     setHotkeyFunctions(hotkeyMap);
 
     // detail selector
-    type DetailTypes = "accent" | "intonation";
+    type DetailTypes =
+      | "accent"
+      | "intonation"
+      | "length"
+      | "play"
+      | "stop"
+      | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "intonation";
@@ -250,14 +334,30 @@ export default defineComponent({
     const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
-      pitch: number
+      data: number,
+      type: MoraDataType
     ) => {
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       });
+    };
+
+    const tabAction = (actionType: DetailTypes) => {
+      switch (actionType) {
+        case "play":
+          play();
+          break;
+        case "stop":
+          stop();
+          break;
+        case "save":
+          save();
+          break;
+      }
     };
 
     // audio play
@@ -368,13 +468,46 @@ export default defineComponent({
       });
     };
 
-    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+    type hoveredType = "vowel" | "consonant";
 
-    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
+    type hoveredInfoType = {
+      accentPhraseIndex: number | undefined;
+      moraIndex?: number | undefined;
+      type?: hoveredType;
+    };
+
+    const accentHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+    });
+
+    const lengthHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+      type: "vowel",
+    });
+
+    const handleAccentHoverText = (isOver: boolean, phraseIndex: number) => {
       if (isOver) {
-        hoveredPhraseIndex.value = phraseIndex;
+        accentHoveredInfo.accentPhraseIndex = phraseIndex;
       } else {
-        hoveredPhraseIndex.value = undefined;
+        accentHoveredInfo.accentPhraseIndex = undefined;
+      }
+    };
+
+    const handleLengthHoverText = (
+      isOver: boolean,
+      phoneme: hoveredType,
+      phraseIndex: number,
+      moraIndex?: number
+    ) => {
+      lengthHoveredInfo.type = phoneme;
+      // the pause and pitch templates don't emit a mouseOver event
+      if (isOver) {
+        lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+        lengthHoveredInfo.moraIndex = moraIndex;
+      } else {
+        lengthHoveredInfo.accentPhraseIndex = undefined;
+        lengthHoveredInfo.moraIndex = undefined;
       }
     };
 
@@ -382,13 +515,53 @@ export default defineComponent({
       if (
         selectedDetail.value == "accent" &&
         !uiLocked.value &&
-        accentPhraseIndex === hoveredPhraseIndex.value
+        accentPhraseIndex === accentHoveredInfo.accentPhraseIndex
       ) {
         return "text-cell-hovered";
       } else {
         return "text-cell";
       }
     };
+
+    const getHoveredText = (
+      mora: Mora,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (selectedDetail.value != "length") return mora.text;
+      if (
+        accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+        moraIndex === lengthHoveredInfo.moraIndex
+      ) {
+        if (lengthHoveredInfo.type == "vowel") {
+          return mora.vowel.toUpperCase();
+        } else {
+          return mora.consonant?.toUpperCase();
+        }
+      } else {
+        return mora.text;
+      }
+    };
+
+    const shiftKeyFlag = ref(false);
+
+    const setShiftKeyFlag = (event: KeyboardEvent) => {
+      shiftKeyFlag.value = event.shiftKey;
+    };
+
+    function resetShiftKeyFlag(event: KeyboardEvent) {
+      if (event.key === "Shift") shiftKeyFlag.value = false;
+    }
+
+    onMounted(() => {
+      window.addEventListener("keyup", resetShiftKeyFlag);
+      document.addEventListener("keydown", setShiftKeyFlag);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("keyup", resetShiftKeyFlag);
+      document.removeEventListener("keydown", setShiftKeyFlag);
+    });
 
     return {
       selectDetail,
@@ -408,8 +581,12 @@ export default defineComponent({
       nowPlayingContinuously,
       pronunciationByPhrase,
       handleChangePronounce,
-      handleHoverText,
+      handleAccentHoverText,
+      handleLengthHoverText,
       getHoveredClass,
+      getHoveredText,
+      shiftKeyFlag,
+      tabAction,
     };
   },
 });

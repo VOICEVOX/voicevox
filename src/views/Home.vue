@@ -437,7 +437,7 @@ body {
   border-bottom: solid #{global.$window-border-width} #{global.$primary};
 }
 
-.relarive-absolute-wrapper {
+.relative-absolute-wrapper {
   position: relative;
   > div {
     position: absolute;
