@@ -98,6 +98,18 @@ export default defineComponent({
       changePreviewValue();
     }, 300);
 
+    const stepDecimals = computed(
+      () => String(props.step).split(".")[1]?.length ?? 0
+    );
+    const scrollStepDecimals = computed(() => {
+      if (props.scrollStep === undefined) return undefined;
+      return String(props.scrollStep).split(".")[1]?.length ?? 0;
+    });
+    const scrollMinStepDecimals = computed(() => {
+      if (props.scrollMinStep === undefined) return undefined;
+      return String(props.scrollMinStep).split(".")[1]?.length ?? 0;
+    });
+
     const onWheel = (event: Events["onWheel"]) => {
       if (props.disableScroll || props.disable) return;
       event.preventDefault();
@@ -107,10 +119,16 @@ export default defineComponent({
         (ctrlKey ? props.scrollMinStep : props.scrollStep) ??
         props.scrollStep ??
         props.step;
+      const decimals =
+        (ctrlKey ? scrollMinStepDecimals.value : scrollStepDecimals.value) ??
+        scrollStepDecimals.value ??
+        stepDecimals.value;
       const diff = -step * Math.sign(deltaY);
-      updatePreviewValue(
-        Math.min(Math.max(currentValue.value + diff, props.min), props.max)
+      const nextValue = Math.min(
+        Math.max(currentValue.value + diff, props.min),
+        props.max
       );
+      updatePreviewValue(Number.parseFloat(nextValue.toFixed(decimals)));
       // start scroll
       isScrolling.value = true;
       debounceScroll();
