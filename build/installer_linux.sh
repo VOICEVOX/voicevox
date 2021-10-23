@@ -220,7 +220,7 @@ echo "${VERSION}" > VERSION
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
     echo "Removing splitted archives"
 
-    for filename in ${ARCHIVE_LIST[@]}; do
+    for filename in ${ARCHIVE_NAME_LIST[@]}; do
         echo "Removing ${filename}"
         rm -f "${filename}"
     done
