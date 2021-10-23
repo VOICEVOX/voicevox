@@ -229,7 +229,7 @@ rm -f "list.txt"
 # Extract desktop entry
 echo "Extacting desktop entry"
 
-APPIMAGE=$(7z l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
 chmod +x "${APPIMAGE}"
 
 "./${APPIMAGE}" --appimage-extract '*.desktop'
