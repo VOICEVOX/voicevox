@@ -1357,10 +1357,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         { commit, dispatch },
         {
           prevAudioKey,
+          prevAudioItem,
           texts,
           styleId,
         }: {
           prevAudioKey: string;
+          prevAudioItem: AudioItem;
           texts: string[];
           styleId: number;
         }
@@ -1373,6 +1375,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
+          audioItem.query! = prevAudioItem.query!;
           audioKeyItemPairs.push({
             audioKey,
             audioItem,

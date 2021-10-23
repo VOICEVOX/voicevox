@@ -439,6 +439,7 @@ type AudioCommandStoreTypes = {
     };
     action(payload: {
       prevAudioKey: string;
+      prevAudioItem: AudioItem;
       texts: string[];
       styleId: number;
     }): string[];

@@ -252,8 +252,10 @@ export default defineComponent({
 
           const styleId = audioItem.value.styleId;
           if (styleId == undefined) throw new Error("styleId == undefined");
+          const prevAudioItem = store.state.audioItems[prevAudioKey];
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            prevAudioItem,
             styleId,
             prevAudioKey,
           });

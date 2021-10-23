@@ -284,6 +284,7 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
+      const prevAudioItem = store.state.audioItems[prevAudioKey!];
       let styleId: number | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
@@ -291,6 +292,7 @@ export default defineComponent({
       const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
       });
+      audioItem.query! = prevAudioItem.query!;
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
