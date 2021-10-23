@@ -5,13 +5,13 @@
     @update:model-value="updatePreviewValue"
     @pan="onPan"
     @wheel="onWheel"
-    @change="changeValue"
+    @change="changePreviewValue"
   >
   </q-slider>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, Events } from "vue";
+import { defineComponent, watch, ref, computed, Events } from "vue";
 import { QSliderProps, debounce } from "quasar";
 
 export default defineComponent({
@@ -51,20 +51,30 @@ export default defineComponent({
     const previewValue = ref(props.modelValue);
     const isPanning = ref(false);
     const isScrolling = ref(false);
+    // @panが呼ばれないことがあるので、その時の更新用
+    const isUpdated = ref(false);
 
     const currentValue = computed(() => {
-      if (isPanning.value || isScrolling.value) {
+      if (isPanning.value || isScrolling.value || isUpdated.value) {
         return previewValue.value;
       } else {
         return props.modelValue;
       }
     });
 
+    watch(
+      () => currentValue.value,
+      (value) => {
+        context.emit("onUpdate:modelValue", value);
+      }
+    );
+
     const updatePreviewValue = (value: number) => {
       previewValue.value = value;
-      context.emit("onUpdate:modelValue", value);
+      isUpdated.value = true;
     };
-    const changeValue = () => {
+    const changePreviewValue = () => {
+      isUpdated.value = false;
       context.emit("onChange", previewValue.value);
     };
 
@@ -82,7 +92,7 @@ export default defineComponent({
     const debounceScroll = debounce(() => {
       // end scroll
       isScrolling.value = false;
-      changeValue();
+      changePreviewValue();
     }, 300);
 
     const onWheel = (event: Events["onWheel"]) => {
@@ -113,7 +123,7 @@ export default defineComponent({
     return {
       currentValue,
       updatePreviewValue,
-      changeValue,
+      changePreviewValue,
       qSliderProps,
       onPan,
       onWheel,
