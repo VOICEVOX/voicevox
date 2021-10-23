@@ -287,6 +287,8 @@ export default defineComponent({
 
     setHotkeyFunctions(hotkeyMap);
 
+    store.dispatch("GET_HOTKEY_SETTINGS");
+
     // detail selector
     type DetailTypes =
       | "accent"
