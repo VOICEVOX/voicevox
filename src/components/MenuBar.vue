@@ -147,6 +147,29 @@ export default defineComponent({
       }
     };
 
+    const close_Setting_Dialog = () => {
+      store.dispatch("IS_SETTING_DIALOG_OPEN", {
+        isSettingDialogOpen: false,
+      });
+    };
+
+    const open_Setting_Dialog = () => {
+      store.dispatch("IS_SETTING_DIALOG_OPEN", {
+        isSettingDialogOpen: true,
+      });
+    };
+
+    const close_Help_Dialog = () => {
+      store.dispatch("IS_HELP_DIALOG_OPEN", {
+        isHelpDialogOpen: false,
+      });
+    };
+
+    const open_Help_Dialog = () => {
+      store.dispatch("IS_HELP_DIALOG_OPEN", {
+        isHelpDialogOpen: true,
+      });
+    };
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
@@ -155,33 +178,57 @@ export default defineComponent({
           {
             type: "button",
             label: "新規プロジェクト",
-            onClick: createNewProject,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              createNewProject();
+            },
           },
           {
             type: "button",
             label: "音声書き出し",
-            onClick: generateAndSaveAllAudio,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              generateAndSaveAllAudio();
+            },
           },
           {
             type: "button",
             label: "テキスト読み込み",
-            onClick: importTextFile,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              importTextFile();
+            },
           },
           { type: "separator" },
           {
             type: "button",
             label: "プロジェクトを上書き保存",
-            onClick: saveProject,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              saveProject();
+            },
           },
           {
             type: "button",
             label: "プロジェクトを名前を付けて保存",
-            onClick: saveProjectAs,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              saveProjectAs();
+            },
           },
           {
             type: "button",
             label: "プロジェクト読み込み",
-            onClick: importProject,
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              importProject();
+            },
           },
         ],
       },
@@ -192,7 +239,11 @@ export default defineComponent({
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch("RESTART_ENGINE"),
+            onClick: () => {
+              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+              if (store.state.isHelpDialogOpen) close_Help_Dialog();
+              store.dispatch("RESTART_ENGINE");
+            },
           },
         ],
       },
@@ -200,16 +251,18 @@ export default defineComponent({
         type: "button",
         label: "設定",
         onClick: () => {
-          store.dispatch("IS_SETTING_DIALOG_OPEN", {
-            isSettingDialogOpen: true,
-          });
+          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+          else open_Setting_Dialog();
         },
       },
       {
         type: "button",
         label: "ヘルプ",
         onClick: () => {
-          store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
+          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+          else open_Help_Dialog();
         },
       },
     ]);
