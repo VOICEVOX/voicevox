@@ -6,30 +6,24 @@
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="!disable && (valueLabel.visible || valueLabel.panning)"
+      v-if="
+        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
+      "
     >
-      {{ previewValue.currentValue.value.toFixed(precisionComputed) }}
+      {{ previewSlider.state.currentValue.value?.toFixed(precisionComputed) }}
     </q-badge>
     <q-slider
       vertical
       reverse
       snap
-      :min="min"
-      :max="max"
-      :step="step"
-      :disable="disable || uiLocked"
+      v-bind="previewSlider.qSliderProps.value"
       :style="clipPathComputed"
-      :model-value="previewValue.currentValue.value"
-      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
-      @change="changeValue(parseFloat($event))"
-      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
-      @pan="setPanning"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { PreviewableValue } from "@/helpers/previewableValue";
+import { usePreviewSlider } from "@/helpers/usePreviewSlider";
 import { MoraDataType } from "@/type/preload";
 import { computed, defineComponent, reactive } from "vue";
 
@@ -53,8 +47,6 @@ export default defineComponent({
   emits: ["changeValue", "mouseOver"],
 
   setup(props, { emit }) {
-    const previewValue = new PreviewableValue(() => props.value);
-
     const changeValue = (newValue: number) => {
       emit(
         "changeValue",
@@ -65,32 +57,21 @@ export default defineComponent({
       );
     };
 
-    const changeValueByScroll = (deltaY: number, withDetailedStep: boolean) => {
-      const step = withDetailedStep ? props.step : props.step * 10;
-      let newValue = props.value - (deltaY > 0 ? step : -step);
-      if (newValue < props.min) newValue = props.min;
-      if (newValue > props.max) newValue = props.max;
-      if (!props.uiLocked && !props.shiftKeyFlag) {
-        changeValue(newValue);
-      }
-    };
+    const previewSlider = usePreviewSlider({
+      modelValue: () => props.value,
+      disable: () => props.disable || props.uiLocked,
+      onChange: changeValue,
+      max: () => props.max,
+      min: () => props.min,
+      step: () => props.step,
+      scrollStep: () => props.step * 10,
+      scrollMinStep: () => props.step,
+      disableScroll: () => props.shiftKeyFlag,
+    });
 
     const valueLabel = reactive({
       visible: false,
-      // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
-      // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
-      panning: false,
     });
-
-    const setPanning = (panningPhase: string) => {
-      if (panningPhase === "start") {
-        valueLabel.panning = true;
-        previewValue.startPreview();
-      } else {
-        valueLabel.panning = false;
-        previewValue.stopPreview();
-      }
-    };
 
     const clipPathComputed = computed((): string => {
       if (!props.clip) {
@@ -126,11 +107,9 @@ export default defineComponent({
     });
 
     return {
-      previewValue,
+      previewSlider,
       changeValue,
-      changeValueByScroll,
       valueLabel,
-      setPanning,
       clipPathComputed,
       handleMouseHover,
       precisionComputed,
