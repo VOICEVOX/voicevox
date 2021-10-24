@@ -249,7 +249,7 @@ VOICEVOX_INSTALLED_DIR=(
 
 echo "[+] Uninstalling VOICEVOX..."
 for i in "${VOICEVOX_INSTALLED_FILES[@]}"; do
-    [ -e "$i" ] && continue
+    [ -e "$i" ] || continue
     echo "[+] Removing '${i}'..."
     if [ -f "$i" ]; then
         rm -f "$i"
@@ -260,7 +260,7 @@ for i in "${VOICEVOX_INSTALLED_FILES[@]}"; do
 done
 
 for i in "${VOICEVOX_INSTALLED_DIR[@]}"; do
-    [ -e "$i" ] && continue
+    [ -e "$i" ] || continue
     echo "[+] Removing '${i}'..."
     if [ -d "$i" ]; then
         rm -rf "$i"
