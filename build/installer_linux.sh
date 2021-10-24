@@ -185,11 +185,11 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
         echo "[+] File verification skipped"
     else
         if [ "$SIZE" != "x" ]; then
-            echo "Verifying size == $SIZE"
+            echo "[+] Verifying size == $SIZE"
             DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "Size OK"
+                echo "[+] Size OK"
             else
                 cat << EOS
 [!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
