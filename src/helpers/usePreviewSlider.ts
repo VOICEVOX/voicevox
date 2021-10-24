@@ -68,7 +68,8 @@ export const usePreviewSlider = (props: Props): ReturnType => {
     isUpdated.value = false;
     if (previewValue.value === null)
       throw new Error("previewValue.value === null");
-    if (props.onChange) props.onChange(previewValue.value);
+    if (modelValue.value !== previewValue.value && props.onChange)
+      props.onChange(previewValue.value);
   };
 
   const onPan: QSliderProps["onPan"] = (phase) => {
