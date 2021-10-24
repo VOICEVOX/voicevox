@@ -226,6 +226,54 @@ chmod +x "${APPIMAGE}"
 echo "[+] Dumping version..."
 echo "${VERSION}" > VERSION
 
+# Create uninstaller
+echo "[+] Creating uninstaller..."
+cat << 'EOS' > uninstaller_linux.sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+if [ "$PWD" = "$HOME/.voicevox" ]; then
+    cd "$HOME"
+fi
+
+VOICEVOX_INSTALLED_FILES=(
+    ~/.local/share/applications/voicevox.desktop
+    ~/.local/share/icons/voicevox.png
+)
+
+VOICEVOX_INSTALLED_DIR=(
+    ~/.voicevox
+)
+
+echo "[+] Uninstalling VOICEVOX..."
+for i in "${VOICEVOX_INSTALLED_FILES[@]}"; do
+    [ -e "$i" ] && continue
+    echo "[+] Removing '${i}'..."
+    if [ -f "$i" ]; then
+        rm -f "$i"
+    else
+        echo "[!] '$i' is not a file"
+        exit 1
+    fi
+done
+
+for i in "${VOICEVOX_INSTALLED_DIR[@]}"; do
+    [ -e "$i" ] && continue
+    echo "[+] Removing '${i}'..."
+    if [ -d "$i" ]; then
+        rm -rf "$i"
+    else
+        echo "[!] '$i' is not a directory"
+        exit 1
+    fi
+done
+
+echo "[+] Done! VOICEVOX has been uninstalled."
+
+EOS
+
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
     echo "[+] Removing splitted archives..."
@@ -270,4 +318,4 @@ cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 echo "[+] Removing temporal directory..."
 rm -rf squashfs-root
 
-echo "[+] All done! VOICEVOX ${VERSION} installed."
+echo "[+] All done! VOICEVOX ${VERSION} has been installed."
