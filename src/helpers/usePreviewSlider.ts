@@ -49,11 +49,9 @@ export const usePreviewSlider = (props: Props): ReturnType => {
   const previewValue = ref(modelValue.value);
   const isPanning = ref(false);
   const isScrolling = ref(false);
-  // @panが呼ばれないことがあるので、その時の更新用
-  const isUpdated = ref(false);
 
   const currentValue = computed(() => {
-    if (isPanning.value || isScrolling.value || isUpdated.value) {
+    if (isPanning.value || isScrolling.value) {
       return previewValue.value;
     } else {
       return modelValue.value;
@@ -62,10 +60,8 @@ export const usePreviewSlider = (props: Props): ReturnType => {
 
   const updatePreviewValue = (value: number) => {
     previewValue.value = value;
-    isUpdated.value = true;
   };
   const changePreviewValue = () => {
-    isUpdated.value = false;
     if (previewValue.value === null)
       throw new Error("previewValue.value === null");
     if (modelValue.value !== previewValue.value && props.onChange)
