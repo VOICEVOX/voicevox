@@ -168,9 +168,9 @@ echo
 
 # Download archives
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
-    FILENAME=${ARCHIVE_NAME_LIST[$index]}
-    SIZE=${ARCHIVE_SIZE_LIST[$index]}
-    HASH=${ARCHIVE_HASH_LIST[$index]}
+    FILENAME=${ARCHIVE_NAME_LIST[index]}
+    SIZE=${ARCHIVE_SIZE_LIST[index]}
+    HASH=${ARCHIVE_HASH_LIST[index]}
 
     URL=${RELEASE_URL}/${FILENAME}
 
@@ -185,7 +185,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
         echo "[+] File verification skipped"
     else
         if [ "$SIZE" != "x" ]; then
-            echo "[+] Verifying size == $SIZE"
+            echo "[+] Verifying size == ${SIZE}..."
             DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
@@ -224,6 +224,7 @@ EOS
 done
 
 # Extract archives
+echo "[+] Extracting archive..."
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 ${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
 
