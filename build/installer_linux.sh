@@ -114,10 +114,10 @@ if [ -z "${VERSION}" ]; then
 
     # extract version (release tag name) from URL
     VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
-    echo "[+] Latest version: ${VERSION}"
+    echo "[+] Install version: ${VERSION} (latest)"
+else
+    echo "[+] Install version: ${VERSION}"
 fi
-
-echo "[+] Install version: ${VERSION}"
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
@@ -145,7 +145,6 @@ if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
 else
     # filename<TAB>size<TAB>hash
-    set +e
     IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$1'; done)"
     IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$2'; done)"
     IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$3' | tr '[:lower:]' '[:upper:]'; done)"
