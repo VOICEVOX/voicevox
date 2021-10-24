@@ -28,6 +28,7 @@ describe("store/vuex.js test", () => {
         useGpu: false,
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
+        uilock_bysetting_stored: false,
         isDefaultStyleSelectDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
@@ -93,6 +94,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
+    assert.equal(store.state.uilock_bysetting_stored, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isObject(store.state.savingSetting);
