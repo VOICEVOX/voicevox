@@ -12,21 +12,7 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          :min="1"
-          :max="accentPhrase.moras.length"
-          :step="1"
-          :disable="uiLocked"
-          :model-value="previewAccent.currentValue.value"
-          @change="changeAccent(parseInt($event))"
-          @update:model-value="previewAccent.setPreviewValue(parseInt($event))"
-          @wheel="
-            changeAccentByScroll(
-              accentPhrase.moras.length,
-              accentPhrase.accent,
-              $event.deltaY
-            )
-          "
-          @pan="setPanning($event)"
+          v-bind="previewAccentSlider.qSliderProps.value"
         />
       </div>
     </div>
@@ -48,7 +34,7 @@
         'accent-select-cell',
         {
           'accent-select-cell-selected':
-            previewAccent.currentValue.value == moraIndex + 1,
+            previewAccentSlider.state.currentValue.value == moraIndex + 1,
         },
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
@@ -61,14 +47,15 @@
 </template>
 
 <script lang="ts">
-import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, computed } from "vue";
+import { usePreviewSlider } from "@/helpers/usePreviewSlider";
+import { AccentPhrase } from "@/openapi";
+import { defineComponent, computed, PropType } from "vue";
 
 export default defineComponent({
   name: "AudioAccent",
 
   props: {
-    accentPhrase: { type: Object, required: true },
+    accentPhrase: { type: Object as PropType<AccentPhrase>, required: true },
     accentPhraseIndex: { type: Number, required: true },
     uiLocked: { type: Boolean, required: true },
     shiftKeyFlag: { type: Boolean, default: false },
@@ -77,37 +64,21 @@ export default defineComponent({
   emits: ["changeAccent"],
 
   setup(props, { emit }) {
-    const previewAccent = new PreviewableValue(() => props.accentPhrase.accent);
-
     const changeAccent = (accent: number) => {
       emit("changeAccent", props.accentPhraseIndex, accent);
     };
 
-    const changeAccentByScroll = (
-      length: number,
-      accent: number,
-      deltaY: number
-    ) => {
-      let currentAccent = accent - (deltaY > 0 ? 1 : -1);
-      if (
-        !props.uiLocked &&
-        !props.shiftKeyFlag &&
-        length >= currentAccent &&
-        currentAccent >= 1
-      )
-        changeAccent(currentAccent);
-    };
-
-    const setPanning = (panningPhrase: string) => {
-      if (panningPhrase === "start") {
-        previewAccent.startPreview();
-      } else {
-        previewAccent.stopPreview();
-      }
-    };
+    const previewAccentSlider = usePreviewSlider({
+      onChange: changeAccent,
+      modelValue: () => props.accentPhrase.accent,
+      disable: () => props.uiLocked,
+      max: () => props.accentPhrase.moras.length,
+      min: () => 1,
+      step: () => 1,
+    });
 
     const accentLine = computed(() => {
-      const accent = previewAccent.currentValue.value ?? 0;
+      const accent = previewAccentSlider.state.currentValue.value ?? 0;
       return [...Array(props.accentPhrase.moras.length).keys()].map(
         (index) =>
           `${index * 40 + 15} ${
@@ -117,11 +88,9 @@ export default defineComponent({
     });
 
     return {
-      previewAccent,
+      previewAccentSlider,
       changeAccent,
-      changeAccentByScroll,
       accentLine,
-      setPanning,
     };
   },
 });
