@@ -234,10 +234,6 @@ cat << 'EOS' > uninstaller_linux.sh
 set -euo pipefail
 IFS=$'\n\t'
 
-if [ "$PWD" = "$HOME/.voicevox" ]; then
-    cd "$HOME"
-fi
-
 VOICEVOX_INSTALLED_FILES=(
     ~/.local/share/applications/voicevox.desktop
     ~/.local/share/icons/voicevox.png
@@ -273,6 +269,7 @@ done
 echo "[+] Done! VOICEVOX has been uninstalled."
 
 EOS
+chmod +x uninstaller_linux.sh
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
@@ -298,7 +295,7 @@ echo "[+] Extacting desktop entry..."
 # Install desktop entry
 echo "[+] Installing desktop entry..."
 
-DESKTOP_FILE=$(find squashfs-root -name '*.desktop' -maxdepth 1 | head -1)
+DESKTOP_FILE=$(find squashfs-root -maxdepth 1 -name '*.desktop' | head -1)
 chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
