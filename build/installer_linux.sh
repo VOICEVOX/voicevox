@@ -18,12 +18,12 @@ IGNORE_RTCOND=${IGNORE_RTCOND:-}
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 
-echo "Checking installer prerequisites..."
+echo "[+] Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
     cat << EOS
 
-* Command 'curl' not found
+[!] Command 'curl' not found
 
 Required to download VOICEVOX
 
@@ -55,7 +55,7 @@ elif command -v 7za &> /dev/null; then
 else
     cat << 'EOS'
 
-* Command '7z', '7zr' or '7za' not found
+[!] Command '7z', '7zr' or '7za' not found
 
 Required to extract compressed files
 
@@ -75,16 +75,16 @@ Or
 EOS
     exit 1
 fi
-echo "7z command: ${COMMAND_7Z}"
+echo "[+] 7z command: ${COMMAND_7Z}"
 
-echo "Checking runtime prerequisites..."
+echo "[+] Checking runtime prerequisites..."
 
 if ldconfig -p | grep libsndfile\.so &> /dev/null; then
-    echo "* libsndfile: OK"
+    echo "[+] libsndfile: OK"
 else
     cat << 'EOS'
 
-* libsndfile: not found
+[!] libsndfile: not found
 
 Required to run VOICEVOX ENGINE
 
@@ -105,7 +105,8 @@ fi
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
 if [ -z "${VERSION}" ]; then
-    echo "Checking the latest version: ${LATEST_RELEASE_URL}"
+    echo "[+] Checking the latest version..."
+    echo "[+] Latest version: ${LATEST_RELEASE_URL}"
 
     # releases/tag/{version}
     RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
@@ -114,24 +115,24 @@ if [ -z "${VERSION}" ]; then
     VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
 fi
 
-echo "Install version: ${VERSION}"
+echo "[+] Install version: ${VERSION}"
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
-echo "Install directory: ${APP_DIR}"
+echo "[+] Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
 
 cd "${APP_DIR}"
 
 # Download archive list
 if [ "$REUSE_LIST" != "1" ]; then
-    echo "Downloading ${ARCHIVE_LIST_URL}"
+    echo "[+] Downloading ${ARCHIVE_LIST_URL}..."
     curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
 fi
 
-echo ""
-echo "List of splitted archives"
+echo
+echo "[+] Listing of splitted archives..."
 readarray ARCHIVE_LIST < "list.txt"
 
 if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
@@ -161,7 +162,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
 
     URL=${RELEASE_URL}/${FILENAME}
 
-    echo "Downloading ${URL}"
+    echo "[+] Downloading ${URL}..."
     if [ ! -f "${FILENAME}" ]; then
         curl --fail -L -C - -o "${FILENAME}.tmp" "${URL}"
         mv "${FILENAME}.tmp" "${FILENAME}"
@@ -169,7 +170,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
 
     # File verification (size, md5 hash)
     if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "File verification skipped"
+        echo "[+] File verification skipped"
     else
         if [ "$SIZE" != "x" ]; then
             echo "Verifying size == $SIZE"
@@ -179,7 +180,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
                 echo "Size OK"
             else
                 cat << EOS
-* Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
+[!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
 
 Remove the corrupted file and restart installer!
 
@@ -191,13 +192,13 @@ EOS
         fi
 
         if [ "$HASH" != "x" ]; then
-            echo "Verifying hash == $HASH"
+            echo "[+] Verifying hash == ${HASH}..."
             DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "Hash OK"
+                echo "[+] Hash OK"
             else
                 cat << EOS
-* Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
+[!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
 
 Remove the corrupted file and restart installer!
 
@@ -219,32 +220,32 @@ APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -
 chmod +x "${APPIMAGE}"
 
 # Dump version
-echo "Dumping version"
+echo "[+] Dumping version..."
 echo "${VERSION}" > VERSION
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
-    echo "Removing splitted archives"
+    echo "[+] Removing splitted archives..."
 
     for filename in "${ARCHIVE_NAME_LIST[@]}"; do
-        echo "Removing ${filename}"
+        echo "[+] Removing ${filename}..."
         rm -f "${filename}"
     done
 fi
 
 # Remove archive list
-echo "Removing archive list: list.txt"
+echo "[+] Removing archive list (list.txt)..."
 rm -f "list.txt"
 
 # Extract desktop entry
-echo "Extacting desktop entry"
+echo "[+] Extacting desktop entry..."
 
 "./${APPIMAGE}" --appimage-extract '*.desktop'
 "./${APPIMAGE}" --appimage-extract 'usr/share/icons/**'
 "./${APPIMAGE}" --appimage-extract '*.png' # symbolic link to icon
 
 # Install desktop entry
-echo "Installing desktop entry"
+echo "[+] Installing desktop entry..."
 
 DESKTOP_FILE=$(find squashfs-root -name '*.desktop' -maxdepth 1 | head -1)
 chmod +x "${DESKTOP_FILE}"
@@ -256,14 +257,14 @@ mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
 mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
 
 # Install icon
-echo "Installing icon"
+echo "[+] Installing icon..."
 
 mkdir -p "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
 cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 
 # Remove extract dir
-echo "Removing temporal directory"
+echo "[+] Removing temporal directory..."
 rm -rf squashfs-root
 
-echo "All done! VOICEVOX ${VERSION} installed."
+echo "[+] All done! VOICEVOX ${VERSION} installed."
