@@ -292,7 +292,7 @@ export default defineComponent({
       const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
       });
-      audioItem.query! = prevAudioItem.query!;
+      if (store.state.inheritquery) audioItem.query! = prevAudioItem.query!;
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,

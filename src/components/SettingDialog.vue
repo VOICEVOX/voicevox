@@ -62,7 +62,7 @@
                 <div class="text-h5">パラメータ継承</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>パラメータを継承して新規セルを作成</div>
+                <div>話速等のパラメータを継承して新規セルを作成</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"

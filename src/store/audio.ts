@@ -24,6 +24,7 @@ import {
   MoraDataType,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
+import { store } from ".";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -1335,9 +1336,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           body,
           state.characterInfos
         )) {
-          audioItems.push(
-            await dispatch("GENERATE_AUDIO_ITEM", { text, styleId })
-          );
+          const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+            text,
+            styleId,
+          });
+          if (store.state.inheritquery)
+            audioItem.query! =
+              store.state.audioItems[store.getters.ACTIVE_AUDIO_KEY!].query!;
+          audioItems.push(audioItem);
         }
         const audioKeys: string[] = await Promise.all(
           audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
@@ -1375,7 +1381,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
-          audioItem.query! = prevAudioItem.query!;
+          if (store.state.inheritquery) audioItem.query! = prevAudioItem.query!;
           audioKeyItemPairs.push({
             audioKey,
             audioItem,
