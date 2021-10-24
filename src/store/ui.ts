@@ -29,6 +29,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   useGpu: false,
+  inheritquery: true,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
@@ -76,6 +77,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
+      },
+      SET_INHERIT_QUERY(state, { inheritquery }: { inheritquery: boolean }) {
+        state.inheritquery = inheritquery;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -150,6 +154,19 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
+        });
+      },
+      async GET_INHERIT_QUERY({ commit }) {
+        commit("SET_INHERIT_QUERY", {
+          inheritquery: await window.electron.inheritquery(),
+        });
+      },
+      async SET_INHERIT_QUERY(
+        { commit },
+        { inheritquery }: { inheritquery: boolean }
+      ) {
+        commit("SET_INHERIT_QUERY", {
+          inheritquery: await window.electron.inheritquery(inheritquery),
         });
       },
       async DETECT_UNMAXIMIZED({ commit }) {

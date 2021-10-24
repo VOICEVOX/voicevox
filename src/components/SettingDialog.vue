@@ -56,6 +56,38 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
+            <!-- inheritQueryMode -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">パラメータ継承</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>パラメータを継承して新規セルを作成</div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  v-model="inheritQueryMode"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  :options="[
+                    { label: '継承する', value: 'switchInheritOn' },
+                    { label: '継承しない', value: 'switchInheritOff' },
+                  ]"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    ＋ボタン、あるいはペーストで新規セルを作成する際、話速等のパラメータを現在のセルから継承します
+                  </q-tooltip>
+                </q-btn-toggle>
+              </q-card-actions>
+            </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -410,6 +442,13 @@ export default defineComponent({
         changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
+    const inheritQueryMode = computed({
+      get: () =>
+        store.state.inheritquery ? "switchInheritOn" : "switchInheritOff",
+      set: (mode: string) => {
+        changeinheritquery(mode == "switchInheritOn" ? true : false);
+      },
+    });
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -468,6 +507,11 @@ export default defineComponent({
           },
         }).onOk(change);
       } else change();
+    };
+
+    const changeinheritquery = async (inheritquery: boolean) => {
+      if (store.state.inheritquery === inheritquery) return;
+      store.dispatch("SET_INHERIT_QUERY", { inheritquery });
     };
 
     const restartEngineProcess = () => {
@@ -630,6 +674,7 @@ export default defineComponent({
       isHotkeyDialogOpened,
       isHotkeyDuplicatedDialogOpened,
       engineMode,
+      inheritQueryMode,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

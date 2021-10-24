@@ -61,6 +61,7 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
+  inheritquery: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
@@ -69,6 +70,10 @@ const store = new Store<{
     useGpu: {
       type: "boolean",
       default: false,
+    },
+    inheritquery:{
+      type: "boolean",
+      default: true,
     },
     savingSetting: {
       type: "object",
@@ -219,8 +224,12 @@ async function runEngine() {
       type: "info",
     });
   }
-
+  if (!store.has("inheritquery")) {
+    store.set("inheritquery", true);
+  }
   const useGpu = store.get("useGpu");
+  const inheritquery = store.get("inheritquery");
+
   log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
@@ -476,6 +485,14 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
   }
 
   return store.get("useGpu", false);
+});
+
+ipcMainHandle("INHERIT_QUERY", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("inheritquery", newValue);
+  }
+
+  return store.get("inheritquery", false);
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {

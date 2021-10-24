@@ -641,6 +641,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 export type UiStoreState = {
   uiLockCount: number;
   useGpu: boolean;
+  inheritquery: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -693,6 +694,15 @@ type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
+  };
+
+  GET_INHERIT_QUERY: {
+    action(): void;
+  };
+
+  SET_INHERIT_QUERY: {
+    mutation: { inheritquery: boolean };
+    action(payload: { inheritquery: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {
