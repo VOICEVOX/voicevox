@@ -639,6 +639,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 
 export type UiStoreState = {
   uiLockCount: number;
+  uilock_bysetting_stored: boolean;
   useGpu: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
@@ -649,6 +650,9 @@ export type UiStoreState = {
 
 type UiStoreTypes = {
   UI_LOCKED: {
+    getter: boolean;
+  };
+  UI_LOCKED_BYSETTING: {
     getter: boolean;
   };
 

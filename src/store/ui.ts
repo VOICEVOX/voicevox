@@ -28,6 +28,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
+  uilock_bysetting_stored: false,
   useGpu: false,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
@@ -41,6 +42,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
     getters: {
       UI_LOCKED(state) {
         return state.uiLockCount > 0;
+      },
+      UI_LOCKED_BYSETTING(state) {
+        return state.uilock_bysetting_stored;
       },
       SHOULD_SHOW_PANES(_, getters) {
         return getters.ACTIVE_AUDIO_KEY != undefined;
@@ -65,6 +69,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
+        state.uilock_bysetting_stored = isSettingDialogOpen;
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,

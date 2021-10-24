@@ -26,6 +26,7 @@
           v-for="(menu, i) of menudata.subMenu"
           :key="i"
           :menudata="menu"
+          :disable="uiLocked_bysetting"
           v-model:selected="subMenuOpenFlags[i]"
           @mouseover="reassignSubMenuOpen(i)"
         />
@@ -38,6 +39,7 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemData } from "@/components/MenuBar.vue";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "MenuButton",
@@ -62,6 +64,10 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const uiLocked_bysetting = computed(
+      () => store.getters.UI_LOCKED_BYSETTING
+    );
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -96,6 +102,7 @@ export default defineComponent({
       );
 
       return {
+        uiLocked_bysetting,
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,
