@@ -287,6 +287,7 @@ export default defineComponent({
 
     setHotkeyFunctions(hotkeyMap);
 
+    // このコンポーネントは遅延評価なので`GET_HOTKEY_SETTINGS`を呼び直す
     store.dispatch("GET_HOTKEY_SETTINGS");
 
     // detail selector
