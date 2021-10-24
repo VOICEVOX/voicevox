@@ -38,7 +38,7 @@ if ! command -v curl &> /dev/null; then
 fi
 
 COMMAND_7Z=${COMMAND_7Z:-}
-if [ ! -z "${COMMAND_7Z}" ]; then
+if [ -n "${COMMAND_7Z}" ]; then
     # use env var
     :
 elif command -v 7z &> /dev/null; then
@@ -73,7 +73,6 @@ else
 fi
 echo "7z command: ${COMMAND_7Z}"
 
-
 echo "Checking runtime prerequisites..."
 
 if ldconfig -p | grep libsndfile\.so &> /dev/null; then
@@ -96,7 +95,6 @@ else
         exit 1
     fi
 fi
-
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
@@ -135,19 +133,22 @@ if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
     # filename
     _IFS=$IFS
     IFS=$'\n'
-    ARCHIVE_NAME_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}"; done))
-    ARCHIVE_SIZE_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "x"; done))
-    ARCHIVE_HASH_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "x"; done))
+    read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}"; done))"
+    read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
+    read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
     IFS=$_IFS
 else
     # filename<TAB>size<TAB>hash
-    ARCHIVE_NAME_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f1; done))
-    ARCHIVE_SIZE_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f2; done))
-    ARCHIVE_HASH_LIST=($(for index in ${!ARCHIVE_LIST[@]}; do echo "${ARCHIVE_LIST[$index]}" | cut -s -f3 | tr a-z A-Z; done))
+    _IFS=$IFS
+    IFS=$'\n'
+    read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f1; done)"
+    read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f2; done)"
+    read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f3 | tr '[:lower:]' '[:upper:]'; done)"
+    IFS=$_IFS
 fi
 echo ""
 
-for index in ${!ARCHIVE_NAME_LIST[@]}; do
+for index in "${!ARCHIVE_NAME_LIST[@]}"; do
     echo "$index. ${ARCHIVE_NAME_LIST[$index]} ${ARCHIVE_SIZE_LIST[$index]} ${ARCHIVE_HASH_LIST[$index]}"
 done
 echo ""
@@ -189,7 +190,7 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
 
         if [ "$HASH" != "x" ]; then
             echo "Verifying hash == $HASH"
-            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '{print $1}' | tr a-z A-Z)
+            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
                 echo "Hash OK"
             else
@@ -221,7 +222,7 @@ echo "${VERSION}" > VERSION
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
     echo "Removing splitted archives"
 
-    for filename in ${ARCHIVE_NAME_LIST[@]}; do
+    for filename in "${ARCHIVE_NAME_LIST[@]}"; do
         echo "Removing ${filename}"
         rm -f "${filename}"
     done
@@ -241,7 +242,7 @@ echo "Extacting desktop entry"
 # Install desktop entry
 echo "Installing desktop entry"
 
-DESKTOP_FILE=$(ls squashfs-root/*.desktop | head -n1)
+DESKTOP_FILE=$(find squashfs-root -name '*.desktop' -maxdepth 1 | head -1)
 chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
