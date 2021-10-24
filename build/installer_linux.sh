@@ -5,6 +5,16 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+cat << 'EOS'
++-+-+-+-+-+-+-+-+
+|V|O|I|C|E|V|O|X|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+          |I|n|s|t|a|l|l|e|r|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|f|o|r| |L|i|n|u|x|
++-+-+-+-+-+-+-+-+-+
+EOS
+
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
 REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
@@ -314,4 +324,4 @@ cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 echo "[+] Removing temporal directory..."
 rm -rf squashfs-root
 
-echo "[+] All done! VOICEVOX ${VERSION} has been installed."
+echo "[+] All done! VOICEVOX ${VERSION} has been installed under '${APP_DIR}'."
