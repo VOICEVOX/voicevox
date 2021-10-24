@@ -8,9 +8,9 @@ IFS=$'\n\t'
 cat << 'EOS'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-          |I|n|s|t|a|l|l|e|r|
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |I|n|s|t|a|l|l|e|r|
++-+-+-+-+-+-+-+-+-+-+-+-+-+
 |f|o|r| |L|i|n|u|x|
 +-+-+-+-+-+-+-+-+-+
 EOS
@@ -243,6 +243,16 @@ cat << 'EOS' > uninstaller_linux.sh
 
 set -euo pipefail
 IFS=$'\n\t'
+
+cat << 'EOS'
++-+-+-+-+-+-+-+-+
+|V|O|I|C|E|V|O|X|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        |U|n|i|n|s|t|a|l|l|e|r|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|f|o|r| |L|i|n|u|x|
++-+-+-+-+-+-+-+-+-+
+EOS
 
 VOICEVOX_INSTALLED_FILES=(
     ~/.local/share/applications/voicevox.desktop
