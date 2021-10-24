@@ -21,19 +21,21 @@ ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 echo "Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
-    echo ""
-    echo "* Command 'curl' not found"
-    echo ""
-    echo "Required to download VOICEVOX"
-    echo ""
-    echo "Ubuntu/Debian:"
-    echo "    sudo apt install curl"
-    echo ""
-    echo "CentOS/Fedora:"
-    echo "    sudo dnf install curl"
-    echo "Or"
-    echo "    sudo yum install curl"
-    echo ""
+    cat << EOS
+
+* Command 'curl' not found
+
+Required to download VOICEVOX
+
+Ubuntu/Debian:
+    sudo apt install curl
+
+CentOS/Fedora:
+    sudo dnf install curl
+Or
+    sudo yum install curl
+
+EOS
     exit 1
 fi
 
@@ -51,24 +53,26 @@ elif command -v 7za &> /dev/null; then
     # CentOS/Fedora
     COMMAND_7Z=7za
 else
-    echo ""
-    echo "* Command '7z', '7zr' or '7za' not found"
-    echo ""
-    echo "Required to extract compressed files"
-    echo ""
-    echo "Ubuntu/Debian:"
-    echo "    sudo apt install p7zip"
-    echo ""
-    echo "CentOS (Enable EPEL repository):"
-    echo "    sudo dnf install epel-release && sudo dnf install p7zip"
-    echo "Or"
-    echo "    sudo yum install epel-release && sudo yum install p7zip"
-    echo ""
-    echo "Fedora:"
-    echo "    sudo dnf install p7zip"
-    echo "Or"
-    echo "    sudo yum install p7zip"
-    echo ""
+    cat << 'EOS'
+
+* Command '7z', '7zr' or '7za' not found
+
+Required to extract compressed files
+
+Ubuntu/Debian:
+    sudo apt install p7zip
+
+CentOS (Enable EPEL repository):
+    sudo dnf install epel-release && sudo dnf install p7zip
+Or
+    sudo yum install epel-release && sudo yum install p7zip
+
+Fedora:
+    sudo dnf install p7zip
+Or
+    sudo yum install p7zip
+
+EOS
     exit 1
 fi
 echo "7z command: ${COMMAND_7Z}"
@@ -78,19 +82,21 @@ echo "Checking runtime prerequisites..."
 if ldconfig -p | grep libsndfile\.so &> /dev/null; then
     echo "* libsndfile: OK"
 else
-    echo ""
-    echo "* libsndfile: not found"
-    echo ""
-    echo "Required to run VOICEVOX ENGINE"
-    echo ""
-    echo "Ubuntu/Debian:"
-    echo "    sudo apt install libsndfile1"
-    echo ""
-    echo "CentOS/Fedora:"
-    echo "    sudo dnf install libsndfile"
-    echo "Or"
-    echo "    sudo yum install libsndfile"
-    echo ""
+    cat << 'EOS'
+
+* libsndfile: not found
+
+Required to run VOICEVOX ENGINE
+
+Ubuntu/Debian:
+    sudo apt install libsndfile1
+
+CentOS/Fedora:
+    sudo dnf install libsndfile
+Or
+    sudo yum install libsndfile
+
+EOS
     if [ "${IGNORE_RTCOND}" != "1" ]; then
         exit 1
     fi
@@ -131,27 +137,21 @@ readarray ARCHIVE_LIST < "list.txt"
 if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
     # No size/hash information
     # filename
-    _IFS=$IFS
-    IFS=$'\n'
-    read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}"; done))"
-    read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
-    read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
-    IFS=$_IFS
+    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}"; done))"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
 else
     # filename<TAB>size<TAB>hash
-    _IFS=$IFS
-    IFS=$'\n'
-    read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f1; done)"
-    read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f2; done)"
-    read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f3 | tr '[:lower:]' '[:upper:]'; done)"
-    IFS=$_IFS
+    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f1; done)"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f2; done)"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f3 | tr '[:lower:]' '[:upper:]'; done)"
 fi
-echo ""
+echo
 
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
     echo "$index. ${ARCHIVE_NAME_LIST[$index]} ${ARCHIVE_SIZE_LIST[$index]} ${ARCHIVE_HASH_LIST[$index]}"
 done
-echo ""
+echo
 
 # Download archives
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
@@ -178,12 +178,14 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
                 echo "Size OK"
             else
-                echo "Invalid size: $DOWNLOADED_SIZE != $SIZE"
-                echo ""
-                echo "Remove the corrupted file and restart installer!"
-                echo ""
-                echo "    rm $(realpath "$FILENAME")"
-                echo ""
+                cat << EOS
+* Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
+
+Remove the corrupted file and restart installer!
+
+    rm $(realpath "${FILENAME}")
+
+EOS
                 exit 1
             fi
         fi
@@ -194,12 +196,14 @@ for index in "${!ARCHIVE_NAME_LIST[@]}"; do
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
                 echo "Hash OK"
             else
-                echo "Invalid hash: $DOWNLOADED_HASH != $HASH"
-                echo ""
-                echo "Remove the corrupted file and restart installer!"
-                echo ""
-                echo "    rm $(realpath "$FILENAME")"
-                echo ""
+                cat << EOS
+* Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
+
+Remove the corrupted file and restart installer!
+
+    rm $(realpath "${FILENAME}")
+
+EOS
                 exit 1
             fi
         fi
