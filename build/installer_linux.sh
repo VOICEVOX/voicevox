@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # VOICEVOX Installer Script
 
+# set -x # Debug mode: output verbose log
 set -euo pipefail
+IFS=$'\n\t'
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
@@ -135,7 +137,7 @@ echo
 echo "[+] Listing of splitted archives..."
 readarray ARCHIVE_LIST < "list.txt"
 
-if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
+if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     # No size/hash information
     # filename
     IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}"; done))"
@@ -143,9 +145,10 @@ if [ "$(echo "${ARCHIVE_LIST[0]}" | cut -s -f1)" = "" ]; then
     IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
 else
     # filename<TAB>size<TAB>hash
-    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f1; done)"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f2; done)"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}" | cut -s -f3 | tr '[:lower:]' '[:upper:]'; done)"
+    set +e
+    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$1'; done)"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$2'; done)"
+    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$3' | tr '[:lower:]' '[:upper:]'; done)"
 fi
 echo
 
