@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # VOICEVOX Installer Script
 
-set -eu
+set -euo pipefail
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
