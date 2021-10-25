@@ -279,7 +279,7 @@ done
 for i in "\${VOICEVOX_INSTALLED_DIR[@]}"; do
     [ -e "\$i" ] || continue
     echo "[+] Removing '\${i}'..."
-    if [ -d "$i" ]; then
+    if [ -d "\$i" ]; then
         rm -rf "\$i"
     else
         echo "[!] '\$i' is not a directory"

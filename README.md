@@ -79,6 +79,15 @@ Markdown の文法チェックを行います。
 npm run markdownlint
 ```
 
+## Shellcheck
+
+ShellScript の文法チェックを行います。
+インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing)を参照してください。
+
+```bash
+shellcheck *.sh
+```
+
 ## OpenAPI generator
 
 音声合成エンジンが起動している状態で以下のコマンドを実行してください。
