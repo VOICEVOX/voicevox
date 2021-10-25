@@ -242,7 +242,7 @@ export default defineComponent({
     const MAX_PORTRAIT_PANE_WIDTH = 40;
     const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
     const portraitPaneWidth = ref(0);
