@@ -209,6 +209,7 @@ done
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 ${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
 
+# Get AppImage filename from 7z archive
 APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
 chmod +x "${APPIMAGE}"
 
@@ -220,13 +221,14 @@ echo "${VERSION}" > VERSION
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
     echo "Removing splitted archives"
 
-    for filename in ${ARCHIVE_LIST[@]}; do
+    for filename in ${ARCHIVE_NAME_LIST[@]}; do
         echo "Removing ${filename}"
         rm -f "${filename}"
     done
 fi
 
 # Remove archive list
+echo "Removing archive list: list.txt"
 rm -f "list.txt"
 
 # Extract desktop entry
