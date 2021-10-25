@@ -16,8 +16,16 @@
       vertical
       reverse
       snap
-      v-bind="previewSlider.qSliderProps.value"
       :style="clipPathComputed"
+      :min="previewSlider.qSliderProps.min.value"
+      :max="previewSlider.qSliderProps.max.value"
+      :step="previewSlider.qSliderProps.step.value"
+      :disable="previewSlider.qSliderProps.disable.value"
+      :model-value="previewSlider.qSliderProps.modelValue.value"
+      @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @change="previewSlider.qSliderProps.onChange"
+      @wheel="previewSlider.qSliderProps.onWheel"
+      @pan="previewSlider.qSliderProps.onPan"
     />
   </div>
 </template>

@@ -12,7 +12,17 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
-          v-bind="previewAccentSlider.qSliderProps.value"
+          :min="previewAccentSlider.qSliderProps.min.value"
+          :max="previewAccentSlider.qSliderProps.max.value"
+          :step="previewAccentSlider.qSliderProps.step.value"
+          :disable="previewAccentSlider.qSliderProps.disable.value"
+          :model-value="previewAccentSlider.qSliderProps.modelValue.value"
+          @update:model-value="
+            previewAccentSlider.qSliderProps['onUpdate:modelValue']
+          "
+          @change="previewAccentSlider.qSliderProps.onChange"
+          @wheel="previewAccentSlider.qSliderProps.onWheel"
+          @pan="previewAccentSlider.qSliderProps.onPan"
         />
       </div>
     </div>

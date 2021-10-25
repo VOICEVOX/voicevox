@@ -18,16 +18,16 @@ export type PreviewSliderHelper = {
     currentValue: Ref<number | null>;
     isPanning: Ref<boolean>;
   };
-  qSliderProps: Ref<{
-    min: number;
-    max: number;
-    step: number;
-    disable: boolean;
+  qSliderProps: {
+    min: Ref<number>;
+    max: Ref<number>;
+    step: Ref<number>;
+    disable: Ref<boolean>;
     "onUpdate:modelValue": (value: number) => void;
     onChange: (value: number) => void;
     onWheel: (event: Events["onWheel"]) => void;
     onPan: QSliderProps["onPan"];
-  }>;
+  };
 };
 
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
@@ -113,17 +113,17 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     debounceScroll();
   };
 
-  const qSliderProps = computed(() => ({
-    min: min.value,
-    max: max.value,
-    step: step.value,
-    disable: disable.value,
-    modelValue: currentValue.value,
+  const qSliderProps = {
+    min: min,
+    max: max,
+    step: step,
+    disable: disable,
+    modelValue: currentValue,
     "onUpdate:modelValue": updatePreviewValue,
     onChange: changePreviewValue,
     onWheel,
     onPan,
-  }));
+  };
 
   return {
     state: {

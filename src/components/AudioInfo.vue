@@ -4,33 +4,103 @@
       <span class="text-body1 q-mb-xs"
         >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
-      <q-slider dense snap v-bind="speedScaleSlider.qSliderProps.value" />
+      <q-slider
+        dense
+        snap
+        :min="speedScaleSlider.qSliderProps.min.value"
+        :max="speedScaleSlider.qSliderProps.max.value"
+        :step="speedScaleSlider.qSliderProps.step.value"
+        :disable="speedScaleSlider.qSliderProps.disable.value"
+        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          speedScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="speedScaleSlider.qSliderProps.onChange"
+        @wheel="speedScaleSlider.qSliderProps.onWheel"
+        @pan="speedScaleSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
-      <q-slider dense snap v-bind="pitchScaleSlider.qSliderProps.value" />
+      <q-slider
+        dense
+        snap
+        :min="pitchScaleSlider.qSliderProps.min.value"
+        :max="pitchScaleSlider.qSliderProps.max.value"
+        :step="pitchScaleSlider.qSliderProps.step.value"
+        :disable="pitchScaleSlider.qSliderProps.disable.value"
+        :model-value="pitchScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          pitchScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="pitchScaleSlider.qSliderProps.onChange"
+        @wheel="pitchScaleSlider.qSliderProps.onWheel"
+        @pan="pitchScaleSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >抑揚
         {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
-      <q-slider dense snap v-bind="intonationScaleSlider.qSliderProps.value" />
+      <q-slider
+        dense
+        snap
+        :min="intonationScaleSlider.qSliderProps.min.value"
+        :max="intonationScaleSlider.qSliderProps.max.value"
+        :step="intonationScaleSlider.qSliderProps.step.value"
+        :disable="intonationScaleSlider.qSliderProps.disable.value"
+        :model-value="intonationScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          intonationScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="intonationScaleSlider.qSliderProps.onChange"
+        @wheel="intonationScaleSlider.qSliderProps.onWheel"
+        @pan="intonationScaleSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
-      <q-slider dense snap v-bind="volumeScaleSlider.qSliderProps.value" />
+      <q-slider
+        dense
+        snap
+        :min="volumeScaleSlider.qSliderProps.min.value"
+        :max="volumeScaleSlider.qSliderProps.max.value"
+        :step="volumeScaleSlider.qSliderProps.step.value"
+        :disable="volumeScaleSlider.qSliderProps.disable.value"
+        :model-value="volumeScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          volumeScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="volumeScaleSlider.qSliderProps.onChange"
+        @wheel="volumeScaleSlider.qSliderProps.onWheel"
+        @pan="volumeScaleSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >開始無音
         {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
-      <q-slider dense snap v-bind="prePhonemeLengthSlider.qSliderProps.value" />
+      <q-slider
+        dense
+        snap
+        :min="prePhonemeLengthSlider.qSliderProps.min.value"
+        :max="prePhonemeLengthSlider.qSliderProps.max.value"
+        :step="prePhonemeLengthSlider.qSliderProps.step.value"
+        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="prePhonemeLengthSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          prePhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="prePhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="prePhonemeLengthSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
@@ -40,7 +110,17 @@
       <q-slider
         dense
         snap
-        v-bind="postPhonemeLengthSlider.qSliderProps.value"
+        :min="postPhonemeLengthSlider.qSliderProps.min.value"
+        :max="postPhonemeLengthSlider.qSliderProps.max.value"
+        :step="postPhonemeLengthSlider.qSliderProps.step.value"
+        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="postPhonemeLengthSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          postPhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="postPhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="postPhonemeLengthSlider.qSliderProps.onPan"
       />
     </div>
   </div>
