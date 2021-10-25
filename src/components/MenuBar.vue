@@ -197,13 +197,37 @@ export default defineComponent({
         ],
       },
       {
-        type: "button",
+        type: "root",
         label: "設定",
-        onClick: () => {
-          store.dispatch("IS_SETTING_DIALOG_OPEN", {
-            isSettingDialogOpen: true,
-          });
-        },
+        subMenu: [
+          {
+            type: "button",
+            label: "オプション",
+            onClick() {
+              store.dispatch("IS_SETTING_DIALOG_OPEN", {
+                isSettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "ショートカットキー",
+            onClick() {
+              store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+                isHotkeySettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "デフォルトスタイル",
+            onClick() {
+              store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+                isDefaultStyleSelectDialogOpen: true,
+              });
+            },
+          },
+        ],
       },
       {
         type: "button",
