@@ -2,14 +2,19 @@
   <q-bar class="bg-white q-pa-none relative-position">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
-      v-for="(root, i) of menudata"
-      :key="i"
+      v-for="(root, index) of menudata"
+      :key="index"
       :menudata="root"
       :disable="uiLocked"
-      v-model:selected="subMenuOpenFlags[i]"
-      @mouseover="reassignSubMenuOpen(i)"
+      v-model:selected="subMenuOpenFlags[index]"
+      @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[i] = false) : undefined
+        [
+          root.type === 'button'
+            ? (subMenuOpenFlags[index] = false)
+            : undefined,
+          reassignSubMenuOpen.cancel(),
+        ]
       "
     />
     <q-space />
@@ -30,7 +35,7 @@ import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { useQuasar } from "quasar";
+import { useQuasar, debounce } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
@@ -242,14 +247,14 @@ export default defineComponent({
       [...Array(menudata.value.length)].map(() => false)
     );
 
-    const reassignSubMenuOpen = (i: number) => {
-      if (subMenuOpenFlags.value[i]) return;
+    const reassignSubMenuOpen = debounce((idx: number) => {
+      if (subMenuOpenFlags.value[idx]) return;
       if (subMenuOpenFlags.value.find((x) => x)) {
         const arr = [...Array(menudata.value.length)].map(() => false);
-        arr[i] = true;
+        arr[idx] = true;
         subMenuOpenFlags.value = arr;
       }
-    };
+    }, 100);
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       ["新規プロジェクト", createNewProject],
