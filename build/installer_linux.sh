@@ -145,7 +145,7 @@ fi
 
 echo
 echo "[+] Listing of splitted archives..."
-readarray ARCHIVE_LIST < "list.txt"
+readarray -t ARCHIVE_LIST < "list.txt"
 
 if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     # No size/hash information
