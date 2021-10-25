@@ -150,14 +150,39 @@ readarray ARCHIVE_LIST < "list.txt"
 if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     # No size/hash information
     # filename
-    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "${ARCHIVE_LIST[index]}"; done))"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo "x"; done)"
+    readarray -t ARCHIVE_NAME_LIST < <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "${ARCHIVE_LIST[index]}"
+      done
+    )
+    readarray -t ARCHIVE_SIZE_LIST < <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "x"
+      done
+    )
+    readarray -t ARCHIVE_HASH_LIST <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "x"
+      done
+    )
 else
     # filename<TAB>size<TAB>hash
-    IFS=$'\n' read -d '' -r -a ARCHIVE_NAME_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$1'; done)"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_SIZE_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$2'; done)"
-    IFS=$'\n' read -d '' -r -a ARCHIVE_HASH_LIST <<< "$(for index in "${!ARCHIVE_LIST[@]}"; do echo -n "${ARCHIVE_LIST[index]}" | awk '$0=$3' | tr '[:lower:]' '[:upper:]'; done)"
+    readarray -t ARCHIVE_NAME_LIST < <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "${ARCHIVE_LIST[index]}"
+      done | awk '$0!=""{print $1}'
+    )
+    readarray -t ARCHIVE_SIZE_LIST < <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "${ARCHIVE_LIST[index]}"
+      done | awk '$0!=""{print $2}'
+    )
+    readarray -t ARCHIVE_HASH_LIST < <(
+      for index in "${!ARCHIVE_LIST[@]}"; do
+        echo "${ARCHIVE_LIST[index]}"
+      done | awk '$0!=""{print $3}' |
+      tr '[:lower:]' '[:upper:]'
+    )
 fi
 echo
 
