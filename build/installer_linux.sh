@@ -5,7 +5,7 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-cat << 'EOS'
+cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -13,7 +13,7 @@ cat << 'EOS'
 +-+-+-+-+-+-+-+-+-+-+-+-+-+
 |f|o|r| |L|i|n|u|x|
 +-+-+-+-+-+-+-+-+-+
-EOS
+BANNER
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
@@ -238,13 +238,13 @@ echo "${VERSION}" > VERSION
 
 # Create uninstaller
 echo "[+] Creating uninstaller..."
-cat << 'EOS' > uninstaller_linux.sh
+cat << EOS > uninstaller_linux.sh && chmod +x uninstaller_linux.sh
 #!/usr/bin/env bash
 
 set -euo pipefail
-IFS=$'\n\t'
+IFS=\$'\n\t'
 
-cat << 'EOS'
+cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -252,36 +252,37 @@ cat << 'EOS'
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |f|o|r| |L|i|n|u|x|
 +-+-+-+-+-+-+-+-+-+
-EOS
+BANNER
 
 VOICEVOX_INSTALLED_FILES=(
-    ~/.local/share/applications/voicevox.desktop
-    ~/.local/share/icons/voicevox.png
+    ${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop
+    ${ICON_INSTALL_DIR}/voicevox.png
+    ${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png
 )
 
 VOICEVOX_INSTALLED_DIR=(
-    ~/.voicevox
+    ${APP_DIR}
 )
 
 echo "[+] Uninstalling VOICEVOX..."
-for i in "${VOICEVOX_INSTALLED_FILES[@]}"; do
-    [ -e "$i" ] || continue
-    echo "[+] Removing '${i}'..."
-    if [ -f "$i" ]; then
-        rm -f "$i"
+for i in "\${VOICEVOX_INSTALLED_FILES[@]}"; do
+    [ -e "\$i" ] || continue
+    echo "[+] Removing '\${i}'..."
+    if [ -f "\$i" ]; then
+        rm -f "\$i"
     else
-        echo "[!] '$i' is not a file"
+        echo "[!] '\$i' is not a file"
         exit 1
     fi
 done
 
-for i in "${VOICEVOX_INSTALLED_DIR[@]}"; do
-    [ -e "$i" ] || continue
-    echo "[+] Removing '${i}'..."
+for i in "\${VOICEVOX_INSTALLED_DIR[@]}"; do
+    [ -e "\$i" ] || continue
+    echo "[+] Removing '\${i}'..."
     if [ -d "$i" ]; then
-        rm -rf "$i"
+        rm -rf "\$i"
     else
-        echo "[!] '$i' is not a directory"
+        echo "[!] '\$i' is not a directory"
         exit 1
     fi
 done
@@ -289,7 +290,6 @@ done
 echo "[+] Done! VOICEVOX has been uninstalled."
 
 EOS
-chmod +x uninstaller_linux.sh
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
