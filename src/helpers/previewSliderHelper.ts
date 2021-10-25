@@ -29,7 +29,16 @@ export type PreviewSliderHelper = {
     onPan: QSliderProps["onPan"];
   };
 };
-
+/**
+ * @param props
+ * q-sliderの描画に用いる引数
+ * computedの引数の様に依存性を算出するために算出関数を渡す。
+ * @returns QSliderProps
+ * + state
+ *   currentValue等、Slider外での描画の為に用いることができる変数
+ * + qSliderProps
+ *   q-sliderに渡すべきprops
+ */
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const modelValue = computed(props.modelValue);
   const min = computed(() => (props.min && props.min()) ?? 0);
