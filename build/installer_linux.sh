@@ -87,12 +87,12 @@ Or
 EOS
     exit 1
 fi
-echo "[+] 7z command: ${COMMAND_7Z}"
+echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
 
 if ldconfig -p | grep libsndfile\.so &> /dev/null; then
-    echo "[+] libsndfile: OK"
+    echo "[-] libsndfile: OK"
 else
     cat << 'EOS'
 
@@ -124,15 +124,15 @@ if [ -z "${VERSION}" ]; then
 
     # extract version (release tag name) from URL
     VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
-    echo "[+] Install version: ${VERSION} (latest)"
+    echo "[-] Install version: ${VERSION} (latest)"
 else
-    echo "[+] Install version: ${VERSION}"
+    echo "[-] Install version: ${VERSION}"
 fi
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
-echo "[+] Install directory: ${APP_DIR}"
+echo "[-] Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
 
 cd "${APP_DIR}"
@@ -210,14 +210,14 @@ for index in "${!ARCHIVE_LIST[@]}"; do
 
     # File verification (size, md5 hash)
     if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "[+] File verification skipped"
+        echo "[-] File verification skipped"
     else
         if [ "$SIZE" != "x" ]; then
             echo "[+] Verifying size == ${SIZE}..."
             DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "[+] Size OK"
+                echo "[-] Size OK"
             else
                 cat << EOS
 [!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
@@ -235,7 +235,7 @@ EOS
             echo "[+] Verifying hash == ${HASH}..."
             DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "[+] Hash OK"
+                echo "[-] Hash OK"
             else
                 cat << EOS
 [!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
