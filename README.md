@@ -85,7 +85,7 @@ ShellScript の文法チェックを行います。
 インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing)を参照してください。
 
 ```bash
-shellcheck *.sh
+shellcheck ./build/*.sh
 ```
 
 ## OpenAPI generator
