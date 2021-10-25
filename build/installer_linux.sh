@@ -151,46 +151,46 @@ if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     # No size/hash information
     # filename
     readarray -t ARCHIVE_NAME_LIST < <(
-      for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-      done
+        for line in "${ARCHIVE_LIST[@]}"; do
+            echo "$line"
+        done
     )
     readarray -t ARCHIVE_SIZE_LIST < <(
-      for index in "${!ARCHIVE_LIST[@]}"; do
-        echo "x"
-      done
+        for index in "${!ARCHIVE_LIST[@]}"; do
+            echo "x"
+        done
     )
     readarray -t ARCHIVE_HASH_LIST <(
-      for index in "${!ARCHIVE_LIST[@]}"; do
-        echo "x"
-      done
+        for index in "${!ARCHIVE_LIST[@]}"; do
+            echo "x"
+        done
     )
 else
     # filename<TAB>size<TAB>hash
     readarray -t ARCHIVE_NAME_LIST < <(
-      for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-      done | awk '$0!=""{print $1}'
+        for line in "${ARCHIVE_LIST[@]}"; do
+            echo "$line"
+        done | awk '$0!=""{print $1}'
     )
     readarray -t ARCHIVE_SIZE_LIST < <(
-      for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-      done | awk '$0!=""{print $2}'
+        for line in "${ARCHIVE_LIST[@]}"; do
+            echo "$line"
+        done | awk '$0!=""{print $2}'
     )
     readarray -t ARCHIVE_HASH_LIST < <(
-      for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-      done | awk '$0!=""{print $3}' |
-      tr '[:lower:]' '[:upper:]'
+        for line in "${ARCHIVE_LIST[@]}"; do
+            echo "$line"
+        done | awk '$0!=""{print $3}' |
+            tr '[:lower:]' '[:upper:]'
     )
 fi
 echo
 
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
-    echo "$index." \
-         "${ARCHIVE_NAME_LIST[$index]}" \
-         "${ARCHIVE_SIZE_LIST[$index]}" \
-         "${ARCHIVE_HASH_LIST[$index]}"
+    echo "${index}." \
+        "${ARCHIVE_NAME_LIST[index]}" \
+        "${ARCHIVE_SIZE_LIST[index]}" \
+        "${ARCHIVE_HASH_LIST[index]}"
 done
 echo
 
