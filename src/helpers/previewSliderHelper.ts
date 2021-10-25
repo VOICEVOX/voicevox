@@ -32,7 +32,7 @@ export type PreviewSliderHelper = {
 /**
  * @param props
  * q-sliderの描画に用いる引数
- * computedの引数の様に依存性を算出するために算出関数を渡す。
+ * reactiveにする為にcomputedの引数の様に算出関数を渡す。
  * @returns QSliderProps
  * + state
  *   currentValue等、Slider外での描画の為に用いることができる変数
