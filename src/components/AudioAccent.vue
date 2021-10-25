@@ -47,7 +47,7 @@
 </template>
 
 <script lang="ts">
-import { usePreviewSlider } from "@/helpers/usePreviewSlider";
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
 import { defineComponent, computed, PropType } from "vue";
 
@@ -68,7 +68,7 @@ export default defineComponent({
       emit("changeAccent", props.accentPhraseIndex, accent);
     };
 
-    const previewAccentSlider = usePreviewSlider({
+    const previewAccentSlider = previewSliderHelper({
       onChange: changeAccent,
       modelValue: () => props.accentPhrase.accent,
       disable: () => props.uiLocked,

@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts">
-import { usePreviewSlider } from "@/helpers/usePreviewSlider";
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 import { computed, defineComponent, reactive } from "vue";
 
@@ -57,7 +57,7 @@ export default defineComponent({
       );
     };
 
-    const previewSlider = usePreviewSlider({
+    const previewSlider = previewSliderHelper({
       modelValue: () => props.value,
       disable: () => props.disable || props.uiLocked,
       onChange: changeValue,

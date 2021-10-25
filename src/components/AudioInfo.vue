@@ -49,7 +49,7 @@
 <script lang="ts">
 import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
-import { usePreviewSlider } from "@/helpers/usePreviewSlider";
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { getterObject } from "@/helpers/funcUtils";
 
 export default defineComponent({
@@ -112,7 +112,7 @@ export default defineComponent({
       });
     };
 
-    const speedScaleSlider = usePreviewSlider({
+    const speedScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.speedScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioSpeedScale,
@@ -124,7 +124,7 @@ export default defineComponent({
         scrollMinStep: 0.01,
       }),
     });
-    const pitchScaleSlider = usePreviewSlider({
+    const pitchScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.pitchScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPitchScale,
@@ -136,7 +136,7 @@ export default defineComponent({
         scrollMinStep: 0.01,
       }),
     });
-    const intonationScaleSlider = usePreviewSlider({
+    const intonationScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.intonationScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioIntonationScale,
@@ -148,7 +148,7 @@ export default defineComponent({
         scrollMinStep: 0.01,
       }),
     });
-    const volumeScaleSlider = usePreviewSlider({
+    const volumeScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.volumeScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioVolumeScale,
@@ -160,7 +160,7 @@ export default defineComponent({
         scrollMinStep: 0.01,
       }),
     });
-    const prePhonemeLengthSlider = usePreviewSlider({
+    const prePhonemeLengthSlider = previewSliderHelper({
       modelValue: () => query.value?.prePhonemeLength ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPrePhonemeLength,
@@ -172,7 +172,7 @@ export default defineComponent({
         scrollMinStep: 0.01,
       }),
     });
-    const postPhonemeLengthSlider = usePreviewSlider({
+    const postPhonemeLengthSlider = previewSliderHelper({
       modelValue: () => query.value?.postPhonemeLength ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPostPhonemeLength,

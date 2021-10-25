@@ -13,7 +13,7 @@ export type Props = {
   disableScroll?: () => boolean;
 };
 
-export type ReturnType = {
+export type PreviewSliderHelper = {
   state: {
     currentValue: Ref<number | null>;
     isPanning: Ref<boolean>;
@@ -30,7 +30,7 @@ export type ReturnType = {
   }>;
 };
 
-export const usePreviewSlider = (props: Props): ReturnType => {
+export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const modelValue = computed(props.modelValue);
   const min = computed(() => (props.min && props.min()) ?? 0);
   const max = computed(() => (props.max && props.max()) ?? 100);
