@@ -53,6 +53,7 @@
                       round
                       flat
                       icon="close"
+                      color="secondary"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
