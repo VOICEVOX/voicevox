@@ -50,7 +50,6 @@
 import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import { getterObject } from "@/helpers/funcUtils";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -116,73 +115,61 @@ export default defineComponent({
       modelValue: () => query.value?.speedScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioSpeedScale,
-      ...getterObject({
-        max: 2,
-        min: 0.5,
-        step: 0.01,
-        scrollStep: 0.1,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 2,
+      min: () => 0.5,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
     });
     const pitchScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.pitchScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPitchScale,
-      ...getterObject({
-        max: 0.15,
-        min: -0.15,
-        step: 0.01,
-        scrollStep: 0.05,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 0.15,
+      min: () => -0.15,
+      step: () => 0.01,
+      scrollStep: () => 0.05,
+      scrollMinStep: () => 0.01,
     });
     const intonationScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.intonationScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioIntonationScale,
-      ...getterObject({
-        max: 2,
-        min: 0,
-        step: 0.01,
-        scrollStep: 0.1,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
     });
     const volumeScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.volumeScale ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioVolumeScale,
-      ...getterObject({
-        max: 2,
-        min: 0,
-        step: 0.01,
-        scrollStep: 0.1,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
     });
     const prePhonemeLengthSlider = previewSliderHelper({
       modelValue: () => query.value?.prePhonemeLength ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPrePhonemeLength,
-      ...getterObject({
-        max: 1.5,
-        min: 0,
-        step: 0.01,
-        scrollStep: 0.1,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
     });
     const postPhonemeLengthSlider = previewSliderHelper({
       modelValue: () => query.value?.postPhonemeLength ?? null,
       disable: () => uiLocked.value,
       onChange: setAudioPostPhonemeLength,
-      ...getterObject({
-        max: 1.5,
-        min: 0,
-        step: 0.01,
-        scrollStep: 0.1,
-        scrollMinStep: 0.01,
-      }),
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
     });
 
     return {
