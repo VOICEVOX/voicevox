@@ -26,7 +26,7 @@
           v-for="(menu, i) of menudata.subMenu"
           :key="i"
           :menudata="menu"
-          :disable="uiLocked_bysetting"
+          :disable="uiLocked"
           v-model:selected="subMenuOpenFlags[i]"
           @mouseover="reassignSubMenuOpen(i)"
         />
@@ -65,9 +65,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const uiLocked_bysetting = computed(
-      () => store.getters.UI_LOCKED_BYSETTING
-    );
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -102,7 +100,7 @@ export default defineComponent({
       );
 
       return {
-        uiLocked_bysetting,
+        uiLocked,
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,

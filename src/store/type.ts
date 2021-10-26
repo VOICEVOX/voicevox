@@ -652,9 +652,6 @@ type UiStoreTypes = {
   UI_LOCKED: {
     getter: boolean;
   };
-  UI_LOCKED_BYSETTING: {
-    getter: boolean;
-  };
 
   ASYNC_UI_LOCK: {
     action(payload: { callback: () => Promise<void> }): void;

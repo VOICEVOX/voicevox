@@ -5,7 +5,6 @@
       v-for="(root, i) of menudata"
       :key="i"
       :menudata="root"
-      :disable="uiLocked"
       v-model:selected="subMenuOpenFlags[i]"
       @mouseover="reassignSubMenuOpen(i)"
       @mouseleave="

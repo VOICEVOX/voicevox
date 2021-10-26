@@ -43,9 +43,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UI_LOCKED(state) {
         return state.uiLockCount > 0;
       },
-      UI_LOCKED_BYSETTING(state) {
-        return state.uilock_bysetting_stored;
-      },
       SHOULD_SHOW_PANES(_, getters) {
         return getters.ACTIVE_AUDIO_KEY != undefined;
       },
@@ -114,8 +111,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-        //if (isHelpDialogOpen) commit("LOCK_UI");
-        //else commit("UNLOCK_UI");
+        if (isHelpDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
 
         commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
       },
@@ -125,8 +122,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-        //if (isSettingDialogOpen) commit("LOCK_UI");
-        //else commit("UNLOCK_UI");
+        if (isSettingDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
       },
