@@ -1,6 +1,5 @@
 import { ref, computed, Ref, Events } from "vue";
 import { QSliderProps, debounce } from "quasar";
-import { time } from "systeminformation";
 export type Props = {
   onPan?: QSliderProps["onPan"];
   onChange?: QSliderProps["onChange"];
@@ -89,21 +88,10 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (props.onPan) props.onPan(phase);
   };
 
-  let endScrollingID: null | number = null;
-  const cancelEndScriling = () => {
-    if (endScrollingID != null) window.clearTimeout(endScrollingID);
-    endScrollingID = null;
-  };
-  const setEndScrolling = () => {
-    cancelEndScriling();
-    endScrollingID = window.setTimeout(() => {
-      isScrolling.value = false;
-    }, 50);
-  };
-
   const debounceScroll = debounce(() => {
+    // end scroll
+    isScrolling.value = false;
     changePreviewValue();
-    setEndScrolling();
   }, 300);
 
   const scrollStepDecimals = computed(() => {
@@ -131,7 +119,6 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     updatePreviewValue(Number.parseFloat(nextValue.toFixed(decimals)));
     // start scroll
     isScrolling.value = true;
-    cancelEndScriling();
     debounceScroll();
   };
 
