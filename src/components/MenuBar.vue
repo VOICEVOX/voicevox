@@ -146,7 +146,7 @@ export default defineComponent({
         store.dispatch("LOAD_PROJECT_FILE", {});
       }
     };
-    const close_All_Dialog = () => {
+    const closeAllDialog = () => {
       store.dispatch("IS_SETTING_DIALOG_OPEN", {
         isSettingDialogOpen: false,
       });
@@ -161,7 +161,7 @@ export default defineComponent({
       });
     };
 
-    const open_Help_Dialog = () => {
+    const openHelpDialog = () => {
       store.dispatch("IS_HELP_DIALOG_OPEN", {
         isHelpDialogOpen: true,
       });
@@ -172,15 +172,13 @@ export default defineComponent({
         type: "root",
         label: "ファイル",
         onClick: () => {
-          close_All_Dialog();
+          closeAllDialog();
         },
         subMenu: [
           {
             type: "button",
             label: "新規プロジェクト",
-            onClick: () => {
-              createNewProject();
-            },
+            onClick: createNewProject,
           },
           {
             type: "button",
@@ -224,7 +222,7 @@ export default defineComponent({
         type: "root",
         label: "エンジン",
         onClick: () => {
-          close_All_Dialog();
+          closeAllDialog();
         },
         subMenu: [
           {
@@ -240,7 +238,7 @@ export default defineComponent({
         type: "root",
         label: "設定",
         onClick: () => {
-          close_All_Dialog();
+          closeAllDialog();
         },
         subMenu: [
           {
@@ -276,10 +274,10 @@ export default defineComponent({
         type: "button",
         label: "ヘルプ",
         onClick: () => {
-          if (store.state.isHelpDialogOpen) close_All_Dialog();
+          if (store.state.isHelpDialogOpen) closeAllDialog();
           else {
-            close_All_Dialog();
-            open_Help_Dialog();
+            closeAllDialog();
+            openHelpDialog();
           }
         },
       },
