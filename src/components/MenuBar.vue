@@ -2,13 +2,13 @@
   <q-bar class="bg-white q-pa-none relative-position">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
-      v-for="(root, i) of menudata"
-      :key="i"
+      v-for="(root, index) of menudata"
+      :key="index"
       :menudata="root"
-      v-model:selected="subMenuOpenFlags[i]"
-      @mouseover="reassignSubMenuOpen(i)"
+      v-model:selected="subMenuOpenFlags[index]"
+      @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[i] = false) : undefined
+        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "
     />
     <q-space />
@@ -250,13 +250,41 @@ export default defineComponent({
         ],
       },
       {
-        type: "button",
+        type: "root",
         label: "設定",
         onClick: () => {
           if (store.state.isHelpDialogOpen) close_Help_Dialog();
           if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-          else open_Setting_Dialog();
         },
+        subMenu: [
+          {
+            type: "button",
+            label: "オプション",
+            onClick() {
+              store.dispatch("IS_SETTING_DIALOG_OPEN", {
+                isSettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "ショートカットキー",
+            onClick() {
+              store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+                isHotkeySettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "デフォルトスタイル",
+            onClick() {
+              store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+                isDefaultStyleSelectDialogOpen: true,
+              });
+            },
+          },
+        ],
       },
       {
         type: "button",
@@ -273,11 +301,11 @@ export default defineComponent({
       [...Array(menudata.value.length)].map(() => false)
     );
 
-    const reassignSubMenuOpen = (i: number) => {
-      if (subMenuOpenFlags.value[i]) return;
+    const reassignSubMenuOpen = (idx: number) => {
+      if (subMenuOpenFlags.value[idx]) return;
       if (subMenuOpenFlags.value.find((x) => x)) {
         const arr = [...Array(menudata.value.length)].map(() => false);
-        arr[i] = true;
+        arr[idx] = true;
         subMenuOpenFlags.value = arr;
       }
     };

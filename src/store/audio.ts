@@ -619,7 +619,7 @@ export const audioStore: VoiceVoxStoreOptions<
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
-            title: "Save",
+            title: "音声を保存",
             defaultPath: buildFileName(state, audioKey),
           });
         }
@@ -762,7 +762,7 @@ export const audioStore: VoiceVoxStoreOptions<
           dirPath = state.savingSetting.fixedExportDir;
         } else {
           dirPath ??= await window.electron.showOpenDirectoryDialog({
-            title: "Save ALL",
+            title: "音声を全て保存",
           });
         }
         if (dirPath) {

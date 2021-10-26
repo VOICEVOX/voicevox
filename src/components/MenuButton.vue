@@ -26,12 +26,13 @@
     >
       <q-list dense>
         <menu-item
-          v-for="(menu, i) of menudata.subMenu"
-          :key="i"
+          v-for="(menu, index) of menudata.subMenu"
+          :key="index"
           :menudata="menu"
           :disable="uiLocked"
-          v-model:selected="subMenuOpenFlags[i]"
-          @mouseover="reassignSubMenuOpen(i)"
+          v-model:selected="subMenuOpenFlags[index]"
+          @mouseenter="reassignSubMenuOpen(index)"
+          @mouseleave="reassignSubMenuOpen.cancel()"
         />
       </q-list>
     </q-menu>
@@ -40,6 +41,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, PropType, watch } from "vue";
+import { debounce } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemData } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
@@ -79,16 +81,16 @@ export default defineComponent({
         [...Array(props.menudata.subMenu.length)].map(() => false)
       );
 
-      const reassignSubMenuOpen = (i: number) => {
-        if (subMenuOpenFlags.value[i]) return;
+      const reassignSubMenuOpen = debounce((idx: number) => {
+        if (subMenuOpenFlags.value[idx]) return;
         if (props.menudata.type !== "root") return;
 
         const len = props.menudata.subMenu.length;
         const arr = [...Array(len)].map(() => false);
-        arr[i] = true;
+        arr[idx] = true;
 
         subMenuOpenFlags.value = arr;
-      };
+      }, 100);
 
       watch(
         () => props.selected,
