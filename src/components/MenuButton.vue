@@ -11,7 +11,10 @@
     "
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
-    @click="menudata.onClick()"
+    @click="
+      (menudata.type === 'button' || menudata.type === 'root') &&
+        menudata.onClick()
+    "
   >
     {{ menudata.label }}
     <q-menu
