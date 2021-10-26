@@ -30,6 +30,22 @@ export type PreviewSliderHelper = {
     onPan: QSliderProps["onPan"];
   };
 };
+
+class CancelableFinary {
+  isCanceled: boolean;
+
+  constructor(promise: Promise<void>, func: (...args: unknown[]) => unknown) {
+    this.isCanceled = false;
+    promise.finally(() => {
+      if (!this.isCanceled) func();
+    });
+  }
+
+  cancel() {
+    this.isCanceled = true;
+  }
+}
+
 /**
  * @param props
  * q-sliderの描画に用いる引数
@@ -91,10 +107,13 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (props.onPan) props.onPan(phase);
   };
 
+  let waitingChange: CancelableFinary | null = null;
+  const endScrolling = () => {
+    isScrolling.value = false;
+  };
   const debounceScroll = debounce(() => {
-    changePreviewValue().finally(() => {
-      isScrolling.value = false;
-    });
+    if (waitingChange !== null) waitingChange.cancel();
+    waitingChange = new CancelableFinary(changePreviewValue(), endScrolling);
   }, 300);
 
   const scrollStepDecimals = computed(() => {
@@ -122,6 +141,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     updatePreviewValue(Number.parseFloat(nextValue.toFixed(decimals)));
     // start scroll
     isScrolling.value = true;
+    if (waitingChange !== null) waitingChange.cancel();
     debounceScroll();
   };
 
