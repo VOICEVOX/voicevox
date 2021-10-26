@@ -21,6 +21,8 @@ REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
 
 # Install directory
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
+# force install if [ ${FORCE_INSTALL} = 1 ]
+FORCE_INSTALL=${FORCE_INSTALL:-}
 # keep archive if [ ${KEEP_ARCHIVE} = 1 ]
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 REUSE_LIST=${REUSE_LIST:-}
@@ -29,6 +31,24 @@ IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
+
+if [ "$FORCE_INSTALL" != "1" ] && [ -f "${APP_DIR}/VOICEVOX.AppImage" ]; then
+    echo "[*] VOICEVOX already installed in '${APP_DIR}/VOICEVOX.AppImage'."
+    while true; do
+        read -r -p "[*] Replace?(y/n): " yn
+        case "$yn" in
+            [Yy]*)
+                break
+                ;;
+            [Nn]*)
+                exit 0
+                ;;
+            *)
+                echo "[*] Please answer y(es) or n(o)."
+                ;;
+        esac
+    done
+fi
 
 echo "[+] Checking installer prerequisites..."
 
