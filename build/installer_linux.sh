@@ -30,6 +30,24 @@ IGNORE_RTCOND=${IGNORE_RTCOND:-}
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
 
+if [ -f "${APP_DIR}/VOICEVOX.AppImage" ]; then
+    echo "[*] VOICEVOX already installed in '${APP_DIR}/VOICEVOX.AppImage'."
+    while true; do
+        read -r -p "[*] Reinstall?(y/n): " yn
+        case "$yn" in
+            [Yy]*)
+                break
+                ;;
+            [Nn]*)
+                exit 0
+                ;;
+            *)
+                echo "[*] Please answer y(es) or n(o)."
+                ;;
+        esac
+    done
+fi
+
 echo "[+] Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
