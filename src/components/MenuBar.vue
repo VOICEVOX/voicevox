@@ -146,22 +146,18 @@ export default defineComponent({
         store.dispatch("LOAD_PROJECT_FILE", {});
       }
     };
-
-    const close_Setting_Dialog = () => {
+    const close_All_Dialog = () => {
       store.dispatch("IS_SETTING_DIALOG_OPEN", {
         isSettingDialogOpen: false,
       });
-    };
-
-    const open_Setting_Dialog = () => {
-      store.dispatch("IS_SETTING_DIALOG_OPEN", {
-        isSettingDialogOpen: true,
-      });
-    };
-
-    const close_Help_Dialog = () => {
       store.dispatch("IS_HELP_DIALOG_OPEN", {
         isHelpDialogOpen: false,
+      });
+      store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+        isHotkeySettingDialogOpen: false,
+      });
+      store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+        isDefaultStyleSelectDialogOpen: false,
       });
     };
 
@@ -170,13 +166,13 @@ export default defineComponent({
         isHelpDialogOpen: true,
       });
     };
+
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
         label: "ファイル",
         onClick: () => {
-          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+          close_All_Dialog();
         },
         subMenu: [
           {
@@ -197,8 +193,6 @@ export default defineComponent({
             type: "button",
             label: "テキスト読み込み",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               importTextFile();
             },
           },
@@ -207,8 +201,6 @@ export default defineComponent({
             type: "button",
             label: "プロジェクトを上書き保存",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               saveProject();
             },
           },
@@ -216,8 +208,6 @@ export default defineComponent({
             type: "button",
             label: "プロジェクトを名前を付けて保存",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               saveProjectAs();
             },
           },
@@ -225,8 +215,6 @@ export default defineComponent({
             type: "button",
             label: "プロジェクト読み込み",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               importProject();
             },
           },
@@ -236,8 +224,7 @@ export default defineComponent({
         type: "root",
         label: "エンジン",
         onClick: () => {
-          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+          close_All_Dialog();
         },
         subMenu: [
           {
@@ -253,8 +240,7 @@ export default defineComponent({
         type: "root",
         label: "設定",
         onClick: () => {
-          if (store.state.isHelpDialogOpen) close_Help_Dialog();
-          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+          close_All_Dialog();
         },
         subMenu: [
           {
@@ -290,9 +276,11 @@ export default defineComponent({
         type: "button",
         label: "ヘルプ",
         onClick: () => {
-          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-          if (store.state.isHelpDialogOpen) close_Help_Dialog();
-          else open_Help_Dialog();
+          if (store.state.isHelpDialogOpen) close_All_Dialog();
+          else {
+            close_All_Dialog();
+            open_Help_Dialog();
+          }
         },
       },
     ]);
