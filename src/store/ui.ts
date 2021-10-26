@@ -32,6 +32,7 @@ export const uiStoreState: UiStoreState = {
   inheritAudioInfo: true,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
+  isHotkeySettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -66,6 +67,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
+      },
+      IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
+        state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
@@ -131,6 +135,18 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         else commit("UNLOCK_UI");
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
+      },
+      IS_HOTKEY_SETTING_DIALOG_OPEN(
+        { state, commit },
+        { isHotkeySettingDialogOpen }
+      ) {
+        if (state.isHotkeySettingDialogOpen === isHotkeySettingDialogOpen)
+          return;
+
+        if (isHotkeySettingDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
       },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },

@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.7.5",
+    "descriptions": ["Linux版がビルドできない問題の修正"],
+    "contributors": []
+  },
+  {
     "version": "0.7.4",
     "descriptions": ["Linuxでエンジンが起動しない問題の修正"],
     "contributors": []

@@ -29,6 +29,7 @@ describe("store/vuex.js test", () => {
         inheritAudioInfo: true,
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
+        isHotkeySettingDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
@@ -95,6 +96,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
+    assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isObject(store.state.savingSetting);

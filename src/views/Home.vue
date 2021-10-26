@@ -107,6 +107,7 @@
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
+  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <!-- v-ifも付けないとfalseでも動いてしまう -->
   <default-style-select-dialog
     v-if="isDefaultStyleSelectDialogOpenComputed"
@@ -131,6 +132,7 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
+import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import { AudioItem } from "@/store/type";
@@ -150,6 +152,7 @@ export default defineComponent({
     AudioInfo,
     HelpDialog,
     SettingDialog,
+    HotkeySettingDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
   },
@@ -239,7 +242,7 @@ export default defineComponent({
     const MAX_PORTRAIT_PANE_WIDTH = 40;
     const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
     const portraitPaneWidth = ref(0);
@@ -362,11 +365,20 @@ export default defineComponent({
         store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: val }),
     });
 
-    // show setting dialog
+    // 設定
     const isSettingDialogOpenComputed = computed({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>
         store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
+    });
+
+    // ショートカットキー設定
+    const isHotkeySettingDialogOpenComputed = computed({
+      get: () => store.state.isHotkeySettingDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+          isHotkeySettingDialogOpen: val,
+        }),
     });
 
     // デフォルトスタイル選択
@@ -422,6 +434,7 @@ export default defineComponent({
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
+      isHotkeySettingDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
