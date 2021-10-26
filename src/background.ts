@@ -61,7 +61,7 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
-  inheritquery: boolean;
+  inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
@@ -71,7 +71,7 @@ const store = new Store<{
       type: "boolean",
       default: false,
     },
-    inheritquery:{
+    inheritAudioInfo:{
       type: "boolean",
       default: true,
     },
@@ -224,11 +224,11 @@ async function runEngine() {
       type: "info",
     });
   }
-  if (!store.has("inheritquery")) {
-    store.set("inheritquery", true);
+  if (!store.has("inheritAudioInfo")) {
+    store.set("inheritAudioInfo", true);
   }
   const useGpu = store.get("useGpu");
-  const inheritquery = store.get("inheritquery");
+  const inheritAudioInfo = store.get("inheritAudioInfo");
 
   log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
@@ -487,12 +487,12 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
   return store.get("useGpu", false);
 });
 
-ipcMainHandle("INHERIT_QUERY", (_, { newValue }) => {
+ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   if (newValue !== undefined) {
-    store.set("inheritquery", newValue);
+    store.set("inheritAudioInfo", newValue);
   }
 
-  return store.get("inheritquery", false);
+  return store.get("inheritAudioInfo", false);
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {

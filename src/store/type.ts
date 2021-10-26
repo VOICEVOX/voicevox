@@ -641,7 +641,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 export type UiStoreState = {
   uiLockCount: number;
   useGpu: boolean;
-  inheritquery: boolean;
+  inheritAudioInfo: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -696,13 +696,13 @@ type UiStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
-  GET_INHERIT_QUERY: {
+  GET_INHERIT_AUDIOINFO: {
     action(): void;
   };
 
-  SET_INHERIT_QUERY: {
-    mutation: { inheritquery: boolean };
-    action(payload: { inheritquery: boolean }): void;
+  SET_INHERIT_AUDIOINFO: {
+    mutation: { inheritAudioInfo: boolean };
+    action(payload: { inheritAudioInfo: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {

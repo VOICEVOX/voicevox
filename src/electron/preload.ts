@@ -132,8 +132,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("USE_GPU", { newValue });
   },
 
-  inheritquery: (newValue) => {
-    return ipcRendererInvoke("INHERIT_QUERY", { newValue });
+  inheritAudioInfo: (newValue) => {
+    return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
   },
 
   isAvailableGPUMode: () => {

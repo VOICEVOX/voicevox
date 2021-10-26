@@ -56,24 +56,24 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
-            <!-- inheritQueryMode -->
+            <!-- ???Mode -->
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">パラメータ継承</div>
+                <div class="text-h5">操作</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>話速等のパラメータを継承して新規セルを作成</div>
+                <div>パラメータを引き継いでテキスト欄を追加</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
-                  v-model="inheritQueryMode"
+                  v-model="inheritAudioInfoMode"
                   color="white"
                   text-color="black"
                   toggle-color="primary"
                   :options="[
-                    { label: '継承する', value: 'switchInheritOn' },
-                    { label: '継承しない', value: 'switchInheritOff' },
+                    { label: '引き継ぐ', value: 'switchInheritOn' },
+                    { label: '引き継がない', value: 'switchInheritOff' },
                   ]"
                 >
                   <q-tooltip
@@ -83,7 +83,8 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    ＋ボタン、あるいはペーストで新規セルを作成する際、話速等のパラメータを現在のセルから継承します
+                    テキスト欄を追加する際、話速等のパラメータを引き継ぎます
+                    //項目名とほぼ同一なので不要かも？
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
@@ -442,11 +443,11 @@ export default defineComponent({
         changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
-    const inheritQueryMode = computed({
+    const inheritAudioInfoMode = computed({
       get: () =>
-        store.state.inheritquery ? "switchInheritOn" : "switchInheritOff",
+        store.state.inheritAudioInfo ? "switchInheritOn" : "switchInheritOff",
       set: (mode: string) => {
-        changeinheritquery(mode == "switchInheritOn" ? true : false);
+        changeinheritAudioInfo(mode == "switchInheritOn" ? true : false);
       },
     });
 
@@ -509,9 +510,9 @@ export default defineComponent({
       } else change();
     };
 
-    const changeinheritquery = async (inheritquery: boolean) => {
-      if (store.state.inheritquery === inheritquery) return;
-      store.dispatch("SET_INHERIT_QUERY", { inheritquery });
+    const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
+      if (store.state.inheritAudioInfo === inheritAudioInfo) return;
+      store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
     const restartEngineProcess = () => {
@@ -674,7 +675,7 @@ export default defineComponent({
       isHotkeyDialogOpened,
       isHotkeyDuplicatedDialogOpened,
       engineMode,
-      inheritQueryMode,
+      inheritAudioInfoMode,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

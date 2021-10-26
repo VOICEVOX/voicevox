@@ -29,7 +29,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   useGpu: false,
-  inheritquery: true,
+  inheritAudioInfo: true,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
@@ -78,8 +78,11 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
-      SET_INHERIT_QUERY(state, { inheritquery }: { inheritquery: boolean }) {
-        state.inheritquery = inheritquery;
+      SET_INHERIT_AUDIOINFO(
+        state,
+        { inheritAudioInfo }: { inheritAudioInfo: boolean }
+      ) {
+        state.inheritAudioInfo = inheritAudioInfo;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -156,17 +159,19 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
-      async GET_INHERIT_QUERY({ commit }) {
-        commit("SET_INHERIT_QUERY", {
-          inheritquery: await window.electron.inheritquery(),
+      async GET_INHERIT_AUDIOINFO({ commit }) {
+        commit("SET_INHERIT_AUDIOINFO", {
+          inheritAudioInfo: await window.electron.inheritAudioInfo(),
         });
       },
-      async SET_INHERIT_QUERY(
+      async SET_INHERIT_AUDIOINFO(
         { commit },
-        { inheritquery }: { inheritquery: boolean }
+        { inheritAudioInfo }: { inheritAudioInfo: boolean }
       ) {
-        commit("SET_INHERIT_QUERY", {
-          inheritquery: await window.electron.inheritquery(inheritquery),
+        commit("SET_INHERIT_AUDIOINFO", {
+          inheritAudioInfo: await window.electron.inheritAudioInfo(
+            inheritAudioInfo
+          ),
         });
       },
       async DETECT_UNMAXIMIZED({ commit }) {

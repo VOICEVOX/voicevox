@@ -1340,7 +1340,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
-          if (store.state.inheritquery)
+          if (store.state.inheritAudioInfo)
             audioItem.query! =
               store.state.audioItems[store.getters.ACTIVE_AUDIO_KEY!].query!;
           audioItems.push(audioItem);
@@ -1381,7 +1381,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
-          if (store.state.inheritquery) audioItem.query! = prevAudioItem.query!;
+          if (store.state.inheritAudioInfo)
+            audioItem.query! = prevAudioItem.query!;
           audioKeyItemPairs.push({
             audioKey,
             audioItem,
