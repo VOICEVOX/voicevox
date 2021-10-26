@@ -17,6 +17,7 @@ export type PreviewSliderHelper = {
   state: {
     currentValue: Ref<number | null>;
     isPanning: Ref<boolean>;
+    isScrolling: Ref<boolean>;
   };
   qSliderProps: {
     min: Ref<number>;
@@ -70,11 +71,13 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const updatePreviewValue = (value: number) => {
     previewValue.value = value;
   };
-  const changePreviewValue = () => {
+  const changePreviewValue = async () => {
     if (previewValue.value === null)
       throw new Error("previewValue.value === null");
-    if (modelValue.value !== previewValue.value && props.onChange)
-      props.onChange(previewValue.value);
+    if (modelValue.value !== previewValue.value && props.onChange) {
+      const ret: unknown = props.onChange(previewValue.value);
+      if (ret instanceof Promise) await ret;
+    }
   };
 
   const onPan: QSliderProps["onPan"] = (phase) => {
@@ -89,9 +92,9 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   };
 
   const debounceScroll = debounce(() => {
-    // end scroll
-    isScrolling.value = false;
-    changePreviewValue();
+    changePreviewValue().finally(() => {
+      isScrolling.value = false;
+    });
   }, 300);
 
   const scrollStepDecimals = computed(() => {
@@ -138,6 +141,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     state: {
       currentValue,
       isPanning,
+      isScrolling,
     },
     qSliderProps,
   };

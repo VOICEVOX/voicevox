@@ -69,14 +69,17 @@ export default defineComponent({
     accentPhraseIndex: { type: Number, required: true },
     uiLocked: { type: Boolean, required: true },
     shiftKeyFlag: { type: Boolean, default: false },
+    onChangeAccent: {
+      type: Function as PropType<
+        (accentPhraseIndex: number, accent: number) => Promise<void>
+      >,
+      required: true,
+    },
   },
 
-  emits: ["changeAccent"],
-
-  setup(props, { emit }) {
-    const changeAccent = (accent: number) => {
-      emit("changeAccent", props.accentPhraseIndex, accent);
-    };
+  setup(props) {
+    const changeAccent = (accent: number) =>
+      props.onChangeAccent(props.accentPhraseIndex, accent);
 
     const previewAccentSlider = previewSliderHelper({
       onChange: changeAccent,

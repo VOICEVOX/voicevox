@@ -309,14 +309,12 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
-    };
-
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       isPause: boolean,
