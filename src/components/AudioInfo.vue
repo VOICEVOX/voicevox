@@ -84,7 +84,7 @@
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >開始無音
-        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
+        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(1) }}</span
       >
       <q-slider
         dense
@@ -105,7 +105,7 @@
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >終了無音
-        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
+        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(1) }}</span
       >
       <q-slider
         dense
