@@ -9,12 +9,7 @@
       v-model:selected="subMenuOpenFlags[index]"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
-        [
-          root.type === 'button'
-            ? (subMenuOpenFlags[index] = false)
-            : undefined,
-          reassignSubMenuOpen.cancel(),
-        ]
+        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "
     />
     <q-space />
@@ -35,7 +30,7 @@ import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { useQuasar, debounce } from "quasar";
+import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
@@ -247,14 +242,14 @@ export default defineComponent({
       [...Array(menudata.value.length)].map(() => false)
     );
 
-    const reassignSubMenuOpen = debounce((idx: number) => {
+    const reassignSubMenuOpen = (idx: number) => {
       if (subMenuOpenFlags.value[idx]) return;
       if (subMenuOpenFlags.value.find((x) => x)) {
         const arr = [...Array(menudata.value.length)].map(() => false);
         arr[idx] = true;
         subMenuOpenFlags.value = arr;
       }
-    }, 100);
+    };
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       ["新規プロジェクト", createNewProject],
