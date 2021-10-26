@@ -42,6 +42,7 @@ type MenuItemBase<T extends string> = {
 export type MenuItemSeparator = MenuItemBase<"separator">;
 
 export type MenuItemRoot = MenuItemBase<"root"> & {
+  onClick: () => void;
   subMenu: MenuItemData[];
 };
 
@@ -173,13 +174,15 @@ export default defineComponent({
       {
         type: "root",
         label: "ファイル",
+        onClick: () => {
+          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+        },
         subMenu: [
           {
             type: "button",
             label: "新規プロジェクト",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               createNewProject();
             },
           },
@@ -187,8 +190,6 @@ export default defineComponent({
             type: "button",
             label: "音声書き出し",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               generateAndSaveAllAudio();
             },
           },
@@ -234,13 +235,15 @@ export default defineComponent({
       {
         type: "root",
         label: "エンジン",
+        onClick: () => {
+          if (store.state.isSettingDialogOpen) close_Setting_Dialog();
+          if (store.state.isHelpDialogOpen) close_Help_Dialog();
+        },
         subMenu: [
           {
             type: "button",
             label: "再起動",
             onClick: () => {
-              if (store.state.isSettingDialogOpen) close_Setting_Dialog();
-              if (store.state.isHelpDialogOpen) close_Help_Dialog();
               store.dispatch("RESTART_ENGINE");
             },
           },
