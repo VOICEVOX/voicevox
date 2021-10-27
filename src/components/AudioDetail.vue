@@ -595,15 +595,17 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (
-        selectedDetail.value == "pitch" &&
-        unvoicableVowels.indexOf(mora.vowel) > -1
-      ) {
-        let data = 0;
-        if (mora.pitch == 0) {
-          data = 5.5; // don't worry, it will be overwritten by template itself
+      if (!uiLocked.value) {
+        if (
+          selectedDetail.value == "pitch" &&
+          unvoicableVowels.indexOf(mora.vowel) > -1
+        ) {
+          let data = 0;
+          if (mora.pitch == 0) {
+            data = 5.5; // don't worry, it will be overwritten by template itself
+          }
+          changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
         }
-        changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
       }
     };
 
