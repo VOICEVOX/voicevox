@@ -373,9 +373,6 @@ export const audioStore: VoiceVoxStoreOptions<
                 moraIndex
               ].vowel.toLowerCase();
           }
-          console.log(
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel
-          );
         }
       }
     },
