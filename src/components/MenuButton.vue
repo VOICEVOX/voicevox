@@ -11,7 +11,10 @@
     "
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
-    @click="menudata.type === 'button' && menudata.onClick()"
+    @click="
+      (menudata.type === 'button' || menudata.type === 'root') &&
+        menudata.onClick()
+    "
   >
     {{ menudata.label }}
     <q-menu
@@ -26,6 +29,7 @@
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
           :menudata="menu"
+          :disable="uiLocked"
           v-model:selected="subMenuOpenFlags[index]"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
@@ -40,6 +44,7 @@ import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { debounce } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemData } from "@/components/MenuBar.vue";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "MenuButton",
@@ -64,6 +69,8 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -98,6 +105,7 @@ export default defineComponent({
       );
 
       return {
+        uiLocked,
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,
