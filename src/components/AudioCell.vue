@@ -255,7 +255,6 @@ export default defineComponent({
           const prevAudioItem = store.state.audioItems[prevAudioKey];
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            prevAudioItem,
             styleId,
             prevAudioKey,
           });

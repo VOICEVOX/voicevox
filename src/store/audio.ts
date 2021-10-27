@@ -24,7 +24,6 @@ import {
   MoraDataType,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { store } from ".";
 
 const api = new DefaultApi(
   new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
@@ -448,6 +447,28 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query != undefined) {
         audioItem.query = query;
       }
+
+      //パラメータ引き継ぎが有効になっている場合、現在の話速等のパラメータを引き継いで新規セルを作成する
+      //起動直後にはstate._activeAudioKeyやprevAudioItem.queryが未設定の可能性があるので確認したのちコピー
+      //AudioItemのうち、accentPhrasesとkanaは設定パラメータではないのでコピーしない
+      if (state.inheritAudioInfo && state._activeAudioKey) {
+        const prevAudioItem = state.audioItems[state._activeAudioKey!];
+        if (prevAudioItem.query) {
+          audioItem.query!.speedScale = prevAudioItem.query!.speedScale;
+          audioItem.query!.pitchScale = prevAudioItem.query!.pitchScale;
+          audioItem.query!.intonationScale =
+            prevAudioItem.query!.intonationScale;
+          audioItem.query!.volumeScale = prevAudioItem.query!.volumeScale;
+          audioItem.query!.prePhonemeLength =
+            prevAudioItem.query!.prePhonemeLength;
+          audioItem.query!.postPhonemeLength =
+            prevAudioItem.query!.postPhonemeLength;
+          audioItem.query!.outputSamplingRate =
+            prevAudioItem.query!.outputSamplingRate;
+          audioItem.query!.outputStereo = prevAudioItem.query!.outputStereo;
+        }
+      }
+
       return audioItem;
     },
     async REGISTER_AUDIO_ITEM(
@@ -1340,9 +1361,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
-          if (store.state.inheritAudioInfo)
-            audioItem.query! =
-              store.state.audioItems[store.getters.ACTIVE_AUDIO_KEY!].query!;
           audioItems.push(audioItem);
         }
         const audioKeys: string[] = await Promise.all(
@@ -1363,12 +1381,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         { commit, dispatch },
         {
           prevAudioKey,
-          prevAudioItem,
           texts,
           styleId,
         }: {
           prevAudioKey: string;
-          prevAudioItem: AudioItem;
           texts: string[];
           styleId: number;
         }
@@ -1381,8 +1397,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
           });
-          if (store.state.inheritAudioInfo)
-            audioItem.query! = prevAudioItem.query!;
           audioKeyItemPairs.push({
             audioKey,
             audioItem,
