@@ -2,7 +2,7 @@
   <div class="root full-height q-py-md" v-if="query">
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(1) }}</span
+        >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -43,7 +43,7 @@
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >抑揚
-        {{ intonationScaleSlider.state.currentValue.value?.toFixed(1) }}</span
+        {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -63,7 +63,7 @@
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(1) }}</span
+        >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -84,7 +84,7 @@
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >開始無音
-        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(1) }}</span
+        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -105,7 +105,7 @@
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >終了無音
-        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(1) }}</span
+        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
@@ -197,7 +197,7 @@ export default defineComponent({
       onChange: setAudioSpeedScale,
       max: () => 2,
       min: () => 0.5,
-      step: () => 0.1,
+      step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
     });
@@ -216,7 +216,7 @@ export default defineComponent({
       onChange: setAudioIntonationScale,
       max: () => 2,
       min: () => 0,
-      step: () => 0.1,
+      step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
     });
@@ -226,7 +226,7 @@ export default defineComponent({
       onChange: setAudioVolumeScale,
       max: () => 2,
       min: () => 0,
-      step: () => 0.1,
+      step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
     });
@@ -236,7 +236,7 @@ export default defineComponent({
       onChange: setAudioPrePhonemeLength,
       max: () => 1.5,
       min: () => 0,
-      step: () => 0.1,
+      step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
     });
@@ -246,7 +246,7 @@ export default defineComponent({
       onChange: setAudioPostPhonemeLength,
       max: () => 1.5,
       min: () => 0,
-      step: () => 0.1,
+      step: () => 0.01,
       scrollStep: () => 0.1,
       scrollMinStep: () => 0.01,
     });
