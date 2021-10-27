@@ -47,6 +47,7 @@ class CancelableFinary {
 }
 
 /**
+ * スライダー用のヘルパー関数。ホイール操作やプレビュー値表示の機能がある。
  * @param props
  * q-sliderの描画に用いる引数
  * reactiveにする為にcomputedの引数の様に算出関数を渡す。
