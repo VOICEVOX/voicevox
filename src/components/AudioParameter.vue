@@ -31,7 +31,7 @@
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
 import { MoraDataType } from "@/type/preload";
-import { computed, defineComponent, reactive } from "vue";
+import { computed, defineComponent, onMounted, reactive, ref } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -52,16 +52,42 @@ export default defineComponent({
 
   emits: ["changeValue", "mouseOver"],
 
+  watch: {
+    value(newVal, oldVal) {
+      if (this.type == "pitch" && this.lastPitch != 0) {
+        if (newVal != 0) {
+          if (oldVal == 0) {
+            this.changeValue(this.lastPitch as number, "voicing");
+          } else {
+            this.lastPitch = newVal;
+          }
+        }
+      }
+    },
+  },
+
   setup(props, { emit }) {
     const previewValue = new PreviewableValue(() => props.value);
 
-    const changeValue = (newValue: number) => {
+    // warpping the props with a function removes its reactivity
+    const initializePitch = () => {
+      return props.value;
+    };
+
+    const lastPitch = ref<number | undefined>(undefined);
+    onMounted(() => {
+      if (props.type == "pitch") {
+        lastPitch.value = initializePitch();
+      }
+    });
+
+    const changeValue = (newValue: number, type: MoraDataType = props.type) => {
       emit(
         "changeValue",
         props.accentPhraseIndex,
         props.moraIndex,
         newValue,
-        props.type
+        type
       );
     };
 
@@ -134,6 +160,7 @@ export default defineComponent({
       clipPathComputed,
       handleMouseHover,
       precisionComputed,
+      lastPitch,
     };
   },
 });

@@ -137,4 +137,9 @@ export type HotkeyReturnType =
   | Promise<void>
   | Promise<boolean>;
 
-export type MoraDataType = "consonant" | "vowel" | "pitch" | "pause";
+export type MoraDataType =
+  | "consonant"
+  | "vowel"
+  | "pitch"
+  | "pause"
+  | "voicing";
