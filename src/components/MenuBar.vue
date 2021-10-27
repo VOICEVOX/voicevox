@@ -2,14 +2,14 @@
   <q-bar class="bg-white q-pa-none relative-position">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
-      v-for="(root, i) of menudata"
-      :key="i"
+      v-for="(root, index) of menudata"
+      :key="index"
       :menudata="root"
       :disable="uiLocked"
-      v-model:selected="subMenuOpenFlags[i]"
-      @mouseover="reassignSubMenuOpen(i)"
+      v-model:selected="subMenuOpenFlags[index]"
+      @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[i] = false) : undefined
+        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "
     />
     <q-space />
@@ -242,11 +242,11 @@ export default defineComponent({
       [...Array(menudata.value.length)].map(() => false)
     );
 
-    const reassignSubMenuOpen = (i: number) => {
-      if (subMenuOpenFlags.value[i]) return;
+    const reassignSubMenuOpen = (idx: number) => {
+      if (subMenuOpenFlags.value[idx]) return;
       if (subMenuOpenFlags.value.find((x) => x)) {
         const arr = [...Array(menudata.value.length)].map(() => false);
-        arr[i] = true;
+        arr[idx] = true;
         subMenuOpenFlags.value = arr;
       }
     };
