@@ -109,11 +109,24 @@ export const settingStore: VoiceVoxStoreOptions<
 };
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>
+  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,
+  hotkeySettings?: HotkeySetting[]
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
   });
+  if (hotkeySettings) {
+    hotkeySettings.forEach((hotkeySetting) => {
+      hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
+        if (hotkeySetting.action == hotkeyAction) {
+          Mousetrap.bind(
+            hotkey2Combo(hotkeySetting.combination),
+            hotkeyFunction
+          );
+        }
+      });
+    });
+  }
 };
 
 const hotkey2Combo = (hotkeyCombo: string) => {

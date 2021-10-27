@@ -293,11 +293,8 @@ export default defineComponent({
         },
       ],
     ]);
-
-    setHotkeyFunctions(hotkeyMap);
-
-    // このコンポーネントは遅延評価なので`GET_HOTKEY_SETTINGS`を呼び直す
-    store.dispatch("GET_HOTKEY_SETTINGS");
+    // このコンポーネントは遅延評価なので手動でバインディングを行う
+    setHotkeyFunctions(hotkeyMap, store.state.hotkeySettings);
 
     // detail selector
     type DetailTypes =
