@@ -18,6 +18,7 @@ export type PreviewSliderHelper = {
     currentValue: Ref<number | null>;
     isPanning: Ref<boolean>;
     isScrolling: Ref<boolean>;
+    isAwaiting: Ref<boolean>;
   };
   qSliderProps: {
     min: Ref<number>;
@@ -76,9 +77,10 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const previewValue = ref(modelValue.value);
   const isPanning = ref(false);
   const isScrolling = ref(false);
+  const isAwaiting = ref(false);
 
   const currentValue = computed(() => {
-    if (isPanning.value || isScrolling.value) {
+    if (isPanning.value || isScrolling.value || isAwaiting.value) {
       return previewValue.value;
     } else {
       return modelValue.value;
@@ -97,6 +99,16 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     }
   };
 
+  let awaitingChange: CancelableFinary | null = null;
+  const endAwaiting = () => {
+    isAwaiting.value = false;
+  };
+  const fireChange = () => {
+    if (awaitingChange !== null) awaitingChange.cancel();
+    isAwaiting.value = true;
+    awaitingChange = new CancelableFinary(changePreviewValue(), endAwaiting);
+  };
+
   const onPan: QSliderProps["onPan"] = (phase) => {
     if (phase == "start") {
       // start panning
@@ -108,13 +120,9 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (props.onPan) props.onPan(phase);
   };
 
-  let waitingChange: CancelableFinary | null = null;
-  const endScrolling = () => {
-    isScrolling.value = false;
-  };
   const debounceScroll = debounce(() => {
-    if (waitingChange !== null) waitingChange.cancel();
-    waitingChange = new CancelableFinary(changePreviewValue(), endScrolling);
+    fireChange();
+    isScrolling.value = false;
   }, 300);
 
   const scrollStepDecimals = computed(() => {
@@ -142,7 +150,6 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     updatePreviewValue(Number.parseFloat(nextValue.toFixed(decimals)));
     // start scroll
     isScrolling.value = true;
-    if (waitingChange !== null) waitingChange.cancel();
     debounceScroll();
   };
 
@@ -153,7 +160,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     disable: disable,
     modelValue: currentValue,
     "onUpdate:modelValue": updatePreviewValue,
-    onChange: changePreviewValue,
+    onChange: fireChange,
     onWheel,
     onPan,
   };
@@ -163,6 +170,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
       currentValue,
       isPanning,
       isScrolling,
+      isAwaiting,
     },
     qSliderProps,
   };
