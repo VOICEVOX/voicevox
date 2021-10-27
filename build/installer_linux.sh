@@ -367,7 +367,8 @@ DESKTOP_FILE=$(find squashfs-root -maxdepth 1 -name '*.desktop' | head -1)
 chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
-sed -i "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE}/" "${DESKTOP_FILE}"
+sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE}/" "${DESKTOP_FILE}" > _
+mv _ "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
 mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
