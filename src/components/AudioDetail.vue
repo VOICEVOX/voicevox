@@ -294,7 +294,7 @@ export default defineComponent({
       ],
     ]);
     // このコンポーネントは遅延評価なので手動でバインディングを行う
-    setHotkeyFunctions(hotkeyMap, store.state.hotkeySettings);
+    setHotkeyFunctions(hotkeyMap, true);
 
     // detail selector
     type DetailTypes =

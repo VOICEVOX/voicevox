@@ -12,6 +12,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import Mousetrap from "mousetrap";
+import { useStore } from "@/store";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -112,18 +113,19 @@ export const settingStore: VoiceVoxStoreOptions<
 
 export const setHotkeyFunctions = (
   hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,
-  hotkeySettings?: HotkeySetting[]
+  reassign?: boolean
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
   });
-  if (hotkeySettings) {
+  if (reassign) {
+    const store = useStore();
     hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
-      const hotkey = hotkeySettings.find((value) => {
+      const hotkey = store.state.hotkeySettings.find((value) => {
         return value.action == hotkeyAction;
       });
       if (hotkey) {
-        Mousetrap.bind(hotkey2Combo(hotkey.combination), hotkeyFunction);
+        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
       }
     });
   }
