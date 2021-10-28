@@ -5,7 +5,7 @@
         <div class="detail-selector">
           <q-tabs vertical class="text-secondary" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="ﾋﾟｯﾁ" />
+            <q-tab name="pitch" label="高さ" />
             <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
@@ -535,14 +535,11 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (uiLocked.value) {
-        return "text-cell";
-      } else {
+      let isHover = false;
+      if (!uiLocked.value) {
         if (selectedDetail.value == "accent") {
           if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
-            return "text-cell-hovered";
-          } else {
-            return "text-cell";
+            isHover = true;
           }
         } else if (selectedDetail.value == "pitch") {
           if (
@@ -550,14 +547,12 @@ export default defineComponent({
             moraIndex === pitchHoveredInfo.moraIndex &&
             unvoicableVowels.indexOf(vowel) > -1
           ) {
-            return "text-cell-hovered";
-          } else {
-            return "text-cell";
+            isHover = true;
           }
-        } else {
-          return "text-cell";
         }
       }
+      if (isHover) return "text-cell-hovered";
+      else return "text-cell";
     };
 
     const getHoveredText = (
