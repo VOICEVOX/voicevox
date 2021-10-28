@@ -204,6 +204,27 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">Experimental</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>無声化</div>
+                <q-space />
+                <q-toggle v-model="useVoicingComputed">
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    Enabling this feature may break the undo and redo function
+                    in current stage
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -239,6 +260,13 @@ export default defineComponent({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
       set: (mode: string) => {
         changeUseGPU(mode == "switchGPU" ? true : false);
+      },
+    });
+
+    const useVoicingComputed = computed({
+      get: () => store.state.useVoicing,
+      set: (useVoicing: boolean) => {
+        store.dispatch("SET_USE_VOICING", { data: useVoicing });
       },
     });
 
@@ -331,6 +359,7 @@ export default defineComponent({
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      useVoicingComputed,
     };
   },
 });

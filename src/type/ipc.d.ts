@@ -161,6 +161,11 @@ type IpcIHData = {
     args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
     return: void;
   };
+
+  USE_VOICING: {
+    args: [obj: { newData?: boolean }];
+    return: boolean;
+  };
 };
 
 /**

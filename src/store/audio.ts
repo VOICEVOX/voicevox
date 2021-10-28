@@ -335,7 +335,7 @@ export const audioStore: VoiceVoxStoreOptions<
         accentPhraseIndex: number;
         moraIndex: number;
         data: number;
-        type: string;
+        type: MoraDataType;
       }
     ) {
       const query = state.audioItems[audioKey].query;
@@ -359,6 +359,20 @@ export const audioStore: VoiceVoxStoreOptions<
             pauseMora.vowelLength = data;
           }
           break;
+        }
+        case "voicing": {
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
+          if (data == 0) {
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+              query.accentPhrases[accentPhraseIndex].moras[
+                moraIndex
+              ].vowel.toUpperCase();
+          } else {
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+              query.accentPhrases[accentPhraseIndex].moras[
+                moraIndex
+              ].vowel.toLowerCase();
+          }
         }
       }
     },
