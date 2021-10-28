@@ -64,6 +64,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
+  useVoicing: boolean;
 }>({
   schema: {
     useGpu: {
@@ -187,6 +188,10 @@ const store = new Store<{
         },
       },
       default: [],
+    },
+    useVoicing: {
+      type: "boolean",
+      default: false,
     },
   },
   migrations: {
@@ -582,6 +587,13 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
     store.set("hotkeySettings", hotkeySettings);
   }
   return store.get("hotkeySettings");
+});
+
+ipcMainHandle("USE_VOICING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("useVoicing", newData);
+  }
+  return store.get("useVoicing");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

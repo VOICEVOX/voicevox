@@ -25,6 +25,7 @@ export const settingStoreState: SettingStoreState = {
     exportText: true,
   },
   hotkeySettings: [],
+  useVoicing: false,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -54,6 +55,9 @@ export const settingStore: VoiceVoxStoreOptions<
         );
       }
       state.hotkeySettings = hotkeySettings;
+    },
+    SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
+      state.useVoicing = useVoicing;
     },
   },
   actions: {
@@ -104,6 +108,15 @@ export const settingStore: VoiceVoxStoreOptions<
         });
       });
       return hotkeys;
+    },
+    GET_USE_VOICING({ commit }) {
+      window.electron.useVoicing().then((useVoicing) => {
+        commit("SET_USE_VOICING", { useVoicing: useVoicing });
+      });
+    },
+    SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
+      window.electron.useVoicing(data);
+      commit("SET_USE_VOICING", { useVoicing: data });
     },
   },
 };
