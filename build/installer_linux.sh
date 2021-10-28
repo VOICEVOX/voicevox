@@ -117,7 +117,7 @@ echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
 
-if ldconfig -p | grep 'libsndfile\.so' &>/dev/null; then
+if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
     echo "[-] libsndfile: OK"
 elif [ -d /usr/local/Cellar/libsndfile ]; then
     echo "[-] libsndfile: OK"
@@ -242,7 +242,11 @@ for index in "${!ARCHIVE_LIST[@]}"; do
     else
         if [ "$SIZE" != "x" ]; then
             echo "[+] Verifying size == ${SIZE}..."
-            DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
+            if stat --version &>/dev/null; then
+                DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
+            else
+                DOWNLOADED_SIZE=$(stat -f%z "${FILENAME}")
+            fi
 
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
                 echo "[-] Size OK"
