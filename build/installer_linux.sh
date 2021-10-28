@@ -5,6 +5,16 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+_readarray(){
+  [[ -z "$1" ]] && return 1
+  [[ "$1" =~ [[:space:]] ]] && return 1
+  var="$1"
+  eval "$var"'=()'
+  while IFS=$'\n' read -r r; do
+    eval "$var"'+=("'"$r"'")'
+  done
+}
+
 cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
@@ -53,8 +63,7 @@ fi
 echo "[+] Checking installer prerequisites..."
 
 if ! command -v curl &> /dev/null; then
-    cat << EOS
-
+    cat << EOS && exit 1
 [!] Command 'curl' not found
 
 Required to download VOICEVOX
@@ -66,9 +75,7 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
-
 EOS
-    exit 1
 fi
 
 COMMAND_7Z=${COMMAND_7Z:-}
@@ -85,8 +92,7 @@ elif command -v 7za &> /dev/null; then
     # CentOS/Fedora
     COMMAND_7Z=7za
 else
-    cat << 'EOS'
-
+    cat << 'EOS' && exit 1
 [!] Command '7z', '7zr' or '7za' not found
 
 Required to extract compressed files
@@ -103,20 +109,20 @@ Fedora:
     sudo dnf install p7zip
 Or
     sudo yum install p7zip
-
+MacOS:
+    brew install p7zip
 EOS
-    exit 1
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
 
-if ldconfig -p | grep libsndfile\.so -q ||
-  [ -d /usr/local/Cellar/libsndfile ]; then
+if ldconfig -p | grep 'libsndfile\.so' &>/dev/null; then
+    echo "[-] libsndfile: OK"
+elif [ -d /usr/local/Cellar/libsndfile ]; then
     echo "[-] libsndfile: OK"
 else
     cat << 'EOS'
-
 [!] libsndfile: not found
 
 Required to run VOICEVOX ENGINE
@@ -128,7 +134,8 @@ CentOS/Fedora:
     sudo dnf install libsndfile
 Or
     sudo yum install libsndfile
-
+MacOS:
+    brew install libsndfile
 EOS
     if [ "${IGNORE_RTCOND}" != "1" ]; then
         exit 1
@@ -166,39 +173,39 @@ fi
 
 echo
 echo "[+] Listing of splitted archives..."
-readarray -t ARCHIVE_LIST < "list.txt"
+_readarray ARCHIVE_LIST < "list.txt"
 
 if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
     # No size/hash information
     # filename
-    readarray -t ARCHIVE_NAME_LIST < <(
+    _readarray ARCHIVE_NAME_LIST < <(
         for line in "${ARCHIVE_LIST[@]}"; do
             echo "$line"
         done
     )
-    readarray -t ARCHIVE_SIZE_LIST < <(
+    _readarray ARCHIVE_SIZE_LIST < <(
         for index in "${!ARCHIVE_LIST[@]}"; do
             echo "x"
         done
     )
-    readarray -t ARCHIVE_HASH_LIST <(
+    _readarray ARCHIVE_HASH_LIST <(
         for index in "${!ARCHIVE_LIST[@]}"; do
             echo "x"
         done
     )
 else
     # filename<TAB>size<TAB>hash
-    readarray -t ARCHIVE_NAME_LIST < <(
+    _readarray ARCHIVE_NAME_LIST < <(
         for line in "${ARCHIVE_LIST[@]}"; do
             echo "$line"
         done | awk '$0!=""{print $1}'
     )
-    readarray -t ARCHIVE_SIZE_LIST < <(
+    _readarray ARCHIVE_SIZE_LIST < <(
         for line in "${ARCHIVE_LIST[@]}"; do
             echo "$line"
         done | awk '$0!=""{print $2}'
     )
-    readarray -t ARCHIVE_HASH_LIST < <(
+    _readarray ARCHIVE_HASH_LIST < <(
         for line in "${ARCHIVE_LIST[@]}"; do
             echo "$line"
         done | awk '$0!=""{print $3}' |
@@ -240,7 +247,7 @@ for index in "${!ARCHIVE_LIST[@]}"; do
             if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
                 echo "[-] Size OK"
             else
-                cat << EOS
+                cat << EOS && exit 1
 [!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
 
 Remove the corrupted file and restart installer!
@@ -248,7 +255,6 @@ Remove the corrupted file and restart installer!
     rm $(realpath "${FILENAME}")
 
 EOS
-                exit 1
             fi
         fi
 
@@ -258,7 +264,7 @@ EOS
             if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
                 echo "[-] Hash OK"
             else
-                cat << EOS
+                cat << EOS && exit 1
 [!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
 
 Remove the corrupted file and restart installer!
@@ -266,7 +272,6 @@ Remove the corrupted file and restart installer!
     rm $(realpath "${FILENAME}")
 
 EOS
-                exit 1
             fi
         fi
     fi
