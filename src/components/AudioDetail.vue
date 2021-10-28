@@ -293,11 +293,8 @@ export default defineComponent({
         },
       ],
     ]);
-
-    setHotkeyFunctions(hotkeyMap);
-
-    // このコンポーネントは遅延評価なので`GET_HOTKEY_SETTINGS`を呼び直す
-    store.dispatch("GET_HOTKEY_SETTINGS");
+    // このコンポーネントは遅延評価なので手動でバインディングを行う
+    setHotkeyFunctions(hotkeyMap, true);
 
     // detail selector
     type DetailTypes =
@@ -321,14 +318,12 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
-    };
-
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       isPause: boolean,

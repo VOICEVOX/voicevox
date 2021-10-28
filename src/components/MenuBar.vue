@@ -5,7 +5,6 @@
       v-for="(root, index) of menudata"
       :key="index"
       :menudata="root"
-      :disable="uiLocked"
       v-model:selected="subMenuOpenFlags[index]"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
@@ -43,6 +42,7 @@ type MenuItemBase<T extends string> = {
 export type MenuItemSeparator = MenuItemBase<"separator">;
 
 export type MenuItemRoot = MenuItemBase<"root"> & {
+  onClick: () => void;
   subMenu: MenuItemData[];
 };
 
@@ -146,11 +146,34 @@ export default defineComponent({
         store.dispatch("LOAD_PROJECT_FILE", {});
       }
     };
+    const closeAllDialog = () => {
+      store.dispatch("IS_SETTING_DIALOG_OPEN", {
+        isSettingDialogOpen: false,
+      });
+      store.dispatch("IS_HELP_DIALOG_OPEN", {
+        isHelpDialogOpen: false,
+      });
+      store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+        isHotkeySettingDialogOpen: false,
+      });
+      store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+        isDefaultStyleSelectDialogOpen: false,
+      });
+    };
+
+    const openHelpDialog = () => {
+      store.dispatch("IS_HELP_DIALOG_OPEN", {
+        isHelpDialogOpen: true,
+      });
+    };
 
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
         label: "ファイル",
+        onClick: () => {
+          closeAllDialog();
+        },
         subMenu: [
           {
             type: "button",
@@ -160,45 +183,63 @@ export default defineComponent({
           {
             type: "button",
             label: "音声書き出し",
-            onClick: generateAndSaveAllAudio,
+            onClick: () => {
+              generateAndSaveAllAudio();
+            },
           },
           {
             type: "button",
             label: "テキスト読み込み",
-            onClick: importTextFile,
+            onClick: () => {
+              importTextFile();
+            },
           },
           { type: "separator" },
           {
             type: "button",
             label: "プロジェクトを上書き保存",
-            onClick: saveProject,
+            onClick: () => {
+              saveProject();
+            },
           },
           {
             type: "button",
             label: "プロジェクトを名前を付けて保存",
-            onClick: saveProjectAs,
+            onClick: () => {
+              saveProjectAs();
+            },
           },
           {
             type: "button",
             label: "プロジェクト読み込み",
-            onClick: importProject,
+            onClick: () => {
+              importProject();
+            },
           },
         ],
       },
       {
         type: "root",
         label: "エンジン",
+        onClick: () => {
+          closeAllDialog();
+        },
         subMenu: [
           {
             type: "button",
             label: "再起動",
-            onClick: () => store.dispatch("RESTART_ENGINE"),
+            onClick: () => {
+              store.dispatch("RESTART_ENGINE");
+            },
           },
         ],
       },
       {
         type: "root",
         label: "設定",
+        onClick: () => {
+          closeAllDialog();
+        },
         subMenu: [
           {
             type: "button",
@@ -233,7 +274,11 @@ export default defineComponent({
         type: "button",
         label: "ヘルプ",
         onClick: () => {
-          store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
+          if (store.state.isHelpDialogOpen) closeAllDialog();
+          else {
+            closeAllDialog();
+            openHelpDialog();
+          }
         },
       },
     ]);
