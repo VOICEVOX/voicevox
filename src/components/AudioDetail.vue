@@ -297,6 +297,7 @@ export default defineComponent({
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "pitch";
     };
+    const useVoicing = computed(() => store.state.useVoicing);
 
     // accent phrase
     const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -541,7 +542,7 @@ export default defineComponent({
           if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
             isHover = true;
           }
-        } else if (selectedDetail.value == "pitch") {
+        } else if (selectedDetail.value == "pitch" && useVoicing.value) {
           if (
             accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
             moraIndex === pitchHoveredInfo.moraIndex &&
@@ -590,7 +591,7 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (!uiLocked.value) {
+      if (!uiLocked.value && useVoicing.value) {
         if (
           selectedDetail.value == "pitch" &&
           unvoicableVowels.indexOf(mora.vowel) > -1
