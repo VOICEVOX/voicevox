@@ -10,6 +10,7 @@ export const useMarkdownIt = (): MarkdownIt => {
 export const markdownItPlugin: Plugin = {
   install(app) {
     const md = new MarkdownIt({
+      html: true,
       linkify: true,
     });
 
