@@ -31,14 +31,7 @@
 <script lang="ts">
 import { PreviewableValue } from "@/helpers/previewableValue";
 import { MoraDataType } from "@/type/preload";
-import {
-  computed,
-  defineComponent,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "vue";
+import { computed, defineComponent, reactive, ref, watch } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -62,17 +55,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const previewValue = new PreviewableValue(() => props.value);
 
-    // warpping the props with a function removes its reactivity
-    const initializePitch = () => {
-      return props.value;
-    };
-
-    const lastPitch = ref<number | undefined>(undefined);
-    onMounted(() => {
-      if (props.type == "pitch") {
-        lastPitch.value = initializePitch();
-      }
-    });
+    const lastPitch = ref<number>(props.value);
 
     const changeValue = (newValue: number, type: MoraDataType = props.type) => {
       emit(
