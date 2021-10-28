@@ -625,8 +625,8 @@ type SettingStoreTypes = {
   };
 
   SET_HOTKEY_SETTINGS: {
-    mutation: { hotkeySettings: HotkeySetting[] };
-    action(payload: { data: HotkeySetting }): Promise<HotkeySetting[]>;
+    mutation: { newHotkey: HotkeySetting };
+    action(payload: { data: HotkeySetting }): void;
   };
 
   GET_USE_VOICING: {

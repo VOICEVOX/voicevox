@@ -11,7 +11,10 @@
     "
     :class="selected ? 'active-menu' : 'bg-transparent'"
     :disable="disable"
-    @click="menudata.type === 'button' && menudata.onClick()"
+    @click="
+      (menudata.type === 'button' || menudata.type === 'root') &&
+        menudata.onClick()
+    "
   >
     {{ menudata.label }}
     <q-menu
@@ -23,11 +26,13 @@
     >
       <q-list dense>
         <menu-item
-          v-for="(menu, i) of menudata.subMenu"
-          :key="i"
+          v-for="(menu, index) of menudata.subMenu"
+          :key="index"
           :menudata="menu"
-          v-model:selected="subMenuOpenFlags[i]"
-          @mouseover="reassignSubMenuOpen(i)"
+          :disable="uiLocked"
+          v-model:selected="subMenuOpenFlags[index]"
+          @mouseenter="reassignSubMenuOpen(index)"
+          @mouseleave="reassignSubMenuOpen.cancel()"
         />
       </q-list>
     </q-menu>
@@ -36,8 +41,10 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, PropType, watch } from "vue";
+import { debounce } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemData } from "@/components/MenuBar.vue";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "MenuButton",
@@ -62,6 +69,8 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -72,16 +81,16 @@ export default defineComponent({
         [...Array(props.menudata.subMenu.length)].map(() => false)
       );
 
-      const reassignSubMenuOpen = (i: number) => {
-        if (subMenuOpenFlags.value[i]) return;
+      const reassignSubMenuOpen = debounce((idx: number) => {
+        if (subMenuOpenFlags.value[idx]) return;
         if (props.menudata.type !== "root") return;
 
         const len = props.menudata.subMenu.length;
         const arr = [...Array(len)].map(() => false);
-        arr[i] = true;
+        arr[idx] = true;
 
         subMenuOpenFlags.value = arr;
-      };
+      }, 100);
 
       watch(
         () => props.selected,
@@ -96,6 +105,7 @@ export default defineComponent({
       );
 
       return {
+        uiLocked,
         selectedComputed,
         subMenuOpenFlags,
         reassignSubMenuOpen,

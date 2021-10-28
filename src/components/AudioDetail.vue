@@ -3,11 +3,44 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
+          <q-tabs
+            dense
+            vertical
+            class="text-secondary"
+            v-model="selectedDetail"
+          >
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="pitch" label="高さ" />
             <q-tab name="length" label="長さ" />
           </q-tabs>
+        </div>
+        <div class="play-button-wrapper">
+          <template v-if="!nowPlayingContinuously">
+            <q-btn
+              v-if="!nowPlaying && !nowGenerating"
+              fab
+              color="primary"
+              text-color="secondary"
+              icon="play_arrow"
+              @click="play"
+            ></q-btn>
+            <q-btn
+              v-else
+              fab
+              color="primary"
+              text-color="secondary"
+              icon="stop"
+              @click="stop"
+            ></q-btn>
+            <q-btn
+              round
+              aria-label="音声ファイルとして保存"
+              size="small"
+              icon="file_download"
+              @click="save()"
+              :disable="nowPlaying || nowGenerating || uiLocked"
+            ></q-btn>
+          </template>
         </div>
       </div>
 
@@ -182,30 +215,6 @@
           </template>
         </div>
       </div>
-      <div class="side">
-        <div class="detail-selector">
-          <q-tabs
-            vertical
-            :model-value="selectedDetail"
-            @update:model-value="tabAction"
-          >
-            <q-tab
-              v-if="!nowPlaying && !nowGenerating"
-              icon="play_arrow"
-              class="bg-primary text-secondary"
-              name="play"
-              :disable="nowPlaying || nowGenerating || uiLocked"
-            />
-            <q-tab
-              v-else
-              icon="stop"
-              class="bg-primary text-secondary"
-              name="stop"
-            />
-            <q-tab icon="download" name="save" :disable="uiLocked" />
-          </q-tabs>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -285,11 +294,8 @@ export default defineComponent({
         },
       ],
     ]);
-
-    setHotkeyFunctions(hotkeyMap);
-
-    // このコンポーネントは遅延評価なので`GET_HOTKEY_SETTINGS`を呼び直す
-    store.dispatch("GET_HOTKEY_SETTINGS");
+    // このコンポーネントは遅延評価なので手動でバインディングを行う
+    setHotkeyFunctions(hotkeyMap, true);
 
     // detail selector
     type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
@@ -308,14 +314,12 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
-    };
-
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       isPause: boolean,
