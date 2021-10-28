@@ -206,10 +206,10 @@
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">Experimental</div>
+                <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>無声化</div>
+                <div>無声化切り替え</div>
                 <q-space />
                 <q-toggle v-model="useVoicingComputed">
                   <q-tooltip
@@ -219,8 +219,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    Enabling this feature may break the undo and redo function
-                    in current stage
+                    この機能を有効にすると、元に戻す・やり直す機能が正しく動作しなくなる可能性があります
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
