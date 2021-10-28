@@ -12,6 +12,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import Mousetrap from "mousetrap";
+import { useStore } from "@/store";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -44,11 +45,15 @@ export const settingStore: VoiceVoxStoreOptions<
     ) {
       state.savingSetting = savingSetting;
     },
-    SET_HOTKEY_SETTINGS(
-      state,
-      { hotkeySettings }: { hotkeySettings: HotkeySetting[] }
-    ) {
-      state.hotkeySettings = hotkeySettings;
+    SET_HOTKEY_SETTINGS(state, { newHotkey }: { newHotkey: HotkeySetting }) {
+      let flag = true;
+      state.hotkeySettings.forEach((hotkey) => {
+        if (hotkey.action == newHotkey.action) {
+          hotkey.combination = newHotkey.combination;
+          flag = false;
+        }
+      });
+      if (flag) state.hotkeySettings.push(newHotkey);
     },
   },
   actions: {
@@ -64,19 +69,17 @@ export const settingStore: VoiceVoxStoreOptions<
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
       });
     },
-    GET_HOTKEY_SETTINGS({ commit, dispatch }) {
-      const hotkeys = window.electron.hotkeySettings();
-      hotkeys.then((value) => {
-        commit("SET_HOTKEY_SETTINGS", {
-          hotkeySettings: value,
-        });
-        value.forEach((hotkey) => {
-          dispatch("SET_HOTKEY_SETTINGS", { data: hotkey });
+    GET_HOTKEY_SETTINGS({ dispatch }) {
+      window.electron.hotkeySettings().then((hotkeys) => {
+        hotkeys.forEach((hotkey) => {
+          dispatch("SET_HOTKEY_SETTINGS", {
+            data: hotkey,
+          });
         });
       });
     },
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
-      const hotkeys = window.electron.hotkeySettings(data);
+      window.electron.hotkeySettings(data);
       state.hotkeySettings.forEach((oldData) => {
         if (oldData.action == data.action) {
           // pass the hotkey actions implemented with native js
@@ -93,22 +96,31 @@ export const settingStore: VoiceVoxStoreOptions<
           }
         }
       });
-      hotkeys.then((value) => {
-        commit("SET_HOTKEY_SETTINGS", {
-          hotkeySettings: value,
-        });
+      commit("SET_HOTKEY_SETTINGS", {
+        newHotkey: data,
       });
-      return hotkeys;
     },
   },
 };
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>
+  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,
+  reassign?: boolean
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
   });
+  if (reassign) {
+    const store = useStore();
+    hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
+      const hotkey = store.state.hotkeySettings.find((value) => {
+        return value.action == hotkeyAction;
+      });
+      if (hotkey) {
+        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
+      }
+    });
+  }
 };
 
 const hotkey2Combo = (hotkeyCombo: string) => {

@@ -561,21 +561,6 @@ export const audioStore: VoiceVoxStoreOptions<
           throw error;
         });
     },
-    FETCH_AND_SET_AUDIO_QUERY(
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
-    ) {
-      const audioItem = state.audioItems[audioKey];
-      const styleId = audioItem.styleId;
-      if (styleId == undefined) throw new Error("styleId == undefined");
-
-      return dispatch("FETCH_AUDIO_QUERY", {
-        text: audioItem.text,
-        styleId: styleId,
-      }).then((audioQuery) =>
-        dispatch("SET_AUDIO_QUERY", { audioKey, audioQuery })
-      );
-    },
     GENERATE_AUDIO: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {
         const audioItem = state.audioItems[audioKey];

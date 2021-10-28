@@ -204,10 +204,6 @@ type AudioStoreTypes = {
     action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
   };
 
-  FETCH_AND_SET_AUDIO_QUERY: {
-    action(payload: { audioKey: string }): void;
-  };
-
   SET_AUDIO_STYLE_ID: {
     mutation: { audioKey: string; styleId: number };
   };
@@ -623,8 +619,8 @@ type SettingStoreTypes = {
   };
 
   SET_HOTKEY_SETTINGS: {
-    mutation: { hotkeySettings: HotkeySetting[] };
-    action(payload: { data: HotkeySetting }): Promise<HotkeySetting[]>;
+    mutation: { newHotkey: HotkeySetting };
+    action(payload: { data: HotkeySetting }): void;
   };
 };
 
