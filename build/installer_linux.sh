@@ -111,7 +111,8 @@ echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
 
-if ldconfig -p | grep libsndfile\.so &> /dev/null; then
+if ldconfig -p | grep libsndfile\.so -q ||
+  [ -d /usr/local/Cellar/libsndfile ]; then
     echo "[-] libsndfile: OK"
 else
     cat << 'EOS'
