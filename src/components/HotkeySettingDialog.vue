@@ -52,7 +52,7 @@
             hide-bottom
             row-key="hotkeyIndexes"
             :filter="hotkeyFilter"
-            :rows="hotkeyRows"
+            :rows="hotkeySettings"
             :columns="hotkeyColumns"
             class="hotkey-table"
             v-model:pagination="hotkeyPagination"
@@ -83,9 +83,7 @@
                         .split(' ')
                         .join(' + ')
                     "
-                    @click="
-                      openHotkeyDialog(props.row.action, props.row.combination)
-                    "
+                    @click="openHotkeyDialog(props.row.action)"
                   />
                 </q-td>
               </q-tr>
@@ -98,6 +96,7 @@
 
   <q-dialog
     no-esc-dismiss
+    no-shake
     transition-show="none"
     transition-hide="none"
     :model-value="isHotkeyDialogOpened"
@@ -105,9 +104,7 @@
   >
     <q-card class="q-py-sm q-px-md">
       <q-card-section align="center">
-        <div class="text-h6">
-          任意のキーの組み合わせを押し、確定ボタンを押します
-        </div>
+        <div class="text-h6">ショートカットキーを入力してください</div>
       </q-card-section>
       <q-card-section align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
@@ -117,11 +114,17 @@
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
+        <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
+          <div>ショートカットキーが次の操作と重複しています</div>
+          <div class="q-mt-sm text-weight-bold">
+            「{{ duplicatedHotkey.action }}」
+          </div>
+        </div>
       </q-card-section>
       <q-card-actions align="center">
         <q-btn
           padding="xs md"
-          label="このショートカットキーを削除"
+          label="ショートカットキーを未設定にする"
           unelevated
           color="grey-3"
           text-color="black"
@@ -130,67 +133,41 @@
             deleteHotkey(lastAction);
             closeHotkeyDialog();
           "
-          :disabled="lastRecord === ''"
         />
         <q-btn
           padding="xs md"
-          label="確定"
+          label="キャンセル"
+          unelevated
+          color="grey-3"
+          text-color="black"
+          class="q-mt-sm"
+          @click="closeHotkeyDialog"
+        />
+        <q-btn
+          v-if="duplicatedHotkey == undefined"
+          padding="xs md"
+          label="OK"
           unelevated
           color="primary"
           text-color="black"
           class="q-mt-sm"
           @click="
-            changeHotkeySettings(lastAction, lastRecord, true)?.then(() => {
-              closeHotkeyDialog();
-            })
+            changeHotkeySettings(lastAction, lastRecord)?.then(() =>
+              closeHotkeyDialog()
+            )
           "
           :disabled="confirmBtnEnabled"
         />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
-  <q-dialog
-    transition-show="none"
-    transition-hide="none"
-    :model-value="isHotkeyDuplicatedDialogOpened"
-    @update:model-value="closeHotkeyDuplicatedDialog(false)"
-  >
-    <q-card class="q-py-sm q-px-md">
-      <q-card-section>
-        <div class="text-h6">ショートカットキーが重複しています</div>
-      </q-card-section>
-      <q-card-section align="center" class="q-pa-none">
-        <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
-          <span v-if="index !== 0"> + </span>
-          <q-chip :ripple="false">
-            {{ hotkey }}
-          </q-chip>
-        </template>
-      </q-card-section>
-      <q-card-section class="q-pb-none"
-        >割り当てる操作を選択してください</q-card-section
-      >
-      <q-card-actions align="center">
         <q-btn
+          v-else
           padding="xs md"
-          square
+          label="上書きする"
           unelevated
-          color="grey-3"
+          color="primary"
           text-color="black"
-          :label="lastAction"
           class="q-mt-sm"
-          @click="solveDuplicated(true)"
-        />
-        <q-btn
-          padding="xs md"
-          square
-          unelevated
-          color="grey-3"
-          text-color="black"
-          :label="lastDuplicated.action"
-          class="q-mt-sm"
-          @click="closeHotkeyDuplicatedDialog(true)"
+          @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
+          :disabled="confirmBtnEnabled"
         />
       </q-card-actions>
     </q-card>
@@ -201,7 +178,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { HotkeyAction } from "@/type/preload";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -222,12 +199,11 @@ export default defineComponent({
     });
 
     const isHotkeyDialogOpened = ref(false);
-    const isHotkeyDuplicatedDialogOpened = ref(false);
 
     const hotkeyPagination = ref({ rowsPerPage: 0 });
     const hotkeyFilter = ref("");
 
-    const hotkeyRows = computed(() => store.state.hotkeySettings);
+    const hotkeySettings = computed(() => store.state.hotkeySettings);
 
     const hotkeyColumns = ref([
       {
@@ -246,10 +222,9 @@ export default defineComponent({
 
     const lastAction = ref("");
     const lastRecord = ref("");
-    const lastDuplicated = ref<HotkeySetting | undefined>(undefined);
 
     const recordCombination = (event: KeyboardEvent) => {
-      if (!isHotkeyDialogOpened.value || isHotkeyDuplicatedDialogOpened.value) {
+      if (!isHotkeyDialogOpened.value) {
         return;
       } else {
         let recordedCombo = parseCombo(event);
@@ -258,19 +233,7 @@ export default defineComponent({
       }
     };
 
-    const changeHotkeySettings = (
-      action: string,
-      combo: string,
-      checkDuplicated: boolean
-    ) => {
-      if (checkDuplicated) {
-        const duplicated = findDuplicatedHotkey();
-        if (duplicated !== undefined) {
-          lastDuplicated.value = duplicated;
-          isHotkeyDuplicatedDialogOpened.value = true;
-          return;
-        }
-      }
+    const changeHotkeySettings = (action: string, combo: string) => {
       return store.dispatch("SET_HOTKEY_SETTINGS", {
         data: {
           action: action as HotkeyAction,
@@ -279,17 +242,17 @@ export default defineComponent({
       });
     };
 
-    const findDuplicatedHotkey = () => {
-      return store.state.hotkeySettings.find((item) => {
-        return (
+    const duplicatedHotkey = computed(() => {
+      if (lastRecord.value == "") return undefined;
+      return hotkeySettings.value.find(
+        (item) =>
           item.combination == lastRecord.value &&
           item.action != lastAction.value
-        );
-      });
-    };
+      );
+    });
 
     const deleteHotkey = (action: HotkeyAction) => {
-      changeHotkeySettings(action, "", false);
+      changeHotkeySettings(action, "");
     };
 
     const getHotkeyText = (action: string, combo: string) => {
@@ -311,9 +274,9 @@ export default defineComponent({
       return flag;
     };
 
-    const openHotkeyDialog = (action: string, combo: string) => {
+    const openHotkeyDialog = (action: string) => {
       lastAction.value = action;
-      lastRecord.value = combo;
+      lastRecord.value = "";
       isHotkeyDialogOpened.value = true;
       document.addEventListener("keydown", recordCombination);
     };
@@ -325,23 +288,11 @@ export default defineComponent({
       document.removeEventListener("keydown", recordCombination);
     };
 
-    const closeHotkeyDuplicatedDialog = (closeParent: boolean) => {
-      lastDuplicated.value = undefined;
-      isHotkeyDuplicatedDialogOpened.value = false;
-      if (closeParent) {
-        closeHotkeyDialog();
-      }
-    };
-
     const solveDuplicated = () => {
-      if (lastDuplicated.value == undefined)
-        throw new Error("lastDuplicated.value == undefined");
-      deleteHotkey(lastDuplicated.value.action);
-      changeHotkeySettings(lastAction.value, lastRecord.value, false)?.then(
-        () => {
-          closeHotkeyDuplicatedDialog(true);
-        }
-      );
+      if (duplicatedHotkey.value == undefined)
+        throw new Error("duplicatedHotkey.value == undefined");
+      deleteHotkey(duplicatedHotkey.value.action);
+      return changeHotkeySettings(lastAction.value, lastRecord.value);
     };
 
     const confirmBtnEnabled = computed(() => {
@@ -356,19 +307,17 @@ export default defineComponent({
     return {
       hotkeySettingDialogOpenComputed,
       isHotkeyDialogOpened,
-      isHotkeyDuplicatedDialogOpened,
-      hotkeyRows,
+      hotkeySettings,
       hotkeyColumns,
       hotkeyPagination,
       hotkeyFilter,
+      duplicatedHotkey,
       deleteHotkey,
       getHotkeyText,
       openHotkeyDialog,
       closeHotkeyDialog,
-      closeHotkeyDuplicatedDialog,
       lastAction,
       lastRecord,
-      lastDuplicated,
       solveDuplicated,
       changeHotkeySettings,
       confirmBtnEnabled,
