@@ -71,7 +71,7 @@ const store = new Store<{
       type: "boolean",
       default: false,
     },
-    inheritAudioInfo:{
+    inheritAudioInfo: {
       type: "boolean",
       default: true,
     },

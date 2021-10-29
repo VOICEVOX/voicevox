@@ -130,7 +130,18 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO_ITEM: {
-    action(payload: { text?: string; styleId?: number }): Promise<AudioItem>;
+    action(payload: {
+      text?: string;
+      styleId?: number;
+      prevAudioItem?: AudioItem;
+    }): Promise<AudioItem>;
+  };
+
+  COPY_AUDIO_INFO: {
+    action(payload: {
+      copyTargetAudioItem: AudioItem;
+      prevAudioItem: AudioItem;
+    }): Promise<AudioItem>;
   };
 
   REGISTER_AUDIO_ITEM: {

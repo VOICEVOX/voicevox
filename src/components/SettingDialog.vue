@@ -66,7 +66,7 @@
                 <div class="text-h5">操作</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>パラメータを引き継いでテキスト欄を追加</div>
+                <div>パラメータの引き継ぎ</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -87,8 +87,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    テキスト欄を追加する際、話速等のパラメータを引き継ぎます
-                    //項目名とほぼ同一なので不要かも？
+                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>

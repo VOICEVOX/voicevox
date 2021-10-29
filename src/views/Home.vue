@@ -291,9 +291,21 @@ export default defineComponent({
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
       }
-      const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-        styleId,
-      });
+      let audioItem: AudioItem;
+      const prevAudioItem = prevAudioKey
+        ? store.state.audioItems[prevAudioKey]
+        : undefined;
+      if (store.state.inheritAudioInfo) {
+        audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+          styleId,
+          prevAudioItem,
+        });
+      } else {
+        audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+          styleId,
+        });
+      }
+
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
