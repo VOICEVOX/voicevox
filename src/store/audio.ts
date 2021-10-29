@@ -468,38 +468,6 @@ export const audioStore: VoiceVoxStoreOptions<
       return audioItem;
     },
 
-    async COPY_AUDIO_INFO(
-      //与えられたAudioItemから、話速～終了無音のユーザー設定パラメータのみをコピーしたAudioItemを返す。新規テキスト欄作成時のパラメータ引き継ぎを想定
-      //AudioItemのうち、accentPhrasesとkanaは基本設定パラメータではないのでコピーしない
-      //AudioItemのうち、textとstyleIdは別途与えられるのでコピーしない
-      { dispatch },
-      payload: { copyTargetAudioItem: AudioItem; prevAudioItem: AudioItem }
-    ) {
-      const copyTargetAudioItem = payload.copyTargetAudioItem;
-      const prevAudioItem = payload.prevAudioItem;
-      const text = copyTargetAudioItem.text;
-      const styleId = copyTargetAudioItem.styleId;
-      const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
-        text,
-        styleId,
-      });
-      if (prevAudioItem.query) {
-        //起動直後でprevAudioItem.queryが未設定の場合はコピーしない
-        audioItem.query!.speedScale = prevAudioItem.query!.speedScale;
-        audioItem.query!.pitchScale = prevAudioItem.query!.pitchScale;
-        audioItem.query!.intonationScale = prevAudioItem.query!.intonationScale;
-        audioItem.query!.volumeScale = prevAudioItem.query!.volumeScale;
-        audioItem.query!.prePhonemeLength =
-          prevAudioItem.query!.prePhonemeLength;
-        audioItem.query!.postPhonemeLength =
-          prevAudioItem.query!.postPhonemeLength;
-        audioItem.query!.outputSamplingRate =
-          prevAudioItem.query!.outputSamplingRate;
-        audioItem.query!.outputStereo = prevAudioItem.query!.outputStereo;
-      }
-      return audioItem;
-    },
-
     async REGISTER_AUDIO_ITEM(
       { dispatch, commit },
       {
@@ -1403,16 +1371,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
               styleId,
             });
           }
-          // if (state.inheritAudioInfo && state._activeAudioKey) {
-          //   //パラメータ引き継ぎが有効の場合、生成されるAudioItemに現在の話速等のパラメータをコピーする
-          //   //起動直後はstate._activeAudioKeyが未設定の可能性があるので確認してから実行
-          //   const copyTargetAudioItem = audioItem;
-          //   const prevAudioItem = state.audioItems[state._activeAudioKey];
-          //   audioItem = await dispatch("COPY_AUDIO_INFO", {
-          //     copyTargetAudioItem,
-          //     prevAudioItem,
-          //   });
-          // }
 
           audioItems.push(audioItem);
         }

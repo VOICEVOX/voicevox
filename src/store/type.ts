@@ -137,13 +137,6 @@ type AudioStoreTypes = {
     }): Promise<AudioItem>;
   };
 
-  COPY_AUDIO_INFO: {
-    action(payload: {
-      copyTargetAudioItem: AudioItem;
-      prevAudioItem: AudioItem;
-    }): Promise<AudioItem>;
-  };
-
   REGISTER_AUDIO_ITEM: {
     action(payload: {
       audioItem: AudioItem;
