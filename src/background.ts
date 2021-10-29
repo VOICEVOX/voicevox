@@ -64,6 +64,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
+  useVoicing: boolean;
 }>({
   schema: {
     useGpu: {
@@ -188,12 +189,25 @@ const store = new Store<{
       },
       default: [],
     },
+    useVoicing: {
+      type: "boolean",
+      default: false,
+    },
   },
   migrations: {
     ">=0.7.3": (store) => {
-      const newHotkeys = store.get("hotkeySettings");
-      newHotkeys.splice(6, 0, { action: "長さ欄を表示", combination: "3" });
-      store.set("hotkeySettings", newHotkeys);
+      const newHotkey: HotkeySetting = {
+        action: "長さ欄を表示",
+        combination: "3",
+      };
+      const hotkeys = store.get("hotkeySettings");
+      hotkeys.forEach((value) => {
+        if (value.combination == newHotkey.combination) {
+          newHotkey.combination = "";
+        }
+      });
+      hotkeys.splice(6, 0, newHotkey);
+      store.set("hotkeySettings", hotkeys);
     },
   },
 });
@@ -582,6 +596,13 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
     store.set("hotkeySettings", hotkeySettings);
   }
   return store.get("hotkeySettings");
+});
+
+ipcMainHandle("USE_VOICING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("useVoicing", newData);
+  }
+  return store.get("useVoicing");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
