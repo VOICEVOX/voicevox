@@ -10,7 +10,7 @@
             v-model="selectedDetail"
           >
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="intonation" label="ｲﾝﾄﾈｰｼｮﾝ" />
+            <q-tab name="pitch" label="高さ" />
             <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
@@ -59,7 +59,7 @@
               @changeAccent="changeAccent"
             />
           </template>
-          <template v-if="selectedDetail === 'intonation'">
+          <template v-if="selectedDetail === 'pitch'">
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
               :key="moraIndex"
@@ -149,12 +149,13 @@
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(accentPhraseIndex)"
+              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouseover="handleAccentHoverText(true, accentPhraseIndex)"
-              @mouseleave="handleAccentHoverText(false, accentPhraseIndex)"
+              @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
+              @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
+              @click="handleChangeVoicing(mora, accentPhraseIndex, moraIndex)"
             >
               {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
@@ -280,7 +281,7 @@ export default defineComponent({
         "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
         () => {
           if (!uiLocked.value) {
-            selectedDetail.value = "intonation";
+            selectedDetail.value = "pitch";
           }
         },
       ],
@@ -293,24 +294,16 @@ export default defineComponent({
         },
       ],
     ]);
-
-    setHotkeyFunctions(hotkeyMap);
-
-    // このコンポーネントは遅延評価なので`GET_HOTKEY_SETTINGS`を呼び直す
-    store.dispatch("GET_HOTKEY_SETTINGS");
+    // このコンポーネントは遅延評価なので手動でバインディングを行う
+    setHotkeyFunctions(hotkeyMap, true);
 
     // detail selector
-    type DetailTypes =
-      | "accent"
-      | "intonation"
-      | "length"
-      | "play"
-      | "stop"
-      | "save";
+    type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
-      selectedDetail.value = index === 0 ? "accent" : "intonation";
+      selectedDetail.value = index === 0 ? "accent" : "pitch";
     };
+    const useVoicing = computed(() => store.state.useVoicing);
 
     // accent phrase
     const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -321,14 +314,12 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
-    };
-
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       isPause: boolean,
@@ -492,17 +483,36 @@ export default defineComponent({
       accentPhraseIndex: undefined,
     });
 
+    const pitchHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+    });
+
     const lengthHoveredInfo = reactive<hoveredInfoType>({
       accentPhraseIndex: undefined,
       moraIndex: undefined,
       type: "vowel",
     });
 
-    const handleAccentHoverText = (isOver: boolean, phraseIndex: number) => {
-      if (isOver) {
-        accentHoveredInfo.accentPhraseIndex = phraseIndex;
-      } else {
-        accentHoveredInfo.accentPhraseIndex = undefined;
+    const handleHoverText = (
+      isOver: boolean,
+      phraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (selectedDetail.value == "accent") {
+        if (isOver) {
+          accentHoveredInfo.accentPhraseIndex = phraseIndex;
+        } else {
+          accentHoveredInfo.accentPhraseIndex = undefined;
+        }
+      } else if (selectedDetail.value == "pitch") {
+        if (isOver) {
+          pitchHoveredInfo.accentPhraseIndex = phraseIndex;
+          pitchHoveredInfo.moraIndex = moraIndex;
+        } else {
+          pitchHoveredInfo.accentPhraseIndex = undefined;
+          pitchHoveredInfo.moraIndex = undefined;
+        }
       }
     };
 
@@ -523,16 +533,31 @@ export default defineComponent({
       }
     };
 
-    const getHoveredClass = (accentPhraseIndex: number) => {
-      if (
-        selectedDetail.value == "accent" &&
-        !uiLocked.value &&
-        accentPhraseIndex === accentHoveredInfo.accentPhraseIndex
-      ) {
-        return "text-cell-hovered";
-      } else {
-        return "text-cell";
+    const unvoicableVowels = ["U", "I", "i", "u"];
+
+    const getHoveredClass = (
+      vowel: string,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      let isHover = false;
+      if (!uiLocked.value) {
+        if (selectedDetail.value == "accent") {
+          if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
+            isHover = true;
+          }
+        } else if (selectedDetail.value == "pitch" && useVoicing.value) {
+          if (
+            accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
+            moraIndex === pitchHoveredInfo.moraIndex &&
+            unvoicableVowels.indexOf(vowel) > -1
+          ) {
+            isHover = true;
+          }
+        }
       }
+      if (isHover) return "text-cell-hovered";
+      else return "text-cell";
     };
 
     const getHoveredText = (
@@ -565,6 +590,25 @@ export default defineComponent({
       if (event.key === "Shift") shiftKeyFlag.value = false;
     }
 
+    const handleChangeVoicing = (
+      mora: Mora,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (!uiLocked.value && useVoicing.value) {
+        if (
+          selectedDetail.value == "pitch" &&
+          unvoicableVowels.indexOf(mora.vowel) > -1
+        ) {
+          let data = 0;
+          if (mora.pitch == 0) {
+            data = 5.5; // don't worry, it will be overwritten by template itself
+          }
+          changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
+        }
+      }
+    };
+
     onMounted(() => {
       window.addEventListener("keyup", resetShiftKeyFlag);
       document.addEventListener("keydown", setShiftKeyFlag);
@@ -593,12 +637,13 @@ export default defineComponent({
       nowPlayingContinuously,
       pronunciationByPhrase,
       handleChangePronounce,
-      handleAccentHoverText,
+      handleHoverText,
       handleLengthHoverText,
       getHoveredClass,
       getHoveredText,
       shiftKeyFlag,
       tabAction,
+      handleChangeVoicing,
     };
   },
 });

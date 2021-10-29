@@ -43,6 +43,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         hotkeySettings: [],
+        useVoicing: false,
       },
       getters: {
         ...uiStore.getters,
@@ -108,5 +109,6 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isPinned, false);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
+    assert.equal(store.state.useVoicing, false);
   });
 });

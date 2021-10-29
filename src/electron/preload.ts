@@ -195,6 +195,10 @@ const api: Sandbox = {
   setDefaultStyleIds: async (defaultStyleIds) => {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
+
+  useVoicing: (newData) => {
+    return ipcRenderer.invoke("USE_VOICING", { newData });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

@@ -24,6 +24,7 @@ export default defineComponent({
     store.dispatch("GET_INHERIT_AUDIOINFO", undefined);
     store.dispatch("GET_SAVING_SETTING", undefined);
     store.dispatch("GET_HOTKEY_SETTINGS", undefined);
+    store.dispatch("GET_USE_VOICING", undefined);
   }
 });
 </script>

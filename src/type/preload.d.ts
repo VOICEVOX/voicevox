@@ -53,6 +53,7 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
+  useVoicing(newData?: boolean): Promise<boolean>;
 }
 
 export type AppInfos = {
@@ -138,4 +139,9 @@ export type HotkeyReturnType =
   | Promise<void>
   | Promise<boolean>;
 
-export type MoraDataType = "consonant" | "vowel" | "pitch" | "pause";
+export type MoraDataType =
+  | "consonant"
+  | "vowel"
+  | "pitch"
+  | "pause"
+  | "voicing";

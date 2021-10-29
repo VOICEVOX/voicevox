@@ -208,10 +208,6 @@ type AudioStoreTypes = {
     action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
   };
 
-  FETCH_AND_SET_AUDIO_QUERY: {
-    action(payload: { audioKey: string }): void;
-  };
-
   SET_AUDIO_STYLE_ID: {
     mutation: { audioKey: string; styleId: number };
   };
@@ -610,6 +606,7 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  useVoicing: boolean;
 };
 
 type SettingStoreTypes = {
@@ -628,8 +625,17 @@ type SettingStoreTypes = {
   };
 
   SET_HOTKEY_SETTINGS: {
-    mutation: { hotkeySettings: HotkeySetting[] };
-    action(payload: { data: HotkeySetting }): Promise<HotkeySetting[]>;
+    mutation: { newHotkey: HotkeySetting };
+    action(payload: { data: HotkeySetting }): void;
+  };
+
+  GET_USE_VOICING: {
+    action(): void;
+  };
+
+  SET_USE_VOICING: {
+    mutation: { useVoicing: boolean };
+    action(payload: { data: boolean }): void;
   };
 };
 

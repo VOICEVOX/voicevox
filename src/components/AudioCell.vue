@@ -118,7 +118,7 @@
 </template>
 
 <script lang="ts">
-import { computed, watch, defineComponent, onMounted, ref } from "vue";
+import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { CharacterInfo } from "@/type/preload";
@@ -349,16 +349,6 @@ export default defineComponent({
       () => (characterInfo: CharacterInfo) =>
         URL.createObjectURL(characterInfo.iconBlob)
     );
-
-    // 初期化
-    onMounted(() => {
-      // TODO: hotfix用のコード https://github.com/Hiroshiba/voicevox/issues/139
-      if (audioItem.value.query == undefined) {
-        store.dispatch("FETCH_AND_SET_AUDIO_QUERY", {
-          audioKey: props.audioKey,
-        });
-      }
-    });
 
     return {
       characterInfos,
