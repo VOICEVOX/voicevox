@@ -17,7 +17,6 @@ import {
   SavingSetting,
   UpdateInfo,
 } from "@/type/preload";
-import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
 export type AudioItem = {
   text: string;
@@ -66,7 +65,6 @@ export type AudioStoreState = {
   audioStates: Record<string, AudioState>;
   _activeAudioKey?: string;
   nowPlayingContinuously: boolean;
-  _engineFactory: IEngineConnectorFactory;
 };
 
 type AudioStoreTypes = {

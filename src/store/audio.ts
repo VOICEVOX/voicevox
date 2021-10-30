@@ -24,7 +24,10 @@ import {
   MoraDataType,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { OpenAPIEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import {
+  IEngineConnectorFactory,
+  OpenAPIEngineConnectorFactory,
+} from "@/infrastructures/EngineConnector";
 
 async function generateUniqueId(audioItem: AudioItem) {
   const data = new TextEncoder().encode(
@@ -109,789 +112,810 @@ export const audioStoreState: AudioStoreState = {
   audioKeys: [],
   audioStates: {},
   nowPlayingContinuously: false,
-  _engineFactory: OpenAPIEngineConnectorFactory,
 };
 
-export const audioStore: VoiceVoxStoreOptions<
-  AudioGetters,
-  AudioActions,
-  AudioMutations
-> = {
-  getters: {
-    ACTIVE_AUDIO_KEY(state) {
-      return state._activeAudioKey !== undefined &&
-        state.audioKeys.includes(state._activeAudioKey)
-        ? state._activeAudioKey
-        : undefined;
+const audioStoreCreator = (
+  _engineFactory: IEngineConnectorFactory
+): VoiceVoxStoreOptions<AudioGetters, AudioActions, AudioMutations> => {
+  const audioStore: VoiceVoxStoreOptions<
+    AudioGetters,
+    AudioActions,
+    AudioMutations
+  > = {
+    getters: {
+      ACTIVE_AUDIO_KEY(state) {
+        return state._activeAudioKey !== undefined &&
+          state.audioKeys.includes(state._activeAudioKey)
+          ? state._activeAudioKey
+          : undefined;
+      },
+      HAVE_AUDIO_QUERY: (state) => (audioKey: string) => {
+        return state.audioItems[audioKey]?.query != undefined;
+      },
+      IS_ACTIVE: (state) => (audioKey: string) => {
+        return state._activeAudioKey === audioKey;
+      },
+      IS_ENGINE_READY: (state) => {
+        return state.engineState === "READY";
+      },
     },
-    HAVE_AUDIO_QUERY: (state) => (audioKey: string) => {
-      return state.audioItems[audioKey]?.query != undefined;
-    },
-    IS_ACTIVE: (state) => (audioKey: string) => {
-      return state._activeAudioKey === audioKey;
-    },
-    IS_ENGINE_READY: (state) => {
-      return state.engineState === "READY";
-    },
-  },
 
-  mutations: {
-    SET_ENGINE_STATE(state, { engineState }: { engineState: EngineState }) {
-      state.engineState = engineState;
-    },
-    SET_CHARACTER_INFOS(
-      state,
-      { characterInfos }: { characterInfos: CharacterInfo[] }
-    ) {
-      state.characterInfos = characterInfos;
-    },
-    SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
-      state._activeAudioKey = audioKey;
-    },
-    SET_AUDIO_NOW_PLAYING(
-      state,
-      { audioKey, nowPlaying }: { audioKey: string; nowPlaying: boolean }
-    ) {
-      state.audioStates[audioKey].nowPlaying = nowPlaying;
-    },
-    SET_AUDIO_NOW_GENERATING(
-      state,
-      { audioKey, nowGenerating }: { audioKey: string; nowGenerating: boolean }
-    ) {
-      state.audioStates[audioKey].nowGenerating = nowGenerating;
-    },
-    SET_NOW_PLAYING_CONTINUOUSLY(
-      state,
-      { nowPlaying }: { nowPlaying: boolean }
-    ) {
-      state.nowPlayingContinuously = nowPlaying;
-    },
-    INSERT_AUDIO_ITEM(
-      state,
-      {
-        audioItem,
-        audioKey,
-        prevAudioKey,
-      }: {
-        audioItem: AudioItem;
-        audioKey: string;
-        prevAudioKey: string | undefined;
-      }
-    ) {
-      const index =
-        prevAudioKey !== undefined
-          ? state.audioKeys.indexOf(prevAudioKey) + 1
-          : state.audioKeys.length;
-      state.audioKeys.splice(index, 0, audioKey);
-      state.audioItems[audioKey] = audioItem;
-      state.audioStates[audioKey] = {
-        nowPlaying: false,
-        nowGenerating: false,
-      };
-    },
-    INSERT_AUDIO_ITEMS(
-      state,
-      {
-        prevAudioKey,
-        audioKeyItemPairs,
-      }: {
-        audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
-        prevAudioKey: string | undefined;
-      }
-    ) {
-      const index =
-        prevAudioKey !== undefined
-          ? state.audioKeys.indexOf(prevAudioKey) + 1
-          : state.audioKeys.length;
-      const audioKeys = audioKeyItemPairs.map((pair) => pair.audioKey);
-      state.audioKeys.splice(index, 0, ...audioKeys);
-      for (const { audioKey, audioItem } of audioKeyItemPairs) {
+    mutations: {
+      SET_ENGINE_STATE(state, { engineState }: { engineState: EngineState }) {
+        state.engineState = engineState;
+      },
+      SET_CHARACTER_INFOS(
+        state,
+        { characterInfos }: { characterInfos: CharacterInfo[] }
+      ) {
+        state.characterInfos = characterInfos;
+      },
+      SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
+        state._activeAudioKey = audioKey;
+      },
+      SET_AUDIO_NOW_PLAYING(
+        state,
+        { audioKey, nowPlaying }: { audioKey: string; nowPlaying: boolean }
+      ) {
+        state.audioStates[audioKey].nowPlaying = nowPlaying;
+      },
+      SET_AUDIO_NOW_GENERATING(
+        state,
+        {
+          audioKey,
+          nowGenerating,
+        }: { audioKey: string; nowGenerating: boolean }
+      ) {
+        state.audioStates[audioKey].nowGenerating = nowGenerating;
+      },
+      SET_NOW_PLAYING_CONTINUOUSLY(
+        state,
+        { nowPlaying }: { nowPlaying: boolean }
+      ) {
+        state.nowPlayingContinuously = nowPlaying;
+      },
+      INSERT_AUDIO_ITEM(
+        state,
+        {
+          audioItem,
+          audioKey,
+          prevAudioKey,
+        }: {
+          audioItem: AudioItem;
+          audioKey: string;
+          prevAudioKey: string | undefined;
+        }
+      ) {
+        const index =
+          prevAudioKey !== undefined
+            ? state.audioKeys.indexOf(prevAudioKey) + 1
+            : state.audioKeys.length;
+        state.audioKeys.splice(index, 0, audioKey);
         state.audioItems[audioKey] = audioItem;
         state.audioStates[audioKey] = {
           nowPlaying: false,
           nowGenerating: false,
         };
-      }
-    },
-    REMOVE_AUDIO_ITEM(state, { audioKey }: { audioKey: string }) {
-      state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
-      delete state.audioItems[audioKey];
-      delete state.audioStates[audioKey];
-    },
-    SET_AUDIO_TEXT(
-      state,
-      { audioKey, text }: { audioKey: string; text: string }
-    ) {
-      state.audioItems[audioKey].text = text;
-    },
-    SET_AUDIO_SPEED_SCALE(
-      state,
-      { audioKey, speedScale }: { audioKey: string; speedScale: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.speedScale = speedScale;
-    },
-    SET_AUDIO_PITCH_SCALE(
-      state,
-      { audioKey, pitchScale }: { audioKey: string; pitchScale: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.pitchScale = pitchScale;
-    },
-    SET_AUDIO_INTONATION_SCALE(
-      state,
-      {
-        audioKey,
-        intonationScale,
-      }: { audioKey: string; intonationScale: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.intonationScale = intonationScale;
-    },
-    SET_AUDIO_VOLUME_SCALE(
-      state,
-      { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.volumeScale = volumeScale;
-    },
-    SET_AUDIO_PRE_PHONEME_LENGTH(
-      state,
-      {
-        audioKey,
-        prePhonemeLength,
-      }: { audioKey: string; prePhonemeLength: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.prePhonemeLength = prePhonemeLength;
-    },
-    SET_AUDIO_POST_PHONEME_LENGTH(
-      state,
-      {
-        audioKey,
-        postPhonemeLength,
-      }: { audioKey: string; postPhonemeLength: number }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.postPhonemeLength = postPhonemeLength;
-    },
-    SET_AUDIO_QUERY(
-      state,
-      { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
-    ) {
-      state.audioItems[audioKey].query = audioQuery;
-    },
-    SET_AUDIO_STYLE_ID(
-      state,
-      { audioKey, styleId }: { audioKey: string; styleId: number }
-    ) {
-      state.audioItems[audioKey].styleId = styleId;
-    },
-    SET_ACCENT_PHRASES(
-      state,
-      {
-        audioKey,
-        accentPhrases,
-      }: { audioKey: string; accentPhrases: AccentPhrase[] }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.accentPhrases = accentPhrases;
-    },
-    SET_SINGLE_ACCENT_PHRASE(
-      state,
-      {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrases,
-      }: {
-        audioKey: string;
-        accentPhraseIndex: number;
-        accentPhrases: AccentPhrase[];
-      }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
-    },
-    SET_AUDIO_MORA_DATA(
-      state,
-      {
-        audioKey,
-        accentPhraseIndex,
-        moraIndex,
-        data,
-        type,
-      }: {
-        audioKey: string;
-        accentPhraseIndex: number;
-        moraIndex: number;
-        data: number;
-        type: MoraDataType;
-      }
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      switch (type) {
-        case "pitch":
-          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
-          break;
-        case "consonant":
-          query.accentPhrases[accentPhraseIndex].moras[
-            moraIndex
-          ].consonantLength = data;
-          break;
-        case "vowel":
-          query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowelLength =
-            data;
-          break;
-        case "pause": {
-          const pauseMora = query.accentPhrases[accentPhraseIndex].pauseMora;
-          if (pauseMora !== undefined) {
-            pauseMora.vowelLength = data;
-          }
-          break;
+      },
+      INSERT_AUDIO_ITEMS(
+        state,
+        {
+          prevAudioKey,
+          audioKeyItemPairs,
+        }: {
+          audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+          prevAudioKey: string | undefined;
         }
-        case "voicing": {
-          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
-          if (data == 0) {
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-              query.accentPhrases[accentPhraseIndex].moras[
-                moraIndex
-              ].vowel.toUpperCase();
-          } else {
-            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
-              query.accentPhrases[accentPhraseIndex].moras[
-                moraIndex
-              ].vowel.toLowerCase();
+      ) {
+        const index =
+          prevAudioKey !== undefined
+            ? state.audioKeys.indexOf(prevAudioKey) + 1
+            : state.audioKeys.length;
+        const audioKeys = audioKeyItemPairs.map((pair) => pair.audioKey);
+        state.audioKeys.splice(index, 0, ...audioKeys);
+        for (const { audioKey, audioItem } of audioKeyItemPairs) {
+          state.audioItems[audioKey] = audioItem;
+          state.audioStates[audioKey] = {
+            nowPlaying: false,
+            nowGenerating: false,
+          };
+        }
+      },
+      REMOVE_AUDIO_ITEM(state, { audioKey }: { audioKey: string }) {
+        state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
+        delete state.audioItems[audioKey];
+        delete state.audioStates[audioKey];
+      },
+      SET_AUDIO_TEXT(
+        state,
+        { audioKey, text }: { audioKey: string; text: string }
+      ) {
+        state.audioItems[audioKey].text = text;
+      },
+      SET_AUDIO_SPEED_SCALE(
+        state,
+        { audioKey, speedScale }: { audioKey: string; speedScale: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.speedScale = speedScale;
+      },
+      SET_AUDIO_PITCH_SCALE(
+        state,
+        { audioKey, pitchScale }: { audioKey: string; pitchScale: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.pitchScale = pitchScale;
+      },
+      SET_AUDIO_INTONATION_SCALE(
+        state,
+        {
+          audioKey,
+          intonationScale,
+        }: { audioKey: string; intonationScale: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.intonationScale = intonationScale;
+      },
+      SET_AUDIO_VOLUME_SCALE(
+        state,
+        { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.volumeScale = volumeScale;
+      },
+      SET_AUDIO_PRE_PHONEME_LENGTH(
+        state,
+        {
+          audioKey,
+          prePhonemeLength,
+        }: { audioKey: string; prePhonemeLength: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.prePhonemeLength = prePhonemeLength;
+      },
+      SET_AUDIO_POST_PHONEME_LENGTH(
+        state,
+        {
+          audioKey,
+          postPhonemeLength,
+        }: { audioKey: string; postPhonemeLength: number }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.postPhonemeLength = postPhonemeLength;
+      },
+      SET_AUDIO_QUERY(
+        state,
+        { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
+      ) {
+        state.audioItems[audioKey].query = audioQuery;
+      },
+      SET_AUDIO_STYLE_ID(
+        state,
+        { audioKey, styleId }: { audioKey: string; styleId: number }
+      ) {
+        state.audioItems[audioKey].styleId = styleId;
+      },
+      SET_ACCENT_PHRASES(
+        state,
+        {
+          audioKey,
+          accentPhrases,
+        }: { audioKey: string; accentPhrases: AccentPhrase[] }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.accentPhrases = accentPhrases;
+      },
+      SET_SINGLE_ACCENT_PHRASE(
+        state,
+        {
+          audioKey,
+          accentPhraseIndex,
+          accentPhrases,
+        }: {
+          audioKey: string;
+          accentPhraseIndex: number;
+          accentPhrases: AccentPhrase[];
+        }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        query.accentPhrases.splice(accentPhraseIndex, 1, ...accentPhrases);
+      },
+      SET_AUDIO_MORA_DATA(
+        state,
+        {
+          audioKey,
+          accentPhraseIndex,
+          moraIndex,
+          data,
+          type,
+        }: {
+          audioKey: string;
+          accentPhraseIndex: number;
+          moraIndex: number;
+          data: number;
+          type: MoraDataType;
+        }
+      ) {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) throw new Error("query == undefined");
+        switch (type) {
+          case "pitch":
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch =
+              data;
+            break;
+          case "consonant":
+            query.accentPhrases[accentPhraseIndex].moras[
+              moraIndex
+            ].consonantLength = data;
+            break;
+          case "vowel":
+            query.accentPhrases[accentPhraseIndex].moras[
+              moraIndex
+            ].vowelLength = data;
+            break;
+          case "pause": {
+            const pauseMora = query.accentPhrases[accentPhraseIndex].pauseMora;
+            if (pauseMora !== undefined) {
+              pauseMora.vowelLength = data;
+            }
+            break;
+          }
+          case "voicing": {
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch =
+              data;
+            if (data == 0) {
+              query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+                query.accentPhrases[accentPhraseIndex].moras[
+                  moraIndex
+                ].vowel.toUpperCase();
+            } else {
+              query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+                query.accentPhrases[accentPhraseIndex].moras[
+                  moraIndex
+                ].vowel.toLowerCase();
+            }
           }
         }
-      }
+      },
     },
-  },
 
-  actions: {
-    START_WAITING_ENGINE: createUILockAction(
-      async ({ rootState, state, commit }) => {
-        let engineState = state.engineState;
-        for (let i = 0; i < 100; i++) {
-          engineState = state.engineState;
-          if (engineState === "FAILED_STARTING") {
+    actions: {
+      START_WAITING_ENGINE: createUILockAction(
+        async ({ rootState, state, commit }) => {
+          let engineState = state.engineState;
+          for (let i = 0; i < 100; i++) {
+            engineState = state.engineState;
+            if (engineState === "FAILED_STARTING") {
+              break;
+            }
+
+            try {
+              await _engineFactory
+                .instance(rootState.engineHost)
+                .versionVersionGet();
+            } catch {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+              window.electron.logInfo("waiting engine...");
+              continue;
+            }
+            engineState = "READY";
+            commit("SET_ENGINE_STATE", { engineState });
             break;
           }
 
-          try {
-            await state._engineFactory
-              .instance(rootState.engineHost)
-              .versionVersionGet();
-          } catch {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            window.electron.logInfo("waiting engine...");
-            continue;
+          if (engineState !== "READY") {
+            commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
           }
-          engineState = "READY";
-          commit("SET_ENGINE_STATE", { engineState });
-          break;
         }
+      ),
+      LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
+        const characterInfos = await window.electron.getCharacterInfos();
 
-        if (engineState !== "READY") {
-          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
+        await Promise.all(
+          characterInfos.map(async (characterInfo) => {
+            const [iconBuf, portraitBuf] = await Promise.all([
+              window.electron.readFile({ filePath: characterInfo.iconPath }),
+              window.electron.readFile({
+                filePath: characterInfo.portraitPath,
+              }),
+            ]);
+            characterInfo.iconBlob = new Blob([iconBuf]);
+            characterInfo.portraitBlob = new Blob([portraitBuf]);
+          })
+        );
+
+        commit("SET_CHARACTER_INFOS", { characterInfos });
+      }),
+      GENERATE_AUDIO_KEY() {
+        const audioKey = uuidv4();
+        audioElements[audioKey] = new Audio();
+        return audioKey;
+      },
+      REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
+        for (const audioKey of [...state.audioKeys]) {
+          commit("REMOVE_AUDIO_ITEM", { audioKey });
         }
-      }
-    ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
-      const characterInfos = await window.electron.getCharacterInfos();
+      },
+      async GENERATE_AUDIO_ITEM(
+        { state, getters, dispatch },
+        payload: { text?: string; styleId?: number }
+      ) {
+        if (state.defaultStyleIds == undefined)
+          throw new Error("state.defaultStyleIds == undefined");
+        if (state.characterInfos == undefined)
+          throw new Error("state.characterInfos == undefined");
+        const characterInfos = state.characterInfos;
 
-      await Promise.all(
-        characterInfos.map(async (characterInfo) => {
-          const [iconBuf, portraitBuf] = await Promise.all([
-            window.electron.readFile({ filePath: characterInfo.iconPath }),
-            window.electron.readFile({ filePath: characterInfo.portraitPath }),
-          ]);
-          characterInfo.iconBlob = new Blob([iconBuf]);
-          characterInfo.portraitBlob = new Blob([portraitBuf]);
-        })
-      );
+        const text = payload.text ?? "";
+        const styleId =
+          payload.styleId ??
+          state.defaultStyleIds[
+            state.defaultStyleIds.findIndex(
+              (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
+            )
+          ].defaultStyleId;
+        const query = getters.IS_ENGINE_READY
+          ? await dispatch("FETCH_AUDIO_QUERY", {
+              text,
+              styleId,
+            }).catch(() => undefined)
+          : undefined;
 
-      commit("SET_CHARACTER_INFOS", { characterInfos });
-    }),
-    GENERATE_AUDIO_KEY() {
-      const audioKey = uuidv4();
-      audioElements[audioKey] = new Audio();
-      return audioKey;
-    },
-    REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
-      for (const audioKey of [...state.audioKeys]) {
-        commit("REMOVE_AUDIO_ITEM", { audioKey });
-      }
-    },
-    async GENERATE_AUDIO_ITEM(
-      { state, getters, dispatch },
-      payload: { text?: string; styleId?: number }
-    ) {
-      if (state.defaultStyleIds == undefined)
-        throw new Error("state.defaultStyleIds == undefined");
-      if (state.characterInfos == undefined)
-        throw new Error("state.characterInfos == undefined");
-      const characterInfos = state.characterInfos;
-
-      const text = payload.text ?? "";
-      const styleId =
-        payload.styleId ??
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
-          )
-        ].defaultStyleId;
-      const query = getters.IS_ENGINE_READY
-        ? await dispatch("FETCH_AUDIO_QUERY", {
-            text,
-            styleId,
-          }).catch(() => undefined)
-        : undefined;
-
-      const audioItem: AudioItem = {
-        text,
-        styleId,
-      };
-      if (query != undefined) {
-        audioItem.query = query;
-      }
-      return audioItem;
-    },
-    async REGISTER_AUDIO_ITEM(
-      { dispatch, commit },
-      {
-        audioItem,
-        prevAudioKey,
-      }: { audioItem: AudioItem; prevAudioKey?: string }
-    ) {
-      const audioKey = await dispatch("GENERATE_AUDIO_KEY");
-      commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
-      return audioKey;
-    },
-    SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
-      commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-    },
-    async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
-      const audioItem = state.audioItems[audioKey];
-      const id = await generateUniqueId(audioItem);
-
-      if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
-        return audioBlobCache[id];
-      } else {
-        return null;
-      }
-    },
-    SET_AUDIO_QUERY(
-      { commit },
-      payload: { audioKey: string; audioQuery: AudioQuery }
-    ) {
-      commit("SET_AUDIO_QUERY", payload);
-    },
-    FETCH_ACCENT_PHRASES(
-      { rootState, state },
-      {
-        text,
-        styleId,
-        isKana,
-      }: { text: string; styleId: number; isKana?: boolean }
-    ) {
-      return state._engineFactory
-        .instance(rootState.engineHost)
-        .accentPhrasesAccentPhrasesPost({
+        const audioItem: AudioItem = {
           text,
-          speaker: styleId,
-          isKana,
-        })
-        .catch((error) => {
-          window.electron.logError(
-            error,
-            `Failed to fetch AccentPhrases for the text "${text}".`
-          );
-          throw error;
-        });
-    },
-    FETCH_MORA_DATA(
-      { rootState, state },
-      {
-        accentPhrases,
-        styleId,
-      }: { accentPhrases: AccentPhrase[]; styleId: number }
-    ) {
-      return state._engineFactory
-        .instance(rootState.engineHost)
-        .moraDataMoraDataPost({
-          accentPhrase: accentPhrases,
-          speaker: styleId,
-        })
-        .catch((error) => {
-          window.electron.logError(
-            error,
-            `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
-              accentPhrases
-            )}".`
-          );
-          throw error;
-        });
-    },
-    async FETCH_AND_COPY_MORA_DATA(
-      { dispatch },
-      {
-        accentPhrases,
-        styleId,
-        copyIndexes,
-      }: {
-        accentPhrases: AccentPhrase[];
-        styleId: number;
-        copyIndexes: number[];
-      }
-    ) {
-      const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
-        "FETCH_MORA_DATA",
-        {
-          accentPhrases,
           styleId,
+        };
+        if (query != undefined) {
+          audioItem.query = query;
         }
-      );
-      for (const index of copyIndexes) {
-        accentPhrases[index] = fetchedAccentPhrases[index];
-      }
-      return accentPhrases;
-    },
-    FETCH_AUDIO_QUERY(
-      { rootState, state },
-      { text, styleId }: { text: string; styleId: number }
-    ) {
-      return state._engineFactory
-        .instance(rootState.engineHost)
-        .audioQueryAudioQueryPost({
-          text,
-          speaker: styleId,
-        })
-        .catch((error) => {
-          window.electron.logError(
-            error,
-            `Failed to fetch AudioQuery for the text "${text}".`
-          );
-          throw error;
-        });
-    },
-    GENERATE_AUDIO: createUILockAction(
-      async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
+        return audioItem;
+      },
+      async REGISTER_AUDIO_ITEM(
+        { dispatch, commit },
+        {
+          audioItem,
+          prevAudioKey,
+        }: { audioItem: AudioItem; prevAudioKey?: string }
+      ) {
+        const audioKey = await dispatch("GENERATE_AUDIO_KEY");
+        commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
+        return audioKey;
+      },
+      SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
+        commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+      },
+      async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
         const audioItem = state.audioItems[audioKey];
         const id = await generateUniqueId(audioItem);
 
-        const audioQuery = audioItem.query;
-        const speaker = audioItem.styleId;
-        if (audioQuery == undefined || speaker == undefined) {
+        if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
+          return audioBlobCache[id];
+        } else {
           return null;
         }
-
-        return state._engineFactory
-          .instance(rootState.engineHost)
-          .synthesisSynthesisPost({ audioQuery: audioQuery, speaker: speaker })
-          .then(async (blob) => {
-            audioBlobCache[id] = blob;
-            return blob;
-          })
-          .catch((e) => {
-            window.electron.logError(e);
-            return null;
-          });
-      }
-    ),
-    GENERATE_AND_SAVE_AUDIO: createUILockAction(
-      async (
-        { state, dispatch },
+      },
+      SET_AUDIO_QUERY(
+        { commit },
+        payload: { audioKey: string; audioQuery: AudioQuery }
+      ) {
+        commit("SET_AUDIO_QUERY", payload);
+      },
+      FETCH_ACCENT_PHRASES(
+        { rootState },
         {
-          audioKey,
-          filePath,
-          encoding,
-        }: {
-          audioKey: string;
-          filePath?: string;
-          encoding?: EncodingType;
-        }
-      ): Promise<SaveResultObject> => {
-        if (state.savingSetting.fixedExportEnabled) {
-          filePath = path.join(
-            state.savingSetting.fixedExportDir,
-            buildFileName(state, audioKey)
-          );
-        } else {
-          filePath ??= await window.electron.showAudioSaveDialog({
-            title: "音声を保存",
-            defaultPath: buildFileName(state, audioKey),
-          });
-        }
-
-        if (!filePath) {
-          return { result: "CANCELED", path: "" };
-        }
-
-        if (state.savingSetting.avoidOverwrite) {
-          let tail = 1;
-          const name = filePath.slice(0, filePath.length - 4);
-          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
-            filePath = name + "[" + tail.toString() + "]" + ".wav";
-            tail += 1;
-          }
-        }
-
-        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (!blob) {
-          blob = await dispatch("GENERATE_AUDIO", { audioKey });
-          if (!blob) {
-            return { result: "ENGINE_ERROR", path: filePath };
-          }
-        }
-
-        try {
-          window.electron.writeFile({
-            filePath,
-            buffer: await blob.arrayBuffer(),
-          });
-        } catch (e) {
-          window.electron.logError(e);
-
-          return { result: "WRITE_ERROR", path: filePath };
-        }
-
-        if (state.savingSetting.exportLab) {
-          const query = state.audioItems[audioKey].query;
-          if (query == undefined)
-            return { result: "WRITE_ERROR", path: filePath };
-          const speedScale = query.speedScale;
-
-          let labString = "";
-          let timestamp = 0;
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.prePhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
-
-          query.accentPhrases.forEach((accentPhrase) => {
-            accentPhrase.moras.forEach((mora) => {
-              if (
-                mora.consonantLength !== undefined &&
-                mora.consonant !== undefined
-              ) {
-                labString += timestamp.toFixed() + " ";
-                timestamp += (mora.consonantLength * 10000000) / speedScale;
-                labString += timestamp.toFixed() + " ";
-                labString += mora.consonant + "\n";
-              }
-              labString += timestamp.toFixed() + " ";
-              timestamp += (mora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              if (mora.vowel != "N") {
-                labString += mora.vowel.toLowerCase() + "\n";
-              } else {
-                labString += mora.vowel + "\n";
-              }
-            });
-            if (accentPhrase.pauseMora !== undefined) {
-              labString += timestamp.toFixed() + " ";
-              timestamp +=
-                (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              labString += accentPhrase.pauseMora.vowel + "\n";
-            }
-          });
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.postPhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
-
-          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-          const labBlob = new Blob([bom, labString], {
-            type: "text/plain;charset=UTF-8",
-          });
-
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return { result: "WRITE_ERROR", path: filePath };
-          }
-        }
-
-        if (state.savingSetting.exportText) {
-          const textBlob = ((): Blob => {
-            if (!encoding || encoding === "UTF-8") {
-              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-              return new Blob([bom, state.audioItems[audioKey].text], {
-                type: "text/plain;charset=UTF-8",
-              });
-            }
-            const sjisArray = Encoding.convert(
-              Encoding.stringToCode(state.audioItems[audioKey].text),
-              { to: "SJIS", type: "arraybuffer" }
+          text,
+          styleId,
+          isKana,
+        }: { text: string; styleId: number; isKana?: boolean }
+      ) {
+        return _engineFactory
+          .instance(rootState.engineHost)
+          .accentPhrasesAccentPhrasesPost({
+            text,
+            speaker: styleId,
+            isKana,
+          })
+          .catch((error) => {
+            window.electron.logError(
+              error,
+              `Failed to fetch AccentPhrases for the text "${text}".`
             );
-            return new Blob([new Uint8Array(sjisArray)], {
-              type: "text/plain;charset=Shift_JIS",
+            throw error;
+          });
+      },
+      FETCH_MORA_DATA(
+        { rootState },
+        {
+          accentPhrases,
+          styleId,
+        }: { accentPhrases: AccentPhrase[]; styleId: number }
+      ) {
+        return _engineFactory
+          .instance(rootState.engineHost)
+          .moraDataMoraDataPost({
+            accentPhrase: accentPhrases,
+            speaker: styleId,
+          })
+          .catch((error) => {
+            window.electron.logError(
+              error,
+              `Failed to fetch MoraData for the accentPhrases "${JSON.stringify(
+                accentPhrases
+              )}".`
+            );
+            throw error;
+          });
+      },
+      async FETCH_AND_COPY_MORA_DATA(
+        { dispatch },
+        {
+          accentPhrases,
+          styleId,
+          copyIndexes,
+        }: {
+          accentPhrases: AccentPhrase[];
+          styleId: number;
+          copyIndexes: number[];
+        }
+      ) {
+        const fetchedAccentPhrases: AccentPhrase[] = await dispatch(
+          "FETCH_MORA_DATA",
+          {
+            accentPhrases,
+            styleId,
+          }
+        );
+        for (const index of copyIndexes) {
+          accentPhrases[index] = fetchedAccentPhrases[index];
+        }
+        return accentPhrases;
+      },
+      FETCH_AUDIO_QUERY(
+        { rootState },
+        { text, styleId }: { text: string; styleId: number }
+      ) {
+        return _engineFactory
+          .instance(rootState.engineHost)
+          .audioQueryAudioQueryPost({
+            text,
+            speaker: styleId,
+          })
+          .catch((error) => {
+            window.electron.logError(
+              error,
+              `Failed to fetch AudioQuery for the text "${text}".`
+            );
+            throw error;
+          });
+      },
+      GENERATE_AUDIO: createUILockAction(
+        async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
+          const audioItem = state.audioItems[audioKey];
+          const id = await generateUniqueId(audioItem);
+
+          const audioQuery = audioItem.query;
+          const speaker = audioItem.styleId;
+          if (audioQuery == undefined || speaker == undefined) {
+            return null;
+          }
+
+          return _engineFactory
+            .instance(rootState.engineHost)
+            .synthesisSynthesisPost({
+              audioQuery: audioQuery,
+              speaker: speaker,
+            })
+            .then(async (blob) => {
+              audioBlobCache[id] = blob;
+              return blob;
+            })
+            .catch((e) => {
+              window.electron.logError(e);
+              return null;
             });
-          })();
+        }
+      ),
+      GENERATE_AND_SAVE_AUDIO: createUILockAction(
+        async (
+          { state, dispatch },
+          {
+            audioKey,
+            filePath,
+            encoding,
+          }: {
+            audioKey: string;
+            filePath?: string;
+            encoding?: EncodingType;
+          }
+        ): Promise<SaveResultObject> => {
+          if (state.savingSetting.fixedExportEnabled) {
+            filePath = path.join(
+              state.savingSetting.fixedExportDir,
+              buildFileName(state, audioKey)
+            );
+          } else {
+            filePath ??= await window.electron.showAudioSaveDialog({
+              title: "音声を保存",
+              defaultPath: buildFileName(state, audioKey),
+            });
+          }
+
+          if (!filePath) {
+            return { result: "CANCELED", path: "" };
+          }
+
+          if (state.savingSetting.avoidOverwrite) {
+            let tail = 1;
+            const name = filePath.slice(0, filePath.length - 4);
+            while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+              filePath = name + "[" + tail.toString() + "]" + ".wav";
+              tail += 1;
+            }
+          }
+
+          let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+          if (!blob) {
+            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+            if (!blob) {
+              return { result: "ENGINE_ERROR", path: filePath };
+            }
+          }
 
           try {
             window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
+              filePath,
+              buffer: await blob.arrayBuffer(),
             });
           } catch (e) {
             window.electron.logError(e);
 
             return { result: "WRITE_ERROR", path: filePath };
           }
-        }
 
-        return { result: "SUCCESS", path: filePath };
-      }
-    ),
-    GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
-      async (
-        { state, dispatch },
-        { dirPath, encoding }: { dirPath?: string; encoding?: EncodingType }
-      ) => {
-        if (state.savingSetting.fixedExportEnabled) {
-          dirPath = state.savingSetting.fixedExportDir;
-        } else {
-          dirPath ??= await window.electron.showOpenDirectoryDialog({
-            title: "音声を全て保存",
-          });
-        }
-        if (dirPath) {
-          const _dirPath = dirPath;
-          const promises = state.audioKeys.map((audioKey) => {
-            const name = buildFileName(state, audioKey);
-            return dispatch("GENERATE_AND_SAVE_AUDIO", {
-              audioKey,
-              filePath: path.join(_dirPath, name),
-              encoding,
+          if (state.savingSetting.exportLab) {
+            const query = state.audioItems[audioKey].query;
+            if (query == undefined)
+              return { result: "WRITE_ERROR", path: filePath };
+            const speedScale = query.speedScale;
+
+            let labString = "";
+            let timestamp = 0;
+
+            labString += timestamp.toFixed() + " ";
+            timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            labString += "pau" + "\n";
+
+            query.accentPhrases.forEach((accentPhrase) => {
+              accentPhrase.moras.forEach((mora) => {
+                if (
+                  mora.consonantLength !== undefined &&
+                  mora.consonant !== undefined
+                ) {
+                  labString += timestamp.toFixed() + " ";
+                  timestamp += (mora.consonantLength * 10000000) / speedScale;
+                  labString += timestamp.toFixed() + " ";
+                  labString += mora.consonant + "\n";
+                }
+                labString += timestamp.toFixed() + " ";
+                timestamp += (mora.vowelLength * 10000000) / speedScale;
+                labString += timestamp.toFixed() + " ";
+                if (mora.vowel != "N") {
+                  labString += mora.vowel.toLowerCase() + "\n";
+                } else {
+                  labString += mora.vowel + "\n";
+                }
+              });
+              if (accentPhrase.pauseMora !== undefined) {
+                labString += timestamp.toFixed() + " ";
+                timestamp +=
+                  (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+                labString += timestamp.toFixed() + " ";
+                labString += accentPhrase.pauseMora.vowel + "\n";
+              }
             });
-          });
-          return Promise.all(promises);
+
+            labString += timestamp.toFixed() + " ";
+            timestamp += (query.postPhonemeLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            labString += "pau" + "\n";
+
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            const labBlob = new Blob([bom, labString], {
+              type: "text/plain;charset=UTF-8",
+            });
+
+            try {
+              window.electron.writeFile({
+                filePath: filePath.replace(/\.wav$/, ".lab"),
+                buffer: await labBlob.arrayBuffer(),
+              });
+            } catch (e) {
+              window.electron.logError(e);
+
+              return { result: "WRITE_ERROR", path: filePath };
+            }
+          }
+
+          if (state.savingSetting.exportText) {
+            const textBlob = ((): Blob => {
+              if (!encoding || encoding === "UTF-8") {
+                const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+                return new Blob([bom, state.audioItems[audioKey].text], {
+                  type: "text/plain;charset=UTF-8",
+                });
+              }
+              const sjisArray = Encoding.convert(
+                Encoding.stringToCode(state.audioItems[audioKey].text),
+                { to: "SJIS", type: "arraybuffer" }
+              );
+              return new Blob([new Uint8Array(sjisArray)], {
+                type: "text/plain;charset=Shift_JIS",
+              });
+            })();
+
+            try {
+              window.electron.writeFile({
+                filePath: filePath.replace(/\.wav$/, ".txt"),
+                buffer: await textBlob.arrayBuffer(),
+              });
+            } catch (e) {
+              window.electron.logError(e);
+
+              return { result: "WRITE_ERROR", path: filePath };
+            }
+          }
+
+          return { result: "SUCCESS", path: filePath };
         }
-      }
-    ),
-    PLAY_AUDIO: createUILockAction(
-      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
+      ),
+      GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
+        async (
+          { state, dispatch },
+          { dirPath, encoding }: { dirPath?: string; encoding?: EncodingType }
+        ) => {
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.electron.showOpenDirectoryDialog({
+              title: "音声を全て保存",
+            });
+          }
+          if (dirPath) {
+            const _dirPath = dirPath;
+            const promises = state.audioKeys.map((audioKey) => {
+              const name = buildFileName(state, audioKey);
+              return dispatch("GENERATE_AND_SAVE_AUDIO", {
+                audioKey,
+                filePath: path.join(_dirPath, name),
+                encoding,
+              });
+            });
+            return Promise.all(promises);
+          }
+        }
+      ),
+      PLAY_AUDIO: createUILockAction(
+        async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
+          const audioElem = audioElements[audioKey];
+          audioElem.pause();
+
+          // 音声用意
+          let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+          if (!blob) {
+            commit("SET_AUDIO_NOW_GENERATING", {
+              audioKey,
+              nowGenerating: true,
+            });
+            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+            commit("SET_AUDIO_NOW_GENERATING", {
+              audioKey,
+              nowGenerating: false,
+            });
+            if (!blob) {
+              throw new Error();
+            }
+          }
+          audioElem.src = URL.createObjectURL(blob);
+
+          // 再生終了時にresolveされるPromiseを返す
+          const played = async () => {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          };
+          audioElem.addEventListener("play", played);
+
+          let paused: () => void;
+          const audioPlayPromise = new Promise<boolean>((resolve) => {
+            paused = () => {
+              resolve(audioElem.ended);
+            };
+            audioElem.addEventListener("pause", paused);
+          }).finally(async () => {
+            audioElem.removeEventListener("play", played);
+            audioElem.removeEventListener("pause", paused);
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          });
+
+          audioElem.play();
+          return audioPlayPromise;
+        }
+      ),
+      STOP_AUDIO(_, { audioKey }: { audioKey: string }) {
         const audioElem = audioElements[audioKey];
         audioElem.pause();
+      },
+      PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
+        async ({ state, commit, dispatch }) => {
+          const currentAudioKey = state._activeAudioKey;
 
-        // 音声用意
-        let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (!blob) {
-          commit("SET_AUDIO_NOW_GENERATING", { audioKey, nowGenerating: true });
-          blob = await dispatch("GENERATE_AUDIO", { audioKey });
-          commit("SET_AUDIO_NOW_GENERATING", {
-            audioKey,
-            nowGenerating: false,
-          });
-          if (!blob) {
-            throw new Error();
+          let index = 0;
+          if (currentAudioKey !== undefined) {
+            index = state.audioKeys.findIndex((v) => v === currentAudioKey);
           }
-        }
-        audioElem.src = URL.createObjectURL(blob);
 
-        // 再生終了時にresolveされるPromiseを返す
-        const played = async () => {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
-        };
-        audioElem.addEventListener("play", played);
-
-        let paused: () => void;
-        const audioPlayPromise = new Promise<boolean>((resolve) => {
-          paused = () => {
-            resolve(audioElem.ended);
-          };
-          audioElem.addEventListener("pause", paused);
-        }).finally(async () => {
-          audioElem.removeEventListener("play", played);
-          audioElem.removeEventListener("pause", paused);
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
-        });
-
-        audioElem.play();
-        return audioPlayPromise;
-      }
-    ),
-    STOP_AUDIO(_, { audioKey }: { audioKey: string }) {
-      const audioElem = audioElements[audioKey];
-      audioElem.pause();
-    },
-    PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
-      async ({ state, commit, dispatch }) => {
-        const currentAudioKey = state._activeAudioKey;
-
-        let index = 0;
-        if (currentAudioKey !== undefined) {
-          index = state.audioKeys.findIndex((v) => v === currentAudioKey);
-        }
-
-        commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
-        try {
-          for (let i = index; i < state.audioKeys.length; ++i) {
-            const audioKey = state.audioKeys[i];
-            commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-            const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
-            if (!isEnded) {
-              break;
+          commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: true });
+          try {
+            for (let i = index; i < state.audioKeys.length; ++i) {
+              const audioKey = state.audioKeys[i];
+              commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+              const isEnded = await dispatch("PLAY_AUDIO", { audioKey });
+              if (!isEnded) {
+                break;
+              }
             }
+          } finally {
+            commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+            commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
           }
-        } finally {
-          commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-          commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
         }
-      }
-    ),
-    STOP_CONTINUOUSLY_AUDIO({ state, dispatch }) {
-      for (const audioKey of state.audioKeys) {
-        if (state.audioStates[audioKey].nowPlaying) {
-          dispatch("STOP_AUDIO", { audioKey });
+      ),
+      STOP_CONTINUOUSLY_AUDIO({ state, dispatch }) {
+        for (const audioKey of state.audioKeys) {
+          if (state.audioStates[audioKey].nowPlaying) {
+            dispatch("STOP_AUDIO", { audioKey });
+          }
         }
-      }
+      },
+      OPEN_TEXT_EDIT_CONTEXT_MENU() {
+        window.electron.openTextEditContextMenu();
+      },
+      DETECTED_ENGINE_ERROR({ state, commit }) {
+        switch (state.engineState) {
+          case "STARTING":
+            commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
+            break;
+          case "READY":
+            commit("SET_ENGINE_STATE", { engineState: "ERROR" });
+            break;
+          default:
+            commit("SET_ENGINE_STATE", { engineState: "ERROR" });
+        }
+      },
+      async RESTART_ENGINE({ dispatch, commit }) {
+        await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
+        window.electron
+          .restartEngine()
+          .then(() => dispatch("START_WAITING_ENGINE"))
+          .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+      },
+      CHECK_FILE_EXISTS(_, { file }: { file: string }) {
+        return window.electron.checkFileExists(file);
+      },
     },
-    OPEN_TEXT_EDIT_CONTEXT_MENU() {
-      window.electron.openTextEditContextMenu();
-    },
-    DETECTED_ENGINE_ERROR({ state, commit }) {
-      switch (state.engineState) {
-        case "STARTING":
-          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
-          break;
-        case "READY":
-          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
-          break;
-        default:
-          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
-      }
-    },
-    async RESTART_ENGINE({ dispatch, commit }) {
-      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
-      window.electron
-        .restartEngine()
-        .then(() => dispatch("START_WAITING_ENGINE"))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
-    },
-    CHECK_FILE_EXISTS(_, { file }: { file: string }) {
-      return window.electron.checkFileExists(file);
-    },
-  },
+  };
+
+  return audioStore;
 };
+
+export const audioStore = audioStoreCreator(OpenAPIEngineConnectorFactory);
 
 export const audioCommandStoreState: AudioCommandStoreState = {};
 
