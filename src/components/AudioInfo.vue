@@ -84,21 +84,17 @@
 
           <q-form @submit.prevent="checkUpdate">
             <q-card-section class="q-pt-none">
-              <q-input
-                v-model="presetName"
+              <q-select
+                :model-value="presetName"
                 autofocus
                 input-debounce="0"
-                list="presetNameList"
                 label="タイトル"
-              >
-                <datalist
-                  id="presetNameList"
-                  v-for="p in presetList"
-                  :key="p.key"
-                >
-                  <option :value="p.label" />
-                </datalist>
-              </q-input>
+                use-input
+                hide-selected
+                fill-input
+                :options="presetList"
+                @input-value="setPresetName"
+              />
             </q-card-section>
 
             <q-card-actions align="right" class="text-secondary">
@@ -619,32 +615,8 @@ export default defineComponent({
     const presetLabelList = computed(() =>
       presetList.value?.map((e) => e.label)
     );
-    const filterOptions = ref(presetLabelList.value);
 
-    const createValue = (
-      val: string,
-      done: (item: string, mode: string) => void
-    ) => {
-      if (!presetLabelList.value!.includes(val)) {
-        done(val, "add-unique");
-      }
-    };
-
-    const presetNamefilter = (
-      val: string,
-      update: (callback: () => void) => void
-    ) => {
-      update(() => {
-        if (val === "") {
-          filterOptions.value = presetLabelList.value;
-        } else {
-          const needle = val.toLowerCase();
-          filterOptions.value = presetLabelList.value!.filter(
-            (v) => v.toLowerCase().indexOf(needle) > -1
-          );
-        }
-      });
-    };
+    const setPresetName = (s: string) => (presetName.value = s);
 
     return {
       activeAudioKey,
@@ -675,10 +647,8 @@ export default defineComponent({
       presetName,
       closeAllDialog,
       showsPresetEditDialog,
-      createValue,
-      filterOptions,
-      presetNamefilter,
       showsPresetRewriteDialog,
+      setPresetName,
     };
   },
 });
