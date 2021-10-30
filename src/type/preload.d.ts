@@ -116,7 +116,7 @@ export type HotkeySetting = {
 
 export type Preset = {
   name: string;
-  speaker: number;
+  styleId: number;
   speedScale: number;
   pitchScale: number;
   intonationScale: number;

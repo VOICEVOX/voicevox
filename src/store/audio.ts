@@ -1338,7 +1338,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       } else {
         if (
           state.presetItems[presetKey] === undefined ||
-          !state.presetKeys[state.audioItems[audioKey].speaker!].includes(
+          !state.presetKeys[state.audioItems[audioKey].styleId!].includes(
             presetKey
           )
         ) {

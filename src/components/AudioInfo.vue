@@ -415,12 +415,12 @@ export default defineComponent({
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
 
-    const speaker = computed(() => audioItem.value?.speaker);
+    const styleId = computed(() => audioItem.value?.styleId);
     const audioPresetKey = computed(() => audioItem.value?.presetKey);
 
     const presetList = computed(() => {
-      if (speaker.value === undefined) return undefined;
-      return presetKeys.value[speaker.value]?.map((e) => ({
+      if (styleId.value === undefined) return undefined;
+      return presetKeys.value[styleId.value]?.map((e) => ({
         label: presetItems.value[e].name,
         key: e,
       }));
@@ -434,11 +434,11 @@ export default defineComponent({
     const presetSelectModel = computed({
       get: () => {
         if (
-          speaker.value === undefined ||
+          styleId.value === undefined ||
           audioPresetKey.value === undefined ||
           presetItems.value[audioPresetKey.value] === undefined ||
-          presetKeys.value[speaker.value] === undefined ||
-          !presetKeys.value[speaker.value].includes(audioPresetKey.value)
+          presetKeys.value[styleId.value] === undefined ||
+          !presetKeys.value[styleId.value].includes(audioPresetKey.value)
         )
           return notSelectedPreset;
         return {
@@ -456,7 +456,7 @@ export default defineComponent({
       key: string | undefined;
     }): void => {
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         presetKey: e.key,
       });
     };
@@ -480,30 +480,30 @@ export default defineComponent({
         addPreset();
       }
     };
-    const createPresetData = (title: string, speaker: number) =>
+    const createPresetData = (title: string, styleId: number) =>
       ({
         name: title,
-        speaker,
-        speedScale: previewAudioSpeedScale.currentValue.value!,
-        pitchScale: previewAudioPitchScale.currentValue.value!,
-        intonationScale: previewAudioIntonationScale.currentValue.value!,
-        volumeScale: previewAudioVolumeScale.currentValue.value!,
-        prePhonemeLength: previewAudioPrePhonemeLength.currentValue.value!,
-        postPhonemeLength: previewAudioPostPhonemeLength.currentValue.value!,
+        styleId,
+        speedScale: speedScaleSlider.state.currentValue.value!,
+        pitchScale: pitchScaleSlider.state.currentValue.value!,
+        intonationScale: intonationScaleSlider.state.currentValue.value!,
+        volumeScale: volumeScaleSlider.state.currentValue.value!,
+        prePhonemeLength: prePhonemeLengthSlider.state.currentValue.value!,
+        postPhonemeLength: postPhonemeLengthSlider.state.currentValue.value!,
       } as Preset);
 
     const addPreset = () => {
       const title = presetName.value;
       presetName.value = "";
 
-      if (audioItem.value?.speaker === undefined) return;
-      const speaker = audioItem.value.speaker;
+      if (audioItem.value?.styleId === undefined) return;
+      const styleId = audioItem.value.styleId;
 
-      const newPreset = createPresetData(title, speaker);
+      const newPreset = createPresetData(title, styleId);
 
       store.dispatch("ADD_PRESET", {
         presetData: newPreset,
-        audioKey: activeAudioKey.value,
+        audioKey: props.activeAudioKey,
       });
 
       closeAllDialog();
@@ -516,22 +516,22 @@ export default defineComponent({
       if (key === undefined) return;
 
       const title = presetName.value;
-      if (audioItem.value?.speaker === undefined) return;
-      const speaker = audioItem.value.speaker;
-      const newPreset = createPresetData(title, speaker);
+      if (audioItem.value?.styleId === undefined) return;
+      const styleId = audioItem.value.styleId;
+      const newPreset = createPresetData(title, styleId);
 
       store.dispatch("UPDATE_PRESET", {
         presetData: newPreset,
         oldKey: key,
         updatesAudioItems,
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
       });
       presetName.value = "";
       closeAllDialog();
     };
 
     const setPresetByScroll = (deltaY: number) => {
-      if (speaker.value === undefined) return;
+      if (styleId.value === undefined) return;
 
       const presetNumber = presetList.value?.length;
       if (presetNumber === 0 || presetNumber === undefined) return;
@@ -540,7 +540,7 @@ export default defineComponent({
       if (presetSelectModel.value.key === undefined) {
         nowIndex = -1;
       } else {
-        nowIndex = presetKeys.value[speaker.value].indexOf(
+        nowIndex = presetKeys.value[styleId.value].indexOf(
           presetSelectModel.value.key
         );
       }

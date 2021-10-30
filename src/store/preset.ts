@@ -74,7 +74,7 @@ export const presetStore: VoiceVoxStoreOptions<
       context,
       { presetData, audioKey }: { presetData: Preset; audioKey?: string }
     ) => {
-      const speaker = presetData.speaker;
+      const speaker = presetData.styleId;
 
       const presetItems = { ...context.state.presetItems };
       const presetKeys = { ...context.state.presetKeys };
@@ -118,7 +118,7 @@ export const presetStore: VoiceVoxStoreOptions<
     ) => {
       const presetItems = { ...context.state.presetItems };
       const presetKeys = { ...context.state.presetKeys };
-      const speaker = presetData.speaker;
+      const speaker = presetData.styleId;
 
       presetKeys[speaker] = [...context.state.presetKeys[speaker]];
       presetKeys[speaker].splice(

@@ -73,10 +73,19 @@ export default defineComponent({
     const presetKeys = computed(() => store.state.presetKeys);
 
     const speakerList = computed(() =>
-      store.state.characterInfos?.map(({ metas }) => ({
-        label: metas.name,
-        speaker: metas.speaker,
-      }))
+      store.state.characterInfos
+        ?.map(({ metas }) =>
+          metas.styles.map((e) => {
+            const label = e.styleName
+              ? `${metas.speakerName}（${e.styleName}）`
+              : metas.speakerName;
+            return {
+              label,
+              speaker: e.styleId,
+            };
+          })
+        )
+        .flat()
     );
     const speakerSelect = ref<{ label: string; speaker: number }>();
 
