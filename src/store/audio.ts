@@ -1,4 +1,4 @@
-import { AudioQuery, AccentPhrase, Configuration, DefaultApi } from "@/openapi";
+import { AudioQuery, AccentPhrase } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -24,10 +24,7 @@ import {
   MoraDataType,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
-
-const api = new DefaultApi(
-  new Configuration({ basePath: process.env.VUE_APP_ENGINE_URL })
-);
+import { OpenAPIEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
 async function generateUniqueId(audioItem: AudioItem) {
   const data = new TextEncoder().encode(
@@ -112,6 +109,7 @@ export const audioStoreState: AudioStoreState = {
   audioKeys: [],
   audioStates: {},
   nowPlayingContinuously: false,
+  _engineFactory: OpenAPIEngineConnectorFactory,
 };
 
 export const audioStore: VoiceVoxStoreOptions<
@@ -388,7 +386,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         try {
-          await api.versionVersionGet();
+          await state._engineFactory.instance().versionVersionGet();
         } catch {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           window.electron.logInfo("waiting engine...");
@@ -494,14 +492,15 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      _,
+      { state },
       {
         text,
         styleId,
         isKana,
       }: { text: string; styleId: number; isKana?: boolean }
     ) {
-      return api
+      return state._engineFactory
+        .instance()
         .accentPhrasesAccentPhrasesPost({
           text,
           speaker: styleId,
@@ -516,13 +515,14 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      _,
+      { state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
-      return api
+      return state._engineFactory
+        .instance()
         .moraDataMoraDataPost({
           accentPhrase: accentPhrases,
           speaker: styleId,
@@ -561,8 +561,12 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       return accentPhrases;
     },
-    FETCH_AUDIO_QUERY(_, { text, styleId }: { text: string; styleId: number }) {
-      return api
+    FETCH_AUDIO_QUERY(
+      { state },
+      { text, styleId }: { text: string; styleId: number }
+    ) {
+      return state._engineFactory
+        .instance()
         .audioQueryAudioQueryPost({
           text,
           speaker: styleId,
@@ -586,7 +590,8 @@ export const audioStore: VoiceVoxStoreOptions<
           return null;
         }
 
-        return api
+        return state._engineFactory
+          .instance()
           .synthesisSynthesisPost({ audioQuery: audioQuery, speaker: speaker })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
