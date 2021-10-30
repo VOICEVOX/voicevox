@@ -281,7 +281,6 @@ declare let __static: string;
 const characterInfos: CharacterInfo[] = [];
 for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   const dirPath = path.join(__static, "characters", dirRelPath);
-  const iconPath = path.join(dirPath, "icon.png");
   const portraitPath = path.join(dirPath, "portrait.png");
   const policy = fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8");
   const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
@@ -290,7 +289,6 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
 
   characterInfos.push({
     dirPath,
-    iconPath,
     portraitPath,
     metas: {
       speakerName,

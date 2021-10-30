@@ -71,9 +71,7 @@ export type MetasJson = {
 
 export type CharacterInfo = {
   dirPath: string;
-  iconPath: string;
   portraitPath: string;
-  iconBlob?: Blob;
   portraitBlob?: Blob;
   metas: {
     speakerUuid: string;

@@ -107,7 +107,7 @@
                   @click="selectedStyleIndexes[characterIndex] = styleIndex"
                 >
                   <img
-                    :src="getBlobUrl(characterInfo.iconBlob)"
+                    :src="`characters/${characterInfo.metas.speakerName}/icons/${characterInfo.metas.speakerName}_${style.styleId}.png`"
                     class="style-icon"
                   />
                   <q-item-section>

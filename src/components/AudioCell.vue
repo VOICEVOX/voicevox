@@ -9,7 +9,10 @@
     />
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img class="q-pa-none q-ma-none" :src="characterIconUrl" />
+      <img
+        class="q-pa-none q-ma-none"
+        :src="`characters/${selectedCharacterInfo.metas.speakerName}/icons/${selectedCharacterInfo.metas.speakerName}_${selectedStyleId}.png`"
+      />
       <q-menu
         class="character-menu"
         transition-show="none"
@@ -38,7 +41,9 @@
                   no-spinner
                   no-transition
                   :ratio="1"
-                  :src="getCharacterIconUrl(characterInfo)"
+                  :src="`characters/${characterInfo.metas.speakerName}/icons/${
+                    characterInfo.metas.speakerName
+                  }_${getDefaultStyleId(characterInfo.metas.speakerUuid)}.png`"
                 />
               </q-avatar>
             </q-item-section>
@@ -67,6 +72,16 @@
                   :active="style.styleId === selectedStyleId"
                   @click="changeStyleId(style.styleId)"
                 >
+                  <q-item-section avatar>
+                    <q-avatar rounded size="2rem">
+                      <q-img
+                        no-spinner
+                        no-transition
+                        :ratio="1"
+                        :src="`characters/${characterInfo.metas.speakerName}/icons/${characterInfo.metas.speakerName}_${characterInfo.metas.styles[index].styleId}.png`"
+                      />
+                    </q-avatar>
+                  </q-item-section>
                   <q-item-section v-if="style.styleName"
                     >{{ characterInfo.metas.speakerName }} ({{
                       style.styleName
@@ -157,10 +172,6 @@ export default defineComponent({
         : undefined
     );
     const selectedStyleId = computed(() => audioItem.value.styleId);
-
-    const characterIconUrl = computed(() =>
-      URL.createObjectURL(selectedCharacterInfo.value?.iconBlob)
-    );
 
     const subMenuOpenFlags = ref(
       [...Array(characterInfos.value?.length)].map(() => false)
@@ -344,11 +355,6 @@ export default defineComponent({
     // キャラクター選択
     const isOpenedCharacterList = ref(false);
 
-    const getCharacterIconUrl = computed(
-      () => (characterInfo: CharacterInfo) =>
-        URL.createObjectURL(characterInfo.iconBlob)
-    );
-
     return {
       characterInfos,
       audioItem,
@@ -358,7 +364,6 @@ export default defineComponent({
       nowGenerating,
       selectedCharacterInfo,
       selectedStyleId,
-      characterIconUrl,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       isActiveAudioCell,
@@ -383,7 +388,6 @@ export default defineComponent({
       focusTextField,
       blurCell,
       isOpenedCharacterList,
-      getCharacterIconUrl,
     };
   },
 });
