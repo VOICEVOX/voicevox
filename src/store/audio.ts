@@ -433,6 +433,9 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: { text?: string; styleId?: number; prevAudioItem?: AudioItem }
     ) {
+      //引数にprevAudioItemが与えられた場合、prevAudioItemから話速等のパラメータを引き継いだAudioItemを返す
+      //prevAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
+      //prevAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
       if (state.characterInfos == undefined)
@@ -447,9 +450,7 @@ export const audioStore: VoiceVoxStoreOptions<
             (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
           )
         ].defaultStyleId;
-      const prevAudioItem = payload.prevAudioItem
-        ? payload.prevAudioItem
-        : undefined;
+      const prevAudioItem = payload.prevAudioItem;
       const query = getters.IS_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
@@ -464,20 +465,19 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query != undefined) {
         audioItem.query = query;
       }
-      if (prevAudioItem && prevAudioItem.query) {
+      if (prevAudioItem && prevAudioItem.query && audioItem.query) {
         //引数にprevAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
         //prevAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
-        audioItem.query!.speedScale = prevAudioItem.query!.speedScale;
-        audioItem.query!.pitchScale = prevAudioItem.query!.pitchScale;
-        audioItem.query!.intonationScale = prevAudioItem.query!.intonationScale;
-        audioItem.query!.volumeScale = prevAudioItem.query!.volumeScale;
-        audioItem.query!.prePhonemeLength =
-          prevAudioItem.query!.prePhonemeLength;
-        audioItem.query!.postPhonemeLength =
-          prevAudioItem.query!.postPhonemeLength;
-        audioItem.query!.outputSamplingRate =
-          prevAudioItem.query!.outputSamplingRate;
-        audioItem.query!.outputStereo = prevAudioItem.query!.outputStereo;
+        audioItem.query.speedScale = prevAudioItem.query.speedScale;
+        audioItem.query.pitchScale = prevAudioItem.query.pitchScale;
+        audioItem.query.intonationScale = prevAudioItem.query.intonationScale;
+        audioItem.query.volumeScale = prevAudioItem.query.volumeScale;
+        audioItem.query.prePhonemeLength = prevAudioItem.query.prePhonemeLength;
+        audioItem.query.postPhonemeLength =
+          prevAudioItem.query.postPhonemeLength;
+        audioItem.query.outputSamplingRate =
+          prevAudioItem.query.outputSamplingRate;
+        audioItem.query.outputStereo = prevAudioItem.query.outputStereo;
       }
       return audioItem;
     },
@@ -1349,29 +1349,26 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           );
         }
         const audioItems: AudioItem[] = [];
-        const prevAudioItem = state._activeAudioKey
-          ? state.audioItems[state._activeAudioKey]
-          : undefined;
+        let prevAudioItem: AudioItem | undefined = undefined;
+        if (state.inheritAudioInfo) {
+          prevAudioItem = state._activeAudioKey
+            ? state.audioItems[state._activeAudioKey]
+            : undefined;
+        }
+
         for (const { text, styleId } of parseTextFile(
           body,
           state.characterInfos
         )) {
-          let audioItem: AudioItem;
-          if (state.inheritAudioInfo) {
-            //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-            audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+          //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+          //パラメータ引き継ぎがOFFの場合、prevAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+          audioItems.push(
+            await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               styleId,
               prevAudioItem,
-            });
-          } else {
-            audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
-              text,
-              styleId,
-            });
-          }
-
-          audioItems.push(audioItem);
+            })
+          );
         }
         const audioKeys: string[] = await Promise.all(
           audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
@@ -1401,23 +1398,21 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
-        const prevAudioItem = state.audioItems[prevAudioKey];
+        let prevAudioItem: AudioItem | undefined = undefined;
+        if (state.inheritAudioInfo) {
+          prevAudioItem = state._activeAudioKey
+            ? state.audioItems[state._activeAudioKey]
+            : undefined;
+        }
         for (const text of texts.filter((value) => value != "")) {
           const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
-          let audioItem: AudioItem;
-          if (state.inheritAudioInfo) {
-            //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-            audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
-              text,
-              styleId,
-              prevAudioItem,
-            });
-          } else {
-            audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
-              text,
-              styleId,
-            });
-          }
+          //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+          //パラメータ引き継ぎがOFFの場合、prevAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+          const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+            text,
+            styleId,
+            prevAudioItem,
+          });
 
           audioKeyItemPairs.push({
             audioKey,

@@ -292,19 +292,18 @@ export default defineComponent({
         styleId = store.state.audioItems[prevAudioKey].styleId;
       }
       let audioItem: AudioItem;
-      const prevAudioItem = prevAudioKey
-        ? store.state.audioItems[prevAudioKey]
-        : undefined;
+      let prevAudioItem: AudioItem | undefined = undefined;
       if (store.state.inheritAudioInfo) {
-        audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-          styleId,
-          prevAudioItem,
-        });
-      } else {
-        audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-          styleId,
-        });
+        prevAudioItem = prevAudioKey
+          ? store.state.audioItems[prevAudioKey]
+          : undefined;
       }
+      //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+      //パラメータ引き継ぎがOFFの場合、prevAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+      audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+        styleId,
+        prevAudioItem,
+      });
 
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
