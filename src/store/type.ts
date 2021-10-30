@@ -605,6 +605,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   useVoicing: boolean;
+  engineHost: string;
 };
 
 type SettingStoreTypes = {

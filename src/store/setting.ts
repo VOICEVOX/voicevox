@@ -27,6 +27,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   useVoicing: false,
+  engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
 };
 
 export const settingStore: VoiceVoxStoreOptions<

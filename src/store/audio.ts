@@ -377,30 +377,34 @@ export const audioStore: VoiceVoxStoreOptions<
   },
 
   actions: {
-    START_WAITING_ENGINE: createUILockAction(async ({ state, commit }) => {
-      let engineState = state.engineState;
-      for (let i = 0; i < 100; i++) {
-        engineState = state.engineState;
-        if (engineState === "FAILED_STARTING") {
+    START_WAITING_ENGINE: createUILockAction(
+      async ({ rootState, state, commit }) => {
+        let engineState = state.engineState;
+        for (let i = 0; i < 100; i++) {
+          engineState = state.engineState;
+          if (engineState === "FAILED_STARTING") {
+            break;
+          }
+
+          try {
+            await state._engineFactory
+              .instance(rootState.engineHost)
+              .versionVersionGet();
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            window.electron.logInfo("waiting engine...");
+            continue;
+          }
+          engineState = "READY";
+          commit("SET_ENGINE_STATE", { engineState });
           break;
         }
 
-        try {
-          await state._engineFactory.instance().versionVersionGet();
-        } catch {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          window.electron.logInfo("waiting engine...");
-          continue;
+        if (engineState !== "READY") {
+          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
         }
-        engineState = "READY";
-        commit("SET_ENGINE_STATE", { engineState });
-        break;
       }
-
-      if (engineState !== "READY") {
-        commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
-      }
-    }),
+    ),
     LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();
 
@@ -492,7 +496,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { state },
+      { rootState, state },
       {
         text,
         styleId,
@@ -500,7 +504,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }: { text: string; styleId: number; isKana?: boolean }
     ) {
       return state._engineFactory
-        .instance()
+        .instance(rootState.engineHost)
         .accentPhrasesAccentPhrasesPost({
           text,
           speaker: styleId,
@@ -515,14 +519,14 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { state },
+      { rootState, state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
       return state._engineFactory
-        .instance()
+        .instance(rootState.engineHost)
         .moraDataMoraDataPost({
           accentPhrase: accentPhrases,
           speaker: styleId,
@@ -562,11 +566,11 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { state },
+      { rootState, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
       return state._engineFactory
-        .instance()
+        .instance(rootState.engineHost)
         .audioQueryAudioQueryPost({
           text,
           speaker: styleId,
@@ -580,7 +584,7 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     GENERATE_AUDIO: createUILockAction(
-      async ({ state }, { audioKey }: { audioKey: string }) => {
+      async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
         const audioItem = state.audioItems[audioKey];
         const id = await generateUniqueId(audioItem);
 
@@ -591,7 +595,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return state._engineFactory
-          .instance()
+          .instance(rootState.engineHost)
           .synthesisSynthesisPost({ audioQuery: audioQuery, speaker: speaker })
           .then(async (blob) => {
             audioBlobCache[id] = blob;

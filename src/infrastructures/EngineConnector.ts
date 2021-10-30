@@ -1,35 +1,26 @@
 import { Configuration, DefaultApi, DefaultApiInterface } from "@/openapi";
 
 export interface IEngineConnectorFactory {
-  setActiveHost: (host: string) => void;
-  instance: () => DefaultApiInterface;
+  // FIXME: hostという名前の時点で外部APIに接続するという知識が出てきてしまっているので
+  // Factory自体に型パラメータを付けて、接続方法だったり設定、IDみたいな名前で表現する
+  instance: (host: string) => DefaultApiInterface;
 }
 
 const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
   const instanceMapper: Record<string, DefaultApiInterface> = {};
-  let activeHost: string;
   return {
-    setActiveHost: (host: string) => {
-      activeHost = host;
-    },
-    instance: () => {
-      const cached = instanceMapper[activeHost];
+    instance: (host: string) => {
+      const cached = instanceMapper[host];
       if (cached !== undefined) {
         return cached;
       }
-      const api = new DefaultApi(new Configuration({ basePath: activeHost }));
-      instanceMapper[activeHost] = api;
+      const api = new DefaultApi(new Configuration({ basePath: host }));
+      instanceMapper[host] = api;
 
       return api;
     },
   };
 };
 
-const SingletonOpenAPIEngineConnectorFactory =
-  OpenAPIEngineConnectorFactoryImpl();
-SingletonOpenAPIEngineConnectorFactory.setActiveHost(
-  process.env.VUE_APP_ENGINE_URL as unknown as string
-);
-
 export const OpenAPIEngineConnectorFactory =
-  SingletonOpenAPIEngineConnectorFactory;
+  OpenAPIEngineConnectorFactoryImpl();
