@@ -7,7 +7,7 @@
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
 指定されたバージョンの Node.js をダウンロードするには推察してダウンロードのURLを作成してください。
-Node.js をインストール後、[voicevoxのリポジトリ](https://github.com/Hiroshiba/voicevox.git) を `git clone` してください。
+Node.js をインストール後、[VOICEVOX のリポジトリ](https://github.com/Hiroshiba/voicevox.git) を `git clone` してください。
 
 ```bash
 git clone https://github.com/Hiroshiba/voicevox.git
