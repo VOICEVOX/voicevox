@@ -76,22 +76,84 @@
       <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
-      <q-dialog v-model="showsPresetNameDialog" @escape-key="onCancel">
+      <q-dialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
         <q-card style="min-width: 350px">
           <q-card-section>
             <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
-          <q-form @submit.prevent.once="addPreset()">
+          <q-form @submit.prevent="checkUpdate">
             <q-card-section class="q-pt-none">
-              <q-input dense v-model="presetName" autofocus label="タイトル" />
+              <q-input
+                v-model="presetName"
+                autofocus
+                input-debounce="0"
+                list="presetNameList"
+                label="タイトル"
+              >
+                <datalist
+                  id="presetNameList"
+                  v-for="p in presetList"
+                  :key="p.key"
+                >
+                  <option :value="p.label" />
+                </datalist>
+              </q-input>
             </q-card-section>
 
             <q-card-actions align="right" class="text-secondary">
-              <q-btn flat label="キャンセル" @click="onCancel" v-close-popup />
-              <q-btn flat label="確定" type="submit" v-close-popup />
+              <q-btn
+                flat
+                label="キャンセル"
+                @click="closeAllDialog"
+                v-close-popup
+              />
+              <q-btn flat type="submit" label="確定" />
             </q-card-actions>
           </q-form>
+        </q-card>
+      </q-dialog>
+
+      <q-dialog
+        v-model="showsPresetRewriteDialog"
+        @before-hide="closeAllDialog()"
+      >
+        <q-card style="min-width: 350px">
+          <q-card-section>
+            <div class="text-h6">プリセットの上書き</div>
+            <div>同名のプリセットがあります。</div>
+          </q-card-section>
+          <q-card-section>
+            <q-list>
+              <q-item clickable class="no-margin" @click="updatePreset(true)">
+                <q-item-section avatar>
+                  <q-avatar icon="arrow_forward" text-color="blue" />
+                </q-item-section>
+                <q-item-section>
+                  プリセットを上書きし、音声にも反映する
+                </q-item-section>
+              </q-item>
+              <q-item clickable class="no-margin" @click="updatePreset(false)">
+                <q-item-section avatar>
+                  <q-avatar icon="arrow_forward" text-color="blue" />
+                </q-item-section>
+                <q-item-section>
+                  プリセットを上書きするが、音声には反映しない
+                </q-item-section>
+              </q-item>
+              <q-item
+                clickable
+                class="no-margin"
+                @click="closeAllDialog"
+                v-close-popup
+              >
+                <q-item-section avatar>
+                  <q-avatar icon="arrow_forward" text-color="blue" />
+                </q-item-section>
+                <q-item-section>キャンセル</q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
         </q-card>
       </q-dialog>
     </div>
@@ -458,21 +520,27 @@ export default defineComponent({
     };
 
     const showsPresetNameDialog = ref(false);
+    const showsPresetRewriteDialog = ref(false);
     const presetName = ref("");
-    const onCancel = () => {
+
+    const closeAllDialog = () => {
       presetName.value = "";
       showsPresetNameDialog.value = false;
+      showsPresetRewriteDialog.value = false;
     };
 
     const showsPresetEditDialog = ref(false);
 
-    const addPreset = () => {
-      showsPresetNameDialog.value = false;
-      if (audioItem.value?.speaker === undefined) return;
-      const speaker = audioItem.value.speaker;
-
-      const newPreset = {
-        name: presetName.value,
+    const checkUpdate = () => {
+      if (presetList.value?.find((e) => e.label === presetName.value)) {
+        showsPresetRewriteDialog.value = true;
+      } else {
+        addPreset();
+      }
+    };
+    const createPresetData = (title: string, speaker: number) =>
+      ({
+        name: title,
         speaker,
         speedScale: previewAudioSpeedScale.currentValue.value!,
         pitchScale: previewAudioPitchScale.currentValue.value!,
@@ -480,15 +548,44 @@ export default defineComponent({
         volumeScale: previewAudioVolumeScale.currentValue.value!,
         prePhonemeLength: previewAudioPrePhonemeLength.currentValue.value!,
         postPhonemeLength: previewAudioPostPhonemeLength.currentValue.value!,
-      } as Preset;
+      } as Preset);
+
+    const addPreset = () => {
+      const title = presetName.value;
+      presetName.value = "";
+
+      if (audioItem.value?.speaker === undefined) return;
+      const speaker = audioItem.value.speaker;
+
+      const newPreset = createPresetData(title, speaker);
 
       store.dispatch("ADD_PRESET", {
         presetData: newPreset,
-
         audioKey: activeAudioKey.value,
       });
 
+      closeAllDialog();
+    };
+
+    const updatePreset = (updatesAudioItems: boolean) => {
+      const key = presetList.value?.find(
+        (e) => e.label === presetName.value
+      )?.key;
+      if (key === undefined) return;
+
+      const title = presetName.value;
+      if (audioItem.value?.speaker === undefined) return;
+      const speaker = audioItem.value.speaker;
+      const newPreset = createPresetData(title, speaker);
+
+      store.dispatch("UPDATE_PRESET", {
+        presetData: newPreset,
+        oldKey: key,
+        updatesAudioItems,
+        audioKey: activeAudioKey.value,
+      });
       presetName.value = "";
+      closeAllDialog();
     };
 
     const setPresetByScroll = (deltaY: number) => {
@@ -519,6 +616,36 @@ export default defineComponent({
       onChangePreset(presetList.value[newIndex]);
     };
 
+    const presetLabelList = computed(() =>
+      presetList.value?.map((e) => e.label)
+    );
+    const filterOptions = ref(presetLabelList.value);
+
+    const createValue = (
+      val: string,
+      done: (item: string, mode: string) => void
+    ) => {
+      if (!presetLabelList.value!.includes(val)) {
+        done(val, "add-unique");
+      }
+    };
+
+    const presetNamefilter = (
+      val: string,
+      update: (callback: () => void) => void
+    ) => {
+      update(() => {
+        if (val === "") {
+          filterOptions.value = presetLabelList.value;
+        } else {
+          const needle = val.toLowerCase();
+          filterOptions.value = presetLabelList.value!.filter(
+            (v) => v.toLowerCase().indexOf(needle) > -1
+          );
+        }
+      });
+    };
+
     return {
       activeAudioKey,
       uiLocked,
@@ -542,11 +669,16 @@ export default defineComponent({
       presetList,
       presetSelectModel,
       setPresetByScroll,
-      addPreset,
+      checkUpdate,
+      updatePreset,
       showsPresetNameDialog,
       presetName,
-      onCancel,
+      closeAllDialog,
       showsPresetEditDialog,
+      createValue,
+      filterOptions,
+      presetNamefilter,
+      showsPresetRewriteDialog,
     };
   },
 });

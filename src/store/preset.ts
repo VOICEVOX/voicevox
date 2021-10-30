@@ -71,7 +71,6 @@ export const presetStore: VoiceVoxStoreOptions<
       const speaker = presetData.speaker;
 
       const presetItems = { ...context.state.presetItems };
-
       const presetKeys = { ...context.state.presetKeys };
 
       presetKeys[speaker] =
@@ -95,6 +94,58 @@ export const presetStore: VoiceVoxStoreOptions<
           presetKey: newKey,
         });
       }
+      return newKey;
+    },
+    UPDATE_PRESET: async (
+      context,
+      {
+        presetData,
+        oldKey,
+        updatesAudioItems,
+        audioKey,
+      }: {
+        presetData: Preset;
+        oldKey: string;
+        updatesAudioItems: boolean;
+        audioKey?: string;
+      }
+    ) => {
+      const presetItems = { ...context.state.presetItems };
+      const presetKeys = { ...context.state.presetKeys };
+      const speaker = presetData.speaker;
+
+      presetKeys[speaker] = [...context.state.presetKeys[speaker]];
+      presetKeys[speaker].splice(
+        presetKeys[speaker].findIndex((e) => e === oldKey),
+        1
+      );
+      delete presetItems[oldKey];
+
+      const newKey = uuidv4();
+      presetItems[newKey] = presetData;
+      presetKeys[speaker].push(newKey);
+
+      await context.dispatch("SAVE_PRESET_CONFIG", {
+        presetItems,
+        presetKeys,
+      });
+
+      if (audioKey !== undefined) {
+        await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
+          audioKey,
+          presetKey: newKey,
+        });
+      }
+
+      if (!updatesAudioItems) return;
+      Object.entries(context.state.audioItems).forEach((e) => {
+        if (e[1].presetKey === oldKey) {
+          context.dispatch("COMMAND_SET_AUDIO_PRESET", {
+            presetKey: newKey,
+            audioKey: e[0],
+          });
+        }
+      });
     },
   },
 };

@@ -474,7 +474,16 @@ export type PresetActions = {
     presetItems: Record<string, Preset>;
     presetKeys: Record<number, string[]>;
   }): void;
-  ADD_PRESET(payload: { presetData: Preset; audioKey?: string }): void;
+  ADD_PRESET(payload: {
+    presetData: Preset;
+    audioKey?: string;
+  }): Promise<string>;
+  UPDATE_PRESET(payload: {
+    presetData: Preset;
+    oldKey: string;
+    updatesAudioItems: boolean;
+    audioKey?: string;
+  }): void;
 };
 
 export type AllGetters = AudioGetters &
