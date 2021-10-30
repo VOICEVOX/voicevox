@@ -18,6 +18,8 @@
         @change="speedScaleSlider.qSliderProps.onChange"
         @wheel="speedScaleSlider.qSliderProps.onWheel"
         @pan="speedScaleSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
     <div class="q-px-md">
@@ -38,6 +40,8 @@
         @change="pitchScaleSlider.qSliderProps.onChange"
         @wheel="pitchScaleSlider.qSliderProps.onWheel"
         @pan="pitchScaleSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
     <div class="q-px-md">
@@ -59,6 +63,8 @@
         @change="intonationScaleSlider.qSliderProps.onChange"
         @wheel="intonationScaleSlider.qSliderProps.onWheel"
         @pan="intonationScaleSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
     <div class="q-px-md">
@@ -79,6 +85,8 @@
         @change="volumeScaleSlider.qSliderProps.onChange"
         @wheel="volumeScaleSlider.qSliderProps.onWheel"
         @pan="volumeScaleSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
     <div class="q-px-md">
@@ -100,6 +108,8 @@
         @change="prePhonemeLengthSlider.qSliderProps.onChange"
         @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
         @pan="prePhonemeLengthSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
     <div class="q-px-md">
@@ -121,6 +131,8 @@
         @change="postPhonemeLengthSlider.qSliderProps.onChange"
         @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
         @pan="postPhonemeLengthSlider.qSliderProps.onPan"
+        @mouseover="lockScroll"
+        @mouseleave="unlockScroll"
       />
     </div>
   </div>
@@ -251,6 +263,20 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
 
+    const lockScroll = () => {
+      const xPos = window.scrollX;
+      const yPos = window.scrollY;
+      window.onscroll = () => {
+        window.scroll(xPos, yPos);
+      };
+    };
+
+    const unlockScroll = () => {
+      window.onscroll = () => {
+        return;
+      };
+    };
+
     return {
       uiLocked,
       audioItem,
@@ -261,6 +287,8 @@ export default defineComponent({
       volumeScaleSlider,
       prePhonemeLengthSlider,
       postPhonemeLengthSlider,
+      lockScroll,
+      unlockScroll,
     };
   },
 });
