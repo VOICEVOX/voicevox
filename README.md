@@ -5,8 +5,15 @@
 
 ## 環境構築
 
-[.node-version](.node-version)に記載されているバージョンの Node.js をインストールしてください。
-インストール後、次のコマンドを実行してください。
+[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
+指定されたバージョンの Node.js をダウンロードするには推察してダウンロードのURLを作成してください。
+Node.js をインストール後、[voicevoxのリポジトリ](https://github.com/Hiroshiba/voicevox.git) を `git clone` してください。
+
+```bash
+git clone https://github.com/Hiroshiba/voicevox.git
+```
+
+次のコマンドを実行して環境構築を完了してください。
 
 ```bash
 npm ci
