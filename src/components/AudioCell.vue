@@ -136,7 +136,6 @@
 import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
-import { CharacterInfo } from "@/type/preload";
 import { QInput, debounce } from "quasar";
 
 export default defineComponent({
