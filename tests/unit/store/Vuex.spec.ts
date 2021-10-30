@@ -8,6 +8,7 @@ import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { assert } from "chai";
+import { DefaultApiInterface } from "@/openapi";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -43,6 +44,10 @@ describe("store/vuex.js test", () => {
         isPinned: false,
         hotkeySettings: [],
         useVoicing: false,
+        engineHost: "http://127.0.0.1",
+        _engineFactory: {
+          instance: () => undefined as unknown as DefaultApiInterface,
+        },
       },
       getters: {
         ...uiStore.getters,
