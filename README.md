@@ -67,8 +67,8 @@ npm run fmt
 
 ## タイポチェック
 
-[typos](https://github.com/crate-ci/typos)を使ってタイポのチェックを行っています。
-[typos をインストール](https://github.com/crate-ci/typos#install)した後
+[typos](https://github.com/crate-ci/typos) を使ってタイポのチェックを行っています。
+[typos をインストール](https://github.com/crate-ci/typos#install) した後
 
 ```bash
 typos
@@ -76,7 +76,7 @@ typos
 
 でタイポチェックを行えます。
 もし誤判定やチェックから除外すべきファイルがあれば
-[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives)に従って`_typos.toml`を編集してください．
+[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives) に従って`_typos.toml`を編集してください．
 
 ## Markdownlint
 
@@ -89,7 +89,7 @@ npm run markdownlint
 ## Shellcheck
 
 ShellScript の文法チェックを行います。
-インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing)を参照してください。
+インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing) を参照してください。
 
 ```bash
 shellcheck ./build/*.sh
