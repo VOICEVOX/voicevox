@@ -107,7 +107,7 @@ export const presetStore: VoiceVoxStoreOptions<
         presetData: Preset;
         oldKey: string;
         updatesAudioItems: boolean;
-        audioKey?: string;
+        audioKey: string;
       }
     ) => {
       const presetItems = { ...context.state.presetItems };
@@ -130,12 +130,10 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys,
       });
 
-      if (audioKey !== undefined) {
-        await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-          audioKey,
-          presetKey: newKey,
-        });
-      }
+      await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
+        audioKey,
+        presetKey: newKey,
+      });
 
       if (!updatesAudioItems) return;
       Object.entries(context.state.audioItems).forEach((e) => {

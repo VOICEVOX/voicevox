@@ -482,7 +482,7 @@ export type PresetActions = {
     presetData: Preset;
     oldKey: string;
     updatesAudioItems: boolean;
-    audioKey?: string;
+    audioKey: string;
   }): void;
 };
 

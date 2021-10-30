@@ -578,7 +578,7 @@ export default defineComponent({
         presetData: newPreset,
         oldKey: key,
         updatesAudioItems,
-        audioKey: activeAudioKey.value,
+        audioKey: activeAudioKey.value!,
       });
       presetName.value = "";
       closeAllDialog();
