@@ -335,7 +335,7 @@ export const audioStore: VoiceVoxStoreOptions<
         accentPhraseIndex: number;
         moraIndex: number;
         data: number;
-        type: string;
+        type: MoraDataType;
       }
     ) {
       const query = state.audioItems[audioKey].query;
@@ -359,6 +359,20 @@ export const audioStore: VoiceVoxStoreOptions<
             pauseMora.vowelLength = data;
           }
           break;
+        }
+        case "voicing": {
+          query.accentPhrases[accentPhraseIndex].moras[moraIndex].pitch = data;
+          if (data == 0) {
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+              query.accentPhrases[accentPhraseIndex].moras[
+                moraIndex
+              ].vowel.toUpperCase();
+          } else {
+            query.accentPhrases[accentPhraseIndex].moras[moraIndex].vowel =
+              query.accentPhrases[accentPhraseIndex].moras[
+                moraIndex
+              ].vowel.toLowerCase();
+          }
         }
       }
     },
@@ -560,21 +574,6 @@ export const audioStore: VoiceVoxStoreOptions<
           );
           throw error;
         });
-    },
-    FETCH_AND_SET_AUDIO_QUERY(
-      { state, dispatch },
-      { audioKey }: { audioKey: string }
-    ) {
-      const audioItem = state.audioItems[audioKey];
-      const styleId = audioItem.styleId;
-      if (styleId == undefined) throw new Error("styleId == undefined");
-
-      return dispatch("FETCH_AUDIO_QUERY", {
-        text: audioItem.text,
-        styleId: styleId,
-      }).then((audioQuery) =>
-        dispatch("SET_AUDIO_QUERY", { audioKey, audioQuery })
-      );
     },
     GENERATE_AUDIO: createUILockAction(
       async ({ state }, { audioKey }: { audioKey: string }) => {
