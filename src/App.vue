@@ -21,8 +21,10 @@ export default defineComponent({
 
     store.dispatch("START_WAITING_ENGINE", undefined);
     store.dispatch("GET_USE_GPU", undefined);
-    store.dispatch("GET_SAVING_SETTING_DATA", undefined);
     store.dispatch("GET_PRESET_CONFIG", undefined);
+    store.dispatch("GET_SAVING_SETTING", undefined);
+    store.dispatch("GET_HOTKEY_SETTINGS", undefined);
+    store.dispatch("GET_USE_VOICING", undefined);
   }
 });
 </script>

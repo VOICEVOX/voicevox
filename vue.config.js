@@ -6,6 +6,15 @@ const process = require("process");
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
 
+// ${productName} Web Setup ${version}.${ext}
+const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
+
+// ${productName}-${version}.${ext}
+const LINUX_ARTIFACT_NAME = process.env.LINUX_ARTIFACT_NAME;
+
+// ${packageName}
+const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
+
 module.exports = {
   configureWebpack: {
     devtool: "source-map",
@@ -50,6 +59,8 @@ module.exports = {
           buildResources: "build",
         },
         nsisWeb: {
+          artifactName:
+            NSIS_WEB_ARTIFACT_NAME !== "" ? NSIS_WEB_ARTIFACT_NAME : undefined,
           include: "build/installer.nsh",
           oneClick: false,
           allowToChangeInstallationDirectory: true,
@@ -60,6 +71,10 @@ module.exports = {
           vPrefixedTagName: false,
         },
         linux: {
+          artifactName:
+            LINUX_ARTIFACT_NAME !== "" ? LINUX_ARTIFACT_NAME : undefined,
+          executableName:
+            LINUX_EXECUTABLE_NAME !== "" ? LINUX_EXECUTABLE_NAME : undefined,
           icon: "public/icon.png",
           category: "AudioVideo",
           target: [

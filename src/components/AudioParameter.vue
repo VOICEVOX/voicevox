@@ -1,35 +1,39 @@
 <template>
   <div
-    @mouseenter="valueLabel.visible = true"
-    @mouseleave="valueLabel.visible = false"
+    @mouseenter="handleMouseHover(true)"
+    @mouseleave="handleMouseHover(false)"
   >
     <q-badge
       class="value-label"
       text-color="secondary"
-      v-if="!disable && (valueLabel.visible || valueLabel.panning)"
+      v-if="
+        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
+      "
     >
-      {{ previewValue.currentValue.value.toPrecision(3) }}
+      {{ previewSlider.state.currentValue.value?.toFixed(precisionComputed) }}
     </q-badge>
     <q-slider
       vertical
       reverse
       snap
-      :min="min"
-      :max="max"
-      :step="step"
-      :disable="disable || uiLocked"
-      :model-value="previewValue.currentValue.value"
-      @update:model-value="previewValue.setPreviewValue(parseFloat($event))"
-      @change="changeValue(parseFloat($event))"
-      @wheel="changeValueByScroll($event.deltaY, $event.ctrlKey)"
-      @pan="setPanning"
+      :style="clipPathComputed"
+      :min="previewSlider.qSliderProps.min.value"
+      :max="previewSlider.qSliderProps.max.value"
+      :step="previewSlider.qSliderProps.step.value"
+      :disable="previewSlider.qSliderProps.disable.value"
+      :model-value="previewSlider.qSliderProps.modelValue.value"
+      @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @change="previewSlider.qSliderProps.onChange"
+      @wheel="previewSlider.qSliderProps.onWheel"
+      @pan="previewSlider.qSliderProps.onPan"
     />
   </div>
 </template>
 
 <script lang="ts">
-import { PreviewableValue } from "@/helpers/previewableValue";
-import { defineComponent, reactive, onMounted, onUnmounted } from "vue";
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import { MoraDataType } from "@/type/preload";
+import { computed, defineComponent, reactive, ref, watch } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -43,69 +47,98 @@ export default defineComponent({
     max: { type: Number, default: 10.0 },
     step: { type: Number, default: 0.01 },
     disable: { type: Boolean, default: false },
+    type: { type: String as () => MoraDataType, default: "vowel" },
+    clip: { type: Boolean, default: false },
+    shiftKeyFlag: { type: Boolean, default: false },
   },
 
-  emits: ["changeValue"],
+  emits: ["changeValue", "mouseOver"],
 
   setup(props, { emit }) {
-    // detect shift key and set flag, preventing changes in intonation while scrolling around
-    let shiftKeyFlag = false;
+    const lastPitch = ref<number>(props.value);
 
-    function handleKeyPress(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag = false;
-    }
-
-    function setShiftKeyFlag(event: KeyboardEvent) {
-      if (event.shiftKey) shiftKeyFlag = true;
-    }
-
-    onMounted(() => {
-      window.addEventListener("keyup", handleKeyPress);
-      window.addEventListener("keydown", setShiftKeyFlag);
-    });
-
-    onUnmounted(() => {
-      window.removeEventListener("keyup", handleKeyPress);
-      window.removeEventListener("keydown", setShiftKeyFlag);
-    });
-
-    const previewValue = new PreviewableValue(() => props.value);
-
-    const changeValue = (newValue: number) => {
-      emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue);
+    const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+      emit(
+        "changeValue",
+        props.accentPhraseIndex,
+        props.moraIndex,
+        newValue,
+        type
+      );
     };
 
-    const changeValueByScroll = (deltaY: number, withDetailedStep: boolean) => {
-      const step = withDetailedStep ? 0.01 : 0.1;
-      let newValue = props.value - (deltaY > 0 ? step : -step);
-      newValue = Math.round(newValue * 1e2) / 1e2;
-      if (!props.uiLocked && !shiftKeyFlag && 6.5 >= newValue && newValue >= 3)
-        changeValue(newValue);
-    };
+    const previewSlider = previewSliderHelper({
+      modelValue: () => props.value,
+      disable: () => props.disable || props.uiLocked,
+      onChange: changeValue,
+      max: () => props.max,
+      min: () => props.min,
+      step: () => props.step,
+      scrollStep: () => props.step * 10,
+      scrollMinStep: () => props.step,
+      disableScroll: () => props.shiftKeyFlag,
+    });
 
     const valueLabel = reactive({
       visible: false,
-      // NOTE: q-slider操作中の表示のON/OFFは@panに渡ってくるphaseで判定する
-      // SEE: https://github.com/quasarframework/quasar/issues/7739#issuecomment-689664504
-      panning: false,
     });
 
-    const setPanning = (panningPhase: string) => {
-      if (panningPhase === "start") {
-        valueLabel.panning = true;
-        previewValue.startPreview();
+    const clipPathComputed = computed((): string => {
+      if (!props.clip) {
+        return "";
       } else {
-        valueLabel.panning = false;
-        previewValue.stopPreview();
+        if (props.type == "vowel") {
+          return "clip-path: inset(-50% -50% -50% 50%)";
+        } else {
+          return "clip-path: inset(-50% 50% -50% -50%)";
+        }
+      }
+    });
+
+    const handleMouseHover = (isOver: boolean) => {
+      valueLabel.visible = isOver;
+      if (props.type == "consonant" || props.type == "vowel") {
+        emit(
+          "mouseOver",
+          isOver,
+          props.type,
+          props.accentPhraseIndex,
+          props.moraIndex
+        );
       }
     };
 
+    const precisionComputed = computed(() => {
+      if (props.type == "pause" || props.type == "pitch") {
+        return 2;
+      } else {
+        return 3;
+      }
+    });
+
+    watch(
+      () => props.value,
+      (newVal, oldVal) => {
+        if (props.type == "pitch" && lastPitch.value != 0) {
+          if (newVal != 0) {
+            if (oldVal == 0) {
+              changeValue(lastPitch.value as number, "voicing");
+            } else {
+              lastPitch.value = newVal;
+            }
+          }
+        }
+      }
+    );
+
     return {
-      previewValue,
+      previewSlider,
       changeValue,
-      changeValueByScroll,
       valueLabel,
-      setPanning,
+      clipPathComputed,
+      handleMouseHover,
+      precisionComputed,
+      lastPitch,
     };
   },
 });

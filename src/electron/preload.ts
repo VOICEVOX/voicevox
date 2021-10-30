@@ -39,6 +39,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_CHARACTER_INFOS");
   },
 
+  getHowToUseText: async () => {
+    return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
+  },
+
   getPolicyText: async () => {
     return await ipcRendererInvoke("GET_POLICY_TEXT");
   },
@@ -49,6 +53,10 @@ const api: Sandbox = {
 
   getUpdateInfos: async () => {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
+  },
+
+  getOssCommunityInfos: async () => {
+    return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {
@@ -170,6 +178,26 @@ const api: Sandbox = {
 
   savingPresets: (newPresets) => {
     return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
+  },
+
+  hotkeySettings: (newData) => {
+    return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
+  },
+
+  isUnsetDefaultStyleIds: async () => {
+    return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_IDS");
+  },
+
+  getDefaultStyleIds: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_STYLE_IDS");
+  },
+
+  setDefaultStyleIds: async (defaultStyleIds) => {
+    await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+  },
+
+  useVoicing: (newData) => {
+    return ipcRenderer.invoke("USE_VOICING", { newData });
   },
 };
 

@@ -24,14 +24,28 @@ export default defineComponent({
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const speaker = audioItem?.speaker;
+      const styleId = audioItem?.styleId;
 
-      return speaker !== undefined
-        ? characterInfos.find((info) => info.metas.speaker == speaker)
+      return styleId !== undefined
+        ? characterInfos.find((info) =>
+            info.metas.styles.find((style) => style.styleId === styleId)
+          )
         : undefined;
     });
 
-    const characterName = computed(() => characterInfo.value?.metas.name);
+    const characterName = computed(() => {
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      const audioItem = activeAudioKey
+        ? store.state.audioItems[activeAudioKey]
+        : undefined;
+      const styleId = audioItem?.styleId;
+      const style = characterInfo.value?.metas.styles.find(
+        (style) => style.styleId === styleId
+      );
+      return style?.styleName
+        ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
+        : characterInfo.value?.metas.speakerName;
+    });
 
     const portraitBlobUrl = computed(() => {
       const portraitBlob = characterInfo.value?.portraitBlob;

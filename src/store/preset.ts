@@ -2,11 +2,17 @@ import {
   PresetGetters,
   PresetActions,
   PresetMutations,
+  PresetStoreState,
   VoiceVoxStoreOptions,
 } from "@/store/type";
 import { Preset } from "@/type/preload";
 
 import { v4 as uuidv4 } from "uuid";
+
+export const presetStoreState: PresetStoreState = {
+  presetItems: {},
+  presetKeys: {},
+};
 
 export const presetStore: VoiceVoxStoreOptions<
   PresetGetters,

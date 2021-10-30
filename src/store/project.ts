@@ -1,6 +1,7 @@
 import { createUILockAction } from "@/store/ui";
 import {
   AudioItem,
+  ProjectStoreState,
   ProjectGetters,
   ProjectActions,
   ProjectMutations,
@@ -11,6 +12,10 @@ import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
 
 const DEFAULT_SAMPLING_RATE = 24000;
+
+export const projectStoreState: ProjectStoreState = {
+  savedLastCommandUnixMillisec: null,
+};
 
 export const projectStore: VoiceVoxStoreOptions<
   ProjectGetters,
@@ -23,11 +28,20 @@ export const projectStore: VoiceVoxStoreOptions<
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
     },
+    IS_EDITED(state, getters) {
+      return (
+        getters.LAST_COMMAND_UNIX_MILLISEC !==
+        state.savedLastCommandUnixMillisec
+      );
+    },
   },
 
   mutations: {
     SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
+    },
+    SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
+      state.savedLastCommandUnixMillisec = unixMillisec;
     },
   },
 
@@ -36,11 +50,12 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { confirm }: { confirm?: boolean }) => {
         if (
           confirm !== false &&
+          context.getters.IS_EDITED &&
           !(await window.electron.showConfirmDialog({
             title: "警告",
             message:
-              "保存されていないプロジェクトの変更は破棄されます。\n" +
-              "よろしいですか？",
+              "プロジェクトの変更が保存されていません。\n" +
+              "変更を破棄してもよろしいですか？",
           }))
         ) {
           return;
@@ -48,12 +63,17 @@ export const projectStore: VoiceVoxStoreOptions<
 
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 
-        const audioItem: AudioItem = { text: "", speaker: 0 };
+        const audioItem: AudioItem = await context.dispatch(
+          "GENERATE_AUDIO_ITEM",
+          {}
+        );
         await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        context.commit("CLEAR_COMMANDS");
       }
     ),
     LOAD_PROJECT_FILE: createUILockAction(
@@ -132,30 +152,59 @@ export const projectStore: VoiceVoxStoreOptions<
                     mora.vowelLength = 0;
                   }
                 }
-              }
 
-              // set phoneme length
-              await context
-                .dispatch("FETCH_MORA_DATA", {
-                  accentPhrases: audioItem.query!.accentPhrases,
-                  speaker: audioItem.speaker!,
-                })
-                .then((accentPhrases: AccentPhrase[]) => {
-                  accentPhrases.forEach((newAccentPhrase, i) => {
-                    const oldAccentPhrase = audioItem.query.accentPhrases[i];
-                    if (newAccentPhrase.pauseMora) {
-                      oldAccentPhrase.pauseMora.vowelLength =
-                        newAccentPhrase.pauseMora.vowelLength;
-                    }
-                    newAccentPhrase.moras.forEach((mora, j) => {
-                      if (mora.consonant) {
-                        oldAccentPhrase.moras[j].consonantLength =
-                          mora.consonantLength;
+                // set phoneme length
+                if (audioItem.styleId == undefined)
+                  throw new Error("audioItem.styleId == undefined");
+                await context
+                  .dispatch("FETCH_MORA_DATA", {
+                    accentPhrases: audioItem.query.accentPhrases,
+                    styleId: audioItem.styleId,
+                  })
+                  .then((accentPhrases: AccentPhrase[]) => {
+                    accentPhrases.forEach((newAccentPhrase, i) => {
+                      const oldAccentPhrase = audioItem.query.accentPhrases[i];
+                      if (newAccentPhrase.pauseMora) {
+                        oldAccentPhrase.pauseMora.vowelLength =
+                          newAccentPhrase.pauseMora.vowelLength;
                       }
-                      oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      newAccentPhrase.moras.forEach((mora, j) => {
+                        if (mora.consonant) {
+                          oldAccentPhrase.moras[j].consonantLength =
+                            mora.consonantLength;
+                        }
+                        oldAccentPhrase.moras[j].vowelLength = mora.vowelLength;
+                      });
                     });
                   });
-                });
+              }
+            }
+          }
+
+          if (appVersionList < [0, 7, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.characterIndex != null) {
+                if (audioItem.characterIndex == 0) {
+                  // 四国めたん 0 -> 四国めたん(あまあま) 0
+                  audioItem.speaker = 0;
+                }
+                if (audioItem.characterIndex == 1) {
+                  // ずんだもん 1 -> ずんだもん(あまあま) 1
+                  audioItem.speaker = 1;
+                }
+                delete audioItem.characterIndex;
+              }
+            }
+          }
+
+          if (appVersionList < [0, 8, 0]) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.speaker !== null) {
+                audioItem.styleId = audioItem.speaker;
+                delete audioItem.speaker;
+              }
             }
           }
 
@@ -173,21 +222,22 @@ export const projectStore: VoiceVoxStoreOptions<
           }
           if (
             !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].speaker != undefined
+              (audioKey) => obj.audioItems[audioKey].styleId != undefined
             )
           ) {
             throw new Error(
-              'Every audioItem should have a "speaker" attribute.'
+              'Every audioItem should have a "styleId" attribute.'
             );
           }
 
           if (
             confirm !== false &&
+            context.getters.IS_EDITED &&
             !(await window.electron.showConfirmDialog({
               title: "警告",
               message:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-                "よろしいですか？",
+                "変更を破棄してもよろしいですか？",
             }))
           ) {
             return;
@@ -205,6 +255,8 @@ export const projectStore: VoiceVoxStoreOptions<
             });
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
+          context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+          context.commit("CLEAR_COMMANDS");
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -248,6 +300,10 @@ export const projectStore: VoiceVoxStoreOptions<
         if (!context.state.projectFilePath) {
           context.commit("SET_PROJECT_FILEPATH", { filePath });
         }
+        context.commit(
+          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+          context.getters.LAST_COMMAND_UNIX_MILLISEC
+        );
         return;
       }
     ),
@@ -303,7 +359,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
-    speaker: { type: "int32" },
+    styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },
   },

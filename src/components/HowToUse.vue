@@ -1,28 +1,27 @@
 <template>
-  <div class="root">
-    <q-header class="q-py-sm">
-      <q-toolbar>
-        <q-toolbar-title class="text-secondary">使い方</q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-    <q-page class="relarive-absolute-wrapper scroller">
-      <div class="q-pa-md">
-        <section>
-          <p>ソフトウェアの使い方は以下をご参照ください。</p>
-          <p>
-            <a
-              href="https://docs.google.com/document/d/1y021q5BToBTErkTQXdMac9A7JzFyJXb4fB1e9_AHe9o/edit?usp=sharing"
-              target="_blank"
-              >使い方</a
-            >
-          </p>
-        </section>
-      </div>
-    </q-page>
-  </div>
+  <q-page class="relative-absolute-wrapper scroller">
+    <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
+  </q-page>
 </template>
 
-<script lang="ts"></script>
+<script lang="ts">
+import { defineComponent, onMounted, ref } from "vue";
+import { useStore } from "@/store";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+export default defineComponent({
+  setup() {
+    const store = useStore();
+    const howToUse = ref("");
+    const md = useMarkdownIt();
+    onMounted(async () => {
+      howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
+    });
+    return {
+      howToUse,
+    };
+  },
+});
+</script>
 
 <style scoped lang="scss">
 .root {
@@ -31,4 +30,10 @@
     overflow: auto;
   }
 }
+
+.markdown :deep(img) {
+  border: 1px solid #333;
+}
 </style>
+
+<style src="github-markdown-css/github-markdown.css"></style>

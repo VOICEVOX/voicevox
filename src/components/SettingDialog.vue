@@ -8,21 +8,24 @@
     v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-white">
-      <q-header class="q-pa-sm" elevated>
-        <q-toolbar>
-          <q-toolbar-title class="text-secondary">設定</q-toolbar-title>
-          <q-space />
-          <!-- close button -->
-          <q-btn
-            round
-            flat
-            icon="close"
-            @click="settingDialogOpenedComputed = false"
-          />
-        </q-toolbar>
-      </q-header>
-      <q-page-container>
-        <q-page ref="scroller" class="relative-absolute-wrapper scroller">
+      <q-page-container class="root">
+        <q-header class="q-pa-sm">
+          <q-toolbar>
+            <q-toolbar-title class="text-secondary"
+              >設定 / オプション</q-toolbar-title
+            >
+            <q-space />
+            <!-- close button -->
+            <q-btn
+              round
+              flat
+              icon="close"
+              color="secondary"
+              @click="settingDialogOpenedComputed = false"
+            />
+          </q-toolbar>
+        </q-header>
+        <q-page ref="scroller" class="scroller">
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
@@ -39,6 +42,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
+                  toggle-text-color="secondary"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -56,7 +60,6 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
-
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -75,6 +78,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
+                  toggle-text-color="secondary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
@@ -157,6 +161,68 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>labファイルを生成</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リップシンク用のlabファイルを生成します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>txtファイルを書き出し</div>
+                <q-space />
+                <q-toggle
+                  :model-value="savingSetting.exportText"
+                  @update:model-value="
+                    handleSavingSettingChange('exportText', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキストをtxtファイルとして書き出します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">実験的機能</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>無声化切り替え</div>
+                <q-space />
+                <q-toggle v-model="useVoicingComputed">
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    この機能を有効にすると、元に戻す・やり直す機能が正しく動作しなくなる可能性があります
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
           </div>
         </q-page>
@@ -166,7 +232,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onUpdated } from "vue";
+import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 
@@ -193,6 +259,13 @@ export default defineComponent({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
       set: (mode: string) => {
         changeUseGPU(mode == "switchGPU" ? true : false);
+      },
+    });
+
+    const useVoicingComputed = computed({
+      get: () => store.state.useVoicing,
+      set: (useVoicing: boolean) => {
+        store.dispatch("SET_USE_VOICING", { data: useVoicing });
       },
     });
 
@@ -262,7 +335,7 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (key: string, data: string | boolean) => {
-      store.dispatch("SET_SAVING_SETTING_DATA", {
+      store.dispatch("SET_SAVING_SETTING", {
         data: { ...savingSetting.value, [key]: data },
       });
     };
@@ -272,15 +345,11 @@ export default defineComponent({
         title: "書き出し先のフォルダを選択",
       });
       if (path) {
-        store.dispatch("SET_SAVING_SETTING_DATA", {
+        store.dispatch("SET_SAVING_SETTING", {
           data: { ...savingSetting.value, fixedExportDir: path },
         });
       }
     };
-
-    onUpdated(() => {
-      store.dispatch("GET_SAVING_SETTING_DATA");
-    });
 
     return {
       settingDialogOpenedComputed,
@@ -289,6 +358,7 @@ export default defineComponent({
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      useVoicingComputed,
     };
   },
 });
@@ -298,7 +368,33 @@ export default defineComponent({
 @use '@/styles' as global;
 @import "~quasar/src/css/variables";
 
-.setting-card {
+.hotkey-table {
   width: 100%;
+}
+
+.setting-card {
+  @extend .hotkey-table;
+  min-width: 475px;
+}
+
+.setting-dialog .q-layout-container :deep(.absolute-full) {
+  right: 0 !important;
+  .scroll {
+    left: unset !important;
+    right: unset !important;
+    width: unset !important;
+    max-height: unset;
+  }
+}
+
+.root {
+  .scroller {
+    overflow-y: scroll;
+    > div {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+  }
 }
 </style>

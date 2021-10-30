@@ -1,14 +1,17 @@
 <template>
-  <div
-    v-show="activeAudioKey"
-    class="full-height root relarive-absolute-wrapper"
-  >
+  <div class="full-height root relative-absolute-wrapper">
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs vertical class="text-secondary" v-model="selectedDetail">
-            <q-tab label="ｱｸｾﾝﾄ" name="accent" />
-            <q-tab label="ｲﾝﾄﾈｰｼｮﾝ" name="intonation" />
+          <q-tabs
+            dense
+            vertical
+            class="text-secondary"
+            v-model="selectedDetail"
+          >
+            <q-tab name="accent" label="ｱｸｾﾝﾄ" />
+            <q-tab name="pitch" label="高さ" />
+            <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
@@ -40,6 +43,7 @@
           </template>
         </div>
       </div>
+
       <div class="overflow-hidden-y accent-phrase-table">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
@@ -51,10 +55,11 @@
               :accentPhraseIndex="accentPhraseIndex"
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
+              :shiftKeyFlag="shiftKeyFlag"
               @changeAccent="changeAccent"
             />
           </template>
-          <template v-if="selectedDetail === 'intonation'">
+          <template v-if="selectedDetail === 'pitch'">
             <div
               v-for="(mora, moraIndex) in accentPhrase.moras"
               :key="moraIndex"
@@ -65,30 +70,94 @@
               <audio-parameter
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
-                :accentPhrase="accentPhrase"
                 :value="mora.pitch"
                 :uiLocked="uiLocked"
                 :min="3"
                 :max="6.5"
                 :disable="mora.pitch == 0.0"
+                :type="'pitch'"
+                :clip="false"
+                :shiftKeyFlag="shiftKeyFlag"
                 @changeValue="changeMoraData"
               />
             </div>
             <div v-if="accentPhrase.pauseMora" />
           </template>
+          <template v-if="selectedDetail === 'length'">
+            <div
+              v-for="(mora, moraIndex) in accentPhrase.moras"
+              :key="moraIndex"
+              class="q-mb-sm pitch-cell"
+              :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
+            >
+              <!-- consonant length -->
+              <audio-parameter
+                v-if="mora.consonant"
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :value="mora.consonantLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                :step="0.001"
+                :type="'consonant'"
+                :clip="true"
+                :shiftKeyFlag="shiftKeyFlag"
+                @changeValue="changeMoraData"
+                @mouseOver="handleLengthHoverText"
+              />
+              <!-- vowel length -->
+              <audio-parameter
+                :moraIndex="moraIndex"
+                :accentPhraseIndex="accentPhraseIndex"
+                :value="mora.vowelLength"
+                :uiLocked="uiLocked"
+                :min="0"
+                :max="0.3"
+                :step="0.001"
+                :type="'vowel'"
+                :clip="mora.consonant ? true : false"
+                :shiftKeyFlag="shiftKeyFlag"
+                @changeValue="changeMoraData"
+                @mouseOver="handleLengthHoverText"
+              />
+            </div>
+          </template>
+          <div
+            class="q-mb-sm pitch-cell"
+            v-if="accentPhrase.pauseMora && selectedDetail == 'length'"
+            :style="{
+              'grid-column': `${accentPhrase.moras.length * 2 + 1} / span 1`,
+            }"
+          >
+            <!-- pause length -->
+            <audio-parameter
+              :moraIndex="accentPhrase.moras.length"
+              :accentPhraseIndex="accentPhraseIndex"
+              :value="accentPhrase.pauseMora.vowelLength"
+              :uiLocked="uiLocked"
+              :min="0"
+              :max="1.0"
+              :step="0.01"
+              :type="'pause'"
+              :shiftKeyFlag="shiftKeyFlag"
+              @changeValue="changeMoraData"
+            />
+          </div>
           <template
             v-for="(mora, moraIndex) in accentPhrase.moras"
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(accentPhraseIndex)"
+              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
-              @mouseover="handleHoverText(accentPhraseIndex, true)"
-              @mouseleave="handleHoverText(accentPhraseIndex, false)"
+              @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
+              @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
+              @click="handleChangeVoicing(mora, accentPhraseIndex, moraIndex)"
             >
-              {{ mora.text }}
+              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -151,74 +220,113 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  onUnmounted,
+  reactive,
+  ref,
+} from "vue";
 import { useStore } from "@/store";
-import Mousetrap from "mousetrap";
 import { useQuasar } from "quasar";
 import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
+import { setHotkeyFunctions } from "@/store/setting";
+import { Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
 
   name: "AudioDetail",
 
-  setup() {
+  props: {
+    activeAudioKey: { type: String, required: true },
+  },
+
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
-    // add hotkeys with mousetrap
-    Mousetrap.bind("space", () => {
-      if (!nowPlaying.value && !nowGenerating.value) {
-        play();
-      } else {
-        stop();
-      }
-    });
-
-    Mousetrap.bind("1", () => {
-      selectedDetail.value = "accent";
-    });
-
-    Mousetrap.bind("2", () => {
-      selectedDetail.value = "intonation";
-    });
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+      [
+        "再生/停止",
+        () => {
+          if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+            play();
+          } else {
+            stop();
+          }
+        },
+      ],
+      [
+        "一つだけ書き出し",
+        () => {
+          if (!uiLocked.value) {
+            save();
+          }
+        },
+      ],
+      [
+        "ｱｸｾﾝﾄ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "accent";
+          }
+        },
+      ],
+      [
+        "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "pitch";
+          }
+        },
+      ],
+      [
+        "長さ欄を表示",
+        () => {
+          if (!uiLocked.value) {
+            selectedDetail.value = "length";
+          }
+        },
+      ],
+    ]);
+    // このコンポーネントは遅延評価なので手動でバインディングを行う
+    setHotkeyFunctions(hotkeyMap, true);
 
     // detail selector
-    type DetailTypes = "accent" | "intonation";
+    type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
-      selectedDetail.value = index === 0 ? "accent" : "intonation";
+      selectedDetail.value = index === 0 ? "accent" : "pitch";
     };
+    const useVoicing = computed(() => store.state.useVoicing);
 
     // accent phrase
-    const activeAudioKey = computed<string | undefined>(
-      () => store.getters.ACTIVE_AUDIO_KEY
-    );
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const audioItem = computed(() =>
-      activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
+    const audioItem = computed(
+      () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const changeAccent = (accentPhraseIndex: number, accent: number) => {
+    const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         accent,
       });
-    };
-
     const toggleAccentPhraseSplit = (
       accentPhraseIndex: number,
       isPause: boolean,
       moraIndex?: number
     ) => {
       store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         ...(!isPause
           ? { isPause, moraIndex: moraIndex as number }
@@ -229,21 +337,37 @@ export default defineComponent({
     const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
-      pitch: number
+      data: number,
+      type: MoraDataType
     ) => {
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         accentPhraseIndex,
         moraIndex,
-        pitch,
+        data,
+        type,
       });
+    };
+
+    const tabAction = (actionType: DetailTypes) => {
+      switch (actionType) {
+        case "play":
+          play();
+          break;
+        case "stop":
+          stop();
+          break;
+        case "save":
+          save();
+          break;
+      }
     };
 
     // audio play
     const play = async () => {
       try {
         await store.dispatch("PLAY_AUDIO", {
-          audioKey: activeAudioKey.value!,
+          audioKey: props.activeAudioKey,
         });
       } catch (e) {
         $q.dialog({
@@ -259,7 +383,7 @@ export default defineComponent({
     };
 
     const stop = () => {
-      store.dispatch("STOP_AUDIO", { audioKey: activeAudioKey.value! });
+      store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
     };
 
     // save
@@ -267,7 +391,7 @@ export default defineComponent({
       const result: SaveResultObject = await store.dispatch(
         "GENERATE_AND_SAVE_AUDIO",
         {
-          audioKey: activeAudioKey.value!,
+          audioKey: props.activeAudioKey,
           encoding: store.state.savingSetting.fileEncoding,
         }
       );
@@ -298,10 +422,10 @@ export default defineComponent({
     };
 
     const nowPlaying = computed(
-      () => store.state.audioStates[activeAudioKey.value!]?.nowPlaying
+      () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
     );
     const nowGenerating = computed(
-      () => store.state.audioStates[activeAudioKey.value!]?.nowGenerating
+      () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
     );
 
     // continuously play
@@ -330,47 +454,174 @@ export default defineComponent({
     ) => {
       let popUntilPause = false;
       newPronunciation = newPronunciation.replace(",", "、");
+      if (accentPhrases.value == undefined)
+        throw new Error("accentPhrases.value == undefined");
       if (
         newPronunciation.slice(-1) == "、" &&
-        accentPhrases.value!.length - 1 != phraseIndex
+        accentPhrases.value.length - 1 != phraseIndex
       ) {
         newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
         popUntilPause = true;
       }
       store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         newPronunciation,
         accentPhraseIndex: phraseIndex,
         popUntilPause,
       });
     };
 
-    const hoveredPhraseIndex = ref<number | undefined>(undefined);
+    type hoveredType = "vowel" | "consonant";
 
-    const handleHoverText = (phraseIndex: number, isOver: boolean) => {
+    type hoveredInfoType = {
+      accentPhraseIndex: number | undefined;
+      moraIndex?: number | undefined;
+      type?: hoveredType;
+    };
+
+    const accentHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+    });
+
+    const pitchHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+    });
+
+    const lengthHoveredInfo = reactive<hoveredInfoType>({
+      accentPhraseIndex: undefined,
+      moraIndex: undefined,
+      type: "vowel",
+    });
+
+    const handleHoverText = (
+      isOver: boolean,
+      phraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (selectedDetail.value == "accent") {
+        if (isOver) {
+          accentHoveredInfo.accentPhraseIndex = phraseIndex;
+        } else {
+          accentHoveredInfo.accentPhraseIndex = undefined;
+        }
+      } else if (selectedDetail.value == "pitch") {
+        if (isOver) {
+          pitchHoveredInfo.accentPhraseIndex = phraseIndex;
+          pitchHoveredInfo.moraIndex = moraIndex;
+        } else {
+          pitchHoveredInfo.accentPhraseIndex = undefined;
+          pitchHoveredInfo.moraIndex = undefined;
+        }
+      }
+    };
+
+    const handleLengthHoverText = (
+      isOver: boolean,
+      phoneme: hoveredType,
+      phraseIndex: number,
+      moraIndex?: number
+    ) => {
+      lengthHoveredInfo.type = phoneme;
+      // the pause and pitch templates don't emit a mouseOver event
       if (isOver) {
-        hoveredPhraseIndex.value = phraseIndex;
+        lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+        lengthHoveredInfo.moraIndex = moraIndex;
       } else {
-        hoveredPhraseIndex.value = undefined;
+        lengthHoveredInfo.accentPhraseIndex = undefined;
+        lengthHoveredInfo.moraIndex = undefined;
       }
     };
 
-    const getHoveredClass = (accentPhraseIndex: number) => {
+    const unvoicableVowels = ["U", "I", "i", "u"];
+
+    const getHoveredClass = (
+      vowel: string,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      let isHover = false;
+      if (!uiLocked.value) {
+        if (selectedDetail.value == "accent") {
+          if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
+            isHover = true;
+          }
+        } else if (selectedDetail.value == "pitch" && useVoicing.value) {
+          if (
+            accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
+            moraIndex === pitchHoveredInfo.moraIndex &&
+            unvoicableVowels.indexOf(vowel) > -1
+          ) {
+            isHover = true;
+          }
+        }
+      }
+      if (isHover) return "text-cell-hovered";
+      else return "text-cell";
+    };
+
+    const getHoveredText = (
+      mora: Mora,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (selectedDetail.value != "length") return mora.text;
       if (
-        selectedDetail.value == "accent" &&
-        !uiLocked.value &&
-        accentPhraseIndex === hoveredPhraseIndex.value
+        accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+        moraIndex === lengthHoveredInfo.moraIndex
       ) {
-        return "text-cell-hovered";
+        if (lengthHoveredInfo.type == "vowel") {
+          return mora.vowel.toUpperCase();
+        } else {
+          return mora.consonant?.toUpperCase();
+        }
       } else {
-        return "text-cell";
+        return mora.text;
       }
     };
+
+    const shiftKeyFlag = ref(false);
+
+    const setShiftKeyFlag = (event: KeyboardEvent) => {
+      shiftKeyFlag.value = event.shiftKey;
+    };
+
+    function resetShiftKeyFlag(event: KeyboardEvent) {
+      if (event.key === "Shift") shiftKeyFlag.value = false;
+    }
+
+    const handleChangeVoicing = (
+      mora: Mora,
+      accentPhraseIndex: number,
+      moraIndex: number
+    ) => {
+      if (!uiLocked.value && useVoicing.value) {
+        if (
+          selectedDetail.value == "pitch" &&
+          unvoicableVowels.indexOf(mora.vowel) > -1
+        ) {
+          let data = 0;
+          if (mora.pitch == 0) {
+            data = 5.5; // don't worry, it will be overwritten by template itself
+          }
+          changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
+        }
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener("keyup", resetShiftKeyFlag);
+      document.addEventListener("keydown", setShiftKeyFlag);
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("keyup", resetShiftKeyFlag);
+      document.removeEventListener("keydown", setShiftKeyFlag);
+    });
 
     return {
       selectDetail,
       selectedDetail,
-      activeAudioKey,
       uiLocked,
       audioItem,
       query,
@@ -387,7 +638,12 @@ export default defineComponent({
       pronunciationByPhrase,
       handleChangePronounce,
       handleHoverText,
+      handleLengthHoverText,
       getHoveredClass,
+      getHoveredText,
+      shiftKeyFlag,
+      tabAction,
+      handleChangeVoicing,
     };
   },
 });

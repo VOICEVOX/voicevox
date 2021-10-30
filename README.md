@@ -34,6 +34,13 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 npm run electron:build
 ```
 
+## テスト
+
+```bash
+npm run test:unit
+npm run test:e2e
+```
+
 ## 依存ライブラリのライセンス情報の生成
 
 ```bash
@@ -70,6 +77,15 @@ Markdown の文法チェックを行います。
 
 ```bash
 npm run markdownlint
+```
+
+## Shellcheck
+
+ShellScript の文法チェックを行います。
+インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing)を参照してください。
+
+```bash
+shellcheck ./build/*.sh
 ```
 
 ## OpenAPI generator

@@ -41,24 +41,6 @@
         @click="redo"
         >やり直す</q-btn
       >
-      <q-btn
-        id="setting_button"
-        unelevated
-        round
-        icon="settings"
-        class="q-mr-sm"
-        :disable="uiLocked"
-        @click="openSettingDialog"
-      />
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold"
-        :disable="uiLocked"
-        @click="openHelpDialog"
-        >ヘルプ</q-btn
-      >
     </q-toolbar>
   </q-header>
 </template>
@@ -67,6 +49,8 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { setHotkeyFunctions } from "@/store/setting";
+import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 
 export default defineComponent({
   setup() {
@@ -82,11 +66,59 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    if (useUndoRedo.value) {
+      const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+        // undo
+        [
+          "元に戻す",
+          () => {
+            if (!uiLocked.value && canUndo.value) {
+              undo();
+            }
+            return false;
+          },
+        ],
+        // redo
+        [
+          "やり直す",
+          () => {
+            if (!uiLocked.value && canRedo.value) {
+              redo();
+            }
+            return false;
+          },
+        ],
+      ]);
+      setHotkeyFunctions(undoRedoHotkeyMap);
+    }
+
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+      // play/stop continuously
+      [
+        "連続再生/停止",
+        () => {
+          if (!uiLocked.value) {
+            if (nowPlayingContinuously.value) {
+              stopContinuously();
+            } else {
+              playContinuously();
+            }
+          }
+        },
+      ],
+    ]);
+
+    setHotkeyFunctions(hotkeyMap);
+
     const undo = () => {
-      store.dispatch("UNDO");
+      if (useUndoRedo.value) {
+        store.dispatch("UNDO");
+      }
     };
     const redo = () => {
-      store.dispatch("REDO");
+      if (useUndoRedo.value) {
+        store.dispatch("REDO");
+      }
     };
     const playContinuously = async () => {
       try {
@@ -106,12 +138,6 @@ export default defineComponent({
     const stopContinuously = () => {
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
-    const openHelpDialog = () => {
-      store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: true });
-    };
-    const openSettingDialog = () => {
-      store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: true });
-    };
 
     return {
       useUndoRedo,
@@ -123,8 +149,6 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
-      openHelpDialog,
-      openSettingDialog,
     };
   },
 });

@@ -1,5 +1,5 @@
 <template>
-  <div class="root full-height q-py-md" v-show="activeAudioKey" v-if="query">
+  <div class="root full-height q-py-md" v-if="query">
     <div class="q-px-md">
       <div class="row no-wrap">
         <div class="text-body1 q-mb-xs">プリセット</div>
@@ -156,126 +156,125 @@
 
     <div class="q-mx-md">
       <span class="text-body1 q-mb-xs"
-        >話速 {{ previewAudioSpeedScale.currentValue.value.toFixed(1) }}</span
+        >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="0.5"
-        :max="2"
-        :step="0.1"
-        :disable="uiLocked"
-        :model-value="previewAudioSpeedScale.currentValue.value"
-        @update:model-value="setPreviewValue(previewAudioSpeedScale, $event)"
-        @change="setAudioSpeedScale"
-        @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'speed')"
-        @pan="setPanning(previewAudioSpeedScale, $event)"
-      >
-      </q-slider>
+        :min="speedScaleSlider.qSliderProps.min.value"
+        :max="speedScaleSlider.qSliderProps.max.value"
+        :step="speedScaleSlider.qSliderProps.step.value"
+        :disable="speedScaleSlider.qSliderProps.disable.value"
+        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          speedScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="speedScaleSlider.qSliderProps.onChange"
+        @wheel="speedScaleSlider.qSliderProps.onWheel"
+        @pan="speedScaleSlider.qSliderProps.onPan"
+      />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音高 {{ previewAudioPitchScale.currentValue.value.toFixed(2) }}</span
+        >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="-0.15"
-        :max="0.15"
-        :step="0.01"
-        :disable="uiLocked"
-        :model-value="previewAudioPitchScale.currentValue.value"
-        @update:model-value="setPreviewValue(previewAudioPitchScale, $event)"
-        @change="setAudioPitchScale"
-        @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'pitch')"
-        @pan="setPanning(previewAudioPitchScale, $event)"
+        :min="pitchScaleSlider.qSliderProps.min.value"
+        :max="pitchScaleSlider.qSliderProps.max.value"
+        :step="pitchScaleSlider.qSliderProps.step.value"
+        :disable="pitchScaleSlider.qSliderProps.disable.value"
+        :model-value="pitchScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          pitchScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="pitchScaleSlider.qSliderProps.onChange"
+        @wheel="pitchScaleSlider.qSliderProps.onWheel"
+        @pan="pitchScaleSlider.qSliderProps.onPan"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >抑揚
-        {{ previewAudioIntonationScale.currentValue.value.toFixed(1) }}</span
+        {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="0"
-        :max="2"
-        :step="0.01"
-        :disable="uiLocked"
-        :model-value="previewAudioIntonationScale.currentValue.value"
+        :min="intonationScaleSlider.qSliderProps.min.value"
+        :max="intonationScaleSlider.qSliderProps.max.value"
+        :step="intonationScaleSlider.qSliderProps.step.value"
+        :disable="intonationScaleSlider.qSliderProps.disable.value"
+        :model-value="intonationScaleSlider.qSliderProps.modelValue.value"
         @update:model-value="
-          setPreviewValue(previewAudioIntonationScale, $event)
+          intonationScaleSlider.qSliderProps['onUpdate:modelValue']
         "
-        @change="setAudioIntonationScale"
-        @wheel="uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'into')"
-        @pan="setPanning(previewAudioIntonationScale, $event)"
+        @change="intonationScaleSlider.qSliderProps.onChange"
+        @wheel="intonationScaleSlider.qSliderProps.onWheel"
+        @pan="intonationScaleSlider.qSliderProps.onPan"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
-        >音量 {{ previewAudioVolumeScale.currentValue.value.toFixed(1) }}</span
+        >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="0"
-        :max="2"
-        :step="0.1"
-        :disable="uiLocked"
-        :model-value="previewAudioVolumeScale.currentValue.value"
-        @update:model-value="setPreviewValue(previewAudioVolumeScale, $event)"
-        @change="setAudioVolumeScale"
-        @wheel="
-          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'volume')
+        :min="volumeScaleSlider.qSliderProps.min.value"
+        :max="volumeScaleSlider.qSliderProps.max.value"
+        :step="volumeScaleSlider.qSliderProps.step.value"
+        :disable="volumeScaleSlider.qSliderProps.disable.value"
+        :model-value="volumeScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          volumeScaleSlider.qSliderProps['onUpdate:modelValue']
         "
-        @pan="setPanning(previewAudioVolumeScale, $event)"
+        @change="volumeScaleSlider.qSliderProps.onChange"
+        @wheel="volumeScaleSlider.qSliderProps.onWheel"
+        @pan="volumeScaleSlider.qSliderProps.onPan"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >開始無音
-        {{ previewAudioPrePhonemeLength.currentValue.value.toFixed(2) }}</span
+        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="0"
-        :max="1.5"
-        :step="0.1"
-        :disable="uiLocked"
-        :model-value="previewAudioPrePhonemeLength.currentValue.value"
+        :min="prePhonemeLengthSlider.qSliderProps.min.value"
+        :max="prePhonemeLengthSlider.qSliderProps.max.value"
+        :step="prePhonemeLengthSlider.qSliderProps.step.value"
+        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="prePhonemeLengthSlider.qSliderProps.modelValue.value"
         @update:model-value="
-          setPreviewValue(previewAudioPrePhonemeLength, $event)
+          prePhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
         "
-        @change="setAudioPrePhonemeLength"
-        @wheel="
-          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'prePhoneme')
-        "
-        @pan="setPanning(previewAudioPrePhonemeLength, $event)"
+        @change="prePhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="prePhonemeLengthSlider.qSliderProps.onPan"
       />
     </div>
     <div class="q-px-md">
       <span class="text-body1 q-mb-xs"
         >終了無音
-        {{ previewAudioPostPhonemeLength.currentValue.value.toFixed(2) }}</span
+        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
         dense
         snap
-        :min="0"
-        :max="1.5"
-        :step="0.1"
-        :disable="uiLocked"
-        :model-value="previewAudioPostPhonemeLength.currentValue.value"
+        :min="postPhonemeLengthSlider.qSliderProps.min.value"
+        :max="postPhonemeLengthSlider.qSliderProps.max.value"
+        :step="postPhonemeLengthSlider.qSliderProps.step.value"
+        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="postPhonemeLengthSlider.qSliderProps.modelValue.value"
         @update:model-value="
-          setPreviewValue(previewAudioPostPhonemeLength, $event)
+          postPhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
         "
-        @change="setAudioPostPhonemeLength"
-        @wheel="
-          uiLocked || setAudioInfoByScroll(query, $event.deltaY, 'postPhoneme')
-        "
-        @pan="setPanning(previewAudioPostPhonemeLength, $event)"
+        @change="postPhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="postPhonemeLengthSlider.qSliderProps.onPan"
       />
     </div>
   </div>
@@ -284,10 +283,11 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
+
 import { Preset } from "@/type/preload";
-import { AudioQuery } from "@/openapi";
-import { PreviewableValue } from "@/helpers/previewableValue";
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import PresetManageDialog from "./PresetManageDialog.vue";
+
 export default defineComponent({
   name: "AudioInfo",
 
@@ -295,176 +295,122 @@ export default defineComponent({
     PresetManageDialog,
   },
 
-  setup() {
+  props: {
+    activeAudioKey: { type: String, required: true },
+  },
+
+  setup(props) {
     const store = useStore();
 
     // accent phrase
-    const activeAudioKey = computed<string | undefined>(
-      () => store.getters.ACTIVE_AUDIO_KEY
-    );
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const audioItem = computed(() =>
-      activeAudioKey.value ? store.state.audioItems[activeAudioKey.value] : null
+    const audioItem = computed(
+      () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
 
-    const previewAudioSpeedScale = new PreviewableValue(
-      () => query.value?.speedScale
-    );
-
-    const previewAudioPitchScale = new PreviewableValue(
-      () => query.value?.pitchScale
-    );
-
-    const previewAudioIntonationScale = new PreviewableValue(
-      () => query.value?.intonationScale
-    );
-
-    const previewAudioVolumeScale = new PreviewableValue(
-      () => query.value?.volumeScale
-    );
-
-    const previewAudioPrePhonemeLength = new PreviewableValue(
-      () => query.value?.prePhonemeLength
-    );
-
-    const previewAudioPostPhonemeLength = new PreviewableValue(
-      () => query.value?.postPhonemeLength
-    );
-
-    const setPreviewValue = (
-      previewableValue: PreviewableValue,
-      value: number
-    ) => previewableValue.setPreviewValue(value);
-
-    const setPanning = (
-      previewableValue: PreviewableValue,
-      panning: string
-    ) => {
-      if (panning === "start") {
-        previewableValue.startPreview();
-      } else {
-        previewableValue.stopPreview();
-      }
-    };
-
     const setAudioSpeedScale = (speedScale: number) => {
-      previewAudioSpeedScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         speedScale,
       });
     };
 
     const setAudioPitchScale = (pitchScale: number) => {
-      previewAudioPitchScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_PITCH_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         pitchScale,
       });
     };
 
     const setAudioIntonationScale = (intonationScale: number) => {
-      previewAudioIntonationScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_INTONATION_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         intonationScale,
       });
     };
 
     const setAudioVolumeScale = (volumeScale: number) => {
-      previewAudioVolumeScale.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_VOLUME_SCALE", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         volumeScale,
       });
     };
 
     const setAudioPrePhonemeLength = (prePhonemeLength: number) => {
-      previewAudioPrePhonemeLength.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         prePhonemeLength,
       });
     };
 
     const setAudioPostPhonemeLength = (postPhonemeLength: number) => {
-      previewAudioPostPhonemeLength.stopPreview();
       store.dispatch("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", {
-        audioKey: activeAudioKey.value!,
+        audioKey: props.activeAudioKey,
         postPhonemeLength,
       });
     };
 
-    type InfoType =
-      | "speed"
-      | "pitch"
-      | "into"
-      | "volume"
-      | "prePhoneme"
-      | "postPhoneme";
-
-    const setAudioInfoByScroll = (
-      query: AudioQuery,
-      delta_y: number,
-      type: InfoType
-    ) => {
-      switch (type) {
-        case "speed": {
-          let curSpeed = query.speedScale - (delta_y > 0 ? 0.1 : -0.1);
-          curSpeed = Math.round(curSpeed * 1e2) / 1e2;
-          if (2 >= curSpeed && curSpeed >= 0.5) {
-            setAudioSpeedScale(curSpeed);
-          }
-          break;
-        }
-        case "pitch": {
-          let curPitch = query.pitchScale - (delta_y > 0 ? 0.01 : -0.01);
-          curPitch = Math.round(curPitch * 1e2) / 1e2;
-          if (0.15 >= curPitch && curPitch >= -0.15) {
-            setAudioPitchScale(curPitch);
-          }
-          break;
-        }
-        case "into": {
-          let curInto = query.intonationScale - (delta_y > 0 ? 0.1 : -0.1);
-          curInto = Math.round(curInto * 1e1) / 1e1;
-          if (2 >= curInto && curInto >= 0) {
-            setAudioIntonationScale(curInto);
-          }
-          break;
-        }
-        case "volume": {
-          let curVolume = query.volumeScale - (delta_y > 0 ? 0.1 : -0.1);
-          curVolume = Math.round(curVolume * 1e1) / 1e1;
-          if (2 >= curVolume && curVolume >= 0) {
-            setAudioVolumeScale(curVolume);
-          }
-          break;
-        }
-        case "prePhoneme": {
-          let curPrePhoneme =
-            query.prePhonemeLength - (delta_y > 0 ? 0.1 : -0.1);
-          curPrePhoneme = Math.round(curPrePhoneme * 1e2) / 1e2;
-          if (1.5 >= curPrePhoneme && curPrePhoneme >= 0) {
-            setAudioPrePhonemeLength(curPrePhoneme);
-          }
-          break;
-        }
-        case "postPhoneme": {
-          let curPostPhoneme =
-            query.postPhonemeLength - (delta_y > 0 ? 0.1 : -0.1);
-          curPostPhoneme = Math.round(curPostPhoneme * 1e2) / 1e2;
-          if (1.5 >= curPostPhoneme && curPostPhoneme >= 0) {
-            setAudioPostPhonemeLength(curPostPhoneme);
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    };
+    const speedScaleSlider = previewSliderHelper({
+      modelValue: () => query.value?.speedScale ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioSpeedScale,
+      max: () => 2,
+      min: () => 0.5,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
+    const pitchScaleSlider = previewSliderHelper({
+      modelValue: () => query.value?.pitchScale ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioPitchScale,
+      max: () => 0.15,
+      min: () => -0.15,
+      step: () => 0.01,
+      scrollStep: () => 0.01,
+    });
+    const intonationScaleSlider = previewSliderHelper({
+      modelValue: () => query.value?.intonationScale ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioIntonationScale,
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
+    const volumeScaleSlider = previewSliderHelper({
+      modelValue: () => query.value?.volumeScale ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioVolumeScale,
+      max: () => 2,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
+    const prePhonemeLengthSlider = previewSliderHelper({
+      modelValue: () => query.value?.prePhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioPrePhonemeLength,
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
+    const postPhonemeLengthSlider = previewSliderHelper({
+      modelValue: () => query.value?.postPhonemeLength ?? null,
+      disable: () => uiLocked.value,
+      onChange: setAudioPostPhonemeLength,
+      max: () => 1.5,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
 
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
@@ -619,25 +565,15 @@ export default defineComponent({
     const setPresetName = (s: string) => (presetName.value = s);
 
     return {
-      activeAudioKey,
       uiLocked,
       audioItem,
       query,
-      previewAudioSpeedScale,
-      previewAudioPitchScale,
-      previewAudioIntonationScale,
-      previewAudioVolumeScale,
-      previewAudioPrePhonemeLength,
-      previewAudioPostPhonemeLength,
-      setPreviewValue,
       setAudioSpeedScale,
       setAudioPitchScale,
       setAudioIntonationScale,
       setAudioVolumeScale,
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
-      setAudioInfoByScroll,
-      setPanning,
       presetList,
       presetSelectModel,
       setPresetByScroll,
@@ -649,6 +585,12 @@ export default defineComponent({
       showsPresetEditDialog,
       showsPresetRewriteDialog,
       setPresetName,
+      speedScaleSlider,
+      pitchScaleSlider,
+      intonationScaleSlider,
+      volumeScaleSlider,
+      prePhonemeLengthSlider,
+      postPhonemeLengthSlider,
     };
   },
 });

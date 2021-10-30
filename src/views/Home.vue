@@ -81,14 +81,20 @@
                     </div>
                   </template>
                   <template #after>
-                    <audio-info />
+                    <audio-info
+                      v-if="activeAudioKey != undefined"
+                      :activeAudioKey="activeAudioKey"
+                    />
                   </template>
                 </q-splitter>
               </template>
             </q-splitter>
           </template>
           <template #after>
-            <audio-detail />
+            <audio-detail
+              v-if="activeAudioKey != undefined"
+              :activeAudioKey="activeAudioKey"
+            />
           </template>
         </q-splitter>
 
@@ -101,6 +107,12 @@
   </q-layout>
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
+  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
+  <!-- v-ifも付けないとfalseでも動いてしまう -->
+  <default-style-select-dialog
+    v-if="isDefaultStyleSelectDialogOpenComputed"
+    v-model="isDefaultStyleSelectDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -120,11 +132,14 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
+import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
+import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import { AudioItem } from "@/store/type";
-import Mousetrap from "mousetrap";
 import { QResizeObserver } from "quasar";
 import path from "path";
+import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
   name: "Home",
@@ -137,7 +152,9 @@ export default defineComponent({
     AudioInfo,
     HelpDialog,
     SettingDialog,
+    HotkeySettingDialog,
     CharacterPortrait,
+    DefaultStyleSelectDialog,
   },
 
   setup() {
@@ -147,17 +164,76 @@ export default defineComponent({
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    // add hotkeys
-    Mousetrap.bind(["ctrl+e"], () => {
-      generateAndSaveAllAudio();
-    });
+    // hotkeys handled by Mousetrap
+    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+      [
+        "テキスト欄にフォーカスを戻す",
+        () => {
+          if (activeAudioKey.value !== undefined) {
+            focusCell({ audioKey: activeAudioKey.value });
+          }
+          return false; // this is the same with event.preventDefault()
+        },
+      ],
+    ]);
 
-    Mousetrap.bind("shift+enter", () => {
-      addAudioItem();
-    });
+    setHotkeyFunctions(hotkeyMap);
 
-    const generateAndSaveAllAudio = () => {
-      store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {});
+    const removeAudioItem = async () => {
+      if (activeAudioKey.value == undefined) throw new Error();
+      audioCellRefs[activeAudioKey.value].removeCell();
+    };
+
+    // convert the hotkey array to Map to get value with keys easier
+    // this only happens here where we deal with native methods
+    const hotkeySettingsMap = computed(
+      () =>
+        new Map(
+          store.state.hotkeySettings.map((obj) => [obj.action, obj.combination])
+        )
+    );
+
+    // hotkeys handled by native, for they are made to be working while focusing input elements
+    const hotkeyActionsNative = [
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          !uiLocked.value &&
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
+        ) {
+          addAudioItem();
+          event.preventDefault();
+        }
+      },
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          !uiLocked.value &&
+          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
+        ) {
+          removeAudioItem();
+          event.preventDefault();
+        }
+      },
+      (event: KeyboardEvent) => {
+        if (
+          !event.isComposing &&
+          !uiLocked.value &&
+          parseCombo(event) ==
+            hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
+        ) {
+          if (document.activeElement instanceof HTMLInputElement) {
+            document.activeElement.blur();
+          }
+          event.preventDefault();
+        }
+      },
+    ];
+
+    window.onload = () => {
+      hotkeyActionsNative.forEach((item) => {
+        document.addEventListener("keyup", item);
+      });
     };
 
     // view
@@ -166,7 +242,7 @@ export default defineComponent({
     const MAX_PORTRAIT_PANE_WIDTH = 40;
     const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
     const portraitPaneWidth = ref(0);
@@ -210,9 +286,14 @@ export default defineComponent({
       () => store.getters.ACTIVE_AUDIO_KEY
     );
     const addAudioItem = async () => {
-      const prevAudioKey = activeAudioKey.value!;
-      const speaker = store.state.audioItems[prevAudioKey].speaker;
-      const audioItem: AudioItem = { text: "", speaker: speaker };
+      const prevAudioKey = activeAudioKey.value;
+      let styleId: number | undefined = undefined;
+      if (prevAudioKey !== undefined) {
+        styleId = store.state.audioItems[prevAudioKey].styleId;
+      }
+      const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+        styleId,
+      });
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
@@ -255,8 +336,17 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER");
-      const audioItem: AudioItem = { text: "", speaker: 0 };
+      await Promise.all([
+        store.dispatch("LOAD_CHARACTER"),
+        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
+      ]);
+      if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
+        isDefaultStyleSelectDialogOpenComputed.value = true;
+      }
+      const audioItem: AudioItem = await store.dispatch(
+        "GENERATE_AUDIO_ITEM",
+        {}
+      );
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,
       });
@@ -273,11 +363,29 @@ export default defineComponent({
         store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: val }),
     });
 
-    // show setting dialog
+    // 設定
     const isSettingDialogOpenComputed = computed({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>
         store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
+    });
+
+    // ショートカットキー設定
+    const isHotkeySettingDialogOpenComputed = computed({
+      get: () => store.state.isHotkeySettingDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+          isHotkeySettingDialogOpen: val,
+        }),
+    });
+
+    // デフォルトスタイル選択
+    const isDefaultStyleSelectDialogOpenComputed = computed({
+      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+          isDefaultStyleSelectDialogOpen: val,
+        }),
     });
 
     // ドラッグ＆ドロップ
@@ -306,12 +414,12 @@ export default defineComponent({
       audioKeys,
       uiLocked,
       addAudioCellRef,
+      activeAudioKey,
       addAudioItem,
       shouldShowPanes,
       focusCell,
       changeAudioDetailPaneMaxHeight,
       resizeObserverRef,
-      generateAndSaveAllAudio,
       MIN_PORTRAIT_PANE_WIDTH,
       MAX_PORTRAIT_PANE_WIDTH,
       portraitPaneWidth,
@@ -324,6 +432,8 @@ export default defineComponent({
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
+      isHotkeySettingDialogOpenComputed,
+      isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
@@ -340,7 +450,7 @@ body {
   border-bottom: solid #{global.$window-border-width} #{global.$primary};
 }
 
-.relarive-absolute-wrapper {
+.relative-absolute-wrapper {
   position: relative;
   > div {
     position: absolute;
@@ -409,6 +519,8 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
+
+    padding-bottom: 70px;
   }
   .add-button-wrapper {
     position: absolute;

@@ -7,7 +7,7 @@
     class="help-dialog"
     v-model="modelValueComputed"
   >
-    <q-layout container view="lHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-white">
       <q-drawer
         bordered
         show-if-above
@@ -29,15 +29,6 @@
               <q-item-section>{{ page.name }}</q-item-section>
             </q-item>
           </q-list>
-          <q-space />
-          <q-list>
-            <q-item clickable v-ripple @click="modelValueComputed = false">
-              <q-item-section side>
-                <q-icon name="keyboard_arrow_left" />
-              </q-item-section>
-              <q-item-section>ヘルプを閉じる</q-item-section>
-            </q-item>
-          </q-list>
         </div>
       </q-drawer>
 
@@ -50,7 +41,24 @@
               :name="page.name"
               class="q-pa-none"
             >
-              <component :is="page.component" />
+              <div class="root">
+                <q-header class="q-pa-sm">
+                  <q-toolbar>
+                    <q-toolbar-title class="text-secondary">
+                      ヘルプ / {{ page.name }}
+                    </q-toolbar-title>
+                    <q-space />
+                    <!-- close button -->
+                    <q-btn
+                      round
+                      flat
+                      icon="close"
+                      @click="modelValueComputed = false"
+                    />
+                  </q-toolbar>
+                </q-header>
+                <component :is="page.component" />
+              </div>
             </q-tab-panel>
           </q-tab-panels>
         </q-page>
@@ -66,6 +74,7 @@ import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
 import UpdateInfo from "@/components/UpdateInfo.vue";
+import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
 
 type Page = {
   name: string;
@@ -108,6 +117,10 @@ export default defineComponent({
       {
         name: "アップデート情報",
         component: UpdateInfo,
+      },
+      {
+        name: "OSSコミュニティ",
+        component: OssCommunityInfo,
       },
     ];
 
