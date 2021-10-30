@@ -22,7 +22,7 @@ npm ci
 ## 実行
 
 `.env.production`をコピーして`.env`を作成し、`ENGINE_PATH`に`voicevox_engine`があるパスを指定します。
-とりあえず[製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
+とりあえず [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
 ```bash
 npm run electron:serve
@@ -89,7 +89,7 @@ npm run markdownlint
 ## Shellcheck
 
 ShellScript の文法チェックを行います。
-インストール方法は[こちら](https://github.com/koalaman/shellcheck#installing) を参照してください。
+インストール方法は [こちら](https://github.com/koalaman/shellcheck#installing) を参照してください。
 
 ```bash
 shellcheck ./build/*.sh
