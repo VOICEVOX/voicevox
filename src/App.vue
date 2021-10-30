@@ -19,11 +19,11 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    store.dispatch("START_WAITING_ENGINE", undefined);
-    store.dispatch("GET_USE_GPU", undefined);
-    store.dispatch("GET_SAVING_SETTING", undefined);
-    store.dispatch("GET_HOTKEY_SETTINGS", undefined);
-    store.dispatch("GET_USE_VOICING", undefined);
+    store.dispatch("START_WAITING_ENGINE");
+    store.dispatch("GET_USE_GPU");
+    store.dispatch("GET_SAVING_SETTING");
+    store.dispatch("GET_HOTKEY_SETTINGS");
+    store.dispatch("GET_USE_VOICING");
   }
 });
 </script>
