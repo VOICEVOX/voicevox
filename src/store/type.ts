@@ -133,7 +133,7 @@ type AudioStoreTypes = {
     action(payload: {
       text?: string;
       styleId?: number;
-      prevAudioItem?: AudioItem;
+      baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
 
