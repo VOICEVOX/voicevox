@@ -195,6 +195,10 @@ const api: Sandbox = {
   useVoicing: (newData) => {
     return ipcRenderer.invoke("USE_VOICING", { newData });
   },
+
+  showSamplingRateWarning: (newData) => {
+    return ipcRenderer.invoke("SHOW_SAMPLING_RATE_WARNING", { newData });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

@@ -53,6 +53,7 @@ export interface Sandbox {
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
   useVoicing(newData?: boolean): Promise<boolean>;
+  showSamplingRateWarning(newData?: boolean): Promise<boolean>;
 }
 
 export type AppInfos = {
