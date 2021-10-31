@@ -6,15 +6,9 @@
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
-Node.js をインストール後、[VOICEVOX のリポジトリ](https://github.com/Hiroshiba/voicevox.git) を
-GitHubの右上にある`Forkボタン`をクリックしてForkします。
-Fork済みの「あなたのVOICEVOXのリポジトリ」を作業するコンピュータに `git clone` してください。
+Node.js をインストール後、[このリポジトリ](https://github.com/Hiroshiba/voicevox.git) を
+Forkして `git clone` し、次のコマンドを実行してください。
 
-```bash
-git clone 「あなたのVOICEVOXのリポジトリ」
-```
-
-git clone したディレクトリにて次のコマンドを実行して環境構築を完了してください。
 
 ```bash
 npm ci
