@@ -62,6 +62,7 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
+  inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
@@ -71,6 +72,10 @@ const store = new Store<{
     useGpu: {
       type: "boolean",
       default: false,
+    },
+    inheritAudioInfo: {
+      type: "boolean",
+      default: true,
     },
     savingSetting: {
       type: "object",
@@ -234,8 +239,12 @@ async function runEngine() {
       type: "info",
     });
   }
-
+  if (!store.has("inheritAudioInfo")) {
+    store.set("inheritAudioInfo", true);
+  }
   const useGpu = store.get("useGpu");
+  const inheritAudioInfo = store.get("inheritAudioInfo");
+
   log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
@@ -507,6 +516,14 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
   }
 
   return store.get("useGpu", false);
+});
+
+ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("inheritAudioInfo", newValue);
+  }
+
+  return store.get("inheritAudioInfo", false);
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {

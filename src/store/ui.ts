@@ -29,6 +29,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   useGpu: false,
+  inheritAudioInfo: true,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
@@ -80,6 +81,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
+      },
+      SET_INHERIT_AUDIOINFO(
+        state,
+        { inheritAudioInfo }: { inheritAudioInfo: boolean }
+      ) {
+        state.inheritAudioInfo = inheritAudioInfo;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -166,6 +173,21 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
+        });
+      },
+      async GET_INHERIT_AUDIOINFO({ commit }) {
+        commit("SET_INHERIT_AUDIOINFO", {
+          inheritAudioInfo: await window.electron.inheritAudioInfo(),
+        });
+      },
+      async SET_INHERIT_AUDIOINFO(
+        { commit },
+        { inheritAudioInfo }: { inheritAudioInfo: boolean }
+      ) {
+        commit("SET_INHERIT_AUDIOINFO", {
+          inheritAudioInfo: await window.electron.inheritAudioInfo(
+            inheritAudioInfo
+          ),
         });
       },
       async DETECT_UNMAXIMIZED({ commit }) {
