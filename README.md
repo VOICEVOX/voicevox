@@ -77,7 +77,7 @@ typos
 
 でタイポチェックを行えます。
 もし誤判定やチェックから除外すべきファイルがあれば
-[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives) に従って`_typos.toml`を編集してください．
+[設定ファイルの説明](https://github.com/crate-ci/typos#false-positives) に従って`_typos.toml`を編集してください。
 
 ## Markdownlint
 
