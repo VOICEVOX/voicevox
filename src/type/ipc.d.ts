@@ -166,10 +166,6 @@ type IpcIHData = {
     args: [obj: { newData?: boolean }];
     return: boolean;
   };
-  SHOW_SAMPLING_RATE_WARNING: {
-    args: [obj: { newData?: boolean }];
-    return: boolean;
-  };
 };
 
 /**

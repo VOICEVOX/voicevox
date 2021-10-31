@@ -65,7 +65,6 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   useVoicing: boolean;
-  showSamplingRateWarning: boolean;
 }>({
   schema: {
     useGpu: {
@@ -197,10 +196,6 @@ const store = new Store<{
     useVoicing: {
       type: "boolean",
       default: false,
-    },
-    showSamplingRateWarning: {
-      type: "boolean",
-      default: true,
     },
   },
   migrations: {
@@ -612,13 +607,6 @@ ipcMainHandle("USE_VOICING", (_, { newData }) => {
     store.set("useVoicing", newData);
   }
   return store.get("useVoicing");
-});
-
-ipcMainHandle("SHOW_SAMPLING_RATE_WARNING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("showSamplingRateWarning", newData);
-  }
-  return store.get("showSamplingRateWarning");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

@@ -401,11 +401,7 @@ export default defineComponent({
           data: { ...savingSetting.value, [key]: data },
         });
       };
-      if (
-        key === "outputSamplingRate" &&
-        data !== 24000 &&
-        store.getters.GET_SHOW_SAMPLING_RATE_WARNING
-      ) {
+      if (key === "outputSamplingRate" && data !== 24000) {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
@@ -422,25 +418,7 @@ export default defineComponent({
             flat: true,
             textColor: "secondary",
           },
-          options: {
-            type: "checkbox",
-            model: [],
-            items: [
-              {
-                label: "次回からこのダイアログを表示しない",
-                value: true,
-                color: "secondary",
-              },
-            ],
-          },
-        }).onOk((d: boolean[]) => {
-          if (d.length && d[0]) {
-            store.dispatch("SET_SHOW_SAMPLING_RATE_WARNING", {
-              data: false,
-            });
-          }
-          storeDispatch();
-        });
+        }).onOk(storeDispatch);
         return;
       }
       storeDispatch();

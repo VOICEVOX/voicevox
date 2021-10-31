@@ -603,7 +603,6 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   useVoicing: boolean;
-  showSamplingRateWarning: boolean;
 };
 
 type SettingStoreTypes = {
@@ -632,16 +631,6 @@ type SettingStoreTypes = {
 
   SET_USE_VOICING: {
     mutation: { useVoicing: boolean };
-    action(payload: { data: boolean }): void;
-  };
-
-  GET_SHOW_SAMPLING_RATE_WARNING: {
-    getter: boolean;
-    action(): void;
-  };
-
-  SET_SHOW_SAMPLING_RATE_WARNING: {
-    mutation: { showSamplingRateWarning: boolean };
     action(payload: { data: boolean }): void;
   };
 };

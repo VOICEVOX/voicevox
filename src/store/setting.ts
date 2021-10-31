@@ -29,7 +29,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   useVoicing: false,
-  showSamplingRateWarning: true,
+  samplingRateWarning: true,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -40,9 +40,6 @@ export const settingStore: VoiceVoxStoreOptions<
   getters: {
     GET_SAVING_SETTING(state) {
       return state.savingSetting;
-    },
-    GET_SHOW_SAMPLING_RATE_WARNING(state) {
-      return state.showSamplingRateWarning;
     },
   },
   mutations: {
@@ -64,12 +61,6 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
       state.useVoicing = useVoicing;
-    },
-    SET_SHOW_SAMPLING_RATE_WARNING(
-      state,
-      { showSamplingRateWarning }: { showSamplingRateWarning: boolean }
-    ) {
-      state.showSamplingRateWarning = showSamplingRateWarning;
     },
   },
   actions: {
@@ -132,19 +123,6 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
       window.electron.useVoicing(data);
       commit("SET_USE_VOICING", { useVoicing: data });
-    },
-    GET_SHOW_SAMPLING_RATE_WARNING({ commit }) {
-      window.electron.showSamplingRateWarning().then((data) => {
-        commit("SET_SHOW_SAMPLING_RATE_WARNING", {
-          showSamplingRateWarning: data,
-        });
-      });
-    },
-    SET_SHOW_SAMPLING_RATE_WARNING({ commit }, { data }: { data: boolean }) {
-      window.electron.showSamplingRateWarning(data);
-      commit("SET_SHOW_SAMPLING_RATE_WARNING", {
-        showSamplingRateWarning: data,
-      });
     },
   },
 };
