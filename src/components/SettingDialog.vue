@@ -238,7 +238,12 @@
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
                   :options="[24000, 44100, 48000, 88200, 96000]"
-                  :option-label="(item) => `${item / 1000} kHz`"
+                  :option-label="
+                    (item) =>
+                      `${item / 1000} kHz${
+                        item === 24000 ? '(デフォルト)' : ''
+                      }`
+                  "
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
@@ -250,7 +255,8 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声データのサンプリングレートを変更して出力しますが、音声の品質が向上するわけではありません
+                    音声データのサンプリングレートを変更して出力しますが、音声の品質が向上するわけではありません(デフォルトは24
+                    kHzです)
                   </q-tooltip>
                 </q-select>
               </q-card-actions>
