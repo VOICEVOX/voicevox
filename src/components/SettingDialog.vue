@@ -235,6 +235,7 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { SavingSetting } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -334,7 +335,10 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
-    const handleSavingSettingChange = (key: string, data: string | boolean) => {
+    const handleSavingSettingChange = (
+      key: keyof SavingSetting,
+      data: string | boolean
+    ) => {
       store.dispatch("SET_SAVING_SETTING", {
         data: { ...savingSetting.value, [key]: data },
       });
