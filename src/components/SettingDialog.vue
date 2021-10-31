@@ -206,6 +206,33 @@
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
+                <div class="text-h5">保存(高度な設定)</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>音声をステレオ出力する</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.outputStereo"
+                  @update:model-value="
+                    handleSavingSettingChange('outputStereo', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声データをモノラルからステレオに変換してから出力します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">

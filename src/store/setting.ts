@@ -24,6 +24,7 @@ export const settingStoreState: SettingStoreState = {
     avoidOverwrite: false,
     exportLab: false,
     exportText: true,
+    outputStereo: false,
   },
   hotkeySettings: [],
   useVoicing: false,
