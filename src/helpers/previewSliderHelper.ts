@@ -59,6 +59,7 @@ class CancelableFinary {
  *   q-sliderに渡すべきprops
  */
 export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
+  // Reactive references of each props
   const modelValue = computed(props.modelValue);
   const min = computed(() => (props.min && props.min()) ?? 0);
   const max = computed(() => (props.max && props.max()) ?? 100);
@@ -74,11 +75,13 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     () => (props.disableScroll && props.disableScroll()) ?? false
   );
 
+  // Inner states
   const previewValue = ref(modelValue.value);
   const isPanning = ref(false);
   const isScrolling = ref(false);
   const isAwaiting = ref(false);
 
+  // Displayed value
   const currentValue = computed(() => {
     if (isPanning.value || isScrolling.value || isAwaiting.value) {
       return previewValue.value;
@@ -99,16 +102,22 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     }
   };
 
+  // isAwaiting
+  // CancelableFinary of the last called onChange Promise.
   let awaitingChange: CancelableFinary | null = null;
+  // end awaiting
   const endAwaiting = () => {
     isAwaiting.value = false;
   };
+  // start awaiting
   const fireChange = () => {
     if (awaitingChange !== null) awaitingChange.cancel();
     isAwaiting.value = true;
     awaitingChange = new CancelableFinary(changePreviewValue(), endAwaiting);
   };
 
+  // isPanning
+  // This function is called when the q-slider fire onPan.
   const onPan: QSliderProps["onPan"] = (phase) => {
     if (phase == "start") {
       // start panning
@@ -120,11 +129,14 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     if (props.onPan) props.onPan(phase);
   };
 
+  // isScrolling
+  // Debounce the call to fire onChange and stop scrolling.
   const debounceScroll = debounce(() => {
     fireChange();
+    // end scrolling
     isScrolling.value = false;
   }, 300);
-
+  // Decimal point precision of step
   const scrollStepDecimals = computed(() => {
     return String(scrollStep.value).split(".")[1]?.length ?? 0;
   });
@@ -134,7 +146,7 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const scrollDecimals = computed(() =>
     Math.max(scrollStepDecimals.value, scrollMinStepDecimals.value)
   );
-
+  // This function is called when the q-slider fire onWheel.
   const onWheel = (event: Events["onWheel"]) => {
     if (disableScroll.value || disable.value || currentValue.value === null)
       return;
@@ -150,11 +162,12 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     updatePreviewValue(
       Number.parseFloat(nextValue.toFixed(scrollDecimals.value))
     );
-    // start scroll
+    // start scrolling
     isScrolling.value = true;
     debounceScroll();
   };
 
+  // Properties to pass to `q-slider`.
   const qSliderProps = {
     min: min,
     max: max,
