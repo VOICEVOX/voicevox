@@ -68,17 +68,9 @@
               <q-card-actions class="q-px-md q-py-sm bg-grey-3">
                 <div>パラメータの引き継ぎ</div>
                 <q-space />
-                <q-btn-toggle
-                  padding="xs md"
-                  unelevated
-                  v-model="inheritAudioInfoMode"
-                  color="white"
-                  text-color="black"
-                  toggle-color="primary"
-                  :options="[
-                    { label: '引き継ぐ', value: 'switchInheritOn' },
-                    { label: '引き継がない', value: 'switchInheritOff' },
-                  ]"
+                <q-toggle
+                  :model-value="inheritAudioInfoMode"
+                  @update:model-value="changeinheritAudioInfo($event)"
                 >
                   <q-tooltip
                     :delay="500"
@@ -89,7 +81,7 @@
                   >
                     テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
                   </q-tooltip>
-                </q-btn-toggle>
+                </q-toggle>
               </q-card-actions>
             </q-card>
             <!-- Saving Card -->
@@ -293,13 +285,7 @@ export default defineComponent({
         changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
-    const inheritAudioInfoMode = computed({
-      get: () =>
-        store.state.inheritAudioInfo ? "switchInheritOn" : "switchInheritOff",
-      set: (mode: string) => {
-        changeinheritAudioInfo(mode == "switchInheritOn" ? true : false);
-      },
-    });
+    const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 
     const useVoicingComputed = computed({
       get: () => store.state.useVoicing,
@@ -399,6 +385,7 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,
