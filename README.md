@@ -9,7 +9,6 @@
 Node.js をインストール後、[このリポジトリ](https://github.com/Hiroshiba/voicevox.git) を
 Forkして `git clone` し、次のコマンドを実行してください。
 
-
 ```bash
 npm ci
 ```
