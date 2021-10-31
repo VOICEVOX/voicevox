@@ -230,6 +230,30 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>出力サンプリングレート</div>
+                <q-space />
+                <q-select
+                  borderless
+                  name="samplingRate"
+                  :model-value="savingSetting.outputSamplingRate"
+                  :options="[24000, 44100, 48000, 88200, 96000]"
+                  :option-label="(item) => `${item / 1000} kHz`"
+                  @update:model-value="
+                    handleSavingSettingChange('outputSamplingRate', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声データのサンプリングレートを変更して出力しますが、音声の品質が向上するわけではありません
+                  </q-tooltip>
+                </q-select>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -364,7 +388,7 @@ export default defineComponent({
 
     const handleSavingSettingChange = (
       key: keyof SavingSetting,
-      data: string | boolean
+      data: string | boolean | number
     ) => {
       store.dispatch("SET_SAVING_SETTING", {
         data: { ...savingSetting.value, [key]: data },
