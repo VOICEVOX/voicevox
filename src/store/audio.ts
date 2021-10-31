@@ -583,7 +583,9 @@ export const audioStore: VoiceVoxStoreOptions<
         const audioItem = state.audioItems[audioKey];
         const id = await generateUniqueId(audioItem);
 
-        const audioQuery = audioItem.query;
+        const audioQuery: AudioQuery = JSON.parse(
+          JSON.stringify(audioItem.query)
+        );
         const speaker = audioItem.styleId;
         if (audioQuery == undefined || speaker == undefined) {
           return null;
