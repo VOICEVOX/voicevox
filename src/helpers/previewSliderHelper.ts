@@ -131,6 +131,9 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
   const scrollMinStepDecimals = computed(() => {
     return String(scrollMinStep.value).split(".")[1]?.length ?? 0;
   });
+  const scrollDecimals = computed(() =>
+    Math.max(scrollStepDecimals.value, scrollMinStepDecimals.value)
+  );
 
   const onWheel = (event: Events["onWheel"]) => {
     if (disableScroll.value || disable.value || currentValue.value === null)
@@ -139,15 +142,14 @@ export const previewSliderHelper = (props: Props): PreviewSliderHelper => {
     const deltaY = event.deltaY;
     const ctrlKey = event.ctrlKey;
     const step = ctrlKey ? scrollMinStep.value : scrollStep.value;
-    const decimals = ctrlKey
-      ? scrollMinStepDecimals.value
-      : scrollStepDecimals.value;
     const diff = -step * Math.sign(deltaY);
     const nextValue = Math.min(
       Math.max(currentValue.value + diff, min.value),
       max.value
     );
-    updatePreviewValue(Number.parseFloat(nextValue.toFixed(decimals)));
+    updatePreviewValue(
+      Number.parseFloat(nextValue.toFixed(scrollDecimals.value))
+    );
     // start scroll
     isScrolling.value = true;
     debounceScroll();
