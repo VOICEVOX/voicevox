@@ -26,6 +26,7 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useUndoRedo: isDevelopment,
         useGpu: false,
+        inheritAudioInfo: true,
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
@@ -94,6 +95,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useUndoRedo, false);
     assert.equal(store.state.useGpu, false);
+    assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);

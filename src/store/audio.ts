@@ -446,8 +446,11 @@ const audioStoreCreator = (
       },
       async GENERATE_AUDIO_ITEM(
         { state, getters, dispatch },
-        payload: { text?: string; styleId?: number }
+        payload: { text?: string; styleId?: number; baseAudioItem?: AudioItem }
       ) {
+        //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
+        //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
+        //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
         if (state.defaultStyleIds == undefined)
           throw new Error("state.defaultStyleIds == undefined");
         if (state.characterInfos == undefined)
@@ -462,6 +465,7 @@ const audioStoreCreator = (
               (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
             )
           ].defaultStyleId;
+        const baseAudioItem = payload.baseAudioItem;
         const query = getters.IS_ENGINE_READY
           ? await dispatch("FETCH_AUDIO_QUERY", {
               text,
@@ -475,6 +479,21 @@ const audioStoreCreator = (
         };
         if (query != undefined) {
           audioItem.query = query;
+        }
+        if (baseAudioItem && baseAudioItem.query && audioItem.query) {
+          //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
+          //baseAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
+          audioItem.query.speedScale = baseAudioItem.query.speedScale;
+          audioItem.query.pitchScale = baseAudioItem.query.pitchScale;
+          audioItem.query.intonationScale = baseAudioItem.query.intonationScale;
+          audioItem.query.volumeScale = baseAudioItem.query.volumeScale;
+          audioItem.query.prePhonemeLength =
+            baseAudioItem.query.prePhonemeLength;
+          audioItem.query.postPhonemeLength =
+            baseAudioItem.query.postPhonemeLength;
+          audioItem.query.outputSamplingRate =
+            baseAudioItem.query.outputSamplingRate;
+          audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
         }
         return audioItem;
       },
@@ -1363,12 +1382,25 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           );
         }
         const audioItems: AudioItem[] = [];
+        let baseAudioItem: AudioItem | undefined = undefined;
+        if (state.inheritAudioInfo) {
+          baseAudioItem = state._activeAudioKey
+            ? state.audioItems[state._activeAudioKey]
+            : undefined;
+        }
+
         for (const { text, styleId } of parseTextFile(
           body,
           state.characterInfos
         )) {
+          //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+          //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
           audioItems.push(
-            await dispatch("GENERATE_AUDIO_ITEM", { text, styleId })
+            await dispatch("GENERATE_AUDIO_ITEM", {
+              text,
+              styleId,
+              baseAudioItem,
+            })
           );
         }
         const audioKeys: string[] = await Promise.all(
@@ -1386,7 +1418,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ),
     COMMAND_PUT_TEXTS: createUILockAction(
       async (
-        { commit, dispatch },
+        { state, commit, dispatch },
         {
           prevAudioKey,
           texts,
@@ -1399,12 +1431,22 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       ) => {
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
+        let baseAudioItem: AudioItem | undefined = undefined;
+        if (state.inheritAudioInfo) {
+          baseAudioItem = state._activeAudioKey
+            ? state.audioItems[state._activeAudioKey]
+            : undefined;
+        }
         for (const text of texts.filter((value) => value != "")) {
           const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
-          const audioItem: AudioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+          //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+          //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+          const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
             text,
             styleId,
+            baseAudioItem,
           });
+
           audioKeyItemPairs.push({
             audioKey,
             audioItem,
