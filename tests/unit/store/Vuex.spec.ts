@@ -44,6 +44,7 @@ describe("store/vuex.js test", () => {
         isPinned: false,
         hotkeySettings: [],
         useVoicing: false,
+        engineHost: "http://127.0.0.1",
       },
       getters: {
         ...uiStore.getters,
