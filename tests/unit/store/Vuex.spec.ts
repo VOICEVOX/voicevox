@@ -45,7 +45,6 @@ describe("store/vuex.js test", () => {
         isPinned: false,
         hotkeySettings: [],
         useVoicing: false,
-        showSamplingRateWarning: true,
       },
       getters: {
         ...uiStore.getters,
