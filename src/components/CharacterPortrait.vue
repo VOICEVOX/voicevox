@@ -2,7 +2,7 @@
   <div class="full-width full-height">
     <span class="character-name">{{ characterName }}</span>
     <img
-      :src="portraitBlobUrl"
+      :src="portraitPath"
       class="full-width full-height character-portrait"
     />
   </div>
@@ -47,15 +47,11 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
-    const portraitBlobUrl = computed(() => {
-      const portraitBlob = characterInfo.value?.portraitBlob;
-
-      return portraitBlob ? URL.createObjectURL(portraitBlob) : undefined;
-    });
+    const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
     return {
       characterName,
-      portraitBlobUrl,
+      portraitPath,
     };
   },
 });

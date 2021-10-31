@@ -406,15 +406,6 @@ export const audioStore: VoiceVoxStoreOptions<
     LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
       const characterInfos = await window.electron.getCharacterInfos();
 
-      await Promise.all(
-        characterInfos.map(async (characterInfo) => {
-          const portraitBuf = await window.electron.readFile({
-            filePath: characterInfo.portraitPath,
-          });
-          characterInfo.portraitBlob = new Blob([portraitBuf]);
-        })
-      );
-
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),
     GENERATE_AUDIO_KEY() {

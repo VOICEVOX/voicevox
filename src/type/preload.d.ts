@@ -60,23 +60,25 @@ export type AppInfos = {
   version: string;
 };
 
+export type StyleInfo = {
+  styleName?: string;
+  styleId: number;
+  iconPath: string;
+  voiceSamplePaths: string[];
+};
+
 export type MetasJson = {
   speakerName: string;
   speakerUuid: string;
-  styles: {
-    styleName?: string;
-    styleId: number;
-  }[];
+  styles: Pick<StyleInfo, "styleName" | "styleId">[];
 };
 
 export type CharacterInfo = {
-  dirPath: string;
   portraitPath: string;
-  portraitBlob?: Blob;
   metas: {
     speakerUuid: string;
     speakerName: string;
-    styles: MetasJson["styles"];
+    styles: StyleInfo[];
     policy: string;
   };
 };

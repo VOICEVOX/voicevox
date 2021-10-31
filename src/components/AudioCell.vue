@@ -9,10 +9,7 @@
     />
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img
-        class="q-pa-none q-ma-none"
-        :src="`characters/${selectedCharacterInfo.metas.speakerName}/icons/${selectedCharacterInfo.metas.speakerName}_${selectedStyleId}.png`"
-      />
+      <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
       <q-menu
         class="character-menu"
         transition-show="none"
@@ -20,8 +17,8 @@
       >
         <q-list>
           <q-item
-            v-for="(characterInfo, index) in characterInfos"
-            :key="index"
+            v-for="(characterInfo, characterIndex) in characterInfos"
+            :key="characterIndex"
             clickable
             v-close-popup
             active-class="selected-character-item"
@@ -30,9 +27,11 @@
               selectedCharacterInfo.metas.speakerUuid
             "
             @click="
-              changeStyleId(getDefaultStyleId(characterInfo.metas.speakerUuid))
+              changeStyleId(
+                getDefaultStyle(characterInfo.metas.speakerUuid).styleId
+              )
             "
-            @mouseover="reassignSubMenuOpen(index)"
+            @mouseover="reassignSubMenuOpen(characterIndex)"
             @mouseleave="reassignSubMenuOpen.cancel()"
           >
             <q-item-section avatar>
@@ -41,9 +40,9 @@
                   no-spinner
                   no-transition
                   :ratio="1"
-                  :src="`characters/${characterInfo.metas.speakerName}/icons/${
-                    characterInfo.metas.speakerName
-                  }_${getDefaultStyleId(characterInfo.metas.speakerUuid)}.png`"
+                  :src="
+                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
+                  "
                 />
               </q-avatar>
             </q-item-section>
@@ -60,16 +59,16 @@
               transition-show="none"
               transition-hide="none"
               class="character-menu"
-              v-model="subMenuOpenFlags[index]"
+              v-model="subMenuOpenFlags[characterIndex]"
             >
               <q-list>
                 <q-item
-                  v-for="(style, index) in characterInfo.metas.styles"
-                  :key="index"
+                  v-for="(style, styleIndex) in characterInfo.metas.styles"
+                  :key="styleIndex"
                   clickable
                   v-close-popup
                   active-class="selected-character-item"
-                  :active="style.styleId === selectedStyleId"
+                  :active="style.styleId === selectedStyle.styleId"
                   @click="changeStyleId(style.styleId)"
                 >
                   <q-item-section avatar>
@@ -78,7 +77,7 @@
                         no-spinner
                         no-transition
                         :ratio="1"
-                        :src="`characters/${characterInfo.metas.speakerName}/icons/${characterInfo.metas.speakerName}_${characterInfo.metas.styles[index].styleId}.png`"
+                        :src="characterInfo.metas.styles[styleIndex].iconPath"
                       />
                     </q-avatar>
                   </q-item-section>
@@ -170,7 +169,11 @@ export default defineComponent({
           )
         : undefined
     );
-    const selectedStyleId = computed(() => audioItem.value.styleId);
+    const selectedStyle = computed(() =>
+      selectedCharacterInfo.value?.metas.styles.find(
+        (style) => style.styleId === audioItem.value.styleId
+      )
+    );
 
     const subMenuOpenFlags = ref(
       [...Array(characterInfos.value?.length)].map(() => false)
@@ -220,10 +223,17 @@ export default defineComponent({
         styleId,
       });
     };
-    const getDefaultStyleId = (speakerUuid: string) => {
-      return store.state.defaultStyleIds.find(
+    const getDefaultStyle = (speakerUuid: string) => {
+      const characterInfo = characterInfos.value?.find(
+        (info) => info.metas.speakerUuid === speakerUuid
+      );
+      const defaultStyleId = store.state.defaultStyleIds.find(
         (x) => x.speakerUuid === speakerUuid
       )?.defaultStyleId;
+
+      return characterInfo?.metas.styles.find(
+        (style) => style.styleId === defaultStyleId
+      );
     };
     const setActiveAudioKey = () => {
       store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
@@ -362,7 +372,7 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       selectedCharacterInfo,
-      selectedStyleId,
+      selectedStyle,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       isActiveAudioCell,
@@ -370,7 +380,7 @@ export default defineComponent({
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
-      getDefaultStyleId,
+      getDefaultStyle,
       setActiveAudioKey,
       save,
       play,
