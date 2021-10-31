@@ -390,9 +390,32 @@ export default defineComponent({
       key: keyof SavingSetting,
       data: string | boolean | number
     ) => {
-      store.dispatch("SET_SAVING_SETTING", {
-        data: { ...savingSetting.value, [key]: data },
-      });
+      const storeDispatch = (): void => {
+        store.dispatch("SET_SAVING_SETTING", {
+          data: { ...savingSetting.value, [key]: data },
+        });
+      };
+      if (key === "outputSamplingRate" && data !== 24000) {
+        $q.dialog({
+          title: "出力サンプリングレートを変更します",
+          message:
+            "出力サンプリングレートを変更しても、音質は向上しません。また、音声の生成処理に若干時間がかかります。<br />本当に変更しますか？",
+          html: true,
+          persistent: true,
+          ok: {
+            label: "変更する",
+            flat: true,
+            textColor: "secondary",
+          },
+          cancel: {
+            label: "変更しない",
+            flat: true,
+            textColor: "secondary",
+          },
+        }).onOk(storeDispatch);
+        return;
+      }
+      storeDispatch();
     };
 
     const openFileExplore = async () => {
