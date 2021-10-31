@@ -29,7 +29,6 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   useVoicing: false,
-  samplingRateWarning: true,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
