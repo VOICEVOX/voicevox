@@ -100,7 +100,10 @@ export const settingStore: VoiceVoxStoreOptions<
           Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
         }
       }
-      if (data.combination != "") {
+      if (
+        data.combination != "" &&
+        hotkeyFunctionCache[data.action] !== undefined
+      ) {
         Mousetrap.bind(
           hotkey2Combo(data.combination),
           hotkeyFunctionCache[data.action]

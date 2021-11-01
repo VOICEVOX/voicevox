@@ -118,14 +118,7 @@
 </template>
 
 <script lang="ts">
-import {
-  computed,
-  watch,
-  defineComponent,
-  ref,
-  onMounted,
-  onUnmounted,
-} from "vue";
+import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { CharacterInfo } from "@/type/preload";
@@ -355,20 +348,6 @@ export default defineComponent({
       () => (characterInfo: CharacterInfo) =>
         URL.createObjectURL(characterInfo.iconBlob)
     );
-
-    const disableDefaultUndoRedo = (event: KeyboardEvent) => {
-      if (event.ctrlKey && (event.key == "z" || event.key == "y")) {
-        event.preventDefault();
-      }
-    };
-
-    onMounted(() => {
-      document.addEventListener("keydown", disableDefaultUndoRedo);
-    });
-
-    onUnmounted(() => {
-      document.removeEventListener("keydown", disableDefaultUndoRedo);
-    });
 
     return {
       characterInfos,
