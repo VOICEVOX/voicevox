@@ -206,10 +206,10 @@
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">保存(高度な設定)</div>
+                <div class="text-h5">高度な設定</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>音声をステレオ出力する</div>
+                <div>音声をステレオ化して再生・保存する</div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -226,12 +226,12 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声データをモノラルからステレオに変換してから出力します
+                    音声データをモノラルからステレオに変換してから再生・保存を行います
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>出力サンプリングレート</div>
+                <div>音声のサンプリングレート</div>
                 <q-space />
                 <q-select
                   borderless
@@ -255,8 +255,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声データのサンプリングレートを変更して出力しますが、音声の品質が向上するわけではありません(デフォルトは24
-                    kHzです)
+                    音声のサンプリングレートを変更して再生・保存しますが、音声の品質は大きく変わりません
                   </q-tooltip>
                 </q-select>
               </q-card-actions>
