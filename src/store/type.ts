@@ -254,7 +254,7 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string; save?: boolean }): Blob | null;
+    action(payload: { audioKey: string }): Blob | null;
   };
 
   GENERATE_AND_SAVE_AUDIO: {

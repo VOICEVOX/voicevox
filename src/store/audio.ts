@@ -576,29 +576,27 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     GENERATE_AUDIO: createUILockAction(
-      async (
-        { state },
-        { audioKey, save }: { audioKey: string; save?: boolean }
-      ) => {
-        const audioItem = state.audioItems[audioKey];
+      async ({ state }, { audioKey }: { audioKey: string }) => {
+        const audioItem: AudioItem = JSON.parse(
+          JSON.stringify(state.audioItems[audioKey])
+        );
+
+        if (audioItem.query == undefined) {
+          return null;
+        }
+
+        audioItem.query.outputSamplingRate =
+          state.savingSetting.outputSamplingRate;
+        audioItem.query.outputStereo = state.savingSetting.outputStereo;
+
         const id = await generateUniqueId(audioItem);
 
         const audioQuery: AudioQuery = JSON.parse(
           JSON.stringify(audioItem.query)
         );
         const speaker = audioItem.styleId;
-        if (audioQuery == undefined || speaker == undefined) {
+        if (speaker == undefined) {
           return null;
-        }
-
-        if (
-          save &&
-          (state.savingSetting.outputSamplingRate !== 24000 ||
-            state.savingSetting.outputStereo)
-        ) {
-          audioQuery.outputSamplingRate =
-            state.savingSetting.outputSamplingRate;
-          audioQuery.outputStereo = state.savingSetting.outputStereo;
         }
 
         return api
@@ -652,12 +650,8 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
-        if (
-          !blob ||
-          state.savingSetting.outputSamplingRate !== 24000 ||
-          state.savingSetting.outputStereo
-        ) {
-          blob = await dispatch("GENERATE_AUDIO", { audioKey, save: true });
+        if (!blob) {
+          blob = await dispatch("GENERATE_AUDIO", { audioKey });
           if (!blob) {
             return { result: "ENGINE_ERROR", path: filePath };
           }
