@@ -1,0 +1,11 @@
+{
+  "name": "Dark",
+  "colors": {
+    "--color-primary": "#0E1B10",
+    "--color-text": "#F5F5F5",
+    "--color-text-invert": "#121212",
+    "--color-background": "#212121",
+    "--color-shadow-light": "#000000",
+    "--color-setting-items": "#424242"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Default",
+  "colors": {
+    "--color-primary": "#A5D4AD",
+    "--color-text": "#121212",
+    "--color-text-invert": "#FFFFFF",
+    "--color-background": "#F5F5F5",
+    "--color-shadow-light": "#FFFFFF",
+    "--color-setting-items": "#EEEEEE"
+  }
+}
