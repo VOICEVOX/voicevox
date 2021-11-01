@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  ThemeConf,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -66,6 +67,7 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   useVoicing: boolean;
+  currentTheme: string;
 }>({
   schema: {
     useGpu: {
@@ -197,6 +199,10 @@ const store = new Store<{
     useVoicing: {
       type: "boolean",
       default: false,
+    },
+    currentTheme: {
+      type: "string",
+      default: "Default",
     },
   },
   migrations: {
@@ -620,6 +626,22 @@ ipcMainHandle("USE_VOICING", (_, { newData }) => {
     store.set("useVoicing", newData);
   }
   return store.get("useVoicing");
+});
+
+ipcMainHandle("THEME", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("currentTheme", newData);
+    return;
+  }
+  const dir = path.join(__static, "themes");
+  const themes: ThemeConf[] = [];
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    themes.push(theme);
+  });
+  console.log(themes);
+  return { currentTheme: "Dark", availableThemes: themes };
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

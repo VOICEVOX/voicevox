@@ -199,6 +199,10 @@ const api: Sandbox = {
   useVoicing: (newData) => {
     return ipcRenderer.invoke("USE_VOICING", { newData });
   },
+
+  theme: (newData) => {
+    return ipcRenderer.invoke("THEME", { newData });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

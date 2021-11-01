@@ -54,6 +54,7 @@ export interface Sandbox {
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
   useVoicing(newData?: boolean): Promise<boolean>;
+  theme(newData?: string): Promise<ThemeSetting | void>;
 }
 
 export type AppInfos = {
@@ -145,3 +146,19 @@ export type MoraDataType =
   | "pitch"
   | "pause"
   | "voicing";
+
+export type ThemeConf = {
+  name: string;
+  colors: {
+    "--color-primary": string;
+    "--color-text": string;
+    "--color-text-invert": string;
+    "--color-background": string;
+    "--color-shadow-light": string;
+    "--color-setting-items": string;
+  };
+};
+export type ThemeSetting = {
+  currentTheme: string;
+  availableThemes: ThemeConf[];
+};

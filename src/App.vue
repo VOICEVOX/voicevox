@@ -25,6 +25,7 @@ export default defineComponent({
     store.dispatch("GET_SAVING_SETTING", undefined);
     store.dispatch("GET_HOTKEY_SETTINGS", undefined);
     store.dispatch("GET_USE_VOICING", undefined);
+    store.dispatch("GET_THEME_SETTING", undefined);
   }
 });
 </script>

@@ -3,6 +3,7 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ThemeConf,
 } from "@/type/preload";
 import {
   SettingGetters,
@@ -28,6 +29,10 @@ export const settingStoreState: SettingStoreState = {
   hotkeySettings: [],
   useVoicing: false,
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
+  themeSetting: {
+    currentTheme: "Default",
+    availableThemes: [],
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -59,6 +64,15 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
       state.useVoicing = useVoicing;
+    },
+    SET_THEME_SETTING(
+      state,
+      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
+    ) {
+      if (themes) {
+        state.themeSetting.availableThemes = themes;
+      }
+      state.themeSetting.currentTheme = currentTheme;
     },
   },
   actions: {
@@ -121,6 +135,23 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
       window.electron.useVoicing(data);
       commit("SET_USE_VOICING", { useVoicing: data });
+    },
+    GET_THEME_SETTING({ commit }) {
+      const currentTheme = window.electron.theme();
+      currentTheme.then((value) => {
+        if (value) {
+          commit("SET_THEME_SETTING", {
+            currentTheme: value.currentTheme,
+            themes: value.availableThemes,
+          });
+        }
+      });
+    },
+    SET_THEME_SETTING({ commit }, { currentTheme }: { currentTheme: string }) {
+      window.electron.theme(currentTheme);
+      commit("SET_THEME_SETTING", {
+        currentTheme: currentTheme,
+      });
     },
   },
 };

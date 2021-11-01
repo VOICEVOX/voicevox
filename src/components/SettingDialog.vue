@@ -247,6 +247,25 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>{{ availableThemeNameComputed }}</div>
+                <q-space />
+                <q-select
+                  borderless
+                  v-model="currentThemeComputed"
+                  :options="availableThemeNameComputed"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    We haven't decided on the dark mode design itself
+                  </q-tooltip>
+                </q-select>
+              </q-card-actions>
             </q-card>
           </div>
         </q-page>
@@ -293,6 +312,29 @@ export default defineComponent({
         store.dispatch("SET_USE_VOICING", { data: useVoicing });
       },
     });
+
+    const currentThemeComputed = computed({
+      get: () => store.state.themeSetting.currentTheme,
+      set: (currentTheme: string) => {
+        store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+      },
+    });
+
+    const availableThemeComputed = computed(
+      () => store.state.themeSetting.availableThemes
+    );
+
+    const availableThemeNameComputed = computed(() => {
+      const names: string[] = [];
+      store.state.themeSetting.availableThemes.forEach((theme) => {
+        names.push(theme.name);
+      });
+      return names;
+    });
+
+    document.addEventListener("keydown", () =>
+      console.log(store.state.themeSetting)
+    );
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -391,6 +433,9 @@ export default defineComponent({
       handleSavingSettingChange,
       openFileExplore,
       useVoicingComputed,
+      currentThemeComputed,
+      availableThemeComputed,
+      availableThemeNameComputed,
     };
   },
 });
