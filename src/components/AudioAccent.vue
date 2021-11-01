@@ -85,6 +85,7 @@ export default defineComponent({
       onChange: changeAccent,
       modelValue: () => props.accentPhrase.accent,
       disable: () => props.uiLocked,
+      disableScroll: () => props.shiftKeyFlag,
       max: () => props.accentPhrase.moras.length,
       min: () => 1,
       step: () => 1,

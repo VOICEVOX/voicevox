@@ -92,6 +92,11 @@ type IpcIHData = {
     return: boolean;
   };
 
+  INHERIT_AUDIOINFO: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;
