@@ -73,10 +73,7 @@
       >
         <div class="column full-height">
           <img
-            :src="
-              characterInfos &&
-              getBlobUrl(characterInfos[pageIndex].portraitBlob)
-            "
+            :src="characterInfos[pageIndex].portraitPath"
             class="full-width full-height character-portrait"
           />
         </div>
@@ -106,10 +103,7 @@
                   ]"
                   @click="selectedStyleIndexes[characterIndex] = styleIndex"
                 >
-                  <img
-                    :src="getBlobUrl(characterInfo.iconBlob)"
-                    class="style-icon"
-                  />
+                  <img :src="style.iconPath" class="style-icon" />
                   <q-item-section>
                     <q-item-label class="text-subtitle1 q-ma-md">{{
                       style.styleName || "ノーマル"
@@ -136,11 +130,7 @@
                             style.styleId === playing?.styleId &&
                             voiceSampleIndex === playing.index
                               ? stop()
-                              : play(
-                                  characterInfo.metas.speakerName,
-                                  style.styleId,
-                                  voiceSampleIndex
-                                )
+                              : play(style, voiceSampleIndex)
                           "
                         />
                       </div>
@@ -164,6 +154,7 @@
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
+import { StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -206,10 +197,6 @@ export default defineComponent({
 
     const pageIndex = ref(0);
 
-    const getBlobUrl = (blob: Blob) => {
-      return URL.createObjectURL(blob);
-    };
-
     const isHoverableStyleItem = ref(true);
 
     const playing = ref<{ styleId: number; index: number }>();
@@ -218,14 +205,10 @@ export default defineComponent({
     audio.volume = 0.7;
     audio.onended = () => stop();
 
-    const play = (characterName: string, styleId: number, index: number) => {
+    const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
       if (audio.src !== "") stop();
 
-      audio.src = `characters/${characterName}/voice_samples/${characterName}_${styleId}_${(
-        index + 1
-      )
-        .toString()
-        .padStart(3, "0")}.wav`;
+      audio.src = voiceSamplePaths[index];
       audio.play();
       playing.value = { styleId, index };
     };
@@ -267,7 +250,6 @@ export default defineComponent({
       characterInfos,
       selectedStyleIndexes,
       pageIndex,
-      getBlobUrl,
       isHoverableStyleItem,
       playing,
       play,
