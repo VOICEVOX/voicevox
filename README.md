@@ -2,7 +2,9 @@
 
 [VOICEVOX](https://voicevox.hiroshiba.jp/) のエディターです。
 
-（エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) 、コアは [VOICEVOX CORE](https://github.com/Hiroshiba/voicevox_core/) 、全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
+（エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) 、
+コアは [VOICEVOX CORE](https://github.com/Hiroshiba/voicevox_core/) 、
+全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
 
 ## 環境構築
 
