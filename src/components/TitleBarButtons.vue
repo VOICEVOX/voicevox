@@ -41,6 +41,7 @@
       flat
       round
       icon="lens"
+      size="8.5px"
       color="green"
       class="title-bar-buttons"
       @click="maximizeWindow()"
@@ -50,6 +51,7 @@
       flat
       round
       icon="lens"
+      size="8.5px"
       color="yellow"
       class="title-bar-buttons"
       @click="minimizeWindow()"
@@ -58,6 +60,7 @@
       dense
       flat
       icon="lens"
+      size="8.5px"
       color="red"
       class="title-bar-buttons"
       @click="closeWindow()"
