@@ -92,6 +92,11 @@ type IpcIHData = {
     return: boolean;
   };
 
+  INHERIT_AUDIOINFO: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;
@@ -160,6 +165,11 @@ type IpcIHData = {
   SET_DEFAULT_STYLE_IDS: {
     args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
     return: void;
+  };
+
+  USE_VOICING: {
+    args: [obj: { newData?: boolean }];
+    return: boolean;
   };
 };
 

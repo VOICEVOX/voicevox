@@ -230,19 +230,13 @@ export default defineComponent({
       },
     ];
 
-    window.onload = () => {
-      hotkeyActionsNative.forEach((item) => {
-        document.addEventListener("keyup", item);
-      });
-    };
-
     // view
     const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
     const MIN_PORTRAIT_PANE_WIDTH = 0;
     const MAX_PORTRAIT_PANE_WIDTH = 40;
     const MIN_AUDIO_INFO_PANE_WIDTH = 160; // px
     const MAX_AUDIO_INFO_PANE_WIDTH = 250;
-    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 170; // px
+    const MIN_AUDIO_DETAIL_PANE_HEIGHT = 185; // px
     const MAX_AUDIO_DETAIL_PANE_HEIGHT = 500;
 
     const portraitPaneWidth = ref(0);
@@ -291,9 +285,20 @@ export default defineComponent({
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
       }
-      const audioItem: AudioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+      let audioItem: AudioItem;
+      let baseAudioItem: AudioItem | undefined = undefined;
+      if (store.state.inheritAudioInfo) {
+        baseAudioItem = prevAudioKey
+          ? store.state.audioItems[prevAudioKey]
+          : undefined;
+      }
+      //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
+      //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+      audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
+        baseAudioItem,
       });
+
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
@@ -334,6 +339,16 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    const disableDefaultUndoRedo = (event: KeyboardEvent) => {
+      // ctrl+z, ctrl+shift+z, ctrl+y
+      if (
+        event.ctrlKey &&
+        (event.key == "z" || (!event.shiftKey && event.key == "y"))
+      ) {
+        event.preventDefault();
+      }
+    };
+
     // プロジェクトを初期化
     onMounted(async () => {
       await Promise.all([
@@ -351,6 +366,12 @@ export default defineComponent({
         audioItem,
       });
       focusCell({ audioKey: newAudioKey });
+
+      document.addEventListener("keydown", disableDefaultUndoRedo);
+
+      hotkeyActionsNative.forEach((item) => {
+        document.addEventListener("keyup", item);
+      });
     });
 
     // エンジン待機

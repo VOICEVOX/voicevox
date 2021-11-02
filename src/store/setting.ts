@@ -12,6 +12,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import Mousetrap from "mousetrap";
+import { useStore } from "@/store";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -23,8 +24,12 @@ export const settingStoreState: SettingStoreState = {
     avoidOverwrite: false,
     exportLab: false,
     exportText: true,
+    outputStereo: false,
+    outputSamplingRate: 24000,
   },
   hotkeySettings: [],
+  useVoicing: false,
+  engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -44,16 +49,18 @@ export const settingStore: VoiceVoxStoreOptions<
     ) {
       state.savingSetting = savingSetting;
     },
-    SET_HOTKEY_SETTINGS(
-      state,
-      { hotkeySettings }: { hotkeySettings: HotkeySetting[] }
-    ) {
-      if (!state.useUndoRedo) {
-        hotkeySettings = hotkeySettings.filter(
-          (hotkey) => hotkey.action != "やり直す" && hotkey.action != "元に戻す"
-        );
-      }
-      state.hotkeySettings = hotkeySettings;
+    SET_HOTKEY_SETTINGS(state, { newHotkey }: { newHotkey: HotkeySetting }) {
+      let flag = true;
+      state.hotkeySettings.forEach((hotkey) => {
+        if (hotkey.action == newHotkey.action) {
+          hotkey.combination = newHotkey.combination;
+          flag = false;
+        }
+      });
+      if (flag) state.hotkeySettings.push(newHotkey);
+    },
+    SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
+      state.useVoicing = useVoicing;
     },
   },
   actions: {
@@ -69,51 +76,76 @@ export const settingStore: VoiceVoxStoreOptions<
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
       });
     },
-    GET_HOTKEY_SETTINGS({ commit, dispatch }) {
-      const hotkeys = window.electron.hotkeySettings();
-      hotkeys.then((value) => {
-        commit("SET_HOTKEY_SETTINGS", {
-          hotkeySettings: value,
-        });
-        value.forEach((hotkey) => {
-          dispatch("SET_HOTKEY_SETTINGS", { data: hotkey });
+    GET_HOTKEY_SETTINGS({ state, dispatch }) {
+      window.electron.hotkeySettings().then((hotkeys) => {
+        hotkeys.forEach((hotkey) => {
+          if (!state.useUndoRedo) {
+            if (hotkey.action != "やり直す" && hotkey.action != "元に戻す") {
+              dispatch("SET_HOTKEY_SETTINGS", {
+                data: hotkey,
+              });
+            }
+          } else {
+            dispatch("SET_HOTKEY_SETTINGS", {
+              data: hotkey,
+            });
+          }
         });
       });
     },
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
-      const hotkeys = window.electron.hotkeySettings(data);
-      state.hotkeySettings.forEach((oldData) => {
-        if (oldData.action == data.action) {
-          // pass the hotkey actions implemented with native js
-          if (hotkeyFunctionCache[data.action] !== undefined) {
-            if (oldData.combination != "") {
-              Mousetrap.unbind(hotkey2Combo(oldData.combination));
-            }
-            if (data.combination != "") {
-              Mousetrap.bind(
-                hotkey2Combo(data.combination),
-                hotkeyFunctionCache[data.action]
-              );
-            }
-          }
+      window.electron.hotkeySettings(data);
+      const oldHotkey = state.hotkeySettings.find((value) => {
+        value.action == data.action;
+      });
+      if (oldHotkey !== undefined) {
+        if (oldHotkey.combination != "") {
+          Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
         }
+      }
+      if (
+        data.combination != "" &&
+        hotkeyFunctionCache[data.action] !== undefined
+      ) {
+        Mousetrap.bind(
+          hotkey2Combo(data.combination),
+          hotkeyFunctionCache[data.action]
+        );
+      }
+      commit("SET_HOTKEY_SETTINGS", {
+        newHotkey: data,
       });
-      hotkeys.then((value) => {
-        commit("SET_HOTKEY_SETTINGS", {
-          hotkeySettings: value,
-        });
+    },
+    GET_USE_VOICING({ commit }) {
+      window.electron.useVoicing().then((useVoicing) => {
+        commit("SET_USE_VOICING", { useVoicing: useVoicing });
       });
-      return hotkeys;
+    },
+    SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
+      window.electron.useVoicing(data);
+      commit("SET_USE_VOICING", { useVoicing: data });
     },
   },
 };
 
 export const setHotkeyFunctions = (
-  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>
+  hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,
+  reassign?: boolean
 ): void => {
   hotkeyMap.forEach((value, key) => {
     hotkeyFunctionCache[key] = value;
   });
+  if (reassign) {
+    const store = useStore();
+    hotkeyMap.forEach((hotkeyFunction, hotkeyAction) => {
+      const hotkey = store.state.hotkeySettings.find((value) => {
+        return value.action == hotkeyAction;
+      });
+      if (hotkey) {
+        store.dispatch("SET_HOTKEY_SETTINGS", { data: { ...hotkey } });
+      }
+    });
+  }
 };
 
 const hotkey2Combo = (hotkeyCombo: string) => {

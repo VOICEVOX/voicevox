@@ -14,25 +14,23 @@
 
 起動しようとすると「Windows によって PC が保護されました」というダイアログが表示されるかもしれません。その際は「詳細情報」をクリックし、「実行」を選んでください。
 
-![image14](res/image14.png)  
-↓  
-![image15](res/image15.png)
+<img src="res/image14.png" style="max-height: 16rem" /> → <img src="res/image15.png" style="max-height: 16rem" />
 
 ## 音声合成エンジンの起動
 
 最初に音声合成エンジンが起動します。１０秒ほど時間がかかると思います。メモリが 3GB 以上の NVIDIA 製 GPU をお持ちの方はぜひ GPU モードで起動します。GPU モードの方が音声の生成がずっと早くて快適です。
 
-![image4](res/image4.png)
+<img src="res/image4.png" style="max-height: 8rem" />
 
 ## 音声の生成
 
 キャラクターアイコンの右にある空白をクリックしてテキストを入力してみてください。
 
-![image19](res/image19.png)
+<img src="res/image19.png" style="max-height: 12rem" />
 
 エンターボタンを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
-![image6](res/image6.png)
+<img src="res/image6.png" style="max-height: 14rem" />
 
 再生ボタンを押すと音声が生成され、音声が再生されます。
 
@@ -40,7 +38,7 @@
 
 右下の＋ボタンを押すとテキスト欄が増え、複数の文章を並べることができます。
 
-![image10](res/image10.png)
+<img src="res/image10.png" style="max-height: 14rem" />
 
 またテキスト欄を空白にした状態でバックスペースキーを押すことで、テキスト欄を消去することができます。
 
@@ -48,7 +46,7 @@
 
 テキスト入力欄の左にあるアイコンをクリックすると、テキストを読み上げてくれるキャラクターを変更することができます。
 
-![image7](res/image7.png)
+<img src="res/image7.png" style="max-height: 12rem" />
 
 ## 単語の接続変更
 
@@ -56,19 +54,19 @@
 
 例えば「ディープラーニング」がこのように分かれてしまった場合は、
 
-![image9](res/image9.png)
+<img src="res/image9.png" style="max-height: 16rem" />
 
 ２つの隙間をクリックすると
 
-![image3](res/image3.png)
+<img src="res/image3.png" style="max-height: 8rem" />
 
 このように１語にまとめることができます
 
-![image8](res/image8.png)
+<img src="res/image8.png" style="max-height: 7rem" />
 
 逆に切り離したい場合は、文字の間をクリックして切り離すことができます。
 
-![image13](res/image13.png)
+<img src="res/image13.png" style="max-height: 8rem" />
 
 ## アクセントの変更
 
@@ -77,9 +75,7 @@
 アクセント箇所を変えるには、読みの上にあるバーを左右に動かします。
 例えば「ディープラーニング」を「↑ ディープラ ↓ アニング」と読んでほしい場合は、「ラ」の位置まで丸をスライドします。
 
-![image8](res/image8.png)  
-↓  
-![image1](res/image1.png)
+<img src="res/image8.png" style="max-height: 8rem" /> → <img src="res/image1.png" style="max-height: 8rem" />
 
 ## イントネーションの変更
 
@@ -87,24 +83,25 @@
 
 「イントネーション」をクリックして現れる縦線のバーを上下させることで抑揚を表現できます。
 
-![image2](res/image2.png)
+<img src="res/image2.png" style="max-height: 8rem" />
 
 イントネーション調整スペースを縦に広くすることで、より細かく抑揚を調整することもできます。
 
-![image18](res/image18.png)
+<img src="res/image18.png" style="max-height: 14rem" />
 
 マウスホイールで調整することもできます。Ctrl キーを押しながらマウスホイールを使うと更に細かく調整できます。
 
-また、「キ」や「ツ」や「ス」などが無声化されている場合、バーが灰色になっています。無声化を解く方法は今の所ありませんが、平仮名やカタカナにすることで回避することもできます。
+また、「キ」や「ツ」や「ス」などが無声化されている場合、バーが灰色になっています。実験的機能の「無声化切り替え」を有効にすれば、イントネーション欄のテキストをクリックすることで無声化を解くことができます。平仮名やカタカナにすることで回避することもできます。
 
-![image5](res/image5.png)
-![image12](res/image12.png)
+<img src="res/image5.png" style="max-height: 10rem" /> → <img src="res/image12.png" style="max-height: 10rem" />
+
+無声化できるものはイ行とウ行だけです。
 
 ## 読みの修正
 
 読みが思っているものと違う場合は、アクセント欄で読みをクリックすることで後から修正することもできます。
 
-![image20](res/image20.png)
+<img src="res/image20.png" style="max-height: 12rem" />
 
 ## 音声ファイル・テキストファイルの書き出し
 
@@ -125,13 +122,15 @@
 
 このように読み込まれます。
 
-![image17](res/image17.png)
+<img src="res/image17.png" style="max-height: 12rem" />
 
 ## プロジェクトファイルの保存・読み込み
 
 入力したテキストやキャラクター、アクセント修正やイントネーションの調整結果は、プロジェクトファイルとして保存し、ソフトウェアを起動し直した後で読み込むことができます。
 
-## デフォルトのショートカットキー
+## ショートカットキー
+
+「設定」の「ショートカットキー」で変更することができます。
 
 - 上下キー
   - 上下のテキスト欄に移動
@@ -145,14 +144,14 @@
   - プロジェクトの保存
 - Ctrl + E
   - 音声を書き出し
+- Esc
+  - テキスト欄からカーソルを外す
 - 1
   - アクセント欄を表示
 - 2
   - イントネーション欄を表示
 - スライダーの上でマウスホイール
-  - スライダーの値を変更します（スライダー →![image16](res/image16.png)）
-
-設定 → キー割り当てから変更することができます。
+  - スライダーの値を変更します（スライダー →<img src="res/image16.png" style="max-height: 1rem" />）
 
 ## 設定画面
 

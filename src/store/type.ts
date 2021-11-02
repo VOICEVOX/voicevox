@@ -130,7 +130,11 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO_ITEM: {
-    action(payload: { text?: string; styleId?: number }): Promise<AudioItem>;
+    action(payload: {
+      text?: string;
+      styleId?: number;
+      baseAudioItem?: AudioItem;
+    }): Promise<AudioItem>;
   };
 
   REGISTER_AUDIO_ITEM: {
@@ -202,10 +206,6 @@ type AudioStoreTypes = {
 
   FETCH_AUDIO_QUERY: {
     action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
-  };
-
-  FETCH_AND_SET_AUDIO_QUERY: {
-    action(payload: { audioKey: string }): void;
   };
 
   SET_AUDIO_STYLE_ID: {
@@ -606,6 +606,8 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  useVoicing: boolean;
+  engineHost: string;
 };
 
 type SettingStoreTypes = {
@@ -624,8 +626,17 @@ type SettingStoreTypes = {
   };
 
   SET_HOTKEY_SETTINGS: {
-    mutation: { hotkeySettings: HotkeySetting[] };
-    action(payload: { data: HotkeySetting }): Promise<HotkeySetting[]>;
+    mutation: { newHotkey: HotkeySetting };
+    action(payload: { data: HotkeySetting }): void;
+  };
+
+  GET_USE_VOICING: {
+    action(): void;
+  };
+
+  SET_USE_VOICING: {
+    mutation: { useVoicing: boolean };
+    action(payload: { data: boolean }): void;
   };
 };
 
@@ -640,6 +651,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 export type UiStoreState = {
   uiLockCount: number;
   useGpu: boolean;
+  inheritAudioInfo: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -698,6 +710,15 @@ type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
+  };
+
+  GET_INHERIT_AUDIOINFO: {
+    action(): void;
+  };
+
+  SET_INHERIT_AUDIOINFO: {
+    mutation: { inheritAudioInfo: boolean };
+    action(payload: { inheritAudioInfo: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {
