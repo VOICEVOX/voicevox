@@ -149,7 +149,7 @@ export default defineComponent({
 }
 
 .selected-item {
-  background-color: rgba(global.$primary, 0.4);
+  background-color: rgba(global.$primary-rgb, 0.4);
   color: global.$secondary;
 }
 </style>

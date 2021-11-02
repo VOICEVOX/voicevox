@@ -7,7 +7,7 @@
     class="default-style-select-dialog"
     v-model="modelValueComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
@@ -35,7 +35,7 @@
             <q-btn
               unelevated
               label="戻る"
-              color="white"
+              color="background-light"
               text-color="secondary"
               class="text-no-wrap q-mr-sm"
               :disable="pageIndex < 1"
@@ -46,7 +46,7 @@
               v-if="pageIndex + 1 < characterInfos.length"
               unelevated
               label="次へ"
-              color="white"
+              color="background-light"
               text-color="secondary"
               class="text-no-wrap"
               @click="nextPage"
@@ -55,7 +55,7 @@
               v-else
               unelevated
               label="完了"
-              color="white"
+              color="background-light"
               text-color="secondary"
               class="text-no-wrap"
               @click="closeDialog"
@@ -128,7 +128,7 @@
                               ? 'stop'
                               : 'play_arrow'
                           "
-                          color="primary"
+                          color="primary-light"
                           class="voice-sample-btn"
                           @mouseenter="isHoverableStyleItem = false"
                           @mouseleave="isHoverableStyleItem = true"
@@ -149,6 +149,8 @@
                       class="absolute-top-right no-pointer-events"
                       v-model="selectedStyleIndexes[characterIndex]"
                       :val="styleIndex"
+                      keep-color
+                      color="display"
                     />
                   </q-item-section>
                 </q-item>
@@ -301,11 +303,11 @@ export default defineComponent({
   }
 
   .style-item {
-    box-shadow: 0 0 0 1px rgba(global.$primary, 0.5);
+    box-shadow: 0 0 0 1px rgba(global.$primary-light-rgb, 0.5);
     border-radius: 10px;
     overflow: hidden;
     &.active-style-item {
-      box-shadow: 0 0 0 2px global.$primary;
+      box-shadow: 0 0 0 2px global.$primary-light;
     }
     &:hover :deep(.q-focus-helper) {
       opacity: 0 !important;

@@ -3,6 +3,7 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ThemeColorType,
   ThemeConf,
 } from "@/type/preload";
 import {
@@ -14,6 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
+import { Dark, setCssVar } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -136,7 +138,7 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.useVoicing(data);
       commit("SET_USE_VOICING", { useVoicing: data });
     },
-    GET_THEME_SETTING({ commit }) {
+    GET_THEME_SETTING({ commit, dispatch }) {
       const currentTheme = window.electron.theme();
       currentTheme.then((value) => {
         if (value) {
@@ -144,11 +146,29 @@ export const settingStore: VoiceVoxStoreOptions<
             currentTheme: value.currentTheme,
             themes: value.availableThemes,
           });
+          dispatch("SET_THEME_SETTING", { currentTheme: value.currentTheme });
         }
       });
     },
-    SET_THEME_SETTING({ commit }, { currentTheme }: { currentTheme: string }) {
+    SET_THEME_SETTING(
+      { state, commit },
+      { currentTheme }: { currentTheme: string }
+    ) {
       window.electron.theme(currentTheme);
+      const theme = state.themeSetting.availableThemes.find((value) => {
+        return value.name == currentTheme;
+      });
+      if (theme) {
+        for (const k in theme.colors) {
+          document.documentElement.style.setProperty(
+            k,
+            theme.colors[k as ThemeColorType]
+          );
+        }
+        Dark.set(theme.isDark);
+        setCssVar("primary", theme.colors["--color-primary"]);
+        setCssVar("secondary", theme.colors["--color-display"]);
+      }
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });
@@ -202,4 +222,11 @@ export const parseCombo = (event: KeyboardEvent): string => {
     }
   }
   return recordedCombo;
+};
+
+export const getThemeValueWithConf = (
+  themeConf: ThemeConf,
+  key: ThemeColorType
+): string => {
+  return themeConf.colors[key];
 };

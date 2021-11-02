@@ -128,17 +128,17 @@ img {
 ::-webkit-scrollbar {
   width: 15px;
   height: 15px;
-  background-color: rgba(global.$primary, 0.2);
+  background-color: rgba(global.$primary-light-rgb, 0.2);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(global.$primary, 0.5);
+  background-color: rgba(global.$primary-light-rgb, 0.5);
   border-radius: 5px;
   &:hover {
-    background-color: rgba(global.$primary, 0.6);
+    background-color: rgba(global.$primary-light-rgb, 0.6);
   }
   &:active {
-    background-color: rgba(global.$primary, 0.8);
+    background-color: rgba(global.$primary-light-rgb, 0.8);
   }
 }
 </style>

@@ -3,7 +3,7 @@
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="primary"
+      color="primary-light"
       size="sm"
       class="absolute active-arrow"
     />
@@ -402,7 +402,7 @@ export default defineComponent({
   }
   .character-button {
     border: solid 1px;
-    border-color: global.$primary;
+    border-color: global.$primary-light;
     font-size: 0;
     height: fit-content;
     img {
@@ -415,7 +415,7 @@ export default defineComponent({
     .q-field__control {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid global.$primary;
+      border-bottom: 1px solid global.$primary-light;
       &::before {
         border-bottom: none;
       }
@@ -439,7 +439,7 @@ export default defineComponent({
     color: global.$secondary;
   }
   .selected-character-item {
-    background-color: rgba(global.$primary, 0.2);
+    background-color: rgba(global.$primary-rgb, 0.2);
   }
 }
 </style>

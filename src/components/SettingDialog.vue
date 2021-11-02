@@ -7,11 +7,11 @@
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-white">
+    <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
         <q-header class="q-pa-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-secondary"
+            <q-toolbar-title class="text-display"
               >設定 / オプション</q-toolbar-title
             >
             <q-space />
@@ -32,7 +32,7 @@
               <q-card-actions>
                 <div class="text-h5">エンジン</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>エンジンモード</div>
                 <q-space />
                 <q-btn-toggle
@@ -50,6 +50,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -60,12 +61,12 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
-            <!-- ???Mode -->
+            <!-- Preservation Setting -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">操作</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>パラメータの引き継ぎ</div>
                 <q-space />
                 <q-toggle
@@ -74,6 +75,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -89,7 +91,7 @@
               <q-card-actions>
                 <div class="text-h5">保存</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>文字コード</div>
                 <q-space />
                 <q-btn-toggle
@@ -109,7 +111,7 @@
                   ]"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>書き出し先を固定</div>
                 <q-space />
                 <q-input
@@ -138,7 +140,11 @@
                       icon="folder_open"
                       @click="openFileExplore"
                     >
-                      <q-tooltip :delay="500" anchor="bottom left">
+                      <q-tooltip
+                        :delay="500"
+                        anchor="bottom left"
+                        class="bg-background-light text-display"
+                      >
                         フォルダ選択
                       </q-tooltip>
                     </q-btn>
@@ -154,6 +160,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -165,7 +172,7 @@
                 </q-toggle>
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>上書き防止</div>
                 <q-space />
                 <q-toggle
@@ -176,6 +183,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -185,7 +193,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>labファイルを生成</div>
                 <q-space />
                 <q-toggle
@@ -198,6 +206,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -207,7 +216,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
@@ -218,6 +227,7 @@
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -228,16 +238,18 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <!-- Experimental Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>無声化切り替え</div>
                 <q-space />
                 <q-toggle v-model="useVoicingComputed">
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -247,16 +259,22 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>{{ availableThemeNameComputed }}</div>
+              <q-card-actions class="q-px-md q-pb-sm bg-setting-item">
+                <div>Theme</div>
                 <q-space />
-                <q-select
-                  borderless
-                  v-model="currentThemeComputed"
+                <q-btn-toggle
+                  unelevated
+                  padding="xs md"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="secondary"
+                  v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
                 >
                   <q-tooltip
                     :delay="500"
+                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -264,7 +282,7 @@
                   >
                     We haven't decided on the dark mode design itself
                   </q-tooltip>
-                </q-select>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
           </div>
@@ -313,28 +331,26 @@ export default defineComponent({
       },
     });
 
-    const currentThemeComputed = computed({
+    const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
       set: (currentTheme: string) => {
         store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
       },
     });
 
-    const availableThemeComputed = computed(
-      () => store.state.themeSetting.availableThemes
+    const currentThemeComputed = computed(() =>
+      store.state.themeSetting.availableThemes.find((value) => {
+        return value.name == currentThemeNameComputed.value;
+      })
     );
 
     const availableThemeNameComputed = computed(() => {
-      const names: string[] = [];
+      const names: { label: string; value: string }[] = [];
       store.state.themeSetting.availableThemes.forEach((theme) => {
-        names.push(theme.name);
+        names.push({ label: theme.name, value: theme.name });
       });
       return names;
     });
-
-    document.addEventListener("keydown", () =>
-      console.log(store.state.themeSetting)
-    );
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -359,7 +375,7 @@ export default defineComponent({
             $q.loading.show({
               spinnerColor: "primary",
               spinnerSize: 50,
-              boxClass: "bg-white text-secondary",
+              boxClass: "bg-background text-secondary",
               message: "起動モードを変更中です",
             });
             resolve(await window.electron.isAvailableGPUMode());
@@ -433,8 +449,8 @@ export default defineComponent({
       handleSavingSettingChange,
       openFileExplore,
       useVoicingComputed,
+      currentThemeNameComputed,
       currentThemeComputed,
-      availableThemeComputed,
       availableThemeNameComputed,
     };
   },
@@ -452,6 +468,7 @@ export default defineComponent({
 .setting-card {
   @extend .hotkey-table;
   min-width: 475px;
+  background: var(--color-background);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

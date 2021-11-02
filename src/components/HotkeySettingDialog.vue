@@ -7,12 +7,12 @@
     class="hotkey-setting-dialog"
     v-model="hotkeySettingDialogOpenComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <q-toolbar-title class="text-secondary"
-            >設定 / ショートカットキー</q-toolbar-title
-          >
+          <q-toolbar-title class="text-secondary">
+            設定 / ショートカットキー
+          </q-toolbar-title>
           <q-input
             hide-bottom-space
             dense
@@ -73,7 +73,7 @@
                 <q-td no-hover :key="props.cols[1].name" :props="props">
                   <q-btn
                     dense
-                    color="secondary"
+                    text-color="display"
                     padding="none sm"
                     flat
                     :disable="checkHotkeyReadonly(props.row.action)"
@@ -126,8 +126,8 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="background-light"
+          text-color="display"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -138,8 +138,8 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="background-light"
+          text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -149,7 +149,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="black"
+          text-color="display"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -351,7 +351,7 @@ export default defineComponent({
     position: sticky;
     top: 0;
     font-weight: bold;
-    background-color: $grey-3;
+    background-color: var(--color-setting-item);
     z-index: 1;
   }
 

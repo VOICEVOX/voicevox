@@ -72,8 +72,8 @@
                         <q-btn
                           fab
                           icon="add"
-                          color="primary"
-                          text-color="secondary"
+                          color="primary-light"
+                          text-color="on-primary"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>

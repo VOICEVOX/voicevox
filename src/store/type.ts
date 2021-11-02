@@ -16,6 +16,7 @@ import {
   MoraDataType,
   SavingSetting,
   ThemeConf,
+  ThemeSetting,
   UpdateInfo,
 } from "@/type/preload";
 
@@ -609,10 +610,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   useVoicing: boolean;
   engineHost: string;
-  themeSetting: {
-    availableThemes: ThemeConf[];
-    currentTheme: string;
-  };
+  themeSetting: ThemeSetting;
 };
 
 type SettingStoreTypes = {

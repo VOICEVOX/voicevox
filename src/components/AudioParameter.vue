@@ -5,7 +5,8 @@
   >
     <q-badge
       class="value-label"
-      text-color="secondary"
+      color="primary-light"
+      text-color="display-invert"
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
@@ -16,6 +17,7 @@
       vertical
       reverse
       snap
+      color="primary-light"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"

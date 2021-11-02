@@ -640,8 +640,7 @@ ipcMainHandle("THEME", (_, { newData }) => {
     const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
     themes.push(theme);
   });
-  console.log(themes);
-  return { currentTheme: "Dark", availableThemes: themes };
+  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

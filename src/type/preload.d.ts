@@ -149,16 +149,28 @@ export type MoraDataType =
 
 export type ThemeConf = {
   name: string;
+  isDark: boolean;
   colors: {
     "--color-primary": string;
-    "--color-text": string;
-    "--color-text-invert": string;
+    "--color-primary-light": string;
+    "--color-display": string;
+    "--color-display-invert": string;
     "--color-background": string;
-    "--color-shadow-light": string;
-    "--color-setting-items": string;
+    "--color-background-light": string;
+    "--color-setting-item": string;
   };
 };
+
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
 };
+
+export type ThemeColorType =
+  | "--color-primary"
+  | "--color-primary-light"
+  | "--color-display"
+  | "--color-display-invert"
+  | "--color-background"
+  | "--color-background-light"
+  | "--color-setting-item";

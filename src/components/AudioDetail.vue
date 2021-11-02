@@ -19,16 +19,16 @@
             <q-btn
               v-if="!nowPlaying && !nowGenerating"
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="on-primary"
               icon="play_arrow"
               @click="play"
             ></q-btn>
             <q-btn
               v-else
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="on-primary"
               icon="stop"
               @click="stop"
             ></q-btn>
@@ -37,6 +37,8 @@
               aria-label="音声ファイルとして保存"
               size="small"
               icon="file_download"
+              color="display-invert"
+              text-color="display"
               @click="save()"
               :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>
@@ -667,9 +669,9 @@ $pitch-label-height: 24px;
     flex-direction: column;
     justify-content: space-between;
     .detail-selector .q-tab--active {
-      background-color: rgba(global.$primary, 0.3);
+      background-color: rgba(global.$primary-light-rgb, 0.3);
       :deep(.q-tab__indicator) {
-        background-color: global.$primary;
+        background-color: var(--color-primary-light);
       }
     }
     .play-button-wrapper {
