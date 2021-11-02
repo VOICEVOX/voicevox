@@ -591,16 +591,13 @@ export const audioStore: VoiceVoxStoreOptions<
 
         const id = await generateUniqueId(audioItem);
 
-        const audioQuery: AudioQuery = JSON.parse(
-          JSON.stringify(audioItem.query)
-        );
         const speaker = audioItem.styleId;
         if (speaker == undefined) {
           return null;
         }
 
         return api
-          .synthesisSynthesisPost({ audioQuery: audioQuery, speaker: speaker })
+          .synthesisSynthesisPost({ audioQuery: audioItem.query, speaker: speaker })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
