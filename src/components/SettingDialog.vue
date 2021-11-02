@@ -60,6 +60,30 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
+            <!-- ???Mode -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">操作</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>パラメータの引き継ぎ</div>
+                <q-space />
+                <q-toggle
+                  :model-value="inheritAudioInfoMode"
+                  @update:model-value="changeinheritAudioInfo($event)"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -318,6 +342,7 @@ export default defineComponent({
         changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
+    const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 
     const useVoicingComputed = computed({
       get: () => store.state.useVoicing,
@@ -385,6 +410,11 @@ export default defineComponent({
       } else change();
     };
 
+    const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
+      if (store.state.inheritAudioInfo === inheritAudioInfo) return;
+      store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -437,6 +467,8 @@ export default defineComponent({
     return {
       settingDialogOpenedComputed,
       engineMode,
+      inheritAudioInfoMode,
+      changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,
