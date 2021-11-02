@@ -60,6 +60,30 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
+            <!-- ???Mode -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">操作</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>パラメータの引き継ぎ</div>
+                <q-space />
+                <q-toggle
+                  :model-value="inheritAudioInfoMode"
+                  @update:model-value="changeinheritAudioInfo($event)"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -204,6 +228,26 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">実験的機能</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+                <div>無声化切り替え</div>
+                <q-space />
+                <q-toggle v-model="useVoicingComputed">
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    この機能を有効にすると、元に戻す・やり直す機能が正しく動作しなくなる可能性があります
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -239,6 +283,14 @@ export default defineComponent({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
       set: (mode: string) => {
         changeUseGPU(mode == "switchGPU" ? true : false);
+      },
+    });
+    const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const useVoicingComputed = computed({
+      get: () => store.state.useVoicing,
+      set: (useVoicing: boolean) => {
+        store.dispatch("SET_USE_VOICING", { data: useVoicing });
       },
     });
 
@@ -301,6 +353,11 @@ export default defineComponent({
       } else change();
     };
 
+    const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
+      if (store.state.inheritAudioInfo === inheritAudioInfo) return;
+      store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -327,10 +384,13 @@ export default defineComponent({
     return {
       settingDialogOpenedComputed,
       engineMode,
+      inheritAudioInfoMode,
+      changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
+      useVoicingComputed,
     };
   },
 });

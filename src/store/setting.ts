@@ -26,6 +26,8 @@ export const settingStoreState: SettingStoreState = {
     exportText: true,
   },
   hotkeySettings: [],
+  useVoicing: false,
+  engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -55,6 +57,9 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
+    SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
+      state.useVoicing = useVoicing;
+    },
   },
   actions: {
     GET_SAVING_SETTING({ commit }) {
@@ -80,25 +85,35 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
       window.electron.hotkeySettings(data);
-      state.hotkeySettings.forEach((oldData) => {
-        if (oldData.action == data.action) {
-          // pass the hotkey actions implemented with native js
-          if (hotkeyFunctionCache[data.action] !== undefined) {
-            if (oldData.combination != "") {
-              Mousetrap.unbind(hotkey2Combo(oldData.combination));
-            }
-            if (data.combination != "") {
-              Mousetrap.bind(
-                hotkey2Combo(data.combination),
-                hotkeyFunctionCache[data.action]
-              );
-            }
-          }
-        }
+      const oldHotkey = state.hotkeySettings.find((value) => {
+        value.action == data.action;
       });
+      if (oldHotkey !== undefined) {
+        if (oldHotkey.combination != "") {
+          Mousetrap.unbind(hotkey2Combo(oldHotkey.combination));
+        }
+      }
+      if (
+        data.combination != "" &&
+        hotkeyFunctionCache[data.action] !== undefined
+      ) {
+        Mousetrap.bind(
+          hotkey2Combo(data.combination),
+          hotkeyFunctionCache[data.action]
+        );
+      }
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
       });
+    },
+    GET_USE_VOICING({ commit }) {
+      window.electron.useVoicing().then((useVoicing) => {
+        commit("SET_USE_VOICING", { useVoicing: useVoicing });
+      });
+    },
+    SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
+      window.electron.useVoicing(data);
+      commit("SET_USE_VOICING", { useVoicing: data });
     },
   },
 };

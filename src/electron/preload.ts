@@ -132,6 +132,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("USE_GPU", { newValue });
   },
 
+  inheritAudioInfo: (newValue) => {
+    return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
+  },
+
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
@@ -190,6 +194,10 @@ const api: Sandbox = {
 
   setDefaultStyleIds: async (defaultStyleIds) => {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+  },
+
+  useVoicing: (newData) => {
+    return ipcRenderer.invoke("USE_VOICING", { newData });
   },
 };
 

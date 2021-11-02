@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  StyleInfo,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -61,14 +62,20 @@ protocol.registerSchemesAsPrivileged([
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
+  inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
+  useVoicing: boolean;
 }>({
   schema: {
     useGpu: {
       type: "boolean",
       default: false,
+    },
+    inheritAudioInfo: {
+      type: "boolean",
+      default: true,
     },
     savingSetting: {
       type: "object",
@@ -188,6 +195,10 @@ const store = new Store<{
       },
       default: [],
     },
+    useVoicing: {
+      type: "boolean",
+      default: false,
+    },
   },
   migrations: {
     ">=0.7.3": (store) => {
@@ -228,8 +239,12 @@ async function runEngine() {
       type: "info",
     });
   }
-
+  if (!store.has("inheritAudioInfo")) {
+    store.set("inheritAudioInfo", true);
+  }
   const useGpu = store.get("useGpu");
+  const inheritAudioInfo = store.get("inheritAudioInfo");
+
   log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
 
   // エンジンプロセスの起動
@@ -275,17 +290,33 @@ if (!fs.existsSync(tempDir)) {
 declare let __static: string;
 const characterInfos: CharacterInfo[] = [];
 for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
-  const dirPath = path.join(__static, "characters", dirRelPath);
-  const iconPath = path.join(dirPath, "icon.png");
-  const portraitPath = path.join(dirPath, "portrait.png");
-  const policy = fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8");
-  const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
-    fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
+  const dirPath = path.join("characters", dirRelPath);
+  const policy = fs.readFileSync(
+    path.join(__static, dirPath, "policy.md"),
+    "utf-8"
   );
+  const {
+    speakerName,
+    speakerUuid,
+    styles: stylesOrigin,
+  }: MetasJson = JSON.parse(
+    fs.readFileSync(path.join(__static, dirPath, "metas.json"), "utf-8")
+  );
+  const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
+    styleName,
+    styleId,
+    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
+    voiceSamplePaths: [...Array(3).keys()].map((x) =>
+      path.join(
+        dirPath,
+        "voice_samples",
+        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
+      )
+    ),
+  }));
+  const portraitPath = path.join(dirPath, "portrait.png");
 
   characterInfos.push({
-    dirPath,
-    iconPath,
     portraitPath,
     metas: {
       speakerName,
@@ -487,6 +518,14 @@ ipcMainHandle("USE_GPU", (_, { newValue }) => {
   return store.get("useGpu", false);
 });
 
+ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("inheritAudioInfo", newValue);
+  }
+
+  return store.get("inheritAudioInfo", false);
+});
+
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
@@ -591,6 +630,13 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
     store.set("hotkeySettings", hotkeySettings);
   }
   return store.get("hotkeySettings");
+});
+
+ipcMainHandle("USE_VOICING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("useVoicing", newData);
+  }
+  return store.get("useVoicing");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
