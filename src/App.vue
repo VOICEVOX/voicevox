@@ -21,6 +21,7 @@ export default defineComponent({
 
     store.dispatch("START_WAITING_ENGINE");
     store.dispatch("GET_USE_GPU");
+    store.dispatch("GET_INHERIT_AUDIOINFO");
     store.dispatch("GET_SAVING_SETTING");
     store.dispatch("GET_HOTKEY_SETTINGS");
     store.dispatch("GET_USE_VOICING");
