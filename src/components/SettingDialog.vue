@@ -233,7 +233,7 @@
                 <div class="text-h5">高度な設定</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>音声をステレオ化して再生・保存する</div>
+                <div>音声をステレオ化</div>
                 <q-space />
                 <q-toggle
                   name="enabled"
