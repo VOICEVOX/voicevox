@@ -43,7 +43,7 @@
       icon="lens"
       color="green"
       class="title-bar-buttons"
-      @click="minimizeWindow()"
+      @click="maximizeWindow()"
     ></q-btn>
     <q-btn
       dense
@@ -52,7 +52,7 @@
       icon="lens"
       color="yellow"
       class="title-bar-buttons"
-      @click="maximizeWindow()"
+      @click="minimizeWindow()"
     ></q-btn>
     <q-btn
       dense
