@@ -40,6 +40,8 @@ describe("store/vuex.js test", () => {
           avoidOverwrite: false,
           exportLab: false,
           exportText: true,
+          outputStereo: false,
+          outputSamplingRate: 24000,
         },
         isPinned: false,
         hotkeySettings: [],

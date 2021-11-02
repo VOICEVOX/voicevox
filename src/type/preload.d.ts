@@ -99,6 +99,8 @@ export type SavingSetting = {
   fixedExportDir: string;
   avoidOverwrite: boolean;
   exportText: boolean;
+  outputStereo: boolean;
+  outputSamplingRate: number;
 };
 
 export type DefaultStyleId = {
