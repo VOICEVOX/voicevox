@@ -1,13 +1,16 @@
 # VOICEVOX
 
-[VOICEVOX](https://voicevox.hiroshiba.jp/) のフロントエンド。
-（音声合成エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) へ）
+[VOICEVOX](https://voicevox.hiroshiba.jp/) のエディターです。
+
+（エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) 、
+コアは [VOICEVOX CORE](https://github.com/Hiroshiba/voicevox_core/) 、
+全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
 
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
 Node.js をインストール後、[このリポジトリ](https://github.com/Hiroshiba/voicevox.git) を
-Forkして `git clone` し、次のコマンドを実行してください。
+Fork して `git clone` し、次のコマンドを実行してください。
 
 ```bash
 npm ci

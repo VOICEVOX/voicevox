@@ -16,8 +16,6 @@ import {
 } from "./type";
 import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
 
-const isDevelopment = process.env.NODE_ENV == "development";
-
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。
 enablePatches();
@@ -38,7 +36,6 @@ export type PayloadRecipeTree<S, M> = {
 interface UndoRedoState {
   undoCommands: Command[];
   redoCommands: Command[];
-  useUndoRedo: boolean;
 }
 
 /**
@@ -69,14 +66,10 @@ export const createCommandMutation =
     payloadRecipe: PayloadRecipe<S, P>
   ): Mutation<S, P> =>
   (state: S, payload: P): void => {
-    if (state.useUndoRedo) {
-      const command = recordPatches(payloadRecipe)(state, payload);
-      applyPatchesImpl(state, command.redoPatches);
-      state.undoCommands.push(command);
-      state.redoCommands.splice(0);
-    } else {
-      payloadRecipe(state, payload);
-    }
+    const command = recordPatches(payloadRecipe)(state, payload);
+    applyPatchesImpl(state, command.redoPatches);
+    state.undoCommands.push(command);
+    state.redoCommands.splice(0);
   };
 
 /**
@@ -100,7 +93,6 @@ const recordPatches =
 export const commandStoreState: CommandStoreState = {
   undoCommands: [],
   redoCommands: [],
-  useUndoRedo: isDevelopment,
 };
 
 export const commandStore: VoiceVoxStoreOptions<
