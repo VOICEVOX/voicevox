@@ -2,8 +2,8 @@
   <q-dialog
     maximized
     seamless
-    transition-show="none"
-    transition-hide="none"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="default-style-select-dialog"
     v-model="modelValueComputed"
   >
