@@ -2,8 +2,8 @@
   <q-dialog
     maximized
     seamless
-    transition-show="none"
-    transition-hide="none"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="default-style-select-dialog"
     v-model="modelValueComputed"
   >
@@ -71,10 +71,10 @@
         :width="$q.screen.width / 3"
         :breakpoint="0"
       >
-        <div class="column full-height">
+        <div class="character-portrait-wrapper">
           <img
             :src="characterInfos[pageIndex].portraitPath"
-            class="full-width full-height character-portrait"
+            class="character-portrait"
           />
         </div>
       </q-drawer>
@@ -268,9 +268,18 @@ export default defineComponent({
 .q-toolbar div:first-child {
   min-width: 0;
 }
-.character-portrait {
-  object-fit: none;
-  object-position: center top;
+.character-portrait-wrapper {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .character-portrait {
+    object-fit: none;
+    object-position: center top;
+    width: 100%;
+    height: fit-content;
+  }
 }
 .q-tab-panels {
   height: calc(
