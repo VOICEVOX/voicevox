@@ -32,14 +32,6 @@
               icon="stop"
               @click="stop"
             ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
-            ></q-btn>
           </template>
         </div>
       </div>
