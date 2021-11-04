@@ -604,20 +604,26 @@ const audioStoreCreator = (
       },
       GENERATE_AUDIO: createUILockAction(
         async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
-          const audioItem = state.audioItems[audioKey];
-          const id = await generateUniqueId(audioItem);
-
+          const audioItem: AudioItem = JSON.parse(
+            JSON.stringify(state.audioItems[audioKey])
+          );
           const audioQuery = audioItem.query;
           const speaker = audioItem.styleId;
           if (audioQuery == undefined || speaker == undefined) {
             return null;
           }
 
+          audioQuery.outputSamplingRate =
+            state.savingSetting.outputSamplingRate;
+          audioQuery.outputStereo = state.savingSetting.outputStereo;
+
+          const id = await generateUniqueId(audioItem);
+
           return _engineFactory
             .instance(rootState.engineHost)
             .synthesisSynthesisPost({
-              audioQuery: audioQuery,
-              speaker: speaker,
+              audioQuery,
+              speaker,
             })
             .then(async (blob) => {
               audioBlobCache[id] = blob;

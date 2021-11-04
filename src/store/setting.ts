@@ -24,6 +24,8 @@ export const settingStoreState: SettingStoreState = {
     avoidOverwrite: false,
     exportLab: false,
     exportText: true,
+    outputStereo: false,
+    outputSamplingRate: 24000,
   },
   hotkeySettings: [],
   useVoicing: false,
@@ -74,20 +76,12 @@ export const settingStore: VoiceVoxStoreOptions<
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
       });
     },
-    GET_HOTKEY_SETTINGS({ state, dispatch }) {
+    GET_HOTKEY_SETTINGS({ dispatch }) {
       window.electron.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
-          if (!state.useUndoRedo) {
-            if (hotkey.action != "やり直す" && hotkey.action != "元に戻す") {
-              dispatch("SET_HOTKEY_SETTINGS", {
-                data: hotkey,
-              });
-            }
-          } else {
-            dispatch("SET_HOTKEY_SETTINGS", {
-              data: hotkey,
-            });
-          }
+          dispatch("SET_HOTKEY_SETTINGS", {
+            data: hotkey,
+          });
         });
       });
     },

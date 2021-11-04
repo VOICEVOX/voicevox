@@ -1,10 +1,7 @@
 <template>
-  <div class="full-width full-height">
+  <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <img
-      :src="portraitPath"
-      class="full-width full-height character-portrait"
-    />
+    <img :src="portraitPath" class="character-portrait" />
   </div>
 </template>
 
@@ -69,8 +66,17 @@ export default defineComponent({
   );
 }
 
-.character-portrait {
-  object-fit: none;
-  object-position: center top;
+.character-portrait-wrapper {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .character-portrait {
+    object-fit: none;
+    object-position: center top;
+    width: 100%;
+    height: fit-content;
+  }
 }
 </style>
