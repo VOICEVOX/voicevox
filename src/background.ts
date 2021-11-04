@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  StyleInfo,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -89,6 +90,8 @@ const store = new Store<{
         fixedExportDir: { type: "string", default: "" },
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: true },
+        outputStereo: { type: "boolean", default: false },
+        outputSamplingRate: { type: "number", default: 24000 },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -97,6 +100,8 @@ const store = new Store<{
         fixedExportDir: "",
         exportLab: false,
         exportText: true,
+        outputStereo: false,
+        outputSamplingRate: 24000,
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -289,17 +294,33 @@ if (!fs.existsSync(tempDir)) {
 declare let __static: string;
 const characterInfos: CharacterInfo[] = [];
 for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
-  const dirPath = path.join(__static, "characters", dirRelPath);
-  const iconPath = path.join(dirPath, "icon.png");
-  const portraitPath = path.join(dirPath, "portrait.png");
-  const policy = fs.readFileSync(path.join(dirPath, "policy.md"), "utf-8");
-  const { speakerName, speakerUuid, styles }: MetasJson = JSON.parse(
-    fs.readFileSync(path.join(dirPath, "metas.json"), "utf-8")
+  const dirPath = path.join("characters", dirRelPath);
+  const policy = fs.readFileSync(
+    path.join(__static, dirPath, "policy.md"),
+    "utf-8"
   );
+  const {
+    speakerName,
+    speakerUuid,
+    styles: stylesOrigin,
+  }: MetasJson = JSON.parse(
+    fs.readFileSync(path.join(__static, dirPath, "metas.json"), "utf-8")
+  );
+  const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
+    styleName,
+    styleId,
+    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
+    voiceSamplePaths: [...Array(3).keys()].map((x) =>
+      path.join(
+        dirPath,
+        "voice_samples",
+        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
+      )
+    ),
+  }));
+  const portraitPath = path.join(dirPath, "portrait.png");
 
   characterInfos.push({
-    dirPath,
-    iconPath,
     portraitPath,
     metas: {
       speakerName,

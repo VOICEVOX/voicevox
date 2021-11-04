@@ -419,19 +419,6 @@ const audioStoreCreator = (
       LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
         const characterInfos = await window.electron.getCharacterInfos();
 
-        await Promise.all(
-          characterInfos.map(async (characterInfo) => {
-            const [iconBuf, portraitBuf] = await Promise.all([
-              window.electron.readFile({ filePath: characterInfo.iconPath }),
-              window.electron.readFile({
-                filePath: characterInfo.portraitPath,
-              }),
-            ]);
-            characterInfo.iconBlob = new Blob([iconBuf]);
-            characterInfo.portraitBlob = new Blob([portraitBuf]);
-          })
-        );
-
         commit("SET_CHARACTER_INFOS", { characterInfos });
       }),
       GENERATE_AUDIO_KEY() {
@@ -617,20 +604,26 @@ const audioStoreCreator = (
       },
       GENERATE_AUDIO: createUILockAction(
         async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
-          const audioItem = state.audioItems[audioKey];
-          const id = await generateUniqueId(audioItem);
-
+          const audioItem: AudioItem = JSON.parse(
+            JSON.stringify(state.audioItems[audioKey])
+          );
           const audioQuery = audioItem.query;
           const speaker = audioItem.styleId;
           if (audioQuery == undefined || speaker == undefined) {
             return null;
           }
 
+          audioQuery.outputSamplingRate =
+            state.savingSetting.outputSamplingRate;
+          audioQuery.outputStereo = state.savingSetting.outputStereo;
+
+          const id = await generateUniqueId(audioItem);
+
           return _engineFactory
             .instance(rootState.engineHost)
             .synthesisSynthesisPost({
-              audioQuery: audioQuery,
-              speaker: speaker,
+              audioQuery,
+              speaker,
             })
             .then(async (blob) => {
               audioBlobCache[id] = blob;
