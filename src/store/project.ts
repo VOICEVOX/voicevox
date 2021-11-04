@@ -279,7 +279,7 @@ export const projectStore: VoiceVoxStoreOptions<
         if (!overwrite || !filePath) {
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
-            title: "プロジェクトファイルの選択",
+            title: "プロジェクトファイルの保存",
           });
           if (ret == undefined) {
             return;

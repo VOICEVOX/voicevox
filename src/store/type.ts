@@ -132,7 +132,11 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO_ITEM: {
-    action(payload: { text?: string; styleId?: number }): Promise<AudioItem>;
+    action(payload: {
+      text?: string;
+      styleId?: number;
+      baseAudioItem?: AudioItem;
+    }): Promise<AudioItem>;
   };
 
   REGISTER_AUDIO_ITEM: {
@@ -475,7 +479,6 @@ export type AudioCommandActions = StoreType<AudioCommandStoreTypes, "action">;
 export type CommandStoreState = {
   undoCommands: Command[];
   redoCommands: Command[];
-  useUndoRedo: boolean;
 };
 
 type CommandStoreTypes = {
@@ -623,6 +626,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   useVoicing: boolean;
+  engineHost: string;
 };
 
 type SettingStoreTypes = {
@@ -666,6 +670,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 export type UiStoreState = {
   uiLockCount: number;
   useGpu: boolean;
+  inheritAudioInfo: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -724,6 +729,15 @@ type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
+  };
+
+  GET_INHERIT_AUDIOINFO: {
+    action(): void;
+  };
+
+  SET_INHERIT_AUDIOINFO: {
+    mutation: { inheritAudioInfo: boolean };
+    action(payload: { inheritAudioInfo: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {
