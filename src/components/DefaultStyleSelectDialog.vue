@@ -49,6 +49,7 @@
               color="white"
               text-color="secondary"
               class="text-no-wrap"
+              :disable="!canNext"
               @click="nextPage"
             />
             <q-btn
@@ -58,6 +59,7 @@
               color="white"
               text-color="secondary"
               class="text-no-wrap"
+              :disable="!canNext"
               @click="closeDialog"
             />
           </div>
@@ -104,7 +106,7 @@
                         'active-style-item',
                       isHoverableStyleItem && 'hoverable-style-item',
                     ]"
-                    @click="selectedStyleIndexes[characterIndex] = styleIndex"
+                    @click="selectStyleIndex(characterIndex, styleIndex)"
                   >
                     <div class="style-item-inner">
                       <img :src="style.iconPath" class="style-icon" />
@@ -136,8 +138,11 @@
                         />
                         <q-radio
                           class="absolute-top-right no-pointer-events"
-                          v-model="selectedStyleIndexes[characterIndex]"
+                          :model-value="selectedStyleIndexes[characterIndex]"
                           :val="styleIndex"
+                          @update:model-value="
+                            selectStyleIndex(characterIndex, styleIndex)
+                          "
                         />
                       </div>
                     </div>
@@ -153,9 +158,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, PropType } from "vue";
 import { useStore } from "@/store";
-import { StyleInfo } from "@/type/preload";
+import { CharacterInfo, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -163,6 +168,10 @@ export default defineComponent({
   props: {
     modelValue: {
       type: Boolean,
+      required: true,
+    },
+    characterInfos: {
+      type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
@@ -182,19 +191,34 @@ export default defineComponent({
         isFirstTime.value = isUnsetDefaultStyleIds;
       });
 
-    const characterInfos = computed(() => store.state.characterInfos);
-
     const selectedStyleIndexes = ref(
-      characterInfos.value?.map((info) => {
+      props.characterInfos.map((info) => {
         const defaultStyleId = store.state.defaultStyleIds.find(
           (x) => x.speakerUuid === info.metas.speakerUuid
         )?.defaultStyleId;
 
-        return info.metas.styles.findIndex(
+        const index = info.metas.styles.findIndex(
           (style) => style.styleId === defaultStyleId
         );
+        return index === -1 ? undefined : index;
       })
     );
+
+    const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
+      selectedStyleIndexes.value[characterIndex] = styleIndex;
+
+      // 音声を再生する。同じstyleIndexだったら停止する。
+      const selectedStyleInfo =
+        props.characterInfos[characterIndex].metas.styles[styleIndex];
+      if (
+        playing.value !== undefined &&
+        playing.value.styleId === selectedStyleInfo.styleId
+      ) {
+        stop();
+      } else {
+        play(selectedStyleInfo, 0);
+      }
+    };
 
     const pageIndex = ref(0);
 
@@ -203,8 +227,13 @@ export default defineComponent({
     const playing = ref<{ styleId: number; index: number }>();
 
     const audio = new Audio();
-    audio.volume = 0.7;
+    audio.volume = 0.5;
     audio.onended = () => stop();
+
+    const canNext = computed(() => {
+      const selectedStyleIndex = selectedStyleIndexes.value[pageIndex.value];
+      return selectedStyleIndex !== undefined;
+    });
 
     const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
       if (audio.src !== "") stop();
@@ -231,12 +260,10 @@ export default defineComponent({
     };
 
     const closeDialog = () => {
-      if (!characterInfos.value) return;
-
-      const defaultStyleIds = characterInfos.value.map((info, idx) => ({
+      const defaultStyleIds = props.characterInfos.map((info, idx) => ({
         speakerUuid: info.metas.speakerUuid,
         defaultStyleId:
-          info.metas.styles[selectedStyleIndexes.value?.[idx] ?? 0].styleId,
+          info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
       }));
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
@@ -248,11 +275,12 @@ export default defineComponent({
     return {
       modelValueComputed,
       isFirstTime,
-      characterInfos,
       selectedStyleIndexes,
+      selectStyleIndex,
       pageIndex,
       isHoverableStyleItem,
       playing,
+      canNext,
       play,
       stop,
       prevPage,
