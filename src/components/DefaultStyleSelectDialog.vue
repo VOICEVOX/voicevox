@@ -11,8 +11,10 @@
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
-            <q-toolbar-title v-if="isFirstTime" class="text-secondary"
-              >デフォルトのスタイルを選択してください</q-toolbar-title
+            <q-toolbar-title v-if="isFirstTime" class="text-secondary text-h6"
+              >「{{
+                characterInfos[pageIndex].metas.speakerName
+              }}」のデフォルトのスタイル（喋り方）を選んでください</q-toolbar-title
             >
             <q-toolbar-title v-else class="text-secondary"
               >設定 / デフォルトスタイル</q-toolbar-title
@@ -28,19 +30,19 @@
           <q-space />
 
           <div class="row items-center no-wrap">
-            <div class="text-subtitle1 text-no-wrap text-secondary q-mr-md">
-              {{ pageIndex + 1 }} / {{ characterInfos.length }}
-            </div>
-
             <q-btn
+              v-show="pageIndex >= 1"
               unelevated
               label="戻る"
               color="white"
               text-color="secondary"
-              class="text-no-wrap q-mr-sm"
-              :disable="pageIndex < 1"
+              class="text-no-wrap q-mr-md"
               @click="prevPage"
             />
+
+            <div class="text-subtitle2 text-no-wrap text-secondary q-mr-md">
+              {{ pageIndex + 1 }} / {{ characterInfos.length }}
+            </div>
 
             <q-btn
               v-if="pageIndex + 1 < characterInfos.length"
