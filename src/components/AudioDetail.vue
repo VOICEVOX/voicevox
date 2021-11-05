@@ -316,7 +316,7 @@ export default defineComponent({
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const lastPitches = ref<number[][]>([]);
-    watch(accentPhrases, (newPhrases, oldPhrases) => {
+    watch(accentPhrases, (newPhrases) => {
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
@@ -664,7 +664,6 @@ export default defineComponent({
       shiftKeyFlag,
       tabAction,
       handleChangeVoicing,
-      lastPitches,
     };
   },
 });
