@@ -108,7 +108,6 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <!-- v-ifも付けないとfalseでも動いてしまう -->
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
