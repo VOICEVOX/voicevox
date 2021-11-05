@@ -153,9 +153,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, PropType } from "vue";
 import { useStore } from "@/store";
-import { StyleInfo } from "@/type/preload";
+import { CharacterInfo, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -163,6 +163,11 @@ export default defineComponent({
   props: {
     modelValue: {
       type: Boolean,
+      required: true,
+    },
+
+    characterInfos: {
+      type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
@@ -182,10 +187,8 @@ export default defineComponent({
         isFirstTime.value = isUnsetDefaultStyleIds;
       });
 
-    const characterInfos = computed(() => store.state.characterInfos);
-
     const selectedStyleIndexes = ref(
-      characterInfos.value?.map((info) => {
+      props.characterInfos.map((info) => {
         const defaultStyleId = store.state.defaultStyleIds.find(
           (x) => x.speakerUuid === info.metas.speakerUuid
         )?.defaultStyleId;
@@ -231,9 +234,7 @@ export default defineComponent({
     };
 
     const closeDialog = () => {
-      if (!characterInfos.value) return;
-
-      const defaultStyleIds = characterInfos.value.map((info, idx) => ({
+      const defaultStyleIds = props.characterInfos.map((info, idx) => ({
         speakerUuid: info.metas.speakerUuid,
         defaultStyleId:
           info.metas.styles[selectedStyleIndexes.value?.[idx] ?? 0].styleId,
@@ -248,7 +249,6 @@ export default defineComponent({
     return {
       modelValueComputed,
       isFirstTime,
-      characterInfos,
       selectedStyleIndexes,
       pageIndex,
       isHoverableStyleItem,

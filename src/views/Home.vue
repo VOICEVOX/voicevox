@@ -110,7 +110,8 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <!-- v-ifも付けないとfalseでも動いてしまう -->
   <default-style-select-dialog
-    v-if="isDefaultStyleSelectDialogOpenComputed"
+    v-if="characterInfos"
+    :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
 </template>
@@ -401,6 +402,7 @@ export default defineComponent({
     });
 
     // デフォルトスタイル選択
+    const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
       get: () => store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
@@ -454,6 +456,7 @@ export default defineComponent({
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
+      characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
