@@ -170,7 +170,6 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-
     characterInfos: {
       type: Object as PropType<CharacterInfo[]>,
       required: true,
