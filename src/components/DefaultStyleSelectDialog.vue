@@ -228,7 +228,7 @@ export default defineComponent({
     const playing = ref<{ styleId: number; index: number }>();
 
     const audio = new Audio();
-    audio.volume = 0.7;
+    audio.volume = 0.5;
     audio.onended = () => stop();
 
     const canNext = computed(() => {
