@@ -49,6 +49,7 @@
               color="white"
               text-color="secondary"
               class="text-no-wrap"
+              :disable="!canNext"
               @click="nextPage"
             />
             <q-btn
@@ -58,6 +59,7 @@
               color="white"
               text-color="secondary"
               class="text-no-wrap"
+              :disable="!canNext"
               @click="closeDialog"
             />
           </div>
@@ -193,9 +195,10 @@ export default defineComponent({
           (x) => x.speakerUuid === info.metas.speakerUuid
         )?.defaultStyleId;
 
-        return info.metas.styles.findIndex(
+        const index = info.metas.styles.findIndex(
           (style) => style.styleId === defaultStyleId
         );
+        return index === -1 ? undefined : index;
       })
     );
 
@@ -208,6 +211,11 @@ export default defineComponent({
     const audio = new Audio();
     audio.volume = 0.7;
     audio.onended = () => stop();
+
+    const canNext = computed(() => {
+      const selectedStyleIndex = selectedStyleIndexes.value[pageIndex.value];
+      return selectedStyleIndex !== undefined;
+    });
 
     const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
       if (audio.src !== "") stop();
@@ -237,7 +245,7 @@ export default defineComponent({
       const defaultStyleIds = props.characterInfos.map((info, idx) => ({
         speakerUuid: info.metas.speakerUuid,
         defaultStyleId:
-          info.metas.styles[selectedStyleIndexes.value?.[idx] ?? 0].styleId,
+          info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
       }));
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
 
@@ -253,6 +261,7 @@ export default defineComponent({
       pageIndex,
       isHoverableStyleItem,
       playing,
+      canNext,
       play,
       stop,
       prevPage,
