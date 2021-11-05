@@ -106,7 +106,7 @@
                         'active-style-item',
                       isHoverableStyleItem && 'hoverable-style-item',
                     ]"
-                    @click="selectedStyleIndexes[characterIndex] = styleIndex"
+                    @click="selectStyleIndex(characterIndex, styleIndex)"
                   >
                     <div class="style-item-inner">
                       <img :src="style.iconPath" class="style-icon" />
@@ -138,8 +138,11 @@
                         />
                         <q-radio
                           class="absolute-top-right no-pointer-events"
-                          v-model="selectedStyleIndexes[characterIndex]"
+                          :model-value="selectedStyleIndexes[characterIndex]"
                           :val="styleIndex"
+                          @update:model-value="
+                            selectStyleIndex(characterIndex, styleIndex)
+                          "
                         />
                       </div>
                     </div>
@@ -202,6 +205,22 @@ export default defineComponent({
       })
     );
 
+    const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
+      selectedStyleIndexes.value[characterIndex] = styleIndex;
+
+      // 音声を再生する。同じstyleIndexだったら停止する。
+      const selectedStyleInfo =
+        props.characterInfos[characterIndex].metas.styles[styleIndex];
+      if (
+        playing.value !== undefined &&
+        playing.value.styleId === selectedStyleInfo.styleId
+      ) {
+        stop();
+      } else {
+        play(selectedStyleInfo, 0);
+      }
+    };
+
     const pageIndex = ref(0);
 
     const isHoverableStyleItem = ref(true);
@@ -258,6 +277,7 @@ export default defineComponent({
       modelValueComputed,
       isFirstTime,
       selectedStyleIndexes,
+      selectStyleIndex,
       pageIndex,
       isHoverableStyleItem,
       playing,
