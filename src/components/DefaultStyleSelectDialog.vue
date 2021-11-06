@@ -192,13 +192,12 @@ export default defineComponent({
     // ダイアログが開かれたときに初期値を求める
     watch(
       () => props.modelValue,
-      (newValue, oldValue) => {
+      async (newValue, oldValue) => {
         if (!oldValue && newValue) {
-          store
-            .dispatch("IS_UNSET_DEFAULT_STYLE_IDS")
-            .then((isUnsetDefaultStyleIds) => {
-              isFirstTime.value = isUnsetDefaultStyleIds;
-            });
+          const isUnsetDefaultStyleIds = await store.dispatch(
+            "IS_UNSET_DEFAULT_STYLE_IDS"
+          );
+          isFirstTime.value = isUnsetDefaultStyleIds;
 
           selectedStyleIndexes.value = props.characterInfos.map((info) => {
             // FIXME: キャラクターごとにデフォルスタイル選択済みか保存できるようになるべき
