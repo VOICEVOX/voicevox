@@ -254,7 +254,8 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <!-- FIXME: バージョン0.8.0現在、エンジン側にサンプリングレート変更エラーがあるので機能制限 -->
+              <!-- <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>音声のサンプリングレート</div>
                 <q-space />
                 <q-select
@@ -282,7 +283,7 @@
                     音声のサンプリングレートを変更して再生・保存しますが、音声の品質は大きく変わりません
                   </q-tooltip>
                 </q-select>
-              </q-card-actions>
+              </q-card-actions> -->
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
