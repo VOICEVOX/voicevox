@@ -1,5 +1,40 @@
 [
   {
+    "version": "0.8.0",
+    "descriptions": [
+      "ショートカットキーの変更機能を追加",
+      "デフォルトスタイルの選択機能を追加",
+      "音素の長さ変更機能を追加",
+      "無声化の切り替え機能を追加",
+      "パラメータの継承機能を追加",
+      "元に戻す／やり直す機能を追加",
+      "音声合成エンジンの機能追加",
+      "UXの向上",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "arigayas",
+      "buckw6eat",
+      "eggplants",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "madosuki",
+      "mes51",
+      "MT224244",
+      "noronoro56",
+      "oov",
+      "Patchethium",
+      "PickledChair",
+      "Segu-g",
+      "takana-v",
+      "yamachu",
+      "y-chan",
+      "Yosshi999"
+    ]
+  },
+  {
     "version": "0.7.5",
     "descriptions": ["Linux版がビルドできない問題の修正"],
     "contributors": []
