@@ -39,6 +39,29 @@ export const indexStore: VoiceVoxStoreOptions<
   mutations: {
     SET_DEFAULT_STYLE_IDS(state, { defaultStyleIds }) {
       state.defaultStyleIds = defaultStyleIds;
+
+      // 初期状態（空のAudioCellが１つだけ）だった場合は、スタイルを変更する
+      // FIXME: デフォルトスタイル選択前にAudioCellを生成しないようにする
+      if (state.audioKeys.length === 1) {
+        const audioItem = state.audioItems[state.audioKeys[0]];
+        if (audioItem.text === "") {
+          const characterInfo = state.characterInfos?.find(
+            (info) =>
+              info.metas.styles.find(
+                (style) => style.styleId == audioItem.styleId
+              ) != undefined
+          );
+          if (characterInfo == undefined)
+            throw new Error("characterInfo == undefined");
+
+          const speakerUuid = characterInfo.metas.speakerUuid;
+          const defaultStyleId = defaultStyleIds.find(
+            (styleId) => speakerUuid == styleId.speakerUuid
+          )?.defaultStyleId;
+
+          audioItem.styleId = defaultStyleId;
+        }
+      }
     },
   },
   actions: {
