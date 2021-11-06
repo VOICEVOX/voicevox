@@ -160,7 +160,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, PropType } from "vue";
+import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
 import { CharacterInfo, StyleInfo } from "@/type/preload";
 
@@ -187,23 +187,34 @@ export default defineComponent({
     });
 
     const isFirstTime = ref(false);
-    store
-      .dispatch("IS_UNSET_DEFAULT_STYLE_IDS")
-      .then((isUnsetDefaultStyleIds) => {
-        isFirstTime.value = isUnsetDefaultStyleIds;
-      });
+    const selectedStyleIndexes = ref<(number | undefined)[]>([]);
 
-    const selectedStyleIndexes = ref(
-      props.characterInfos.map((info) => {
-        const defaultStyleId = store.state.defaultStyleIds.find(
-          (x) => x.speakerUuid === info.metas.speakerUuid
-        )?.defaultStyleId;
+    // ダイアログが開かれたときに初期値を求める
+    watch(
+      () => props.modelValue,
+      (newValue, oldValue) => {
+        if (!oldValue && newValue) {
+          store
+            .dispatch("IS_UNSET_DEFAULT_STYLE_IDS")
+            .then((isUnsetDefaultStyleIds) => {
+              isFirstTime.value = isUnsetDefaultStyleIds;
+            });
 
-        const index = info.metas.styles.findIndex(
-          (style) => style.styleId === defaultStyleId
-        );
-        return index === -1 ? undefined : index;
-      })
+          selectedStyleIndexes.value = props.characterInfos.map((info) => {
+            // FIXME: キャラクターごとにデフォルスタイル選択済みか保存できるようになるべき
+            if (isFirstTime.value) return undefined;
+
+            const defaultStyleId = store.state.defaultStyleIds.find(
+              (x) => x.speakerUuid === info.metas.speakerUuid
+            )?.defaultStyleId;
+
+            const index = info.metas.styles.findIndex(
+              (style) => style.styleId === defaultStyleId
+            );
+            return index === -1 ? undefined : index;
+          });
+        }
+      }
     );
 
     const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
