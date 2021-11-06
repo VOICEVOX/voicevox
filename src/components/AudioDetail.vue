@@ -10,7 +10,7 @@
             v-model="selectedDetail"
           >
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="高さ" />
+            <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
             <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
@@ -31,14 +31,6 @@
               text-color="secondary"
               icon="stop"
               @click="stop"
-            ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>
           </template>
         </div>

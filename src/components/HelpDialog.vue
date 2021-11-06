@@ -53,6 +53,7 @@
                       round
                       flat
                       icon="close"
+                      color="secondary"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
@@ -111,16 +112,16 @@ export default defineComponent({
         component: HowToUse,
       },
       {
-        name: "OSSライセンス情報",
+        name: "開発コミュニティ",
+        component: OssCommunityInfo,
+      },
+      {
+        name: "ライセンス情報",
         component: OssLicense,
       },
       {
         name: "アップデート情報",
         component: UpdateInfo,
-      },
-      {
-        name: "OSSコミュニティ",
-        component: OssCommunityInfo,
       },
     ];
 
