@@ -710,6 +710,10 @@ type UiStoreTypes = {
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
   };
 
+  VUEX_READY: {
+    action(): void;
+  };
+
   IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
     mutation: { isDefaultStyleSelectDialogOpen: boolean };
     action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;

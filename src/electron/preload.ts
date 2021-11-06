@@ -203,6 +203,10 @@ const api: Sandbox = {
   theme: (newData) => {
     return ipcRenderer.invoke("THEME", { newData });
   },
+
+  vuexReady: () => {
+    ipcRenderer.invoke("VUEX_READY");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

@@ -55,6 +55,7 @@ export interface Sandbox {
   ): Promise<void>;
   useVoicing(newData?: boolean): Promise<boolean>;
   theme(newData?: string): Promise<ThemeSetting | void>;
+  vuexReady(): void;
 }
 
 export type AppInfos = {

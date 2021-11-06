@@ -350,6 +350,7 @@ async function createWindow() {
     height: 600,
     frame: false,
     minWidth: 320,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -641,6 +642,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
     themes.push(theme);
   });
   return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+});
+
+ipcMainHandle("VUEX_READY", () => {
+  win.show();
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
