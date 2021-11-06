@@ -6,7 +6,9 @@ models/AudioQuery.ts
 models/HTTPValidationError.ts
 models/Mora.ts
 models/ParseKanaBadRequest.ts
+models/Preset.ts
 models/Speaker.ts
+models/SpeakerInfo.ts
 models/SpeakerStyle.ts
 models/ValidationError.ts
 models/index.ts
