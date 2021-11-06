@@ -255,10 +255,6 @@ const store = new Store<{
       hotkeys.splice(6, 0, newHotkey);
       store.set("hotkeySettings", hotkeys);
     },
-    presets: {
-      items: {},
-      keys: {},
-    },
   },
 });
 
