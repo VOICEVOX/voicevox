@@ -3,12 +3,7 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs
-            dense
-            vertical
-            class="text-secondary"
-            v-model="selectedDetail"
-          >
+          <q-tabs dense vertical class="text-display" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
             <q-tab name="length" label="長さ" />
@@ -383,7 +378,7 @@ export default defineComponent({
           ok: {
             label: "閉じる",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       }
@@ -423,7 +418,7 @@ export default defineComponent({
         ok: {
           label: "閉じる",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
       });
     };
@@ -719,14 +714,14 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
           font-weight: bold;
           cursor: pointer;
         }

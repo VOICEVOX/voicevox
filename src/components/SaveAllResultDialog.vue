@@ -93,7 +93,7 @@ export default defineComponent({
 }
 
 .header-text {
-  color: global.$secondary;
+  color: var(--color-display);
 }
 
 .background {

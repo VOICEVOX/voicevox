@@ -160,9 +160,9 @@ export const settingStore: VoiceVoxStoreOptions<
             theme.colors[k as ThemeColorType]
           );
         }
-        // Dark.set(theme.isDark);
+        Dark.set(theme.isDark);
         setCssVar("primary", theme.colors["--color-primary"]);
-        setCssVar("secondary", theme.colors["--color-display"]);
+        setCssVar("warning", theme.colors["--color-warning"]);
       }
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,

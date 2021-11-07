@@ -54,7 +54,7 @@
                       round
                       flat
                       icon="close"
-                      color="secondary"
+                      color="display"
                       @click="modelValueComputed = false"
                     />
                   </q-toolbar>
@@ -152,6 +152,6 @@ export default defineComponent({
 
 .selected-item {
   background-color: rgba(global.$primary-rgb, 0.4);
-  color: global.$secondary;
+  color: var(--color-display);
 }
 </style>

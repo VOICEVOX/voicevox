@@ -3,7 +3,7 @@
     v-if="$q.platform.is.mac"
     transparent
     color="transparent"
-    text-color="secondary"
+    text-color="display"
     class="full-height cursor-not-allowed no-border-radius"
   >
     <q-btn
@@ -27,7 +27,7 @@
       flat
       round
       icon="push_pin"
-      color="secondary"
+      color="display"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
@@ -70,7 +70,7 @@
     v-else
     transparent
     color="transparent"
-    text-color="secondary"
+    text-color="display"
     class="
       full-height
       cursor-not-allowed

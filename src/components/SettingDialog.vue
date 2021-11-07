@@ -20,7 +20,7 @@
               round
               flat
               icon="close"
-              color="secondary"
+              color="display"
               @click="settingDialogOpenedComputed = false"
             />
           </q-toolbar>
@@ -42,7 +42,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
-                  toggle-text-color="secondary"
+                  toggle-text-color="display"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -50,7 +50,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -75,7 +74,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -104,7 +102,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
-                  toggle-text-color="secondary"
+                  toggle-text-color="display"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
@@ -140,11 +138,7 @@
                       icon="folder_open"
                       @click="openFileExplore"
                     >
-                      <q-tooltip
-                        :delay="500"
-                        anchor="bottom left"
-                        class="bg-background-light text-display"
-                      >
+                      <q-tooltip :delay="500" anchor="bottom left">
                         フォルダ選択
                       </q-tooltip>
                     </q-btn>
@@ -160,7 +154,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -183,7 +176,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -206,7 +198,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -227,7 +218,6 @@
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -243,7 +233,7 @@
               <q-card-actions>
                 <div class="text-h5">高度な設定</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声をステレオ化</div>
                 <q-space />
                 <q-toggle
@@ -306,7 +296,6 @@
                 <q-toggle v-model="useVoicingComputed">
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -325,13 +314,12 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
-                  toggle-text-color="secondary"
+                  toggle-text-color="display"
                   v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
                 >
                   <q-tooltip
                     :delay="500"
-                    class="bg-background-light text-display"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -422,7 +410,7 @@ export default defineComponent({
           message: "変更を適用するためにエンジンを再起動します。",
           ok: {
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       };
@@ -433,7 +421,7 @@ export default defineComponent({
             $q.loading.show({
               spinnerColor: "primary",
               spinnerSize: 50,
-              boxClass: "bg-background text-secondary",
+              boxClass: "bg-background text-display",
               message: "起動モードを変更中です",
             });
             resolve(await window.electron.isAvailableGPUMode());
@@ -458,12 +446,12 @@ export default defineComponent({
           ok: {
             label: "変更する",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
           cancel: {
             label: "変更しない",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         }).onOk(change);
       } else change();
@@ -499,12 +487,12 @@ export default defineComponent({
           ok: {
             label: "変更する",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
           cancel: {
             label: "変更しない",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         }).onOk(storeDispatch);
         return;

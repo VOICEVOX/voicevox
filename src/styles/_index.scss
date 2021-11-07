@@ -2,8 +2,6 @@ $primary: var(--color-primary);
 $primary-rgb: var(--color-primary-rgb);
 $primary-light: var(--color-primary-light);
 $primary-light-rgb: var(--color-primary-light-rgb);
-$secondary: var(--color-display);
-$secondary-rgb: var(--color-display-rgb);
 
 $window-border-width: 2px;
 
@@ -67,6 +65,14 @@ $detail-view-splitter-cell-z-index: 2;
 
 .bg-setting-item {
   background: var(--color-setting-item);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.bg-warning {
+  background: var(--color-warning);
 }
 
 body {

@@ -102,6 +102,7 @@
       dense
       hide-bottom-space
       class="full-width"
+      color="primary-light"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
@@ -121,7 +122,6 @@
         <q-btn
           round
           flat
-          text-color="display"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -440,7 +440,7 @@ export default defineComponent({
       display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
-      background-color: #0001;
+      background-color: rgba(var(--color-display-rgb), 0.08);
     }
   }
   &:hover > .q-input > .q-field__after {
@@ -450,7 +450,7 @@ export default defineComponent({
 
 .character-menu {
   .q-item {
-    color: global.$secondary;
+    color: var(--color-display);
   }
   .selected-character-item {
     background-color: rgba(global.$primary-rgb, 0.2);
@@ -459,5 +459,6 @@ export default defineComponent({
 
 input {
   caret-color: var(--color-display);
+  color: var(--color-display);
 }
 </style>

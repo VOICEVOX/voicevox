@@ -7,10 +7,12 @@
     "--color-primary-light": "#A5D4AD",
     "--color-primary-light-rgb": "165, 212, 173",
     "--color-display": "#121212",
-    "--color-display-light": "#FFFFFF",
+    "--color-display-rgb": "18, 18, 18",
+    "--color-display-light": "#EBEBEB",
     "--color-display-dark": "#121212",
     "--color-background": "#F5F5F5",
     "--color-background-light": "#FFFFFF",
-    "--color-setting-item": "#EEEEEE"
+    "--color-setting-item": "#EEEEEE",
+    "--color-warning": "#C10015"
   }
 }

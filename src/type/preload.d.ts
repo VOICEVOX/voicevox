@@ -155,12 +155,17 @@ export type ThemeConf = {
   isDark: boolean;
   colors: {
     "--color-primary": string;
+    "--color-primary-rgb": string;
     "--color-primary-light": string;
+    "--color-primary-light-rgb": string;
     "--color-display": string;
-    "--color-display-invert": string;
+    "--color-display-rgb": string;
+    "--color-display-light": string;
+    "--color-display-dark": string;
     "--color-background": string;
     "--color-background-light": string;
     "--color-setting-item": string;
+    "--color-warning": string;
   };
 };
 
@@ -171,9 +176,14 @@ export type ThemeSetting = {
 
 export type ThemeColorType =
   | "--color-primary"
+  | "--color-primary-rgb"
   | "--color-primary-light"
+  | "--color-primary-light-rgb"
   | "--color-display"
-  | "--color-display-invert"
+  | "--color-display-rgb"
+  | "--color-display-light"
+  | "--color-display-dark"
   | "--color-background"
   | "--color-background-light"
-  | "--color-setting-item";
+  | "--color-setting-item"
+  | "--color-warning";

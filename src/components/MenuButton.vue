@@ -1,7 +1,7 @@
 <template>
   <q-btn
     flat
-    text-color="secondary"
+    text-color="display"
     class="
       full-height
       cursor-pointer

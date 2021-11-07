@@ -3,7 +3,7 @@
     <q-toolbar>
       <q-btn
         unelevated
-        color="display-light"
+        color="background-light"
         text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="uiLocked"
@@ -12,7 +12,7 @@
       >
       <q-btn
         unelevated
-        color="display-light"
+        color="background-light"
         text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!nowPlayingContinuously"
@@ -23,7 +23,7 @@
       <q-space />
       <q-btn
         unelevated
-        color="display-light"
+        color="background-light"
         text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canUndo || uiLocked"
@@ -32,7 +32,7 @@
       >
       <q-btn
         unelevated
-        color="display-light"
+        color="background-light"
         text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canRedo || uiLocked"
@@ -120,7 +120,7 @@ export default defineComponent({
           ok: {
             label: "閉じる",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       }
