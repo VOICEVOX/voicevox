@@ -391,7 +391,10 @@ async function createWindow() {
     );
   });
   win.webContents.on("before-input-event", (event, input) => {
-    if (input.alt && input.key.toUpperCase() === "F4") {
+    if (
+      (input.alt && input.key.toUpperCase() === "F4") ||
+      (input.meta && input.key.toUpperCase() === "Q")
+    ) {
       event.preventDefault();
       ipcMainSend(win, "CLOSE_WINDOW_FOR_SHORTCUT");
     }
