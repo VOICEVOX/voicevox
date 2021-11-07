@@ -116,6 +116,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.hotkeySettings);
     assert.equal(store.state.useVoicing, false);
     assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
-    assert.propertyVal(store.state.themeSetting, "availableThemes", []);
+    assert.property(store.state.themeSetting, "availableThemes");
+    assert.isEmpty(store.state.themeSetting.availableThemes);
   });
 });
