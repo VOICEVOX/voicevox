@@ -325,7 +325,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    We haven't decided on the dark mode design itself
+                    The markdown pages won't be influenced
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
