@@ -50,6 +50,8 @@
             flat
             dense
             hide-bottom
+            card-class="bg-background text-display"
+            table-class="text-display"
             row-key="hotkeyIndexes"
             :filter="hotkeyFilter"
             :rows="hotkeySettings"
@@ -126,7 +128,7 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="background-light"
+          color="background"
           text-color="display"
           class="q-mt-sm"
           @click="
@@ -138,7 +140,7 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="background-light"
+          color="background"
           text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"

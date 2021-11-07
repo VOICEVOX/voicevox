@@ -35,8 +35,8 @@
             <q-btn
               unelevated
               label="戻る"
-              color="background-light"
-              text-color="secondary"
+              color="display-light"
+              text-color="display-dark"
               class="text-no-wrap q-mr-sm"
               :disable="pageIndex < 1"
               @click="prevPage"
@@ -46,8 +46,8 @@
               v-if="pageIndex + 1 < characterInfos.length"
               unelevated
               label="次へ"
-              color="background-light"
-              text-color="secondary"
+              color="display-light"
+              text-color="display-dark"
               class="text-no-wrap"
               @click="nextPage"
             />
@@ -55,8 +55,8 @@
               v-else
               unelevated
               label="完了"
-              color="background-light"
-              text-color="secondary"
+              color="display-light"
+              text-color="display-dark"
               class="text-no-wrap"
               @click="closeDialog"
             />

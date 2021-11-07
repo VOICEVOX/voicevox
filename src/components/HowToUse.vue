@@ -1,5 +1,5 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller">
+  <q-page class="relative-absolute-wrapper scroller bg-background">
     <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
   </q-page>
 </template>

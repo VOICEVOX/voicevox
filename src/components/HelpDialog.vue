@@ -7,10 +7,11 @@
     class="help-dialog"
     v-model="modelValueComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff">
       <q-drawer
         bordered
         show-if-above
+        class="bg-background"
         :model-value="true"
         :width="250"
         :breakpoint="0"
@@ -44,7 +45,7 @@
               <div class="root">
                 <q-header class="q-pa-sm">
                   <q-toolbar>
-                    <q-toolbar-title class="text-secondary">
+                    <q-toolbar-title class="text-display">
                       ヘルプ / {{ page.name }}
                     </q-toolbar-title>
                     <q-space />

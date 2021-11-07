@@ -6,9 +6,9 @@
     "--color-primary-rgb": "165, 212, 173",
     "--color-primary-light": "#A5D4AD",
     "--color-primary-light-rgb": "165, 212, 173",
-    "--color-on-primary": "#0A0A0A",
     "--color-display": "#121212",
-    "--color-display-invert": "#FFFFFF",
+    "--color-display-light": "#FFFFFF",
+    "--color-display-dark": "#121212",
     "--color-background": "#F5F5F5",
     "--color-background-light": "#FFFFFF",
     "--color-setting-item": "#EEEEEE"

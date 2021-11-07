@@ -4,11 +4,11 @@
   "colors": {
     "--color-primary": "#0A0A0A",
     "--color-primary-rgb": "10, 10, 10",
-    "--color-primary-light": "#F5F5F5",
-    "--color-primary-light-rgb": "245, 245, 245",
-    "--color-on-primary": "#0A0A0A",
+    "--color-primary-light": "#E0E0E0",
+    "--color-primary-light-rgb": "224, 224, 224",
     "--color-display": "#F5F5F5",
-    "--color-display-invert": "#212121",
+    "--color-display-light": "#E0E0E0",
+    "--color-display-dark": "#121212",
     "--color-background": "#121212",
     "--color-background-light": "#212121",
     "--color-setting-item": "#424242"

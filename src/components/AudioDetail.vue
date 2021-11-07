@@ -20,7 +20,7 @@
               v-if="!nowPlaying && !nowGenerating"
               fab
               color="primary-light"
-              text-color="on-primary"
+              text-color="display-dark"
               icon="play_arrow"
               @click="play"
             ></q-btn>
@@ -28,7 +28,7 @@
               v-else
               fab
               color="primary-light"
-              text-color="on-primary"
+              text-color="display-dark"
               icon="stop"
               @click="stop"
             ></q-btn>
@@ -37,8 +37,8 @@
               aria-label="音声ファイルとして保存"
               size="small"
               icon="file_download"
-              color="display-invert"
-              text-color="display"
+              color="display-light"
+              text-color="display-dark"
               @click="save()"
               :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>

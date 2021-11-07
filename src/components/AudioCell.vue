@@ -107,6 +107,7 @@
         <q-btn
           round
           flat
+          text-color="display"
           icon="delete_outline"
           size="0.8rem"
           :disable="uiLocked"
@@ -441,5 +442,9 @@ export default defineComponent({
   .selected-character-item {
     background-color: rgba(global.$primary-rgb, 0.2);
   }
+}
+
+input {
+  caret-color: var(--color-display);
 }
 </style>

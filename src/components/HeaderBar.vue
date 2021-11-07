@@ -3,8 +3,8 @@
     <q-toolbar>
       <q-btn
         unelevated
-        color="background-light"
-        text-color="secondary"
+        color="display-light"
+        text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="uiLocked"
         @click="playContinuously"
@@ -12,8 +12,8 @@
       >
       <q-btn
         unelevated
-        color="background-light"
-        text-color="secondary"
+        color="display-light"
+        text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!nowPlayingContinuously"
         @click="stopContinuously"
@@ -24,8 +24,8 @@
       <q-btn
         v-if="useUndoRedo"
         unelevated
-        color="background-light"
-        text-color="secondary"
+        color="display-light"
+        text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canUndo || uiLocked"
         @click="undo"
@@ -34,8 +34,8 @@
       <q-btn
         v-if="useUndoRedo"
         unelevated
-        color="background-light"
-        text-color="secondary"
+        color="display-light"
+        text-color="display-dark"
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canRedo || uiLocked"
         @click="redo"

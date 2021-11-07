@@ -1,5 +1,8 @@
 <template>
-  <q-page ref="scroller" class="relative-absolute-wrapper scroller">
+  <q-page
+    ref="scroller"
+    class="relative-absolute-wrapper scroller bg-background"
+  >
     <div class="q-pa-md">
       <q-list v-if="detailIndex === undefined">
         <template v-for="(characterInfo, index) in characterInfos" :key="index">

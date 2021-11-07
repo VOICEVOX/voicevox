@@ -12,13 +12,7 @@ $menubar-height: 24px;
 
 $detail-view-splitter-cell-z-index: 2;
 
-.text-on-primary {
-  color: var(--color-on-primary);
-}
 
-.bg-on-primary {
-  background: var(--color-on-primary);
-}
 .text-primary-light {
   color: var(--color-primary-light);
 }
@@ -35,20 +29,20 @@ $detail-view-splitter-cell-z-index: 2;
   background: var(--color-display);
 }
 
-.text-display-invert {
-  color: var(--color-display-invert);
+.text-display-light {
+  color: var(--color-display-light);
 }
 
-.bg-display-invert {
-  background: var(--color-display-invert);
+.bg-display-light {
+  background: var(--color-display-light);
 }
 
-.text-slider {
-  color: var(--color-primary-light);
+.text-display-dark {
+  color: var(--color-display-dark);
 }
 
-.bg-slider {
-  background: var(--color-primary-light);
+.bg-display-dark {
+  background: var(--color-display-dark);
 }
 
 .text-background {
@@ -73,4 +67,9 @@ $detail-view-splitter-cell-z-index: 2;
 
 .bg-setting-item {
   background: var(--color-setting-item);
+}
+
+body {
+  color: var(--color-display);
+  background: var(--color-background);
 }

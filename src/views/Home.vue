@@ -73,7 +73,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="on-primary"
+                          text-color="display-dark"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -488,7 +488,7 @@ body {
   justify-content: center;
 
   > div {
-    background: white;
+    background: var(--color-background);
     border-radius: 6px;
     padding: 14px;
   }

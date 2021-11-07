@@ -6,7 +6,7 @@
     <q-badge
       class="value-label"
       color="primary-light"
-      text-color="display-invert"
+      text-color="display-dark"
       v-if="
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "

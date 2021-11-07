@@ -55,7 +55,7 @@ img {
     opacity: 0.3 !important;
   }
   &.bg-primary:hover > .q-focus-helper {
-    background-color: white !important;
+    background-color: var(--color-background) !important;
     opacity: 0.2 !important;
   }
 }
@@ -65,7 +65,7 @@ img {
   background-color: global.$primary;
 }
 .bg-primary > .q-ripple > .q-ripple__inner {
-  background-color: white;
+  background-color: var(--color-background);
 }
 
 .q-dialog,
