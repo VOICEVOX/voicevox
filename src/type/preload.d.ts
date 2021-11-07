@@ -63,25 +63,25 @@ export type AppInfos = {
   version: string;
 };
 
+export type StyleInfo = {
+  styleName?: string;
+  styleId: number;
+  iconPath: string;
+  voiceSamplePaths: string[];
+};
+
 export type MetasJson = {
   speakerName: string;
   speakerUuid: string;
-  styles: {
-    styleName?: string;
-    styleId: number;
-  }[];
+  styles: Pick<StyleInfo, "styleName" | "styleId">[];
 };
 
 export type CharacterInfo = {
-  dirPath: string;
-  iconPath: string;
   portraitPath: string;
-  iconBlob?: Blob;
-  portraitBlob?: Blob;
   metas: {
     speakerUuid: string;
     speakerName: string;
-    styles: MetasJson["styles"];
+    styles: StyleInfo[];
     policy: string;
   };
 };
@@ -101,6 +101,8 @@ export type SavingSetting = {
   fixedExportDir: string;
   avoidOverwrite: boolean;
   exportText: boolean;
+  outputStereo: boolean;
+  outputSamplingRate: number;
 };
 
 export type DefaultStyleId = {

@@ -10,7 +10,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.7.5
+  VOICEVOX_ENGINE_VERSION: 0.8.0
 
   # FIXME: implement build with production resources in Hiroshiba/voicevox
   # Temporarily, skip uploading to GitHub Release (use Artifact instead)

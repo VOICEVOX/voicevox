@@ -108,9 +108,9 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <!-- v-ifも付けないとfalseでも動いてしまう -->
   <default-style-select-dialog
-    v-if="isDefaultStyleSelectDialogOpenComputed"
+    v-if="characterInfos"
+    :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
 </template>
@@ -230,12 +230,6 @@ export default defineComponent({
       },
     ];
 
-    window.onload = () => {
-      hotkeyActionsNative.forEach((item) => {
-        document.addEventListener("keyup", item);
-      });
-    };
-
     // view
     const DEFAULT_PORTRAIT_PANE_WIDTH = 25; // %
     const MIN_PORTRAIT_PANE_WIDTH = 0;
@@ -345,6 +339,16 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    const disableDefaultUndoRedo = (event: KeyboardEvent) => {
+      // ctrl+z, ctrl+shift+z, ctrl+y
+      if (
+        event.ctrlKey &&
+        (event.key == "z" || (!event.shiftKey && event.key == "y"))
+      ) {
+        event.preventDefault();
+      }
+    };
+
     // プロジェクトを初期化
     onMounted(async () => {
       await Promise.all([
@@ -362,6 +366,12 @@ export default defineComponent({
         audioItem,
       });
       focusCell({ audioKey: newAudioKey });
+
+      document.addEventListener("keydown", disableDefaultUndoRedo);
+
+      hotkeyActionsNative.forEach((item) => {
+        document.addEventListener("keyup", item);
+      });
     });
 
     // エンジン待機
@@ -391,6 +401,7 @@ export default defineComponent({
     });
 
     // デフォルトスタイル選択
+    const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
       get: () => store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
@@ -444,6 +455,7 @@ export default defineComponent({
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
+      characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,

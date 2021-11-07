@@ -1,10 +1,7 @@
 <template>
-  <div class="full-width full-height">
+  <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <img
-      :src="portraitBlobUrl"
-      class="full-width full-height character-portrait"
-    />
+    <img :src="portraitPath" class="character-portrait" />
   </div>
 </template>
 
@@ -47,15 +44,11 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
-    const portraitBlobUrl = computed(() => {
-      const portraitBlob = characterInfo.value?.portraitBlob;
-
-      return portraitBlob ? URL.createObjectURL(portraitBlob) : undefined;
-    });
+    const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
     return {
       characterName,
-      portraitBlobUrl,
+      portraitPath,
     };
   },
 });
@@ -75,8 +68,17 @@ $background: var(--color-background);
   );
 }
 
-.character-portrait {
-  object-fit: none;
-  object-position: center top;
+.character-portrait-wrapper {
+  display: grid;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  .character-portrait {
+    object-fit: none;
+    object-position: center top;
+    width: 100%;
+    height: fit-content;
+  }
 }
 </style>

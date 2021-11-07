@@ -35,7 +35,7 @@
 <script lang="ts">
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
-import { computed, defineComponent, reactive, ref, watch } from "vue";
+import { computed, defineComponent, reactive } from "vue";
 
 export default defineComponent({
   name: "AudioParameter",
@@ -57,8 +57,6 @@ export default defineComponent({
   emits: ["changeValue", "mouseOver"],
 
   setup(props, { emit }) {
-    const lastPitch = ref<number>(props.value);
-
     const changeValue = (newValue: number, type: MoraDataType = props.type) => {
       emit(
         "changeValue",
@@ -118,21 +116,6 @@ export default defineComponent({
       }
     });
 
-    watch(
-      () => props.value,
-      (newVal, oldVal) => {
-        if (props.type == "pitch" && lastPitch.value != 0) {
-          if (newVal != 0) {
-            if (oldVal == 0) {
-              changeValue(lastPitch.value as number, "voicing");
-            } else {
-              lastPitch.value = newVal;
-            }
-          }
-        }
-      }
-    );
-
     return {
       previewSlider,
       changeValue,
@@ -140,7 +123,6 @@ export default defineComponent({
       clipPathComputed,
       handleMouseHover,
       precisionComputed,
-      lastPitch,
     };
   },
 });

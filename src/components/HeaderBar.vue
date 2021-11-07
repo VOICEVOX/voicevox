@@ -22,7 +22,6 @@
 
       <q-space />
       <q-btn
-        v-if="useUndoRedo"
         unelevated
         color="display-light"
         text-color="display-dark"
@@ -32,7 +31,6 @@
         >元に戻す</q-btn
       >
       <q-btn
-        v-if="useUndoRedo"
         unelevated
         color="display-light"
         text-color="display-dark"
@@ -57,8 +55,6 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const useUndoRedo = computed(() => store.state.useUndoRedo);
-
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
@@ -66,31 +62,29 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    if (useUndoRedo.value) {
-      const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
-        // undo
-        [
-          "元に戻す",
-          () => {
-            if (!uiLocked.value && canUndo.value) {
-              undo();
-            }
-            return false;
-          },
-        ],
-        // redo
-        [
-          "やり直す",
-          () => {
-            if (!uiLocked.value && canRedo.value) {
-              redo();
-            }
-            return false;
-          },
-        ],
-      ]);
-      setHotkeyFunctions(undoRedoHotkeyMap);
-    }
+    const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+      // undo
+      [
+        "元に戻す",
+        () => {
+          if (!uiLocked.value && canUndo.value) {
+            undo();
+          }
+          return false;
+        },
+      ],
+      // redo
+      [
+        "やり直す",
+        () => {
+          if (!uiLocked.value && canRedo.value) {
+            redo();
+          }
+          return false;
+        },
+      ],
+    ]);
+    setHotkeyFunctions(undoRedoHotkeyMap);
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // play/stop continuously
@@ -111,14 +105,10 @@ export default defineComponent({
     setHotkeyFunctions(hotkeyMap);
 
     const undo = () => {
-      if (useUndoRedo.value) {
-        store.dispatch("UNDO");
-      }
+      store.dispatch("UNDO");
     };
     const redo = () => {
-      if (useUndoRedo.value) {
-        store.dispatch("REDO");
-      }
+      store.dispatch("REDO");
     };
     const playContinuously = async () => {
       try {
@@ -140,7 +130,6 @@ export default defineComponent({
     };
 
     return {
-      useUndoRedo,
       uiLocked,
       canUndo,
       canRedo,

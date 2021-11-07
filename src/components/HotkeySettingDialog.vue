@@ -2,17 +2,17 @@
   <q-dialog
     maximized
     seamless
-    transition-show="none"
-    transition-hide="none"
+    transition-show="jump-up"
+    transition-hide="jump-down"
     class="hotkey-setting-dialog"
     v-model="hotkeySettingDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <q-toolbar-title class="text-secondary">
-            設定 / ショートカットキー
-          </q-toolbar-title>
+          <q-toolbar-title class="text-secondary"
+            >設定 / キー割り当て</q-toolbar-title
+          >
           <q-input
             hide-bottom-space
             dense

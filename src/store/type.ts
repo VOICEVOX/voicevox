@@ -461,7 +461,6 @@ export type AudioCommandActions = StoreType<AudioCommandStoreTypes, "action">;
 export type CommandStoreState = {
   undoCommands: Command[];
   redoCommands: Command[];
-  useUndoRedo: boolean;
 };
 
 type CommandStoreTypes = {
