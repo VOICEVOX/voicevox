@@ -605,7 +605,6 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
-  useVoicing: boolean;
   engineHost: string;
 };
 
@@ -627,15 +626,6 @@ type SettingStoreTypes = {
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
-  };
-
-  GET_USE_VOICING: {
-    action(): void;
-  };
-
-  SET_USE_VOICING: {
-    mutation: { useVoicing: boolean };
-    action(payload: { data: boolean }): void;
   };
 };
 
