@@ -42,6 +42,10 @@ describe("store/vuex.js test", () => {
           outputStereo: false,
           outputSamplingRate: 24000,
         },
+        themeSetting: {
+          currentTheme: "Default",
+          availableThemes: [],
+        },
         isPinned: false,
         hotkeySettings: [],
         useVoicing: false,
@@ -111,5 +115,7 @@ describe("store/vuex.js test", () => {
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
     assert.equal(store.state.useVoicing, false);
+    assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
+    assert.propertyVal(store.state.themeSetting, "availableThemes", []);
   });
 });
