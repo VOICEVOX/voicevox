@@ -156,7 +156,7 @@ const store = new Store<{
         },
         {
           action: "テキスト欄にフォーカスを戻す",
-          combination: "Backspace",
+          combination: "Enter",
         },
         {
           action: "元に戻す",
