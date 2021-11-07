@@ -102,6 +102,20 @@ export const indexStore: VoiceVoxStoreOptions<
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
       await window.electron.setDefaultStyleIds(defaultStyleIds);
     },
+    async CLOSE_WINDOW_FOR_SHORTCUT() {
+      if (
+        store.getters.IS_EDITED &&
+        !(await window.electron.showConfirmDialog({
+          title: "警告",
+          message:
+            "プロジェクトの変更が保存されていません。\n" +
+            "変更を破棄してもよろしいですか？",
+        }))
+      ) {
+        return;
+      }
+      window.electron.closeWindow();
+    },
   },
 };
 

@@ -549,6 +549,10 @@ type IndexStoreTypes = {
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
+
+  CLOSE_WINDOW_FOR_SHORTCUT: {
+    action(): Promise<void>;
+  };
 };
 
 export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
