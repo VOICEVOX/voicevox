@@ -539,7 +539,7 @@ export default defineComponent({
       }
     };
 
-    const unvoicableVowels = ["A", "I", "U", "E", "O", "a", "i", "u", "e", "o"];
+    const unvoicableVowels = ["U", "I", "i", "u"];
 
     const getHoveredClass = (
       vowel: string,
