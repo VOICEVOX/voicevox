@@ -10,7 +10,7 @@
             v-model="selectedDetail"
           >
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="高さ" />
+            <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
             <q-tab name="length" label="長さ" />
           </q-tabs>
         </div>
@@ -31,14 +31,6 @@
               text-color="secondary"
               icon="stop"
               @click="stop"
-            ></q-btn>
-            <q-btn
-              round
-              aria-label="音声ファイルとして保存"
-              size="small"
-              icon="file_download"
-              @click="save()"
-              :disable="nowPlaying || nowGenerating || uiLocked"
             ></q-btn>
           </template>
         </div>
@@ -227,6 +219,7 @@ import {
   onUnmounted,
   reactive,
   ref,
+  watch,
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
@@ -314,6 +307,17 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
+    const lastPitches = ref<number[][]>([]);
+    watch(accentPhrases, (newPhrases) => {
+      if (newPhrases) {
+        lastPitches.value = newPhrases.map((phrase) =>
+          phrase.moras.map((mora) => mora.pitch)
+        );
+      } else {
+        lastPitches.value = [];
+      }
+    });
+
     const changeAccent = (accentPhraseIndex: number, accent: number) =>
       store.dispatch("COMMAND_CHANGE_ACCENT", {
         audioKey: props.activeAudioKey,
@@ -340,6 +344,9 @@ export default defineComponent({
       data: number,
       type: MoraDataType
     ) => {
+      if (type == "pitch") {
+        lastPitches.value[accentPhraseIndex][moraIndex] = data;
+      }
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: props.activeAudioKey,
         accentPhraseIndex,
@@ -602,7 +609,12 @@ export default defineComponent({
         ) {
           let data = 0;
           if (mora.pitch == 0) {
-            data = 5.5; // don't worry, it will be overwritten by template itself
+            if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
+              // 元々無声だった場合、適当な値を代入
+              data = 5.5;
+            } else {
+              data = lastPitches.value[accentPhraseIndex][moraIndex];
+            }
           }
           changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
         }
