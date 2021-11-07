@@ -396,7 +396,7 @@ async function createWindow() {
       (input.meta && input.key.toUpperCase() === "Q")
     ) {
       event.preventDefault();
-      ipcMainSend(win, "CLOSE_WINDOW_FOR_SHORTCUT");
+      ipcMainSend(win, "CLOSE_WINDOW");
     }
   });
 

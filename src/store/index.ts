@@ -102,7 +102,7 @@ export const indexStore: VoiceVoxStoreOptions<
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
       await window.electron.setDefaultStyleIds(defaultStyleIds);
     },
-    async CLOSE_WINDOW_FOR_SHORTCUT() {
+    async CLOSE_WINDOW() {
       if (
         store.getters.IS_EDITED &&
         !(await window.electron.showConfirmDialog({

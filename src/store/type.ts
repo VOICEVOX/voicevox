@@ -550,7 +550,7 @@ type IndexStoreTypes = {
     action(...payload: unknown[]): void;
   };
 
-  CLOSE_WINDOW_FOR_SHORTCUT: {
+  CLOSE_WINDOW: {
     action(): Promise<void>;
   };
 };

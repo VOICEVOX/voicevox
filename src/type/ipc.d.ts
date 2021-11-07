@@ -207,7 +207,7 @@ type IpcSOData = {
     return: void;
   };
 
-  CLOSE_WINDOW_FOR_SHORTCUT: {
+  CLOSE_WINDOW: {
     args: [];
     return: void;
   };

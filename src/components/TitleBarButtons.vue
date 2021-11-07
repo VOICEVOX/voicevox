@@ -154,7 +154,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const closeWindow = async () => store.dispatch("CLOSE_WINDOW_FOR_SHORTCUT");
+    const closeWindow = async () => store.dispatch("CLOSE_WINDOW");
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
     const changePinWindow = () => {
