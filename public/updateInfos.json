@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.8.1",
+    "descriptions": ["インストーラーがタイムアウトする問題の修正"],
+    "contributors": ["oov"]
+  },
+  {
     "version": "0.8.0",
     "descriptions": [
       "ショートカットキーの変更機能を追加",
