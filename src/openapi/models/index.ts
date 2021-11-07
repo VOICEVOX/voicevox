@@ -4,5 +4,6 @@ export * from "./HTTPValidationError";
 export * from "./Mora";
 export * from "./ParseKanaBadRequest";
 export * from "./Speaker";
+export * from "./SpeakerInfo";
 export * from "./SpeakerStyle";
 export * from "./ValidationError";

@@ -29,8 +29,10 @@ import {
     ParseKanaBadRequestToJSON,
     Speaker,
     SpeakerFromJSON,
-    SpeakerToJSON,
-} from '../models';
+    SpeakerInfo,
+    SpeakerInfoFromJSON,
+    SpeakerToJSON
+} from "../models";
 
 export interface AccentPhrasesAccentPhrasesPostRequest {
     text: string;
@@ -65,6 +67,10 @@ export interface MoraPitchMoraPitchPostRequest {
 export interface MultiSynthesisMultiSynthesisPostRequest {
     speaker: number;
     audioQuery: Array<AudioQuery>;
+}
+
+export interface SpeakerInfoGetRequest {
+    speakerUuid: string;
 }
 
 export interface SynthesisSynthesisPostRequest {
@@ -193,6 +199,21 @@ export interface DefaultApiInterface {
      * 複数まとめて音声合成する
      */
     multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest): Promise<Blob>;
+
+    /**
+     *
+     * @summary SpeakerInfo
+     * @param {string} speakerUuid
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoGetRequest): Promise<runtime.ApiResponse<SpeakerInfo>>
+
+    /**
+     * SpeakerInfo
+     */
+    speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoGetRequest): Promise<SpeakerInfo>;
 
     /**
      * 
@@ -533,6 +554,36 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest): Promise<Blob> {
         const response = await this.multiSynthesisMultiSynthesisPostRaw(requestParameters);
+        return await response.value();
+    }
+
+    /**
+     * SpeakerInfo
+     */
+    async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoGetRequest): Promise<runtime.ApiResponse<SpeakerInfo>> {
+        const queryParameters: any = {};
+
+        if (requestParameters.speakerUuid !== undefined) {
+            queryParameters['speaker_uuid'] = requestParameters.speakerUuid;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/speaker_info`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        });
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(SpeakerInfoFromJSON));
+    }
+
+    /**
+     * SpeakerInfo
+     */
+    async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoGetRequest): Promise<SpeakerInfo> {
+        const response = await this.speakerInfoSpeakerInfoGetRaw(requestParameters);
         return await response.value();
     }
 

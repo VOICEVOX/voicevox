@@ -416,8 +416,35 @@ const audioStoreCreator = (
           }
         }
       ),
-      LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
+      LOAD_CHARACTER: createUILockAction(async ({ rootState, commit }) => {
         const characterInfos = await window.electron.getCharacterInfos();
+        _engineFactory
+          .instance(rootState.engineHost)
+          .speakersSpeakersGet()
+          .catch((error) => {
+            window.electron.logError(error, `Failed to get speakers.`);
+            throw error;
+          })
+          .then((speakers) => {
+            console.log(speakers);
+            for (const speaker of speakers) {
+              _engineFactory
+                .instance(rootState.engineHost)
+                .speakerInfoSpeakerInfoGet({
+                  speakerUuid: speaker.speakerUuid,
+                })
+                .catch((error) => {
+                  window.electron.logError(
+                    error,
+                    `Failed to get speaker info.`
+                  );
+                  throw error;
+                })
+                .then((speakerInfo) => {
+                  console.log(speakerInfo);
+                });
+            }
+          });
 
         commit("SET_CHARACTER_INFOS", { characterInfos });
       }),
