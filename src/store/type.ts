@@ -549,10 +549,6 @@ type IndexStoreTypes = {
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
-
-  CLOSE_WINDOW: {
-    action(): Promise<void>;
-  };
 };
 
 export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
@@ -742,6 +738,10 @@ type UiStoreTypes = {
   DETECT_UNPINNED: {
     mutation: undefined;
     action(): void;
+  };
+
+  CLOSE_WINDOW: {
+    action(): Promise<void>;
   };
 };
 
