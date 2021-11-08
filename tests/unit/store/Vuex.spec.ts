@@ -44,7 +44,6 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         hotkeySettings: [],
-        useVoicing: false,
         engineHost: "http://127.0.0.1",
       },
       getters: {
@@ -110,6 +109,5 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isPinned, false);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
-    assert.equal(store.state.useVoicing, false);
   });
 });
