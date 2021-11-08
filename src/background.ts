@@ -385,6 +385,15 @@ async function createWindow() {
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
     );
   });
+  win.webContents.on("before-input-event", (event, input) => {
+    if (
+      (input.alt && input.key.toUpperCase() === "F4") ||
+      (input.meta && input.key.toUpperCase() === "Q")
+    ) {
+      event.preventDefault();
+      ipcMainSend(win, "CLOSE_WINDOW");
+    }
+  });
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {

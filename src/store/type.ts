@@ -729,6 +729,10 @@ type UiStoreTypes = {
     mutation: undefined;
     action(): void;
   };
+
+  CLOSE_WINDOW: {
+    action(): Promise<void>;
+  };
 };
 
 export type UiGetters = StoreType<UiStoreTypes, "getter">;
