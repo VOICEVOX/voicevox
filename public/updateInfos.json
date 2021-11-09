@@ -1,16 +1,16 @@
 [
   {
+    "version": "0.8.2",
+    "descriptions": ["音声を１つだけ書き出せるメニューボタンを追加"],
+    "contributors": []
+  },
+  {
     "version": "0.8.1",
     "descriptions": [
       "インストーラーがタイムアウトする問題の修正",
       "無声化の切り替え機能をデフォルトで有効化"
     ],
     "contributors": ["oov", "Yosshi999"]
-  },
-  {
-    "version": "0.8.2",
-    "descriptions": ["音声を１つだけ書き出せるメニューボタンを追加"],
-    "contributors": []
   },
   {
     "version": "0.8.0",
