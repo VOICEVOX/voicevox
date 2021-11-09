@@ -123,7 +123,7 @@ const store = new Store<{
         },
         {
           action: "一つだけ書き出し",
-          combination: "",
+          combination: "E",
         },
         {
           action: "再生/停止",
@@ -131,7 +131,7 @@ const store = new Store<{
         },
         {
           action: "連続再生/停止",
-          combination: "",
+          combination: "Shift Space",
         },
         {
           action: "ｱｸｾﾝﾄ欄を表示",
