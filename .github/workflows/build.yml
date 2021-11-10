@@ -543,6 +543,13 @@ jobs:
           mv dist_electron/nsis-web/out/*.7z.* nsis-web-artifact/
           mv dist_electron/nsis-web/*.exe nsis-web-artifact/
 
+      - name: Rename Windows NSIS Web Installer
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        shell: bash
+        run: |
+          INSTALLER_NAME=`find . -maxdepth 1 -name '*.exe'`
+          mv "${INSTALLER_NAME}" ${INSTALLER_NAME// /.}
+
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
@@ -641,7 +648,6 @@ jobs:
           file: artifact/*.7z.*
 
       # Windows NSIS Web
-      # FIXME: rename archives and installer before upload to separate cpu, gpu distribution
       - name: Upload Windows nsis-web archives to Release assets
         if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
