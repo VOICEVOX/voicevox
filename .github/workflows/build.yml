@@ -547,6 +547,7 @@ jobs:
         if: endsWith(matrix.artifact_name, '-nsis-web')
         shell: bash
         run: |
+          cd nsis-web-artifact
           INSTALLER_NAME=`find . -maxdepth 1 -name '*.exe'`
           mv "${INSTALLER_NAME}" ${INSTALLER_NAME// /.}
 
