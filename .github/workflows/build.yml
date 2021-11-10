@@ -134,6 +134,19 @@ jobs:
         run: |
           rm -r public/characters
           cp -r resource/character_info public/characters
+          cd public/characters
+          for FILEPATH in `\find . -maxdepth 1 -name '*'`; do
+            if [ "$FILEPATH" != "." ]; then
+              SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`;
+              pushd $FILEPATH/icons;
+              for ICONPATH in `\find . -maxdepth 1 -name '*'`; do
+                if [ "$ICONPATH" != "." ]; then
+                  mv ${ICONPATH:2} "${SPEAKER_NAME}_${ICONPATH:2}";
+                fi;
+              done;
+              popd;
+            fi;
+          done;
 
       - name: Create README.txt and policy.md
         shell: bash
