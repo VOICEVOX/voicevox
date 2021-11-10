@@ -138,7 +138,7 @@ jobs:
       - name: Create README.txt and policy.md
         shell: bash
         run: |
-          cat resource/editer/README.md resource/editer/ACKNOWLEDGMENTS.md > README.txt
+          cat resource/editor/README.md resource/editor/ACKNOWLEDGMENTS.md > README.txt
           rm public/policy.md
           cp README.txt public/policy.md
 
