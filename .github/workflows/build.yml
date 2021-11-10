@@ -145,6 +145,13 @@ jobs:
                 fi;
               done;
               popd;
+              pushd $FILEPATH/voice_samples;
+              for VOICEPATH in `\find . -maxdepth 1 -name '*'`; do
+                if [ "$VOICEPATH" != "." ]; then
+                  mv ${VOICEPATH:2} "${SPEAKER_NAME}_${VOICEPATH:2}";
+                fi;
+              done;
+              popd;
             fi;
           done;
 
