@@ -122,6 +122,30 @@ jobs:
           echo "ENGINE_PATH=./run" > .env.production
           echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
 
+      - name: Checkout Product Version Resource
+        uses: actions/checkout@v2
+        with:
+          repository: Hiroshiba/voicevox_resource
+          ref: main
+          path: resource
+
+      - name: Replace Character Info
+        shell: bash
+        run: |
+          rm -r public/characters
+          cp -r resource/character_info public/characters
+
+      - name: Create README.txt and policy.md
+        shell: bash
+        run: |
+          cat resource/editer/README.md resource/editer/ACKNOWLEDGMENTS.md > README.txt
+          rm public/policy.md
+          cp README.txt public/policy.md
+
+      - name: Apply vue.config.js patch
+        shell: bash
+        run: patch -u vue.config.js < build/vue.config.js.patch
+
       - name: Generate public/licenses.json
         shell: bash
         run: npm run license:generate -- -o public/licenses.json
