@@ -649,7 +649,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: artifact/out/*.7z.*
+          file: artifact/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
         if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
