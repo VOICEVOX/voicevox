@@ -4,7 +4,7 @@
            },
          ],
          extraFiles: [
-+          "README_SOFTWARE.txt",
++          "README.txt",
            { from: ".env.production", to: ".env" },
            {
              from: VOICEVOX_ENGINE_DIR,
