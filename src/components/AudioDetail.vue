@@ -223,7 +223,6 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
@@ -251,14 +250,6 @@ export default defineComponent({
             play();
           } else {
             stop();
-          }
-        },
-      ],
-      [
-        "一つだけ書き出し",
-        () => {
-          if (!uiLocked.value) {
-            save();
           }
         },
       ],
@@ -355,20 +346,6 @@ export default defineComponent({
       });
     };
 
-    const tabAction = (actionType: DetailTypes) => {
-      switch (actionType) {
-        case "play":
-          play();
-          break;
-        case "stop":
-          stop();
-          break;
-        case "save":
-          save();
-          break;
-      }
-    };
-
     // audio play
     const play = async () => {
       try {
@@ -390,41 +367,6 @@ export default defineComponent({
 
     const stop = () => {
       store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
-    };
-
-    // save
-    const save = async () => {
-      const result: SaveResultObject = await store.dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey: props.activeAudioKey,
-          encoding: store.state.savingSetting.fileEncoding,
-        }
-      );
-
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-
-      $q.dialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
-      });
     };
 
     const nowPlaying = computed(
@@ -642,7 +584,6 @@ export default defineComponent({
       changeMoraData,
       play,
       stop,
-      save,
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
@@ -653,7 +594,6 @@ export default defineComponent({
       getHoveredClass,
       getHoveredText,
       shiftKeyFlag,
-      tabAction,
       handleChangeVoicing,
     };
   },
