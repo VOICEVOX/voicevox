@@ -169,10 +169,6 @@ jobs:
           rm public/policy.md
           cp README.txt public/policy.md
 
-      - name: Apply vue.config.js patch
-        shell: bash
-        run: patch -u vue.config.js < build/vue.config.js.patch
-
       - name: Generate public/licenses.json
         shell: bash
         run: npm run license:generate -- -o public/licenses.json
