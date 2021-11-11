@@ -138,28 +138,31 @@ jobs:
           # Explore characters directory.
           # Character directory name is uuid, but this script can automatically detect character directory name.
           # We don't need to change this code when add more characters.
-          for FILEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`; do
+          for FILEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            do
             # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`;
-            pushd $FILEPATH/icons;
+            SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`
+            pushd $FILEPATH/icons
             # Explore character icons directory.
             # ICONPATH example: "./0.png"
-            for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`; do
+            for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+              do
               # ":2" part is python slice like, can remove "./" part from ICONPATH
               # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
               # If don't use ":2": "${SPEAKER_NAME}_${ICONPATH}" is "AAA_./0.png"
               #       If use ":2": "${SPEAKER_NAME}_${ICONPATH:2}" is "AAA_0.png"
-              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}";
-            done;
-            popd;
-            pushd $FILEPATH/voice_samples;
+              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
+            done
+            popd
+            pushd $FILEPATH/voice_samples
             # Explore character voice_samples directory.
-            for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`; do
+            for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+              do
               # Same as for ICONPATH
-              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}";
-            done;
-            popd;
-          done;
+              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
+            done
+            popd
+          done
 
       - name: Create and replace README.txt and policy.md
         shell: bash
