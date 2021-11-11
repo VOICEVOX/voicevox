@@ -161,13 +161,14 @@ jobs:
             popd;
           done;
 
-      - name: Create README.txt and policy.md
+      - name: Create and replace README.txt and policy.md
         shell: bash
         run: |
-          # "<(echo)" has the effect of adding a new line.
-          cat resource/editor/README.md <(echo) resource/editor/ACKNOWLEDGMENTS.md > README.txt
+          rm build/README.txt
           rm public/policy.md
-          cp README.txt public/policy.md
+          # "<(echo)" has the effect of adding a new line.
+          cat resource/editor/README.md <(echo) resource/editor/ACKNOWLEDGMENTS.md > build/README.txt
+          cp build/README.txt public/policy.md
 
       - name: Generate public/licenses.json
         shell: bash
