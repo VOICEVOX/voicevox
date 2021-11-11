@@ -139,12 +139,12 @@ jobs:
             SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`;
             pushd $FILEPATH/icons;
             for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`; do
-              mv ${ICONPATH:2} "${SPEAKER_NAME}_${ICONPATH:2}";
+              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}";
             done;
             popd;
             pushd $FILEPATH/voice_samples;
             for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`; do
-              mv ${VOICEPATH:2} "${SPEAKER_NAME}_${VOICEPATH:2}";
+              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}";
             done;
             popd;
           done;
