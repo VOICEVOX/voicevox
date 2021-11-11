@@ -85,6 +85,18 @@
                     "
                     @click="openHotkeyDialog(props.row.action)"
                   />
+                  <q-btn
+                    rounded
+                    flat
+                    icon="settings_backup_restore"
+                    padding="none sm"
+                    color="secondary"
+                    size="1em"
+                    :disable="checkHotkeyReadonly(props.row.action)"
+                    @click="resetHotkey(props.row.action)"
+                  >
+                    <q-tooltip delay="500">デフォルトに戻す</q-tooltip>
+                  </q-btn>
                 </q-td>
               </q-tr>
             </template>
@@ -304,6 +316,10 @@ export default defineComponent({
       );
     });
 
+    const resetHotkey = (action: string) => {
+      console.log(action);
+    };
+
     return {
       hotkeySettingDialogOpenComputed,
       isHotkeyDialogOpened,
@@ -322,6 +338,7 @@ export default defineComponent({
       changeHotkeySettings,
       confirmBtnEnabled,
       checkHotkeyReadonly,
+      resetHotkey,
     };
   },
 });
@@ -345,6 +362,16 @@ export default defineComponent({
   > :deep(.scroll) {
     overflow-y: scroll;
     overflow-x: hidden;
+  }
+
+  tbody tr {
+    td button:last-child {
+      float: right;
+      display: none;
+    }
+    &:hover td button:last-child {
+      display: inline-flex;
+    }
   }
 
   thead tr th {
