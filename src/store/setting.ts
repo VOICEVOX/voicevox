@@ -88,7 +88,7 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
       window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
-        value.action == data.action;
+        return value.action == data.action;
       });
       if (oldHotkey !== undefined) {
         if (oldHotkey.combination != "") {
