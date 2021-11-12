@@ -53,7 +53,6 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
-  useVoicing(newData?: boolean): Promise<boolean>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }

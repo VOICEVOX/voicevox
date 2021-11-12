@@ -146,7 +146,6 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import Mousetrap from "mousetrap";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
 
 export default defineComponent({
@@ -154,20 +153,7 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const closeWindow = async () => {
-      if (
-        store.getters.IS_EDITED &&
-        !(await window.electron.showConfirmDialog({
-          title: "警告",
-          message:
-            "プロジェクトの変更が保存されていません。\n" +
-            "変更を破棄してもよろしいですか？",
-        }))
-      ) {
-        return;
-      }
-      window.electron.closeWindow();
-    };
+    const closeWindow = async () => store.dispatch("CLOSE_WINDOW");
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
     const changePinWindow = () => {
@@ -177,8 +163,6 @@ export default defineComponent({
     const isPinned = computed(() => store.state.isPinned);
 
     const isMaximized = computed(() => store.state.isMaximized);
-
-    Mousetrap.bind(["alt+f4", "command+q"], closeWindow);
 
     return {
       closeWindow,

@@ -216,4 +216,9 @@ type IpcSOData = {
     args: [];
     return: void;
   };
+
+  CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
 };

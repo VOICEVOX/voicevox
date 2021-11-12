@@ -196,10 +196,6 @@ const api: Sandbox = {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 
-  useVoicing: (newData) => {
-    return ipcRenderer.invoke("USE_VOICING", { newData });
-  },
-
   theme: (newData) => {
     return ipcRenderer.invoke("THEME", { newData });
   },

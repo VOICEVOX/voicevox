@@ -205,5 +205,19 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
       },
+      async CLOSE_WINDOW({ getters }) {
+        if (
+          getters.IS_EDITED &&
+          !(await window.electron.showConfirmDialog({
+            title: "警告",
+            message:
+              "プロジェクトの変更が保存されていません。\n" +
+              "変更を破棄してもよろしいですか？",
+          }))
+        ) {
+          return;
+        }
+        window.electron.closeWindow();
+      },
     },
   };

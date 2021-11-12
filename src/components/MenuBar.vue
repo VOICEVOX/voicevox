@@ -33,6 +33,7 @@ import { useQuasar } from "quasar";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import { SaveResultObject } from "@/store/type";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -123,6 +124,56 @@ export default defineComponent({
       }
     };
 
+    const generateAndSaveOneAudio = async () => {
+      if (uiLocked.value) return;
+
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      if (activeAudioKey == undefined) {
+        $q.dialog({
+          title: "テキスト欄が選択されていません",
+          message: "音声を書き出したいテキスト欄を選択してください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+        return;
+      }
+
+      const result: SaveResultObject = await store.dispatch(
+        "GENERATE_AND_SAVE_AUDIO",
+        {
+          audioKey: activeAudioKey,
+          encoding: store.state.savingSetting.fileEncoding,
+        }
+      );
+
+      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
+
+      let msg = "";
+      switch (result.result) {
+        case "WRITE_ERROR":
+          msg =
+            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+          break;
+        case "ENGINE_ERROR":
+          msg =
+            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+          break;
+      }
+
+      $q.dialog({
+        title: "書き出しに失敗しました。",
+        message: msg,
+        ok: {
+          label: "閉じる",
+          flat: true,
+          textColor: "secondary",
+        },
+      });
+    };
+
     const importTextFile = () => {
       if (!uiLocked.value) {
         store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
@@ -185,6 +236,13 @@ export default defineComponent({
             label: "音声書き出し",
             onClick: () => {
               generateAndSaveAllAudio();
+            },
+          },
+          {
+            type: "button",
+            label: "一つだけ書き出し",
+            onClick: () => {
+              generateAndSaveOneAudio();
             },
           },
           {
@@ -300,6 +358,7 @@ export default defineComponent({
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
+      ["一つだけ書き出し", generateAndSaveOneAudio],
       ["テキスト読み込む", importTextFile],
       ["プロジェクトを上書き保存", saveProject],
       ["プロジェクトを名前を付けて保存", saveProjectAs],
