@@ -538,6 +538,12 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 
 ipcMainHandle("CLOSE_WINDOW", (_, value) => {
   isCanClose = value;
+  if (isCanClose && isQuit) {
+    app.quit();
+    return;
+  }
+
+  isQuit = false;
   if (isCanClose) {
     win.close();
   }
@@ -689,10 +695,12 @@ app.on("window-all-closed", () => {
   }
 });
 
+let isQuit = false;
 // Called before window closing
 app.on("before-quit", (event) => {
   if (!isCanClose) {
     event.preventDefault();
+    isQuit = true;
     ipcMainSend(win, "CLOSE_WINDOW");
   }
 
