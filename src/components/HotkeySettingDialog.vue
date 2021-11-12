@@ -95,7 +95,7 @@
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
                   >
-                    <q-tooltip delay="500">デフォルトに戻す</q-tooltip>
+                    <q-tooltip delay="1000">デフォルトに戻す</q-tooltip>
                   </q-btn>
                 </q-td>
               </q-tr>
@@ -190,7 +190,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -317,7 +317,16 @@ export default defineComponent({
     });
 
     const resetHotkey = (action: string) => {
-      console.log(action);
+      window.electron
+        .getDefaultHotkeySettings()
+        .then((defaultSettings: HotkeySetting[]) => {
+          const setting = defaultSettings.find(
+            (value) => value.action == action
+          );
+          if (setting) {
+            changeHotkeySettings(action, setting.combination);
+          }
+        });
     };
 
     return {

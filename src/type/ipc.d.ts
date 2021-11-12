@@ -167,6 +167,11 @@ type IpcIHData = {
     return: void;
   };
 
+  GET_DEFAULT_HOTKEY_SETTINGS: {
+    args: [];
+    return: import("@/type/preload").HotkeySetting[];
+  };
+
   USE_VOICING: {
     args: [obj: { newData?: boolean }];
     return: boolean;
