@@ -66,7 +66,7 @@ const defaultHotkeySetting: HotkeySetting[] = [
   },
   {
     action: "一つだけ書き出し",
-    combination: "",
+    combination: "E",
   },
   {
     action: "再生/停止",
@@ -74,7 +74,7 @@ const defaultHotkeySetting: HotkeySetting[] = [
   },
   {
     action: "連続再生/停止",
-    combination: "",
+    combination: "Shift Space",
   },
   {
     action: "ｱｸｾﾝﾄ欄を表示",
