@@ -1,9 +1,6 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller bg-background">
-    <div
-      class="q-pa-md markdown markdown-body"
-      v-html="ossCommunityInfos"
-    ></div>
+  <q-page class="relative-absolute-wrapper scroller markdown-body">
+    <div class="q-pa-md markdown" v-html="ossCommunityInfos"></div>
   </q-page>
 </template>
 
@@ -36,5 +33,3 @@ export default defineComponent({
   }
 }
 </style>
-
-<style src="github-markdown-css/github-markdown.css"></style>

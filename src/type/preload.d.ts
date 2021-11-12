@@ -166,6 +166,9 @@ export type ThemeConf = {
     "--color-background-light": string;
     "--color-setting-item": string;
     "--color-warning": string;
+    "--color-markdown-color": string;
+    "--color-markdown-background": string;
+    "--color-markdown-hyperlink": string;
   };
 };
 
@@ -186,4 +189,7 @@ export type ThemeColorType =
   | "--color-background"
   | "--color-background-light"
   | "--color-setting-item"
-  | "--color-warning";
+  | "--color-warning"
+  | "--color-markdown-color"
+  | "--color-markdown-background"
+  | "--color-markdown-hyperlink";

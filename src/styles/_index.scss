@@ -79,3 +79,12 @@ body {
   color: var(--color-display);
   background: var(--color-background);
 }
+
+.markdown-body {
+  color: var(--color-markdown-color);
+  background: var(--color-markdown-background);
+}
+
+.markdown-body a {
+  color: var(--color-markdown-hyperlink);
+}

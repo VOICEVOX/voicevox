@@ -10,9 +10,12 @@
     "--color-display-rgb": "18, 18, 18",
     "--color-display-light": "#EBEBEB",
     "--color-display-dark": "#121212",
-    "--color-background": "#F5F5F5",
+    "--color-background": "#FFFFFF",
     "--color-background-light": "#FFFFFF",
     "--color-setting-item": "#EEEEEE",
-    "--color-warning": "#C10015"
+    "--color-warning": "#C10015",
+    "--color-markdown-color": "#24292F",
+    "--color-markdown-background": "#FFFFFF",
+    "--color-markdown-hyperlink": "#0969DA"
   }
 }

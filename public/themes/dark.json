@@ -13,6 +13,9 @@
     "--color-background": "#121212",
     "--color-background-light": "#E0E0E0",
     "--color-setting-item": "#424242",
-    "--color-warning": "#F2C037"
+    "--color-warning": "#F2C037",
+    "--color-markdown-color": "#c9d1d9",
+    "--color-markdown-background": "#0D1117",
+    "--color-markdown-hyperlink": "#58A6FF"
   }
 }

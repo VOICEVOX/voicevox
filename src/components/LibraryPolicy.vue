@@ -3,7 +3,7 @@
     ref="scroller"
     class="relative-absolute-wrapper scroller bg-background"
   >
-    <div class="q-pa-md">
+    <div class="q-pa-md markdown-body">
       <q-list v-if="detailIndex === undefined">
         <template v-for="(characterInfo, index) in characterInfos" :key="index">
           <q-item clickable @click="selectCharacterInfIndex(index)">
@@ -17,7 +17,7 @@
         <div class="q-mb-md">
           <q-btn
             outline
-            style="color: #a5d4ad"
+            color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
             @click="selectCharacterInfIndex(undefined)"

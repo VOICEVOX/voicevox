@@ -218,10 +218,3 @@ export const parseCombo = (event: KeyboardEvent): string => {
   }
   return recordedCombo;
 };
-
-export const getThemeValueWithConf = (
-  themeConf: ThemeConf,
-  key: ThemeColorType
-): string => {
-  return themeConf.colors[key];
-};

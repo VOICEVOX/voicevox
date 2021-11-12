@@ -290,7 +290,7 @@
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-pt-sm q-pb-none bg-setting-item">
                 <div>無声化切り替え</div>
                 <q-space />
                 <q-toggle v-model="useVoicingComputed">
@@ -305,7 +305,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-pb-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-pt-none q-pb-sm bg-setting-item">
                 <div>Theme</div>
                 <q-space />
                 <q-btn-toggle
@@ -325,7 +325,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    The markdown pages won't be influenced
+                    The colors in themes are not decided yet
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>

@@ -1,7 +1,7 @@
 <template>
   <q-page
     ref="scroller"
-    class="relative-absolute-wrapper scroller bg-background"
+    class="relative-absolute-wrapper scroller markdown-body"
   >
     <div class="q-pa-md">
       <div v-html="html"></div>

@@ -147,4 +147,8 @@ img {
     background-color: rgba(global.$primary-light-rgb, 0.8);
   }
 }
+
+::-webkit-scrollbar-corner {
+  background: var(--color-background);
+}
 </style>
