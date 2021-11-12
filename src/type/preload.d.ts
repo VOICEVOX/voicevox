@@ -38,7 +38,7 @@ export interface Sandbox {
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
   ): IpcRenderer;
-  closeWindow(approveClose: boolean): void;
+  closeWindow(isCanClose: boolean): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;

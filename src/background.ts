@@ -353,7 +353,7 @@ const updateInfos = JSON.parse(
   })
 );
 
-let approveClose = false;
+let isCanClose = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -387,23 +387,11 @@ async function createWindow() {
     );
   });
   win.on("close", (event) => {
-    if (!approveClose) {
+    if (!isCanClose) {
       event.preventDefault();
       ipcMainSend(win, "CLOSE_WINDOW");
     }
   });
-
-  /*
-  win.webContents.on("before-input-event", (event, input) => {
-    if (
-      (input.alt && input.key.toUpperCase() === "F4") ||
-      (input.meta && input.key.toUpperCase() === "Q")
-    ) {
-      event.preventDefault();
-      ipcMainSend(win, "CLOSE_WINDOW");
-    }
-  });
-  */
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -549,8 +537,8 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", (_, value) => {
-  approveClose = value;
-  if (approveClose) {
+  isCanClose = value;
+  if (isCanClose) {
     win.close();
   }
 });
@@ -703,7 +691,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!approveClose) {
+  if (!isCanClose) {
     event.preventDefault();
     ipcMainSend(win, "CLOSE_WINDOW");
   }
