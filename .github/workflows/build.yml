@@ -566,7 +566,7 @@ jobs:
           OLD_NAME=`find . -maxdepth 1 -name '*.exe'`
           # replace space by dot(.)
           NEW_NAME=${OLD_NAME// /.}
-          mv $OLD_NAME $NEW_NAME
+          mv "${OLD_NAME}" $NEW_NAME
 
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
