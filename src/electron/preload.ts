@@ -144,8 +144,8 @@ const api: Sandbox = {
     return ipcRendererOn(channel, callback);
   },
 
-  closeWindow: (approveClose) => {
-    ipcRenderer.invoke("CLOSE_WINDOW", approveClose);
+  closeWindow: (isCanClose) => {
+    ipcRenderer.invoke("CLOSE_WINDOW", isCanClose);
   },
 
   minimizeWindow: () => {
