@@ -103,7 +103,7 @@ type IpcIHData = {
   };
 
   CLOSE_WINDOW: {
-    args: [];
+    args: [approveClose: boolean];
     return: void;
   };
 

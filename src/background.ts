@@ -353,6 +353,7 @@ const updateInfos = JSON.parse(
   })
 );
 
+let approveClose = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -385,6 +386,14 @@ async function createWindow() {
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
     );
   });
+  win.on("close", (event) => {
+    if (!approveClose) {
+      event.preventDefault();
+      ipcMainSend(win, "CLOSE_WINDOW");
+    }
+  });
+
+  /*
   win.webContents.on("before-input-event", (event, input) => {
     if (
       (input.alt && input.key.toUpperCase() === "F4") ||
@@ -394,6 +403,7 @@ async function createWindow() {
       ipcMainSend(win, "CLOSE_WINDOW");
     }
   });
+  */
 
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
@@ -538,9 +548,11 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-ipcMainHandle("CLOSE_WINDOW", () => {
-  app.emit("window-all-closed");
-  win.destroy();
+ipcMainHandle("CLOSE_WINDOW", (_, value) => {
+  approveClose = value;
+  if (approveClose) {
+    win.close();
+  }
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
@@ -691,6 +703,11 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
+  if (!approveClose) {
+    event.preventDefault();
+    ipcMainSend(win, "CLOSE_WINDOW");
+  }
+
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
     log.info("ENGINE killed. Quitting app");

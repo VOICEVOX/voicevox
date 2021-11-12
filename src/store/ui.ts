@@ -212,9 +212,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
               "変更を破棄してもよろしいですか？",
           }))
         ) {
-          return;
+          return window.electron.closeWindow(false);
         }
-        window.electron.closeWindow();
+        window.electron.closeWindow(true);
       },
     },
   };
