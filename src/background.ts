@@ -59,14 +59,14 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
-const defaultHotkeySetting: HotkeySetting[] = [
+const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
     combination: "Ctrl E",
   },
   {
     action: "一つだけ書き出し",
-    combination: "",
+    combination: "E",
   },
   {
     action: "再生/停止",
@@ -74,7 +74,7 @@ const defaultHotkeySetting: HotkeySetting[] = [
   },
   {
     action: "連続再生/停止",
-    combination: "",
+    combination: "Shift Space",
   },
   {
     action: "ｱｸｾﾝﾄ欄を表示",
@@ -187,7 +187,7 @@ const store = new Store<{
           combination: { type: "string" },
         },
       },
-      default: defaultHotkeySetting,
+      default: defaultHotkeySettings,
     },
     defaultStyleIds: {
       type: "array",
@@ -674,7 +674,7 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
 });
 
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
-  return defaultHotkeySetting;
+  return defaultHotkeySettings;
 });
 
 // app callback
