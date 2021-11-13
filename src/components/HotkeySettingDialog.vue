@@ -191,6 +191,7 @@ import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -204,6 +205,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const $q = useQuasar();
 
     const hotkeySettingDialogOpenComputed = computed({
       get: () => props.modelValue,
@@ -317,16 +319,33 @@ export default defineComponent({
     });
 
     const resetHotkey = (action: string) => {
-      window.electron
-        .getDefaultHotkeySettings()
-        .then((defaultSettings: HotkeySetting[]) => {
-          const setting = defaultSettings.find(
-            (value) => value.action == action
-          );
-          if (setting) {
-            changeHotkeySettings(action, setting.combination);
-          }
-        });
+      $q.dialog({
+        title: "ショートカットキーを初期値に戻します",
+        message:
+          "ショートカットキーの設定を初期値に戻します。<br/>本当に戻しますか？",
+        html: true,
+        ok: {
+          label: "初期値に戻す",
+          flat: true,
+          textColor: "secondary",
+        },
+        cancel: {
+          label: "初期値に戻さない",
+          flat: true,
+          textColor: "secondary",
+        },
+      }).onOk(() => {
+        window.electron
+          .getDefaultHotkeySettings()
+          .then((defaultSettings: HotkeySetting[]) => {
+            const setting = defaultSettings.find(
+              (value) => value.action == action
+            );
+            if (setting) {
+              changeHotkeySettings(action, setting.combination);
+            }
+          });
+      });
     };
 
     return {
