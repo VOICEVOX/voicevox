@@ -24,13 +24,12 @@ const proxyStoreCreator = (
     mutations: {},
     actions: {
       INVOKE_ENGINE_CONNECTOR({ rootState }, payload) {
-        const action = _engineFactory.instance(rootState.engineHost)[
-          payload.action
-        ];
+        const instance = _engineFactory.instance(rootState.engineHost);
+        const action = payload.action;
         const args = payload.payload;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        return action(...args);
+        return instance[action](...args);
       },
     },
   };
