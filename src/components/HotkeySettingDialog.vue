@@ -404,7 +404,7 @@ export default defineComponent({
       display: inline-flex;
       color: $grey-6;
       &:hover {
-        color: global.$secondary;
+        color: $grey-10;
       }
     }
   }
