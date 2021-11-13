@@ -1,5 +1,8 @@
 <template>
-  <q-page ref="scroller" class="relative-absolute-wrapper scroller">
+  <q-page
+    ref="scroller"
+    class="relative-absolute-wrapper scroller markdown-body"
+  >
     <div class="q-pa-md">
       <div v-html="html"></div>
     </div>
