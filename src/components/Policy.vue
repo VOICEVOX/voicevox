@@ -1,6 +1,6 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller">
-    <div class="q-pa-md markdown" v-html="policy"></div>
+  <q-page class="relative-absolute-wrapper scroller bg-background">
+    <div class="q-pa-md markdown markdown-body" v-html="policy"></div>
   </q-page>
 </template>
 

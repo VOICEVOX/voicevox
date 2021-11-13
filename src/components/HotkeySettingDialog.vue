@@ -7,17 +7,17 @@
     class="hotkey-setting-dialog"
     v-model="hotkeySettingDialogOpenComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <q-toolbar-title class="text-secondary"
+          <q-toolbar-title class="text-display"
             >設定 / キー割り当て</q-toolbar-title
           >
           <q-input
             hide-bottom-space
             dense
             placeholder="検索"
-            color="secondary"
+            color="display"
             class="q-mr-sm search-box"
             v-model="hotkeyFilter"
           >
@@ -38,7 +38,7 @@
             round
             flat
             icon="close"
-            color="secondary"
+            color="display"
             @click="hotkeySettingDialogOpenComputed = false"
           />
         </q-toolbar>
@@ -50,6 +50,8 @@
             flat
             dense
             hide-bottom
+            card-class="bg-background text-display"
+            table-class="text-display"
             row-key="hotkeyIndexes"
             :filter="hotkeyFilter"
             :rows="hotkeySettings"
@@ -73,7 +75,7 @@
                 <q-td no-hover :key="props.cols[1].name" :props="props">
                   <q-btn
                     dense
-                    color="secondary"
+                    text-color="display"
                     padding="none sm"
                     flat
                     :disable="checkHotkeyReadonly(props.row.action)"
@@ -120,14 +122,16 @@
       <q-card-section align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
-          <q-chip :ripple="false">
+          <q-chip :ripple="false" color="setting-item">
             {{ hotkey }}
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
-          <div>ショートカットキーが次の操作と重複しています</div>
-          <div class="q-mt-sm text-weight-bold">
+          <div class="text-warning">
+            ショートカットキーが次の操作と重複しています
+          </div>
+          <div class="q-mt-sm text-weight-bold text-warning">
             「{{ duplicatedHotkey.action }}」
           </div>
         </div>
@@ -137,8 +141,8 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="display-light"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -149,8 +153,8 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="display-light"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -160,7 +164,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="black"
+          text-color="display"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -175,7 +179,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="black"
+          text-color="display"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
@@ -409,7 +413,7 @@ export default defineComponent({
     position: sticky;
     top: 0;
     font-weight: bold;
-    background-color: $grey-3;
+    background-color: var(--color-setting-item);
     z-index: 1;
   }
 

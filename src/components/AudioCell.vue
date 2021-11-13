@@ -3,7 +3,7 @@
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="primary"
+      color="primary-light"
       size="sm"
       class="absolute active-arrow"
     />
@@ -102,6 +102,7 @@
       dense
       hide-bottom-space
       class="full-width"
+      color="primary-light"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
@@ -415,7 +416,7 @@ export default defineComponent({
   }
   .character-button {
     border: solid 1px;
-    border-color: global.$primary;
+    border-color: global.$primary-light;
     font-size: 0;
     height: fit-content;
     img {
@@ -428,7 +429,7 @@ export default defineComponent({
     .q-field__control {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid global.$primary;
+      border-bottom: 1px solid global.$primary-light;
       &::before {
         border-bottom: none;
       }
@@ -439,7 +440,7 @@ export default defineComponent({
       display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
-      background-color: #0001;
+      background-color: rgba(var(--color-display-rgb), 0.08);
     }
   }
   &:hover > .q-input > .q-field__after {
@@ -449,10 +450,15 @@ export default defineComponent({
 
 .character-menu {
   .q-item {
-    color: global.$secondary;
+    color: var(--color-display);
   }
   .selected-character-item {
-    background-color: rgba(global.$primary, 0.2);
+    background-color: rgba(global.$primary-rgb, 0.2);
   }
+}
+
+input {
+  caret-color: var(--color-display);
+  color: var(--color-display);
 }
 </style>

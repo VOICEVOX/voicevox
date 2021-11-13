@@ -7,6 +7,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="speedScaleSlider.qSliderProps.min.value"
         :max="speedScaleSlider.qSliderProps.max.value"
         :step="speedScaleSlider.qSliderProps.step.value"
@@ -27,6 +28,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="pitchScaleSlider.qSliderProps.min.value"
         :max="pitchScaleSlider.qSliderProps.max.value"
         :step="pitchScaleSlider.qSliderProps.step.value"
@@ -48,6 +50,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="intonationScaleSlider.qSliderProps.min.value"
         :max="intonationScaleSlider.qSliderProps.max.value"
         :step="intonationScaleSlider.qSliderProps.step.value"
@@ -68,6 +71,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="volumeScaleSlider.qSliderProps.min.value"
         :max="volumeScaleSlider.qSliderProps.max.value"
         :step="volumeScaleSlider.qSliderProps.step.value"
@@ -89,6 +93,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="prePhonemeLengthSlider.qSliderProps.min.value"
         :max="prePhonemeLengthSlider.qSliderProps.max.value"
         :step="prePhonemeLengthSlider.qSliderProps.step.value"
@@ -110,6 +115,7 @@
       <q-slider
         dense
         snap
+        color="primary-light"
         :min="postPhonemeLengthSlider.qSliderProps.min.value"
         :max="postPhonemeLengthSlider.qSliderProps.max.value"
         :step="postPhonemeLengthSlider.qSliderProps.step.value"

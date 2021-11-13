@@ -175,6 +175,14 @@ type IpcIHData = {
   USE_VOICING: {
     args: [obj: { newData?: boolean }];
     return: boolean;
+  THEME: {
+    args: [obj: { newData?: string }];
+    return: import("@/type/preload").ThemeSetting | void;
+  };
+
+  ON_VUEX_READY: {
+    args: [];
+    return: void;
   };
 };
 

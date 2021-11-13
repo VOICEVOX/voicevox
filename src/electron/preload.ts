@@ -195,9 +195,17 @@ const api: Sandbox = {
   setDefaultStyleIds: async (defaultStyleIds) => {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
-
+  
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+  },
+  
+  theme: (newData) => {
+    return ipcRenderer.invoke("THEME", { newData });
+  },
+  
+  vuexReady: () => {
+    ipcRenderer.invoke("ON_VUEX_READY");
   },
 };
 

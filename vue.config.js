@@ -31,6 +31,7 @@ module.exports = {
           },
         ],
         extraFiles: [
+          { from: "build/README.txt", to: "README.txt" },
           { from: ".env.production", to: ".env" },
           {
             from: VOICEVOX_ENGINE_DIR,

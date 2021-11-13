@@ -1,5 +1,7 @@
-$primary: #a5d4ad;
-$secondary: #212121;
+$primary: var(--color-primary);
+$primary-rgb: var(--color-primary-rgb);
+$primary-light: var(--color-primary-light);
+$primary-light-rgb: var(--color-primary-light-rgb);
 
 $window-border-width: 2px;
 
@@ -7,3 +9,82 @@ $header-height: 66px;
 $menubar-height: 24px;
 
 $detail-view-splitter-cell-z-index: 2;
+
+
+.text-primary-light {
+  color: var(--color-primary-light);
+}
+
+.bg-primary-light {
+  background: var(--color-primary-light);
+}
+
+.text-display {
+  color: var(--color-display);
+}
+
+.bg-display {
+  background: var(--color-display);
+}
+
+.text-display-light {
+  color: var(--color-display-light);
+}
+
+.bg-display-light {
+  background: var(--color-display-light);
+}
+
+.text-display-dark {
+  color: var(--color-display-dark);
+}
+
+.bg-display-dark {
+  background: var(--color-display-dark);
+}
+
+.text-background {
+  color: var(--color-background);
+}
+
+.bg-background {
+  background: var(--color-background);
+}
+
+.text-background-light {
+  color: var(--color-background-light);
+}
+
+.bg-background-light {
+  background: var(--color-background-light);
+}
+
+.text-setting-item {
+  color: var(--color-setting-item);
+}
+
+.bg-setting-item {
+  background: var(--color-setting-item);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.bg-warning {
+  background: var(--color-warning);
+}
+
+body {
+  color: var(--color-display);
+  background: var(--color-background);
+}
+
+.markdown-body {
+  color: var(--color-markdown-color);
+  background: var(--color-markdown-background);
+}
+
+.markdown-body a {
+  color: var(--color-markdown-hyperlink);
+}
