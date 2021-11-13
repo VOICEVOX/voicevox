@@ -90,12 +90,12 @@
                     flat
                     icon="settings_backup_restore"
                     padding="none sm"
-                    color="secondary"
+                    color="grey-5"
                     size="1em"
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
                   >
-                    <q-tooltip delay="1000">デフォルトに戻す</q-tooltip>
+                    <q-tooltip delay="500">デフォルトに戻す</q-tooltip>
                   </q-btn>
                 </q-td>
               </q-tr>
