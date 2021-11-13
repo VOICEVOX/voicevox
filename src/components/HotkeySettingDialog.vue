@@ -90,7 +90,6 @@
                     flat
                     icon="settings_backup_restore"
                     padding="none sm"
-                    color="grey-6"
                     size="1em"
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
@@ -399,6 +398,10 @@ export default defineComponent({
     }
     &:hover td button:last-child {
       display: inline-flex;
+      color: $grey-6;
+      &:hover {
+        color: global.$secondary;
+      }
     }
   }
 
