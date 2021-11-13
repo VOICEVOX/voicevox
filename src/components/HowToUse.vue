@@ -1,6 +1,6 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller">
-    <div class="q-pa-md markdown markdown-body" v-html="howToUse"></div>
+  <q-page class="relative-absolute-wrapper scroller markdown-body">
+    <div class="q-pa-md markdown" v-html="howToUse"></div>
   </q-page>
 </template>
 
@@ -35,5 +35,3 @@ export default defineComponent({
   border: 1px solid #333;
 }
 </style>
-
-<style src="github-markdown-css/github-markdown.css"></style>

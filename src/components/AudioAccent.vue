@@ -12,6 +12,7 @@
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
+          color="primary-light"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
@@ -34,7 +35,11 @@
     }"
   >
     <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
-      <polyline :points="accentLine" stroke="black" fill="none" />
+      <polyline
+        :points="accentLine"
+        stroke="var(--color-display)"
+        fill="none"
+      />
     </svg>
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
@@ -136,7 +141,7 @@ div {
   &.accent-draw-cell {
     grid-row-start: 2;
     svg line {
-      stroke: black;
+      stroke: var(--color-display);
     }
   }
   &.accent-select-cell {
@@ -144,7 +149,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: global.$primary;
+      stroke: var(--color-primary-light);
       stroke-dasharray: 3;
     }
   }
