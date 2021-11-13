@@ -1,5 +1,5 @@
 <template>
-  <q-bar class="bg-white q-pa-none relative-position">
+  <q-bar class="bg-background q-pa-none relative-position">
     <img src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, index) of menudata"
@@ -392,7 +392,7 @@ export default defineComponent({
 @use '@/styles' as global;
 
 .active-menu {
-  background-color: rgba(global.$primary, 0.3) !important;
+  background-color: rgba(global.$primary-rgb, 0.3) !important;
 }
 </style>
 
@@ -417,5 +417,8 @@ export default defineComponent({
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+.bg-background {
+  background: var(--color-background);
 }
 </style>

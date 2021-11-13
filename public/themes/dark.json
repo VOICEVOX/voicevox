@@ -1,0 +1,22 @@
+{
+  "name": "Dark",
+  "isDark": true,
+  "colors": {
+    "--color-primary": "#0A0A0A",
+    "--color-primary-rgb": "10, 10, 10",
+    "--color-primary-light": "#E0E0E0",
+    "--color-primary-light-rgb": "224, 224, 224",
+    "--color-display": "#F5F5F5",
+    "--color-display-rgb": "245, 245, 245",
+    "--color-display-light": "#E0E0E0",
+    "--color-display-dark": "#121212",
+    "--color-background": "#121212",
+    "--color-background-light": "#E0E0E0",
+    "--color-setting-item": "#424242",
+    "--color-warning": "#F2C037",
+    "--color-markdown-color": "#c9d1d9",
+    "--color-markdown-background": "#0D1117",
+    "--color-markdown-hyperlink": "#58A6FF",
+    "--color-pause-hovered": "#333A44"
+  }
+}
