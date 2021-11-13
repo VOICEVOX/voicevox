@@ -211,7 +211,6 @@ const store = new Store<{
               type: "object",
               properties: {
                 name: { type: "string" },
-                speaker: { type: "number" },
                 speedScale: { type: "number" },
                 pitchScale: { type: "number" },
                 intonationScale: { type: "number" },
