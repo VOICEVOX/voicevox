@@ -68,7 +68,6 @@ const store = new Store<{
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
-  useVoicing: boolean;
 }>({
   schema: {
     useGpu: {
@@ -126,7 +125,7 @@ const store = new Store<{
         },
         {
           action: "一つだけ書き出し",
-          combination: "",
+          combination: "E",
         },
         {
           action: "再生/停止",
@@ -134,7 +133,7 @@ const store = new Store<{
         },
         {
           action: "連続再生/停止",
-          combination: "",
+          combination: "Shift Space",
         },
         {
           action: "ｱｸｾﾝﾄ欄を表示",
@@ -200,10 +199,6 @@ const store = new Store<{
         },
       },
       default: [],
-    },
-    useVoicing: {
-      type: "boolean",
-      default: false,
     },
     presets: {
       type: "object",
@@ -425,6 +420,15 @@ async function createWindow() {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
     );
+  });
+  win.webContents.on("before-input-event", (event, input) => {
+    if (
+      (input.alt && input.key.toUpperCase() === "F4") ||
+      (input.meta && input.key.toUpperCase() === "Q")
+    ) {
+      event.preventDefault();
+      ipcMainSend(win, "CLOSE_WINDOW");
+    }
   });
 
   win.webContents.once("did-finish-load", () => {
@@ -670,13 +674,6 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
     store.set("hotkeySettings", hotkeySettings);
   }
   return store.get("hotkeySettings");
-});
-
-ipcMainHandle("USE_VOICING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("useVoicing", newData);
-  }
-  return store.get("useVoicing");
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

@@ -57,7 +57,6 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
-  useVoicing(newData?: boolean): Promise<boolean>;
 }
 
 export type AppInfos = {

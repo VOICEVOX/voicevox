@@ -7,6 +7,11 @@
 ; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
 !define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
 
+; inetc::get で使用するタイムアウト時間（秒）
+; https://nsis.sourceforge.io/Inetc_plug-in#Commands
+!define CONNECTTIMEOUT "300"
+!define RECEIVETIMEOUT "300"
+
 !ifndef BUILD_UNINSTALLER
 
   ; インストール後のサイズ
@@ -130,7 +135,7 @@
   Exch $0            ;       $0
   Push $1            ;       $1 $0
 
-  inetc::get /POPUP "" /CAPTION "$(^Name) セットアップ" /RESUME "追加ファイルのダウンロードに失敗しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.ini" "$0" /END
+  inetc::get /CONNECTTIMEOUT ${CONNECTTIMEOUT} /RECEIVETIMEOUT ${RECEIVETIMEOUT} /POPUP "" /CAPTION "$(^Name) セットアップ" /RESUME "追加ファイルのダウンロードに失敗しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.ini" "$0" /END
   Pop $0
 
                   ; Stack $1 $0
@@ -222,7 +227,7 @@ verifyPartedFile_finish${UniqueID}:
     Goto downloadFile_finish
   ${EndIf}
 
-  inetc::get /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
+  inetc::get /CONNECTTIMEOUT ${CONNECTTIMEOUT} /RECEIVETIMEOUT ${RECEIVETIMEOUT} /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
   Pop $0
 
   ; プロキシーなしでリトライする処理は合理的な理由が見つからないのでひとまずやめる
@@ -230,7 +235,7 @@ verifyPartedFile_finish${UniqueID}:
   ; https://github.com/electron-userland/electron-builder/issues/2049
   ; ${If} $0 != "OK"
   ; ${AndIf} $0 != "Cancelled"
-  ;   inetc::get /NOPROXY /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
+  ;   inetc::get /CONNECTTIMEOUT ${CONNECTTIMEOUT} /RECEIVETIMEOUT ${RECEIVETIMEOUT} /NOPROXY /POPUP "" /CAPTION "$(^Name) セットアップ ($3/$numFiles)" /RESUME "ファイルのダウンロード中にエラーが発生しました。$\r$\n再試行しますか？" "${DOWNLOAD_BASE_URL}/$archiveName.$2" "$4" /END
   ;   Pop $0
   ; ${EndIf}
 
