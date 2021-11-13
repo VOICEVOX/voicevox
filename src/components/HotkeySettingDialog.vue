@@ -96,7 +96,7 @@
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
                   >
-                    <q-tooltip delay="500">デフォルトに戻す</q-tooltip>
+                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
                   </q-btn>
                 </q-td>
               </q-tr>
