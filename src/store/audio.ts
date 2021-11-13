@@ -16,6 +16,7 @@ import {
   AudioCommandMutations,
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
+  IEngineConnectorFactoryActions,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -28,6 +29,7 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import { PromiseType } from "./vuex";
 
 async function generateUniqueId(audioItem: AudioItem) {
   const data = new TextEncoder().encode(
@@ -389,7 +391,7 @@ const audioStoreCreator = (
 
     actions: {
       START_WAITING_ENGINE: createUILockAction(
-        async ({ rootState, state, commit }) => {
+        async ({ state, commit, dispatch }) => {
           let engineState = state.engineState;
           for (let i = 0; i < 100; i++) {
             engineState = state.engineState;
@@ -398,9 +400,10 @@ const audioStoreCreator = (
             }
 
             try {
-              await _engineFactory
-                .instance(rootState.engineHost)
-                .versionVersionGet();
+              await dispatch("INVOKE_ENGINE_CONNECTOR", {
+                action: "versionVersionGet",
+                payload: [],
+              }).then(toDispatchResponse("versionVersionGet"));
             } catch {
               await new Promise((resolve) => setTimeout(resolve, 1000));
               window.electron.logInfo("waiting engine...");
@@ -515,41 +518,47 @@ const audioStoreCreator = (
         commit("SET_AUDIO_QUERY", payload);
       },
       FETCH_ACCENT_PHRASES(
-        { rootState },
+        { dispatch },
         {
           text,
           styleId,
           isKana,
         }: { text: string; styleId: number; isKana?: boolean }
       ) {
-        return _engineFactory
-          .instance(rootState.engineHost)
-          .accentPhrasesAccentPhrasesPost({
-            text,
-            speaker: styleId,
-            isKana,
+        return (
+          dispatch("INVOKE_ENGINE_CONNECTOR", {
+            action: "accentPhrasesAccentPhrasesPost",
+            payload: [
+              {
+                text,
+                speaker: styleId,
+                isKana,
+              },
+            ],
           })
-          .catch((error) => {
-            window.electron.logError(
-              error,
-              `Failed to fetch AccentPhrases for the text "${text}".`
-            );
-            throw error;
-          });
+            // ReturnValueの型付けがうまく行かなくて、Promise<any>になってしまっている
+            .then(toDispatchResponse("accentPhrasesAccentPhrasesPost"))
+            .catch((error) => {
+              window.electron.logError(
+                error,
+                `Failed to fetch AccentPhrases for the text "${text}".`
+              );
+              throw error;
+            })
+        );
       },
       FETCH_MORA_DATA(
-        { rootState },
+        { dispatch },
         {
           accentPhrases,
           styleId,
         }: { accentPhrases: AccentPhrase[]; styleId: number }
       ) {
-        return _engineFactory
-          .instance(rootState.engineHost)
-          .moraDataMoraDataPost({
-            accentPhrase: accentPhrases,
-            speaker: styleId,
-          })
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          action: "moraDataMoraDataPost",
+          payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
+        })
+          .then(toDispatchResponse("moraDataMoraDataPost"))
           .catch((error) => {
             window.electron.logError(
               error,
@@ -585,15 +594,14 @@ const audioStoreCreator = (
         return accentPhrases;
       },
       FETCH_AUDIO_QUERY(
-        { rootState },
+        { dispatch },
         { text, styleId }: { text: string; styleId: number }
       ) {
-        return _engineFactory
-          .instance(rootState.engineHost)
-          .audioQueryAudioQueryPost({
-            text,
-            speaker: styleId,
-          })
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          action: "audioQueryAudioQueryPost",
+          payload: [{ text, speaker: styleId }],
+        })
+          .then(toDispatchResponse("audioQueryAudioQueryPost"))
           .catch((error) => {
             window.electron.logError(
               error,
@@ -603,7 +611,7 @@ const audioStoreCreator = (
           });
       },
       GENERATE_AUDIO: createUILockAction(
-        async ({ rootState, state }, { audioKey }: { audioKey: string }) => {
+        async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
           const audioItem: AudioItem = JSON.parse(
             JSON.stringify(state.audioItems[audioKey])
           );
@@ -619,12 +627,16 @@ const audioStoreCreator = (
 
           const id = await generateUniqueId(audioItem);
 
-          return _engineFactory
-            .instance(rootState.engineHost)
-            .synthesisSynthesisPost({
-              audioQuery,
-              speaker,
-            })
+          return dispatch("INVOKE_ENGINE_CONNECTOR", {
+            action: "synthesisSynthesisPost",
+            payload: [
+              {
+                audioQuery,
+                speaker,
+              },
+            ],
+          })
+            .then(toDispatchResponse("synthesisSynthesisPost"))
             .then(async (blob) => {
               audioBlobCache[id] = blob;
               return blob;
@@ -1641,3 +1653,13 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
   }),
 };
+
+const toDispatchResponse =
+  <T extends keyof IEngineConnectorFactoryActions>(_: T) =>
+  (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    response: any
+  ): PromiseType<ReturnType<IEngineConnectorFactoryActions[T]>> => {
+    _; // Unused回避のため
+    return response;
+  };
