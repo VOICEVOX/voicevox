@@ -1,54 +1,39 @@
 <template>
   <q-header class="q-py-sm">
     <q-toolbar>
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="uiLocked"
-        @click="playContinuously"
-        >連続再生</q-btn
-      >
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!nowPlayingContinuously"
-        @click="stopContinuously"
-        >停止</q-btn
-      >
-
-      <q-space />
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!canUndo || uiLocked"
-        @click="undo"
-        >元に戻す</q-btn
-      >
-      <q-btn
-        unelevated
-        color="white"
-        text-color="secondary"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!canRedo || uiLocked"
-        @click="redo"
-        >やり直す</q-btn
-      >
+      <template v-for="button in headerButtons" :key="button.text">
+        <q-space v-if="button.text === null" />
+        <q-btn
+          v-else
+          unelevated
+          color="white"
+          text-color="secondary"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="button.disable.value"
+          @click="button.click"
+          >{{ button.text }}</q-btn
+        >
+      </template>
     </q-toolbar>
   </q-header>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+
+type ButtonContent =
+  | {
+      text: string;
+      click(): void;
+      disable: ComputedRef<boolean>;
+    }
+  | {
+      text: null;
+    };
 
 export default defineComponent({
   setup() {
@@ -129,15 +114,34 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
 
+    const headerButtons: ButtonContent[] = [
+      {
+        text: "連続再生",
+        click: playContinuously,
+        disable: uiLocked,
+      },
+      {
+        text: "停止",
+        click: stopContinuously,
+        disable: computed(() => !nowPlayingContinuously.value),
+      },
+      {
+        text: null,
+      },
+      {
+        text: "元に戻す",
+        click: undo,
+        disable: computed(() => !canUndo.value || uiLocked.value),
+      },
+      {
+        text: "やり直す",
+        click: redo,
+        disable: computed(() => !canRedo.value || uiLocked.value),
+      },
+    ];
+
     return {
-      uiLocked,
-      canUndo,
-      canRedo,
-      nowPlayingContinuously,
-      undo,
-      redo,
-      playContinuously,
-      stopContinuously,
+      headerButtons,
     };
   },
 });
