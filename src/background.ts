@@ -700,7 +700,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!isCloseMode) {
+  if (!isCloseMode && !isQuitMode) {
     event.preventDefault();
     isQuitMode = true;
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { isQuitMode: true });
