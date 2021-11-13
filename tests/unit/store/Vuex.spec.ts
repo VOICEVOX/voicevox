@@ -45,7 +45,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         presetItems: {},
-        presetKeys: {},
+        presetKeys: [],
         hotkeySettings: [],
         useVoicing: false,
         engineHost: "http://127.0.0.1",
@@ -116,7 +116,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isPinned, false);
     assert.isObject(store.state.presetItems);
     assert.isEmpty(store.state.presetItems);
-    assert.isObject(store.state.presetKeys);
+    assert.isArray(store.state.presetKeys);
     assert.isEmpty(store.state.presetKeys);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
