@@ -5,7 +5,7 @@
     <header-bar />
 
     <q-page-container>
-      <q-page class="main-row-panes">
+      <q-page class="main-row-panes bg-background">
         <div v-if="engineState === 'STARTING'" class="waiting-engine">
           <div>
             <q-spinner color="primary" size="2.5rem" />
@@ -490,7 +490,7 @@ body {
 }
 
 .waiting-engine {
-  background-color: #0002;
+  background-color: var(--color-background);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -500,7 +500,8 @@ body {
   justify-content: center;
 
   > div {
-    background: var(--color-background);
+    color: var(--color-display-dark);
+    background: var(--color-background-light);
     border-radius: 6px;
     padding: 14px;
   }
@@ -530,7 +531,7 @@ body {
   height: 100%;
 
   &.is-dragging {
-    background-color: #0002;
+    background-color: var(--color-background);
   }
 
   .audio-cells {

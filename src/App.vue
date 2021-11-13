@@ -18,20 +18,8 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-
-    const promises = [];
-
-    promises.push(store.dispatch("START_WAITING_ENGINE"));
-    promises.push(store.dispatch("GET_USE_GPU", undefined));
-    promises.push(store.dispatch("GET_INHERIT_AUDIOINFO"));
-    promises.push(store.dispatch("GET_SAVING_SETTING"));
-    promises.push(store.dispatch("GET_HOTKEY_SETTINGS"));
-    promises.push(store.dispatch("GET_USE_VOICING"));
-    promises.push(store.dispatch("GET_THEME_SETTING"));
-
-    Promise.all(promises).then(() => {
-      store.dispatch("VUEX_READY", undefined);
-    });
+    store.dispatch("INIT_VUEX");
+    store.dispatch("START_WAITING_ENGINE")
   }
 });
 </script>

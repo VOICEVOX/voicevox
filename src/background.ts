@@ -662,7 +662,7 @@ ipcMainHandle("THEME", (_, { newData }) => {
   return { currentTheme: store.get("currentTheme"), availableThemes: themes };
 });
 
-ipcMainHandle("VUEX_READY", () => {
+ipcMainHandle("ON_VUEX_READY", () => {
   win.show();
 });
 

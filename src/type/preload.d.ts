@@ -168,6 +168,7 @@ export type ThemeConf = {
     "--color-markdown-color": string;
     "--color-markdown-background": string;
     "--color-markdown-hyperlink": string;
+    "--color-pause-hovered": string;
   };
 };
 
@@ -191,4 +192,5 @@ export type ThemeColorType =
   | "--color-warning"
   | "--color-markdown-color"
   | "--color-markdown-background"
-  | "--color-markdown-hyperlink";
+  | "--color-markdown-hyperlink"
+  | "--color-pause-hovered";

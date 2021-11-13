@@ -671,7 +671,7 @@ $pitch-label-height: 24px;
           z-index: global.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
-          background-color: #cdf;
+          background-color: var(--color-pause-hovered);
           cursor: pointer;
         }
         &.splitter-cell-be-split {

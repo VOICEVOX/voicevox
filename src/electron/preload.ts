@@ -201,7 +201,7 @@ const api: Sandbox = {
   },
 
   vuexReady: () => {
-    ipcRenderer.invoke("VUEX_READY");
+    ipcRenderer.invoke("ON_VUEX_READY");
   },
 };
 

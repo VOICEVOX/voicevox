@@ -16,6 +16,7 @@
     "--color-warning": "#C10015",
     "--color-markdown-color": "#24292F",
     "--color-markdown-background": "#FFFFFF",
-    "--color-markdown-hyperlink": "#0969DA"
+    "--color-markdown-hyperlink": "#0969DA",
+    "--color-pause-hovered": "#CCDDFF"
   }
 }

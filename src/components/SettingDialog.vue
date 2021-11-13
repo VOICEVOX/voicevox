@@ -370,11 +370,9 @@ export default defineComponent({
     );
 
     const availableThemeNameComputed = computed(() => {
-      const names: { label: string; value: string }[] = [];
-      store.state.themeSetting.availableThemes.forEach((theme) => {
-        names.push({ label: theme.name, value: theme.name });
+      return store.state.themeSetting.availableThemes.map((theme) => {
+        return { label: theme.name, value: theme.name };
       });
-      return names;
     });
 
     const changeUseGPU = async (useGpu: boolean) => {

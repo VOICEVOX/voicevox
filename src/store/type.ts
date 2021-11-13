@@ -551,6 +551,10 @@ type IndexStoreTypes = {
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
+
+  INIT_VUEX: {
+    action(): void;
+  };
 };
 
 export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
@@ -699,7 +703,7 @@ type UiStoreTypes = {
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
   };
 
-  VUEX_READY: {
+  ON_VUEX_READY: {
     action(): void;
   };
 
