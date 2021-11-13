@@ -402,9 +402,10 @@ export default defineComponent({
     }
     &:hover td button:last-child {
       display: inline-flex;
-      color: rgba(var(--color-display-rgb), 0.5);
+      color: var(--color-display);
+      opacity: 0.5;
       &:hover {
-        color: var(--color-display);
+        opacity: 1;
       }
     }
   }
