@@ -353,7 +353,8 @@ const updateInfos = JSON.parse(
   })
 );
 
-let isCanClose = false;
+let isCloseMode = false;
+let isQuitMode = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -387,9 +388,9 @@ async function createWindow() {
     );
   });
   win.on("close", (event) => {
-    if (!isCanClose) {
+    if (!isCloseMode && !isQuitMode) {
       event.preventDefault();
-      ipcMainSend(win, "CLOSE_WINDOW");
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { isQuitMode: false });
     }
   });
 
@@ -536,17 +537,19 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
 
-ipcMainHandle("CLOSE_WINDOW", (_, value) => {
-  isCanClose = value;
-  if (isCanClose && isQuit) {
-    app.quit();
-    return;
-  }
-
-  isQuit = false;
-  if (isCanClose) {
-    win.close();
-  }
+ipcMainHandle("CLOSE_WINDOW", () => {
+  isCloseMode = true;
+  isQuitMode = false;
+  win.close();
+});
+ipcMainHandle("QUIT_APPLICATION", () => {
+  isCloseMode = false;
+  isQuitMode = true;
+  app.quit();
+});
+ipcMainHandle("RESET_CLOSE_AND_QUIT_VARIABLES", () => {
+  isCloseMode = false;
+  isQuitMode = false;
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
@@ -695,13 +698,12 @@ app.on("window-all-closed", () => {
   }
 });
 
-let isQuit = false;
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!isCanClose) {
+  if (!isCloseMode) {
     event.preventDefault();
-    isQuit = true;
-    ipcMainSend(win, "CLOSE_WINDOW");
+    isQuitMode = true;
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { isQuitMode: true });
   }
 
   // considering the case that ENGINE process killed after checking process status

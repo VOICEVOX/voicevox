@@ -102,8 +102,19 @@ type IpcIHData = {
     return: boolean;
   };
 
+  // receive main
   CLOSE_WINDOW: {
-    args: [isCanClose: boolean];
+    args: [];
+    return: void;
+  };
+
+  QUIT_APPLICATION: {
+    args: [];
+    return: void;
+  };
+
+  RESET_CLOSE_AND_QUIT_VARIABLES: {
+    args: [];
     return: void;
   };
 
@@ -207,8 +218,8 @@ type IpcSOData = {
     return: void;
   };
 
-  CLOSE_WINDOW: {
-    args: [];
+  CHECK_EDITED_AND_NOT_SAVE: {
+    args: [obj: { isQuitMode: boolean }];
     return: void;
   };
 };
