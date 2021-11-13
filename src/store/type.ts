@@ -744,7 +744,7 @@ export type UiActions = StoreType<UiStoreTypes, "action">;
  * Setting Store Types
  */
 
-export type ProxyStoreState = Record<string, never>;
+export type ProxyStoreState = Record<string, unknown>;
 
 export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
