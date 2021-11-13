@@ -50,7 +50,7 @@ export interface Sandbox {
   changePinWindow(): void;
   savingPresets(newPresets?: {
     presetItems: Record<string, Preset>;
-    presetKeys: Record<number, string[]>;
+    presetKeys: string[];
   }): Promise<PresetConfig>;
   isUnsetDefaultStyleIds(): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
@@ -119,7 +119,6 @@ export type HotkeySetting = {
 
 export type Preset = {
   name: string;
-  styleId: number;
   speedScale: number;
   pitchScale: number;
   intonationScale: number;
@@ -130,7 +129,7 @@ export type Preset = {
 
 export type PresetConfig = {
   items: Record<string, Preset>;
-  keys: Record<number, string[]>;
+  keys: string[];
 };
 export type HotkeyAction =
   | "音声書き出し"

@@ -229,15 +229,15 @@ const store = new Store<{
           additionalProperties: false,
         },
         keys: {
-          type: "object",
-          patternProperties: {
-            "[0-9]+": {
-              type: "array",
-              items: { type: "string" },
-            },
+          type: "array",
+          items: {
+            type: "string",
+            pattern:
+              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
           },
         },
       },
+      default: { items: {}, keys: [] },
     },
   },
   migrations: {

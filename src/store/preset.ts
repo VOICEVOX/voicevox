@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
-  presetKeys: {},
+  presetKeys: [],
 };
 
 export const presetStore: VoiceVoxStoreOptions<
@@ -28,10 +28,7 @@ export const presetStore: VoiceVoxStoreOptions<
       state.presetItems = presetItems;
     },
 
-    SET_PRESET_KEYS(
-      state,
-      { presetKeys }: { presetKeys: Record<number, string[]> }
-    ) {
+    SET_PRESET_KEYS(state, { presetKeys }: { presetKeys: string[] }) {
       state.presetKeys = presetKeys;
     },
   },
@@ -59,96 +56,61 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys,
       }: {
         presetItems: Record<string, Preset>;
-        presetKeys: Record<number, string[]>;
+        presetKeys: string[];
       }
     ) => {
       const result = await window.electron.savingPresets({
-        presetItems: JSON.parse(JSON.stringify(presetItems)),
-        presetKeys: JSON.parse(JSON.stringify(presetKeys)),
+        presetItems: presetItems,
+        presetKeys: presetKeys,
       });
       context.commit("SET_PRESET_ITEMS", { presetItems: result.items });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
     },
 
-    ADD_PRESET: async (
-      context,
-      { presetData, audioKey }: { presetData: Preset; audioKey?: string }
-    ) => {
-      const speaker = presetData.styleId;
-
-      const presetItems = { ...context.state.presetItems };
-      const presetKeys = { ...context.state.presetKeys };
-
-      presetKeys[speaker] =
-        presetKeys[speaker] !== undefined ? [...presetKeys[speaker]] : [];
-
+    async ADD_PRESET(context, { presetData }: { presetData: Preset }) {
       const newKey = uuidv4();
-
-      presetItems[newKey] = presetData;
-      presetKeys[speaker].push(newKey);
+      const newPresetItems = {
+        ...context.state.presetItems,
+        [newKey]: presetData,
+      };
+      const newPresetKeys = [newKey, ...context.state.presetKeys];
 
       await context.dispatch("SAVE_PRESET_CONFIG", {
-        presetItems,
-        presetKeys,
+        presetItems: newPresetItems,
+        presetKeys: newPresetKeys,
       });
 
-      // プリセットを登録したときのAudioItemに登録したプリセットを紐付けたいが、uuidが取れる場所がここしかなかったため仕方なく実装
-      // プリセット(管理)のロジックにAudioのロジックが入り込んでしまっているので、対象方ができ次第変更する
-      if (audioKey !== undefined) {
-        context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-          audioKey,
-          presetKey: newKey,
-        });
-      }
       return newKey;
     },
-    UPDATE_PRESET: async (
+    async UPDATE_PRESET(
       context,
-      {
-        presetData,
-        oldKey,
-        updatesAudioItems,
-        audioKey,
-      }: {
-        presetData: Preset;
-        oldKey: string;
-        updatesAudioItems: boolean;
-        audioKey: string;
-      }
-    ) => {
-      const presetItems = { ...context.state.presetItems };
-      const presetKeys = { ...context.state.presetKeys };
-      const speaker = presetData.styleId;
-
-      presetKeys[speaker] = [...context.state.presetKeys[speaker]];
-      presetKeys[speaker].splice(
-        presetKeys[speaker].findIndex((e) => e === oldKey),
-        1
-      );
-      delete presetItems[oldKey];
-
-      const newKey = uuidv4();
-      presetItems[newKey] = presetData;
-      presetKeys[speaker].push(newKey);
+      { presetKey, presetData }: { presetData: Preset; presetKey: string }
+    ) {
+      const newPresetItems = {
+        ...context.state.presetItems,
+        [presetKey]: presetData,
+      };
+      const newPresetKeys = context.state.presetKeys.includes(presetKey)
+        ? [...context.state.presetKeys]
+        : [presetKey, ...context.state.presetKeys];
 
       await context.dispatch("SAVE_PRESET_CONFIG", {
-        presetItems,
-        presetKeys,
+        presetItems: newPresetItems,
+        presetKeys: newPresetKeys,
       });
+    },
+    async DELETE_PRESET(context, { presetKey }: { presetKey: string }) {
+      const newPresetKeys = context.state.presetKeys.filter(
+        (key) => key != presetKey
+      );
+      // Filter the `presetKey` properties from presetItems.
+      // The destructuring assignment syntax do not support variable omitting.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [presetKey]: _, ...newPresetItems } = context.state.presetItems;
 
-      await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioKey,
-        presetKey: newKey,
-      });
-
-      if (!updatesAudioItems) return;
-      Object.entries(context.state.audioItems).forEach((e) => {
-        if (e[1].presetKey === oldKey) {
-          context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-            presetKey: newKey,
-            audioKey: e[0],
-          });
-        }
+      await context.dispatch("SAVE_PRESET_CONFIG", {
+        presetItems: newPresetItems,
+        presetKeys: newPresetKeys,
       });
     },
   },

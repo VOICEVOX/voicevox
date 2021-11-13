@@ -770,7 +770,7 @@ export type UiActions = StoreType<UiStoreTypes, "action">;
 */
 
 export type PresetStoreState = {
-  presetKeys: Record<number, string[]>;
+  presetKeys: string[];
   presetItems: Record<string, Preset>;
 };
 
@@ -782,7 +782,7 @@ type PresetStoreTypes = {
   };
   SET_PRESET_KEYS: {
     mutation: {
-      presetKeys: Record<number, string[]>;
+      presetKeys: string[];
     };
   };
   GET_PRESET_CONFIG: {
@@ -791,19 +791,17 @@ type PresetStoreTypes = {
   SAVE_PRESET_CONFIG: {
     action(payload: {
       presetItems: Record<string, Preset>;
-      presetKeys: Record<number, string[]>;
+      presetKeys: string[];
     }): void;
   };
   ADD_PRESET: {
-    action(payload: { presetData: Preset; audioKey?: string }): Promise<string>;
+    action(payload: { presetData: Preset }): Promise<string>;
   };
   UPDATE_PRESET: {
-    action(payload: {
-      presetData: Preset;
-      oldKey: string;
-      updatesAudioItems: boolean;
-      audioKey: string;
-    }): void;
+    action(payload: { presetData: Preset; presetKey: string }): void;
+  };
+  DELETE_PRESET: {
+    action(payload: { presetKey: string }): void;
   };
 };
 

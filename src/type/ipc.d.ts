@@ -152,7 +152,7 @@ type IpcIHData = {
       obj: {
         newPresets?: {
           presetItems: Record<string, import("@/type/preload").Preset>;
-          presetKeys: Record<number, string[]>;
+          presetKeys: string[];
         };
       }
     ];
