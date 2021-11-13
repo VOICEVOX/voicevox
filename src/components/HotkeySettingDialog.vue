@@ -90,7 +90,7 @@
                     flat
                     icon="settings_backup_restore"
                     padding="none sm"
-                    color="grey-5"
+                    color="grey-6"
                     size="1em"
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
