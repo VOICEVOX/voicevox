@@ -105,14 +105,14 @@ export const indexStore: VoiceVoxStoreOptions<
     async INIT_VUEX({ dispatch }) {
       const promises = [];
 
-      promises.push(dispatch("GET_USE_GPU", undefined));
+      promises.push(dispatch("GET_USE_GPU"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
       promises.push(dispatch("GET_SAVING_SETTING"));
       promises.push(dispatch("GET_HOTKEY_SETTINGS"));
       promises.push(dispatch("GET_THEME_SETTING"));
 
       Promise.all(promises).then(() => {
-        dispatch("ON_VUEX_READY", undefined);
+        dispatch("ON_VUEX_READY");
       });
     },
   },
