@@ -19,6 +19,7 @@ import {
   ThemeSetting,
   UpdateInfo,
 } from "@/type/preload";
+import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
 export type AudioItem = {
   text: string;
@@ -760,6 +761,38 @@ export type UiMutations = StoreType<UiStoreTypes, "mutation">;
 export type UiActions = StoreType<UiStoreTypes, "action">;
 
 /*
+ * Setting Store Types
+ */
+
+export type ProxyStoreState = Record<string, unknown>;
+
+export type IEngineConnectorFactoryActions = ReturnType<
+  IEngineConnectorFactory["instance"]
+>;
+
+type IEngineConnectorFactoryActionsMapper<K> =
+  K extends keyof IEngineConnectorFactoryActions
+    ? (payload: {
+        action: K;
+        payload: Parameters<IEngineConnectorFactoryActions[K]>;
+      }) => ReturnType<IEngineConnectorFactoryActions[K]>
+    : never;
+
+type ProxyStoreTypes = {
+  INVOKE_ENGINE_CONNECTOR: {
+    // FIXME: actionに対してIEngineConnectorFactoryActionsのUnion型を与えているため、actionとpayloadが与えられるとReturnValueの型が得られる
+    // しかしVuexの型を通すとReturnValueの型付けが行われなくなりPromise<any>に落ちてしまうため、明示的な型付けを行う必要がある
+    action: IEngineConnectorFactoryActionsMapper<
+      keyof IEngineConnectorFactoryActions
+    >;
+  };
+};
+
+export type ProxyGetters = StoreType<ProxyStoreTypes, "getter">;
+export type ProxyMutations = StoreType<ProxyStoreTypes, "mutation">;
+export type ProxyActions = StoreType<ProxyStoreTypes, "action">;
+
+/*
  * All Store Types
  */
 
@@ -769,7 +802,8 @@ export type State = AudioStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
-  UiStoreState;
+  UiStoreState &
+  ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
@@ -777,7 +811,8 @@ type AllStoreTypes = AudioStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &
-  UiStoreTypes;
+  UiStoreTypes &
+  ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
