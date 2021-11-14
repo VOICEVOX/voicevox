@@ -15,6 +15,8 @@ import {
   HotkeySetting,
   MoraDataType,
   SavingSetting,
+  ThemeConf,
+  ThemeSetting,
   UpdateInfo,
 } from "@/type/preload";
 
@@ -549,6 +551,10 @@ type IndexStoreTypes = {
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
+
+  INIT_VUEX: {
+    action(): void;
+  };
 };
 
 export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
@@ -606,6 +612,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   engineHost: string;
+  themeSetting: ThemeSetting;
 };
 
 type SettingStoreTypes = {
@@ -626,6 +633,15 @@ type SettingStoreTypes = {
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
+  };
+
+  GET_THEME_SETTING: {
+    action(): void;
+  };
+
+  SET_THEME_SETTING: {
+    mutation: { currentTheme: string; themes?: ThemeConf[] };
+    action(payload: { currentTheme: string }): void;
   };
 };
 
@@ -685,6 +701,10 @@ type UiStoreTypes = {
   IS_HOTKEY_SETTING_DIALOG_OPEN: {
     mutation: { isHotkeySettingDialogOpen: boolean };
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
+  };
+
+  ON_VUEX_READY: {
+    action(): void;
   };
 
   IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {

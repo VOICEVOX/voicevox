@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  ThemeConf,
   StyleInfo,
 } from "./type/preload";
 
@@ -66,6 +67,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
 }>({
   schema: {
     useGpu: {
@@ -197,6 +199,10 @@ const store = new Store<{
         },
       },
       default: [],
+    },
+    currentTheme: {
+      type: "string",
+      default: "Default",
     },
   },
   migrations: {
@@ -362,6 +368,7 @@ async function createWindow() {
     height: 600,
     frame: false,
     minWidth: 320,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -647,6 +654,25 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
     store.set("hotkeySettings", hotkeySettings);
   }
   return store.get("hotkeySettings");
+});
+
+ipcMainHandle("THEME", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("currentTheme", newData);
+    return;
+  }
+  const dir = path.join(__static, "themes");
+  const themes: ThemeConf[] = [];
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    themes.push(theme);
+  });
+  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+});
+
+ipcMainHandle("ON_VUEX_READY", () => {
+  win.show();
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {

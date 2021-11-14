@@ -3,6 +3,8 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ThemeColorType,
+  ThemeConf,
 } from "@/type/preload";
 import {
   SettingGetters,
@@ -13,6 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
+import { Dark, setCssVar } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -29,6 +32,10 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
+  themeSetting: {
+    currentTheme: "Default",
+    availableThemes: [],
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -57,6 +64,15 @@ export const settingStore: VoiceVoxStoreOptions<
         }
       });
       if (flag) state.hotkeySettings.push(newHotkey);
+    },
+    SET_THEME_SETTING(
+      state,
+      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
+    ) {
+      if (themes) {
+        state.themeSetting.availableThemes = themes;
+      }
+      state.themeSetting.currentTheme = currentTheme;
     },
   },
   actions: {
@@ -102,6 +118,41 @@ export const settingStore: VoiceVoxStoreOptions<
       }
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
+      });
+    },
+    GET_THEME_SETTING({ commit, dispatch }) {
+      const currentTheme = window.electron.theme();
+      currentTheme.then((value) => {
+        if (value) {
+          commit("SET_THEME_SETTING", {
+            currentTheme: value.currentTheme,
+            themes: value.availableThemes,
+          });
+          dispatch("SET_THEME_SETTING", { currentTheme: value.currentTheme });
+        }
+      });
+    },
+    SET_THEME_SETTING(
+      { state, commit },
+      { currentTheme }: { currentTheme: string }
+    ) {
+      window.electron.theme(currentTheme);
+      const theme = state.themeSetting.availableThemes.find((value) => {
+        return value.name == currentTheme;
+      });
+      if (theme) {
+        for (const k in theme.colors) {
+          document.documentElement.style.setProperty(
+            k,
+            theme.colors[k as ThemeColorType]
+          );
+        }
+        Dark.set(theme.isDark);
+        setCssVar("primary", theme.colors["--color-primary"]);
+        setCssVar("warning", theme.colors["--color-warning"]);
+      }
+      commit("SET_THEME_SETTING", {
+        currentTheme: currentTheme,
       });
     },
   },

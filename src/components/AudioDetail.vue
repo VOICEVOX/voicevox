@@ -3,12 +3,7 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs
-            dense
-            vertical
-            class="text-secondary"
-            v-model="selectedDetail"
-          >
+          <q-tabs dense vertical class="text-display" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
             <q-tab name="length" label="長さ" />
@@ -19,16 +14,16 @@
             <q-btn
               v-if="!nowPlaying && !nowGenerating"
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="display-dark"
               icon="play_arrow"
               @click="play"
             ></q-btn>
             <q-btn
               v-else
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="display-dark"
               icon="stop"
               @click="stop"
             ></q-btn>
@@ -359,7 +354,7 @@ export default defineComponent({
           ok: {
             label: "閉じる",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       }
@@ -618,9 +613,9 @@ $pitch-label-height: 24px;
     flex-direction: column;
     justify-content: space-between;
     .detail-selector .q-tab--active {
-      background-color: rgba(global.$primary, 0.3);
+      background-color: rgba(global.$primary-light-rgb, 0.3);
       :deep(.q-tab__indicator) {
-        background-color: global.$primary;
+        background-color: var(--color-primary-light);
       }
     }
     .play-button-wrapper {
@@ -658,14 +653,14 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
           font-weight: bold;
           cursor: pointer;
         }
@@ -676,7 +671,7 @@ $pitch-label-height: 24px;
           z-index: global.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
-          background-color: #cdf;
+          background-color: var(--color-pause-hovered);
           cursor: pointer;
         }
         &.splitter-cell-be-split {

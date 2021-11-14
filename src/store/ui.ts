@@ -148,6 +148,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
       },
+      ON_VUEX_READY() {
+        window.electron.vuexReady();
+      },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },
         { isDefaultStyleSelectDialogOpen }

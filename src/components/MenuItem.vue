@@ -1,6 +1,7 @@
 <template>
-  <q-separator v-if="menudata.type === 'separator'" />
+  <q-separator class="bg-background" v-if="menudata.type === 'separator'" />
   <q-item
+    class="bg-background"
     v-else-if="menudata.type === 'root'"
     dense
     :class="selected && 'active-menu'"
@@ -32,6 +33,7 @@
     clickable
     v-ripple
     v-close-popup
+    class="bg-background"
     @click="menudata.onClick"
   >
     <q-item-section v-if="menudata.type === 'checkbox'" side class="q-pr-sm">

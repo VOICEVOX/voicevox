@@ -1,7 +1,7 @@
 <template>
   <q-dialog persistent ref="dialogRef">
     <!-- 仮デザイン -->
-    <q-layout container class="q-dialog-plugin bg-white">
+    <q-layout container class="q-dialog-plugin background">
       <q-header>
         <q-toolbar>
           <q-toolbar-title class="header-text"
@@ -93,6 +93,10 @@ export default defineComponent({
 }
 
 .header-text {
-  color: global.$secondary;
+  color: var(--color-display);
+}
+
+.background {
+  background-color: var(--color-background);
 }
 </style>

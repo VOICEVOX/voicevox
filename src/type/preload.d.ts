@@ -55,6 +55,8 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
+  theme(newData?: string): Promise<ThemeSetting | void>;
+  vuexReady(): void;
 }
 
 export type AppInfos = {
@@ -148,3 +150,49 @@ export type MoraDataType =
   | "pitch"
   | "pause"
   | "voicing";
+
+export type ThemeConf = {
+  name: string;
+  isDark: boolean;
+  colors: {
+    "--color-primary": string;
+    "--color-primary-rgb": string;
+    "--color-primary-light": string;
+    "--color-primary-light-rgb": string;
+    "--color-display": string;
+    "--color-display-rgb": string;
+    "--color-display-light": string;
+    "--color-display-dark": string;
+    "--color-background": string;
+    "--color-background-light": string;
+    "--color-setting-item": string;
+    "--color-warning": string;
+    "--color-markdown-color": string;
+    "--color-markdown-background": string;
+    "--color-markdown-hyperlink": string;
+    "--color-pause-hovered": string;
+  };
+};
+
+export type ThemeSetting = {
+  currentTheme: string;
+  availableThemes: ThemeConf[];
+};
+
+export type ThemeColorType =
+  | "--color-primary"
+  | "--color-primary-rgb"
+  | "--color-primary-light"
+  | "--color-primary-light-rgb"
+  | "--color-display"
+  | "--color-display-rgb"
+  | "--color-display-light"
+  | "--color-display-dark"
+  | "--color-background"
+  | "--color-background-light"
+  | "--color-setting-item"
+  | "--color-warning"
+  | "--color-markdown-color"
+  | "--color-markdown-background"
+  | "--color-markdown-hyperlink"
+  | "--color-pause-hovered";
