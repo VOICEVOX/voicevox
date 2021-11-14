@@ -178,6 +178,9 @@ export default defineComponent({
       store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
         isHotkeySettingDialogOpen: false,
       });
+      store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+        isToolbarSettingDialogOpen: false,
+      });
       store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
       });
@@ -283,6 +286,15 @@ export default defineComponent({
             onClick() {
               store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
                 isHotkeySettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "ツールバーのカスタム",
+            onClick() {
+              store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+                isToolbarSettingDialogOpen: true,
               });
             },
           },
