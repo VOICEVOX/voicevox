@@ -17,6 +17,7 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ToolbarSetting,
   UpdateInfo,
 } from "@/type/preload";
 
@@ -611,6 +612,7 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   engineHost: string;
   themeSetting: ThemeSetting;
 };
@@ -633,6 +635,15 @@ type SettingStoreTypes = {
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
+  };
+
+  GET_TOOLBAR_SETTING: {
+    action(): void;
+  };
+
+  SET_TOOLBAR_SETTING: {
+    mutation: { toolbarSetting: ToolbarSetting };
+    action(payload: { data: ToolbarSetting }): void;
   };
 
   GET_THEME_SETTING: {

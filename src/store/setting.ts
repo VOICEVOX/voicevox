@@ -5,6 +5,7 @@ import {
   SavingSetting,
   ThemeColorType,
   ThemeConf,
+  ToolbarSetting,
 } from "@/type/preload";
 import {
   SettingGetters,
@@ -31,6 +32,9 @@ export const settingStoreState: SettingStoreState = {
     outputSamplingRate: 24000,
   },
   hotkeySettings: [],
+  toolbarSetting: {
+    buttons: ["連続再生", "停止", "", "元に戻す", "やり直す"],
+  },
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
   themeSetting: {
     currentTheme: "Default",
@@ -64,6 +68,12 @@ export const settingStore: VoiceVoxStoreOptions<
         }
       });
       if (flag) state.hotkeySettings.push(newHotkey);
+    },
+    SET_TOOLBAR_SETTING(
+      state,
+      { toolbarSetting }: { toolbarSetting: ToolbarSetting }
+    ) {
+      state.toolbarSetting = toolbarSetting;
     },
     SET_THEME_SETTING(
       state,
@@ -118,6 +128,18 @@ export const settingStore: VoiceVoxStoreOptions<
       }
       commit("SET_HOTKEY_SETTINGS", {
         newHotkey: data,
+      });
+    },
+    GET_TOOLBAR_SETTING({ commit }) {
+      const newData = window.electron.toolbarSetting();
+      newData.then((toolbarSetting) => {
+        commit("SET_TOOLBAR_SETTING", { toolbarSetting });
+      });
+    },
+    SET_TOOLBAR_SETTING({ commit }, { data }: { data: ToolbarSetting }) {
+      const newData = window.electron.toolbarSetting(data);
+      newData.then((toolbarSetting) => {
+        commit("SET_TOOLBAR_SETTING", { toolbarSetting });
       });
     },
     GET_THEME_SETTING({ commit, dispatch }) {
