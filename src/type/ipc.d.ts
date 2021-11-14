@@ -102,7 +102,6 @@ type IpcIHData = {
     return: boolean;
   };
 
-  // receive main
   CLOSE_WINDOW: {
     args: [];
     return: void;
