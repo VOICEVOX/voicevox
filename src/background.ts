@@ -361,6 +361,7 @@ const updateInfos = JSON.parse(
   })
 );
 
+let willQuit = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -394,13 +395,11 @@ async function createWindow() {
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
     );
   });
-  win.webContents.on("before-input-event", (event, input) => {
-    if (
-      (input.alt && input.key.toUpperCase() === "F4") ||
-      (input.meta && input.key.toUpperCase() === "Q")
-    ) {
+  win.on("close", (event) => {
+    if (!willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CLOSE_WINDOW");
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+      return;
     }
   });
 
@@ -548,6 +547,7 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
+  willQuit = true;
   app.emit("window-all-closed");
   win.destroy();
 });
@@ -723,6 +723,12 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
+  if (!willQuit) {
+    event.preventDefault();
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+    return;
+  }
+
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
     log.info("ENGINE killed. Quitting app");

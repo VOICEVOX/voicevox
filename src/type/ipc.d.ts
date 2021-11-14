@@ -217,7 +217,7 @@ type IpcSOData = {
     return: void;
   };
 
-  CLOSE_WINDOW: {
+  CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
     return: void;
   };

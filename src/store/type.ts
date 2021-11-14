@@ -750,7 +750,7 @@ type UiStoreTypes = {
     action(): void;
   };
 
-  CLOSE_WINDOW: {
+  CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
   };
 };
