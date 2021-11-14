@@ -719,6 +719,7 @@ app.on("before-quit", (event) => {
   if (!willQuit) {
     event.preventDefault();
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+    return;
   }
 
   // considering the case that ENGINE process killed after checking process status
