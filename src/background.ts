@@ -397,6 +397,7 @@ async function createWindow() {
     if (!willQuit) {
       event.preventDefault();
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+      return;
     }
   });
 
