@@ -60,6 +60,77 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+const defaultHotkeySettings: HotkeySetting[] = [
+  {
+    action: "音声書き出し",
+    combination: "Ctrl E",
+  },
+  {
+    action: "一つだけ書き出し",
+    combination: "E",
+  },
+  {
+    action: "再生/停止",
+    combination: "Space",
+  },
+  {
+    action: "連続再生/停止",
+    combination: "Shift Space",
+  },
+  {
+    action: "ｱｸｾﾝﾄ欄を表示",
+    combination: "1",
+  },
+  {
+    action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    combination: "2",
+  },
+  {
+    action: "テキスト欄を追加",
+    combination: "Shift Enter",
+  },
+  {
+    action: "テキスト欄を削除",
+    combination: "Shift Delete",
+  },
+  {
+    action: "テキスト欄からフォーカスを外す",
+    combination: "Escape",
+  },
+  {
+    action: "テキスト欄にフォーカスを戻す",
+    combination: "Enter",
+  },
+  {
+    action: "元に戻す",
+    combination: "Ctrl Z",
+  },
+  {
+    action: "やり直す",
+    combination: "Ctrl Y",
+  },
+  {
+    action: "新規プロジェクト",
+    combination: "Ctrl N",
+  },
+  {
+    action: "プロジェクトを名前を付けて保存",
+    combination: "Ctrl Shift S",
+  },
+  {
+    action: "プロジェクトを上書き保存",
+    combination: "Ctrl S",
+  },
+  {
+    action: "プロジェクト読み込み",
+    combination: "Ctrl O",
+  },
+  {
+    action: "テキスト読み込む",
+    combination: "",
+  },
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
@@ -118,76 +189,7 @@ const store = new Store<{
           combination: { type: "string" },
         },
       },
-      default: [
-        {
-          action: "音声書き出し",
-          combination: "Ctrl E",
-        },
-        {
-          action: "一つだけ書き出し",
-          combination: "E",
-        },
-        {
-          action: "再生/停止",
-          combination: "Space",
-        },
-        {
-          action: "連続再生/停止",
-          combination: "Shift Space",
-        },
-        {
-          action: "ｱｸｾﾝﾄ欄を表示",
-          combination: "1",
-        },
-        {
-          action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-          combination: "2",
-        },
-        {
-          action: "テキスト欄を追加",
-          combination: "Shift Enter",
-        },
-        {
-          action: "テキスト欄を削除",
-          combination: "Shift Delete",
-        },
-        {
-          action: "テキスト欄からフォーカスを外す",
-          combination: "Escape",
-        },
-        {
-          action: "テキスト欄にフォーカスを戻す",
-          combination: "Enter",
-        },
-        {
-          action: "元に戻す",
-          combination: "Ctrl Z",
-        },
-        {
-          action: "やり直す",
-          combination: "Ctrl Y",
-        },
-        {
-          action: "新規プロジェクト",
-          combination: "Ctrl N",
-        },
-        {
-          action: "プロジェクトを名前を付けて保存",
-          combination: "Ctrl Shift S",
-        },
-        {
-          action: "プロジェクトを上書き保存",
-          combination: "Ctrl S",
-        },
-        {
-          action: "プロジェクト読み込み",
-          combination: "Ctrl O",
-        },
-        {
-          action: "テキスト読み込む",
-          combination: "",
-        },
-      ],
+      default: defaultHotkeySettings,
     },
     defaultStyleIds: {
       type: "array",
@@ -695,6 +697,10 @@ ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
 
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   store.set("defaultStyleIds", defaultStyleIds);
+});
+
+ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
+  return defaultHotkeySettings;
 });
 
 // app callback

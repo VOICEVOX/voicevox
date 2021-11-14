@@ -87,6 +87,17 @@
                     "
                     @click="openHotkeyDialog(props.row.action)"
                   />
+                  <q-btn
+                    rounded
+                    flat
+                    icon="settings_backup_restore"
+                    padding="none sm"
+                    size="1em"
+                    :disable="checkHotkeyReadonly(props.row.action)"
+                    @click="resetHotkey(props.row.action)"
+                  >
+                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
+                  </q-btn>
                 </q-td>
               </q-tr>
             </template>
@@ -182,7 +193,8 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -196,6 +208,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const $q = useQuasar();
 
     const hotkeySettingDialogOpenComputed = computed({
       get: () => props.modelValue,
@@ -308,6 +321,35 @@ export default defineComponent({
       );
     });
 
+    const resetHotkey = (action: string) => {
+      $q.dialog({
+        title: "ショートカットキーを初期値に戻します",
+        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+        html: true,
+        ok: {
+          label: "初期値に戻す",
+          flat: true,
+          textColor: "secondary",
+        },
+        cancel: {
+          label: "初期値に戻さない",
+          flat: true,
+          textColor: "secondary",
+        },
+      }).onOk(() => {
+        window.electron
+          .getDefaultHotkeySettings()
+          .then((defaultSettings: HotkeySetting[]) => {
+            const setting = defaultSettings.find(
+              (value) => value.action == action
+            );
+            if (setting) {
+              changeHotkeySettings(action, setting.combination);
+            }
+          });
+      });
+    };
+
     return {
       hotkeySettingDialogOpenComputed,
       isHotkeyDialogOpened,
@@ -326,6 +368,7 @@ export default defineComponent({
       changeHotkeySettings,
       confirmBtnEnabled,
       checkHotkeyReadonly,
+      resetHotkey,
     };
   },
 });
@@ -349,6 +392,21 @@ export default defineComponent({
   > :deep(.scroll) {
     overflow-y: scroll;
     overflow-x: hidden;
+  }
+
+  tbody tr {
+    td button:last-child {
+      float: right;
+      display: none;
+    }
+    &:hover td button:last-child {
+      display: inline-flex;
+      color: var(--color-display);
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+    }
   }
 
   thead tr th {

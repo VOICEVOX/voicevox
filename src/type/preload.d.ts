@@ -53,6 +53,7 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
+  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }

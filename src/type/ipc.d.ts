@@ -167,6 +167,11 @@ type IpcIHData = {
     return: void;
   };
 
+  GET_DEFAULT_HOTKEY_SETTINGS: {
+    args: [];
+    return: import("@/type/preload").HotkeySetting[];
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
