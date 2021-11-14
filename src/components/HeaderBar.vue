@@ -23,11 +23,15 @@ import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import {
+  HotkeyAction,
+  HotkeyReturnType,
+  ToolbarButtonsType,
+} from "@/type/preload";
 
 type ButtonContent =
   | {
-      text: string;
+      text: ToolbarButtonsType;
       click(): void;
       disable: ComputedRef<boolean>;
     }
@@ -46,6 +50,7 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+    const toolbarSetting = computed(() => store.state.toolbarSetting);
 
     const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // undo
@@ -114,7 +119,7 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
 
-    const headerButtons: ButtonContent[] = [
+    const usableButtons: ButtonContent[] = [
       {
         text: "連続再生",
         click: playContinuously,
@@ -124,9 +129,6 @@ export default defineComponent({
         text: "停止",
         click: stopContinuously,
         disable: computed(() => !nowPlayingContinuously.value),
-      },
-      {
-        text: null,
       },
       {
         text: "元に戻す",
@@ -139,6 +141,20 @@ export default defineComponent({
         disable: computed(() => !canRedo.value || uiLocked.value),
       },
     ];
+
+    const searchButton = (button: ToolbarButtonsType): ButtonContent => {
+      if (button === "") {
+        return {
+          text: null,
+        };
+      } else {
+        return usableButtons.find((b) => b.text === button) as ButtonContent;
+      }
+    };
+
+    const headerButtons = computed(() =>
+      toolbarSetting.value.buttons.map(searchButton)
+    );
 
     return {
       headerButtons,

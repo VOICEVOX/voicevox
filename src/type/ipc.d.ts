@@ -152,6 +152,11 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  TOOLBAR_SETTING: {
+    args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
+    return: import("@/type/preload").ToolbarSetting;
+  };
+
   IS_UNSET_DEFAULT_STYLE_ID: {
     args: [speakerUuid: string];
     return: boolean;

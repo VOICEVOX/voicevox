@@ -50,6 +50,7 @@ export interface Sandbox {
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
@@ -156,6 +157,17 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type ToolbarButtonsType =
+  | "連続再生"
+  | "停止"
+  | "元に戻す"
+  | "やり直す"
+  | "";
+
+export type ToolbarSetting = {
+  buttons: ToolbarButtonsType[];
+};
 
 export type MoraDataType =
   | "consonant"
