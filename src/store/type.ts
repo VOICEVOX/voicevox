@@ -751,7 +751,7 @@ type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    action(payload: { isQuitMode: boolean }): Promise<void>;
+    action(): Promise<void>;
   };
 };
 

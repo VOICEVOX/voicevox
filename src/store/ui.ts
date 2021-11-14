@@ -205,7 +205,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
       },
-      async CHECK_EDITED_AND_NOT_SAVE({ getters }, { isQuitMode }) {
+      async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
         if (
           getters.IS_EDITED &&
           !(await window.electron.showConfirmDialog({
@@ -215,12 +215,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
               "変更を破棄してもよろしいですか？",
           }))
         ) {
-          window.electron.resetCloseAndQuitVariables();
-          return;
-        }
-
-        if (isQuitMode) {
-          window.electron.quitApplication();
           return;
         }
 

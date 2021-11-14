@@ -39,8 +39,6 @@ export interface Sandbox {
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
   ): IpcRenderer;
   closeWindow(): void;
-  quitApplication(): void;
-  resetCloseAndQuitVariables(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;

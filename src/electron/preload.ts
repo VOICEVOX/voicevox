@@ -148,14 +148,6 @@ const api: Sandbox = {
     ipcRenderer.invoke("CLOSE_WINDOW");
   },
 
-  quitApplication: () => {
-    ipcRendererInvoke("QUIT_APPLICATION");
-  },
-
-  resetCloseAndQuitVariables: () => {
-    ipcRendererInvoke("RESET_CLOSE_AND_QUIT_VARIABLES");
-  },
-
   minimizeWindow: () => {
     ipcRenderer.invoke("MINIMIZE_WINDOW");
   },

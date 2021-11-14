@@ -359,8 +359,7 @@ const updateInfos = JSON.parse(
   })
 );
 
-let isCloseMode = false;
-let isQuitMode = false;
+let willQuit = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -395,9 +394,9 @@ async function createWindow() {
     );
   });
   win.on("close", (event) => {
-    if (!isCloseMode && !isQuitMode) {
+    if (!willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { isQuitMode: false });
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
     }
   });
 
@@ -545,18 +544,9 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
-  isCloseMode = true;
-  isQuitMode = false;
-  win.close();
-});
-ipcMainHandle("QUIT_APPLICATION", () => {
-  isCloseMode = false;
-  isQuitMode = true;
-  app.quit();
-});
-ipcMainHandle("RESET_CLOSE_AND_QUIT_VARIABLES", () => {
-  isCloseMode = false;
-  isQuitMode = false;
+  willQuit = true;
+  app.emit("window-all-close");
+  win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
@@ -726,10 +716,9 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!isCloseMode && !isQuitMode) {
+  if (!willQuit) {
     event.preventDefault();
-    isQuitMode = true;
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { isQuitMode: true });
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
   }
 
   // considering the case that ENGINE process killed after checking process status

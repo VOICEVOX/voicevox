@@ -108,16 +108,6 @@ type IpcIHData = {
     return: void;
   };
 
-  QUIT_APPLICATION: {
-    args: [];
-    return: void;
-  };
-
-  RESET_CLOSE_AND_QUIT_VARIABLES: {
-    args: [];
-    return: void;
-  };
-
   MINIMIZE_WINDOW: {
     args: [];
     return: void;
@@ -224,7 +214,7 @@ type IpcSOData = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    args: [obj: { isQuitMode: boolean }];
+    args: [];
     return: void;
   };
 };
