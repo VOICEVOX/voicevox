@@ -172,9 +172,6 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
-  USE_VOICING: {
-    args: [obj: { newData?: boolean }];
-    return: boolean;
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
