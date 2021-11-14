@@ -511,27 +511,24 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana,
       }: { text: string; styleId: number; isKana?: boolean }
     ) {
-      return (
-        dispatch("INVOKE_ENGINE_CONNECTOR", {
-          action: "accentPhrasesAccentPhrasesPost",
-          payload: [
-            {
-              text,
-              speaker: styleId,
-              isKana,
-            },
-          ],
-        })
-          // ReturnValueの型付けがうまく行かなくて、Promise<any>になってしまっている
-          .then(toDispatchResponse("accentPhrasesAccentPhrasesPost"))
-          .catch((error) => {
-            window.electron.logError(
-              error,
-              `Failed to fetch AccentPhrases for the text "${text}".`
-            );
-            throw error;
-          })
-      );
+      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        action: "accentPhrasesAccentPhrasesPost",
+        payload: [
+          {
+            text,
+            speaker: styleId,
+            isKana,
+          },
+        ],
+      })
+        .then(toDispatchResponse("accentPhrasesAccentPhrasesPost"))
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch AccentPhrases for the text "${text}".`
+          );
+          throw error;
+        });
     },
     FETCH_MORA_DATA(
       { dispatch },
@@ -1634,6 +1631,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
   }),
 };
 
+// FIXME: ProxyStoreのactionとVuexの組み合わせでReturnValueの型付けが中途半端になり、Promise<any>になってしまっている
 const toDispatchResponse =
   <T extends keyof IEngineConnectorFactoryActions>(_: T) =>
   (

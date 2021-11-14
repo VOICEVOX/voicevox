@@ -760,6 +760,8 @@ type IEngineConnectorFactoryActionsMapper<K> =
 
 type ProxyStoreTypes = {
   INVOKE_ENGINE_CONNECTOR: {
+    // FIXME: actionに対してIEngineConnectorFactoryActionsのUnion型を与えているため、actionとpayloadが与えられるとReturnValueの型が得られる
+    // しかしVuexの型を通すとReturnValueの型付けが行われなくなりPromise<any>に落ちてしまうため、明示的な型付けを行う必要がある
     action: IEngineConnectorFactoryActionsMapper<
       keyof IEngineConnectorFactoryActions
     >;
