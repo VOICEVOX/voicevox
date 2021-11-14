@@ -110,6 +110,7 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
+  <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
@@ -135,6 +136,7 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
+import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import { AudioItem } from "@/store/type";
@@ -155,6 +157,7 @@ export default defineComponent({
     HelpDialog,
     SettingDialog,
     HotkeySettingDialog,
+    HeaderBarCustomDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
   },
@@ -402,6 +405,15 @@ export default defineComponent({
         }),
     });
 
+    // ツールバーのカスタム設定
+    const isToolbarSettingDialogOpenComputed = computed({
+      get: () => store.state.isToolbarSettingDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+          isToolbarSettingDialogOpen: val,
+        }),
+    });
+
     // デフォルトスタイル選択
     const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
@@ -457,6 +469,7 @@ export default defineComponent({
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
+      isToolbarSettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,

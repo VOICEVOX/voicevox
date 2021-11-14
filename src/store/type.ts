@@ -645,6 +645,7 @@ export type UiStoreState = {
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
+  isToolbarSettingDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
 };
@@ -685,6 +686,11 @@ type UiStoreTypes = {
   IS_HOTKEY_SETTING_DIALOG_OPEN: {
     mutation: { isHotkeySettingDialogOpen: boolean };
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
+  };
+
+  IS_TOOLBAR_SETTING_DIALOG_OPEN: {
+    mutation: { isToolbarSettingDialogOpen: boolean };
+    action(payload: { isToolbarSettingDialogOpen: boolean }): void;
   };
 
   IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {

@@ -33,6 +33,7 @@ export const uiStoreState: UiStoreState = {
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
+  isToolbarSettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -70,6 +71,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
         state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
+      },
+      IS_TOOLBAR_SETTING_DIALOG_OPEN(
+        state,
+        { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
+      ) {
+        state.isToolbarSettingDialogOpen = isToolbarSettingDialogOpen;
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
@@ -147,6 +154,20 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         else commit("UNLOCK_UI");
 
         commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
+      },
+      IS_TOOLBAR_SETTING_DIALOG_OPEN(
+        { state, commit },
+        { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
+      ) {
+        if (state.isToolbarSettingDialogOpen === isToolbarSettingDialogOpen)
+          return;
+
+        if (isToolbarSettingDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+          isToolbarSettingDialogOpen,
+        });
       },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },
