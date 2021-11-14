@@ -324,8 +324,7 @@ export default defineComponent({
     const resetHotkey = (action: string) => {
       $q.dialog({
         title: "ショートカットキーを初期値に戻します",
-        message:
-          "ショートカットキーの設定を初期値に戻します。<br/>本当に戻しますか？",
+        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
         html: true,
         ok: {
           label: "初期値に戻す",
