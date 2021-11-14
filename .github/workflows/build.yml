@@ -122,6 +122,57 @@ jobs:
           echo "ENGINE_PATH=./run" > .env.production
           echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
 
+      - name: Checkout Product Version Resource
+        uses: actions/checkout@v2
+        with:
+          repository: Hiroshiba/voicevox_resource
+          ref: main
+          path: resource
+
+      - name: Replace Character Info
+        shell: bash
+        run: |
+          rm -r public/characters
+          cp -r resource/character_info public/characters
+          cd public/characters
+          # Explore characters directory.
+          # Character directory name is uuid, but this script can automatically detect character directory name.
+          # We don't need to change this code when add more characters.
+          for FILEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            do
+            # Extract speaker name from metas.json by jq command
+            SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`
+            pushd $FILEPATH/icons
+            # Explore character icons directory.
+            # ICONPATH example: "./0.png"
+            for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+              do
+              # ":2" part is python slice like, can remove "./" part from ICONPATH
+              # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
+              # If don't use ":2": "${SPEAKER_NAME}_${ICONPATH}" is "AAA_./0.png"
+              #       If use ":2": "${SPEAKER_NAME}_${ICONPATH:2}" is "AAA_0.png"
+              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
+            done
+            popd
+            pushd $FILEPATH/voice_samples
+            # Explore character voice_samples directory.
+            for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+              do
+              # Same as for ICONPATH
+              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
+            done
+            popd
+          done
+
+      - name: Create and replace README.txt and policy.md
+        shell: bash
+        run: |
+          rm build/README.txt
+          rm public/policy.md
+          # "<(echo)" has the effect of adding a new line.
+          cat resource/editor/README.md <(echo) resource/editor/ACKNOWLEDGMENTS.md > build/README.txt
+          cp build/README.txt public/policy.md
+
       - name: Generate public/licenses.json
         shell: bash
         run: npm run license:generate -- -o public/licenses.json
@@ -506,6 +557,17 @@ jobs:
           mv dist_electron/nsis-web/out/*.7z.* nsis-web-artifact/
           mv dist_electron/nsis-web/*.exe nsis-web-artifact/
 
+      # Rename file name like "VOICEVOX Web Setup X.X.X.exe" to "VOICEVOX.Web.Setup.X.X.X.exe".
+      - name: Rename Windows NSIS Web Installer
+        if: endsWith(matrix.artifact_name, '-nsis-web')
+        shell: bash
+        run: |
+          cd nsis-web-artifact
+          OLD_NAME=`find . -maxdepth 1 -name '*.exe'`
+          # replace space by dot(.)
+          NEW_NAME=${OLD_NAME// /.}
+          mv "${OLD_NAME}" $NEW_NAME
+
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v2
@@ -604,7 +666,6 @@ jobs:
           file: artifact/*.7z.*
 
       # Windows NSIS Web
-      # FIXME: rename archives and installer before upload to separate cpu, gpu distribution
       - name: Upload Windows nsis-web archives to Release assets
         if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
@@ -612,7 +673,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: artifact/out/*.7z.*
+          file: artifact/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
         if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
