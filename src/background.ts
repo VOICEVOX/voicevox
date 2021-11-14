@@ -22,6 +22,7 @@ import {
   MetasJson,
   SavingSetting,
   StyleInfo,
+  ToolbarSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -65,6 +66,7 @@ const store = new Store<{
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
 }>({
   schema: {
@@ -186,6 +188,19 @@ const store = new Store<{
           combination: "",
         },
       ],
+    },
+    toolbarSetting: {
+      properties: {
+        buttons: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+        },
+      },
+      default: {
+        buttons: ["連続再生", "停止", "", "元に戻す", "やり直す"],
+      },
     },
     defaultStyleIds: {
       type: "array",
@@ -615,6 +630,13 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
     store.set("savingSetting", newData);
   }
   return store.get("savingSetting");
+});
+
+ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("toolbarSetting", newData);
+  }
+  return store.get("toolbarSetting");
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
