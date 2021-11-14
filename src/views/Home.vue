@@ -2,7 +2,9 @@
   <menu-bar />
 
   <q-layout reveal elevated>
-    <header-bar />
+    <q-header class="q-py-sm">
+      <header-bar />
+    </q-header>
 
     <q-page-container>
       <q-page class="main-row-panes bg-background">
