@@ -87,7 +87,7 @@
   </q-dialog>
 </template>
 
-<script>
+<script lang="ts">
 import { computed, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 
