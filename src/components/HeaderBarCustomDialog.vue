@@ -88,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -102,7 +102,14 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const toolbarButtons = computed(() => store.state.toolbarSetting.buttons);
+    // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
+    const toolbarButtons = ref([...store.state.toolbarSetting.buttons]);
+    watch(
+      () => store.state.toolbarSetting,
+      (newData) => {
+        toolbarButtons.value = [...newData.buttons];
+      }
+    );
 
     const headerBarCustomDialogOpenComputed = computed({
       get: () => props.modelValue,
