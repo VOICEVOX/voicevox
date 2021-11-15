@@ -29,7 +29,7 @@
           <q-card flat class="preview-card">
             <q-card-actions class="bg-primary">
               <template v-for="button in toolbarButtons" :key="button">
-                <q-space v-if="button === ''" />
+                <q-space v-if="button === '空白'" />
                 <q-radio
                   v-else
                   v-model="selectedButton"

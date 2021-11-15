@@ -201,7 +201,7 @@ const store = new Store<{
         },
       },
       default: {
-        buttons: ["連続再生", "停止", "", "元に戻す", "やり直す"],
+        buttons: ["連続再生", "停止", "空白", "元に戻す", "やり直す"],
       },
     },
     defaultStyleIds: {
