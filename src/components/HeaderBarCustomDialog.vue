@@ -91,6 +91,7 @@
                 color="background-light"
                 text-color="display-dark"
                 class="text-no-wrap text-bold q-mr-sm"
+                @click="removeButton"
                 >削除する</q-btn
               >
             </q-card-actions>
@@ -151,6 +152,13 @@ export default defineComponent({
       toolbarButtons.value[index] = toolbarButtons.value[index + 1];
       toolbarButtons.value[index + 1] = selectedButton.value;
     };
+    const removeButton = () => {
+      const index = toolbarButtons.value.indexOf(selectedButton.value);
+      toolbarButtons.value = [
+        ...toolbarButtons.value.slice(0, index),
+        ...toolbarButtons.value.slice(index + 1),
+      ];
+    };
 
     const saveCustomToolbar = () => {
       store.dispatch("SET_TOOLBAR_SETTING", {
@@ -168,6 +176,7 @@ export default defineComponent({
       rightShiftable,
       moveLeftButton,
       moveRightButton,
+      removeButton,
       saveCustomToolbar,
     };
   },
