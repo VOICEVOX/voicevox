@@ -33,7 +33,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   toolbarSetting: {
-    buttons: ["連続再生", "停止", "空白", "元に戻す", "やり直す"],
+    buttons: [],
   },
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
   themeSetting: {

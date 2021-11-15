@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ComputedRef, watch } from "vue";
+import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
@@ -152,14 +152,8 @@ export default defineComponent({
       }
     };
 
-    let headerButtons: ButtonContent[] =
-      toolbarSetting.value.buttons.map(searchButton);
-
-    watch(
-      () => toolbarSetting.value,
-      (newSetting) => {
-        headerButtons = newSetting.buttons.map(searchButton);
-      }
+    const headerButtons = computed(() =>
+      toolbarSetting.value.buttons.map(searchButton)
     );
 
     return {
