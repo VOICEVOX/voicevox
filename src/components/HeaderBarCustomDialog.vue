@@ -27,9 +27,6 @@
         </q-header>
         <q-page>
           <q-card class="preview-card">
-            <q-card-actions>
-              <div class="text-h5">プレビュー</div>
-            </q-card-actions>
             <q-card-actions class="bg-primary">
               <header-bar />
             </q-card-actions>
