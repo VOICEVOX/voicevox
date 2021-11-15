@@ -142,6 +142,11 @@ export default defineComponent({
   border-radius: 3px;
   background-color: var(--color-background);
 }
+
+.radio:hover {
+  @extend .radio-selected;
+}
+
 .radio-selected {
   @extend .radio;
   background-color: var(--color-setting-item);
