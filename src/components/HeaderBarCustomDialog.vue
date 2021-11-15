@@ -29,6 +29,15 @@
           <q-card flat class="preview-card">
             <q-card-actions>
               <div class="text-h5">カスタマイズのプレビュー</div>
+              <q-space />
+              <q-btn
+                outline
+                color="background-light"
+                text-color="display-dark"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="saveCustomToolbar"
+                >保存</q-btn
+              >
             </q-card-actions>
             <q-card-actions class="bg-primary">
               <template v-for="button in toolbarButtons" :key="button">
@@ -142,6 +151,14 @@ export default defineComponent({
       toolbarButtons.value[index + 1] = selectedButton.value;
     };
 
+    const saveCustomToolbar = () => {
+      store.dispatch("SET_TOOLBAR_SETTING", {
+        data: {
+          buttons: [...toolbarButtons.value],
+        },
+      });
+    };
+
     return {
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
@@ -150,6 +167,7 @@ export default defineComponent({
       rightShiftable,
       moveLeftButton,
       moveRightButton,
+      saveCustomToolbar,
     };
   },
 });
