@@ -62,6 +62,7 @@
                 text-color="display-dark"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="!leftShiftable"
+                @click="moveLeftButton"
                 >左に動かす</q-btn
               >
               <q-btn
@@ -70,6 +71,7 @@
                 text-color="display-dark"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="!rightShiftable"
+                @click="moveRightButton"
                 >右に動かす</q-btn
               >
               <q-btn
@@ -126,12 +128,25 @@ export default defineComponent({
         toolbarButtons.value[toolbarButtons.value.length - 1]
     );
 
+    const moveLeftButton = () => {
+      const index = toolbarButtons.value.indexOf(selectedButton.value);
+      toolbarButtons.value[index] = toolbarButtons.value[index - 1];
+      toolbarButtons.value[index - 1] = selectedButton.value;
+    };
+    const moveRightButton = () => {
+      const index = toolbarButtons.value.indexOf(selectedButton.value);
+      toolbarButtons.value[index] = toolbarButtons.value[index + 1];
+      toolbarButtons.value[index + 1] = selectedButton.value;
+    };
+
     return {
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
       selectedButton,
       leftShiftable,
       rightShiftable,
+      moveLeftButton,
+      moveRightButton,
     };
   },
 });
