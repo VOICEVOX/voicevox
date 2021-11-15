@@ -28,7 +28,19 @@
         <q-page>
           <q-card flat class="preview-card">
             <q-card-actions class="bg-primary">
-              <header-bar />
+              <template v-for="button in toolbarButtons" :key="button">
+                <q-space v-if="button === ''" />
+                <q-radio
+                  v-else
+                  v-model="selectedButton"
+                  size="0"
+                  :val="button"
+                  :label="button"
+                  :class="
+                    selectedButton === button ? 'radio-selected' : 'radio'
+                  "
+                />
+              </template>
             </q-card-actions>
           </q-card>
         </q-page>
@@ -38,12 +50,11 @@
 </template>
 
 <script>
-import { computed, defineComponent } from "vue";
-import HeaderBar from "@/components/HeaderBar";
+import { computed, defineComponent, ref } from "vue";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
-  components: { HeaderBar },
   props: {
     modelValue: {
       type: Boolean,
@@ -52,19 +63,27 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const store = useStore();
+    const toolbarButtons = computed(() => store.state.toolbarSetting.buttons);
+
     const headerBarCustomDialogOpenComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
 
+    const selectedButton = ref(toolbarButtons.value[0]);
+
     return {
       headerBarCustomDialogOpenComputed,
+      toolbarButtons,
+      selectedButton,
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles' as global;
 .header-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
   > .scroll {
@@ -77,5 +96,17 @@ export default defineComponent({
   width: 100%;
   min-width: 400px;
   background: var(--color-background);
+}
+
+.radio {
+  padding: 8px 16px;
+  margin: 5px;
+  font-weight: bold;
+  border-radius: 3px;
+  background-color: var(--color-background);
+}
+.radio-selected {
+  @extend .radio;
+  background-color: var(--color-setting-item);
 }
 </style>
