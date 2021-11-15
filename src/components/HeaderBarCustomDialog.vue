@@ -118,10 +118,12 @@ export default defineComponent({
     const store = useStore();
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting.buttons]);
+    const selectedButton = ref(toolbarButtons.value[0]);
     watch(
-      () => store.state.toolbarSetting,
+      () => store.state.toolbarSetting.buttons,
       (newData) => {
-        toolbarButtons.value = [...newData.buttons];
+        toolbarButtons.value = [...newData];
+        selectedButton.value = newData[0];
       }
     );
 
@@ -130,7 +132,6 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const selectedButton = ref(toolbarButtons.value[0]);
     const leftShiftable = computed(
       () => selectedButton.value !== toolbarButtons.value[0]
     );
