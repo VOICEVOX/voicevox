@@ -498,6 +498,20 @@ ipcMainHandle("SHOW_CONFIRM_DIALOG", (_, { title, message }) => {
     });
 });
 
+ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
+  return dialog
+    .showMessageBox(win, {
+      type: "info",
+      buttons: buttons,
+      title: title,
+      message: message,
+      noLink: true,
+    })
+    .then((value) => {
+      return value.response;
+    });
+});
+
 ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",

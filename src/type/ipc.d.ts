@@ -72,6 +72,11 @@ type IpcIHData = {
     return: boolean;
   };
 
+  SHOW_INFO_DIALOG: {
+    args: [obj: { title: string; message: string; buttons: string[] }];
+    return: number;
+  };
+
   SHOW_WARNING_DIALOG: {
     args: [obj: { title: string; message: string }];
     return: Electron.MessageBoxReturnValue;

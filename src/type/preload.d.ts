@@ -19,6 +19,11 @@ export interface Sandbox {
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showConfirmDialog(obj: { title: string; message: string }): Promise<boolean>;
+  showInfoDialog(obj: {
+    title: string;
+    message: string;
+    buttons: string[];
+  }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
     message: string;

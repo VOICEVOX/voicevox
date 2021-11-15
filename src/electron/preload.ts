@@ -104,6 +104,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_CONFIRM_DIALOG", { title, message });
   },
 
+  showInfoDialog: ({ title, message, buttons }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
+  },
+
   showWarningDialog: ({ title, message }) => {
     return ipcRendererInvoke("SHOW_WARNING_DIALOG", { title, message });
   },
