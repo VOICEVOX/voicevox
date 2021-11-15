@@ -26,7 +26,7 @@
           </q-toolbar>
         </q-header>
         <q-page>
-          <q-card class="preview-card">
+          <q-card flat class="preview-card">
             <q-card-actions class="bg-primary">
               <header-bar />
             </q-card-actions>
