@@ -1,19 +1,21 @@
 <template>
-  <q-toolbar>
-    <template v-for="button in headerButtons" :key="button.text">
-      <q-space v-if="button.text === null" />
-      <q-btn
-        v-else
-        unelevated
-        color="background-light"
-        text-color="display-dark"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="button.disable.value"
-        @click="button.click"
-        >{{ button.text }}</q-btn
-      >
-    </template>
-  </q-toolbar>
+  <q-header class="q-py-sm">
+    <q-toolbar>
+      <template v-for="button in headerButtons" :key="button.text">
+        <q-space v-if="button.text === null" />
+        <q-btn
+          v-else
+          unelevated
+          color="background-light"
+          text-color="display-dark"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="button.disable.value"
+          @click="button.click"
+          >{{ button.text }}</q-btn
+        >
+      </template>
+    </q-toolbar>
+  </q-header>
 </template>
 
 <script lang="ts">
