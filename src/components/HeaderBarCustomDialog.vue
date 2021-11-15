@@ -29,7 +29,18 @@
           <q-card flat class="preview-card">
             <q-card-actions class="bg-primary">
               <template v-for="button in toolbarButtons" :key="button">
-                <q-space v-if="button === ''" />
+                <q-radio
+                  v-if="button === 'EMPTY'"
+                  v-model="selectedButton"
+                  size="0"
+                  :val="button"
+                  :label="button"
+                  :class="
+                    selectedButton === button
+                      ? 'radio-space-selected'
+                      : 'radio-space'
+                  "
+                />
                 <q-radio
                   v-else
                   v-model="selectedButton"
@@ -149,6 +160,23 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
+  background-color: var(--color-setting-item);
+}
+
+.radio-space {
+  @extend .radio;
+  flex-grow: 1;
+  color: global.$primary;
+  background-color: global.$primary;
+}
+
+.radio-space:hover {
+  @extend .radio-space-selected;
+}
+
+.radio-space-selected {
+  @extend .radio-space;
+  color: var(--color-setting-item);
   background-color: var(--color-setting-item);
 }
 </style>
