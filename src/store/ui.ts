@@ -205,7 +205,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
       },
-      async CLOSE_WINDOW({ getters }) {
+      async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
         if (
           getters.IS_EDITED &&
           !(await window.electron.showConfirmDialog({
@@ -217,6 +217,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         ) {
           return;
         }
+
         window.electron.closeWindow();
       },
     },
