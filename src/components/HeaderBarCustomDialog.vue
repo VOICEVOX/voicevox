@@ -12,7 +12,7 @@
         <q-header class="q-py-sm">
           <q-toolbar>
             <q-toolbar-title class="text-secondary"
-              >ツールバーのカスタム</q-toolbar-title
+              >ツールバーのカスタマイズ</q-toolbar-title
             >
             <q-space />
             <!-- close button -->

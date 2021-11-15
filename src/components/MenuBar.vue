@@ -313,7 +313,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "ツールバーのカスタム",
+            label: "ツールバーのカスタマイズ",
             onClick() {
               store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
                 isToolbarSettingDialogOpen: true,
