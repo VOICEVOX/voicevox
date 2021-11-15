@@ -42,6 +42,33 @@
                 />
               </template>
             </q-card-actions>
+            <q-card-actions>
+              <div class="text-h5">「{{ selectedButton }}」を</div>
+              <q-space />
+              <q-btn
+                outline
+                color="background-light"
+                text-color="display-dark"
+                class="text-no-wrap text-bold q-mr-sm"
+                :disable="!leftShiftable"
+                >左に動かす</q-btn
+              >
+              <q-btn
+                outline
+                color="background-light"
+                text-color="display-dark"
+                class="text-no-wrap text-bold q-mr-sm"
+                :disable="!rightShiftable"
+                >右に動かす</q-btn
+              >
+              <q-btn
+                outline
+                color="background-light"
+                text-color="display-dark"
+                class="text-no-wrap text-bold q-mr-sm"
+                >削除する</q-btn
+              >
+            </q-card-actions>
           </q-card>
         </q-page>
       </q-page-container>
@@ -72,11 +99,21 @@ export default defineComponent({
     });
 
     const selectedButton = ref(toolbarButtons.value[0]);
+    const leftShiftable = computed(
+      () => selectedButton.value !== toolbarButtons.value[0]
+    );
+    const rightShiftable = computed(
+      () =>
+        selectedButton.value !==
+        toolbarButtons.value[toolbarButtons.value.length - 1]
+    );
 
     return {
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
       selectedButton,
+      leftShiftable,
+      rightShiftable,
     };
   },
 });
@@ -94,7 +131,7 @@ export default defineComponent({
 
 .preview-card {
   width: 100%;
-  min-width: 400px;
+  min-width: 460px;
   background: var(--color-background);
 }
 
