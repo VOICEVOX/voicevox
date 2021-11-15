@@ -27,6 +27,9 @@
         </q-header>
         <q-page>
           <q-card flat class="preview-card">
+            <q-card-actions>
+              <div class="text-h5">カスタマイズのプレビュー</div>
+            </q-card-actions>
             <q-card-actions class="bg-primary">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
