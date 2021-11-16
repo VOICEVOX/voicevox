@@ -78,7 +78,7 @@
             <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
-          <q-form @submit.prevent="checkUpdate">
+          <q-form @submit.prevent="updateOrAddPreset">
             <q-card-section class="q-pt-none" text-color="display-dark">
               <q-select
                 fill-input
@@ -119,21 +119,11 @@
           </q-card-section>
           <q-card-section>
             <q-list>
-              <q-item clickable class="no-margin" @click="updatePreset(true)">
+              <q-item clickable class="no-margin" @click="updatePreset">
                 <q-item-section avatar>
                   <q-avatar icon="arrow_forward" text-color="blue" />
                 </q-item-section>
-                <q-item-section>
-                  プリセットを上書きし、音声にも反映する
-                </q-item-section>
-              </q-item>
-              <q-item clickable class="no-margin" @click="updatePreset(false)">
-                <q-item-section avatar>
-                  <q-avatar icon="arrow_forward" text-color="blue" />
-                </q-item-section>
-                <q-item-section>
-                  プリセットを上書きするが、音声には反映しない
-                </q-item-section>
+                <q-item-section> プリセットを上書きする． </q-item-section>
               </q-item>
               <q-item
                 clickable
@@ -504,7 +494,7 @@ export default defineComponent({
 
     const showsPresetEditDialog = ref(false);
 
-    const checkUpdate = () => {
+    const updateOrAddPreset = () => {
       if (presetList.value?.find((e) => e.label === presetName.value)) {
         showsPresetRewriteDialog.value = true;
       } else {
@@ -603,7 +593,7 @@ export default defineComponent({
       filterPresetOptionsList,
       presetSelectModel,
       setPresetByScroll,
-      checkUpdate,
+      updateOrAddPreset,
       updatePreset,
       registerPreset,
       showsPresetNameDialog,
