@@ -199,6 +199,14 @@ const api: Sandbox = {
   setDefaultStyleIds: async (defaultStyleIds) => {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
+
+  theme: (newData) => {
+    return ipcRenderer.invoke("THEME", { newData });
+  },
+
+  vuexReady: () => {
+    ipcRenderer.invoke("ON_VUEX_READY");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

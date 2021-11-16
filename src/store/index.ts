@@ -103,6 +103,20 @@ export const indexStore: VoiceVoxStoreOptions<
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
       await window.electron.setDefaultStyleIds(defaultStyleIds);
     },
+    async INIT_VUEX({ dispatch }) {
+      const promises = [];
+
+      promises.push(dispatch("GET_USE_GPU", undefined));
+      store.dispatch("GET_PRESET_CONFIG");
+      promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
+      promises.push(dispatch("GET_SAVING_SETTING"));
+      promises.push(dispatch("GET_HOTKEY_SETTINGS"));
+      promises.push(dispatch("GET_THEME_SETTING"));
+
+      Promise.all(promises).then(() => {
+        dispatch("ON_VUEX_READY", undefined);
+      });
+    },
   },
 };
 

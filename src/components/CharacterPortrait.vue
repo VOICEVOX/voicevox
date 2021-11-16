@@ -55,13 +55,15 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
+$background: var(--color-background);
+
 .character-name {
   position: absolute;
   padding: 1px 24px 1px 8px;
   background-image: linear-gradient(
     90deg,
-    rgba(white, 0.5) 0%,
-    rgba(white, 0.5) 75%,
+    rgba($background, 0.5) 0%,
+    rgba($background, 0.5) 75%,
     transparent 100%
   );
 }

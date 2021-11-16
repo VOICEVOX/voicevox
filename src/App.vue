@@ -18,14 +18,8 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-
-    store.dispatch("START_WAITING_ENGINE");
-    store.dispatch("GET_USE_GPU");
-    store.dispatch("GET_PRESET_CONFIG");
-    store.dispatch("GET_INHERIT_AUDIOINFO");
-    store.dispatch("GET_SAVING_SETTING");
-    store.dispatch("GET_HOTKEY_SETTINGS");
-    store.dispatch("GET_USE_VOICING");
+    store.dispatch("INIT_VUEX");
+    store.dispatch("START_WAITING_ENGINE")
   }
 });
 </script>
@@ -49,7 +43,7 @@ img {
     opacity: 0.3 !important;
   }
   &.bg-primary:hover > .q-focus-helper {
-    background-color: white !important;
+    background-color: var(--color-background) !important;
     opacity: 0.2 !important;
   }
 }
@@ -59,7 +53,7 @@ img {
   background-color: global.$primary;
 }
 .bg-primary > .q-ripple > .q-ripple__inner {
-  background-color: white;
+  background-color: var(--color-background);
 }
 
 .q-dialog,
@@ -128,17 +122,21 @@ img {
 ::-webkit-scrollbar {
   width: 15px;
   height: 15px;
-  background-color: rgba(global.$primary, 0.2);
+  background-color: rgba(global.$primary-light-rgb, 0.2);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(global.$primary, 0.5);
+  background-color: rgba(global.$primary-light-rgb, 0.5);
   border-radius: 5px;
   &:hover {
-    background-color: rgba(global.$primary, 0.6);
+    background-color: rgba(global.$primary-light-rgb, 0.6);
   }
   &:active {
-    background-color: rgba(global.$primary, 0.8);
+    background-color: rgba(global.$primary-light-rgb, 0.8);
   }
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--color-background);
 }
 </style>
