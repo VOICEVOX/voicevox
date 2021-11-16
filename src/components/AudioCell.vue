@@ -52,9 +52,12 @@
                 </q-avatar>
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
+
+              <q-separator vertical />
+
               <q-btn
                 flat
-                class="q-px-xs q-py-none"
+                class="q-px-sm q-py-none"
                 :class="
                   subMenuOpenFlags[characterIndex] && 'opened-character-item'
                 "
