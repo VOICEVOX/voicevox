@@ -556,22 +556,16 @@ export default defineComponent({
       const presetNumber = presetList.value?.length;
       if (presetNumber === 0 || presetNumber === undefined) return;
 
-      let nowIndex: number;
-      if (presetSelectModel.value.key === undefined) {
-        nowIndex = -1;
-      } else {
-        nowIndex = presetKeys.value.indexOf(presetSelectModel.value.key);
-      }
+      const nowIndex = presetList.value.findIndex(
+        (value) => value.key == presetSelectModel.value.key
+      );
+      console.log(nowIndex);
 
       const isUp = deltaY > 0;
       const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
       if (newIndex < 0 || presetNumber <= newIndex) return;
 
-      if (
-        presetList.value === undefined ||
-        presetList.value[newIndex] === undefined
-      )
-        return;
+      if (presetList.value[newIndex] === undefined) return;
 
       onChangePreset(presetList.value[newIndex]);
     };
