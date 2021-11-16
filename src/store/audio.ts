@@ -21,7 +21,6 @@ import { createUILockAction } from "./ui";
 import {
   CharacterInfo,
   Encoding as EncodingType,
-  Preset,
   MoraDataType,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
