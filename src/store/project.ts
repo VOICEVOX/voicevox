@@ -48,17 +48,17 @@ export const projectStore: VoiceVoxStoreOptions<
   actions: {
     CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
-        if (
-          confirm !== false &&
-          context.getters.IS_EDITED &&
-          !(await window.electron.showConfirmDialog({
+        if (confirm !== false && context.getters.IS_EDITED) {
+          const result: number = await window.electron.showInfoDialog({
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
-          }))
-        ) {
-          return;
+            buttons: ["破棄", "キャンセル"],
+          });
+          if (result == 1) {
+            return;
+          }
         }
 
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
@@ -230,17 +230,17 @@ export const projectStore: VoiceVoxStoreOptions<
             );
           }
 
-          if (
-            confirm !== false &&
-            context.getters.IS_EDITED &&
-            !(await window.electron.showConfirmDialog({
+          if (confirm !== false && context.getters.IS_EDITED) {
+            const result: number = await window.electron.showInfoDialog({
               title: "警告",
               message:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
                 "変更を破棄してもよろしいですか？",
-            }))
-          ) {
-            return;
+              buttons: ["破棄", "キャンセル"],
+            });
+            if (result == 1) {
+              return;
+            }
           }
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
 

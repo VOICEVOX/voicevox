@@ -485,16 +485,17 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
   });
 });
 
-ipcMainHandle("SHOW_CONFIRM_DIALOG", (_, { title, message }) => {
+ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
   return dialog
     .showMessageBox(win, {
       type: "info",
-      buttons: ["OK", "Cancel"],
+      buttons: buttons,
       title: title,
       message: message,
+      noLink: true,
     })
     .then((value) => {
-      return value.response == 0;
+      return value.response;
     });
 });
 
