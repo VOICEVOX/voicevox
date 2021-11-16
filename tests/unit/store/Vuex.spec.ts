@@ -9,6 +9,7 @@ import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
+import { proxyStore } from "@/store/proxy";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -62,6 +63,7 @@ describe("store/vuex.js test", () => {
         ...audioCommandStore.getters,
         ...indexStore.getters,
         ...presetStore.getters,
+        ...proxyStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -72,6 +74,7 @@ describe("store/vuex.js test", () => {
         ...audioCommandStore.mutations,
         ...indexStore.mutations,
         ...presetStore.mutations,
+        ...proxyStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -82,6 +85,7 @@ describe("store/vuex.js test", () => {
         ...audioCommandStore.actions,
         ...indexStore.actions,
         ...presetStore.actions,
+        ...proxyStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",

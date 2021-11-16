@@ -19,6 +19,7 @@ import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
+import { proxyStore, proxyStoreState } from "./proxy";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -130,6 +131,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore,
     ...indexStoreState,
     ...presetStoreState,
+    ...proxyStoreState,
   },
 
   getters: {
@@ -141,6 +143,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...presetStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
+    ...proxyStore.getters,
   },
 
   mutations: {
@@ -152,6 +155,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore.mutations,
     ...presetStore.mutations,
     ...indexStore.mutations,
+    ...proxyStore.mutations,
   },
 
   actions: {
@@ -163,6 +167,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore.actions,
     ...presetStore.actions,
     ...indexStore.actions,
+    ...proxyStore.actions,
   },
   plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",

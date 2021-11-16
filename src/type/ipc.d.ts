@@ -179,6 +179,11 @@ type IpcIHData = {
     return: void;
   };
 
+  GET_DEFAULT_HOTKEY_SETTINGS: {
+    args: [];
+    return: import("@/type/preload").HotkeySetting[];
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
@@ -224,7 +229,7 @@ type IpcSOData = {
     return: void;
   };
 
-  CLOSE_WINDOW: {
+  CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
     return: void;
   };

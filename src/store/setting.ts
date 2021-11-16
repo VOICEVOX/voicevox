@@ -15,7 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
-import { Dark, setCssVar } from "quasar";
+import { Dark, setCssVar, colors } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -140,17 +140,22 @@ export const settingStore: VoiceVoxStoreOptions<
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
+
       if (theme) {
-        for (const k in theme.colors) {
+        for (const key in theme.colors) {
+          const color = theme.colors[key as ThemeColorType];
+          const { r, g, b } = colors.hexToRgb(color);
+          document.documentElement.style.setProperty(`--color-${key}`, color);
           document.documentElement.style.setProperty(
-            k,
-            theme.colors[k as ThemeColorType]
+            `--color-${key}-rgb`,
+            `${r}, ${g}, ${b}`
           );
         }
         Dark.set(theme.isDark);
-        setCssVar("primary", theme.colors["--color-primary"]);
-        setCssVar("warning", theme.colors["--color-warning"]);
+        setCssVar("primary", theme.colors["primary"]);
+        setCssVar("warning", theme.colors["warning"]);
       }
+
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });

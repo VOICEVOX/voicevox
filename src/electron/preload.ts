@@ -200,6 +200,10 @@ const api: Sandbox = {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 
+  getDefaultHotkeySettings: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+  },
+
   theme: (newData) => {
     return ipcRenderer.invoke("THEME", { newData });
   },
