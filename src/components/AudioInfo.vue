@@ -15,8 +15,8 @@
               <q-item-section avatar>
                 <q-avatar
                   icon="add_circle_outline"
-                  color="primary"
-                  text-color="secondary"
+                  color="primary-light"
+                  text-color="display-dark"
                 ></q-avatar>
               </q-item-section>
               <q-item-section>
@@ -34,8 +34,8 @@
               <q-item-section avatar>
                 <q-avatar
                   icon="edit_note"
-                  color="primary"
-                  text-color="secondary"
+                  color="primary-light"
+                  text-color="display-dark"
                 ></q-avatar>
               </q-item-section>
               <q-item-section>
@@ -54,7 +54,7 @@
           v-model="presetSelectModel"
           :options="presetList"
           class="overflow-hidden"
-          popup-content-class="text-secondary"
+          text-color="display-dark"
           outlined
           dense
         >
@@ -83,21 +83,22 @@
           </q-card-section>
 
           <q-form @submit.prevent="checkUpdate">
-            <q-card-section class="q-pt-none">
+            <q-card-section class="q-pt-none" text-color="display-dark">
               <q-select
-                :model-value="presetName"
-                autofocus
-                input-debounce="0"
-                label="タイトル"
-                use-input
-                hide-selected
                 fill-input
+                autofocus
+                hide-selected
+                label="タイトル"
+                label-color="display-dark"
+                use-input
+                input-debounce="0"
+                :model-value="presetName"
                 :options="presetList"
                 @input-value="setPresetName"
               />
             </q-card-section>
 
-            <q-card-actions align="right" class="text-secondary">
+            <q-card-actions align="right" text-color="display-dark">
               <q-btn
                 flat
                 label="キャンセル"
@@ -515,7 +516,7 @@ export default defineComponent({
       closeAllDialog();
     };
 
-    const updatePreset = (updatesAudioItems: boolean) => {
+    const updatePreset = () => {
       const key = presetList.value?.find(
         (e) => e.label === presetName.value
       )?.key;
