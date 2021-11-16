@@ -60,8 +60,8 @@ export const presetStore: VoiceVoxStoreOptions<
       }
     ) => {
       const result = await window.electron.savingPresets({
-        presetItems: presetItems,
-        presetKeys: presetKeys,
+        presetItems: JSON.parse(JSON.stringify(presetItems)),
+        presetKeys: JSON.parse(JSON.stringify(presetKeys)),
       });
       context.commit("SET_PRESET_ITEMS", { presetItems: result.items });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
