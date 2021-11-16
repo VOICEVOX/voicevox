@@ -100,10 +100,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showConfirmDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_CONFIRM_DIALOG", { title, message });
-  },
-
   showInfoDialog: ({ title, message, buttons }) => {
     return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
   },
