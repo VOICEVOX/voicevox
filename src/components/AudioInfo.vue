@@ -7,11 +7,7 @@
 
         <q-btn-dropdown dense flat icon="more_vert">
           <q-list>
-            <q-item
-              clickable
-              v-close-popup
-              @click="showsPresetNameDialog = true"
-            >
+            <q-item clickable v-close-popup @click="registerPreset">
               <q-item-section avatar>
                 <q-avatar
                   icon="add_circle_outline"
@@ -93,8 +89,9 @@
                 use-input
                 input-debounce="0"
                 :model-value="presetName"
-                :options="presetList"
+                :options="presetOptionsList"
                 @input-value="setPresetName"
+                @filter="filterPresetOptionsList"
               />
             </q-card-section>
 
@@ -289,6 +286,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
+import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
 import { Preset } from "@/type/preload";
@@ -425,7 +423,7 @@ export default defineComponent({
 
     const presetList = computed(() => {
       return [
-        { key: undefined, label: "プリセットなし" },
+        { key: undefined, label: "プリセット解除" },
         ...presetKeys.value.map((key) => ({
           key,
           label: presetItems.value[key].name,
@@ -467,6 +465,36 @@ export default defineComponent({
     const showsPresetNameDialog = ref(false);
     const showsPresetRewriteDialog = ref(false);
     const presetName = ref("");
+
+    const registerPreset = () => {
+      showsPresetNameDialog.value = true;
+
+      if (
+        audioPresetKey.value != undefined &&
+        presetItems.value[audioPresetKey.value] != undefined
+      ) {
+        presetName.value = presetItems.value[audioPresetKey.value].name;
+      }
+    };
+
+    const presetOptionsList = ref<string[]>([]);
+    const filterPresetOptionsList: QSelectProps["onFilter"] = (
+      inputValue,
+      doneFn
+    ) => {
+      const presetNames = presetKeys.value
+        .map((presetKey) => presetItems.value[presetKey]?.name)
+        .filter((value) => value != undefined);
+      if (inputValue == "")
+        doneFn(() => {
+          presetOptionsList.value = presetNames;
+        });
+      doneFn(() => {
+        presetOptionsList.value = presetNames.filter((name) =>
+          name.includes(inputValue)
+        );
+      });
+    };
 
     const closeAllDialog = () => {
       presetName.value = "";
@@ -571,10 +599,13 @@ export default defineComponent({
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
       presetList,
+      presetOptionsList,
+      filterPresetOptionsList,
       presetSelectModel,
       setPresetByScroll,
       checkUpdate,
       updatePreset,
+      registerPreset,
       showsPresetNameDialog,
       presetName,
       closeAllDialog,
