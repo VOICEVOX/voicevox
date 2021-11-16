@@ -137,6 +137,7 @@ type AudioStoreTypes = {
     action(payload: {
       text?: string;
       styleId?: number;
+      presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
@@ -244,6 +245,10 @@ type AudioStoreTypes = {
       data: number;
       type: MoraDataType;
     };
+  };
+
+  APLLY_AUDIO_PRESET: {
+    mutation: { audioKey: string };
   };
 
   FETCH_MORA_DATA: {
@@ -439,13 +444,8 @@ type AudioCommandStoreTypes = {
     mutation: {
       audioKey: string;
       presetKey: string | undefined;
-      preset?: Preset;
     };
-    action(payload: {
-      audioKey: string;
-      presetKey: string | undefined;
-      preset?: Preset;
-    }): void;
+    action(payload: { audioKey: string; presetKey: string | undefined }): void;
   };
   COMMAND_IMPORT_FROM_FILE: {
     mutation: {
