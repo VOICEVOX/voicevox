@@ -1647,24 +1647,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: { audioKey: string; speedScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, payload);
-      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
-        audioStore.mutations.SET_AUDIO_PRESET(draft, {
-          audioKey: payload.audioKey,
-          presetKey: undefined,
-        });
-      }
     },
     COMMAND_SET_AUDIO_PITCH_SCALE(
       draft,
       payload: { audioKey: string; pitchScale: number }
     ) {
       audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, payload);
-      if (draft.audioItems[payload.audioKey].presetKey !== undefined) {
-        audioStore.mutations.SET_AUDIO_PRESET(draft, {
-          audioKey: payload.audioKey,
-          presetKey: undefined,
-        });
-      }
     },
     COMMAND_SET_AUDIO_INTONATION_SCALE(
       draft,
