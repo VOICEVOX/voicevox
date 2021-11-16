@@ -559,7 +559,6 @@ export default defineComponent({
       const nowIndex = presetList.value.findIndex(
         (value) => value.key == presetSelectModel.value.key
       );
-      console.log(nowIndex);
 
       const isUp = deltaY > 0;
       const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;

@@ -294,7 +294,7 @@ export const audioStore: VoiceVoxStoreOptions<
         state.audioItems[audioKey].presetKey = presetKey;
       }
     },
-    APLLY_AUDIO_PRESET(state, { audioKey }: { audioKey: string }) {
+    APPLY_AUDIO_PRESET(state, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
       if (
         audioItem == undefined ||
@@ -1509,7 +1509,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
-      audioStore.mutations.APLLY_AUDIO_PRESET(draft, {
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
         audioKey: payload.audioKey,
       });
     },
@@ -1546,7 +1546,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           audioKey: payload.audioKey,
           audioQuery: payload.query,
         });
-        audioStore.mutations.APLLY_AUDIO_PRESET(draft, {
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
           audioKey: payload.audioKey,
         });
       }
@@ -1581,7 +1581,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           audioKey: payload.audioKey,
           audioQuery: payload.query,
         });
-        audioStore.mutations.APLLY_AUDIO_PRESET(draft, {
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
           audioKey: payload.audioKey,
         });
       }
@@ -1678,7 +1678,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) => {
       audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
-      audioStore.mutations.APLLY_AUDIO_PRESET(draft, { audioKey });
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
     },
     COMMAND_IMPORT_FROM_FILE(
       draft,

@@ -248,7 +248,7 @@ type AudioStoreTypes = {
     };
   };
 
-  APLLY_AUDIO_PRESET: {
+  APPLY_AUDIO_PRESET: {
     mutation: { audioKey: string };
   };
 
