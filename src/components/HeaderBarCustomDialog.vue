@@ -250,13 +250,13 @@ export default defineComponent({
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
       selectedButton,
+      usableButtons,
       leftShiftable,
       rightShiftable,
       moveLeftButton,
       moveRightButton,
       removeButton,
       saveCustomToolbar,
-      usableButtons,
     };
   },
 });
