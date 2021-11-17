@@ -226,7 +226,7 @@ export default defineComponent({
       {
         text: "再生",
         click: play,
-        disable: uiLocked,
+        disable: computed(() => !activeAudioKey.value || uiLocked.value),
       },
       {
         text: "停止",
