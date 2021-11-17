@@ -51,6 +51,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     SAVE_ALL: "音声書き出し",
     UNDO: "元に戻す",
     REDO: "やり直す",
+    IMPORT_TEXT: "テキスト読み込み",
     EMPTY: "空白",
   };
   return tag2NameObj[tag];
@@ -150,6 +151,9 @@ export default defineComponent({
         encoding: store.state.savingSetting.fileEncoding,
       });
     };
+    const importTextFile = () => {
+      store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
+    };
 
     const usableButtons: Record<
       ToolbarButtonTagType,
@@ -178,6 +182,10 @@ export default defineComponent({
       REDO: {
         click: redo,
         disable: computed(() => !canRedo.value || uiLocked.value),
+      },
+      IMPORT_TEXT: {
+        click: importTextFile,
+        disable: uiLocked,
       },
       EMPTY: null,
     };

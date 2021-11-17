@@ -192,6 +192,7 @@ export type ToolbarButtonTagType =
   | "SAVE_ALL"
   | "UNDO"
   | "REDO"
+  | "IMPORT_TEXT"
   | "EMPTY";
 
 export type ToolbarSetting = ToolbarButtonTagType[];
