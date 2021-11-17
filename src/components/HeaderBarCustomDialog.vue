@@ -96,6 +96,27 @@
                 >削除する</q-btn
               >
             </q-card-actions>
+            <q-card-actions>
+              <div class="text-h5">表示するボタンの選択</div>
+            </q-card-actions>
+            <q-card-actions class="no-padding">
+              <q-list class="usable-button-list">
+                <q-item
+                  v-for="button in usableButtons"
+                  :key="button.label"
+                  tag="label"
+                  v-ripple
+                >
+                  <q-item-section>
+                    <q-item-label>{{ button.label }}</q-item-label>
+                    <q-item-label caption>{{ button.desc }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section avatar>
+                    <q-toggle v-model="toolbarButtons" :val="button.label" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-actions>
           </q-card>
         </q-page>
       </q-page-container>
@@ -128,6 +149,44 @@ export default defineComponent({
         selectedButton.value = newData[0];
       }
     );
+    const usableButtons = [
+      {
+        label: "連続再生",
+        desc: "選択されているテキスト以降のすべてのテキストを読み上げます。",
+      },
+      {
+        label: "再生",
+        desc: "選択されているテキストを読み上げます。",
+      },
+      {
+        label: "停止",
+        desc: "テキストが読み上げられているときに、それを止めます。",
+      },
+      {
+        label: "音声書き出し",
+        desc: "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
+      },
+      {
+        label: "一つだけ書き出し",
+        desc: "選択されているテキストの読み上げを音声ファイルに書き出します。",
+      },
+      {
+        label: "元に戻す",
+        desc: "操作を一つ戻します。",
+      },
+      {
+        label: "やり直す",
+        desc: "元に戻した操作をやり直します。",
+      },
+      {
+        label: "テキスト読み込み",
+        desc: "テキストファイル(.txt)を読み込みます。",
+      },
+      {
+        label: "空白",
+        desc: "これはボタンではありません、ボタンを左右に配置したい際に使います。",
+      },
+    ];
 
     const headerBarCustomDialogOpenComputed = computed({
       get: () => props.modelValue,
@@ -180,6 +239,7 @@ export default defineComponent({
       moveRightButton,
       removeButton,
       saveCustomToolbar,
+      usableButtons,
     };
   },
 });
@@ -205,6 +265,17 @@ export default defineComponent({
   width: 100%;
   min-width: 460px;
   background: var(--color-background);
+}
+
+.usable-button-list {
+  // menubar-height + header-height * 2(main+preview) + window-border-width
+  // 52(preview part title & buttons) * 2 + 46(select part title)
+  height: calc(
+    100vh - #{global.$menubar-height + (global.$header-height * 2) +
+      global.$window-border-width + (52px * 2) + 46px}
+  );
+  width: 100%;
+  overflow-y: scroll;
 }
 
 .radio {
