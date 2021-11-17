@@ -48,9 +48,9 @@
                   :val="button"
                   :label="button"
                   :class="
-                    selectedButton === button
+                    (selectedButton === button
                       ? 'radio-space-selected'
-                      : 'radio-space'
+                      : 'radio-space') + ' q-mr-sm'
                   "
                 />
                 <q-radio
@@ -60,7 +60,8 @@
                   :val="button"
                   :label="button"
                   :class="
-                    selectedButton === button ? 'radio-selected' : 'radio'
+                    (selectedButton === button ? 'radio-selected' : 'radio') +
+                    ' text-no-wrap text-bold q-mr-sm'
                   "
                 />
               </template>
@@ -204,8 +205,6 @@ export default defineComponent({
 
 .radio {
   padding: 8px 16px;
-  margin: 5px;
-  font-weight: bold;
   border-radius: 3px;
   background-color: var(--color-background);
 }
