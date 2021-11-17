@@ -42,10 +42,7 @@ type ButtonContent =
     };
 
 export default defineComponent({
-  props: {
-    activeAudioKey: { type: String, required: false },
-  },
-  setup(props) {
+  setup() {
     const store = useStore();
     const $q = useQuasar();
 
@@ -55,8 +52,11 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
-    const nowPlaying = computed(
-      () => store.state.audioStates[props.activeAudioKey as string]?.nowPlaying
+    const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
+    const nowPlaying = computed(() =>
+      activeAudioKey.value
+        ? store.state.audioStates[activeAudioKey.value]?.nowPlaying
+        : false
     );
     const toolbarSetting = computed(() => store.state.toolbarSetting);
 
@@ -114,9 +114,9 @@ export default defineComponent({
       try {
         if (continuouslyFlag.value === true) {
           await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
-        } else if (props.activeAudioKey !== undefined) {
+        } else if (activeAudioKey.value !== undefined) {
           await store.dispatch("PLAY_AUDIO", {
-            audioKey: props.activeAudioKey,
+            audioKey: activeAudioKey.value,
           });
         } else {
           throw Error();
@@ -144,8 +144,8 @@ export default defineComponent({
     const stop = () => {
       if (continuouslyFlag.value === true) {
         store.dispatch("STOP_CONTINUOUSLY_AUDIO");
-      } else if (props.activeAudioKey !== undefined) {
-        store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+      } else if (activeAudioKey.value !== undefined) {
+        store.dispatch("STOP_AUDIO", { audioKey: activeAudioKey.value });
       }
     };
     const generateAndSaveAllAudio = async () => {
@@ -187,7 +187,7 @@ export default defineComponent({
       const result: SaveResultObject = await store.dispatch(
         "GENERATE_AND_SAVE_AUDIO",
         {
-          audioKey: props.activeAudioKey as string,
+          audioKey: activeAudioKey.value as string,
           encoding: store.state.savingSetting.fileEncoding,
         }
       );
@@ -243,7 +243,7 @@ export default defineComponent({
       {
         text: "一つだけ書き出し",
         click: generateAndSaveOneAudio,
-        disable: computed(() => !props.activeAudioKey || uiLocked.value),
+        disable: computed(() => !activeAudioKey.value || uiLocked.value),
       },
       {
         text: "元に戻す",
