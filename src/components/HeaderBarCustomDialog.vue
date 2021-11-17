@@ -39,7 +39,7 @@
                 >保存</q-btn
               >
             </q-card-actions>
-            <q-toolbar class="bg-primary">
+            <q-toolbar class="bg-primary preview-toolbar">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
                   v-if="button === '空白'"
@@ -195,6 +195,10 @@ export default defineComponent({
     width: unset !important;
     overflow: hidden;
   }
+}
+
+.preview-toolbar {
+  height: global.$header-height;
 }
 
 .preview-card {
