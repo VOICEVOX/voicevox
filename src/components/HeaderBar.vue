@@ -199,7 +199,7 @@ export default defineComponent({
       {
         text: "一つだけ書き出し",
         click: generateAndSaveOneAudio,
-        disable: computed(() => !props.activeAudioKey),
+        disable: computed(() => !props.activeAudioKey || uiLocked.value),
       },
       {
         text: "元に戻す",
