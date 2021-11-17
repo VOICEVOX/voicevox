@@ -28,6 +28,7 @@ import {
   HotkeyReturnType,
   ToolbarButtonTagType,
 } from "@/type/preload";
+import { generateAndSaveOneAudioWithDialog } from "@/components/Dialog";
 
 type ButtonContent = {
   text: string;
@@ -43,6 +44,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   const tag2NameObj: Record<ToolbarButtonTagType, string> = {
     PLAY_CONTINUOUSLY: "連続再生",
     STOP: "停止",
+    SAVE_ONE: "一つだけ書き出し",
     UNDO: "元に戻す",
     REDO: "やり直す",
     EMPTY: "空白",
@@ -58,6 +60,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
+    const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
@@ -128,6 +131,14 @@ export default defineComponent({
     const stopContinuously = () => {
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
+    const generateAndSaveOneAudio = async () => {
+      await generateAndSaveOneAudioWithDialog({
+        audioKey: activeAudioKey.value as string,
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
 
     const usableButtons: Record<
       ToolbarButtonTagType,
@@ -140,6 +151,10 @@ export default defineComponent({
       STOP: {
         click: stopContinuously,
         disable: computed(() => !nowPlayingContinuously.value),
+      },
+      SAVE_ONE: {
+        click: generateAndSaveOneAudio,
+        disable: computed(() => !activeAudioKey.value),
       },
       UNDO: {
         click: undo,

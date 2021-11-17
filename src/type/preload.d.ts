@@ -188,6 +188,7 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
+  | "SAVE_ONE"
   | "UNDO"
   | "REDO"
   | "EMPTY";
