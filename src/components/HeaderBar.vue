@@ -28,7 +28,10 @@ import {
   HotkeyReturnType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import { generateAndSaveOneAudioWithDialog } from "@/components/Dialog";
+import {
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "@/components/Dialog";
 
 type ButtonContent = {
   text: string;
@@ -45,6 +48,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     PLAY_CONTINUOUSLY: "連続再生",
     STOP: "停止",
     SAVE_ONE: "一つだけ書き出し",
+    SAVE_ALL: "音声書き出し",
     UNDO: "元に戻す",
     REDO: "やり直す",
     EMPTY: "空白",
@@ -139,6 +143,13 @@ export default defineComponent({
         encoding: store.state.savingSetting.fileEncoding,
       });
     };
+    const generateAndSaveAllAudio = async () => {
+      await generateAndSaveAllAudioWithDialog({
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
 
     const usableButtons: Record<
       ToolbarButtonTagType,
@@ -155,6 +166,10 @@ export default defineComponent({
       SAVE_ONE: {
         click: generateAndSaveOneAudio,
         disable: computed(() => !activeAudioKey.value),
+      },
+      SAVE_ALL: {
+        click: generateAndSaveAllAudio,
+        disable: uiLocked,
       },
       UNDO: {
         click: undo,

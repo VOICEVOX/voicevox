@@ -189,6 +189,7 @@ export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
   | "SAVE_ONE"
+  | "SAVE_ALL"
   | "UNDO"
   | "REDO"
   | "EMPTY";
