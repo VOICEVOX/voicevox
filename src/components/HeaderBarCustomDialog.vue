@@ -225,6 +225,15 @@ export default defineComponent({
       selectedButton.value = toolbarButtons.value[0];
     };
 
+    watch(
+      () => toolbarButtons.value,
+      (newData, oldData) => {
+        if (oldData.length < newData.length) {
+          selectedButton.value = newData[newData.length - 1];
+        }
+      }
+    );
+
     const saveCustomToolbar = () => {
       store.dispatch("SET_TOOLBAR_SETTING", {
         data: {
