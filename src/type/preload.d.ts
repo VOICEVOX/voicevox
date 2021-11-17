@@ -145,9 +145,13 @@ export type HotkeyReturnType =
 
 export type ToolbarButtonsType =
   | "連続再生"
+  | "再生"
+  | "音声書き出し"
+  | "一つだけ書き出し"
   | "停止"
   | "元に戻す"
   | "やり直す"
+  | "テキスト読み込み"
   | "空白";
 
 export type ToolbarSetting = {
