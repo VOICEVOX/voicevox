@@ -29,6 +29,7 @@ describe("store/vuex.js test", () => {
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
+        isToolbarSettingDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
@@ -41,6 +42,9 @@ describe("store/vuex.js test", () => {
           exportText: true,
           outputStereo: false,
           outputSamplingRate: 24000,
+        },
+        toolbarSetting: {
+          buttons: [],
         },
         isPinned: false,
         hotkeySettings: [],
