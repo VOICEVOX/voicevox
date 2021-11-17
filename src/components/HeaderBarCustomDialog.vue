@@ -188,6 +188,8 @@ export default defineComponent({
 @use '@/styles' as global;
 .header-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
+  overflow-x: hidden;
+
   > .scroll {
     width: unset !important;
     overflow: hidden;
