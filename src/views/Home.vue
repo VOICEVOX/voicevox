@@ -2,7 +2,7 @@
   <menu-bar />
 
   <q-layout reveal elevated>
-    <header-bar />
+    <header-bar :activeAudioKey="activeAudioKey" />
 
     <q-page-container>
       <q-page class="main-row-panes">
