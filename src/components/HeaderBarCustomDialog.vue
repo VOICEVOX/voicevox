@@ -222,7 +222,6 @@ export default defineComponent({
         ...toolbarButtons.value.slice(0, index),
         ...toolbarButtons.value.slice(index + 1),
       ];
-      selectedButton.value = toolbarButtons.value[0];
     };
 
     watch(
@@ -230,6 +229,11 @@ export default defineComponent({
       (newData, oldData) => {
         if (oldData.length < newData.length) {
           selectedButton.value = newData[newData.length - 1];
+        } else if (
+          oldData.includes(selectedButton.value) &&
+          !newData.includes(selectedButton.value)
+        ) {
+          selectedButton.value = newData[0];
         }
       }
     );
