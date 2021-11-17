@@ -28,6 +28,7 @@ import {
   HotkeyReturnType,
   ToolbarButtonsType,
 } from "@/type/preload";
+import { SaveResultObject } from "@/store/type";
 
 type ButtonContent =
   | {
@@ -146,6 +147,36 @@ export default defineComponent({
         store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
       }
     };
+    const generateAndSaveOneAudio = async () => {
+      const result: SaveResultObject = await store.dispatch(
+        "GENERATE_AND_SAVE_AUDIO",
+        {
+          audioKey: props.activeAudioKey as string,
+          encoding: store.state.savingSetting.fileEncoding,
+        }
+      );
+      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
+      let msg = "";
+      switch (result.result) {
+        case "WRITE_ERROR":
+          msg =
+            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+          break;
+        case "ENGINE_ERROR":
+          msg =
+            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+          break;
+      }
+      $q.dialog({
+        title: "書き出しに失敗しました。",
+        message: msg,
+        ok: {
+          label: "閉じる",
+          flat: true,
+          textColor: "secondary",
+        },
+      });
+    };
 
     const usableButtons: ButtonContent[] = [
       {
@@ -164,6 +195,11 @@ export default defineComponent({
         disable: computed(
           () => !nowPlayingContinuously.value && !nowPlaying.value
         ),
+      },
+      {
+        text: "一つだけ書き出し",
+        click: generateAndSaveOneAudio,
+        disable: computed(() => !props.activeAudioKey),
       },
       {
         text: "元に戻す",
