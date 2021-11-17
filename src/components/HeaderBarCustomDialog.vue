@@ -21,7 +21,7 @@
               flat
               icon="close"
               color="display"
-              @click="headerBarCustomDialogOpenComputed = false"
+              @click="finishOrNotDialog"
             />
           </q-toolbar>
         </q-header>
@@ -129,6 +129,7 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/components/HeaderBar";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -141,6 +142,8 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const $q = useQuasar();
+
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting.buttons]);
     const selectedButton = ref(toolbarButtons.value[0]);
@@ -219,6 +222,36 @@ export default defineComponent({
       });
     };
 
+    const finishOrNotDialog = () => {
+      const nowSetting = store.state.toolbarSetting.buttons;
+      // 配列の比較は出来ないので、文字列として結合したものを比較する
+      if (toolbarButtons.value.join("") !== nowSetting.join("")) {
+        $q.dialog({
+          title: "カスタマイズを終了しますか？",
+          message:
+            "このまま終了すると、カスタマイズは破棄されてリセットされます。",
+          persistent: true,
+          focus: "cancel",
+          ok: {
+            label: "終了",
+            flat: true,
+            textColor: "display",
+          },
+          cancel: {
+            label: "キャンセル",
+            flat: true,
+            textColor: "display",
+          },
+        }).onOk(() => {
+          toolbarButtons.value = [...store.state.toolbarSetting.buttons];
+          selectedButton.value = toolbarButtons.value[0];
+          headerBarCustomDialogOpenComputed.value = false;
+        });
+      } else {
+        headerBarCustomDialogOpenComputed.value = false;
+      }
+    };
+
     return {
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
@@ -231,6 +264,7 @@ export default defineComponent({
       saveCustomToolbar,
       usableButtonsDesc,
       getToolbarButtonName,
+      finishOrNotDialog,
     };
   },
 });
