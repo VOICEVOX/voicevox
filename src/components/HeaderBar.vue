@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ComputedRef } from "vue";
+import { defineComponent, computed, ComputedRef, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
@@ -40,7 +40,10 @@ type ButtonContent =
     };
 
 export default defineComponent({
-  setup() {
+  props: {
+    activeAudioKey: { type: String, required: false },
+  },
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -50,7 +53,12 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+    const nowPlaying = computed(
+      () => store.state.audioStates[props.activeAudioKey as string]?.nowPlaying
+    );
     const toolbarSetting = computed(() => store.state.toolbarSetting);
+
+    const continuouslyFlag = ref(true);
 
     const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // undo
@@ -83,7 +91,7 @@ export default defineComponent({
         () => {
           if (!uiLocked.value) {
             if (nowPlayingContinuously.value) {
-              stopContinuously();
+              stop();
             } else {
               playContinuously();
             }
@@ -100,9 +108,17 @@ export default defineComponent({
     const redo = () => {
       store.dispatch("REDO");
     };
-    const playContinuously = async () => {
+    const playAudio = async () => {
       try {
-        await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
+        if (continuouslyFlag.value === true) {
+          await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
+        } else if (props.activeAudioKey !== undefined) {
+          await store.dispatch("PLAY_AUDIO", {
+            audioKey: props.activeAudioKey,
+          });
+        } else {
+          throw Error();
+        }
       } catch {
         $q.dialog({
           title: "再生に失敗しました",
@@ -115,8 +131,20 @@ export default defineComponent({
         });
       }
     };
-    const stopContinuously = () => {
-      store.dispatch("STOP_CONTINUOUSLY_AUDIO");
+    const playContinuously = async () => {
+      continuouslyFlag.value = true;
+      await playAudio();
+    };
+    const play = async () => {
+      continuouslyFlag.value = false;
+      await playAudio();
+    };
+    const stop = () => {
+      if (continuouslyFlag.value === true) {
+        store.dispatch("STOP_CONTINUOUSLY_AUDIO");
+      } else if (props.activeAudioKey !== undefined) {
+        store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+      }
     };
 
     const usableButtons: ButtonContent[] = [
@@ -126,9 +154,16 @@ export default defineComponent({
         disable: uiLocked,
       },
       {
+        text: "再生",
+        click: play,
+        disable: uiLocked,
+      },
+      {
         text: "停止",
-        click: stopContinuously,
-        disable: computed(() => !nowPlayingContinuously.value),
+        click: stop,
+        disable: computed(
+          () => !nowPlayingContinuously.value && !nowPlaying.value
+        ),
       },
       {
         text: "元に戻す",
