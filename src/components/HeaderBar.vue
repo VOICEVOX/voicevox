@@ -213,6 +213,9 @@ export default defineComponent({
         },
       });
     };
+    const importTextFile = () => {
+      store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
+    };
 
     const usableButtons: ButtonContent[] = [
       {
@@ -251,6 +254,11 @@ export default defineComponent({
         text: "やり直す",
         click: redo,
         disable: computed(() => !canRedo.value || uiLocked.value),
+      },
+      {
+        text: "テキスト読み込み",
+        click: importTextFile,
+        disable: uiLocked,
       },
     ];
 
