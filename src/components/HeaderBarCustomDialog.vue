@@ -158,6 +158,7 @@ export default defineComponent({
         ...toolbarButtons.value.slice(0, index),
         ...toolbarButtons.value.slice(index + 1),
       ];
+      selectedButton.value = toolbarButtons.value[0];
     };
 
     const saveCustomToolbar = () => {
