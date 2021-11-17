@@ -356,7 +356,7 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  color: var(--color-setting-item);
-  background-color: var(--color-setting-item);
+  color: #eeeeee;
+  background-color: #eeeeee;
 }
 </style>
