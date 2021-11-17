@@ -29,6 +29,7 @@ import {
   ToolbarButtonsType,
 } from "@/type/preload";
 import { SaveResultObject } from "@/store/type";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type ButtonContent =
   | {
@@ -147,6 +148,41 @@ export default defineComponent({
         store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
       }
     };
+    const generateAndSaveAllAudio = async () => {
+      const result = await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+
+      let successArray: Array<string | undefined> = [];
+      let writeErrorArray: Array<string | undefined> = [];
+      let engineErrorArray: Array<string | undefined> = [];
+      if (result) {
+        for (const item of result) {
+          switch (item.result) {
+            case "SUCCESS":
+              successArray.push(item.path);
+              break;
+            case "WRITE_ERROR":
+              writeErrorArray.push(item.path);
+              break;
+            case "ENGINE_ERROR":
+              engineErrorArray.push(item.path);
+              break;
+          }
+        }
+      }
+
+      if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+        $q.dialog({
+          component: SaveAllResultDialog,
+          componentProps: {
+            successArray: successArray,
+            writeErrorArray: writeErrorArray,
+            engineErrorArray: engineErrorArray,
+          },
+        });
+      }
+    };
     const generateAndSaveOneAudio = async () => {
       const result: SaveResultObject = await store.dispatch(
         "GENERATE_AND_SAVE_AUDIO",
@@ -195,6 +231,11 @@ export default defineComponent({
         disable: computed(
           () => !nowPlayingContinuously.value && !nowPlaying.value
         ),
+      },
+      {
+        text: "音声書き出し",
+        click: generateAndSaveAllAudio,
+        disable: uiLocked,
       },
       {
         text: "一つだけ書き出し",
