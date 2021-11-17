@@ -39,7 +39,7 @@
                 >保存</q-btn
               >
             </q-card-actions>
-            <q-card-actions class="bg-primary">
+            <q-toolbar class="bg-primary">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
                   v-if="button === 'EMPTY'"
@@ -65,7 +65,7 @@
                   "
                 />
               </template>
-            </q-card-actions>
+            </q-toolbar>
             <q-card-actions>
               <div class="text-h5">「{{ selectedButton }}」を</div>
               <q-space />
