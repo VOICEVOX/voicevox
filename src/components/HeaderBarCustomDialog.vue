@@ -185,7 +185,7 @@ export default defineComponent({
       UNDO: "操作を一つ戻します。",
       REDO: "元に戻した操作をやり直します。",
       EMPTY:
-        "これはボタンではありません、ボタンを左右に配置したい際に使います。",
+        "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
     };
 
     const headerBarCustomDialogOpenComputed = computed({
@@ -341,8 +341,7 @@ export default defineComponent({
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: global.$primary;
-  background-color: global.$primary;
+  color: var(--color-background);
 }
 
 .radio-space:hover {
