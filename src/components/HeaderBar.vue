@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ComputedRef, ref } from "vue";
+import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
@@ -60,7 +60,7 @@ export default defineComponent({
     );
     const toolbarSetting = computed(() => store.state.toolbarSetting);
 
-    const continuouslyFlag = ref(true);
+    let continuouslyFlag = true;
 
     const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // undo
@@ -112,7 +112,7 @@ export default defineComponent({
     };
     const playAudio = async () => {
       try {
-        if (continuouslyFlag.value === true) {
+        if (continuouslyFlag) {
           await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
         } else if (activeAudioKey.value !== undefined) {
           await store.dispatch("PLAY_AUDIO", {
@@ -134,15 +134,15 @@ export default defineComponent({
       }
     };
     const playContinuously = async () => {
-      continuouslyFlag.value = true;
+      continuouslyFlag = true;
       await playAudio();
     };
     const play = async () => {
-      continuouslyFlag.value = false;
+      continuouslyFlag = false;
       await playAudio();
     };
     const stop = () => {
-      if (continuouslyFlag.value === true) {
+      if (continuouslyFlag) {
         store.dispatch("STOP_CONTINUOUSLY_AUDIO");
       } else if (activeAudioKey.value !== undefined) {
         store.dispatch("STOP_AUDIO", { audioKey: activeAudioKey.value });
