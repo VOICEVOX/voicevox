@@ -350,7 +350,8 @@ export default defineComponent({
 }
 
 .radio {
-  padding: 8px 16px;
+  padding: 6px 14px;
+  border: solid 2px var(--color-background);
   border-radius: 3px;
   background-color: var(--color-background);
 }
@@ -361,7 +362,8 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
-  background-color: var(--color-setting-item);
+  color: red;
+  border: solid 2px red;
 }
 
 .radio-space {
@@ -376,7 +378,6 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  color: var(--color-setting-item);
-  background-color: var(--color-setting-item);
+  border: solid 2px red;
 }
 </style>
