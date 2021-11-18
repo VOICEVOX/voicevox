@@ -52,7 +52,17 @@
                       ? 'radio-space-selected'
                       : 'radio-space') + ' q-mr-sm'
                   "
-                />
+                  ><q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    >{{
+                      usableButtons.find((v) => v.label === button).desc
+                    }}</q-tooltip
+                  ></q-radio
+                >
                 <q-radio
                   v-else
                   v-model="selectedButton"
@@ -63,7 +73,17 @@
                     (selectedButton === button ? 'radio-selected' : 'radio') +
                     ' text-no-wrap text-bold q-mr-sm'
                   "
-                />
+                  ><q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    >{{
+                      usableButtons.find((v) => v.label === button).desc
+                    }}</q-tooltip
+                  ></q-radio
+                >
               </template>
             </q-toolbar>
             <q-card-actions>
