@@ -55,18 +55,18 @@
 
               <q-separator vertical />
 
-              <q-btn
-                flat
-                class="q-px-sm q-py-none"
+              <div
+                class="flex items-center q-px-sm q-py-none cursor-pointer"
                 :class="
                   subMenuOpenFlags[characterIndex] && 'opened-character-item'
                 "
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
               >
-                <q-icon name="keyboard_arrow_right" color="grey-6" />
+                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
 
                 <q-menu
+                  no-parent-event
                   anchor="top end"
                   self="top start"
                   transition-show="none"
@@ -103,7 +103,7 @@
                     </q-item>
                   </q-list>
                 </q-menu>
-              </q-btn>
+              </div>
             </q-btn-group>
           </q-item>
         </q-list>
@@ -465,14 +465,17 @@ export default defineComponent({
   .q-item {
     color: var(--color-display);
   }
-  .q-btn-group > .q-btn:first-child > .q-btn__content {
-    justify-content: flex-start;
+  .q-btn-group {
+    > .q-btn:first-child > .q-btn__content {
+      justify-content: flex-start;
+    }
+    > div:last-child:hover {
+      background-color: rgba(global.$primary-rgb, 0.1);
+    }
   }
-  .selected-character-item {
-    background-color: rgba(global.$primary-rgb, 0.2);
-  }
+  .selected-character-item,
   .opened-character-item {
-    background-color: rgba(global.$primary-rgb, 0.3);
+    background-color: rgba(global.$primary-rgb, 0.2);
   }
 }
 
