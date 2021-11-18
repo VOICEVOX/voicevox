@@ -211,7 +211,7 @@ export default defineComponent({
       },
       {
         label: "空白",
-        desc: "これはボタンではありません、ボタンを左右に配置したい際に使います。",
+        desc: "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
       },
     ];
 
@@ -367,8 +367,7 @@ export default defineComponent({
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: global.$primary;
-  background-color: global.$primary;
+  color: var(--color-background);
 }
 
 .radio-space:hover {
