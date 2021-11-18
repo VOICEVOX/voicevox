@@ -50,6 +50,7 @@
           v-model="presetSelectModel"
           :options="presetList"
           class="overflow-hidden"
+          color="primary-light"
           text-color="display-dark"
           outlined
           dense
@@ -86,6 +87,7 @@
                 hide-selected
                 label="タイトル"
                 label-color="display-dark"
+                color="primary-light"
                 use-input
                 input-debounce="0"
                 :model-value="presetName"
