@@ -815,7 +815,7 @@ export const audioStore: VoiceVoxStoreOptions<
         { audioKey }: { audioKey: string }
       ) => {
         const audioElem = audioElements[audioKey] as HTMLAudioElement & {
-          setSinkId(deviceID: string): void; // setSinkIdを認識してくれないため
+          setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
         };
         audioElem.pause();
 
@@ -837,15 +837,15 @@ export const audioStore: VoiceVoxStoreOptions<
         }
         audioElem.src = URL.createObjectURL(blob);
 
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-          const device = devices.find(
-            (device) =>
-              device.deviceId === state.savingSetting.audioOutputDevice
-          );
-          if (device) {
-            audioElem.setSinkId(state.savingSetting.audioOutputDevice);
-          }
-        });
+        audioElem
+          .setSinkId(state.savingSetting.audioOutputDevice)
+          .catch((err) => {
+            window.electron.showErrorDialog({
+              title: "エラー",
+              message: "再生デバイスが見つかりません",
+            });
+            throw new Error(err);
+          });
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
