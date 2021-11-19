@@ -810,8 +810,13 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     PLAY_AUDIO: createUILockAction(
-      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
-        const audioElem = audioElements[audioKey];
+      async (
+        { state, commit, dispatch },
+        { audioKey }: { audioKey: string }
+      ) => {
+        const audioElem = audioElements[audioKey] as HTMLAudioElement & {
+          setSinkId(deviceID: string): void; // setSinkIdを認識してくれないため
+        };
         audioElem.pause();
 
         // 音声用意
@@ -831,6 +836,16 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
         audioElem.src = URL.createObjectURL(blob);
+
+        navigator.mediaDevices.enumerateDevices().then((devices) => {
+          const device = devices.find(
+            (device) =>
+              device.deviceId === state.savingSetting.audioOutputDevice
+          );
+          if (device) {
+            audioElem.setSinkId(state.savingSetting.audioOutputDevice);
+          }
+        });
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
