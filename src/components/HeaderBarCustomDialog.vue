@@ -55,7 +55,7 @@
           </q-toolbar>
         </q-header>
         <q-page>
-          <q-card flat class="preview-card">
+          <q-card flat square class="preview-card">
             <q-toolbar class="bg-primary preview-toolbar">
               <q-toolbar-title class="text-display"
                 >ツールバーのカスタマイズ</q-toolbar-title
