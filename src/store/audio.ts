@@ -28,6 +28,8 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
+import { QVueGlobals } from "quasar";
 
 async function generateUniqueId(audioItem: AudioItem) {
   const data = new TextEncoder().encode(
@@ -815,6 +817,48 @@ const audioStoreCreator = (
           }
         }
       ),
+      async GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG(
+        { dispatch },
+        {
+          $q,
+          dirPath,
+          encoding,
+        }: { $q: QVueGlobals; dirPath?: string; encoding?: EncodingType }
+      ) {
+        const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+          dirPath,
+          encoding,
+        });
+        const successArray: Array<string | undefined> = [];
+        const writeErrorArray: Array<string | undefined> = [];
+        const engineErrorArray: Array<string | undefined> = [];
+        if (result) {
+          for (const item of result) {
+            switch (item.result) {
+              case "SUCCESS":
+                successArray.push(item.path);
+                break;
+              case "WRITE_ERROR":
+                writeErrorArray.push(item.path);
+                break;
+              case "ENGINE_ERROR":
+                engineErrorArray.push(item.path);
+                break;
+            }
+          }
+        }
+
+        if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+          $q.dialog({
+            component: SaveAllResultDialog,
+            componentProps: {
+              successArray: successArray,
+              writeErrorArray: writeErrorArray,
+              engineErrorArray: engineErrorArray,
+            },
+          });
+        }
+      },
       PLAY_AUDIO: createUILockAction(
         async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
           const audioElem = audioElements[audioKey];
