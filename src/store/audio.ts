@@ -840,6 +840,9 @@ export const audioStore: VoiceVoxStoreOptions<
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
           .catch((err) => {
+            audioElem.pause();
+            audioElem.currentTime = 0;
+
             window.electron.showErrorDialog({
               title: "エラー",
               message: "再生デバイスが見つかりません",
@@ -865,7 +868,9 @@ export const audioStore: VoiceVoxStoreOptions<
           commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
         });
 
-        audioElem.play();
+        audioElem.play().catch((err) => {
+          throw new Error(err);
+        });
         return audioPlayPromise;
       }
     ),
