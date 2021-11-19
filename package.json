@@ -27,6 +27,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@gtm-support/vue-gtm": "^1.2.2",
     "@quasar/extras": "1.10.10",
     "ajv": "8.6.2",
     "core-js": "3.12.1",

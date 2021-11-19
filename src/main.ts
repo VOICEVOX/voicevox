@@ -6,6 +6,7 @@ import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { createGtm } from "@gtm-support/vue-gtm";
 
 import { Quasar, Dialog, Loading } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
@@ -16,6 +17,12 @@ import "./styles/_index.scss";
 createApp(App)
   .use(store, storeKey)
   .use(router)
+  .use(
+    createGtm({
+      id: process.env.VUE_APP_GTM_CONTAINER_ID ?? "GTM-DUMMY",
+      vueRouter: router,
+    })
+  )
   .use(Quasar, {
     config: {
       brand: {
