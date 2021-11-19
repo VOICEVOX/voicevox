@@ -273,6 +273,15 @@ type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
+  GENERATE_AND_SAVE_AUDIO_WITH_DIALOG: {
+    action(payload: {
+      audioKey: string;
+      $q: QVueGlobals;
+      filePath?: string;
+      encoding?: EncodingType;
+    }): void;
+  };
+
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;

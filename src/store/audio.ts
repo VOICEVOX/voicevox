@@ -791,6 +791,50 @@ const audioStoreCreator = (
           return { result: "SUCCESS", path: filePath };
         }
       ),
+      async GENERATE_AND_SAVE_AUDIO_WITH_DIALOG(
+        { dispatch },
+        {
+          audioKey,
+          $q,
+          filePath,
+          encoding,
+        }: {
+          audioKey: string;
+          $q: QVueGlobals;
+          filePath?: string;
+          encoding?: EncodingType;
+        }
+      ) {
+        const result: SaveResultObject = await dispatch(
+          "GENERATE_AND_SAVE_AUDIO",
+          {
+            audioKey,
+            filePath,
+            encoding,
+          }
+        );
+        if (result.result === "SUCCESS" || result.result === "CANCELED") return;
+        let msg = "";
+        switch (result.result) {
+          case "WRITE_ERROR":
+            msg =
+              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+            break;
+          case "ENGINE_ERROR":
+            msg =
+              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+            break;
+        }
+        $q.dialog({
+          title: "書き出しに失敗しました。",
+          message: msg,
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "secondary",
+          },
+        });
+      },
       GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
         async (
           { state, dispatch },
