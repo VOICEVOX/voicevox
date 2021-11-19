@@ -396,20 +396,25 @@ export default defineComponent({
       });
     });
 
-    const currentAudioOutputDeviceComputed = computed({
+    const currentAudioOutputDeviceComputed = computed<{
+      key: string;
+      label: string;
+    } | null>({
       get: () => {
         const device = availableAudioOutputDevices.value?.find(
           (device) => device.key === store.state.savingSetting.audioOutputDevice
         );
         if (device) {
-          return device.label;
+          return device;
         } else {
           handleSavingSettingChange("audioOutputDevice", "default");
           return null;
         }
       },
-      set: (device: any) => {
-        handleSavingSettingChange("audioOutputDevice", device.key);
+      set: (device) => {
+        if (device) {
+          handleSavingSettingChange("audioOutputDevice", device.key);
+        }
       },
     });
 
