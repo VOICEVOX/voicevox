@@ -272,7 +272,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声の再生デバイスを変更し再生します
+                    音声の再生デバイスを変更し再生を行います
                   </q-tooltip>
                 </q-select>
               </q-card-actions>
