@@ -67,6 +67,7 @@
                 text-color="display-dark"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="saveCustomToolbar"
+                :disable="!changedOrNotFlag"
                 >保存</q-btn
               >
               <!-- close button -->
@@ -194,6 +195,11 @@ export default defineComponent({
         toolbarButtons.value[toolbarButtons.value.length - 1]
     );
 
+    const changedOrNotFlag = computed(() => {
+      const nowSetting = store.state.toolbarSetting.buttons;
+      return toolbarButtons.value.join("") !== nowSetting.join("");
+    });
+
     const moveLeftButton = () => {
       const index = toolbarButtons.value.indexOf(selectedButton.value);
       toolbarButtons.value[index] = toolbarButtons.value[index - 1];
@@ -235,9 +241,8 @@ export default defineComponent({
     };
 
     const finishOrNotDialog = () => {
-      const nowSetting = store.state.toolbarSetting.buttons;
       // 配列の比較は出来ないので、文字列として結合したものを比較する
-      if (toolbarButtons.value.join("") !== nowSetting.join("")) {
+      if (changedOrNotFlag.value) {
         $q.dialog({
           title: "カスタマイズを終了しますか？",
           message:
@@ -270,6 +275,7 @@ export default defineComponent({
       selectedButton,
       leftShiftable,
       rightShiftable,
+      changedOrNotFlag,
       moveLeftButton,
       moveRightButton,
       removeButton,
