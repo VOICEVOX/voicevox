@@ -226,18 +226,20 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
       },
-      async CLOSE_WINDOW({ getters }) {
-        if (
-          getters.IS_EDITED &&
-          !(await window.electron.showConfirmDialog({
+      async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
+        if (getters.IS_EDITED) {
+          const result: number = await window.electron.showInfoDialog({
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
-          }))
-        ) {
-          return;
+            buttons: ["破棄", "キャンセル"],
+          });
+          if (result == 1) {
+            return;
+          }
         }
+
         window.electron.closeWindow();
       },
     },
