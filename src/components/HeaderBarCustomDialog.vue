@@ -11,80 +11,76 @@
       <q-page-container class="root">
         <q-header class="q-py-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >ツールバーのカスタマイズ</q-toolbar-title
-            >
-            <q-space />
-            <!-- close button -->
-            <q-btn
-              round
-              flat
-              icon="close"
-              color="display"
-              @click="finishOrNotDialog"
-            />
+            <template v-for="button in toolbarButtons" :key="button">
+              <q-radio
+                v-if="button === '空白'"
+                v-model="selectedButton"
+                size="0"
+                :val="button"
+                :label="button"
+                :class="
+                  (selectedButton === button
+                    ? 'radio-space-selected'
+                    : 'radio-space') + ' q-mr-sm'
+                "
+                ><q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                  >{{
+                    usableButtons.find((v) => v.label === button).desc
+                  }}</q-tooltip
+                ></q-radio
+              >
+              <q-radio
+                v-else
+                v-model="selectedButton"
+                size="0"
+                :val="button"
+                :label="button"
+                :class="
+                  (selectedButton === button ? 'radio-selected' : 'radio') +
+                  ' text-no-wrap text-bold text-display q-mr-sm'
+                "
+                ><q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                  >{{
+                    usableButtons.find((v) => v.label === button).desc
+                  }}</q-tooltip
+                ></q-radio
+              >
+            </template>
           </q-toolbar>
         </q-header>
         <q-page>
           <q-card flat class="preview-card">
-            <q-card-actions>
-              <div class="text-h5">カスタマイズのプレビュー</div>
+            <q-toolbar class="bg-primary preview-toolbar">
+              <q-toolbar-title class="text-display"
+                >ツールバーのカスタマイズ</q-toolbar-title
+              >
               <q-space />
               <q-btn
-                outline
+                unelevated
                 color="background-light"
                 text-color="display-dark"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="saveCustomToolbar"
                 >保存</q-btn
               >
-            </q-card-actions>
-            <q-toolbar class="bg-primary preview-toolbar">
-              <template v-for="button in toolbarButtons" :key="button">
-                <q-radio
-                  v-if="button === '空白'"
-                  v-model="selectedButton"
-                  size="0"
-                  :val="button"
-                  :label="button"
-                  :class="
-                    (selectedButton === button
-                      ? 'radio-space-selected'
-                      : 'radio-space') + ' q-mr-sm'
-                  "
-                  ><q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    >{{
-                      usableButtons.find((v) => v.label === button).desc
-                    }}</q-tooltip
-                  ></q-radio
-                >
-                <q-radio
-                  v-else
-                  v-model="selectedButton"
-                  size="0"
-                  :val="button"
-                  :label="button"
-                  :class="
-                    (selectedButton === button ? 'radio-selected' : 'radio') +
-                    ' text-no-wrap text-bold q-mr-sm'
-                  "
-                  ><q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    >{{
-                      usableButtons.find((v) => v.label === button).desc
-                    }}</q-tooltip
-                  ></q-radio
-                >
-              </template>
+              <!-- close button -->
+              <q-btn
+                round
+                flat
+                icon="close"
+                color="display"
+                @click="finishOrNotDialog"
+              />
             </q-toolbar>
             <q-card-actions>
               <div class="text-h5">「{{ selectedButton }}」を</div>
@@ -340,10 +336,10 @@ export default defineComponent({
 
 .usable-button-list {
   // menubar-height + header-height * 2(main+preview) + window-border-width
-  // 52(preview part title & buttons) * 2 + 46(select part title)
+  // 52(preview part buttons) * 2 + 46(select part title)
   height: calc(
     100vh - #{global.$menubar-height + (global.$header-height * 2) +
-      global.$window-border-width + (52px * 2) + 46px}
+      global.$window-border-width + 52px + 46px}
   );
   width: 100%;
   overflow-y: scroll;
