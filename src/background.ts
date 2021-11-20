@@ -212,7 +212,7 @@ const store = new Store<{
     acceptRetrieveTelemetry: {
       type: ["boolean", "null"],
       default: null,
-    }
+    },
   },
   migrations: {
     ">=0.7.3": (store) => {
@@ -412,10 +412,10 @@ async function createWindow() {
 
   win.on("resize", () => {
     const windowSize = win.getSize();
-    win.webContents.send(
-      "DETECT_RESIZED",
-      { width: windowSize[0], height: windowSize[1] }
-    );
+    win.webContents.send("DETECT_RESIZED", {
+      width: windowSize[0],
+      height: windowSize[1],
+    });
   });
 
   win.webContents.once("did-finish-load", () => {
@@ -727,12 +727,9 @@ ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
   return store.get("acceptRetrieveTelemetry");
 });
 
-ipcMainHandle(
-  "SET_ACCEPT_RETRIEVE_TELEMETRY",
-  (_, acceptRetrieveTelemetry) => {
-    store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
-  }
-);
+ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
+  store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
 
 // app callback
 app.on("web-contents-created", (e, contents) => {

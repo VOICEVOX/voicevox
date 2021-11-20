@@ -178,12 +178,12 @@ type IpcIHData = {
   };
 
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [],
+    args: [];
     return: boolean | null;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [acceptRetrieveTelemetry: boolean | null],
+    args: [acceptRetrieveTelemetry: boolean | null];
     return: void;
   };
 
@@ -238,7 +238,7 @@ type IpcSOData = {
   };
 
   DETECT_RESIZED: {
-    args: [obj: { width: number, height: number }],
+    args: [obj: { width: number; height: number }];
     return: void;
   };
 };
