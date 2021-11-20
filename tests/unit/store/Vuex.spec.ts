@@ -43,6 +43,7 @@ describe("store/vuex.js test", () => {
           exportText: true,
           outputStereo: false,
           outputSamplingRate: 24000,
+          audioOutputDevice: "default",
         },
         themeSetting: {
           currentTheme: "Default",

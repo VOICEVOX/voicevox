@@ -255,6 +255,27 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>再生デバイス</div>
+                <q-space />
+                <q-select
+                  dense
+                  v-model="currentAudioOutputDeviceComputed"
+                  label="再生デバイス"
+                  :options="availableAudioOutputDevices"
+                  class="col-7"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声の再生デバイスを変更し再生を行います
+                  </q-tooltip>
+                </q-select>
+              </q-card-actions>
               <!-- FIXME: バージョン0.8.0現在、エンジン側にサンプリングレート変更エラーがあるので機能制限 -->
               <!-- <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>音声のサンプリングレート</div>
@@ -324,7 +345,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
@@ -374,6 +395,44 @@ export default defineComponent({
         return { label: theme.name, value: theme.name };
       });
     });
+
+    const currentAudioOutputDeviceComputed = computed<{
+      key: string;
+      label: string;
+    } | null>({
+      get: () => {
+        // 再生デバイスが見つからなかったらデフォルト値に戻す
+        const device = availableAudioOutputDevices.value?.find(
+          (device) => device.key === store.state.savingSetting.audioOutputDevice
+        );
+        if (device) {
+          return device;
+        } else {
+          handleSavingSettingChange("audioOutputDevice", "default");
+          return null;
+        }
+      },
+      set: (device) => {
+        if (device) {
+          handleSavingSettingChange("audioOutputDevice", device.key);
+        }
+      },
+    });
+
+    const availableAudioOutputDevices = ref<{ key: string; label: string }[]>();
+    const updateAudioOutputDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableAudioOutputDevices.value = devices
+        .filter((device) => device.kind === "audiooutput")
+        .map((device) => {
+          return { label: device.label, key: device.deviceId };
+        });
+    };
+    navigator.mediaDevices.addEventListener(
+      "devicechange",
+      updateAudioOutputDevices
+    );
+    updateAudioOutputDevices();
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -492,6 +551,8 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      currentAudioOutputDeviceComputed,
+      availableAudioOutputDevices,
       changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,
