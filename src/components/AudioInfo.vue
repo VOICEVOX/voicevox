@@ -48,7 +48,7 @@
       >
         <q-select
           v-model="presetSelectModel"
-          :options="presetList"
+          :options="selectablePresetList"
           class="overflow-hidden"
           color="primary-light"
           text-color="display-dark"
@@ -424,21 +424,30 @@ export default defineComponent({
       });
     };
 
-    const presetList = computed<{ label: string; key: string | undefined }[]>(
-      () => {
-        return [
-          { key: undefined, label: "プリセット解除" },
-          ...presetKeys.value
-            .filter((key) => presetItems.value[key] != undefined)
-            .map((key) => ({
-              key,
-              label: presetItems.value[key].name,
-            })),
-        ];
-      }
+    const presetList = computed<{ label: string; key: string }[]>(() =>
+      presetKeys.value
+        .filter((key) => presetItems.value[key] != undefined)
+        .map((key) => ({
+          key,
+          label: presetItems.value[key].name,
+        }))
     );
 
-    const presetSelectModel = computed({
+    // セルへのプリセットの設定
+    const selectablePresetList = computed<
+      { label: string; key: string | undefined }[]
+    >(() => [
+      {
+        key: undefined,
+        label: "プリセット解除",
+      },
+      ...presetList.value,
+    ]);
+
+    const presetSelectModel = computed<{
+      label: string;
+      key: string | undefined;
+    }>({
       get: () => {
         if (
           audioPresetKey.value === undefined ||
@@ -454,10 +463,27 @@ export default defineComponent({
           key: audioPresetKey.value,
         };
       },
-      set: (newVal: { label: string; key: string | undefined }) => {
+      set: (newVal) => {
         changePreset(newVal);
       },
     });
+
+    const setPresetByScroll = (deltaY: number) => {
+      const presetNumber = selectablePresetList.value.length;
+      if (presetNumber === 0 || presetNumber === undefined) return;
+
+      const nowIndex = selectablePresetList.value.findIndex(
+        (value) => value.key == presetSelectModel.value.key
+      );
+
+      const isUp = deltaY > 0;
+      const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
+      if (newIndex < 0 || presetNumber <= newIndex) return;
+
+      if (selectablePresetList.value[newIndex] === undefined) return;
+
+      changePreset(selectablePresetList.value[newIndex]);
+    };
 
     // プリセットの登録・上書き
     const showsPresetNameDialog = ref(false);
@@ -500,7 +526,7 @@ export default defineComponent({
     };
 
     const checkRewrite = () => {
-      if (presetList.value?.find((e) => e.label === presetName.value)) {
+      if (presetList.value.find((e) => e.label === presetName.value)) {
         showsPresetRewriteDialog.value = true;
       } else {
         addPreset();
@@ -542,7 +568,7 @@ export default defineComponent({
 
     const updatePreset = () => {
       const key = presetList.value.find(
-        (e) => e.label === presetName.value
+        (preset) => preset.label === presetName.value
       )?.key;
       if (key === undefined) return;
 
@@ -556,23 +582,6 @@ export default defineComponent({
       });
 
       closeAllDialog();
-    };
-
-    const setPresetByScroll = (deltaY: number) => {
-      const presetNumber = presetList.value?.length;
-      if (presetNumber === 0 || presetNumber === undefined) return;
-
-      const nowIndex = presetList.value.findIndex(
-        (value) => value.key == presetSelectModel.value.key
-      );
-
-      const isUp = deltaY > 0;
-      const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
-      if (newIndex < 0 || presetNumber <= newIndex) return;
-
-      if (presetList.value[newIndex] === undefined) return;
-
-      changePreset(presetList.value[newIndex]);
     };
 
     // プリセットの編集
@@ -589,6 +598,7 @@ export default defineComponent({
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
       presetList,
+      selectablePresetList,
       presetOptionsList,
       filterPresetOptionsList,
       presetSelectModel,
