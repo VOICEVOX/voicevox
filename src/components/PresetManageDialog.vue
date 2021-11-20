@@ -1,6 +1,6 @@
 <template>
   <q-dialog :model-value="openDialog" @update:model-value="updateOpenDialog">
-    <q-card class="setting-card q-pa-md dialogCard">
+    <q-card class="setting-card q-pa-md dialog-card">
       <q-card-section>
         <div class="text-h5">プリセット管理</div>
       </q-card-section>
@@ -45,8 +45,8 @@ export default defineComponent({
   emits: ["update:openDialog"],
 
   setup(props, context) {
-    const updateOpenDialog = (e: boolean) =>
-      context.emit("update:openDialog", e);
+    const updateOpenDialog = (isOpen: boolean) =>
+      context.emit("update:openDialog", isOpen);
 
     const store = useStore();
 
@@ -54,10 +54,12 @@ export default defineComponent({
     const presetKeys = computed(() => store.state.presetKeys);
 
     const presetList = computed(() =>
-      presetKeys.value.map((key) => ({
-        key,
-        ...presetItems.value[key],
-      }))
+      presetKeys.value
+        .filter((key) => presetItems.value[key] != undefined)
+        .map((key) => ({
+          key,
+          ...presetItems.value[key],
+        }))
     );
 
     const deletePreset = (key: string) =>
@@ -73,7 +75,7 @@ export default defineComponent({
 </script>
 
 <style>
-.dialogCard {
+.dialog-card {
   width: 700px;
   max-width: 80vw;
 }

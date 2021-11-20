@@ -109,7 +109,7 @@
           </q-form>
         </q-card>
       </q-dialog>
-
+      <!-- Rewrite Confirm Dialog -->
       <q-dialog
         v-model="showsPresetRewriteDialog"
         @before-hide="closeAllDialog"
@@ -492,7 +492,7 @@ export default defineComponent({
         .filter((value) => value != undefined);
       doneFn(() => {
         presetOptionsList.value = presetNames.filter((name) =>
-          name.includes(inputValue)
+          name.startsWith(inputValue)
         );
       });
     };
