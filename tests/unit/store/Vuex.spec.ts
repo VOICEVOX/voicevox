@@ -31,6 +31,7 @@ describe("store/vuex.js test", () => {
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
+        isAcceptRetrieveTelemetryDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
@@ -50,6 +51,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         hotkeySettings: [],
+        acceptRetrieveTelemetry: false,
         engineHost: "http://127.0.0.1",
       },
       getters: {
@@ -108,6 +110,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
+    assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isObject(store.state.savingSetting);
     assert.propertyVal(store.state.savingSetting, "fileEncoding", "UTF-8");
@@ -121,5 +124,6 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
+    assert.equal(store.state.acceptRetrieveTelemetry, false);
   });
 });
