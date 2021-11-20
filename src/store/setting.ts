@@ -29,6 +29,7 @@ export const settingStoreState: SettingStoreState = {
     exportText: true,
     outputStereo: false,
     outputSamplingRate: 24000,
+    audioOutputDevice: "default",
   },
   hotkeySettings: [],
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
