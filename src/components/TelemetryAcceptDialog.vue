@@ -7,7 +7,7 @@
   >
     <q-card>
       <q-card-section>
-        <div class="text-h6">利用率の収集について</div>
+        <div class="text-h6">テレメトリーの収集について</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -61,12 +61,11 @@ export default defineComponent({
     const handleSaveAcceptRetrieveTelemetry = (
       acceptRetrieveTelemetry: boolean
     ) => {
-      store.dispatch(
-        "SET_ACCEPT_RETRIEVE_TELEMETRY",
-        acceptRetrieveTelemetry
-      );
+      store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+        acceptRetrieveTelemetry,
+      });
       modelValueComputed.value = false;
-    }
+    };
 
     return {
       modelValueComputed,

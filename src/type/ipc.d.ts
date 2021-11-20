@@ -183,7 +183,7 @@ type IpcIHData = {
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [acceptRetrieveTelemetry: boolean],
+    args: [acceptRetrieveTelemetry: boolean | null],
     return: void;
   };
 

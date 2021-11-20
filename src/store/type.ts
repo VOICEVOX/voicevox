@@ -538,19 +538,6 @@ type IndexStoreTypes = {
     action(payload: DefaultStyleId[]): void;
   };
 
-  IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY: {
-    action(): Promise<boolean>;
-  };
-
-  LOAD_ACCEPT_RETRIEVE_TELEMETRY: {
-    action(): Promise<void>;
-  };
-
-  SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    mutation: { acceptRetrieveTelemetry: boolean | null };
-    action(payload: boolean): void;
-  };
-
   SHOW_WARNING_DIALOG: {
     action(payload: {
       title: string;
@@ -627,6 +614,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   engineHost: string;
   themeSetting: ThemeSetting;
+  acceptRetrieveTelemetry: boolean | null;
 };
 
 type SettingStoreTypes = {
@@ -656,6 +644,15 @@ type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    action(): void;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    mutation: { acceptRetrieveTelemetry: boolean | null };
+    action(payload: { acceptRetrieveTelemetry: boolean | null }): void;
   };
 };
 

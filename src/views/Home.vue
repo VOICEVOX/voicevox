@@ -359,12 +359,11 @@ export default defineComponent({
       await Promise.all([
         store.dispatch("LOAD_CHARACTER"),
         store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
-        store.dispatch("LOAD_ACCEPT_RETRIEVE_TELEMETRY"),
       ]);
       if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
         isDefaultStyleSelectDialogOpenComputed.value = true;
       }
-      if (await store.dispatch("IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY")) {
+      if (store.state.acceptRetrieveTelemetry === null) {
         isAcceptRetrieveTelemetryDialogOpenComputed.value = true;
       }
       const audioItem: AudioItem = await store.dispatch(

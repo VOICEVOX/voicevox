@@ -59,7 +59,7 @@ export interface Sandbox {
   ): Promise<void>;
   isUnsetAcceptRetrieveTelemetry(): Promise<boolean>;
   getAcceptRetrieveTelemetry(): Promise<boolean | null>;
-  setAcceptRetrieveTelemetry(acceptRetrieveTelemetry: boolean): Promise<void>;
+  setAcceptRetrieveTelemetry(acceptRetrieveTelemetry: boolean | null): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
