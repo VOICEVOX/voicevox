@@ -719,10 +719,6 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
 
-ipcMainHandle("IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY", () => {
-  return store.get("acceptRetrieveTelemetry") === null;
-});
-
 ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
   return store.get("acceptRetrieveTelemetry");
 });

@@ -172,11 +172,6 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
-  IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [];
-    return: boolean;
-  };
-
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
     args: [];
     return: boolean | null;

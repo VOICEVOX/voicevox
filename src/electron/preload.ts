@@ -196,10 +196,6 @@ const api: Sandbox = {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 
-  isUnsetAcceptRetrieveTelemetry: async () => {
-    return await ipcRendererInvoke("IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY");
-  },
-
   getAcceptRetrieveTelemetry: async () => {
     return await ipcRendererInvoke("GET_ACCEPT_RETRIEVE_TELEMETRY");
   },

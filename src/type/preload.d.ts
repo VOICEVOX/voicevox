@@ -57,7 +57,6 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
-  isUnsetAcceptRetrieveTelemetry(): Promise<boolean>;
   getAcceptRetrieveTelemetry(): Promise<boolean | null>;
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: boolean | null
