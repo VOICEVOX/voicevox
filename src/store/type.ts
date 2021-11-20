@@ -441,6 +441,7 @@ type AudioCommandStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
   };
+
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
       audioKey: string;
@@ -448,6 +449,7 @@ type AudioCommandStoreTypes = {
     };
     action(payload: { audioKey: string; presetKey: string | undefined }): void;
   };
+
   COMMAND_IMPORT_FROM_FILE: {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];

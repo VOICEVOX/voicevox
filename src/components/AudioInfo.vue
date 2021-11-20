@@ -79,7 +79,7 @@
             <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
-          <q-form @submit.prevent="updateOrAddPreset">
+          <q-form @submit.prevent="checkRewrite">
             <q-card-section class="q-pt-none" text-color="display-dark">
               <q-select
                 fill-input
@@ -112,7 +112,7 @@
 
       <q-dialog
         v-model="showsPresetRewriteDialog"
-        @before-hide="closeAllDialog()"
+        @before-hide="closeAllDialog"
       >
         <q-card style="min-width: 350px">
           <q-card-section>
@@ -413,15 +413,29 @@ export default defineComponent({
     const presetKeys = computed(() => store.state.presetKeys);
     const audioPresetKey = computed(() => audioItem.value?.presetKey);
 
-    const presetList = computed(() => {
-      return [
-        { key: undefined, label: "プリセット解除" },
-        ...presetKeys.value.map((key) => ({
-          key,
-          label: presetItems.value[key].name,
-        })),
-      ];
-    });
+    const changePreset = (preset: {
+      label: string;
+      key: string | undefined;
+    }): void => {
+      store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+        audioKey: props.activeAudioKey,
+        presetKey: preset.key,
+      });
+    };
+
+    const presetList = computed<{ label: string; key: string | undefined }[]>(
+      () => {
+        return [
+          { key: undefined, label: "プリセット解除" },
+          ...presetKeys.value
+            .filter((key) => presetItems.value[key] != undefined)
+            .map((key) => ({
+              key,
+              label: presetItems.value[key].name,
+            })),
+        ];
+      }
+    );
 
     const presetSelectModel = computed({
       get: () => {
@@ -440,27 +454,26 @@ export default defineComponent({
         };
       },
       set: (newVal: { label: string; key: string | undefined }) => {
-        onChangePreset(newVal);
+        changePreset(newVal);
       },
     });
-
-    const onChangePreset = (e: {
-      label: string;
-      key: string | undefined;
-    }): void => {
-      store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioKey: props.activeAudioKey,
-        presetKey: e.key,
-      });
-    };
 
     const showsPresetNameDialog = ref(false);
     const showsPresetRewriteDialog = ref(false);
     const presetName = ref("");
 
+    const setPresetName = (name: string) => {
+      presetName.value = name;
+    };
+
+    const closeAllDialog = () => {
+      presetName.value = "";
+      showsPresetNameDialog.value = false;
+      showsPresetRewriteDialog.value = false;
+    };
+
     const registerPreset = () => {
       showsPresetNameDialog.value = true;
-
       if (
         audioPresetKey.value != undefined &&
         presetItems.value[audioPresetKey.value] != undefined
@@ -477,10 +490,6 @@ export default defineComponent({
       const presetNames = presetKeys.value
         .map((presetKey) => presetItems.value[presetKey]?.name)
         .filter((value) => value != undefined);
-      if (inputValue == "")
-        doneFn(() => {
-          presetOptionsList.value = presetNames;
-        });
       doneFn(() => {
         presetOptionsList.value = presetNames.filter((name) =>
           name.includes(inputValue)
@@ -488,21 +497,14 @@ export default defineComponent({
       });
     };
 
-    const closeAllDialog = () => {
-      presetName.value = "";
-      showsPresetNameDialog.value = false;
-      showsPresetRewriteDialog.value = false;
-    };
-
-    const showsPresetEditDialog = ref(false);
-
-    const updateOrAddPreset = () => {
+    const checkRewrite = () => {
       if (presetList.value?.find((e) => e.label === presetName.value)) {
         showsPresetRewriteDialog.value = true;
       } else {
         addPreset();
       }
     };
+
     const createPresetData = (title: string): Preset | undefined => {
       if (
         speedScaleSlider.state.currentValue.value == null ||
@@ -537,7 +539,7 @@ export default defineComponent({
     };
 
     const updatePreset = () => {
-      const key = presetList.value?.find(
+      const key = presetList.value.find(
         (e) => e.label === presetName.value
       )?.key;
       if (key === undefined) return;
@@ -550,7 +552,7 @@ export default defineComponent({
         presetData: newPreset,
         presetKey: key,
       });
-      presetName.value = "";
+
       closeAllDialog();
     };
 
@@ -568,10 +570,10 @@ export default defineComponent({
 
       if (presetList.value[newIndex] === undefined) return;
 
-      onChangePreset(presetList.value[newIndex]);
+      changePreset(presetList.value[newIndex]);
     };
 
-    const setPresetName = (s: string) => (presetName.value = s);
+    const showsPresetEditDialog = ref(false);
 
     return {
       uiLocked,
@@ -588,7 +590,7 @@ export default defineComponent({
       filterPresetOptionsList,
       presetSelectModel,
       setPresetByScroll,
-      updateOrAddPreset,
+      checkRewrite,
       updatePreset,
       registerPreset,
       showsPresetNameDialog,
