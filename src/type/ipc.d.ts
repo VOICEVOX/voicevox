@@ -67,9 +67,9 @@ type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_CONFIRM_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: boolean;
+  SHOW_INFO_DIALOG: {
+    args: [obj: { title: string; message: string; buttons: string[] }];
+    return: number;
   };
 
   SHOW_WARNING_DIALOG: {
