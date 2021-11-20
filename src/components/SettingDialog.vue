@@ -401,7 +401,7 @@ export default defineComponent({
       label: string;
     } | null>({
       get: () => {
-        //見つからなかったらデフォルト値に戻す
+        // 再生デバイスが見つからなかったらデフォルト値に戻す
         const device = availableAudioOutputDevices.value?.find(
           (device) => device.key === store.state.savingSetting.audioOutputDevice
         );
