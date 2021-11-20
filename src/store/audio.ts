@@ -840,9 +840,11 @@ export const audioStore: VoiceVoxStoreOptions<
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
           .catch((err) => {
-            audioElem.addEventListener("canplay", () => {
+            const stop = () => {
               audioElem.pause();
-            });
+              audioElem.removeEventListener("canplay", stop);
+            };
+            audioElem.addEventListener("canplay", stop);
             window.electron.showErrorDialog({
               title: "エラー",
               message: "再生デバイスが見つかりません",
