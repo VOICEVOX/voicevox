@@ -538,6 +538,19 @@ type IndexStoreTypes = {
     action(payload: DefaultStyleId[]): void;
   };
 
+  IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY: {
+    action(): Promise<boolean>;
+  };
+
+  LOAD_ACCEPT_RETRIEVE_TELEMETRY: {
+    action(): Promise<void>;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    mutation: { acceptRetrieveTelemetry: boolean | null };
+    action(payload: boolean): void;
+  };
+
   SHOW_WARNING_DIALOG: {
     action(payload: {
       title: string;
@@ -662,6 +675,7 @@ export type UiStoreState = {
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
+  isAcceptRetrieveTelemetryDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
 };
@@ -702,6 +716,11 @@ type UiStoreTypes = {
   IS_HOTKEY_SETTING_DIALOG_OPEN: {
     mutation: { isHotkeySettingDialogOpen: boolean };
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
+  };
+
+  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
+    mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
+    action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
   };
 
   ON_VUEX_READY: {

@@ -172,6 +172,21 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [];
+    return: boolean;
+  };
+
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [],
+    return: boolean | null;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [acceptRetrieveTelemetry: boolean],
+    return: void;
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;

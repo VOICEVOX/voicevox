@@ -63,6 +63,12 @@ export const indexStore: VoiceVoxStoreOptions<
         }
       }
     },
+    SET_ACCEPT_RETRIEVE_TELEMETRY(_, { acceptRetrieveTelemetry }) {
+      window.dataLayer?.push({
+        event: "updateAcceptRetrieveTelemetry",
+        acceptRetrieveTelemetry: acceptRetrieveTelemetry ?? false,
+      });
+    },
   },
   actions: {
     async GET_HOW_TO_USE_TEXT() {
@@ -102,6 +108,18 @@ export const indexStore: VoiceVoxStoreOptions<
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
       await window.electron.setDefaultStyleIds(defaultStyleIds);
+    },
+    async IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY() {
+      return await window.electron.isUnsetAcceptRetrieveTelemetry();
+    },
+    async LOAD_ACCEPT_RETRIEVE_TELEMETRY({ commit }) {
+      const acceptRetrieveTelemetry =
+        await window.electron.getAcceptRetrieveTelemetry();
+      commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+    },
+    async SET_ACCEPT_RETRIEVE_TELEMETRY({ commit }, acceptRetrieveTelemetry) {
+      commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+      await window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
     },
     async INIT_VUEX({ dispatch }) {
       const promises = [];

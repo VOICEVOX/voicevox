@@ -139,6 +139,7 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  acceptRetrieveTelemetry: boolean | null;
 }>({
   schema: {
     useGpu: {
@@ -208,6 +209,10 @@ const store = new Store<{
       type: "string",
       default: "Default",
     },
+    acceptRetrieveTelemetry: {
+      type: ["boolean", "null"],
+      default: null,
+    }
   },
   migrations: {
     ">=0.7.3": (store) => {
@@ -705,6 +710,21 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
+
+ipcMainHandle("IS_UNSET_ACCEPT_RETRIEVE_TELEMETRY", () => {
+  return store.get("acceptRetrieveTelemetry") === null;
+});
+
+ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
+  return store.get("acceptRetrieveTelemetry");
+});
+
+ipcMainHandle(
+  "SET_ACCEPT_RETRIEVE_TELEMETRY",
+  (_, acceptRetrieveTelemetry) => {
+    store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+  }
+);
 
 // app callback
 app.on("web-contents-created", (e, contents) => {

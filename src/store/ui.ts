@@ -34,6 +34,7 @@ export const uiStoreState: UiStoreState = {
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
+  isAcceptRetrieveTelemetryDialogOpen: false,
   isMaximized: false,
   isPinned: false,
 };
@@ -78,6 +79,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }: { isDefaultStyleSelectDialogOpen: boolean }
       ) {
         state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
+      },
+      IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
+        state,
+        { isAcceptRetrieveTelemetryDialogOpen }
+      ) {
+        state.isAcceptRetrieveTelemetryDialogOpen =
+          isAcceptRetrieveTelemetryDialogOpen;
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
@@ -166,6 +174,23 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen,
+        });
+      },
+      async IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
+        { state, commit },
+        { isAcceptRetrieveTelemetryDialogOpen }
+      ) {
+        if (
+          state.isAcceptRetrieveTelemetryDialogOpen ===
+          isAcceptRetrieveTelemetryDialogOpen
+        )
+          return;
+
+        if (isAcceptRetrieveTelemetryDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+          isAcceptRetrieveTelemetryDialogOpen,
         });
       },
       async GET_USE_GPU({ commit }) {

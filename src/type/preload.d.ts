@@ -57,6 +57,9 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
+  isUnsetAcceptRetrieveTelemetry(): Promise<boolean>;
+  getAcceptRetrieveTelemetry(): Promise<boolean | null>;
+  setAcceptRetrieveTelemetry(acceptRetrieveTelemetry: boolean): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
