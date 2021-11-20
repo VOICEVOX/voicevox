@@ -109,7 +109,8 @@
           </q-form>
         </q-card>
       </q-dialog>
-      <!-- Rewrite Confirm Dialog -->
+
+      <!-- プリセット上書きダイアログ -->
       <q-dialog
         v-model="showsPresetRewriteDialog"
         @before-hide="closeAllDialog"
@@ -458,6 +459,7 @@ export default defineComponent({
       },
     });
 
+    // プリセットの登録・上書き
     const showsPresetNameDialog = ref(false);
     const showsPresetRewriteDialog = ref(false);
     const presetName = ref("");
@@ -573,6 +575,7 @@ export default defineComponent({
       changePreset(presetList.value[newIndex]);
     };
 
+    // プリセットの編集
     const showsPresetEditDialog = ref(false);
 
     return {
