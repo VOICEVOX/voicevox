@@ -1,5 +1,6 @@
 <template>
   <q-dialog
+    persistent
     transition-show="jump-up"
     transition-hide="jump-down"
     class="default-style-select-dialog"
@@ -11,7 +12,7 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        VOICEVOXでは、UIの利便性向上のため、各UIの利用率をGoogle
+        利便性向上のため、ウインドウサイズや各UIの利用率などの情報をGoogle
         Analyticsを用いて収集、分析に使用します。
       </q-card-section>
 

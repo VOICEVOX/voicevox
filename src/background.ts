@@ -410,6 +410,14 @@ async function createWindow() {
     }
   });
 
+  win.on("resize", () => {
+    const windowSize = win.getSize();
+    win.webContents.send(
+      "DETECT_RESIZED",
+      { width: windowSize[0], height: windowSize[1] }
+    );
+  });
+
   win.webContents.once("did-finish-load", () => {
     if (process.argv.length >= 2) {
       const filePath = process.argv[1];

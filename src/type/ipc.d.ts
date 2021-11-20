@@ -236,4 +236,9 @@ type IpcSOData = {
     args: [];
     return: void;
   };
+
+  DETECT_RESIZED: {
+    args: [obj: { width: number, height: number }],
+    return: void;
+  };
 };
