@@ -159,9 +159,7 @@ export type ToolbarButtonsType =
   | "テキスト読み込み"
   | "空白";
 
-export type ToolbarSetting = {
-  buttons: ToolbarButtonsType[];
-};
+export type ToolbarSetting = ToolbarButtonsType[];
 
 export type MoraDataType =
   | "consonant"

@@ -132,6 +132,14 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
+const defaultToolbarButtonSetting: ToolbarSetting = [
+  "連続再生",
+  "停止",
+  "空白",
+  "元に戻す",
+  "やり直す",
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
@@ -194,17 +202,11 @@ const store = new Store<{
       default: defaultHotkeySettings,
     },
     toolbarSetting: {
-      properties: {
-        buttons: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
+      type: "array",
+      items: {
+        type: "string",
       },
-      default: {
-        buttons: ["連続再生", "停止", "空白", "元に戻す", "やり直す"],
-      },
+      default: defaultToolbarButtonSetting,
     },
     defaultStyleIds: {
       type: "array",

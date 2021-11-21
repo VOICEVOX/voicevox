@@ -32,9 +32,7 @@ export const settingStoreState: SettingStoreState = {
     outputSamplingRate: 24000,
   },
   hotkeySettings: [],
-  toolbarSetting: {
-    buttons: [],
-  },
+  toolbarSetting: [],
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
   themeSetting: {
     currentTheme: "Default",

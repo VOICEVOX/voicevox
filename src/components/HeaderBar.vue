@@ -221,7 +221,7 @@ export default defineComponent({
     };
 
     const headerButtons = computed(() =>
-      toolbarSetting.value.buttons.map(searchButton)
+      toolbarSetting.value.map(searchButton)
     );
 
     return {
