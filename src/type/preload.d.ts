@@ -181,3 +181,20 @@ export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
 };
+
+export type QuasarScrollObserverEvent = {
+  position: {
+    top: number;
+    left: number;
+  };
+  direction: "up" | "down" | "left" | "right";
+  directionChanged: boolean;
+  delta: {
+    top: number;
+    left: number;
+  };
+  inflectionPoint: {
+    top: number;
+    left: number;
+  };
+};

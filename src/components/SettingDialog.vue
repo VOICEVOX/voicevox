@@ -6,6 +6,7 @@
     transition-hide="jump-down"
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
+    @show="restorePos"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -25,8 +26,9 @@
             />
           </q-toolbar>
         </q-header>
-        <q-page ref="scroller" class="scroller">
-          <div class="q-pa-md row items-start q-gutter-md">
+        <q-page class="scroller scroll">
+          <q-scroll-observer @scroll="onScroll" />
+          <div id="scroller" class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -324,10 +326,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
-import { SavingSetting } from "@/type/preload";
+import { useQuasar, debounce, scroll } from "quasar";
+import { QuasarScrollObserverEvent, SavingSetting } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -340,6 +342,7 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    const { getScrollTarget, setVerticalScrollPosition } = scroll;
     const store = useStore();
     const $q = useQuasar();
 
@@ -355,6 +358,22 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const scrollPos = ref(0);
+
+    const onScroll = (evt: QuasarScrollObserverEvent) => {
+      scrollPos.value = evt.position.top;
+    };
+
+    const restorePos = () => {
+      const target = document.getElementById("scroller");
+      if (target)
+        setVerticalScrollPosition(
+          getScrollTarget(target),
+          scrollPos.value,
+          150
+        );
+    };
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -500,6 +519,8 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
+      onScroll: debounce(onScroll, 200),
+      restorePos,
     };
   },
 });
