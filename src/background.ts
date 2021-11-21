@@ -164,6 +164,7 @@ const store = new Store<{
         exportText: { type: "boolean", default: true },
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
+        audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -174,6 +175,7 @@ const store = new Store<{
         exportText: true,
         outputStereo: false,
         outputSamplingRate: 24000,
+        audioOutputDevice: "default",
       },
     },
     // To future developers: if you are to modify the store schema with array type,
