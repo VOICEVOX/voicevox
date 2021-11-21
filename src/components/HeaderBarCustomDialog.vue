@@ -111,7 +111,7 @@
               <div class="text-h5">表示するボタンの選択</div>
             </q-card-actions>
             <q-card-actions class="no-padding">
-              <q-list class="usable-button-list">
+              <q-list class="usable-button-list bg-setting-item">
                 <q-item
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
