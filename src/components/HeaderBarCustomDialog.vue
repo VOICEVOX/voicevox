@@ -286,6 +286,7 @@ export default defineComponent({
             });
           });
       } else {
+        selectedButton.value = toolbarButtons.value[0];
         headerBarCustomDialogOpenComputed.value = false;
       }
     };
