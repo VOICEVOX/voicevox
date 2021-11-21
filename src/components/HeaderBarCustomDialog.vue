@@ -106,6 +106,7 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
+                :disable="!removable"
                 @click="removeButton"
                 >削除する</q-btn
               >
@@ -226,13 +227,15 @@ export default defineComponent({
     );
 
     const leftShiftable = computed(
-      () => selectedButton.value !== toolbarButtons.value[0]
+      () => selectedButton.value !== toolbarButtons.value[0] && removable.value
     );
     const rightShiftable = computed(
       () =>
         selectedButton.value !==
-        toolbarButtons.value[toolbarButtons.value.length - 1]
+          toolbarButtons.value[toolbarButtons.value.length - 1] &&
+        removable.value
     );
+    const removable = computed(() => selectedButton.value !== undefined);
 
     const changedOrNotFlag = computed(() => {
       const nowSetting = store.state.toolbarSetting.buttons;
@@ -325,6 +328,7 @@ export default defineComponent({
       usableButtons,
       leftShiftable,
       rightShiftable,
+      removable,
       changedOrNotFlag,
       moveLeftButton,
       moveRightButton,
