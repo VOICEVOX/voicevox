@@ -28,7 +28,6 @@ import {
   HotkeyReturnType,
   ToolbarButtonsType,
 } from "@/type/preload";
-import { SaveResultObject } from "@/store/type";
 
 type ButtonContent =
   | {

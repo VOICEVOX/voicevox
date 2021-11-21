@@ -32,7 +32,6 @@ import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { SaveResultObject } from "@/store/type";
 
 type MenuItemBase<T extends string> = {
   type: T;
