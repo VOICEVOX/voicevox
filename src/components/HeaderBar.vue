@@ -28,6 +28,7 @@ import {
   HotkeyReturnType,
   ToolbarButtonsType,
 } from "@/type/preload";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type ButtonContent =
   | {
@@ -150,6 +151,7 @@ export default defineComponent({
       await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG", {
         encoding: store.state.savingSetting.fileEncoding,
         $q,
+        saveAllResultDialog: SaveAllResultDialog,
       });
     };
     const generateAndSaveOneAudio = async () => {

@@ -26,7 +26,6 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
 
 async function generateUniqueId(audioItem: AudioItem) {
@@ -859,9 +858,15 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch },
       {
         $q,
+        saveAllResultDialog,
         dirPath,
         encoding,
-      }: { $q: QVueGlobals; dirPath?: string; encoding?: EncodingType }
+      }: {
+        $q: QVueGlobals;
+        saveAllResultDialog: unknown;
+        dirPath?: string;
+        encoding?: EncodingType;
+      }
     ) {
       const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
         dirPath,
@@ -888,7 +893,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
         $q.dialog({
-          component: SaveAllResultDialog,
+          component: saveAllResultDialog,
           componentProps: {
             successArray: successArray,
             writeErrorArray: writeErrorArray,

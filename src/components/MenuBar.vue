@@ -32,6 +32,7 @@ import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -89,6 +90,7 @@ export default defineComponent({
         await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG", {
           encoding: store.state.savingSetting.fileEncoding,
           $q,
+          saveAllResultDialog: SaveAllResultDialog,
         });
       }
     };

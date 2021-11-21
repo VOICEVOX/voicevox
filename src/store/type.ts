@@ -293,6 +293,7 @@ type AudioStoreTypes = {
   GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG: {
     action(payload: {
       $q: QVueGlobals;
+      saveAllResultDialog: unknown;
       dirPath?: string;
       encoding?: EncodingType;
     }): void;
