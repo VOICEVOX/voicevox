@@ -44,9 +44,7 @@ describe("store/vuex.js test", () => {
           outputStereo: false,
           outputSamplingRate: 24000,
         },
-        toolbarSetting: {
-          buttons: [],
-        },
+        toolbarSetting: [],
         themeSetting: {
           currentTheme: "Default",
           availableThemes: [],
