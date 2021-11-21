@@ -84,8 +84,7 @@
               <q-space />
               <q-btn
                 outline
-                color="background-light"
-                text-color="display-dark"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="!leftShiftable"
                 @click="moveLeftButton"
@@ -93,8 +92,7 @@
               >
               <q-btn
                 outline
-                color="background-light"
-                text-color="display-dark"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="!rightShiftable"
                 @click="moveRightButton"
@@ -102,8 +100,7 @@
               >
               <q-btn
                 outline
-                color="background-light"
-                text-color="display-dark"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="removeButton"
                 >削除する</q-btn
