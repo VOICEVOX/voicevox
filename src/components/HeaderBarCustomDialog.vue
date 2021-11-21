@@ -21,7 +21,7 @@
                 :class="
                   (selectedButton === button
                     ? 'radio-space-selected'
-                    : 'radio-space') + ' q-mr-sm'
+                    : 'radio-space') + ' text-no-wrap q-mr-sm'
                 "
                 ><q-tooltip
                   :delay="500"
