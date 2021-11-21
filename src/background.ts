@@ -728,6 +728,10 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
 
+ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+  return defaultToolbarButtonSetting;
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く

@@ -177,6 +177,11 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  GET_DEFAULT_TOOLBAR_SETTING: {
+    args: [];
+    return: import("@/type/preload").ToolbarSetting;
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
