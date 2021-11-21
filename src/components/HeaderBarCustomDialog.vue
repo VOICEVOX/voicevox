@@ -353,9 +353,10 @@ export default defineComponent({
 
 .radio {
   padding: 6px 14px;
-  border: solid 2px var(--color-background);
+  border: solid 2px var(--color-background-light);
   border-radius: 3px;
-  background-color: var(--color-background);
+  color: var(--color-display-dark);
+  background-color: var(--color-background-light);
 }
 
 .radio:hover {
@@ -371,7 +372,7 @@ export default defineComponent({
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: var(--color-background);
+  color: var(--color-background-light);
 }
 
 .radio-space:hover {
