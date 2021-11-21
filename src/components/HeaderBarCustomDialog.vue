@@ -80,7 +80,9 @@
               </template>
             </q-toolbar>
             <q-card-actions>
-              <div class="text-h5">「{{ selectedButton }}」を</div>
+              <div v-if="selectedButton !== undefined" class="text-h5">
+                「{{ selectedButton }}」を選択中
+              </div>
               <q-space />
               <q-btn
                 outline
