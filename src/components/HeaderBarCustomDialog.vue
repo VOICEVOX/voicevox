@@ -20,6 +20,15 @@
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap text-bold q-mr-sm"
+              @click="applyDefaultSetting"
+              :disable="!defaultOrNotFlag"
+              >デフォルトに戻す</q-btn
+            >
+            <q-btn
+              unelevated
+              color="background-light"
+              text-color="display-dark"
+              class="text-no-wrap text-bold q-mr-sm"
               @click="saveCustomToolbar"
               :disable="!changedOrNotFlag"
               >保存</q-btn
@@ -145,7 +154,7 @@
 import { computed, defineComponent, ref, watch, Ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { ToolbarButtonsType } from "@/type/preload";
+import { ToolbarButtonsType, ToolbarSetting } from "@/type/preload";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -176,6 +185,11 @@ export default defineComponent({
         }
       }
     );
+    const defaultSetting: ToolbarSetting = [];
+    window.electron.getDefaultToolbarSetting().then((setting) => {
+      defaultSetting.push(...setting);
+    });
+
     const usableButtons = [
       {
         label: "連続再生",
@@ -243,6 +257,9 @@ export default defineComponent({
       const nowSetting = store.state.toolbarSetting;
       return toolbarButtons.value.join("") !== nowSetting.join("");
     });
+    const defaultOrNotFlag = computed(() => {
+      return toolbarButtons.value.join("") !== defaultSetting.join("");
+    });
 
     const moveLeftButton = () => {
       if (selectedButton.value === undefined) return;
@@ -280,6 +297,27 @@ export default defineComponent({
       }
     );
 
+    const applyDefaultSetting = () => {
+      $q.dialog({
+        title: "ツールバーをデフォルトに戻します",
+        message:
+          "ツールバーをデフォルトに戻します。<br/>本当によろしいですか？",
+        html: true,
+        ok: {
+          label: "はい",
+          flat: true,
+          textColor: "secondary",
+        },
+        cancel: {
+          label: "いいえ",
+          flat: true,
+          textColor: "secondary",
+        },
+      }).onOk(() => {
+        toolbarButtons.value = [...defaultSetting];
+        selectedButton.value = toolbarButtons.value[0];
+      });
+    };
     const saveCustomToolbar = () => {
       store.dispatch("SET_TOOLBAR_SETTING", {
         data: [...toolbarButtons.value],
@@ -331,10 +369,12 @@ export default defineComponent({
       rightShiftable,
       removable,
       changedOrNotFlag,
+      defaultOrNotFlag,
       moveLeftButton,
       moveRightButton,
       removeButton,
       saveCustomToolbar,
+      applyDefaultSetting,
       finishOrNotDialog,
     };
   },
