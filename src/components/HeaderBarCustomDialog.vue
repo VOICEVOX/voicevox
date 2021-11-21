@@ -223,6 +223,7 @@ export default defineComponent({
     );
     const removable = computed(() => selectedButton.value !== undefined);
 
+    // 配列の比較は出来ないので、文字列として結合したものを比較する
     const changedOrNotFlag = computed(() => {
       const nowSetting = store.state.toolbarSetting;
       return toolbarButtons.value.join("") !== nowSetting.join("");
@@ -295,7 +296,6 @@ export default defineComponent({
     };
 
     const finishOrNotDialog = () => {
-      // 配列の比較は出来ないので、文字列として結合したものを比較する
       if (changedOrNotFlag.value) {
         $q.dialog({
           title: "カスタマイズを終了しますか？",
