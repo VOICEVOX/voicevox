@@ -18,6 +18,7 @@ import {
   VoiceVoxStoreOptions,
   IEngineConnectorFactoryActions,
   QuasarDialog,
+  SaveAllResultDialogType,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -27,7 +28,6 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -869,10 +869,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch },
       {
         quasarDialog,
+        saveAllResultDialog,
         dirPath,
         encoding,
       }: {
         quasarDialog: QuasarDialog;
+        saveAllResultDialog: SaveAllResultDialogType;
         dirPath?: string;
         encoding?: EncodingType;
       }
@@ -902,7 +904,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
         quasarDialog({
-          component: SaveAllResultDialog,
+          component: saveAllResultDialog,
           componentProps: {
             successArray: successArray,
             writeErrorArray: writeErrorArray,
