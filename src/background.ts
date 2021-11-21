@@ -844,6 +844,10 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
 
+ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+  return defaultToolbarButtonSetting;
+});
+
 ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
   return store.get("acceptRetrieveTelemetry");
 });
