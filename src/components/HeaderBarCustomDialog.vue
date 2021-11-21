@@ -135,11 +135,12 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch, Ref } from "vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/components/HeaderBar.vue";
 import { useQuasar } from "quasar";
+import { ToolbarButtonsType } from "@/type/preload";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -156,7 +157,9 @@ export default defineComponent({
 
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting.buttons]);
-    const selectedButton = ref(toolbarButtons.value[0]);
+    const selectedButton: Ref<ToolbarButtonsType | undefined> = ref(
+      toolbarButtons.value[0]
+    );
     watch(
       () => store.state.toolbarSetting.buttons,
       (newData) => {
@@ -206,16 +209,19 @@ export default defineComponent({
     });
 
     const moveLeftButton = () => {
+      if (selectedButton.value === undefined) return;
       const index = toolbarButtons.value.indexOf(selectedButton.value);
       toolbarButtons.value[index] = toolbarButtons.value[index - 1];
       toolbarButtons.value[index - 1] = selectedButton.value;
     };
     const moveRightButton = () => {
+      if (selectedButton.value === undefined) return;
       const index = toolbarButtons.value.indexOf(selectedButton.value);
       toolbarButtons.value[index] = toolbarButtons.value[index + 1];
       toolbarButtons.value[index + 1] = selectedButton.value;
     };
     const removeButton = () => {
+      if (selectedButton.value === undefined) return;
       const index = toolbarButtons.value.indexOf(selectedButton.value);
       toolbarButtons.value = [
         ...toolbarButtons.value.slice(0, index),
@@ -229,6 +235,7 @@ export default defineComponent({
         if (oldData.length < newData.length) {
           selectedButton.value = newData[newData.length - 1];
         } else if (
+          selectedButton.value !== undefined &&
           oldData.includes(selectedButton.value) &&
           !newData.includes(selectedButton.value)
         ) {
