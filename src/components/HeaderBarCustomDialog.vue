@@ -157,12 +157,12 @@ export default defineComponent({
     const $q = useQuasar();
 
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
-    const toolbarButtons = ref([...store.state.toolbarSetting.buttons]);
+    const toolbarButtons = ref([...store.state.toolbarSetting]);
     const selectedButton: Ref<ToolbarButtonsType | undefined> = ref(
       toolbarButtons.value[0]
     );
     watch(
-      () => store.state.toolbarSetting.buttons,
+      () => store.state.toolbarSetting,
       (newData) => {
         // このwatchはToolbar Setting更新時にも機能するが、
         // 以下の処理はVOICEVOX起動時のみ機能してほしいので、toolbarButtonsのlengthが0の時だけ機能させる
@@ -207,7 +207,7 @@ export default defineComponent({
     const removable = computed(() => selectedButton.value !== undefined);
 
     const changedOrNotFlag = computed(() => {
-      const nowSetting = store.state.toolbarSetting.buttons;
+      const nowSetting = store.state.toolbarSetting;
       return toolbarButtons.value.join("") !== nowSetting.join("");
     });
 
@@ -249,9 +249,7 @@ export default defineComponent({
 
     const saveCustomToolbar = () => {
       store.dispatch("SET_TOOLBAR_SETTING", {
-        data: {
-          buttons: [...toolbarButtons.value],
-        },
+        data: [...toolbarButtons.value],
       });
     };
 
@@ -276,7 +274,7 @@ export default defineComponent({
           },
         })
           .onOk(() => {
-            toolbarButtons.value = [...store.state.toolbarSetting.buttons];
+            toolbarButtons.value = [...store.state.toolbarSetting];
             selectedButton.value = toolbarButtons.value[0];
             headerBarCustomDialogOpenComputed.value = false;
           })
