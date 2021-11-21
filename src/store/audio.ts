@@ -810,8 +810,13 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     PLAY_AUDIO: createUILockAction(
-      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
-        const audioElem = audioElements[audioKey];
+      async (
+        { state, commit, dispatch },
+        { audioKey }: { audioKey: string }
+      ) => {
+        const audioElem = audioElements[audioKey] as HTMLAudioElement & {
+          setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
+        };
         audioElem.pause();
 
         // 音声用意
@@ -832,6 +837,21 @@ export const audioStore: VoiceVoxStoreOptions<
         }
         audioElem.src = URL.createObjectURL(blob);
 
+        audioElem
+          .setSinkId(state.savingSetting.audioOutputDevice)
+          .catch((err) => {
+            const stop = () => {
+              audioElem.pause();
+              audioElem.removeEventListener("canplay", stop);
+            };
+            audioElem.addEventListener("canplay", stop);
+            window.electron.showErrorDialog({
+              title: "エラー",
+              message: "再生デバイスが見つかりません",
+            });
+            throw new Error(err);
+          });
+
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
           commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
@@ -851,6 +871,7 @@ export const audioStore: VoiceVoxStoreOptions<
         });
 
         audioElem.play();
+
         return audioPlayPromise;
       }
     ),
