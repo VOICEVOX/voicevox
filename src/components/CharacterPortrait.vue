@@ -55,17 +55,17 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-$background: var(--color-background);
+$background: var(--color-background-rgb);
 
 .character-name {
   position: absolute;
   padding: 1px 24px 1px 8px;
-  //background-image: linear-gradient(
-  //  90deg,
-  //  rgba($background, 0.5) 0%,
-  //  rgba($background, 0.5) 75%,
-  //  transparent 100%
-  //);
+  background-image: linear-gradient(
+    90deg,
+    rgba($background, 0.5) 0%,
+    rgba($background, 0.5) 75%,
+    transparent 100%
+  );
   overflow-wrap: anywhere;
 }
 
