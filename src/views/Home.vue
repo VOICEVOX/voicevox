@@ -113,9 +113,6 @@
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
-  <telemetry-accept-dialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
 </template>
 
 <script lang="ts">
@@ -138,7 +135,6 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
-import TelemetryAcceptDialog from "@/components/TelemetryAcceptDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -159,7 +155,6 @@ export default defineComponent({
     HotkeySettingDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
-    TelemetryAcceptDialog,
   },
 
   setup() {
@@ -363,9 +358,6 @@ export default defineComponent({
       if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
         isDefaultStyleSelectDialogOpenComputed.value = true;
       }
-      if (store.state.acceptRetrieveTelemetry === null) {
-        isAcceptRetrieveTelemetryDialogOpenComputed.value = true;
-      }
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -418,15 +410,6 @@ export default defineComponent({
         }),
     });
 
-    // テレメトリー収集の同意
-    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
-      get: () => store.state.isAcceptRetrieveTelemetryDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
-          isAcceptRetrieveTelemetryDialogOpen: val,
-        }),
-    });
-
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -474,7 +457,6 @@ export default defineComponent({
       isHotkeySettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
-      isAcceptRetrieveTelemetryDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
