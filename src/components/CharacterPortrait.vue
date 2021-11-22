@@ -66,6 +66,7 @@ $background: var(--color-background);
   //  rgba($background, 0.5) 75%,
   //  transparent 100%
   //);
+  overflow-wrap: anywhere;
 }
 
 .character-portrait-wrapper {
