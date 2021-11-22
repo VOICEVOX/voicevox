@@ -5,7 +5,7 @@
     <header-bar />
 
     <q-page-container>
-      <q-page class="main-row-panes bg-background">
+      <q-page class="main-row-panes">
         <div v-if="engineState === 'STARTING'" class="waiting-engine">
           <div>
             <q-spinner color="primary" size="2.5rem" />
