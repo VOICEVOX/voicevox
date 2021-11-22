@@ -490,7 +490,7 @@ body {
 }
 
 .waiting-engine {
-  background-color: var(--color-background);
+  background-color: rgba(var(--color-display-dark-rgb), 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
