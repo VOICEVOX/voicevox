@@ -12,6 +12,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  AcceptRetrieveTelemetryStatus,
   HotkeySetting,
   MoraDataType,
   SavingSetting,
@@ -614,7 +615,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   engineHost: string;
   themeSetting: ThemeSetting;
-  acceptRetrieveTelemetry: boolean | null;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 };
 
 type SettingStoreTypes = {
@@ -651,8 +652,10 @@ type SettingStoreTypes = {
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    mutation: { acceptRetrieveTelemetry: boolean | null };
-    action(payload: { acceptRetrieveTelemetry: boolean | null }): void;
+    mutation: { acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus };
+    action(payload: {
+      acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+    }): void;
   };
 };
 

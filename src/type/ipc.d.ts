@@ -174,11 +174,13 @@ type IpcIHData = {
 
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
     args: [];
-    return: boolean | null;
+    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [acceptRetrieveTelemetry: boolean | null];
+    args: [
+      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
+    ];
     return: void;
   };
 

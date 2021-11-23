@@ -23,6 +23,7 @@ import {
   SavingSetting,
   ThemeConf,
   StyleInfo,
+  AcceptRetrieveTelemetryStatus,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -139,7 +140,7 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
-  acceptRetrieveTelemetry: boolean | null;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
     useGpu: {
@@ -210,8 +211,9 @@ const store = new Store<{
       default: "Default",
     },
     acceptRetrieveTelemetry: {
-      type: ["boolean", "null"],
-      default: null,
+      type: "string",
+      enum: ["Unconfirmed", "Accepted", "Refused"],
+      default: "Unconfirmed",
     },
   },
   migrations: {

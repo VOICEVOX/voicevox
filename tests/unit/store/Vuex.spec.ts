@@ -51,7 +51,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         hotkeySettings: [],
-        acceptRetrieveTelemetry: false,
+        acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
       },
       getters: {
@@ -124,6 +124,6 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
-    assert.equal(store.state.acceptRetrieveTelemetry, false);
+    assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
   });
 });

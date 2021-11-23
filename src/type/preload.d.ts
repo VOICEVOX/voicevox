@@ -57,9 +57,9 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
-  getAcceptRetrieveTelemetry(): Promise<boolean | null>;
+  getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
   setAcceptRetrieveTelemetry(
-    acceptRetrieveTelemetry: boolean | null
+    acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -101,6 +101,11 @@ export type UpdateInfo = {
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";
+
+export type AcceptRetrieveTelemetryStatus =
+  | "Unconfirmed"
+  | "Accepted"
+  | "Refused";
 
 export type SavingSetting = {
   exportLab: boolean;

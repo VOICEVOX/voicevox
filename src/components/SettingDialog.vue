@@ -461,10 +461,12 @@ export default defineComponent({
     updateAudioOutputDevices();
 
     //const acceptRetrieveTelemetryComputed = computed({
-    //  get: () => store.state.acceptRetrieveTelemetry ?? false,
+    //  get: () => store.state.acceptRetrieveTelemetry == "Accepted",
     //  set: (acceptRetrieveTelemetry: boolean) => {
     //    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-    //      acceptRetrieveTelemetry,
+    //      acceptRetrieveTelemetry: acceptRetrieveTelemetry
+    //        ? "Accepted"
+    //        : "Refused",
     //    });
     //  },
     //});

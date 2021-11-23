@@ -37,7 +37,7 @@ export const settingStoreState: SettingStoreState = {
     currentTheme: "Default",
     availableThemes: [],
   },
-  acceptRetrieveTelemetry: null,
+  acceptRetrieveTelemetry: "Unconfirmed",
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -175,7 +175,7 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_ACCEPT_RETRIEVE_TELEMETRY({ commit }, { acceptRetrieveTelemetry }) {
       window.dataLayer?.push({
         event: "updateAcceptRetrieveTelemetry",
-        acceptRetrieveTelemetry: acceptRetrieveTelemetry ?? false,
+        acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
       window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
