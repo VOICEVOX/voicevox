@@ -337,6 +337,7 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
+            <!--
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">テレメトリー</div>
@@ -361,6 +362,7 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            -->
           </div>
         </q-page>
       </q-page-container>
@@ -458,14 +460,14 @@ export default defineComponent({
     );
     updateAudioOutputDevices();
 
-    const acceptRetrieveTelemetryComputed = computed({
-      get: () => store.state.acceptRetrieveTelemetry ?? false,
-      set: (acceptRetrieveTelemetry: boolean) => {
-        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-          acceptRetrieveTelemetry,
-        });
-      },
-    });
+    //const acceptRetrieveTelemetryComputed = computed({
+    //  get: () => store.state.acceptRetrieveTelemetry ?? false,
+    //  set: (acceptRetrieveTelemetry: boolean) => {
+    //    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    //      acceptRetrieveTelemetry,
+    //    });
+    //  },
+    //});
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -594,7 +596,7 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
-      acceptRetrieveTelemetryComputed,
+      //acceptRetrieveTelemetryComputed,
     };
   },
 });
