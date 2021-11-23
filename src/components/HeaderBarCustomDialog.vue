@@ -206,6 +206,7 @@ export default defineComponent({
     watch(
       () => props.modelValue,
       (newValue) => {
+        store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: false });
         if (!newValue) {
           finishOrNotDialog();
         }
