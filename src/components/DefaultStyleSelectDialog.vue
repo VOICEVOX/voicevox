@@ -77,7 +77,10 @@
       >
         <div class="character-portrait-wrapper">
           <img
-            :src="characterInfos[pageIndex].portraitPath"
+            :src="
+              'data:image/png;base64,' +
+              characterInfos[pageIndex].portraitBase64
+            "
             class="character-portrait"
           />
         </div>
@@ -111,7 +114,10 @@
                     @click="selectStyleIndex(characterIndex, styleIndex)"
                   >
                     <div class="style-item-inner">
-                      <img :src="style.iconPath" class="style-icon" />
+                      <img
+                        :src="'data:image/png;base64,' + style.iconBase64"
+                        class="style-icon"
+                      />
                       <span class="text-subtitle1 q-ma-sm">{{
                         style.styleName || "ノーマル"
                       }}</span>
@@ -247,10 +253,13 @@ export default defineComponent({
       return selectedStyleIndex !== undefined;
     });
 
-    const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
+    const play = (
+      { styleId, voiceSampleBase64s }: StyleInfo,
+      index: number
+    ) => {
       if (audio.src !== "") stop();
 
-      audio.src = voiceSamplePaths[index];
+      audio.src = "data:audio/wav;base64," + voiceSampleBase64s[index];
       audio.play();
       playing.value = { styleId, index };
     };

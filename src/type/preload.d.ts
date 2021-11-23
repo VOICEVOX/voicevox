@@ -64,8 +64,8 @@ export type AppInfos = {
 export type StyleInfo = {
   styleName?: string;
   styleId: number;
-  iconPath: string;
-  voiceSamplePaths: string[];
+  iconBase64: string;
+  voiceSampleBase64s: string[];
 };
 
 export type MetasJson = {
@@ -75,7 +75,7 @@ export type MetasJson = {
 };
 
 export type CharacterInfo = {
-  portraitPath: string;
+  portraitBase64: string;
   metas: {
     speakerUuid: string;
     speakerName: string;

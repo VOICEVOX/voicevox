@@ -22,6 +22,7 @@ import {
   CharacterInfo,
   Encoding as EncodingType,
   MoraDataType,
+  StyleInfo,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import {
@@ -418,6 +419,7 @@ const audioStoreCreator = (
       ),
       LOAD_CHARACTER: createUILockAction(async ({ rootState, commit }) => {
         const characterInfos = await window.electron.getCharacterInfos();
+
         _engineFactory
           .instance(rootState.engineHost)
           .speakersSpeakersGet()
@@ -426,8 +428,10 @@ const audioStoreCreator = (
             throw error;
           })
           .then((speakers) => {
-            console.log(speakers);
-            for (const speaker of speakers) {
+            const tmpCharacterInfos: CharacterInfo[] = new Array(
+              speakers.length
+            );
+            speakers.forEach((speaker, speaker_index) => {
               _engineFactory
                 .instance(rootState.engineHost)
                 .speakerInfoSpeakerInfoGet({
@@ -441,9 +445,31 @@ const audioStoreCreator = (
                   throw error;
                 })
                 .then((speakerInfo) => {
-                  console.log(speakerInfo);
+                  const styles: StyleInfo[] = new Array(speaker.styles.length);
+                  speaker.styles.forEach((style, i) => {
+                    for (const styleInfo of speakerInfo.styleInfos) {
+                      if (style.id === styleInfo.id) {
+                        styles[i] = {
+                          styleName: style.name,
+                          styleId: style.id,
+                          iconBase64: styleInfo.icon,
+                          voiceSampleBase64s: styleInfo.voiceSamples,
+                        };
+                      }
+                    }
+                  });
+                  tmpCharacterInfos[speaker_index] = {
+                    portraitBase64: speakerInfo.portrait,
+                    metas: {
+                      speakerUuid: speaker.speakerUuid,
+                      speakerName: speaker.name,
+                      styles: styles,
+                      policy: speakerInfo.policy,
+                    },
+                  };
                 });
-            }
+            });
+            console.log(tmpCharacterInfos);
           });
 
         commit("SET_CHARACTER_INFOS", { characterInfos });

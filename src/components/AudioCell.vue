@@ -9,7 +9,10 @@
     />
     <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
-      <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
+      <img
+        class="q-pa-none q-ma-none"
+        :src="'data:image/png;base64,' + selectedStyle.iconBase64"
+      />
       <q-menu
         class="character-menu"
         transition-show="none"
@@ -41,7 +44,8 @@
                   no-transition
                   :ratio="1"
                   :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
+                    'data:image/png;base64,' +
+                    getDefaultStyle(characterInfo.metas.speakerUuid).iconBase64
                   "
                 />
               </q-avatar>
@@ -77,7 +81,10 @@
                         no-spinner
                         no-transition
                         :ratio="1"
-                        :src="characterInfo.metas.styles[styleIndex].iconPath"
+                        :src="
+                          'data:image/png;base64,' +
+                          characterInfo.metas.styles[styleIndex].iconBase64
+                        "
                       />
                     </q-avatar>
                   </q-item-section>

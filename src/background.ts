@@ -309,19 +309,29 @@ for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
   const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
     styleName,
     styleId,
-    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
-    voiceSamplePaths: [...Array(3).keys()].map((x) =>
-      path.join(
-        dirPath,
-        "voice_samples",
-        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
+    iconBase64: fs.readFileSync(
+      path.join(__static, dirPath, "icons", `${speakerName}_${styleId}.png`),
+      "base64"
+    ),
+    voiceSampleBase64s: [...Array(3).keys()].map((x) =>
+      fs.readFileSync(
+        path.join(
+          __static,
+          dirPath,
+          "voice_samples",
+          `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
+        ),
+        "base64"
       )
     ),
   }));
-  const portraitPath = path.join(dirPath, "portrait.png");
+  const portraitBase64 = fs.readFileSync(
+    path.join(__static, dirPath, "portrait.png"),
+    "base64"
+  );
 
   characterInfos.push({
-    portraitPath,
+    portraitBase64,
     metas: {
       speakerName,
       speakerUuid,
