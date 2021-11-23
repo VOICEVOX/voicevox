@@ -8,6 +8,7 @@ import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { assert } from "chai";
+import { proxyStore } from "@/store/proxy";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -41,10 +42,14 @@ describe("store/vuex.js test", () => {
           exportText: true,
           outputStereo: false,
           outputSamplingRate: 24000,
+          audioOutputDevice: "default",
+        },
+        themeSetting: {
+          currentTheme: "Default",
+          availableThemes: [],
         },
         isPinned: false,
         hotkeySettings: [],
-        useVoicing: false,
         engineHost: "http://127.0.0.1",
       },
       getters: {
@@ -55,6 +60,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.getters,
         ...audioCommandStore.getters,
         ...indexStore.getters,
+        ...proxyStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -64,6 +70,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
         ...indexStore.mutations,
+        ...proxyStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -73,6 +80,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.actions,
         ...audioCommandStore.actions,
         ...indexStore.actions,
+        ...proxyStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
@@ -110,6 +118,8 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isPinned, false);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
-    assert.equal(store.state.useVoicing, false);
+    assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
+    assert.property(store.state.themeSetting, "availableThemes");
+    assert.isEmpty(store.state.themeSetting.availableThemes);
   });
 });

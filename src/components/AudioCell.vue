@@ -3,7 +3,7 @@
     <q-icon
       v-if="isActiveAudioCell"
       name="arrow_right"
-      color="primary"
+      color="primary-light"
       size="sm"
       class="absolute active-arrow"
     />
@@ -22,83 +22,96 @@
           <q-item
             v-for="(characterInfo, characterIndex) in characterInfos"
             :key="characterIndex"
-            clickable
-            v-close-popup
-            active-class="selected-character-item"
-            :active="
-              characterInfo.metas.speakerUuid ===
-              selectedCharacterInfo.metas.speakerUuid
-            "
-            @click="
-              changeStyleId(
-                getDefaultStyle(characterInfo.metas.speakerUuid).styleId
-              )
-            "
-            @mouseover="reassignSubMenuOpen(characterIndex)"
-            @mouseleave="reassignSubMenuOpen.cancel()"
+            class="q-pa-none"
           >
-            <q-item-section avatar>
-              <q-avatar rounded size="2rem">
-                <q-img
-                  no-spinner
-                  no-transition
-                  :ratio="1"
-                  :src="
-                    'data:image/png;base64,' +
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconBase64
-                  "
-                />
-              </q-avatar>
-            </q-item-section>
-            <q-item-section>{{
-              characterInfo.metas.speakerName
-            }}</q-item-section>
-            <q-item-section side>
-              <q-icon name="keyboard_arrow_right" />
-            </q-item-section>
+            <q-btn-group flat class="col full-width">
+              <q-btn
+                flat
+                no-caps
+                v-close-popup
+                class="col-grow"
+                :class="
+                  characterInfo.metas.speakerUuid ===
+                    selectedCharacterInfo.metas.speakerUuid &&
+                  'selected-character-item'
+                "
+                @click="
+                  changeStyleId(
+                    getDefaultStyle(characterInfo.metas.speakerUuid).styleId
+                  )
+                "
+                @mouseover="reassignSubMenuOpen(-1)"
+                @mouseleave="reassignSubMenuOpen.cancel()"
+              >
+                <q-avatar rounded size="2rem" class="q-mr-md">
+                  <q-img
+                    no-spinner
+                    no-transition
+                    :ratio="1"
+                    :src="
+                      'data:image/png;base64,' +
+                      getDefaultStyle(characterInfo.metas.speakerUuid).iconBase64
+                    "
+                  />
+                </q-avatar>
+                <div>{{ characterInfo.metas.speakerName }}</div>
+              </q-btn>
 
-            <q-menu
-              anchor="top end"
-              self="top start"
-              transition-show="none"
-              transition-hide="none"
-              class="character-menu"
-              v-model="subMenuOpenFlags[characterIndex]"
-            >
-              <q-list>
-                <q-item
-                  v-for="(style, styleIndex) in characterInfo.metas.styles"
-                  :key="styleIndex"
-                  clickable
-                  v-close-popup
-                  active-class="selected-character-item"
-                  :active="style.styleId === selectedStyle.styleId"
-                  @click="changeStyleId(style.styleId)"
+              <q-separator vertical />
+
+              <div
+                class="flex items-center q-px-sm q-py-none cursor-pointer"
+                :class="
+                  subMenuOpenFlags[characterIndex] && 'opened-character-item'
+                "
+                @mouseover="reassignSubMenuOpen(characterIndex)"
+                @mouseleave="reassignSubMenuOpen.cancel()"
+              >
+                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
+
+                <q-menu
+                  no-parent-event
+                  anchor="top end"
+                  self="top start"
+                  transition-show="none"
+                  transition-hide="none"
+                  class="character-menu"
+                  v-model="subMenuOpenFlags[characterIndex]"
                 >
-                  <q-item-section avatar>
-                    <q-avatar rounded size="2rem">
-                      <q-img
-                        no-spinner
-                        no-transition
-                        :ratio="1"
-                        :src="
-                          'data:image/png;base64,' +
-                          characterInfo.metas.styles[styleIndex].iconBase64
-                        "
-                      />
-                    </q-avatar>
-                  </q-item-section>
-                  <q-item-section v-if="style.styleName"
-                    >{{ characterInfo.metas.speakerName }} ({{
-                      style.styleName
-                    }})</q-item-section
-                  >
-                  <q-item-section v-else>{{
-                    characterInfo.metas.speakerName
-                  }}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
+                  <q-list>
+                    <q-item
+                      v-for="(style, styleIndex) in characterInfo.metas.styles"
+                      :key="styleIndex"
+                      clickable
+                      v-close-popup
+                      active-class="selected-character-item"
+                      :active="style.styleId === selectedStyle.styleId"
+                      @click="changeStyleId(style.styleId)"
+                    >
+                      <q-avatar rounded size="2rem" class="q-mr-md">
+                        <q-img
+                          no-spinner
+                          no-transition
+                          :ratio="1"
+                          :src="
+                            'data:image/png;base64,' +
+                            characterInfo.metas.styles[styleIndex].iconBase64
+                          "
+                        />
+                      </q-avatar>
+                      <q-item-section v-if="style.styleName"
+                        >{{ characterInfo.metas.speakerName }} ({{
+                          style.styleName
+                        }})</q-item-section
+                      >
+                      <q-item-section v-else>{{
+                        characterInfo.metas.speakerName
+                      }}</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </div>
+            </q-btn-group>
           </q-item>
         </q-list>
       </q-menu>
@@ -109,6 +122,7 @@
       dense
       hide-bottom-space
       class="full-width"
+      color="primary-light"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
       :model-value="audioTextBuffer"
@@ -422,7 +436,7 @@ export default defineComponent({
   }
   .character-button {
     border: solid 1px;
-    border-color: global.$primary;
+    border-color: global.$primary-light;
     font-size: 0;
     height: fit-content;
     img {
@@ -435,7 +449,7 @@ export default defineComponent({
     .q-field__control {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid global.$primary;
+      border-bottom: 1px solid global.$primary-light;
       &::before {
         border-bottom: none;
       }
@@ -446,7 +460,7 @@ export default defineComponent({
       display: none;
     }
     &.q-field--filled.q-field--highlighted .q-field__control:before {
-      background-color: #0001;
+      background-color: rgba(var(--color-display-rgb), 0.08);
     }
   }
   &:hover > .q-input > .q-field__after {
@@ -456,10 +470,24 @@ export default defineComponent({
 
 .character-menu {
   .q-item {
-    color: global.$secondary;
+    color: var(--color-display);
   }
-  .selected-character-item {
-    background-color: rgba(global.$primary, 0.2);
+  .q-btn-group {
+    > .q-btn:first-child > .q-btn__content {
+      justify-content: flex-start;
+    }
+    > div:last-child:hover {
+      background-color: rgba(global.$primary-rgb, 0.1);
+    }
   }
+  .selected-character-item,
+  .opened-character-item {
+    background-color: rgba(global.$primary-rgb, 0.2);
+  }
+}
+
+input {
+  caret-color: var(--color-display);
+  color: var(--color-display);
 }
 </style>

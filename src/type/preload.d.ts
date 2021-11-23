@@ -18,7 +18,11 @@ export interface Sandbox {
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showConfirmDialog(obj: { title: string; message: string }): Promise<boolean>;
+  showInfoDialog(obj: {
+    title: string;
+    message: string;
+    buttons: string[];
+  }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
     message: string;
@@ -53,7 +57,9 @@ export interface Sandbox {
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
-  useVoicing(newData?: boolean): Promise<boolean>;
+  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  theme(newData?: string): Promise<ThemeSetting | void>;
+  vuexReady(): void;
 }
 
 export type AppInfos = {
@@ -101,6 +107,7 @@ export type SavingSetting = {
   exportText: boolean;
   outputStereo: boolean;
   outputSamplingRate: number;
+  audioOutputDevice: string;
 };
 
 export type DefaultStyleId = {
@@ -147,3 +154,31 @@ export type MoraDataType =
   | "pitch"
   | "pause"
   | "voicing";
+
+export type ThemeColorType =
+  | "primary"
+  | "primary-light"
+  | "display"
+  | "display-light"
+  | "display-dark"
+  | "background"
+  | "background-light"
+  | "setting-item"
+  | "warning"
+  | "markdown-color"
+  | "markdown-background"
+  | "markdown-hyperlink"
+  | "pause-hovered";
+
+export type ThemeConf = {
+  name: string;
+  isDark: boolean;
+  colors: {
+    [K in ThemeColorType]: string;
+  };
+};
+
+export type ThemeSetting = {
+  currentTheme: string;
+  availableThemes: ThemeConf[];
+};

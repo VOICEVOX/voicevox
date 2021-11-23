@@ -7,17 +7,17 @@
     class="hotkey-setting-dialog"
     v-model="hotkeySettingDialogOpenComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <q-toolbar-title class="text-secondary"
+          <q-toolbar-title class="text-display"
             >設定 / キー割り当て</q-toolbar-title
           >
           <q-input
             hide-bottom-space
             dense
             placeholder="検索"
-            color="secondary"
+            color="display"
             class="q-mr-sm search-box"
             v-model="hotkeyFilter"
           >
@@ -38,7 +38,7 @@
             round
             flat
             icon="close"
-            color="secondary"
+            color="display"
             @click="hotkeySettingDialogOpenComputed = false"
           />
         </q-toolbar>
@@ -50,6 +50,8 @@
             flat
             dense
             hide-bottom
+            card-class="bg-background text-display"
+            table-class="text-display"
             row-key="hotkeyIndexes"
             :filter="hotkeyFilter"
             :rows="hotkeySettings"
@@ -73,7 +75,7 @@
                 <q-td no-hover :key="props.cols[1].name" :props="props">
                   <q-btn
                     dense
-                    color="secondary"
+                    text-color="display"
                     padding="none sm"
                     flat
                     :disable="checkHotkeyReadonly(props.row.action)"
@@ -85,6 +87,17 @@
                     "
                     @click="openHotkeyDialog(props.row.action)"
                   />
+                  <q-btn
+                    rounded
+                    flat
+                    icon="settings_backup_restore"
+                    padding="none sm"
+                    size="1em"
+                    :disable="checkHotkeyReadonly(props.row.action)"
+                    @click="resetHotkey(props.row.action)"
+                  >
+                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
+                  </q-btn>
                 </q-td>
               </q-tr>
             </template>
@@ -109,14 +122,16 @@
       <q-card-section align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
-          <q-chip :ripple="false">
+          <q-chip :ripple="false" color="setting-item">
             {{ hotkey }}
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
-          <div>ショートカットキーが次の操作と重複しています</div>
-          <div class="q-mt-sm text-weight-bold">
+          <div class="text-warning">
+            ショートカットキーが次の操作と重複しています
+          </div>
+          <div class="q-mt-sm text-weight-bold text-warning">
             「{{ duplicatedHotkey.action }}」
           </div>
         </div>
@@ -126,8 +141,8 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="display-light"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -138,8 +153,8 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="grey-3"
-          text-color="black"
+          color="display-light"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -149,7 +164,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="black"
+          text-color="display"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -164,7 +179,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="black"
+          text-color="display"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
@@ -178,7 +193,8 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
-import { HotkeyAction } from "@/type/preload";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -192,6 +208,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const $q = useQuasar();
 
     const hotkeySettingDialogOpenComputed = computed({
       get: () => props.modelValue,
@@ -304,6 +321,35 @@ export default defineComponent({
       );
     });
 
+    const resetHotkey = (action: string) => {
+      $q.dialog({
+        title: "ショートカットキーを初期値に戻します",
+        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+        html: true,
+        ok: {
+          label: "初期値に戻す",
+          flat: true,
+          textColor: "secondary",
+        },
+        cancel: {
+          label: "初期値に戻さない",
+          flat: true,
+          textColor: "secondary",
+        },
+      }).onOk(() => {
+        window.electron
+          .getDefaultHotkeySettings()
+          .then((defaultSettings: HotkeySetting[]) => {
+            const setting = defaultSettings.find(
+              (value) => value.action == action
+            );
+            if (setting) {
+              changeHotkeySettings(action, setting.combination);
+            }
+          });
+      });
+    };
+
     return {
       hotkeySettingDialogOpenComputed,
       isHotkeyDialogOpened,
@@ -322,6 +368,7 @@ export default defineComponent({
       changeHotkeySettings,
       confirmBtnEnabled,
       checkHotkeyReadonly,
+      resetHotkey,
     };
   },
 });
@@ -347,11 +394,26 @@ export default defineComponent({
     overflow-x: hidden;
   }
 
+  tbody tr {
+    td button:last-child {
+      float: right;
+      display: none;
+    }
+    &:hover td button:last-child {
+      display: inline-flex;
+      color: var(--color-display);
+      opacity: 0.5;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
   thead tr th {
     position: sticky;
     top: 0;
     font-weight: bold;
-    background-color: $grey-3;
+    background-color: var(--color-setting-item);
     z-index: 1;
   }
 

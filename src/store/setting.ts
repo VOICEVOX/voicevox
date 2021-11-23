@@ -3,6 +3,8 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ThemeColorType,
+  ThemeConf,
 } from "@/type/preload";
 import {
   SettingGetters,
@@ -13,6 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
+import { Dark, setCssVar, colors } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -26,10 +29,14 @@ export const settingStoreState: SettingStoreState = {
     exportText: true,
     outputStereo: false,
     outputSamplingRate: 24000,
+    audioOutputDevice: "default",
   },
   hotkeySettings: [],
-  useVoicing: false,
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
+  themeSetting: {
+    currentTheme: "Default",
+    availableThemes: [],
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -59,8 +66,14 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    SET_USE_VOICING(state, { useVoicing }: { useVoicing: boolean }) {
-      state.useVoicing = useVoicing;
+    SET_THEME_SETTING(
+      state,
+      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
+    ) {
+      if (themes) {
+        state.themeSetting.availableThemes = themes;
+      }
+      state.themeSetting.currentTheme = currentTheme;
     },
   },
   actions: {
@@ -88,7 +101,7 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
       window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
-        value.action == data.action;
+        return value.action == data.action;
       });
       if (oldHotkey !== undefined) {
         if (oldHotkey.combination != "") {
@@ -108,14 +121,45 @@ export const settingStore: VoiceVoxStoreOptions<
         newHotkey: data,
       });
     },
-    GET_USE_VOICING({ commit }) {
-      window.electron.useVoicing().then((useVoicing) => {
-        commit("SET_USE_VOICING", { useVoicing: useVoicing });
+    GET_THEME_SETTING({ commit, dispatch }) {
+      const currentTheme = window.electron.theme();
+      currentTheme.then((value) => {
+        if (value) {
+          commit("SET_THEME_SETTING", {
+            currentTheme: value.currentTheme,
+            themes: value.availableThemes,
+          });
+          dispatch("SET_THEME_SETTING", { currentTheme: value.currentTheme });
+        }
       });
     },
-    SET_USE_VOICING({ commit }, { data }: { data: boolean }) {
-      window.electron.useVoicing(data);
-      commit("SET_USE_VOICING", { useVoicing: data });
+    SET_THEME_SETTING(
+      { state, commit },
+      { currentTheme }: { currentTheme: string }
+    ) {
+      window.electron.theme(currentTheme);
+      const theme = state.themeSetting.availableThemes.find((value) => {
+        return value.name == currentTheme;
+      });
+
+      if (theme) {
+        for (const key in theme.colors) {
+          const color = theme.colors[key as ThemeColorType];
+          const { r, g, b } = colors.hexToRgb(color);
+          document.documentElement.style.setProperty(`--color-${key}`, color);
+          document.documentElement.style.setProperty(
+            `--color-${key}-rgb`,
+            `${r}, ${g}, ${b}`
+          );
+        }
+        Dark.set(theme.isDark);
+        setCssVar("primary", theme.colors["primary"]);
+        setCssVar("warning", theme.colors["warning"]);
+      }
+
+      commit("SET_THEME_SETTING", {
+        currentTheme: currentTheme,
+      });
     },
   },
 };

@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  ThemeConf,
   StyleInfo,
 } from "./type/preload";
 
@@ -59,6 +60,77 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+const defaultHotkeySettings: HotkeySetting[] = [
+  {
+    action: "音声書き出し",
+    combination: "Ctrl E",
+  },
+  {
+    action: "一つだけ書き出し",
+    combination: "E",
+  },
+  {
+    action: "再生/停止",
+    combination: "Space",
+  },
+  {
+    action: "連続再生/停止",
+    combination: "Shift Space",
+  },
+  {
+    action: "ｱｸｾﾝﾄ欄を表示",
+    combination: "1",
+  },
+  {
+    action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    combination: "2",
+  },
+  {
+    action: "テキスト欄を追加",
+    combination: "Shift Enter",
+  },
+  {
+    action: "テキスト欄を削除",
+    combination: "Shift Delete",
+  },
+  {
+    action: "テキスト欄からフォーカスを外す",
+    combination: "Escape",
+  },
+  {
+    action: "テキスト欄にフォーカスを戻す",
+    combination: "Enter",
+  },
+  {
+    action: "元に戻す",
+    combination: "Ctrl Z",
+  },
+  {
+    action: "やり直す",
+    combination: "Ctrl Y",
+  },
+  {
+    action: "新規プロジェクト",
+    combination: "Ctrl N",
+  },
+  {
+    action: "プロジェクトを名前を付けて保存",
+    combination: "Ctrl Shift S",
+  },
+  {
+    action: "プロジェクトを上書き保存",
+    combination: "Ctrl S",
+  },
+  {
+    action: "プロジェクト読み込み",
+    combination: "Ctrl O",
+  },
+  {
+    action: "テキスト読み込む",
+    combination: "",
+  },
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
@@ -66,7 +138,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
-  useVoicing: boolean;
+  currentTheme: string;
 }>({
   schema: {
     useGpu: {
@@ -92,6 +164,7 @@ const store = new Store<{
         exportText: { type: "boolean", default: true },
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
+        audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -102,6 +175,7 @@ const store = new Store<{
         exportText: true,
         outputStereo: false,
         outputSamplingRate: 24000,
+        audioOutputDevice: "default",
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -117,76 +191,7 @@ const store = new Store<{
           combination: { type: "string" },
         },
       },
-      default: [
-        {
-          action: "音声書き出し",
-          combination: "Ctrl E",
-        },
-        {
-          action: "一つだけ書き出し",
-          combination: "",
-        },
-        {
-          action: "再生/停止",
-          combination: "Space",
-        },
-        {
-          action: "連続再生/停止",
-          combination: "",
-        },
-        {
-          action: "ｱｸｾﾝﾄ欄を表示",
-          combination: "1",
-        },
-        {
-          action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-          combination: "2",
-        },
-        {
-          action: "テキスト欄を追加",
-          combination: "Shift Enter",
-        },
-        {
-          action: "テキスト欄を削除",
-          combination: "Shift Delete",
-        },
-        {
-          action: "テキスト欄からフォーカスを外す",
-          combination: "Escape",
-        },
-        {
-          action: "テキスト欄にフォーカスを戻す",
-          combination: "Enter",
-        },
-        {
-          action: "元に戻す",
-          combination: "Ctrl Z",
-        },
-        {
-          action: "やり直す",
-          combination: "Ctrl Y",
-        },
-        {
-          action: "新規プロジェクト",
-          combination: "Ctrl N",
-        },
-        {
-          action: "プロジェクトを名前を付けて保存",
-          combination: "Ctrl Shift S",
-        },
-        {
-          action: "プロジェクトを上書き保存",
-          combination: "Ctrl S",
-        },
-        {
-          action: "プロジェクト読み込み",
-          combination: "Ctrl O",
-        },
-        {
-          action: "テキスト読み込む",
-          combination: "",
-        },
-      ],
+      default: defaultHotkeySettings,
     },
     defaultStyleIds: {
       type: "array",
@@ -199,9 +204,9 @@ const store = new Store<{
       },
       default: [],
     },
-    useVoicing: {
-      type: "boolean",
-      default: false,
+    currentTheme: {
+      type: "string",
+      default: "Default",
     },
   },
   migrations: {
@@ -368,6 +373,7 @@ const updateInfos = JSON.parse(
   })
 );
 
+let willQuit = false;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -375,6 +381,7 @@ async function createWindow() {
     height: 600,
     frame: false,
     minWidth: 320,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
@@ -399,6 +406,13 @@ async function createWindow() {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
     );
+  });
+  win.on("close", (event) => {
+    if (!willQuit) {
+      event.preventDefault();
+      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+      return;
+    }
   });
 
   win.webContents.once("did-finish-load", () => {
@@ -483,16 +497,17 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
   });
 });
 
-ipcMainHandle("SHOW_CONFIRM_DIALOG", (_, { title, message }) => {
+ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
   return dialog
     .showMessageBox(win, {
       type: "info",
-      buttons: ["OK", "Cancel"],
+      buttons: buttons,
       title: title,
       message: message,
+      noLink: true,
     })
     .then((value) => {
-      return value.response == 0;
+      return value.response;
     });
 });
 
@@ -545,6 +560,7 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
+  willQuit = true;
   app.emit("window-all-closed");
   win.destroy();
 });
@@ -646,11 +662,23 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return store.get("hotkeySettings");
 });
 
-ipcMainHandle("USE_VOICING", (_, { newData }) => {
+ipcMainHandle("THEME", (_, { newData }) => {
   if (newData !== undefined) {
-    store.set("useVoicing", newData);
+    store.set("currentTheme", newData);
+    return;
   }
-  return store.get("useVoicing");
+  const dir = path.join(__static, "themes");
+  const themes: ThemeConf[] = [];
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    themes.push(theme);
+  });
+  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+});
+
+ipcMainHandle("ON_VUEX_READY", () => {
+  win.show();
 });
 
 ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
@@ -684,6 +712,10 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   store.set("defaultStyleIds", defaultStyleIds);
 });
 
+ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
+  return defaultHotkeySettings;
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -704,6 +736,12 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
+  if (!willQuit) {
+    event.preventDefault();
+    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+    return;
+  }
+
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
     log.info("ENGINE killed. Quitting app");

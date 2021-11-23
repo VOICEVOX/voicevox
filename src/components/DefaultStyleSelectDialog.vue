@@ -7,22 +7,19 @@
     class="default-style-select-dialog"
     v-model="modelValueComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-white">
+    <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
-            <q-toolbar-title v-if="isFirstTime" class="text-secondary text-h6"
+            <q-toolbar-title v-if="isFirstTime" class="text-display text-h6"
               >「{{
                 characterInfos[pageIndex].metas.speakerName
               }}」のデフォルトのスタイル（喋り方）を選んでください</q-toolbar-title
             >
-            <q-toolbar-title v-else class="text-secondary"
+            <q-toolbar-title v-else class="text-display"
               >設定 / デフォルトスタイル</q-toolbar-title
             >
-            <span
-              v-if="isFirstTime"
-              class="text-secondary text-caption q-ml-sm"
-            >
+            <span v-if="isFirstTime" class="text-display text-caption q-ml-sm">
               ※後からでも変更できます
             </span>
           </div>
@@ -34,13 +31,13 @@
               v-show="pageIndex >= 1"
               unelevated
               label="戻る"
-              color="white"
-              text-color="secondary"
+              color="background-light"
+              text-color="display-dark"
               class="text-no-wrap q-mr-md"
               @click="prevPage"
             />
 
-            <div class="text-subtitle2 text-no-wrap text-secondary q-mr-md">
+            <div class="text-subtitle2 text-no-wrap text-display q-mr-md">
               {{ pageIndex + 1 }} / {{ characterInfos.length }}
             </div>
 
@@ -48,8 +45,8 @@
               v-if="pageIndex + 1 < characterInfos.length"
               unelevated
               label="次へ"
-              color="white"
-              text-color="secondary"
+              color="background-light"
+              text-color="display-dark"
               class="text-no-wrap"
               :disable="!canNext"
               @click="nextPage"
@@ -58,8 +55,8 @@
               v-else
               unelevated
               label="完了"
-              color="white"
-              text-color="secondary"
+              color="background-light"
+              text-color="display-dark"
               class="text-no-wrap"
               :disable="!canNext"
               @click="closeDialog"
@@ -133,7 +130,7 @@
                               ? 'stop'
                               : 'play_arrow'
                           "
-                          color="primary"
+                          color="primary-light"
                           class="voice-sample-btn"
                           @mouseenter="isHoverableStyleItem = false"
                           @mouseleave="isHoverableStyleItem = true"
@@ -145,7 +142,11 @@
                           "
                         />
                         <q-radio
-                          class="absolute-top-right no-pointer-events"
+                          class="
+                            absolute-top-right
+                            no-pointer-events
+                            text-primary-light
+                          "
                           :model-value="selectedStyleIndexes[characterIndex]"
                           :val="styleIndex"
                           @update:model-value="
@@ -363,11 +364,11 @@ export default defineComponent({
       align-content: center;
       justify-content: center;
       .style-item {
-        box-shadow: 0 0 0 1px rgba(global.$primary, 0.5);
+        box-shadow: 0 0 0 1px rgba(var(--color-primary-light-rgb), 0.5);
         border-radius: 10px;
         overflow: hidden;
         &.active-style-item {
-          box-shadow: 0 0 0 2px global.$primary;
+          box-shadow: 0 0 0 2px var(--color-primary-light);
         }
         &:hover :deep(.q-focus-helper) {
           opacity: 0 !important;

@@ -32,5 +32,9 @@ export const ipcMessageReceiver: Plugin = {
     window.electron.onReceivedIPCMsg("DETECT_UNPINNED", () => {
       options.store.dispatch("DETECT_UNPINNED", undefined);
     });
+
+    window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", () => {
+      options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+    });
   },
 };

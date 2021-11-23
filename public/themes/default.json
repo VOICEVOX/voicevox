@@ -1,0 +1,19 @@
+{
+  "name": "Default",
+  "isDark": false,
+  "colors": {
+    "primary": "#A5D4AD",
+    "primary-light": "#A5D4AD",
+    "display": "#121212",
+    "display-light": "#EBEBEB",
+    "display-dark": "#121212",
+    "background": "#FFFFFF",
+    "background-light": "#FFFFFF",
+    "setting-item": "#EEEEEE",
+    "warning": "#C10015",
+    "markdown-color": "#24292F",
+    "markdown-background": "#FFFFFF",
+    "markdown-hyperlink": "#0969DA",
+    "pause-hovered": "#CCDDFF"
+  }
+}

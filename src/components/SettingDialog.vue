@@ -7,11 +7,11 @@
     class="setting-dialog"
     v-model="settingDialogOpenedComputed"
   >
-    <q-layout container view="hHh Lpr fFf" class="bg-white">
+    <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
         <q-header class="q-pa-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-secondary"
+            <q-toolbar-title class="text-display"
               >設定 / オプション</q-toolbar-title
             >
             <q-space />
@@ -20,7 +20,7 @@
               round
               flat
               icon="close"
-              color="secondary"
+              color="display"
               @click="settingDialogOpenedComputed = false"
             />
           </q-toolbar>
@@ -32,7 +32,7 @@
               <q-card-actions>
                 <div class="text-h5">エンジン</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>エンジンモード</div>
                 <q-space />
                 <q-btn-toggle
@@ -42,7 +42,7 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
-                  toggle-text-color="secondary"
+                  toggle-text-color="display"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -60,12 +60,12 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
-            <!-- ???Mode -->
+            <!-- Preservation Setting -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">操作</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>パラメータの引き継ぎ</div>
                 <q-space />
                 <q-toggle
@@ -89,7 +89,7 @@
               <q-card-actions>
                 <div class="text-h5">保存</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>文字コード</div>
                 <q-space />
                 <q-btn-toggle
@@ -102,14 +102,14 @@
                   color="white"
                   text-color="black"
                   toggle-color="primary"
-                  toggle-text-color="secondary"
+                  toggle-text-color="display"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
                   ]"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>書き出し先を固定</div>
                 <q-space />
                 <q-input
@@ -165,7 +165,7 @@
                 </q-toggle>
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>上書き防止</div>
                 <q-space />
                 <q-toggle
@@ -185,7 +185,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>labファイルを生成</div>
                 <q-space />
                 <q-toggle
@@ -207,7 +207,7 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
@@ -228,11 +228,12 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <!-- Experimental Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">高度な設定</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声をステレオ化</div>
                 <q-space />
                 <q-toggle
@@ -253,6 +254,27 @@
                     音声データをモノラルからステレオに変換してから再生・保存を行います
                   </q-tooltip>
                 </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>再生デバイス</div>
+                <q-space />
+                <q-select
+                  dense
+                  v-model="currentAudioOutputDeviceComputed"
+                  label="再生デバイス"
+                  :options="availableAudioOutputDevices"
+                  class="col-7"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声の再生デバイスを変更し再生を行います
+                  </q-tooltip>
+                </q-select>
               </q-card-actions>
               <!-- FIXME: バージョン0.8.0現在、エンジン側にサンプリングレート変更エラーがあるので機能制限 -->
               <!-- <q-card-actions class="q-px-md q-py-none bg-grey-3">
@@ -285,14 +307,24 @@
                 </q-select>
               </q-card-actions> -->
             </q-card>
+            <!-- 今後実験的機能を追加する場合はここに追加 -->
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-grey-3">
-                <div>無声化切り替え</div>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>Theme</div>
                 <q-space />
-                <q-toggle v-model="useVoicingComputed">
+                <q-btn-toggle
+                  unelevated
+                  padding="xs md"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  v-model="currentThemeNameComputed"
+                  :options="availableThemeNameComputed"
+                >
                   <q-tooltip
                     :delay="500"
                     anchor="center left"
@@ -300,9 +332,9 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    この機能を有効にすると、元に戻す・やり直す機能が正しく動作しなくなる可能性があります
+                    The colors in themes are not decided yet
                   </q-tooltip>
-                </q-toggle>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
           </div>
@@ -313,7 +345,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
@@ -345,12 +377,62 @@ export default defineComponent({
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 
-    const useVoicingComputed = computed({
-      get: () => store.state.useVoicing,
-      set: (useVoicing: boolean) => {
-        store.dispatch("SET_USE_VOICING", { data: useVoicing });
+    const currentThemeNameComputed = computed({
+      get: () => store.state.themeSetting.currentTheme,
+      set: (currentTheme: string) => {
+        store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
       },
     });
+
+    const currentThemeComputed = computed(() =>
+      store.state.themeSetting.availableThemes.find((value) => {
+        return value.name == currentThemeNameComputed.value;
+      })
+    );
+
+    const availableThemeNameComputed = computed(() => {
+      return store.state.themeSetting.availableThemes.map((theme) => {
+        return { label: theme.name, value: theme.name };
+      });
+    });
+
+    const currentAudioOutputDeviceComputed = computed<{
+      key: string;
+      label: string;
+    } | null>({
+      get: () => {
+        // 再生デバイスが見つからなかったらデフォルト値に戻す
+        const device = availableAudioOutputDevices.value?.find(
+          (device) => device.key === store.state.savingSetting.audioOutputDevice
+        );
+        if (device) {
+          return device;
+        } else {
+          handleSavingSettingChange("audioOutputDevice", "default");
+          return null;
+        }
+      },
+      set: (device) => {
+        if (device) {
+          handleSavingSettingChange("audioOutputDevice", device.key);
+        }
+      },
+    });
+
+    const availableAudioOutputDevices = ref<{ key: string; label: string }[]>();
+    const updateAudioOutputDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableAudioOutputDevices.value = devices
+        .filter((device) => device.kind === "audiooutput")
+        .map((device) => {
+          return { label: device.label, key: device.deviceId };
+        });
+    };
+    navigator.mediaDevices.addEventListener(
+      "devicechange",
+      updateAudioOutputDevices
+    );
+    updateAudioOutputDevices();
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -364,7 +446,7 @@ export default defineComponent({
           message: "変更を適用するためにエンジンを再起動します。",
           ok: {
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       };
@@ -375,7 +457,7 @@ export default defineComponent({
             $q.loading.show({
               spinnerColor: "primary",
               spinnerSize: 50,
-              boxClass: "bg-white text-secondary",
+              boxClass: "bg-background text-display",
               message: "起動モードを変更中です",
             });
             resolve(await window.electron.isAvailableGPUMode());
@@ -400,12 +482,12 @@ export default defineComponent({
           ok: {
             label: "変更する",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
           cancel: {
             label: "変更しない",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         }).onOk(change);
       } else change();
@@ -441,12 +523,12 @@ export default defineComponent({
           ok: {
             label: "変更する",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
           cancel: {
             label: "変更しない",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         }).onOk(storeDispatch);
         return;
@@ -469,12 +551,16 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      currentAudioOutputDeviceComputed,
+      availableAudioOutputDevices,
       changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
-      useVoicingComputed,
+      currentThemeNameComputed,
+      currentThemeComputed,
+      availableThemeNameComputed,
     };
   },
 });
@@ -491,6 +577,7 @@ export default defineComponent({
 .setting-card {
   @extend .hotkey-table;
   min-width: 475px;
+  background: var(--color-background);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

@@ -148,6 +148,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
       },
+      ON_VUEX_READY() {
+        window.electron.vuexReady();
+      },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },
         { isDefaultStyleSelectDialogOpen }
@@ -201,6 +204,22 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
+      },
+      async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
+        if (getters.IS_EDITED) {
+          const result: number = await window.electron.showInfoDialog({
+            title: "警告",
+            message:
+              "プロジェクトの変更が保存されていません。\n" +
+              "変更を破棄してもよろしいですか？",
+            buttons: ["破棄", "キャンセル"],
+          });
+          if (result == 1) {
+            return;
+          }
+        }
+
+        window.electron.closeWindow();
       },
     },
   };

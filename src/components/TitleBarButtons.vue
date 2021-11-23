@@ -3,7 +3,7 @@
     v-if="$q.platform.is.mac"
     transparent
     color="transparent"
-    text-color="secondary"
+    text-color="display"
     class="full-height cursor-not-allowed no-border-radius"
   >
     <q-btn
@@ -27,7 +27,7 @@
       flat
       round
       icon="push_pin"
-      color="black"
+      color="display"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
@@ -70,7 +70,7 @@
     v-else
     transparent
     color="transparent"
-    text-color="secondary"
+    text-color="display"
     class="
       full-height
       cursor-not-allowed
@@ -99,7 +99,6 @@
       flat
       round
       icon="push_pin"
-      color="black"
       class="title-bar-buttons rotate-45"
       id="pinned-btn"
       @click="changePinWindow()"
@@ -147,7 +146,6 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import Mousetrap from "mousetrap";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
 
 export default defineComponent({
@@ -156,18 +154,7 @@ export default defineComponent({
     const store = useStore();
 
     const closeWindow = async () => {
-      if (
-        store.getters.IS_EDITED &&
-        !(await window.electron.showConfirmDialog({
-          title: "警告",
-          message:
-            "プロジェクトの変更が保存されていません。\n" +
-            "変更を破棄してもよろしいですか？",
-        }))
-      ) {
-        return;
-      }
-      window.electron.closeWindow();
+      store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
     };
     const minimizeWindow = () => window.electron.minimizeWindow();
     const maximizeWindow = () => window.electron.maximizeWindow();
@@ -178,8 +165,6 @@ export default defineComponent({
     const isPinned = computed(() => store.state.isPinned);
 
     const isMaximized = computed(() => store.state.isMaximized);
-
-    Mousetrap.bind(["alt+f4", "command+q"], closeWindow);
 
     return {
       closeWindow,

@@ -72,8 +72,8 @@
                         <q-btn
                           fab
                           icon="add"
-                          color="primary"
-                          text-color="secondary"
+                          color="primary-light"
+                          text-color="display-dark"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -490,7 +490,7 @@ body {
 }
 
 .waiting-engine {
-  background-color: #0002;
+  background-color: rgba(var(--color-display-dark-rgb), 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -500,7 +500,8 @@ body {
   justify-content: center;
 
   > div {
-    background: white;
+    color: var(--color-display-dark);
+    background: var(--color-background-light);
     border-radius: 6px;
     padding: 14px;
   }
@@ -530,7 +531,7 @@ body {
   height: 100%;
 
   &.is-dragging {
-    background-color: #0002;
+    background-color: var(--color-background);
   }
 
   .audio-cells {

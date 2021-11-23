@@ -67,9 +67,9 @@ type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_CONFIRM_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: boolean;
+  SHOW_INFO_DIALOG: {
+    args: [obj: { title: string; message: string; buttons: string[] }];
+    return: number;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -167,9 +167,19 @@ type IpcIHData = {
     return: void;
   };
 
-  USE_VOICING: {
-    args: [obj: { newData?: boolean }];
-    return: boolean;
+  GET_DEFAULT_HOTKEY_SETTINGS: {
+    args: [];
+    return: import("@/type/preload").HotkeySetting[];
+  };
+
+  THEME: {
+    args: [obj: { newData?: string }];
+    return: import("@/type/preload").ThemeSetting | void;
+  };
+
+  ON_VUEX_READY: {
+    args: [];
+    return: void;
   };
 };
 
@@ -203,6 +213,11 @@ type IpcSOData = {
   };
 
   DETECT_UNPINNED: {
+    args: [];
+    return: void;
+  };
+
+  CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
     return: void;
   };

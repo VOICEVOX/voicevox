@@ -1,0 +1,19 @@
+{
+  "name": "Dark",
+  "isDark": true,
+  "colors": {
+    "primary": "#0A0A0A",
+    "primary-light": "#E0E0E0",
+    "display": "#F5F5F5",
+    "display-light": "#E0E0E0",
+    "display-dark": "#121212",
+    "background": "#121212",
+    "background-light": "#E0E0E0",
+    "setting-item": "#424242",
+    "warning": "#F2C037",
+    "markdown-color": "#c9d1d9",
+    "markdown-background": "#0D1117",
+    "markdown-hyperlink": "#58A6FF",
+    "pause-hovered": "#333A44"
+  }
+}

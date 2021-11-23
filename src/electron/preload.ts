@@ -100,8 +100,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showConfirmDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_CONFIRM_DIALOG", { title, message });
+  showInfoDialog: ({ title, message, buttons }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
   },
 
   showWarningDialog: ({ title, message }) => {
@@ -196,8 +196,16 @@ const api: Sandbox = {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 
-  useVoicing: (newData) => {
-    return ipcRenderer.invoke("USE_VOICING", { newData });
+  getDefaultHotkeySettings: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+  },
+
+  theme: (newData) => {
+    return ipcRenderer.invoke("THEME", { newData });
+  },
+
+  vuexReady: () => {
+    ipcRenderer.invoke("ON_VUEX_READY");
   },
 };
 

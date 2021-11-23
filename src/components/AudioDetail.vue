@@ -3,12 +3,7 @@
     <div>
       <div class="side">
         <div class="detail-selector">
-          <q-tabs
-            dense
-            vertical
-            class="text-secondary"
-            v-model="selectedDetail"
-          >
+          <q-tabs dense vertical class="text-display" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
             <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
             <q-tab name="length" label="長さ" />
@@ -19,16 +14,16 @@
             <q-btn
               v-if="!nowPlaying && !nowGenerating"
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="display-dark"
               icon="play_arrow"
               @click="play"
             ></q-btn>
             <q-btn
               v-else
               fab
-              color="primary"
-              text-color="secondary"
+              color="primary-light"
+              text-color="display-dark"
               icon="stop"
               @click="stop"
             ></q-btn>
@@ -223,7 +218,6 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SaveResultObject } from "@/store/type";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
@@ -251,14 +245,6 @@ export default defineComponent({
             play();
           } else {
             stop();
-          }
-        },
-      ],
-      [
-        "一つだけ書き出し",
-        () => {
-          if (!uiLocked.value) {
-            save();
           }
         },
       ],
@@ -296,7 +282,6 @@ export default defineComponent({
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "pitch";
     };
-    const useVoicing = computed(() => store.state.useVoicing);
 
     // accent phrase
     const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -356,20 +341,6 @@ export default defineComponent({
       });
     };
 
-    const tabAction = (actionType: DetailTypes) => {
-      switch (actionType) {
-        case "play":
-          play();
-          break;
-        case "stop":
-          stop();
-          break;
-        case "save":
-          save();
-          break;
-      }
-    };
-
     // audio play
     const play = async () => {
       try {
@@ -383,7 +354,7 @@ export default defineComponent({
           ok: {
             label: "閉じる",
             flat: true,
-            textColor: "secondary",
+            textColor: "display",
           },
         });
       }
@@ -391,41 +362,6 @@ export default defineComponent({
 
     const stop = () => {
       store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
-    };
-
-    // save
-    const save = async () => {
-      const result: SaveResultObject = await store.dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey: props.activeAudioKey,
-          encoding: store.state.savingSetting.fileEncoding,
-        }
-      );
-
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-
-      $q.dialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
-      });
     };
 
     const nowPlaying = computed(
@@ -553,7 +489,7 @@ export default defineComponent({
           if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
             isHover = true;
           }
-        } else if (selectedDetail.value == "pitch" && useVoicing.value) {
+        } else if (selectedDetail.value == "pitch") {
           if (
             accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
             moraIndex === pitchHoveredInfo.moraIndex &&
@@ -602,7 +538,7 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (!uiLocked.value && useVoicing.value) {
+      if (!uiLocked.value) {
         if (
           selectedDetail.value == "pitch" &&
           unvoicableVowels.indexOf(mora.vowel) > -1
@@ -643,7 +579,6 @@ export default defineComponent({
       changeMoraData,
       play,
       stop,
-      save,
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
@@ -654,7 +589,6 @@ export default defineComponent({
       getHoveredClass,
       getHoveredText,
       shiftKeyFlag,
-      tabAction,
       handleChangeVoicing,
     };
   },
@@ -679,9 +613,9 @@ $pitch-label-height: 24px;
     flex-direction: column;
     justify-content: space-between;
     .detail-selector .q-tab--active {
-      background-color: rgba(global.$primary, 0.3);
+      background-color: rgba(global.$primary-light-rgb, 0.3);
       :deep(.q-tab__indicator) {
-        background-color: global.$primary;
+        background-color: var(--color-primary-light);
       }
     }
     .play-button-wrapper {
@@ -719,14 +653,14 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: global.$secondary;
+          color: var(--color-display);
           font-weight: bold;
           cursor: pointer;
         }
@@ -737,7 +671,7 @@ $pitch-label-height: 24px;
           z-index: global.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
-          background-color: #cdf;
+          background-color: var(--color-pause-hovered);
           cursor: pointer;
         }
         &.splitter-cell-be-split {
