@@ -195,24 +195,28 @@ export default defineComponent({
       () => props.modelValue,
       async (newValue, oldValue) => {
         if (!oldValue && newValue) {
-          const isUnsetDefaultStyleIds = await store.dispatch(
-            "IS_UNSET_DEFAULT_STYLE_IDS"
+          selectedStyleIndexes.value = await Promise.all(
+            props.characterInfos.map(async (info) => {
+              const styles = info.metas.styles;
+              const isUnsetDefaultStyleId = await store.dispatch(
+                "IS_UNSET_DEFAULT_STYLE_ID",
+                { speakerUuid: info.metas.speakerUuid }
+              );
+              if (!isUnsetDefaultStyleId) {
+                isFirstTime.value = true;
+                return undefined;
+              }
+
+              const defaultStyleId = store.state.defaultStyleIds.find(
+                (x) => x.speakerUuid === info.metas.speakerUuid
+              )?.defaultStyleId;
+
+              const index = styles.findIndex(
+                (style) => style.styleId === defaultStyleId
+              );
+              return index === -1 ? undefined : index;
+            })
           );
-          isFirstTime.value = isUnsetDefaultStyleIds;
-
-          selectedStyleIndexes.value = props.characterInfos.map((info) => {
-            // FIXME: キャラクターごとにデフォルスタイル選択済みか保存できるようになるべき
-            if (isFirstTime.value) return undefined;
-
-            const defaultStyleId = store.state.defaultStyleIds.find(
-              (x) => x.speakerUuid === info.metas.speakerUuid
-            )?.defaultStyleId;
-
-            const index = info.metas.styles.findIndex(
-              (style) => style.styleId === defaultStyleId
-            );
-            return index === -1 ? undefined : index;
-          });
         }
       }
     );
