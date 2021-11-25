@@ -201,6 +201,7 @@ export default defineComponent({
 
     // アップデートで増えたキャラ・スタイルがあれば、それらに対して起動時にデフォルトスタイル選択・試聴を問うための変数
     // その他の場合は、characterInfosと同じになる
+    // FIXME: 現状はスタイルが増えてもデフォルトスタイルを問えないので、そこを改修しなければならない
     const showCharacterInfos = ref(props.characterInfos);
 
     const isFirstTime = ref(false);
