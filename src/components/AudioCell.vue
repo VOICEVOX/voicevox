@@ -53,57 +53,66 @@
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
 
-              <q-separator vertical />
+              <template v-if="characterInfo.metas.styles.length > 1">
+                <q-separator vertical />
 
-              <div
-                class="flex items-center q-px-sm q-py-none cursor-pointer"
-                :class="
-                  subMenuOpenFlags[characterIndex] && 'opened-character-item'
-                "
-                @mouseover="reassignSubMenuOpen(characterIndex)"
-                @mouseleave="reassignSubMenuOpen.cancel()"
-              >
-                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
-
-                <q-menu
-                  no-parent-event
-                  anchor="top end"
-                  self="top start"
-                  transition-show="none"
-                  transition-hide="none"
-                  class="character-menu"
-                  v-model="subMenuOpenFlags[characterIndex]"
+                <div
+                  class="flex items-center q-px-sm q-py-none cursor-pointer"
+                  :class="
+                    subMenuOpenFlags[characterIndex] && 'opened-character-item'
+                  "
+                  @mouseover="reassignSubMenuOpen(characterIndex)"
+                  @mouseleave="reassignSubMenuOpen.cancel()"
                 >
-                  <q-list>
-                    <q-item
-                      v-for="(style, styleIndex) in characterInfo.metas.styles"
-                      :key="styleIndex"
-                      clickable
-                      v-close-popup
-                      active-class="selected-character-item"
-                      :active="style.styleId === selectedStyle.styleId"
-                      @click="changeStyleId(style.styleId)"
-                    >
-                      <q-avatar rounded size="2rem" class="q-mr-md">
-                        <q-img
-                          no-spinner
-                          no-transition
-                          :ratio="1"
-                          :src="characterInfo.metas.styles[styleIndex].iconPath"
-                        />
-                      </q-avatar>
-                      <q-item-section v-if="style.styleName"
-                        >{{ characterInfo.metas.speakerName }} ({{
-                          style.styleName
-                        }})</q-item-section
+                  <q-icon
+                    name="keyboard_arrow_right"
+                    color="grey-6"
+                    size="sm"
+                  />
+
+                  <q-menu
+                    no-parent-event
+                    anchor="top end"
+                    self="top start"
+                    transition-show="none"
+                    transition-hide="none"
+                    class="character-menu"
+                    v-model="subMenuOpenFlags[characterIndex]"
+                  >
+                    <q-list>
+                      <q-item
+                        v-for="(style, styleIndex) in characterInfo.metas
+                          .styles"
+                        :key="styleIndex"
+                        clickable
+                        v-close-popup
+                        active-class="selected-character-item"
+                        :active="style.styleId === selectedStyle.styleId"
+                        @click="changeStyleId(style.styleId)"
                       >
-                      <q-item-section v-else>{{
-                        characterInfo.metas.speakerName
-                      }}</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
-              </div>
+                        <q-avatar rounded size="2rem" class="q-mr-md">
+                          <q-img
+                            no-spinner
+                            no-transition
+                            :ratio="1"
+                            :src="
+                              characterInfo.metas.styles[styleIndex].iconPath
+                            "
+                          />
+                        </q-avatar>
+                        <q-item-section v-if="style.styleName"
+                          >{{ characterInfo.metas.speakerName }} ({{
+                            style.styleName
+                          }})</q-item-section
+                        >
+                        <q-item-section v-else>{{
+                          characterInfo.metas.speakerName
+                        }}</q-item-section>
+                      </q-item>
+                    </q-list>
+                  </q-menu>
+                </div>
+              </template>
             </q-btn-group>
           </q-item>
         </q-list>
