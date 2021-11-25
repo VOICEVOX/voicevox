@@ -202,7 +202,7 @@ export default defineComponent({
                 "IS_UNSET_DEFAULT_STYLE_ID",
                 { speakerUuid: info.metas.speakerUuid }
               );
-              if (!isUnsetDefaultStyleId) {
+              if (isUnsetDefaultStyleId) {
                 isFirstTime.value = true;
                 return undefined;
               }
