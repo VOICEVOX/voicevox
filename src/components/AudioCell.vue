@@ -115,6 +115,7 @@
       dense
       hide-bottom-space
       class="full-width"
+      input-class="mousetrap"
       color="primary-light"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
