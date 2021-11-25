@@ -362,15 +362,12 @@ export default defineComponent({
 }
 .character-portrait-wrapper {
   display: grid;
-  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
   .character-portrait {
-    object-fit: none;
-    object-position: center top;
-    width: 100%;
-    height: fit-content;
+    margin: auto;
   }
 }
 .q-tab-panels {
