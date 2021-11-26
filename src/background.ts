@@ -5,15 +5,7 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import {
-  app,
-  protocol,
-  BrowserWindow,
-  dialog,
-  Menu,
-  shell,
-  ipcMain,
-} from "electron";
+import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -463,44 +455,36 @@ ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
 });
 
-ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
-  const result = await dialog.showSaveDialog(win, {
+ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", (_, { title, defaultPath }) => {
+  return dialog.showSaveDialogSync(win, {
     title,
     defaultPath,
     filters: [{ name: "Wave File", extensions: ["wav"] }],
     properties: ["createDirectory"],
   });
-  return result.filePath;
 });
 
-ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
-  const result = await dialog.showOpenDialog(win, {
+ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", (_, { title }) => {
+  return dialog.showOpenDialogSync(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
-  });
-  if (result.canceled) {
-    return undefined;
-  }
-
-  return result.filePaths[0];
+  })?.[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
-  const result = await dialog.showSaveDialog(win, {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", (_, { title }) => {
+  return dialog.showSaveDialogSync(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
-  return result.filePath;
 });
 
-ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
-  const result = await dialog.showOpenDialog(win, {
+ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
+  return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["openFile"],
   });
-  return result.filePaths;
 });
 
 ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {

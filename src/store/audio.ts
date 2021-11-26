@@ -648,7 +648,6 @@ export const audioStore: VoiceVoxStoreOptions<
             buildFileName(state, audioKey)
           );
         } else {
-          window.electron.logInfo("open window");
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を保存",
             defaultPath: buildFileName(state, audioKey),
