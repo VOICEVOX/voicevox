@@ -439,7 +439,7 @@ export const audioStore: VoiceVoxStoreOptions<
         payload.styleId ??
         state.defaultStyleIds[
           state.defaultStyleIds.findIndex(
-            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid
+            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
           )
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
