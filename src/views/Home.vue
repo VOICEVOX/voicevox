@@ -5,7 +5,7 @@
     <header-bar />
 
     <q-page-container>
-      <q-page class="main-row-panes bg-background">
+      <q-page class="main-row-panes">
         <div v-if="engineState === 'STARTING'" class="waiting-engine">
           <div>
             <q-spinner color="primary" size="2.5rem" />
@@ -493,7 +493,7 @@ body {
 }
 
 .waiting-engine {
-  background-color: var(--color-background);
+  background-color: rgba(var(--color-display-dark-rgb), 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
