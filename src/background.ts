@@ -682,8 +682,9 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("IS_UNSET_DEFAULT_STYLE_IDS", () => {
-  return store.get("defaultStyleIds").length === 0;
+ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
+  const defaultStyleIds = store.get("defaultStyleIds");
+  return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
 });
 
 ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {

@@ -11,15 +11,26 @@
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
-            <q-toolbar-title v-if="isFirstTime" class="text-display text-h6"
-              >「{{
-                characterInfos[pageIndex].metas.speakerName
-              }}」のデフォルトのスタイル（喋り方）を選んでください</q-toolbar-title
-            >
+            <q-toolbar-title
+              v-if="isFirstTime && showCharacterInfos.length > 0"
+              class="text-display text-h6"
+              >「{{ showCharacterInfos[pageIndex].metas.speakerName }}」の{{
+                showCharacterInfos[pageIndex].metas.styles.length > 1
+                  ? "デフォルトのスタイル（喋り方）を選んでください"
+                  : "サンプル音声を視聴できます"
+              }}
+            </q-toolbar-title>
             <q-toolbar-title v-else class="text-display"
-              >設定 / デフォルトスタイル</q-toolbar-title
+              >設定 / デフォルトスタイル・試聴</q-toolbar-title
             >
-            <span v-if="isFirstTime" class="text-display text-caption q-ml-sm">
+            <span
+              v-if="
+                isFirstTime &&
+                showCharacterInfos.length > 0 &&
+                showCharacterInfos[pageIndex].metas.styles.length > 1
+              "
+              class="text-display text-caption q-ml-sm"
+            >
               ※後からでも変更できます
             </span>
           </div>
@@ -38,11 +49,11 @@
             />
 
             <div class="text-subtitle2 text-no-wrap text-display q-mr-md">
-              {{ pageIndex + 1 }} / {{ characterInfos.length }}
+              {{ pageIndex + 1 }} / {{ showCharacterInfos.length }}
             </div>
 
             <q-btn
-              v-if="pageIndex + 1 < characterInfos.length"
+              v-if="pageIndex + 1 < showCharacterInfos.length"
               unelevated
               label="次へ"
               color="background-light"
@@ -74,17 +85,18 @@
       >
         <div class="character-portrait-wrapper">
           <img
-            :src="characterInfos[pageIndex].portraitPath"
+            v-if="showCharacterInfos.length > 0"
+            :src="showCharacterInfos[pageIndex].portraitPath"
             class="character-portrait"
           />
         </div>
       </q-drawer>
 
       <q-page-container>
-        <q-page v-if="characterInfos && selectedStyleIndexes">
+        <q-page v-if="showCharacterInfos && selectedStyleIndexes">
           <q-tab-panels v-model="pageIndex">
             <q-tab-panel
-              v-for="(characterInfo, characterIndex) of characterInfos"
+              v-for="(characterInfo, characterIndex) of showCharacterInfos"
               :key="characterIndex"
               :name="characterIndex"
             >
@@ -163,7 +175,7 @@
 <script lang="ts">
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -187,6 +199,11 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
+    // アップデートで増えたキャラ・スタイルがあれば、それらに対して起動時にデフォルトスタイル選択・試聴を問うための変数
+    // その他の場合は、characterInfosと同じになる
+    // FIXME: 現状はスタイルが増えてもデフォルトスタイルを問えないので、そこを改修しなければならない
+    const showCharacterInfos = ref(props.characterInfos);
+
     const isFirstTime = ref(false);
     const selectedStyleIndexes = ref<(number | undefined)[]>([]);
 
@@ -195,24 +212,43 @@ export default defineComponent({
       () => props.modelValue,
       async (newValue, oldValue) => {
         if (!oldValue && newValue) {
-          const isUnsetDefaultStyleIds = await store.dispatch(
-            "IS_UNSET_DEFAULT_STYLE_IDS"
+          showCharacterInfos.value = [];
+          selectedStyleIndexes.value = await Promise.all(
+            props.characterInfos.map(async (info) => {
+              const styles = info.metas.styles;
+              const isUnsetDefaultStyleId = await store.dispatch(
+                "IS_UNSET_DEFAULT_STYLE_ID",
+                { speakerUuid: info.metas.speakerUuid }
+              );
+              if (isUnsetDefaultStyleId) {
+                isFirstTime.value = true;
+                showCharacterInfos.value.push(info);
+                return undefined;
+              }
+
+              const defaultStyleId = store.state.defaultStyleIds.find(
+                (x) => x.speakerUuid === info.metas.speakerUuid
+              )?.defaultStyleId;
+
+              const index = styles.findIndex(
+                (style) => style.styleId === defaultStyleId
+              );
+              return index === -1 ? undefined : index;
+            })
           );
-          isFirstTime.value = isUnsetDefaultStyleIds;
-
-          selectedStyleIndexes.value = props.characterInfos.map((info) => {
-            // FIXME: キャラクターごとにデフォルスタイル選択済みか保存できるようになるべき
-            if (isFirstTime.value) return undefined;
-
-            const defaultStyleId = store.state.defaultStyleIds.find(
-              (x) => x.speakerUuid === info.metas.speakerUuid
-            )?.defaultStyleId;
-
-            const index = info.metas.styles.findIndex(
-              (style) => style.styleId === defaultStyleId
+          if (!isFirstTime.value) {
+            showCharacterInfos.value = props.characterInfos;
+          } else {
+            selectedStyleIndexes.value = showCharacterInfos.value.map(
+              (info) => {
+                if (info.metas.styles.length > 1) {
+                  return undefined;
+                } else {
+                  return info.metas.styles[0].styleId;
+                }
+              }
             );
-            return index === -1 ? undefined : index;
-          });
+          }
         }
       }
     );
@@ -222,7 +258,7 @@ export default defineComponent({
 
       // 音声を再生する。同じstyleIndexだったら停止する。
       const selectedStyleInfo =
-        props.characterInfos[characterIndex].metas.styles[styleIndex];
+        showCharacterInfos.value[characterIndex].metas.styles[styleIndex];
       if (
         playing.value !== undefined &&
         playing.value.styleId === selectedStyleInfo.styleId
@@ -272,13 +308,28 @@ export default defineComponent({
       pageIndex.value++;
     };
 
+    // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
     const closeDialog = () => {
-      const defaultStyleIds = props.characterInfos.map((info, idx) => ({
-        speakerUuid: info.metas.speakerUuid,
-        defaultStyleId:
-          info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
-      }));
+      const defaultStyleIds = JSON.parse(
+        JSON.stringify(store.state.defaultStyleIds)
+      ) as DefaultStyleId[];
+      showCharacterInfos.value.forEach((info, idx) => {
+        const defaultStyleInfo = {
+          speakerUuid: info.metas.speakerUuid,
+          defaultStyleId:
+            info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
+        };
+        const nowSettingIndex = defaultStyleIds.findIndex(
+          (s) => s.speakerUuid === info.metas.speakerUuid
+        );
+        if (nowSettingIndex !== -1) {
+          defaultStyleIds[nowSettingIndex] = defaultStyleInfo;
+        } else {
+          defaultStyleIds.push(defaultStyleInfo);
+        }
+      });
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+      isFirstTime.value = false;
 
       stop();
       modelValueComputed.value = false;
@@ -287,6 +338,7 @@ export default defineComponent({
 
     return {
       modelValueComputed,
+      showCharacterInfos,
       isFirstTime,
       selectedStyleIndexes,
       selectStyleIndex,
@@ -312,15 +364,12 @@ export default defineComponent({
 }
 .character-portrait-wrapper {
   display: grid;
-  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
   .character-portrait {
-    object-fit: none;
-    object-position: center top;
-    width: 100%;
-    height: fit-content;
+    margin: auto;
   }
 }
 .q-tab-panels {
