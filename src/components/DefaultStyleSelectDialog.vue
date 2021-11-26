@@ -244,7 +244,7 @@ export default defineComponent({
                 if (info.metas.styles.length > 1) {
                   return undefined;
                 } else {
-                  return info.metas.styles[0].styleId;
+                  return 0;
                 }
               }
             );
