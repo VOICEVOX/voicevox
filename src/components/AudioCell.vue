@@ -53,7 +53,8 @@
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
 
-              <template v-if="characterInfo.metas.styles.length > 1">
+              <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
+              <template v-if="characterInfo.metas.styles.length >= 2">
                 <q-separator vertical />
 
                 <div
