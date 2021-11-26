@@ -6,6 +6,7 @@
       :key="index"
       :menudata="root"
       v-model:selected="subMenuOpenFlags[index]"
+      :disable="menubarLocked"
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
@@ -77,6 +78,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
     const isEdited = computed(() => store.getters.IS_EDITED);
 
@@ -378,6 +380,7 @@ export default defineComponent({
 
     return {
       uiLocked,
+      menubarLocked,
       projectName,
       isEdited,
       subMenuOpenFlags,
