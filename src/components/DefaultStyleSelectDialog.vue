@@ -308,6 +308,7 @@ export default defineComponent({
       pageIndex.value++;
     };
 
+    // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
     const closeDialog = () => {
       const defaultStyleIds = JSON.parse(
         JSON.stringify(store.state.defaultStyleIds)
