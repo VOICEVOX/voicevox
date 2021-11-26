@@ -356,13 +356,12 @@ export default defineComponent({
         store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
       ]);
       let isUnsetDefaultStyleIds = false;
-      if (characterInfos.value) {
-        for (const info of characterInfos.value) {
-          isUnsetDefaultStyleIds ||= await store.dispatch(
-            "IS_UNSET_DEFAULT_STYLE_ID",
-            { speakerUuid: info.metas.speakerUuid }
-          );
-        }
+      if (characterInfos.value == undefined) throw new Error();
+      for (const info of characterInfos.value) {
+        isUnsetDefaultStyleIds ||= await store.dispatch(
+          "IS_UNSET_DEFAULT_STYLE_ID",
+          { speakerUuid: info.metas.speakerUuid }
+        );
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
       const audioItem: AudioItem = await store.dispatch(
