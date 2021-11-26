@@ -40,6 +40,13 @@ log.transports.file.fileName = `${prefix}_error.log`;
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
+if (isDevelopment) {
+  app.setPath(
+    "userData",
+    path.join(app.getPath("appData"), `${app.getName()}-dev`)
+  );
+}
+
 let win: BrowserWindow;
 
 // 多重起動防止
