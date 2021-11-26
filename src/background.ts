@@ -140,6 +140,7 @@ const store = new Store<{
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
 }>({
+  name: isDevelopment ? "config-dev" : undefined,
   schema: {
     useGpu: {
       type: "boolean",
