@@ -455,36 +455,49 @@ ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
 });
 
-ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", (_, { title, defaultPath }) => {
-  return dialog.showSaveDialogSync(win, {
+ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+  const result = await dialog.showSaveDialog(win, {
     title,
     defaultPath,
     filters: [{ name: "Wave File", extensions: ["wav"] }],
     properties: ["createDirectory"],
   });
+  return result.filePath;
 });
 
-ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", (_, { title }) => {
-  return dialog.showOpenDialogSync(win, {
+ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
+  const result = await dialog.showOpenDialog(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
-  })?.[0];
+  });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", (_, { title }) => {
-  return dialog.showSaveDialogSync(win, {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
+  const result = await dialog.showSaveDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePath;
 });
 
-ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
-  return dialog.showOpenDialogSync(win, {
+ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
+  const result = await dialog.showOpenDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["openFile"],
   });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths;
 });
 
 ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
