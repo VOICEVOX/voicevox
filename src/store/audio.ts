@@ -27,14 +27,25 @@ import {
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
 
-async function generateUniqueId(audioItem: AudioItem) {
+async function generateUniqueIdAndQuery(
+  state: State,
+  audioItem: AudioItem
+): Promise<[string, AudioQuery | undefined]> {
+  audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
+  const audioQuery = audioItem.query;
+  if (audioQuery != undefined) {
+    audioQuery.outputSamplingRate = state.savingSetting.outputSamplingRate;
+    audioQuery.outputStereo = state.savingSetting.outputStereo;
+  }
+
   const data = new TextEncoder().encode(
-    JSON.stringify([audioItem.text, audioItem.query, audioItem.styleId])
+    JSON.stringify([audioItem.text, audioQuery, audioItem.styleId])
   );
   const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
+  const id = Array.from(new Uint8Array(digest))
     .map((v) => v.toString(16).padStart(2, "0"))
     .join("");
+  return [id, audioQuery];
 }
 
 function parseTextFile(
@@ -489,7 +500,7 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
-      const id = await generateUniqueId(audioItem);
+      const [id] = await generateUniqueIdAndQuery(state, audioItem);
 
       if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
         return audioBlobCache[id];
@@ -598,16 +609,15 @@ export const audioStore: VoiceVoxStoreOptions<
         const audioItem: AudioItem = JSON.parse(
           JSON.stringify(state.audioItems[audioKey])
         );
-        const audioQuery = audioItem.query;
+
+        const [id, audioQuery] = await generateUniqueIdAndQuery(
+          state,
+          audioItem
+        );
         const speaker = audioItem.styleId;
         if (audioQuery == undefined || speaker == undefined) {
           return null;
         }
-
-        audioQuery.outputSamplingRate = state.savingSetting.outputSamplingRate;
-        audioQuery.outputStereo = state.savingSetting.outputStereo;
-
-        const id = await generateUniqueId(audioItem);
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
           action: "synthesisSynthesisPost",
