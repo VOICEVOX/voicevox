@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.9.2",
+    "descriptions": [
+      "特定環境でエンジンが起動しないバグの修正",
+      "デフォルトスタイル選択で完了が押せないバグの修正"
+    ],
+    "contributors": ["aoirint", "Hiroshiba", "raa0121", "shigobu", "y-chan"]
+  },
+  {
     "version": "0.9.1",
     "descriptions": [
       "キャラクター「春日部つむぎ」「波音リツ」を追加",
