@@ -272,8 +272,7 @@ export default defineComponent({
     const applyDefaultSetting = () => {
       $q.dialog({
         title: "ツールバーをデフォルトに戻します",
-        message:
-          "ツールバーをデフォルトに戻します。<br/>本当によろしいですか？",
+        message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
         html: true,
         ok: {
           label: "はい",
