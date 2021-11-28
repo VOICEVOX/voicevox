@@ -28,6 +28,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
+  dialogLockCount: 0,
   useGpu: false,
   inheritAudioInfo: true,
   isHelpDialogOpen: false,
@@ -45,6 +46,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UI_LOCKED(state) {
         return state.uiLockCount > 0;
       },
+      MENUBAR_LOCKED(state) {
+        return state.dialogLockCount > 0;
+      },
       SHOULD_SHOW_PANES(_, getters) {
         return getters.ACTIVE_AUDIO_KEY != undefined;
       },
@@ -56,6 +60,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       UNLOCK_UI(state) {
         state.uiLockCount--;
+      },
+      LOCK_MENUBAR(state) {
+        state.dialogLockCount++;
+      },
+      UNLOCK_MENUBAR(state) {
+        state.dialogLockCount--;
       },
       IS_HELP_DIALOG_OPEN(
         state,
@@ -116,6 +126,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UNLOCK_UI({ commit }) {
         commit("UNLOCK_UI");
       },
+      LOCK_MENUBAR({ commit }) {
+        commit("LOCK_MENUBAR");
+      },
+      UNLOCK_MENUBAR({ commit }) {
+        commit("UNLOCK_MENUBAR");
+      },
       ASYNC_UI_LOCK: createUILockAction(
         async (_, { callback }: { callback: () => Promise<void> }) => {
           await callback();
@@ -127,8 +143,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
-        if (isHelpDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isHelpDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
       },
@@ -138,8 +159,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
-        if (isSettingDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isSettingDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
       },
@@ -150,8 +176,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         if (state.isHotkeySettingDialogOpen === isHotkeySettingDialogOpen)
           return;
 
-        if (isHotkeySettingDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isHotkeySettingDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
       },
@@ -162,8 +193,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         if (state.isToolbarSettingDialogOpen === isToolbarSettingDialogOpen)
           return;
 
-        if (isToolbarSettingDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isToolbarSettingDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
           isToolbarSettingDialogOpen,
@@ -182,8 +218,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         )
           return;
 
-        if (isDefaultStyleSelectDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isDefaultStyleSelectDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen,

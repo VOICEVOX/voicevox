@@ -22,6 +22,7 @@ describe("store/vuex.js test", () => {
         audioKeys: [],
         audioStates: {},
         uiLockCount: 0,
+        dialogLockCount: 0,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
@@ -43,6 +44,7 @@ describe("store/vuex.js test", () => {
           exportText: true,
           outputStereo: false,
           outputSamplingRate: 24000,
+          audioOutputDevice: "default",
         },
         toolbarSetting: [],
         themeSetting: {
