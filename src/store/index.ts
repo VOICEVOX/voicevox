@@ -19,6 +19,7 @@ import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
 import { proxyStore, proxyStoreState } from "./proxy";
+import { DefaultStyleId } from "@/type/preload";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -95,8 +96,14 @@ export const indexStore: VoiceVoxStoreOptions<
     async IS_UNSET_DEFAULT_STYLE_IDS() {
       return await window.electron.isUnsetDefaultStyleIds();
     },
-    async LOAD_DEFAULT_STYLE_IDS({ commit }) {
-      const defaultStyleIds = await window.electron.getDefaultStyleIds();
+    async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
+      const characterInfos = await state.characterInfos;
+      if (characterInfos == undefined)
+        throw new Error("state.characterInfos == undefined");
+      const defaultStyleIds = characterInfos.map<DefaultStyleId>((info) => ({
+        speakerUuid: info.metas.speakerUuid,
+        defaultStyleId: info.metas.styles[0].styleId,
+      }));
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
     },
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {

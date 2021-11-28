@@ -351,10 +351,9 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await Promise.all([
-        store.dispatch("LOAD_CHARACTER"),
-        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
-      ]);
+      await store.dispatch("LOAD_CHARACTER").then(async () => {
+        await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+      });
       if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
         isDefaultStyleSelectDialogOpenComputed.value = true;
       }
