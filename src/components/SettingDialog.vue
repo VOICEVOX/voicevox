@@ -276,8 +276,7 @@
                   </q-tooltip>
                 </q-select>
               </q-card-actions>
-              <!-- FIXME: バージョン0.8.0現在、エンジン側にサンプリングレート変更エラーがあるので機能制限 -->
-              <!-- <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>音声のサンプリングレート</div>
                 <q-space />
                 <q-select
@@ -302,13 +301,14 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声のサンプリングレートを変更して再生・保存しますが、音声の品質は大きく変わりません
+                    再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
                   </q-tooltip>
                 </q-select>
-              </q-card-actions> -->
+              </q-card-actions>
             </q-card>
             <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <q-card flat class="setting-card">
+            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+            <!-- <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
@@ -336,7 +336,7 @@
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
-            </q-card>
+            </q-card> -->
           </div>
         </q-page>
       </q-page-container>
@@ -517,7 +517,7 @@ export default defineComponent({
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />本当に変更しますか？",
+            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
           html: true,
           persistent: true,
           ok: {

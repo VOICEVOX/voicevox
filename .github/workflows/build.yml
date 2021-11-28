@@ -10,11 +10,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.8.0
-
-  # FIXME: implement build with production resources in Hiroshiba/voicevox
-  # Temporarily, skip uploading to GitHub Release (use Artifact instead)
-  SKIP_UPLOADING_RELEASE_ASSET: 1
+  VOICEVOX_ENGINE_VERSION: 0.9.1
 
 jobs:
   build-noengine-prepackage:
@@ -649,7 +645,7 @@ jobs:
           df -h
 
       - name: Upload Linux AppImage Release artifact
-        if: env.SKIP_UPLOADING_RELEASE_ASSET == '1' && endsWith(matrix.artifact_name, '-appimage')
+        if: endsWith(matrix.artifact_name, '-appimage')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-release
@@ -657,7 +653,7 @@ jobs:
             artifact/*.7z.*
 
       - name: Upload Linux AppImage splitted archives to Release assets
-        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-appimage')
+        if: endsWith(matrix.artifact_name, '-appimage')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -667,7 +663,7 @@ jobs:
 
       # Windows NSIS Web
       - name: Upload Windows nsis-web archives to Release assets
-        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
+        if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -676,7 +672,7 @@ jobs:
           file: artifact/*.7z.*
 
       - name: Upload Windows nsis-web installer to Release assets
-        if: env.SKIP_UPLOADING_RELEASE_ASSET != '1' && endsWith(matrix.artifact_name, '-nsis-web')
+        if: endsWith(matrix.artifact_name, '-nsis-web')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}

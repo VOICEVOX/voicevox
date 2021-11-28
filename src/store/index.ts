@@ -93,8 +93,8 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
     },
-    async IS_UNSET_DEFAULT_STYLE_IDS() {
-      return await window.electron.isUnsetDefaultStyleIds();
+    async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
+      return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
       const characterInfos = await state.characterInfos;
