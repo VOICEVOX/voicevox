@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.9.1",
+    "descriptions": [
+      "キャラクター「春日部つむぎ」「波音リツ」を追加",
+      "サンプリングレート変更機能を追加",
+      "再生デバイスの変更機能を追加",
+      "ショートカットキーをデフォルトに戻せるように",
+      "UXの向上",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "koizuka",
+      "madosuki",
+      "MT224244",
+      "nogino52",
+      "Patchethium",
+      "PickledChair",
+      "shigobu",
+      "takana-v",
+      "yamachu",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.8.2",
     "descriptions": ["音声を１つだけ書き出せるメニューボタンを追加"],
     "contributors": []

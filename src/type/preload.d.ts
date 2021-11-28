@@ -56,7 +56,7 @@ export interface Sandbox {
     presetItems: Record<string, Preset>;
     presetKeys: string[];
   }): Promise<PresetConfig>;
-  isUnsetDefaultStyleIds(): Promise<boolean>;
+  isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]

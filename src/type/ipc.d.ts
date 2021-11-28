@@ -164,8 +164,8 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
-  IS_UNSET_DEFAULT_STYLE_IDS: {
-    args: [];
+  IS_UNSET_DEFAULT_STYLE_ID: {
+    args: [speakerUuid: string];
     return: boolean;
   };
 

@@ -23,6 +23,7 @@ describe("store/vuex.js test", () => {
         audioKeys: [],
         audioStates: {},
         uiLockCount: 0,
+        dialogLockCount: 0,
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
