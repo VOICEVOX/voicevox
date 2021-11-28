@@ -351,8 +351,10 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await store.dispatch("LOAD_CHARACTER").then(async () => {
-        await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+      await store.dispatch("START_WAITING_ENGINE").then(async () => {
+        await store.dispatch("LOAD_CHARACTER").then(async () => {
+          await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+        });
       });
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();

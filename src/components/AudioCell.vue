@@ -50,7 +50,8 @@
                     :ratio="1"
                     :src="
                       'data:image/png;base64,' +
-                      getDefaultStyle(characterInfo.metas.speakerUuid).iconBase64
+                      getDefaultStyle(characterInfo.metas.speakerUuid)
+                        .iconBase64
                     "
                   />
                 </q-avatar>
@@ -102,7 +103,7 @@
                             :ratio="1"
                             :src="
                               'data:image/png;base64,' +
-                              characterInfo.metas.styles[styleIndex].iconPath
+                              characterInfo.metas.styles[styleIndex].iconBase64
                             "
                           />
                         </q-avatar>
