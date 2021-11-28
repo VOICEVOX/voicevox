@@ -233,15 +233,6 @@ export default defineComponent({
       get: () => props.modelValue || changedOrNotFlag.value,
       set: (val) => emit("update:modelValue", val),
     });
-    watch(
-      () => props.modelValue,
-      (newValue) => {
-        store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: false });
-        if (!newValue) {
-          finishOrNotDialog();
-        }
-      }
-    );
 
     const leftShiftable = computed(
       () => selectedButton.value !== toolbarButtons.value[0] && removable.value
@@ -343,17 +334,11 @@ export default defineComponent({
             flat: true,
             textColor: "display",
           },
-        })
-          .onOk(() => {
-            toolbarButtons.value = [...store.state.toolbarSetting];
-            selectedButton.value = toolbarButtons.value[0];
-            headerBarCustomDialogOpenComputed.value = false;
-          })
-          .onCancel(() => {
-            store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
-              isToolbarSettingDialogOpen: true,
-            });
-          });
+        }).onOk(() => {
+          toolbarButtons.value = [...store.state.toolbarSetting];
+          selectedButton.value = toolbarButtons.value[0];
+          headerBarCustomDialogOpenComputed.value = false;
+        });
       } else {
         selectedButton.value = toolbarButtons.value[0];
         headerBarCustomDialogOpenComputed.value = false;
