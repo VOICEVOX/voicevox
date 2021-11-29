@@ -11,6 +11,7 @@ on:
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.9.3
+  VOICEVOX_RESOURCE_VERSION: 0.9.2
 
 jobs:
   build-noengine-prepackage:
@@ -124,6 +125,11 @@ jobs:
           repository: Hiroshiba/voicevox_resource
           ref: main
           path: resource
+
+      - name: Checkout tag of VOICEVOX_RESOURCE_VERSION
+        run: |
+          cd resource
+          git checkout ${{ env.VOICEVOX_RESOURCE_VERSION }}
 
       - name: Replace Character Info
         shell: bash
