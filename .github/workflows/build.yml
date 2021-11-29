@@ -123,13 +123,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: Hiroshiba/voicevox_resource
-          ref: main
+          ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
-
-      - name: Checkout tag of VOICEVOX_RESOURCE_VERSION
-        run: |
-          cd resource
-          git checkout ${{ env.VOICEVOX_RESOURCE_VERSION }}
 
       - name: Replace Character Info
         shell: bash
