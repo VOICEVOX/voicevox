@@ -26,7 +26,7 @@ export const settingStoreState: SettingStoreState = {
     fixedExportDir: "",
     avoidOverwrite: false,
     exportLab: false,
-    exportText: true,
+    exportText: false,
     outputStereo: false,
     outputSamplingRate: 24000,
     audioOutputDevice: "default",

@@ -41,7 +41,7 @@ describe("store/vuex.js test", () => {
           fixedExportDir: "",
           avoidOverwrite: false,
           exportLab: false,
-          exportText: true,
+          exportText: false,
           outputStereo: false,
           outputSamplingRate: 24000,
           audioOutputDevice: "default",
