@@ -596,8 +596,8 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-@use '@/styles' as global;
-@import "~quasar/src/css/variables";
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 
 $pitch-label-height: 24px;
 
@@ -613,9 +613,9 @@ $pitch-label-height: 24px;
     flex-direction: column;
     justify-content: space-between;
     .detail-selector .q-tab--active {
-      background-color: rgba(global.$primary-light-rgb, 0.3);
+      background-color: rgba(colors.$primary-light-rgb, 0.3);
       :deep(.q-tab__indicator) {
-        background-color: var(--color-primary-light);
+        background-color: colors.$primary-light;
       }
     }
     .play-button-wrapper {
@@ -653,14 +653,14 @@ $pitch-label-height: 24px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: var(--color-display);
+          color: colors.$display;
         }
         &.text-cell-hovered {
           min-width: 30px;
           max-width: 30px;
           grid-row-start: 3;
           text-align: center;
-          color: var(--color-display);
+          color: colors.$display;
           font-weight: bold;
           cursor: pointer;
         }
@@ -668,10 +668,10 @@ $pitch-label-height: 24px;
           min-width: 10px;
           max-width: 10px;
           grid-row: 3 / span 1;
-          z-index: global.$detail-view-splitter-cell-z-index;
+          z-index: vars.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
-          background-color: var(--color-pause-hovered);
+          background-color: colors.$pause-hovered;
           cursor: pointer;
         }
         &.splitter-cell-be-split {
