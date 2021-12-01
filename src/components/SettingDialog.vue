@@ -255,8 +255,28 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <!-- FIXME: バージョン0.8.0現在、エンジン側にサンプリングレート変更エラーがあるので機能制限 -->
-              <!-- <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>再生デバイス</div>
+                <q-space />
+                <q-select
+                  dense
+                  v-model="currentAudioOutputDeviceComputed"
+                  label="再生デバイス"
+                  :options="availableAudioOutputDevices"
+                  class="col-7"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    音声の再生デバイスを変更し再生を行います
+                  </q-tooltip>
+                </q-select>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>音声のサンプリングレート</div>
                 <q-space />
                 <q-select
@@ -281,13 +301,14 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    音声のサンプリングレートを変更して再生・保存しますが、音声の品質は大きく変わりません
+                    再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
                   </q-tooltip>
                 </q-select>
-              </q-card-actions> -->
+              </q-card-actions>
             </q-card>
             <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <q-card flat class="setting-card">
+            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+            <!-- <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
@@ -315,7 +336,7 @@
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
-            </q-card>
+            </q-card> -->
           </div>
         </q-page>
       </q-page-container>
@@ -324,7 +345,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
@@ -374,6 +395,44 @@ export default defineComponent({
         return { label: theme.name, value: theme.name };
       });
     });
+
+    const currentAudioOutputDeviceComputed = computed<{
+      key: string;
+      label: string;
+    } | null>({
+      get: () => {
+        // 再生デバイスが見つからなかったらデフォルト値に戻す
+        const device = availableAudioOutputDevices.value?.find(
+          (device) => device.key === store.state.savingSetting.audioOutputDevice
+        );
+        if (device) {
+          return device;
+        } else {
+          handleSavingSettingChange("audioOutputDevice", "default");
+          return null;
+        }
+      },
+      set: (device) => {
+        if (device) {
+          handleSavingSettingChange("audioOutputDevice", device.key);
+        }
+      },
+    });
+
+    const availableAudioOutputDevices = ref<{ key: string; label: string }[]>();
+    const updateAudioOutputDevices = async () => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      availableAudioOutputDevices.value = devices
+        .filter((device) => device.kind === "audiooutput")
+        .map((device) => {
+          return { label: device.label, key: device.deviceId };
+        });
+    };
+    navigator.mediaDevices.addEventListener(
+      "devicechange",
+      updateAudioOutputDevices
+    );
+    updateAudioOutputDevices();
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -458,7 +517,7 @@ export default defineComponent({
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />本当に変更しますか？",
+            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
           html: true,
           persistent: true,
           ok: {
@@ -492,6 +551,8 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      currentAudioOutputDeviceComputed,
+      availableAudioOutputDevices,
       changeinheritAudioInfo,
       restartEngineProcess,
       savingSetting,

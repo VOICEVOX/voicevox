@@ -52,7 +52,7 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  isUnsetDefaultStyleIds(): Promise<boolean>;
+  isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
@@ -107,6 +107,7 @@ export type SavingSetting = {
   exportText: boolean;
   outputStereo: boolean;
   outputSamplingRate: number;
+  audioOutputDevice: string;
 };
 
 export type DefaultStyleId = {

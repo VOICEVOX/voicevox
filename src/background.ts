@@ -40,6 +40,13 @@ log.transports.file.fileName = `${prefix}_error.log`;
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
+if (isDevelopment) {
+  app.setPath(
+    "userData",
+    path.join(app.getPath("appData"), `${app.getName()}-dev`)
+  );
+}
+
 let win: BrowserWindow;
 
 // 多重起動防止
@@ -161,9 +168,10 @@ const store = new Store<{
         avoidOverwrite: { type: "boolean", default: false },
         fixedExportDir: { type: "string", default: "" },
         exportLab: { type: "boolean", default: false },
-        exportText: { type: "boolean", default: true },
+        exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
+        audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -171,9 +179,10 @@ const store = new Store<{
         avoidOverwrite: false,
         fixedExportDir: "",
         exportLab: false,
-        exportText: true,
+        exportText: false,
         outputStereo: false,
         outputSamplingRate: 24000,
+        audioOutputDevice: "default",
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -453,36 +462,49 @@ ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
 });
 
-ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", (_, { title, defaultPath }) => {
-  return dialog.showSaveDialogSync(win, {
+ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+  const result = await dialog.showSaveDialog(win, {
     title,
     defaultPath,
     filters: [{ name: "Wave File", extensions: ["wav"] }],
     properties: ["createDirectory"],
   });
+  return result.filePath;
 });
 
-ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", (_, { title }) => {
-  return dialog.showOpenDialogSync(win, {
+ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
+  const result = await dialog.showOpenDialog(win, {
     title,
     properties: ["openDirectory", "createDirectory"],
-  })?.[0];
+  });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", (_, { title }) => {
-  return dialog.showSaveDialogSync(win, {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
+  const result = await dialog.showSaveDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePath;
 });
 
-ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", (_, { title }) => {
-  return dialog.showOpenDialogSync(win, {
+ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
+  const result = await dialog.showOpenDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["openFile"],
   });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths;
 });
 
 ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
@@ -680,8 +702,9 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("IS_UNSET_DEFAULT_STYLE_IDS", () => {
-  return store.get("defaultStyleIds").length === 0;
+ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
+  const defaultStyleIds = store.get("defaultStyleIds");
+  return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
 });
 
 ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {

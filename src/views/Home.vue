@@ -5,7 +5,7 @@
     <header-bar />
 
     <q-page-container>
-      <q-page class="main-row-panes bg-background">
+      <q-page class="main-row-panes">
         <div v-if="engineState === 'STARTING'" class="waiting-engine">
           <div>
             <q-spinner color="primary" size="2.5rem" />
@@ -355,9 +355,15 @@ export default defineComponent({
         store.dispatch("LOAD_CHARACTER"),
         store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
       ]);
-      if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
-        isDefaultStyleSelectDialogOpenComputed.value = true;
+      let isUnsetDefaultStyleIds = false;
+      if (characterInfos.value == undefined) throw new Error();
+      for (const info of characterInfos.value) {
+        isUnsetDefaultStyleIds ||= await store.dispatch(
+          "IS_UNSET_DEFAULT_STYLE_ID",
+          { speakerUuid: info.metas.speakerUuid }
+        );
       }
+      isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -490,7 +496,7 @@ body {
 }
 
 .waiting-engine {
-  background-color: var(--color-background);
+  background-color: rgba(var(--color-display-dark-rgb), 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
