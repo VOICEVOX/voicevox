@@ -604,6 +604,57 @@ export const audioStore: VoiceVoxStoreOptions<
           throw error;
         });
     },
+    GENERATE_LAB: createUILockAction(
+      async ({ state }, { audioKey }: { audioKey: string }) => {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) return;
+        const speedScale = query.speedScale;
+
+        let labString = "";
+        let timestamp = 0;
+
+        labString += timestamp.toFixed() + " ";
+        timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+        labString += timestamp.toFixed() + " ";
+        labString += "pau" + "\n";
+
+        query.accentPhrases.forEach((accentPhrase) => {
+          accentPhrase.moras.forEach((mora) => {
+            if (
+              mora.consonantLength !== undefined &&
+              mora.consonant !== undefined
+            ) {
+              labString += timestamp.toFixed() + " ";
+              timestamp += (mora.consonantLength * 10000000) / speedScale;
+              labString += timestamp.toFixed() + " ";
+              labString += mora.consonant + "\n";
+            }
+            labString += timestamp.toFixed() + " ";
+            timestamp += (mora.vowelLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            if (mora.vowel != "N") {
+              labString += mora.vowel.toLowerCase() + "\n";
+            } else {
+              labString += mora.vowel + "\n";
+            }
+          });
+          if (accentPhrase.pauseMora !== undefined) {
+            labString += timestamp.toFixed() + " ";
+            timestamp +=
+              (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            labString += accentPhrase.pauseMora.vowel + "\n";
+          }
+        });
+
+        labString += timestamp.toFixed() + " ";
+        timestamp += (query.postPhonemeLength * 10000000) / speedScale;
+        labString += timestamp.toFixed() + " ";
+        labString += "pau" + "\n";
+
+        return labString;
+      }
+    ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
         const audioItem: AudioItem = JSON.parse(
@@ -697,52 +748,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         if (state.savingSetting.exportLab) {
-          const query = state.audioItems[audioKey].query;
-          if (query == undefined)
+          const labString = await dispatch("GENERATE_LAB", { audioKey });
+          if (labString === undefined)
             return { result: "WRITE_ERROR", path: filePath };
-          const speedScale = query.speedScale;
-
-          let labString = "";
-          let timestamp = 0;
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.prePhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
-
-          query.accentPhrases.forEach((accentPhrase) => {
-            accentPhrase.moras.forEach((mora) => {
-              if (
-                mora.consonantLength !== undefined &&
-                mora.consonant !== undefined
-              ) {
-                labString += timestamp.toFixed() + " ";
-                timestamp += (mora.consonantLength * 10000000) / speedScale;
-                labString += timestamp.toFixed() + " ";
-                labString += mora.consonant + "\n";
-              }
-              labString += timestamp.toFixed() + " ";
-              timestamp += (mora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              if (mora.vowel != "N") {
-                labString += mora.vowel.toLowerCase() + "\n";
-              } else {
-                labString += mora.vowel + "\n";
-              }
-            });
-            if (accentPhrase.pauseMora !== undefined) {
-              labString += timestamp.toFixed() + " ";
-              timestamp +=
-                (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              labString += accentPhrase.pauseMora.vowel + "\n";
-            }
-          });
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.postPhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
 
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
           const labBlob = new Blob([bom, labString], {

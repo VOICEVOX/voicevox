@@ -260,6 +260,10 @@ type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  GENERATE_LAB: {
+    action(payload: { audioKey: string }): string | undefined;
+  };
+
   GENERATE_AUDIO: {
     action(payload: { audioKey: string }): Blob | null;
   };
