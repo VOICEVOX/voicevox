@@ -268,6 +268,10 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): Blob | null;
   };
 
+  CONNECT_AUDIO: {
+    action(payload: { encodedBlobs: string[] }): Blob | null;
+  };
+
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
       audioKey: string;

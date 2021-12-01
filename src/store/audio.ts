@@ -655,6 +655,26 @@ export const audioStore: VoiceVoxStoreOptions<
         return labString;
       }
     ),
+    CONNECT_AUDIO: createUILockAction(
+      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          action: "connectWavesConnectWavesPost",
+          payload: [
+            {
+              requestBody: encodedBlobs,
+            },
+          ],
+        })
+          .then(toDispatchResponse("connectWavesConnectWavesPost"))
+          .then(async (blob) => {
+            return blob;
+          })
+          .catch((e) => {
+            window.electron.logError(e);
+            return null;
+          });
+      }
+    ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
         const audioItem: AudioItem = JSON.parse(
