@@ -605,13 +605,16 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     GENERATE_LAB: createUILockAction(
-      async ({ state }, { audioKey }: { audioKey: string }) => {
+      async (
+        { state },
+        { audioKey, offset }: { audioKey: string; offset?: number }
+      ) => {
         const query = state.audioItems[audioKey].query;
         if (query == undefined) return;
         const speedScale = query.speedScale;
 
         let labString = "";
-        let timestamp = 0;
+        let timestamp = offset !== undefined ? offset : 0;
 
         labString += timestamp.toFixed() + " ";
         timestamp += (query.prePhonemeLength * 10000000) / speedScale;

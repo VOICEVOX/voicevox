@@ -261,7 +261,7 @@ type AudioStoreTypes = {
   };
 
   GENERATE_LAB: {
-    action(payload: { audioKey: string }): string | undefined;
+    action(payload: { audioKey: string; offset?: number }): string | undefined;
   };
 
   GENERATE_AUDIO: {
