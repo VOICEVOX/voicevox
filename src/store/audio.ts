@@ -850,6 +850,176 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
+    GENERATE_AND_CONNECT_AND_SAVE_AUDIO: createUILockAction(
+      async (
+        { state, dispatch },
+        { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
+      ): Promise<SaveResultObject> => {
+        const defaultFileName =
+          state.audioItems[state.audioKeys[0]].text +
+          "..." +
+          state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+        if (state.savingSetting.fixedExportEnabled) {
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            defaultFileName
+          );
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "音声を全て繋げて保存",
+            defaultPath: defaultFileName,
+          });
+        }
+
+        if (!filePath) {
+          return { result: "CANCELED", path: "" };
+        }
+        const encodedBlobs: string[] = [];
+        const labs: string[] = [];
+        const texts: string[] = [];
+
+        let labOffset = 0;
+
+        const base64Encoder = (blob: Blob): Promise<string | undefined> => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              // string/undefined以外が来ることはないと思うが、型定義的にArrayBufferも来るので、toStringする
+              const result = reader.result?.toString();
+              if (result) {
+                // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
+                resolve(result.slice(result.indexOf(",") + 1));
+              } else {
+                reject();
+              }
+            };
+            reader.readAsDataURL(blob);
+          });
+        };
+
+        for (const audioKey of state.audioKeys) {
+          let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+          if (!blob) {
+            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          }
+          if (blob === null) {
+            return { result: "ENGINE_ERROR", path: filePath };
+          }
+          const encodedBlob = await base64Encoder(blob);
+          console.log(encodedBlob);
+          if (encodedBlob === undefined) {
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+          encodedBlobs.push(encodedBlob);
+          // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
+          const lab = await dispatch("GENERATE_LAB", {
+            audioKey,
+            offset: labOffset,
+          });
+          if (lab === undefined) {
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+          labs.push(lab);
+          texts.push(state.audioItems[audioKey].text);
+          // 最終音素の終了時刻を取得する
+          const splitLab = lab.split(" ");
+          labOffset = Number(splitLab[splitLab.length - 2]);
+        }
+
+        const connectedWav = await dispatch("CONNECT_AUDIO", {
+          encodedBlobs,
+        });
+        if (!connectedWav) {
+          return { result: "ENGINE_ERROR", path: filePath };
+        }
+
+        try {
+          window.electron.writeFile({
+            filePath,
+            buffer: await connectedWav.arrayBuffer(),
+          });
+        } catch (e) {
+          window.electron.logError(e);
+          return { result: "WRITE_ERROR", path: filePath };
+        }
+
+        if (state.savingSetting.exportLab) {
+          // pauが重なっているのを取り除く
+          for (let i = 1; i < labs.length; i++) {
+            const prevLab = labs[i - 1];
+            const currentLab = labs[i];
+            // 改行でsplit
+            let splitPrevLab = prevLab.split("\n");
+            const splitCurrentLab = currentLab.split("\n");
+            console.log(splitCurrentLab);
+            // prevの最後のpauseを抽出
+            const prevEndPause = splitPrevLab[splitPrevLab.length - 2];
+            // currentの最初のpauseをスペースでsplit
+            const splitCurrentStartPause = splitCurrentLab[0].split(" ");
+            // currentの最初のpauseの開始時刻をprevの最後のpauseの開始時刻にする
+            splitCurrentStartPause[0] = prevEndPause.split(" ")[0];
+            // 改行でsplitしたcurrentの最初のpauseを、編集したもので置き換える
+            splitCurrentLab[0] = splitCurrentStartPause.join(" ");
+            // prevの最後のpauseは開始時刻を取得して用済みなので消す
+            splitPrevLab = splitPrevLab
+              .slice(0, splitPrevLab.length - 2)
+              .concat("");
+            labs[i - 1] = splitPrevLab.join("\n");
+            labs[i] = splitCurrentLab.join("\n");
+          }
+
+          // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
+          const labString = labs.join("");
+
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const labBlob = new Blob([bom, labString], {
+            type: "text/plain;charset=UTF-8",
+          });
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+        }
+
+        if (state.savingSetting.exportText) {
+          const textBlob = ((): Blob => {
+            const text = texts.join("\n");
+            if (!encoding || encoding === "UTF-8") {
+              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+              return new Blob([bom, text], {
+                type: "text/plain;charset=UTF-8",
+              });
+            }
+            const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+              to: "SJIS",
+              type: "arraybuffer",
+            });
+            return new Blob([new Uint8Array(sjisArray)], {
+              type: "text/plain;charset=Shift_JIS",
+            });
+          })();
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+        }
+
+        return { result: "SUCCESS", path: filePath };
+      }
+    ),
     PLAY_AUDIO: createUILockAction(
       async (
         { state, commit, dispatch },
