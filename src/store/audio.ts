@@ -949,7 +949,7 @@ export const audioStore: VoiceVoxStoreOptions<
             const prevLab = labs[i - 1];
             const currentLab = labs[i];
             // 改行でsplit
-            let splitPrevLab = prevLab.split("\n");
+            const splitPrevLab = prevLab.split("\n");
             const splitCurrentLab = currentLab.split("\n");
             console.log(splitCurrentLab);
             // prevの最後のpauseを抽出
@@ -961,9 +961,7 @@ export const audioStore: VoiceVoxStoreOptions<
             // 改行でsplitしたcurrentの最初のpauseを、編集したもので置き換える
             splitCurrentLab[0] = splitCurrentStartPause.join(" ");
             // prevの最後のpauseは開始時刻を取得して用済みなので消す
-            splitPrevLab = splitPrevLab
-              .slice(0, splitPrevLab.length - 2)
-              .concat("");
+            splitPrevLab.splice(0, splitPrevLab.length - 2);
             labs[i - 1] = splitPrevLab.join("\n");
             labs[i] = splitCurrentLab.join("\n");
           }
