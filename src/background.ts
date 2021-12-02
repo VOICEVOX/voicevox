@@ -93,6 +93,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "2",
   },
   {
+    action: "長さ欄を表示",
+    combination: "3",
+  },
+  {
     action: "テキスト欄を追加",
     combination: "Shift Enter",
   },
@@ -223,13 +227,16 @@ const store = new Store<{
         combination: "3",
       };
       const hotkeys = store.get("hotkeySettings");
-      hotkeys.forEach((value) => {
-        if (value.combination == newHotkey.combination) {
+      const actionAlreadyExists = hotkeys.some((hotkey) => hotkey.action === newHotkey.action);
+      if(!actionAlreadyExists){
+        const combinationExists = hotkeys.some((hotkey) => hotkey.combination === newHotkey.combination);
+        if (combinationExists) {
           newHotkey.combination = "";
         }
-      });
-      hotkeys.splice(6, 0, newHotkey);
-      store.set("hotkeySettings", hotkeys);
+        const insertionIndex = defaultHotkeySettings.findIndex((hotkey) => hotkey.action === newHotkey.action);
+        hotkeys.splice(insertionIndex, 0, newHotkey);
+        store.set("hotkeySettings", hotkeys);
+      }
     },
   },
 });
