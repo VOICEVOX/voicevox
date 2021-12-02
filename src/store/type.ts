@@ -20,6 +20,7 @@ import {
   UpdateInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import { QVueGlobals } from "quasar";
 
 export type AudioItem = {
   text: string;
@@ -277,6 +278,14 @@ type AudioStoreTypes = {
       dirPath?: string;
       encoding?: EncodingType;
     }): SaveResultObject[] | undefined;
+  };
+
+  GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG: {
+    action(payload: {
+      $q: QVueGlobals;
+      dirPath?: string;
+      encoding?: EncodingType;
+    }): void;
   };
 
   PLAY_AUDIO: {
