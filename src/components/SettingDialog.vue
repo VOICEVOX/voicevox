@@ -566,9 +566,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
-@import "~quasar/src/css/variables";
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .hotkey-table {
   width: 100%;
@@ -577,7 +576,7 @@ export default defineComponent({
 .setting-card {
   @extend .hotkey-table;
   min-width: 475px;
-  background: var(--color-background);
+  background: colors.$background;
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

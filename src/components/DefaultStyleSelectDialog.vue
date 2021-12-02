@@ -356,8 +356,9 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 
 .q-toolbar div:first-child {
   min-width: 0;
@@ -374,8 +375,8 @@ export default defineComponent({
 }
 .q-tab-panels {
   height: calc(
-    100vh - #{global.$menubar-height + global.$header-height +
-      global.$window-border-width}
+    100vh - #{vars.$menubar-height + vars.$header-height +
+      vars.$window-border-width}
   );
 
   > :deep(.scroll) {
@@ -404,11 +405,11 @@ export default defineComponent({
       align-content: center;
       justify-content: center;
       .style-item {
-        box-shadow: 0 0 0 1px rgba(var(--color-primary-light-rgb), 0.5);
+        box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
         border-radius: 10px;
         overflow: hidden;
         &.active-style-item {
-          box-shadow: 0 0 0 2px var(--color-primary-light);
+          box-shadow: 0 0 0 2px colors.$primary-light;
         }
         &:hover :deep(.q-focus-helper) {
           opacity: 0 !important;
