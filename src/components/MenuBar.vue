@@ -408,6 +408,7 @@ export default defineComponent({
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
       ["一つだけ書き出し", generateAndSaveOneAudio],
+      ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
       ["テキスト読み込む", importTextFile],
       ["プロジェクトを上書き保存", saveProject],
       ["プロジェクトを名前を付けて保存", saveProjectAs],
