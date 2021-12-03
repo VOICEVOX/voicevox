@@ -157,22 +157,17 @@ function storeNewHotkeyforMigration(
   newHotkey: HotkeySetting
 ): void {
   const hotkeys = store.get("hotkeySettings");
-  const actionAlreadyExists = hotkeys.some(
+  const combinationExists = hotkeys.some(
+    (hotkey) => hotkey.combination === newHotkey.combination
+  );
+  if (combinationExists) {
+    newHotkey.combination = "";
+  }
+  const insertionIndex = defaultHotkeySettings.findIndex(
     (hotkey) => hotkey.action === newHotkey.action
   );
-  if (!actionAlreadyExists) {
-    const combinationExists = hotkeys.some(
-      (hotkey) => hotkey.combination === newHotkey.combination
-    );
-    if (combinationExists) {
-      newHotkey.combination = "";
-    }
-    const insertionIndex = defaultHotkeySettings.findIndex(
-      (hotkey) => hotkey.action === newHotkey.action
-    );
-    hotkeys.splice(insertionIndex, 0, newHotkey);
-    store.set("hotkeySettings", hotkeys);
-  }
+  hotkeys.splice(insertionIndex, 0, newHotkey);
+  store.set("hotkeySettings", hotkeys);
 }
 
 // 設定ファイル
@@ -248,12 +243,14 @@ const store = new Store<StoreType>({
   },
   migrations: {
     ">=0.7.3": (store) => {
-      const newHotkey: HotkeySetting = {
-        action: "長さ欄を表示",
-        combination: "3",
-      };
-
-      storeNewHotkeyforMigration(store, newHotkey);
+      const hotkeys = store.get("hotkeySettings");
+      const newHotkeys: HotkeySetting[] = defaultHotkeySettings.filter(
+        (defaultHotkey) =>
+          !hotkeys.some((hotkey) => hotkey.action === defaultHotkey.action)
+      );
+      for (const newHotkey of newHotkeys) {
+        storeNewHotkeyforMigration(store, newHotkey);
+      }
     },
   },
 });
