@@ -27,6 +27,7 @@ import {
 
 import log from "electron-log";
 import dayjs from "dayjs";
+import StoreConf from "conf";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -142,15 +143,40 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
-// 設定ファイル
-const store = new Store<{
+interface StoreType {
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
-}>({
+}
+
+function storeNewHotkeyforMigration(
+  store: StoreConf<StoreType>,
+  newHotkey: HotkeySetting
+): void {
+  const hotkeys = store.get("hotkeySettings");
+  const actionAlreadyExists = hotkeys.some(
+    (hotkey) => hotkey.action === newHotkey.action
+  );
+  if (!actionAlreadyExists) {
+    const combinationExists = hotkeys.some(
+      (hotkey) => hotkey.combination === newHotkey.combination
+    );
+    if (combinationExists) {
+      newHotkey.combination = "";
+    }
+    const insertionIndex = defaultHotkeySettings.findIndex(
+      (hotkey) => hotkey.action === newHotkey.action
+    );
+    hotkeys.splice(insertionIndex, 0, newHotkey);
+    store.set("hotkeySettings", hotkeys);
+  }
+}
+
+// 設定ファイル
+const store = new Store<StoreType>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -226,25 +252,8 @@ const store = new Store<{
         action: "長さ欄を表示",
         combination: "3",
       };
-      const hotkeys = store.get("hotkeySettings");
-      
-      // 以下を関数化
-      const actionAlreadyExists = hotkeys.some(
-        (hotkey) => hotkey.action === newHotkey.action
-      );
-      if (!actionAlreadyExists) {
-        const combinationExists = hotkeys.some(
-          (hotkey) => hotkey.combination === newHotkey.combination
-        );
-        if (combinationExists) {
-          newHotkey.combination = "";
-        }
-        const insertionIndex = defaultHotkeySettings.findIndex(
-          (hotkey) => hotkey.action === newHotkey.action
-        );
-        hotkeys.splice(insertionIndex, 0, newHotkey);
-        store.set("hotkeySettings", hotkeys);
-      }
+
+      storeNewHotkeyforMigration(store, newHotkey);
     },
   },
 });
