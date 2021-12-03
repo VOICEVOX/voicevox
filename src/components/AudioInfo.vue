@@ -7,6 +7,21 @@
 
         <q-btn-dropdown dense flat icon="more_vert">
           <q-list>
+            <q-item clickable v-close-popup @click="applyPreset">
+              <q-item-section avatar>
+                <q-avatar
+                  icon="settings_backup_restore"
+                  color="primary-light"
+                  text-color="display-dark"
+                ></q-avatar>
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>プリセット適用</q-item-label>
+                <q-item-label caption
+                  >選択中の設定をプリセット値に戻す
+                </q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item clickable v-close-popup @click="registerPreset">
               <q-item-section avatar>
                 <q-avatar
@@ -308,6 +323,12 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
+    const applyPreset = () => {
+      store.dispatch("COMMAND_APPLY_AUDIO_PRESET", {
+        audioKey: props.activeAudioKey,
+      });
+    };
+
     const setAudioSpeedScale = (speedScale: number) => {
       store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
         audioKey: props.activeAudioKey,
@@ -597,6 +618,7 @@ export default defineComponent({
       setAudioVolumeScale,
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
+      applyPreset,
       presetList,
       selectablePresetList,
       presetOptionsList,
