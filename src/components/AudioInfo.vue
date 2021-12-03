@@ -273,8 +273,6 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-@use '@/styles' as global;
-
 .root {
   display: flex;
   flex-direction: column;

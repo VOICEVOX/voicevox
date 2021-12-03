@@ -115,15 +115,15 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
 
 .q-btn {
   min-height: 0;
   overflow: hidden;
   :deep(.q-btn__content) {
     display: inline;
-    line-height: global.$menubar-height;
+    line-height: vars.$menubar-height;
     overflow: hidden;
     text-overflow: ellipsis;
   }

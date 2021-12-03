@@ -35,11 +35,7 @@
     }"
   >
     <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
-      <polyline
-        :points="accentLine"
-        stroke="var(--color-display)"
-        fill="none"
-      />
+      <polyline :points="accentLine" />
     </svg>
   </div>
   <template v-for="(mora, moraIndex) in accentPhrase.moras" :key="moraIndex">
@@ -116,7 +112,7 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-@use '@/styles' as global;
+@use '@/styles/colors' as colors;
 
 div {
   padding: 0px;
@@ -140,8 +136,14 @@ div {
   }
   &.accent-draw-cell {
     grid-row-start: 2;
-    svg line {
-      stroke: var(--color-display);
+    svg {
+      line {
+        stroke: colors.$display;
+      }
+      polyline {
+        stroke: colors.$display;
+        fill: none;
+      }
     }
   }
   &.accent-select-cell {
@@ -149,7 +151,7 @@ div {
     text-align: center;
     cursor: pointer;
     svg line {
-      stroke: var(--color-primary-light);
+      stroke: colors.$primary-light;
       stroke-dasharray: 3;
     }
   }

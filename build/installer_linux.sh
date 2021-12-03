@@ -75,6 +75,9 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
+
+Arch Linux:
+    sudo pacman -S curl
 EOS
 fi
 
@@ -109,6 +112,10 @@ Fedora:
     sudo dnf install p7zip
 Or
     sudo yum install p7zip
+
+Arch Linux:
+    sudo pacman -S p7zip
+
 MacOS:
     brew install p7zip
 EOS
@@ -134,6 +141,10 @@ CentOS/Fedora:
     sudo dnf install libsndfile
 Or
     sudo yum install libsndfile
+
+Arch Linux
+    sudo pacman -S libsndfile
+
 MacOS:
     brew install libsndfile
 EOS

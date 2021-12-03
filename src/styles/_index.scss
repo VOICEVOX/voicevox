@@ -1,90 +1,196 @@
-$primary: var(--color-primary);
-$primary-rgb: var(--color-primary-rgb);
-$primary-light: var(--color-primary-light);
-$primary-light-rgb: var(--color-primary-light-rgb);
-
-$window-border-width: 2px;
-
-$header-height: 66px;
-$menubar-height: 24px;
-
-$detail-view-splitter-cell-z-index: 2;
-
-
-.text-primary-light {
-  color: var(--color-primary-light);
-}
-
-.bg-primary-light {
-  background: var(--color-primary-light);
-}
-
-.text-display {
-  color: var(--color-display);
-}
-
-.bg-display {
-  background: var(--color-display);
-}
-
-.text-display-light {
-  color: var(--color-display-light);
-}
-
-.bg-display-light {
-  background: var(--color-display-light);
-}
-
-.text-display-dark {
-  color: var(--color-display-dark);
-}
-
-.bg-display-dark {
-  background: var(--color-display-dark);
-}
-
-.text-background {
-  color: var(--color-background);
-}
-
-.bg-background {
-  background: var(--color-background);
-}
-
-.text-background-light {
-  color: var(--color-background-light);
-}
-
-.bg-background-light {
-  background: var(--color-background-light);
-}
-
-.text-setting-item {
-  color: var(--color-setting-item);
-}
-
-.bg-setting-item {
-  background: var(--color-setting-item);
-}
-
-.text-warning {
-  color: var(--color-warning);
-}
-
-.bg-warning {
-  background: var(--color-warning);
-}
+@use './variables' as vars;
+@use './colors' as colors;
 
 body {
-  color: var(--color-display);
-  background: var(--color-background);
+  user-select: none;
+  border-left: solid #{vars.$window-border-width} #{colors.$primary};
+  border-right: solid #{vars.$window-border-width} #{colors.$primary};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$primary};
+  color: colors.$display;
+  background: colors.$background;
+}
+
+img {
+  pointer-events: none;
+}
+
+// スクロールバーのデザイン
+::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+  background-color: rgba(colors.$primary-light-rgb, 0.2);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(colors.$primary-light-rgb, 0.5);
+  border-radius: 5px;
+  &:hover {
+    background-color: rgba(colors.$primary-light-rgb, 0.6);
+  }
+  &:active {
+    background-color: rgba(colors.$primary-light-rgb, 0.8);
+  }
+}
+::-webkit-scrollbar-corner {
+  background: colors.$background;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+}
+
+.relative-absolute-wrapper {
+  position: relative;
+  > div {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+// ホバー色
+.q-hoverable {
+  &:hover > .q-focus-helper {
+    background-color: colors.$primary !important;
+    opacity: 0.3 !important;
+  }
+  &.bg-primary:hover > .q-focus-helper {
+    background-color: colors.$background !important;
+    opacity: 0.2 !important;
+  }
+}
+
+// リプル色
+.q-ripple > .q-ripple__inner {
+  background-color: colors.$primary;
+}
+.bg-primary > .q-ripple > .q-ripple__inner {
+  background-color: colors.$background;
+}
+
+// ダイアログ
+.q-dialog,
+#q-loading {
+  .q-dialog__backdrop,
+  .q-dialog__inner,
+  .q-loading,
+  .q-loading__backdrop {
+    top: vars.$menubar-height;
+    left: vars.$window-border-width;
+    right: vars.$window-border-width;
+    bottom: vars.$window-border-width;
+  }
+  .q-layout-container {
+    box-shadow: none;
+  }
 }
 
 .markdown-body {
-  color: var(--color-markdown-color);
-  background: var(--color-markdown-background);
+  color: colors.$markdown-color;
+  background: colors.$markdown-background;
+  a {
+    color: colors.$markdown-hyperlink;
+  }
+}
+.markdown {
+  // h1-h6のスタイルをデフォルトに戻す
+  // https://www.w3schools.com/tags/tag_hn.asp
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    display: block;
+    margin-left: 0;
+    margin-right: 0;
+    font-weight: bold;
+  }
+  h1 {
+    font-size: 2rem;
+    margin-top: 0.67rem;
+    margin-bottom: 0.67rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+    margin-top: 0.83rem;
+    margin-bottom: 0.83rem;
+  }
+  h3 {
+    font-size: 1.17rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  h4 {
+    font-size: 1rem;
+    margin-top: 1.33rem;
+    margin-bottom: 1.33rem;
+  }
+  h5 {
+    font-size: 0.83rem;
+    margin-top: 1.67rem;
+    margin-bottom: 1.67rem;
+  }
+  h6 {
+    font-size: 0.67rem;
+    margin-top: 2.33rem;
+    margin-bottom: 2.33rem;
+  }
 }
 
-.markdown-body a {
-  color: var(--color-markdown-hyperlink);
+// カラー
+.text-primary-light {
+  color: colors.$primary-light;
+}
+.bg-primary-light {
+  background: colors.$primary-light;
+}
+
+.text-display {
+  color: colors.$display;
+}
+.bg-display {
+  background: colors.$display;
+}
+
+.text-display-light {
+  color: colors.$display-light;
+}
+.bg-display-light {
+  background: colors.$display-light;
+}
+
+.text-display-dark {
+  color: colors.$display-dark;
+}
+.bg-display-dark {
+  background: colors.$display-dark;
+}
+
+.text-background {
+  color: colors.$background;
+}
+.bg-background {
+  background: colors.$background;
+}
+
+.text-background-light {
+  color: colors.$background-light;
+}
+.bg-background-light {
+  background: colors.$background-light;
+}
+
+.text-setting-item {
+  color: colors.$setting-item;
+}
+.bg-setting-item {
+  background: colors.$setting-item;
+}
+
+.text-warning {
+  color: colors.$warning;
+}
+.bg-warning {
+  background: colors.$warning;
 }

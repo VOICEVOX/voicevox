@@ -129,8 +129,6 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
-@use '@/styles' as global;
-
 $value-label-height: 24px;
 
 div {
