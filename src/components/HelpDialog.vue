@@ -137,8 +137,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
@@ -151,7 +151,7 @@ export default defineComponent({
 }
 
 .selected-item {
-  background-color: rgba(global.$primary-rgb, 0.4);
-  color: var(--color-display);
+  background-color: rgba(colors.$primary-rgb, 0.4);
+  color: colors.$display;
 }
 </style>

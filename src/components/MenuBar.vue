@@ -392,18 +392,19 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-@use '@/styles' as global;
+@use '@/styles/colors' as colors;
 
 .active-menu {
-  background-color: rgba(global.$primary-rgb, 0.3) !important;
+  background-color: rgba(colors.$primary-rgb, 0.3) !important;
 }
 </style>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 
 .q-bar {
-  min-height: global.$menubar-height;
+  min-height: vars.$menubar-height;
   -webkit-app-region: drag;
   > .q-btn {
     margin-left: 0;
@@ -412,16 +413,13 @@ export default defineComponent({
 }
 
 .window-logo {
-  height: global.$menubar-height;
+  height: vars.$menubar-height;
 }
 
 .window-title {
-  height: global.$menubar-height;
+  height: vars.$menubar-height;
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
-}
-.bg-background {
-  background: var(--color-background);
 }
 </style>
