@@ -455,6 +455,11 @@ type AudioCommandStoreTypes = {
     action(payload: { audioKey: string }): void;
   };
 
+  COMMAND_FULLY_APPLY_AUDIO_PRESET: {
+    mutation: { presetKey: string };
+    action(payload: { presetKey: string }): void;
+  };
+
   COMMAND_IMPORT_FROM_FILE: {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];

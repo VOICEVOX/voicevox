@@ -1434,6 +1434,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_APPLY_AUDIO_PRESET: ({ commit }, payload: { audioKey: string }) => {
       commit("COMMAND_APPLY_AUDIO_PRESET", payload);
     },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET: (
+      { commit },
+      payload: { presetKey: string }
+    ) => {
+      commit("COMMAND_FULLY_APPLY_AUDIO_PRESET", payload);
+    },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async (
         { state, commit, dispatch },
@@ -1716,6 +1722,17 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_APPLY_AUDIO_PRESET(draft, payload: { audioKey: string }) {
       audioStore.mutations.APPLY_AUDIO_PRESET(draft, payload);
+    },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET(
+      draft,
+      { presetKey }: { presetKey: string }
+    ) {
+      const targetAudioKeys = draft.audioKeys.filter(
+        (audioKey) => draft.audioItems[audioKey].presetKey === presetKey
+      );
+      for (const audioKey of targetAudioKeys) {
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+      }
     },
     COMMAND_IMPORT_FROM_FILE(
       draft,
