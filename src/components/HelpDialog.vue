@@ -45,9 +45,14 @@
               <div class="root">
                 <q-header class="q-pa-sm">
                   <q-toolbar>
-                    <q-toolbar-title class="text-display">
-                      ヘルプ / {{ page.name }}
-                    </q-toolbar-title>
+                    <q-breadcrumbs
+                      class="text-display"
+                      active-color="display"
+                      style="font-size: 20px"
+                    >
+                      <q-breadcrumbs-el :label="t('help_dialog.root')" />
+                      <q-breadcrumbs-el :label="page.name" />
+                    </q-breadcrumbs>
                     <q-space />
                     <!-- close button -->
                     <q-btn
@@ -77,6 +82,8 @@ import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
 import UpdateInfo from "@/components/UpdateInfo.vue";
 import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 type Page = {
   name: string;
@@ -99,29 +106,33 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     const pagedata: Page[] = [
       {
-        name: "ソフトウェアの利用規約",
+        name: t("help_dialog.policy"),
         component: Policy,
       },
       {
-        name: "音声ライブラリの利用規約",
+        name: t("help_dialog.library_policy"),
         component: LibraryPolicy,
       },
       {
-        name: "使い方",
+        name: t("help_dialog.how_to_use"),
         component: HowToUse,
       },
       {
-        name: "開発コミュニティ",
+        name: t("help_dialog.community"),
         component: OssCommunityInfo,
       },
       {
-        name: "ライセンス情報",
+        name: t("help_dialog.license"),
         component: OssLicense,
       },
       {
-        name: "アップデート情報",
+        name: t("help_dialog.release_note"),
         component: UpdateInfo,
       },
     ];
@@ -132,6 +143,7 @@ export default defineComponent({
       modelValueComputed,
       pagedata,
       selectedPage,
+      t,
     };
   },
 });

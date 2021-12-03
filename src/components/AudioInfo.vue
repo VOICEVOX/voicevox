@@ -1,9 +1,13 @@
 <template>
   <div class="root full-height q-py-md" v-if="query">
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.speed_scale") +
+          " " +
+          speedScaleSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -22,9 +26,13 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.pitch_scale") +
+          " " +
+          pitchScaleSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -43,10 +51,13 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >抑揚
-        {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.into_scale") +
+          " " +
+          intonationScaleSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -65,9 +76,13 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.volume_scale") +
+          " " +
+          volumeScaleSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -86,10 +101,13 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >開始無音
-        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.prefix_silence") +
+          " " +
+          prePhonemeLengthSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -108,10 +126,13 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
-        >終了無音
-        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
-      >
+      <span class="text-body1 q-mb-xs">
+        {{
+          t("audio_info.suffix_silence") +
+          " " +
+          postPhonemeLengthSlider.state.currentValue.value?.toFixed(2)
+        }}
+      </span>
       <q-slider
         dense
         snap
@@ -136,6 +157,8 @@
 import { computed, defineComponent } from "vue";
 import { useStore } from "@/store";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -149,6 +172,10 @@ export default defineComponent({
 
     // accent phrase
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
 
     const audioItem = computed(
       () => store.state.audioItems[props.activeAudioKey]
@@ -267,6 +294,7 @@ export default defineComponent({
       volumeScaleSlider,
       prePhonemeLengthSlider,
       postPhonemeLengthSlider,
+      t,
     };
   },
 });

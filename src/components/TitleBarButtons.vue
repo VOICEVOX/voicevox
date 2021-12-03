@@ -18,7 +18,7 @@
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        {{ t("menu_bar.pin_tip") }}
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -33,7 +33,7 @@
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        {{ t("menu_bar.pin_tip") }}
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -90,7 +90,7 @@
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        {{ t("menu_bar.pin_tip") }}
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -104,7 +104,7 @@
       @click="changePinWindow()"
     >
       <q-tooltip :delay="500" class="text-body2" :offset="[11, 11]">
-        最前面に表示
+        {{ t("menu_bar.pin_tip") }}
       </q-tooltip>
     </q-btn>
     <q-btn
@@ -147,6 +147,8 @@
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   name: "TitleBarButtons",
@@ -166,6 +168,10 @@ export default defineComponent({
 
     const isMaximized = computed(() => store.state.isMaximized);
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     return {
       closeWindow,
       minimizeWindow,
@@ -174,6 +180,7 @@ export default defineComponent({
       mdiWindowRestore,
       isMaximized,
       isPinned,
+      t,
     };
   },
 });

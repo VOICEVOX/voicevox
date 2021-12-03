@@ -16,13 +16,18 @@
               class="text-display text-h6"
               >「{{ showCharacterInfos[pageIndex].metas.speakerName }}」の{{
                 showCharacterInfos[pageIndex].metas.styles.length > 1
-                  ? "デフォルトのスタイル（喋り方）を選んでください"
-                  : "サンプル音声を視聴できます"
+                  ? t("default_style.choose")
+                  : t("default_style.listen")
               }}
             </q-toolbar-title>
-            <q-toolbar-title v-else class="text-display"
-              >設定 / デフォルトスタイル・試聴</q-toolbar-title
+            <q-breadcrumbs
+              class="text-display"
+              active-color="display"
+              style="font-size: 20px"
             >
+              <q-breadcrumbs-el :label="t('default_style.root')" />
+              <q-breadcrumbs-el :label="t('default_style.title')" />
+            </q-breadcrumbs>
             <span
               v-if="
                 isFirstTime &&
@@ -31,7 +36,7 @@
               "
               class="text-display text-caption q-ml-sm"
             >
-              ※後からでも変更できます
+              {{ t("default_style.tip") }}
             </span>
           </div>
 
@@ -41,7 +46,7 @@
             <q-btn
               v-show="pageIndex >= 1"
               unelevated
-              label="戻る"
+              :label="t('nav.back')"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap q-mr-md"
@@ -55,7 +60,7 @@
             <q-btn
               v-if="pageIndex + 1 < showCharacterInfos.length"
               unelevated
-              label="次へ"
+              :label="t('nav.next')"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
@@ -65,7 +70,7 @@
             <q-btn
               v-else
               unelevated
-              label="完了"
+              :label="t('nav.finish')"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
@@ -122,7 +127,7 @@
                     <div class="style-item-inner">
                       <img :src="style.iconPath" class="style-icon" />
                       <span class="text-subtitle1 q-ma-sm">{{
-                        style.styleName || "ノーマル"
+                        style.styleName || t("default_style.normal")
                       }}</span>
                       <div class="voice-samples">
                         <q-btn
@@ -176,6 +181,8 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
 import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -336,6 +343,10 @@ export default defineComponent({
       pageIndex.value = 0;
     };
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     return {
       modelValueComputed,
       showCharacterInfos,
@@ -351,6 +362,7 @@ export default defineComponent({
       prevPage,
       nextPage,
       closeDialog,
+      t,
     };
   },
 });

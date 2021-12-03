@@ -4,9 +4,9 @@
       <div class="side">
         <div class="detail-selector">
           <q-tabs dense vertical class="text-display" v-model="selectedDetail">
-            <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
-            <q-tab name="length" label="長さ" />
+            <q-tab name="accent" no-caps :label="t('audio_detail.accent')" />
+            <q-tab name="pitch" no-caps :label="t('audio_detail.pitch')" />
+            <q-tab name="length" no-caps :label="t('audio_detail.length')" />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
@@ -223,6 +223,8 @@ import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -285,6 +287,10 @@ export default defineComponent({
 
     // accent phrase
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
 
     const audioItem = computed(
       () => store.state.audioItems[props.activeAudioKey]
@@ -590,6 +596,7 @@ export default defineComponent({
       getHoveredText,
       shiftKeyFlag,
       handleChangeVoicing,
+      t,
     };
   },
 });

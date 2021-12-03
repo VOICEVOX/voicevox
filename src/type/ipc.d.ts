@@ -177,6 +177,11 @@ type IpcIHData = {
     return: import("@/type/preload").ThemeSetting | void;
   };
 
+  I18N: {
+    args: [obj: { newData?: import("@/type/preload").I18nSetting }];
+    return: import("@/type/preload").I18nSetting;
+  };
+
   ON_VUEX_READY: {
     args: [];
     return: void;

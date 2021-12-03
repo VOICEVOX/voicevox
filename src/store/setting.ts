@@ -2,6 +2,7 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   HotkeySetting,
+  I18nSetting,
   SavingSetting,
   ThemeColorType,
   ThemeConf,
@@ -16,6 +17,8 @@ import {
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import { Dark, setCssVar, colors } from "quasar";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -36,6 +39,10 @@ export const settingStoreState: SettingStoreState = {
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],
+  },
+  i18nSetting: {
+    lang: "",
+    fallbackLang: "",
   },
 };
 
@@ -74,6 +81,9 @@ export const settingStore: VoiceVoxStoreOptions<
         state.themeSetting.availableThemes = themes;
       }
       state.themeSetting.currentTheme = currentTheme;
+    },
+    SET_I18N_SETTING(state, { i18nSetting }: { i18nSetting: I18nSetting }) {
+      state.i18nSetting = i18nSetting;
     },
   },
   actions: {
@@ -159,6 +169,17 @@ export const settingStore: VoiceVoxStoreOptions<
 
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
+      });
+    },
+    GET_I18N_SETTING({ dispatch }) {
+      dispatch("SET_I18N_SETTING", {});
+    },
+    SET_I18N_SETTING(
+      { commit },
+      { i18nSetting }: { i18nSetting?: I18nSetting }
+    ) {
+      window.electron.i18n(i18nSetting).then((value) => {
+        commit("SET_I18N_SETTING", { i18nSetting: value });
       });
     },
   },

@@ -19,7 +19,7 @@
             outline
             color="primary-light"
             icon="keyboard_arrow_left"
-            label="戻る"
+            :label="t('nav.back')"
             @click="selectCharacterInfIndex(undefined)"
           />
         </div>
@@ -39,6 +39,8 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   setup() {
@@ -61,12 +63,17 @@ export default defineComponent({
       detailIndex.value = index;
     };
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     return {
       characterInfos,
       convertMarkdown,
       selectCharacterInfIndex,
       detailIndex,
       scroller,
+      t,
     };
   },
 });

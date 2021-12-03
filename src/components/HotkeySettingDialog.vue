@@ -10,13 +10,19 @@
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
-          <q-toolbar-title class="text-display"
-            >設定 / キー割り当て</q-toolbar-title
+          <q-breadcrumbs
+            class="text-display"
+            active-color="display"
+            style="font-size: 20px"
           >
+            <q-breadcrumbs-el :label="t('hotkey_dialog.root')" />
+            <q-breadcrumbs-el :label="t('hotkey_dialog.title')" />
+          </q-breadcrumbs>
+          <q-space />
           <q-input
             hide-bottom-space
             dense
-            placeholder="検索"
+            :placeholder="t('hotkey_dialog.search')"
             color="display"
             class="q-mr-sm search-box"
             v-model="hotkeyFilter"
@@ -82,8 +88,6 @@
                     no-caps
                     :label="
                       getHotkeyText(props.row.action, props.row.combination)
-                        .split(' ')
-                        .join(' + ')
                     "
                     @click="openHotkeyDialog(props.row.action)"
                   />
@@ -96,7 +100,9 @@
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
                   >
-                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
+                    <q-tooltip :delay="500">{{
+                      t("hotkey_dialog.restore")
+                    }}</q-tooltip>
                   </q-btn>
                 </q-td>
               </q-tr>
@@ -117,7 +123,7 @@
   >
     <q-card class="q-py-sm q-px-md">
       <q-card-section align="center">
-        <div class="text-h6">ショートカットキーを入力してください</div>
+        <div class="text-h6">{{ t("dialogs.hotkey_edit.title") }}</div>
       </q-card-section>
       <q-card-section align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
@@ -129,17 +135,21 @@
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
           <div class="text-warning">
-            ショートカットキーが次の操作と重複しています
+            {{ t("dialogs.hotkey_edit.duplicated") }}
           </div>
           <div class="q-mt-sm text-weight-bold text-warning">
-            「{{ duplicatedHotkey.action }}」
+            {{
+              t("dialogs.hotkey_edit.duplicated_action", {
+                action: duplicatedHotkey.action,
+              })
+            }}
           </div>
         </div>
       </q-card-section>
       <q-card-actions align="center">
         <q-btn
           padding="xs md"
-          label="ショートカットキーを未設定にする"
+          :label="t('dialogs.hotkey_edit.unbind')"
           unelevated
           color="display-light"
           text-color="display-dark"
@@ -151,7 +161,7 @@
         />
         <q-btn
           padding="xs md"
-          label="キャンセル"
+          :label="t('dialogs.hotkey_edit.cancel')"
           unelevated
           color="display-light"
           text-color="display-dark"
@@ -161,7 +171,7 @@
         <q-btn
           v-if="duplicatedHotkey == undefined"
           padding="xs md"
-          label="OK"
+          :label="t('dialogs.hotkey_edit.confirm')"
           unelevated
           color="primary"
           text-color="display"
@@ -176,7 +186,7 @@
         <q-btn
           v-else
           padding="xs md"
-          label="上書きする"
+          :label="t('dialogs.hotkey_edit.overwrite')"
           unelevated
           color="primary"
           text-color="display"
@@ -195,6 +205,8 @@ import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
 import { useQuasar } from "quasar";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -222,17 +234,21 @@ export default defineComponent({
 
     const hotkeySettings = computed(() => store.state.hotkeySettings);
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     const hotkeyColumns = ref([
       {
         name: "action",
         align: "left",
-        label: "操作",
+        label: t("hotkey_dialog.action"),
         field: "action",
       },
       {
         name: "combination",
         align: "left",
-        label: "ショートカットキー",
+        label: t("hotkey_dialog.combination"),
         field: "combination",
       },
     ]);
@@ -273,9 +289,10 @@ export default defineComponent({
     };
 
     const getHotkeyText = (action: string, combo: string) => {
-      if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
-      if (combo == "") return "未設定";
-      else return combo;
+      if (checkHotkeyReadonly(action))
+        combo = `(${t("hotkey_dialog.read_only")})` + combo;
+      if (combo == "") return t("hotkey_dialog.blank");
+      else return combo.split(" ").join(" + ");
     };
 
     // for later developers, in case anyone wants to add a readonly hotkey
@@ -323,16 +340,16 @@ export default defineComponent({
 
     const resetHotkey = (action: string) => {
       $q.dialog({
-        title: "ショートカットキーを初期値に戻します",
-        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+        title: t("dialogs.hotkey_restore.title"),
+        message: t("dialogs.hotkey_restore.msg", { action: action }),
         html: true,
         ok: {
-          label: "初期値に戻す",
+          label: t("dialogs.hotkey_restore.confirm"),
           flat: true,
           textColor: "secondary",
         },
         cancel: {
-          label: "初期値に戻さない",
+          label: t("dialogs.hotkey_restore.close"),
           flat: true,
           textColor: "secondary",
         },
@@ -369,6 +386,7 @@ export default defineComponent({
       confirmBtnEnabled,
       checkHotkeyReadonly,
       resetHotkey,
+      t,
     };
   },
 });

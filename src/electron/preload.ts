@@ -204,6 +204,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("THEME", { newData });
   },
 
+  i18n: (newData) => {
+    return ipcRenderer.invoke("I18N", { newData });
+  },
+
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
   },

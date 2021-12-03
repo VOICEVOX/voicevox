@@ -11,9 +11,14 @@
       <q-page-container class="root">
         <q-header class="q-pa-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >設定 / オプション</q-toolbar-title
+            <q-breadcrumbs
+              class="text-display"
+              active-color="display"
+              style="font-size: 20px"
             >
+              <q-breadcrumbs-el :label="t('setting_dialog.root')" />
+              <q-breadcrumbs-el :label="t('setting_dialog.title')" />
+            </q-breadcrumbs>
             <q-space />
             <!-- close button -->
             <q-btn
@@ -30,10 +35,12 @@
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">エンジン</div>
+                <div class="text-h5">
+                  {{ t("setting_dialog.engine.title") }}
+                </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>エンジンモード</div>
+                <div>{{ t("setting_dialog.engine.engine_mode.label") }}</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -54,19 +61,22 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    GPUモードの利用には NVIDIA&trade; GPU が必要です
-                  </q-tooltip>
+                    v-html="t('setting_dialog.engine.engine_mode.tip')"
+                  />
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">操作</div>
+                <div class="text-h5">
+                  {{ t("setting_dialog.operation.title") }}
+                </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>パラメータの引き継ぎ</div>
+                <div>
+                  {{ t("setting_dialog.operation.inherit_parameter.label") }}
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="inheritAudioInfoMode"
@@ -78,19 +88,20 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
-                  </q-tooltip>
+                    v-html="t('setting_dialog.operation.inherit_parameter.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">保存</div>
+                <div class="text-h5">
+                  {{ t("setting_dialog.saving.title") }}
+                </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>文字コード</div>
+                <div>{{ t("setting_dialog.saving.encoding.label") }}</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -110,13 +121,15 @@
                 />
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>書き出し先を固定</div>
+                <div>
+                  {{ t("setting_dialog.saving.fix_export_dir.label") }}
+                </div>
                 <q-space />
                 <q-input
                   dense
                   v-if="savingSetting.fixedExportEnabled"
                   maxheight="10px"
-                  label="書き出し先のフォルダ"
+                  :label="t('setting_dialog.saving.fix_export_dir.input_label')"
                   hide-bottom-space
                   readonly
                   :model-value="savingSetting.fixedExportDir"
@@ -139,7 +152,11 @@
                       @click="openFileExplore"
                     >
                       <q-tooltip :delay="500" anchor="bottom left">
-                        フォルダ選択
+                        {{
+                          t(
+                            "setting_dialog.saving.fix_export_dir.explore_folder"
+                          )
+                        }}
                       </q-tooltip>
                     </q-btn>
                   </template>
@@ -159,14 +176,15 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                     v-if="!savingSetting.fixedExportEnabled"
-                  >
-                    音声ファイルを設定したフォルダに書き出す
-                  </q-tooltip>
+                    v-html="t('setting_dialog.saving.fix_export_dir.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
 
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>上書き防止</div>
+                <div>
+                  {{ t("setting_dialog.saving.avoid_overwrite.label") }}
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.avoidOverwrite"
@@ -180,13 +198,14 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    上書きせずにファイルを連番で保存します
-                  </q-tooltip>
+                    v-html="t('setting_dialog.saving.avoid_overwrite.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>labファイルを生成</div>
+                <div>
+                  {{ t("setting_dialog.saving.generate_lab_file.label") }}
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -202,13 +221,14 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを生成します
-                  </q-tooltip>
+                    v-html="t('setting_dialog.saving.generate_lab_file.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>txtファイルを書き出し</div>
+                <div>
+                  {{ t("setting_dialog.saving.generate_text_file.label") }}
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.exportText"
@@ -222,19 +242,22 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    テキストをtxtファイルとして書き出します
-                  </q-tooltip>
+                    v-html="t('setting_dialog.saving.generate_text_file.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
             </q-card>
-            <!-- Experimental Card -->
+            <!-- Advanced Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">高度な設定</div>
+                <div class="text-h5">
+                  {{ t("setting_dialog.advanced.title") }}
+                </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>音声をステレオ化</div>
+                <div>
+                  {{ t("setting_dialog.advanced.stereo.label") }}
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -250,18 +273,19 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    音声データをモノラルからステレオに変換してから再生・保存を行います
-                  </q-tooltip>
+                    v-html="t('setting_dialog.advanced.stereo.tip')"
+                  />
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>再生デバイス</div>
+                <div>
+                  {{ t("setting_dialog.advanced.device.label") }}
+                </div>
                 <q-space />
                 <q-select
                   dense
                   v-model="currentAudioOutputDeviceComputed"
-                  label="再生デバイス"
+                  :label="t('setting_dialog.advanced.device.select_label')"
                   :options="availableAudioOutputDevices"
                   class="col-7"
                 >
@@ -271,13 +295,14 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    音声の再生デバイスを変更し再生を行います
-                  </q-tooltip>
+                    v-html="t('setting_dialog.advanced.device.tip')"
+                  />
                 </q-select>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
-                <div>音声のサンプリングレート</div>
+                <div>
+                  {{ t("setting_dialog.advanced.sample_rate.label") }}
+                </div>
                 <q-space />
                 <q-select
                   borderless
@@ -300,10 +325,62 @@
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                  >
-                    再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
-                  </q-tooltip>
+                    v-html="t('setting_dialog.advanced.sample_rate.tip')"
+                  />
                 </q-select>
+              </q-card-actions>
+            </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">
+                  {{ t("setting_dialog.locale.title") }}
+                </div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>{{ t("setting_dialog.locale.language.label") }}</div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  v-model="langComputed"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  :options="localeOption"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    v-html="t('setting_dialog.locale.language.tip')"
+                  />
+                </q-btn-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>{{ t("setting_dialog.locale.fallback.label") }}</div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  v-model="fallbackLangComputed"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  :options="localeOption"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    v-html="t('setting_dialog.locale.fallback.tip')"
+                  />
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
             <!-- 今後実験的機能を追加する場合はここに追加 -->
@@ -349,6 +426,8 @@ import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
+import messages, { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -547,6 +626,47 @@ export default defineComponent({
       }
     };
 
+    const langComputed = computed({
+      get: () => store.state.i18nSetting.lang,
+      set: (value: string) => {
+        store.dispatch("SET_I18N_SETTING", {
+          i18nSetting: {
+            lang: value,
+            fallbackLang: fallbackLangComputed.value,
+          },
+        });
+      },
+    });
+
+    const fallbackLangComputed = computed({
+      get: () => store.state.i18nSetting.fallbackLang,
+      set: (value: string) => {
+        store.dispatch("SET_I18N_SETTING", {
+          i18nSetting: {
+            lang: langComputed.value,
+            fallbackLang: value,
+          },
+        });
+      },
+    });
+
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
+    const localeOption = [];
+
+    for (const [key, value] of Object.entries(messages)) {
+      localeOption.push({ label: value.loc_name, value: value.ISO_name });
+    }
+
+    document.addEventListener("keydown", (evt: KeyboardEvent) => {
+      if (evt.key == "l") {
+        console.log(langComputed.value);
+        console.log(fallbackLangComputed.value);
+      }
+    });
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -561,6 +681,10 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
+      localeOption,
+      langComputed,
+      fallbackLangComputed,
+      t,
     };
   },
 });

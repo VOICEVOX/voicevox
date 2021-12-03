@@ -35,6 +35,8 @@ import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { SaveResultObject } from "@/store/type";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -126,16 +128,20 @@ export default defineComponent({
       }
     };
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     const generateAndSaveOneAudio = async () => {
       if (uiLocked.value) return;
 
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
         $q.dialog({
-          title: "テキスト欄が選択されていません",
-          message: "音声を書き出したいテキスト欄を選択してください。",
+          title: t("dialogs.error_no_cell.title"),
+          message: t("dialogs.error_no_cell.msg"),
           ok: {
-            label: "閉じる",
+            label: t("dialogs.error_no_cell.close"),
             flat: true,
             textColor: "secondary",
           },
@@ -156,20 +162,18 @@ export default defineComponent({
       let msg = "";
       switch (result.result) {
         case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+          msg = t("dialogs.export_failed.write_error_msg");
           break;
         case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+          msg = t("dialogs.export_failed.engine_error_msg");
           break;
       }
 
       $q.dialog({
-        title: "書き出しに失敗しました。",
+        title: t("dialogs.export_failed.title"),
         message: msg,
         ok: {
-          label: "閉じる",
+          label: t("dialogs.export_failed.close"),
           flat: true,
           textColor: "secondary",
         },
@@ -223,33 +227,33 @@ export default defineComponent({
     const menudata = ref<MenuItemData[]>([
       {
         type: "root",
-        label: "ファイル",
+        label: t("menu_bar.file.label"),
         onClick: () => {
           closeAllDialog();
         },
         subMenu: [
           {
             type: "button",
-            label: "新規プロジェクト",
+            label: t("menu_bar.file.new_project"),
             onClick: createNewProject,
           },
           {
             type: "button",
-            label: "音声書き出し",
+            label: t("menu_bar.file.export_audio"),
             onClick: () => {
               generateAndSaveAllAudio();
             },
           },
           {
             type: "button",
-            label: "一つだけ書き出し",
+            label: t("menu_bar.file.export_one_audio"),
             onClick: () => {
               generateAndSaveOneAudio();
             },
           },
           {
             type: "button",
-            label: "テキスト読み込み",
+            label: t("menu_bar.file.read_text_file"),
             onClick: () => {
               importTextFile();
             },
@@ -257,21 +261,21 @@ export default defineComponent({
           { type: "separator" },
           {
             type: "button",
-            label: "プロジェクトを上書き保存",
+            label: t("menu_bar.file.save_project"),
             onClick: () => {
               saveProject();
             },
           },
           {
             type: "button",
-            label: "プロジェクトを名前を付けて保存",
+            label: t("menu_bar.file.save_project_as"),
             onClick: () => {
               saveProjectAs();
             },
           },
           {
             type: "button",
-            label: "プロジェクト読み込み",
+            label: t("menu_bar.file.open_project"),
             onClick: () => {
               importProject();
             },
@@ -280,14 +284,14 @@ export default defineComponent({
       },
       {
         type: "root",
-        label: "エンジン",
+        label: t("menu_bar.engine.label"),
         onClick: () => {
           closeAllDialog();
         },
         subMenu: [
           {
             type: "button",
-            label: "再起動",
+            label: t("menu_bar.engine.restart"),
             onClick: () => {
               store.dispatch("RESTART_ENGINE");
             },
@@ -296,14 +300,14 @@ export default defineComponent({
       },
       {
         type: "root",
-        label: "設定",
+        label: t("menu_bar.setting.label"),
         onClick: () => {
           closeAllDialog();
         },
         subMenu: [
           {
             type: "button",
-            label: "キー割り当て",
+            label: t("menu_bar.setting.hotkeys"),
             onClick() {
               store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
                 isHotkeySettingDialogOpen: true,
@@ -312,7 +316,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "デフォルトスタイル・試聴",
+            label: t("menu_bar.setting.default_styles"),
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,
@@ -322,7 +326,7 @@ export default defineComponent({
           { type: "separator" },
           {
             type: "button",
-            label: "オプション",
+            label: t("menu_bar.setting.general"),
             onClick() {
               store.dispatch("IS_SETTING_DIALOG_OPEN", {
                 isSettingDialogOpen: true,
@@ -333,7 +337,7 @@ export default defineComponent({
       },
       {
         type: "button",
-        label: "ヘルプ",
+        label: t("menu_bar.help.label"),
         onClick: () => {
           if (store.state.isHelpDialogOpen) closeAllDialog();
           else {
@@ -386,6 +390,7 @@ export default defineComponent({
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
+      t,
     };
   },
 });

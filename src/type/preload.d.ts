@@ -59,6 +59,7 @@ export interface Sandbox {
   ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
+  i18n(newData?: I18nSetting): Promise<I18nSetting>;
   vuexReady(): void;
 }
 
@@ -181,4 +182,9 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type I18nSetting = {
+  lang: string;
+  fallbackLang: string;
 };

@@ -138,8 +138,7 @@
       @mouseup.right="onRightClickTextField"
     >
       <template v-slot:error>
-        文章が長いと正常に動作しない可能性があります。
-        句読点の位置で文章を分割してください。
+        {{ t("audio_cell.msg_length_error") }}
       </template>
       <template #after v-if="deleteButtonEnable">
         <q-btn
@@ -160,6 +159,8 @@ import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { QInput, debounce } from "quasar";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   name: "AudioCell",
@@ -182,6 +183,10 @@ export default defineComponent({
     );
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
 
     const selectedCharacterInfo = computed(() =>
       store.state.characterInfos !== undefined &&
@@ -421,6 +426,7 @@ export default defineComponent({
       focusTextField,
       blurCell,
       isOpenedCharacterList,
+      t,
     };
   },
 });

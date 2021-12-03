@@ -13,6 +13,7 @@ import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import messages from "@/i18n";
 
 import fs from "fs";
 import {
@@ -146,6 +147,10 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  i18nSetting: {
+    lang: string;
+    fallbackLang: string;
+  };
 }>({
   schema: {
     useGpu: {
@@ -214,6 +219,20 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    i18nSetting: {
+      type: "object",
+      properties: {
+        lang: { type: "string" },
+        fallbackLang: { type: "string" },
+      },
+      default: {
+        lang:
+          Object.keys(messages).indexOf(app.getLocale()) > -1
+            ? app.getLocale()
+            : "en",
+        fallbackLang: "ja",
+      },
     },
   },
   migrations: {
@@ -685,6 +704,13 @@ ipcMainHandle("THEME", (_, { newData }) => {
     themes.push(theme);
   });
   return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+});
+
+ipcMainHandle("I18N", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("i18nSetting", newData);
+  }
+  return store.get("i18nSetting");
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

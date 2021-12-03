@@ -13,6 +13,7 @@ import {
   DefaultStyleId,
   Encoding as EncodingType,
   HotkeySetting,
+  I18nSetting,
   MoraDataType,
   SavingSetting,
   ThemeConf,
@@ -614,6 +615,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   engineHost: string;
   themeSetting: ThemeSetting;
+  i18nSetting: I18nSetting;
 };
 
 type SettingStoreTypes = {
@@ -643,6 +645,15 @@ type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  GET_I18N_SETTING: {
+    action(): void;
+  };
+
+  SET_I18N_SETTING: {
+    mutation: { i18nSetting: I18nSetting };
+    action(payload: { i18nSetting?: I18nSetting }): void;
   };
 };
 

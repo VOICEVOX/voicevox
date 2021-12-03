@@ -4,16 +4,16 @@
     <q-layout container class="q-dialog-plugin background">
       <q-header>
         <q-toolbar>
-          <q-toolbar-title class="header-text"
-            >音声書き出し結果</q-toolbar-title
-          >
+          <q-toolbar-title class="header-text">
+            {{ t("dialogs.save_result.title") }}
+          </q-toolbar-title>
         </q-toolbar>
         <q-space />
       </q-header>
       <q-page-container>
         <q-page>
           <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">失敗（書き込みエラー）:</div>
+            <div class="error">{{ t("dialogs.save_result.write_error") }}</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -21,7 +21,7 @@
             </q-item>
           </q-list>
           <q-list separator v-if="engineErrorArray.length > 0">
-            <div class="error">失敗（エンジンエラー）:</div>
+            <div class="error">{{ t("dialogs.save_result.engine_error") }}</div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -29,7 +29,7 @@
             </q-item>
           </q-list>
           <q-list separator v-if="successArray.length > 0">
-            <div class="success">成功:</div>
+            <div class="success">{{ t("dialogs.save_result.success") }}</div>
             <q-item v-for="(value, index) in successArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -41,7 +41,13 @@
       <q-footer>
         <q-toolbar>
           <q-space />
-          <q-btn flat dense align="right" @click="close" label="閉じる" />
+          <q-btn
+            flat
+            dense
+            align="right"
+            @click="close"
+            :label="t('dialogs.save_result.close')"
+          />
         </q-toolbar>
       </q-footer>
     </q-layout>
@@ -51,6 +57,8 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import { useDialogPluginComponent } from "quasar";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   name: "SaveAllResultDialog",
@@ -65,9 +73,13 @@ export default defineComponent({
   setup() {
     const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const close = () => onDialogOK();
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
     return {
       dialogRef,
       close,
+      t,
     };
   },
 });

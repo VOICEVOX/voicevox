@@ -8,8 +8,9 @@
         class="text-no-wrap text-bold q-mr-sm"
         :disable="uiLocked"
         @click="playContinuously"
-        >連続再生</q-btn
       >
+        {{ t("header_bar.play") }}
+      </q-btn>
       <q-btn
         unelevated
         color="background-light"
@@ -17,8 +18,9 @@
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!nowPlayingContinuously"
         @click="stopContinuously"
-        >停止</q-btn
       >
+        {{ t("header_bar.stop") }}
+      </q-btn>
 
       <q-space />
       <q-btn
@@ -28,8 +30,9 @@
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canUndo || uiLocked"
         @click="undo"
-        >元に戻す</q-btn
       >
+        {{ t("header_bar.undo") }}
+      </q-btn>
       <q-btn
         unelevated
         color="background-light"
@@ -37,8 +40,9 @@
         class="text-no-wrap text-bold q-mr-sm"
         :disable="!canRedo || uiLocked"
         @click="redo"
-        >やり直す</q-btn
       >
+        {{ t("header_bar.redo") }}
+      </q-btn>
     </q-toolbar>
   </q-header>
 </template>
@@ -49,6 +53,8 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { MessageSchema } from "@/i18n";
+import { useI18n } from "vue-i18n";
 
 export default defineComponent({
   setup() {
@@ -129,6 +135,10 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
 
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     return {
       uiLocked,
       canUndo,
@@ -138,6 +148,7 @@ export default defineComponent({
       redo,
       playContinuously,
       stopContinuously,
+      t,
     };
   },
 });
