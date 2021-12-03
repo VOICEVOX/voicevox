@@ -227,13 +227,21 @@ const store = new Store<{
         combination: "3",
       };
       const hotkeys = store.get("hotkeySettings");
-      const actionAlreadyExists = hotkeys.some((hotkey) => hotkey.action === newHotkey.action);
-      if(!actionAlreadyExists){
-        const combinationExists = hotkeys.some((hotkey) => hotkey.combination === newHotkey.combination);
+      
+      // 以下を関数化
+      const actionAlreadyExists = hotkeys.some(
+        (hotkey) => hotkey.action === newHotkey.action
+      );
+      if (!actionAlreadyExists) {
+        const combinationExists = hotkeys.some(
+          (hotkey) => hotkey.combination === newHotkey.combination
+        );
         if (combinationExists) {
           newHotkey.combination = "";
         }
-        const insertionIndex = defaultHotkeySettings.findIndex((hotkey) => hotkey.action === newHotkey.action);
+        const insertionIndex = defaultHotkeySettings.findIndex(
+          (hotkey) => hotkey.action === newHotkey.action
+        );
         hotkeys.splice(insertionIndex, 0, newHotkey);
         store.set("hotkeySettings", hotkeys);
       }
