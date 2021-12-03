@@ -137,11 +137,19 @@
           </q-card-section>
           <q-card-section>
             <q-list>
-              <q-item clickable class="no-margin" @click="updatePreset">
+              <q-item clickable class="no-margin" @click="updatePreset(true)">
                 <q-item-section avatar>
                   <q-avatar icon="arrow_forward" text-color="blue" />
                 </q-item-section>
-                <q-item-section> プリセットを上書きする． </q-item-section>
+                <q-item-section>
+                  プリセットを上書きし、このプリセットが設定されたテキスト欄全てに適用する
+                </q-item-section>
+              </q-item>
+              <q-item clickable class="no-margin" @click="updatePreset(false)">
+                <q-item-section avatar>
+                  <q-avatar icon="arrow_forward" text-color="blue" />
+                </q-item-section>
+                <q-item-section> プリセットの上書きのみ行う </q-item-section>
               </q-item>
               <q-item
                 clickable
@@ -587,7 +595,7 @@ export default defineComponent({
       closeAllDialog();
     };
 
-    const updatePreset = () => {
+    const updatePreset = async (fullApply: boolean) => {
       const key = presetList.value.find(
         (preset) => preset.label === presetName.value
       )?.key;
@@ -597,10 +605,16 @@ export default defineComponent({
       const newPreset = createPresetData(title);
       if (newPreset == undefined) return;
 
-      store.dispatch("UPDATE_PRESET", {
+      await store.dispatch("UPDATE_PRESET", {
         presetData: newPreset,
         presetKey: key,
       });
+
+      if (fullApply) {
+        await store.dispatch("COMMAND_FULLY_APPLY_AUDIO_PRESET", {
+          presetKey: key,
+        });
+      }
 
       closeAllDialog();
     };
