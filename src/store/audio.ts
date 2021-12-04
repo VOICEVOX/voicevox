@@ -229,6 +229,9 @@ export const audioStore: VoiceVoxStoreOptions<
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
     },
+    SET_AUDIO_KEYS(state, { audioKeys }: { audioKeys: string[] }) {
+      state.audioKeys = audioKeys;
+    },
     SET_AUDIO_TEXT(
       state,
       { audioKey, text }: { audioKey: string; text: string }
@@ -979,6 +982,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
       commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
     },
+    COMMAND_SET_AUDIO_KEYS({ commit }, payload: { audioKeys: string[] }) {
+      commit("COMMAND_SET_AUDIO_KEYS", payload);
+    },
     async COMMAND_CHANGE_AUDIO_TEXT(
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
@@ -1487,6 +1493,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
+    },
+    COMMAND_SET_AUDIO_KEYS(draft, payload: { audioKeys: string[] }) {
+      audioStore.mutations.SET_AUDIO_KEYS(draft, payload);
     },
     COMMAND_CHANGE_AUDIO_TEXT(
       draft,

@@ -166,6 +166,10 @@ type AudioStoreTypes = {
     mutation: { audioKey: string };
   };
 
+  SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
+  };
+
   REMOVE_ALL_AUDIO_ITEM: {
     action(): void;
   };
@@ -332,6 +336,11 @@ type AudioCommandStoreTypes = {
   COMMAND_REMOVE_AUDIO_ITEM: {
     mutation: { audioKey: string };
     action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
+    action(payload: { audioKeys: string[] }): void;
   };
 
   COMMAND_CHANGE_AUDIO_TEXT: {
