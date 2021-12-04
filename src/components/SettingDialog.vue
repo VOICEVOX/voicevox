@@ -287,7 +287,6 @@
                   v-model="currentAudioOutputDeviceComputed"
                   :label="t('setting_dialog.advanced.device.select_label')"
                   :options="availableAudioOutputDevices"
-                  class="col-7"
                 >
                   <q-tooltip
                     :delay="500"
@@ -299,7 +298,7 @@
                   />
                 </q-select>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>
                   {{ t("setting_dialog.advanced.sample_rate.label") }}
                 </div>
@@ -315,6 +314,13 @@
                         item === 24000 ? '(デフォルト)' : ''
                       }`
                   "
+                  :input-style="{
+                    width: `${
+                      savingSetting.outputSamplingRate.length / 2 + 1
+                    }em`,
+                    minWidth: '150px',
+                    maxWidth: '450px',
+                  }"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
@@ -335,6 +341,29 @@
                 <div class="text-h5">
                   {{ t("setting_dialog.locale.title") }}
                 </div>
+                <q-space />
+                <q-btn
+                  v-if="
+                    localeComputed != oldLocale ||
+                    fallbackLocaleComputed != oldFallbackLocale
+                  "
+                  :label="t('setting_dialog.locale.relaunch.label')"
+                  @click="relaunchRenderer()"
+                  unelevated
+                  no-caps
+                  padding="none sm"
+                  color="warning"
+                  text-color="background"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    v-html="t('setting_dialog.locale.relaunch.tip')"
+                  />
+                </q-btn>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>{{ t("setting_dialog.locale.language.label") }}</div>
@@ -342,7 +371,7 @@
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
-                  v-model="langComputed"
+                  v-model="localeComputed"
                   color="white"
                   text-color="black"
                   toggle-color="primary"
@@ -350,6 +379,7 @@
                   :options="localeOption"
                 >
                   <q-tooltip
+                    v-if="localeComputed == oldLocale"
                     :delay="500"
                     anchor="center left"
                     self="center right"
@@ -365,7 +395,7 @@
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
-                  v-model="fallbackLangComputed"
+                  v-model="fallbackLocaleComputed"
                   color="white"
                   text-color="black"
                   toggle-color="primary"
@@ -373,6 +403,7 @@
                   :options="localeOption"
                 >
                   <q-tooltip
+                    v-if="fallbackLocaleComputed == oldFallbackLocale"
                     :delay="500"
                     anchor="center left"
                     self="center right"
@@ -422,7 +453,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
@@ -626,24 +657,24 @@ export default defineComponent({
       }
     };
 
-    const langComputed = computed({
+    const localeComputed = computed({
       get: () => store.state.i18nSetting.lang,
       set: (value: string) => {
         store.dispatch("SET_I18N_SETTING", {
           i18nSetting: {
             lang: value,
-            fallbackLang: fallbackLangComputed.value,
+            fallbackLang: fallbackLocaleComputed.value,
           },
         });
       },
     });
 
-    const fallbackLangComputed = computed({
+    const fallbackLocaleComputed = computed({
       get: () => store.state.i18nSetting.fallbackLang,
       set: (value: string) => {
         store.dispatch("SET_I18N_SETTING", {
           i18nSetting: {
-            lang: langComputed.value,
+            lang: localeComputed.value,
             fallbackLang: value,
           },
         });
@@ -662,9 +693,21 @@ export default defineComponent({
 
     document.addEventListener("keydown", (evt: KeyboardEvent) => {
       if (evt.key == "l") {
-        console.log(langComputed.value);
-        console.log(fallbackLangComputed.value);
+        console.log(localeComputed.value);
+        console.log(fallbackLocaleComputed.value);
       }
+    });
+
+    const relaunchRenderer = () => {
+      location.reload();
+    };
+
+    const oldLocale = ref("");
+    const oldFallbackLocale = ref("");
+
+    onMounted(() => {
+      oldLocale.value = store.state.i18nSetting.lang;
+      oldFallbackLocale.value = store.state.i18nSetting.fallbackLang;
     });
 
     return {
@@ -682,9 +725,12 @@ export default defineComponent({
       currentThemeComputed,
       availableThemeNameComputed,
       localeOption,
-      langComputed,
-      fallbackLangComputed,
+      localeComputed,
+      fallbackLocaleComputed,
       t,
+      oldLocale,
+      oldFallbackLocale,
+      relaunchRenderer,
     };
   },
 });

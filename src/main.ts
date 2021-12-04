@@ -15,31 +15,32 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "./styles/_index.scss";
 
-type MessageSchema = typeof messages["ja"];
-const i18n = createI18n<[MessageSchema], "en" | "ja">({
-  legacy: false,
-  locale: "en",
-  fallbackLocale: "ja",
-  messages,
-});
-
-createApp(App)
-  .use(store, storeKey)
-  .use(router)
-  .use(Quasar, {
-    config: {
-      brand: {
-        primary: "#a5d4ad",
-        secondary: "#212121",
+store.dispatch("GET_I18N_SETTING").then((value) => {
+  const i18n = createI18n<false>({
+    silentFallbackWarn: true,
+    legacy: false,
+    locale: value.lang,
+    fallbackLocale: value.fallbackLang,
+    messages,
+  });
+  createApp(App)
+    .use(store, storeKey)
+    .use(router)
+    .use(Quasar, {
+      config: {
+        brand: {
+          primary: "#a5d4ad",
+          secondary: "#212121",
+        },
       },
-    },
-    iconSet,
-    plugins: {
-      Dialog,
-      Loading,
-    },
-  })
-  .use(ipcMessageReceiver, { store })
-  .use(markdownItPlugin)
-  .use(i18n)
-  .mount("#app");
+      iconSet,
+      plugins: {
+        Dialog,
+        Loading,
+      },
+    })
+    .use(ipcMessageReceiver, { store })
+    .use(markdownItPlugin)
+    .use(i18n)
+    .mount("#app");
+});

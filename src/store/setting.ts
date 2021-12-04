@@ -17,8 +17,6 @@ import {
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import { Dark, setCssVar, colors } from "quasar";
-import { useI18n } from "vue-i18n";
-import { MessageSchema } from "@/i18n";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -172,15 +170,17 @@ export const settingStore: VoiceVoxStoreOptions<
       });
     },
     GET_I18N_SETTING({ dispatch }) {
-      dispatch("SET_I18N_SETTING", {});
+      return dispatch("SET_I18N_SETTING", {});
     },
     SET_I18N_SETTING(
       { commit },
       { i18nSetting }: { i18nSetting?: I18nSetting }
     ) {
-      window.electron.i18n(i18nSetting).then((value) => {
+      const newSetting = window.electron.i18n(i18nSetting);
+      newSetting.then((value) => {
         commit("SET_I18N_SETTING", { i18nSetting: value });
       });
+      return newSetting;
     },
   },
 };

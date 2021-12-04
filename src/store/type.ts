@@ -648,12 +648,12 @@ type SettingStoreTypes = {
   };
 
   GET_I18N_SETTING: {
-    action(): void;
+    action(): Promise<I18nSetting>;
   };
 
   SET_I18N_SETTING: {
     mutation: { i18nSetting: I18nSetting };
-    action(payload: { i18nSetting?: I18nSetting }): void;
+    action(payload: { i18nSetting?: I18nSetting }): Promise<I18nSetting>;
   };
 };
 

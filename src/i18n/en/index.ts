@@ -241,6 +241,10 @@ export default {
         label: "Fallback Language",
         tip: "Choose language for words display language doesn't have translation",
       },
+      relaunch: {
+        label: "Reload required",
+        tip: "The modification will be applied after reloading",
+      },
     },
   },
 };

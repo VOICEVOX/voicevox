@@ -111,7 +111,6 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_SAVING_SETTING"));
       promises.push(dispatch("GET_HOTKEY_SETTINGS"));
       promises.push(dispatch("GET_THEME_SETTING"));
-      promises.push(dispatch("GET_I18N_SETTING"));
 
       Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY", undefined);
