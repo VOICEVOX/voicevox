@@ -152,24 +152,6 @@ interface StoreType {
   currentTheme: string;
 }
 
-function storeNewHotkeyforMigration(
-  store: StoreConf<StoreType>,
-  newHotkey: HotkeySetting
-): void {
-  const hotkeys = store.get("hotkeySettings");
-  const combinationExists = hotkeys.some(
-    (hotkey) => hotkey.combination === newHotkey.combination
-  );
-  if (combinationExists) {
-    newHotkey.combination = "";
-  }
-  const insertionIndex = defaultHotkeySettings.findIndex(
-    (hotkey) => hotkey.action === newHotkey.action
-  );
-  hotkeys.splice(insertionIndex, 0, newHotkey);
-  store.set("hotkeySettings", hotkeys);
-}
-
 // 設定ファイル
 const store = new Store<StoreType>({
   schema: {
@@ -243,14 +225,7 @@ const store = new Store<StoreType>({
   },
   migrations: {
     ">=0.7.3": (store) => {
-      const hotkeys = store.get("hotkeySettings");
-      const newHotkeys: HotkeySetting[] = defaultHotkeySettings.filter(
-        (defaultHotkey) =>
-          !hotkeys.some((hotkey) => hotkey.action === defaultHotkey.action)
-      );
-      for (const newHotkey of newHotkeys) {
-        storeNewHotkeyforMigration(store, newHotkey);
-      }
+      migrateHotkeySettings(store);
     },
   },
 });
@@ -390,6 +365,36 @@ const updateInfos = JSON.parse(
     encoding: "utf-8",
   })
 );
+
+// hotkeySettingsのマイグレーション
+function migrateHotkeySettings(store: StoreConf<StoreType>) {
+  function storeNewHotkeyforMigration(
+    store: StoreConf<StoreType>,
+    newHotkey: HotkeySetting
+  ): void {
+    const hotkeys = store.get("hotkeySettings");
+    const combinationExists = hotkeys.some(
+      (hotkey) => hotkey.combination === newHotkey.combination
+    );
+    if (combinationExists) {
+      newHotkey.combination = "";
+    }
+    const insertionIndex = defaultHotkeySettings.findIndex(
+      (hotkey) => hotkey.action === newHotkey.action
+    );
+    hotkeys.splice(insertionIndex, 0, newHotkey);
+    store.set("hotkeySettings", hotkeys);
+  }
+
+  const hotkeys = store.get("hotkeySettings");
+  const newHotkeys: HotkeySetting[] = defaultHotkeySettings.filter(
+    (defaultHotkey) =>
+      !hotkeys.some((hotkey) => hotkey.action === defaultHotkey.action)
+  );
+  for (const newHotkey of newHotkeys) {
+    storeNewHotkeyforMigration(store, newHotkey);
+  }
+}
 
 let willQuit = false;
 // create window
