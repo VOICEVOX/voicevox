@@ -77,6 +77,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "E",
   },
   {
+    action: "音声を繋げて書き出し",
+    combination: "",
+  },
+  {
     action: "再生/停止",
     combination: "Space",
   },
@@ -229,15 +233,6 @@ const store = new Store<{
         }
       });
       hotkeys.splice(6, 0, newHotkey);
-      store.set("hotkeySettings", hotkeys);
-    },
-    ">=0.9.3": (store) => {
-      const newHotkey: HotkeySetting = {
-        action: "音声を繋げて書き出し",
-        combination: "",
-      };
-      const hotkeys = store.get("hotkeySettings");
-      hotkeys.splice(2, 0, newHotkey);
       store.set("hotkeySettings", hotkeys);
     },
   },
