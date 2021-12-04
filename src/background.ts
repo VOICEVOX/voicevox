@@ -359,11 +359,11 @@ const updateInfos = JSON.parse(
 
 // hotkeySettingsのマイグレーション
 function migrateHotkeySettings(store: StoreConf<StoreOption>) {
-  const CONBINATION_IS_NONE = "####";
+  const COMBINATION_IS_NONE = "####";
   const emptyHotkeys = defaultHotkeySettings.map((defaultHotkey) => {
     const hotkey: HotkeySetting = {
       action: defaultHotkey.action,
-      combination: CONBINATION_IS_NONE,
+      combination: COMBINATION_IS_NONE,
     };
     return hotkey;
   });
@@ -376,7 +376,7 @@ function migrateHotkeySettings(store: StoreConf<StoreOption>) {
     );
   });
   const migratedHotkeys = copiedHotkeys.map((hotkey) => {
-    if (hotkey.combination === CONBINATION_IS_NONE) {
+    if (hotkey.combination === COMBINATION_IS_NONE) {
       const newHotkey =
         defaultHotkeySettings.find(
           (defaultHotkey) => defaultHotkey.action === hotkey.action
