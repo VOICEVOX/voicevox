@@ -60,14 +60,13 @@ export default {
       title: "Compatible GPU not found",
       write_error:
         "Nvidia&trade; GPU is needed to enable GPU mode<br />Enabling GPU mode without a compatible GPU may cause errors, continue?",
-      ok: "Continue",
+      confirm: "Continue",
       close: "Cancel",
     },
-    warning_changing_sample_rate: {
-      title: "Change sample rate for exported audio files",
-      write_error:
-        "The quality won't be improved by increasing sample rate <br /> Meanwhile, audio with larger sample rate takes more time to generate, <br />continue?",
-      ok: "Continue",
+    warning_sample_rate: {
+      title: "Sample Rate Issue",
+      msg: "Increasing sample rate <b>won't</b> improve audio quality.<br /> Meanwhile, audios with larger sample rate take more time to generate.<br />Continue?",
+      confirm: "Continue",
       close: "Cancel",
     },
   },
@@ -82,7 +81,7 @@ export default {
     warning_project_overwrite: {
       title: "Warning",
       msg: "This project has been modified \n Discard the change?",
-      ok: "Discard",
+      confirm: "Discard",
       close: "Cancel",
     },
     open_project: "Choose Project File",

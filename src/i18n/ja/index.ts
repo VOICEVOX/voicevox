@@ -20,7 +20,7 @@ export default {
       duplicated_action: "「{action}」",
       unbind: "ショートカットキーを未設定にする",
       cancel: "キャンセル",
-      confirm: "OK",
+      confirm: "confirm",
       overwrite: "上書きする",
     },
     hotkey_restore: {
@@ -60,14 +60,13 @@ export default {
       title: "対応するGPUデバイスが見つかりません",
       write_error:
         "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-      ok: "変更する",
+      confirm: "変更する",
       close: "変更しない",
     },
-    warning_changing_sample_rate: {
+    warning_sample_rate: {
       title: "出力サンプリングレートを変更します",
-      write_error:
-        "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-      ok: "変更する",
+      msg: "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+      confirm: "変更する",
       close: "変更しない",
     },
   },
@@ -82,7 +81,7 @@ export default {
     warning_project_overwrite: {
       title: "警告",
       msg: "プロジェクトの変更が保存されていません。\n変更を破棄してもよろしいですか？",
-      ok: "破棄",
+      confirm: "破棄",
       close: "キャンセル",
     },
     open_project: "プロジェクトファイルの選択",
