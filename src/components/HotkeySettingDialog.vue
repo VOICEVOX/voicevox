@@ -140,7 +140,7 @@
           <div class="q-mt-sm text-weight-bold text-warning">
             {{
               t("dialogs.hotkey_edit.duplicated_action", {
-                action: duplicatedHotkey.action,
+                action: t(`hotkey_table.${duplicatedHotkey.action}`),
               })
             }}
           </div>
@@ -341,7 +341,9 @@ export default defineComponent({
     const resetHotkey = (action: string) => {
       $q.dialog({
         title: t("dialogs.hotkey_restore.title"),
-        message: t("dialogs.hotkey_restore.msg", { action: action }),
+        message: t("dialogs.hotkey_restore.msg", {
+          action: `<b>${t(`hotkey_table.${action}`)}</b>`,
+        }),
         html: true,
         ok: {
           label: t("dialogs.hotkey_restore.confirm"),
