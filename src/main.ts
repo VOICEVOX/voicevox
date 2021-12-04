@@ -21,6 +21,11 @@ createApp(App)
     createGtm({
       id: process.env.VUE_APP_GTM_CONTAINER_ID ?? "GTM-DUMMY",
       vueRouter: router,
+      // NOTE: 現状、ElectronでGoogle Analyticsのopt-outが提供出来ない(起動時に設定が読めない)ため、
+      //       設定が読める or 初期値の設定が出来るようになるまで無効にする
+      // SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
+      // FIXME: Google Analyticsのopt-out方法の提供後削除
+      enabled: false,
     })
   )
   .use(Quasar, {
