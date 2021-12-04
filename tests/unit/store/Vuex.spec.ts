@@ -52,6 +52,10 @@ describe("store/vuex.js test", () => {
         isPinned: false,
         hotkeySettings: [],
         engineHost: "http://127.0.0.1",
+        i18nSetting: {
+          locale: "ja",
+          fallbackLocale: "ja",
+        },
       },
       getters: {
         ...uiStore.getters,
@@ -122,5 +126,8 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
+    assert.isObject(store.state.i18nSetting);
+    assert.propertyVal(store.state.i18nSetting, "locale", "ja");
+    assert.propertyVal(store.state.i18nSetting, "locale", "ja");
   });
 });
