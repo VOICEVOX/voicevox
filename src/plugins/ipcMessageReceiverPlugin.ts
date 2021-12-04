@@ -1,6 +1,7 @@
 import { Plugin } from "vue";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
+import { debounce } from "lodash";
 
 export const ipcMessageReceiver: Plugin = {
   install: (
@@ -36,5 +37,14 @@ export const ipcMessageReceiver: Plugin = {
     window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", () => {
       options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
     });
+
+    window.electron.onReceivedIPCMsg(
+      "DETECT_RESIZED",
+      debounce(
+        (_, { width, height }) =>
+          window.dataLayer?.push({ event: "windowResize", width, height }),
+        300
+      )
+    );
   },
 };
