@@ -80,16 +80,13 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_OSS_COMMUNITY_INFOS() {
       return await window.electron.getOssCommunityInfos();
     },
-    async SHOW_WARNING_DIALOG(
-      _,
-      { title, message }: { title: string; message: string }
-    ) {
+    async SHOW_WARNING_DIALOG(_, { title, message }) {
       return await window.electron.showWarningDialog({ title, message });
     },
-    LOG_ERROR(_, ...params: unknown[]) {
+    LOG_ERROR(_, ...params) {
       window.electron.logError(...params);
     },
-    LOG_INFO(_, ...params: unknown[]) {
+    LOG_INFO(_, ...params) {
       window.electron.logInfo(...params);
     },
     async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
@@ -106,7 +103,7 @@ export const indexStore: VoiceVoxStoreOptions<
     async INIT_VUEX({ dispatch }) {
       const promises = [];
 
-      promises.push(dispatch("GET_USE_GPU", undefined));
+      promises.push(dispatch("GET_USE_GPU"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
       promises.push(dispatch("GET_SAVING_SETTING"));
       promises.push(dispatch("GET_HOTKEY_SETTINGS"));
@@ -114,7 +111,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
 
       Promise.all(promises).then(() => {
-        dispatch("ON_VUEX_READY", undefined);
+        dispatch("ON_VUEX_READY");
       });
     },
   },

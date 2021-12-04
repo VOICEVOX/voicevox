@@ -1,11 +1,4 @@
-import {
-  HotkeyAction,
-  HotkeyReturnType,
-  HotkeySetting,
-  SavingSetting,
-  ThemeColorType,
-  ThemeConf,
-} from "@/type/preload";
+import { HotkeyAction, HotkeyReturnType, ThemeColorType } from "@/type/preload";
 import {
   SettingGetters,
   SettingActions,
@@ -51,13 +44,10 @@ export const settingStore: VoiceVoxStoreOptions<
     },
   },
   mutations: {
-    SET_SAVING_SETTING(
-      state,
-      { savingSetting }: { savingSetting: SavingSetting }
-    ) {
+    SET_SAVING_SETTING(state, { savingSetting }) {
       state.savingSetting = savingSetting;
     },
-    SET_HOTKEY_SETTINGS(state, { newHotkey }: { newHotkey: HotkeySetting }) {
+    SET_HOTKEY_SETTINGS(state, { newHotkey }) {
       let flag = true;
       state.hotkeySettings.forEach((hotkey) => {
         if (hotkey.action == newHotkey.action) {
@@ -67,10 +57,7 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    SET_THEME_SETTING(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
-    ) {
+    SET_THEME_SETTING(state, { currentTheme, themes }) {
       if (themes) {
         state.themeSetting.availableThemes = themes;
       }
@@ -87,7 +74,7 @@ export const settingStore: VoiceVoxStoreOptions<
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
       });
     },
-    SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
+    SET_SAVING_SETTING({ commit }, { data }) {
       const newData = window.electron.savingSetting(data);
       newData.then((savingSetting) => {
         commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
@@ -102,7 +89,7 @@ export const settingStore: VoiceVoxStoreOptions<
         });
       });
     },
-    SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
+    SET_HOTKEY_SETTINGS({ state, commit }, { data }) {
       window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
         return value.action == data.action;
@@ -137,10 +124,7 @@ export const settingStore: VoiceVoxStoreOptions<
         }
       });
     },
-    SET_THEME_SETTING(
-      { state, commit },
-      { currentTheme }: { currentTheme: string }
-    ) {
+    SET_THEME_SETTING({ state, commit }, { currentTheme }) {
       window.electron.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;

@@ -67,16 +67,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UNLOCK_MENUBAR(state) {
         state.dialogLockCount--;
       },
-      IS_HELP_DIALOG_OPEN(
-        state,
-        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-      ) {
+      IS_HELP_DIALOG_OPEN(state, { isHelpDialogOpen }) {
         state.isHelpDialogOpen = isHelpDialogOpen;
       },
-      IS_SETTING_DIALOG_OPEN(
-        state,
-        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-      ) {
+      IS_SETTING_DIALOG_OPEN(state, { isSettingDialogOpen }) {
         state.isSettingDialogOpen = isSettingDialogOpen;
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
@@ -84,9 +78,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
-        {
-          isDefaultStyleSelectDialogOpen,
-        }: { isDefaultStyleSelectDialogOpen: boolean }
+        { isDefaultStyleSelectDialogOpen }
       ) {
         state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
       },
@@ -97,13 +89,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.isAcceptRetrieveTelemetryDialogOpen =
           isAcceptRetrieveTelemetryDialogOpen;
       },
-      SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
+      SET_USE_GPU(state, { useGpu }) {
         state.useGpu = useGpu;
       },
-      SET_INHERIT_AUDIOINFO(
-        state,
-        { inheritAudioInfo }: { inheritAudioInfo: boolean }
-      ) {
+      SET_INHERIT_AUDIOINFO(state, { inheritAudioInfo }) {
         state.inheritAudioInfo = inheritAudioInfo;
       },
       DETECT_UNMAXIMIZED(state) {
@@ -133,15 +122,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UNLOCK_MENUBAR({ commit }) {
         commit("UNLOCK_MENUBAR");
       },
-      ASYNC_UI_LOCK: createUILockAction(
-        async (_, { callback }: { callback: () => Promise<void> }) => {
-          await callback();
-        }
-      ),
-      IS_HELP_DIALOG_OPEN(
-        { state, commit },
-        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-      ) {
+      ASYNC_UI_LOCK: createUILockAction(async (_, { callback }) => {
+        await callback();
+      }),
+      IS_HELP_DIALOG_OPEN({ state, commit }, { isHelpDialogOpen }) {
         if (state.isHelpDialogOpen === isHelpDialogOpen) return;
 
         if (isHelpDialogOpen) {
@@ -154,10 +138,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
       },
-      IS_SETTING_DIALOG_OPEN(
-        { state, commit },
-        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-      ) {
+      IS_SETTING_DIALOG_OPEN({ state, commit }, { isSettingDialogOpen }) {
         if (state.isSettingDialogOpen === isSettingDialogOpen) return;
 
         if (isSettingDialogOpen) {
@@ -234,7 +215,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           useGpu: await window.electron.useGpu(),
         });
       },
-      async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
+      async SET_USE_GPU({ commit }, { useGpu }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
         });
@@ -244,10 +225,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           inheritAudioInfo: await window.electron.inheritAudioInfo(),
         });
       },
-      async SET_INHERIT_AUDIOINFO(
-        { commit },
-        { inheritAudioInfo }: { inheritAudioInfo: boolean }
-      ) {
+      async SET_INHERIT_AUDIOINFO({ commit }, { inheritAudioInfo }) {
         commit("SET_INHERIT_AUDIOINFO", {
           inheritAudioInfo: await window.electron.inheritAudioInfo(
             inheritAudioInfo

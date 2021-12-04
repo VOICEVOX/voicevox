@@ -37,7 +37,7 @@ export const projectStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
+    SET_PROJECT_FILEPATH(state, { filePath }) {
       state.projectFilePath = filePath;
     },
     SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
@@ -46,8 +46,7 @@ export const projectStore: VoiceVoxStoreOptions<
   },
 
   actions: {
-    CREATE_NEW_PROJECT: createUILockAction(
-      async (context, { confirm }: { confirm?: boolean }) => {
+    CREATE_NEW_PROJECT: createUILockAction(async (context, { confirm }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
           const result: number = await window.electron.showInfoDialog({
             title: "警告",
@@ -74,13 +73,9 @@ export const projectStore: VoiceVoxStoreOptions<
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
         context.commit("CLEAR_COMMANDS");
-      }
-    ),
+    }),
     LOAD_PROJECT_FILE: createUILockAction(
-      async (
-        context,
-        { filePath, confirm }: { filePath?: string; confirm?: boolean }
-      ) => {
+      async (context, { filePath, confirm }) => {
         if (!filePath) {
           // Select and load a project File.
           const ret = await window.electron.showProjectLoadDialog({
@@ -273,8 +268,7 @@ export const projectStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    SAVE_PROJECT_FILE: createUILockAction(
-      async (context, { overwrite }: { overwrite?: boolean }) => {
+    SAVE_PROJECT_FILE: createUILockAction(async (context, { overwrite }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
           // Write the current status to a project file.
@@ -293,9 +287,7 @@ export const projectStore: VoiceVoxStoreOptions<
           audioKeys,
           audioItems,
         };
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData)
-        ).buffer;
+      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
         window.electron.writeFile({ filePath, buffer: buf });
         if (!context.state.projectFilePath) {
           context.commit("SET_PROJECT_FILEPATH", { filePath });
@@ -305,8 +297,7 @@ export const projectStore: VoiceVoxStoreOptions<
           context.getters.LAST_COMMAND_UNIX_MILLISEC
         );
         return;
-      }
-    ),
+    }),
   },
 };
 
