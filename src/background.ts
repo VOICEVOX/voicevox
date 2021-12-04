@@ -27,7 +27,6 @@ import {
 
 import log from "electron-log";
 import dayjs from "dayjs";
-import StoreConf from "conf";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -214,11 +213,7 @@ const store = new Store<StoreOption>({
       default: "Default",
     },
   },
-  migrations: {
-    ">=0.7.3": (store) => {
-      migrateHotkeySettings(store);
-    },
-  },
+  migrations: {},
 });
 
 // engine
@@ -358,7 +353,7 @@ const updateInfos = JSON.parse(
 );
 
 // hotkeySettingsのマイグレーション
-function migrateHotkeySettings(store: StoreConf<StoreOption>) {
+function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
   const emptyHotkeys = defaultHotkeySettings.map((defaultHotkey) => {
     const hotkey: HotkeySetting = {
@@ -395,6 +390,7 @@ function migrateHotkeySettings(store: StoreConf<StoreOption>) {
   });
   store.set("hotkeySettings", migratedHotkeys);
 }
+migrateHotkeySettings();
 
 let willQuit = false;
 // create window
