@@ -59,15 +59,21 @@
                         loadDraggedFile($event);
                       "
                     >
-                      <div class="audio-cells">
-                        <audio-cell
-                          v-for="audioKey in audioKeys"
-                          :key="audioKey"
-                          :audioKey="audioKey"
-                          :ref="addAudioCellRef"
-                          @focusCell="focusCell"
-                        />
-                      </div>
+                      <draggable
+                        class="audio-cells"
+                        :modelValue="audioKeys"
+                        @update:modelValue="updateAudioKeys"
+                        :itemKey="itemKey"
+                        ghost-class="ghost"
+                      >
+                        <template v-slot:item="{ element }">
+                          <audio-cell
+                            :audioKey="element"
+                            :ref="addAudioCellRef"
+                            @focusCell="focusCell"
+                          />
+                        </template>
+                      </draggable>
                       <div class="add-button-wrapper">
                         <q-btn
                           fab
@@ -125,6 +131,7 @@ import {
   watch,
 } from "vue";
 import { useStore } from "@/store";
+import draggable from "vuedraggable";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -145,6 +152,7 @@ export default defineComponent({
   name: "Home",
 
   components: {
+    draggable,
     MenuBar,
     HeaderBar,
     AudioCell,
@@ -274,6 +282,10 @@ export default defineComponent({
     });
 
     const resizeObserverRef = ref<QResizeObserver>();
+
+    // DaD
+    const updateAudioKeys = console.log;
+    const itemKey = (key: string) => key;
 
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
@@ -443,6 +455,8 @@ export default defineComponent({
       uiLocked,
       addAudioCellRef,
       activeAudioKey,
+      itemKey,
+      updateAudioKeys,
       addAudioItem,
       shouldShowPanes,
       focusCell,
@@ -509,6 +523,10 @@ export default defineComponent({
         vars.$window-border-width}
     );
   }
+}
+
+.ghost {
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
 }
 
 .audio-cell-pane {
