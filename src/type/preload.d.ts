@@ -1,4 +1,5 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
+import { AvailableLocale } from "@/i18n";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
@@ -187,8 +188,8 @@ export type ThemeSetting = {
 };
 
 export type I18nSetting = {
-  lang: string;
-  fallbackLang: string;
+  locale: AvailableLocale;
+  fallbackLocale: AvailableLocale;
 };
 
 export type HotkeyTags =

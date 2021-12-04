@@ -139,10 +139,10 @@ export default defineComponent({
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
         $q.dialog({
-          title: t("dialogs.error_no_cell.title"),
-          message: t("dialogs.error_no_cell.msg"),
+          title: t("dialogs.cell_not_found.title"),
+          message: t("dialogs.cell_not_found.msg"),
           ok: {
-            label: t("dialogs.error_no_cell.close"),
+            label: t("dialogs.cell_not_found.close"),
             flat: true,
             textColor: "secondary",
           },

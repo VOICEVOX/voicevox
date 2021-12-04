@@ -26,6 +26,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
+import messages from "@/i18n";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -658,8 +659,9 @@ export const audioStore: VoiceVoxStoreOptions<
             buildFileName(state, audioKey)
           );
         } else {
+          const t = messages[state.i18nSetting.locale];
           filePath ??= await window.electron.showAudioSaveDialog({
-            title: "音声を保存",
+            title: t.windows.save_audio,
             defaultPath: buildFileName(state, audioKey),
           });
         }
@@ -801,8 +803,9 @@ export const audioStore: VoiceVoxStoreOptions<
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
+          const t = messages[state.i18nSetting.locale];
           dirPath ??= await window.electron.showOpenDirectoryDialog({
-            title: "音声を全て保存",
+            title: t.windows.save_all_audio,
           });
         }
         if (dirPath) {
@@ -824,6 +827,7 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, commit, dispatch },
         { audioKey }: { audioKey: string }
       ) => {
+        const t = messages[state.i18nSetting.locale];
         const audioElem = audioElements[audioKey] as HTMLAudioElement & {
           setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
         };
@@ -856,8 +860,8 @@ export const audioStore: VoiceVoxStoreOptions<
             };
             audioElem.addEventListener("canplay", stop);
             window.electron.showErrorDialog({
-              title: "エラー",
-              message: "再生デバイスが見つかりません",
+              title: t.windows.error_audio_device_not_found.title,
+              message: t.windows.error_audio_device_not_found.msg,
             });
             throw new Error(err);
           });

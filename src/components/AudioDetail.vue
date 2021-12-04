@@ -355,10 +355,10 @@ export default defineComponent({
         });
       } catch (e) {
         $q.dialog({
-          title: "再生に失敗しました",
-          message: "エンジンの再起動をお試しください。",
+          title: t("dialogs.play_failed.title"),
+          message: t("dialogs.play_failed.msg"),
           ok: {
-            label: "閉じる",
+            label: t("dialogs.play_failed.close"),
             flat: true,
             textColor: "display",
           },

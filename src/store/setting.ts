@@ -39,8 +39,8 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   i18nSetting: {
-    lang: "",
-    fallbackLang: "",
+    locale: "ja",
+    fallbackLocale: "ja",
   },
 };
 

@@ -457,7 +457,7 @@ import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
-import messages, { MessageSchema } from "@/i18n";
+import messages, { AvailableLocale, MessageSchema } from "@/i18n";
 import { useI18n } from "vue-i18n";
 
 export default defineComponent({
@@ -552,8 +552,8 @@ export default defineComponent({
         store.dispatch("RESTART_ENGINE");
 
         $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにエンジンを再起動します。",
+          title: t("dialogs.change_engine_mode.title"),
+          message: t("dialogs.change_engine_mode.msg"),
           ok: {
             flat: true,
             textColor: "display",
@@ -568,7 +568,7 @@ export default defineComponent({
               spinnerColor: "primary",
               spinnerSize: 50,
               boxClass: "bg-background text-display",
-              message: "起動モードを変更中です",
+              message: t("dialogs.changing_engine_mode.msg"),
             });
             resolve(await window.electron.isAvailableGPUMode());
             $q.loading.hide();
@@ -578,10 +578,8 @@ export default defineComponent({
 
       if (useGpu && !isAvailableGPUMode) {
         $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+          title: t("dialogs.gpu_not_found.title"),
+          message: t("dialogs.gpu_not_found.msg"),
           html: true,
           persistent: true,
           focus: "cancel",
@@ -590,12 +588,12 @@ export default defineComponent({
             maxWidth: "90vw",
           },
           ok: {
-            label: "変更する",
+            label: t("dialogs.gpu_not_found.confirm"),
             flat: true,
             textColor: "display",
           },
           cancel: {
-            label: "変更しない",
+            label: t("dialogs.gpu_not_found.close"),
             flat: true,
             textColor: "display",
           },
@@ -625,18 +623,17 @@ export default defineComponent({
       };
       if (key === "outputSamplingRate" && data !== 24000) {
         $q.dialog({
-          title: "出力サンプリングレートを変更します",
-          message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+          title: t("dialogs.sample_rate.title"),
+          message: t("dialogs.sample_rate.msg"),
           html: true,
           persistent: true,
           ok: {
-            label: "変更する",
+            label: t("dialogs.sample_rate.confirm"),
             flat: true,
             textColor: "display",
           },
           cancel: {
-            label: "変更しない",
+            label: t("dialogs.sample_rate.close"),
             flat: true,
             textColor: "display",
           },
@@ -648,7 +645,7 @@ export default defineComponent({
 
     const openFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
-        title: "書き出し先のフォルダを選択",
+        title: t("windows.choose_export_folder"),
       });
       if (path) {
         store.dispatch("SET_SAVING_SETTING", {
@@ -658,24 +655,24 @@ export default defineComponent({
     };
 
     const localeComputed = computed({
-      get: () => store.state.i18nSetting.lang,
-      set: (value: string) => {
+      get: () => store.state.i18nSetting.locale,
+      set: (value: AvailableLocale) => {
         store.dispatch("SET_I18N_SETTING", {
           i18nSetting: {
-            lang: value,
-            fallbackLang: fallbackLocaleComputed.value,
+            locale: value,
+            fallbackLocale: fallbackLocaleComputed.value,
           },
         });
       },
     });
 
     const fallbackLocaleComputed = computed({
-      get: () => store.state.i18nSetting.fallbackLang,
-      set: (value: string) => {
+      get: () => store.state.i18nSetting.fallbackLocale,
+      set: (value: AvailableLocale) => {
         store.dispatch("SET_I18N_SETTING", {
           i18nSetting: {
-            lang: localeComputed.value,
-            fallbackLang: value,
+            locale: localeComputed.value,
+            fallbackLocale: value,
           },
         });
       },
@@ -699,15 +696,27 @@ export default defineComponent({
     });
 
     const relaunchRenderer = () => {
-      location.reload();
+      if (store.getters.IS_EDITED) {
+        $q.dialog({
+          html: true,
+          title: t("windows.warning_project_overwrite.title"),
+          message: t("windows.warning_project_overwrite.dialog_msg"),
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        }).onOk(() => location.reload());
+      } else {
+        location.reload();
+      }
     };
 
     const oldLocale = ref("");
     const oldFallbackLocale = ref("");
 
     onMounted(() => {
-      oldLocale.value = store.state.i18nSetting.lang;
-      oldFallbackLocale.value = store.state.i18nSetting.fallbackLang;
+      oldLocale.value = store.state.i18nSetting.locale;
+      oldFallbackLocale.value = store.state.i18nSetting.fallbackLocale;
     });
 
     return {

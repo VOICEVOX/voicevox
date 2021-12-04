@@ -7,3 +7,5 @@ export default {
 };
 
 export type MessageSchema = typeof ja | typeof en;
+
+export type AvailableLocale = "ja" | "en";

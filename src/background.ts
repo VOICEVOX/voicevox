@@ -25,6 +25,7 @@ import {
   ThemeConf,
   StyleInfo,
   HotkeyTags,
+  I18nSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -153,8 +154,8 @@ const store = new Store<{
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
   i18nSetting: {
-    lang: string;
-    fallbackLang: string;
+    locale: string;
+    fallbackLocale: string;
   };
 }>({
   schema: {
@@ -228,15 +229,15 @@ const store = new Store<{
     i18nSetting: {
       type: "object",
       properties: {
-        lang: { type: "string" },
-        fallbackLang: { type: "string" },
+        locale: { type: "string" },
+        fallbackLocale: { type: "string" },
       },
       default: {
-        lang:
+        locale:
           Object.keys(messages).indexOf(app.getLocale()) > -1
             ? app.getLocale()
             : "en",
-        fallbackLang: "ja",
+        fallbackLocale: "ja",
       },
     },
   },
@@ -730,7 +731,7 @@ ipcMainHandle("I18N", (_, { newData }) => {
   if (newData !== undefined) {
     store.set("i18nSetting", newData);
   }
-  return store.get("i18nSetting");
+  return store.get("i18nSetting") as I18nSetting;
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

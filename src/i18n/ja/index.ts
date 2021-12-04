@@ -29,7 +29,7 @@ export default {
       confirm: "初期値に戻す",
       close: "初期値に戻さない",
     },
-    error_no_cell: {
+    cell_not_found: {
       title: "テキスト欄が選択されていません",
       msg: "音声を書き出したいテキスト欄を選択してください。",
       close: "閉じる",
@@ -51,19 +51,18 @@ export default {
     },
     change_engine_mode: {
       title: "エンジンの起動モードを変更しました",
-      write_error: "変更を適用するためにエンジンを再起動します。",
+      msg: "変更を適用するためにエンジンを再起動します。",
     },
     changing_engine_mode: {
       msg: "起動モードを変更中です",
     },
-    error_gpu_not_found: {
+    gpu_not_found: {
       title: "対応するGPUデバイスが見つかりません",
-      write_error:
-        "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+      msg: "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
       confirm: "変更する",
       close: "変更しない",
     },
-    warning_sample_rate: {
+    sample_rate: {
       title: "出力サンプリングレートを変更します",
       msg: "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
       confirm: "変更する",
@@ -80,7 +79,10 @@ export default {
     },
     warning_project_overwrite: {
       title: "警告",
-      msg: "プロジェクトの変更が保存されていません。\n変更を破棄してもよろしいですか？",
+      window_msg:
+        "プロジェクトの変更が保存されていません。 \r\n 変更を破棄してもよろしいですか？",
+      dialog_msg:
+        "プロジェクトの変更が保存されていません。<br />変更を破棄してもよろしいですか？",
       confirm: "破棄",
       close: "キャンセル",
     },

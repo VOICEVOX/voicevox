@@ -9,6 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
+import messages from "@/i18n";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -241,14 +242,16 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
       },
-      async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
+      async CHECK_EDITED_AND_NOT_SAVE({ state, getters }) {
+        const t = messages[state.i18nSetting.locale];
         if (getters.IS_EDITED) {
           const result: number = await window.electron.showInfoDialog({
-            title: "警告",
-            message:
-              "プロジェクトの変更が保存されていません。\n" +
-              "変更を破棄してもよろしいですか？",
-            buttons: ["破棄", "キャンセル"],
+            title: t.windows.warning_project_overwrite.title,
+            message: t.windows.warning_project_overwrite.window_msg,
+            buttons: [
+              t.windows.warning_project_overwrite.confirm,
+              t.windows.warning_project_overwrite.close,
+            ],
           });
           if (result == 1) {
             return;

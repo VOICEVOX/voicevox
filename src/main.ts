@@ -19,8 +19,8 @@ store.dispatch("GET_I18N_SETTING").then((value) => {
   const i18n = createI18n<false>({
     silentFallbackWarn: true,
     legacy: false,
-    locale: value.lang,
-    fallbackLocale: value.fallbackLang,
+    locale: value.locale,
+    fallbackLocale: value.fallbackLocale,
     messages,
   });
   createApp(App)

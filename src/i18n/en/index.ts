@@ -29,7 +29,7 @@ export default {
       confirm: "Yes",
       close: "Cancel",
     },
-    error_no_cell: {
+    cell_not_found: {
       title: "Text cell not found",
       msg: "please select the text cell you want to export",
       close: "Close",
@@ -51,21 +51,20 @@ export default {
     },
     change_engine_mode: {
       title: "Engine mode has been modified",
-      write_error: "Restart engine to apply the change",
+      msg: "Restart engine to apply the change",
     },
     changing_engine_mode: {
       msg: "Changing engine mode",
     },
-    error_gpu_not_found: {
+    gpu_not_found: {
       title: "Compatible GPU not found",
-      write_error:
-        "Nvidia&trade; GPU is needed to enable GPU mode<br />Enabling GPU mode without a compatible GPU may cause errors, continue?",
+      msg: "Nvidia&trade; GPU is needed to enable GPU mode<br />Enabling GPU mode without a compatible GPU may cause errors, continue?",
       confirm: "Continue",
       close: "Cancel",
     },
-    warning_sample_rate: {
+    sample_rate: {
       title: "Sample Rate Issue",
-      msg: "Increasing sample rate <b>won't</b> improve audio quality.<br /> Meanwhile, audios with larger sample rate take more time to generate.<br />Continue?",
+      msg: "Increasing sample rate <b>won't</b> improve audio quality.<br />Meanwhile, audios with larger sample rate take more time to generate.<br />Continue?",
       confirm: "Continue",
       close: "Cancel",
     },
@@ -80,7 +79,8 @@ export default {
     },
     warning_project_overwrite: {
       title: "Warning",
-      msg: "This project has been modified \n Discard the change?",
+      window_msg: "This project has been modified.\r\nDiscard the change?",
+      dialog_msg: "This project has been modified.<br />Discard the change?",
       confirm: "Discard",
       close: "Cancel",
     },
@@ -106,15 +106,15 @@ export default {
   },
   audio_cell: {
     msg_length_error:
-      "Sentence with too many characters may cause errors. Consider splitting it with periods",
+      "Sentence with too long may cause errors. Consider splitting it with periods.",
   },
   audio_info: {
     speed_scale: "Speed",
     pitch_scale: "Pitch",
     into_scale: "Into.",
     volume_scale: "Volume",
-    prefix_silence: "Prefix Sil",
-    suffix_silence: "Suffix Sil",
+    prefix_silence: "Prefix Sil.",
+    suffix_silence: "Suffix Sil.",
   },
   header_bar: {
     play: "Play",
@@ -124,12 +124,12 @@ export default {
   },
   help_dialog: {
     root: "Help",
-    policy: "Policy",
-    library_policy: "Library Policy",
-    how_to_use: "How To Use",
-    community: "Community",
-    license: "License",
-    release_note: "Release Note",
+    policy: "Policy[JP]",
+    library_policy: "Library Policy[JP]",
+    how_to_use: "How To Use[JP]",
+    community: "Community[JP]",
+    license: "License[JP]",
+    release_note: "Release Note[JP]",
   },
   hotkey_dialog: {
     root: "Setting",

@@ -7,6 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
+import messages from "@/i18n";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -48,13 +49,15 @@ export const projectStore: VoiceVoxStoreOptions<
   actions: {
     CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
+        const t = messages[context.state.i18nSetting.locale];
         if (confirm !== false && context.getters.IS_EDITED) {
           const result: number = await window.electron.showInfoDialog({
-            title: "警告",
-            message:
-              "プロジェクトの変更が保存されていません。\n" +
-              "変更を破棄してもよろしいですか？",
-            buttons: ["破棄", "キャンセル"],
+            title: t.windows.warning_project_overwrite.title,
+            message: t.windows.warning_project_overwrite.window_msg,
+            buttons: [
+              t.windows.warning_project_overwrite.confirm,
+              t.windows.warning_project_overwrite.close,
+            ],
           });
           if (result == 1) {
             return;
@@ -81,10 +84,11 @@ export const projectStore: VoiceVoxStoreOptions<
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
       ) => {
+        const t = messages[context.state.i18nSetting.locale];
         if (!filePath) {
           // Select and load a project File.
           const ret = await window.electron.showProjectLoadDialog({
-            title: "プロジェクトファイルの選択",
+            title: t.windows.open_project,
           });
           if (ret == undefined || ret?.length == 0) {
             return;
@@ -92,7 +96,10 @@ export const projectStore: VoiceVoxStoreOptions<
           filePath = ret[0];
         }
 
-        const projectFileErrorMsg = `VOICEVOX Project file "${filePath}" is a invalid file.`;
+        const projectFileErrorMsg = t.errors.invalid_project_file.replace(
+          "{filePath}",
+          filePath
+        );
 
         try {
           const buf = await window.electron.readFile({ filePath });
@@ -102,8 +109,7 @@ export const projectStore: VoiceVoxStoreOptions<
           // appVersion Validation check
           if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
             throw new Error(
-              projectFileErrorMsg +
-                " The appVersion of the project file should be string"
+              projectFileErrorMsg + t.errors.app_version_type_error
             );
           }
           const appVersionList = versionTextParse(obj.appVersion);
@@ -111,8 +117,7 @@ export const projectStore: VoiceVoxStoreOptions<
           const nowAppVersionList = versionTextParse(nowAppInfo.version);
           if (appVersionList == null || nowAppVersionList == null) {
             throw new Error(
-              projectFileErrorMsg +
-                ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
+              projectFileErrorMsg + t.errors.app_version_mismatch
             );
           }
 
@@ -232,11 +237,12 @@ export const projectStore: VoiceVoxStoreOptions<
 
           if (confirm !== false && context.getters.IS_EDITED) {
             const result: number = await window.electron.showInfoDialog({
-              title: "警告",
-              message:
-                "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-                "変更を破棄してもよろしいですか？",
-              buttons: ["破棄", "キャンセル"],
+              title: t.windows.warning_project_overwrite.title,
+              message: t.windows.warning_project_overwrite.window_msg,
+              buttons: [
+                t.windows.warning_project_overwrite.confirm,
+                t.windows.warning_project_overwrite.close,
+              ],
             });
             if (result == 1) {
               return;
@@ -261,13 +267,13 @@ export const projectStore: VoiceVoxStoreOptions<
           window.electron.logError(err);
           const message = (() => {
             if (typeof err === "string") return err;
-            if (!(err instanceof Error)) return "エラーが発生しました。";
+            if (!(err instanceof Error)) return t.errors.any;
             if (err.message.startsWith(projectFileErrorMsg))
-              return "ファイルフォーマットが正しくありません。";
+              return t.errors.file_format_error;
             return err.message;
           })();
           await window.electron.showErrorDialog({
-            title: "エラー",
+            title: t.errors.any,
             message,
           });
         }
@@ -277,9 +283,10 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
+          const t = messages[context.state.i18nSetting.locale];
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
-            title: "プロジェクトファイルの保存",
+            title: t.windows.save_project,
           });
           if (ret == undefined) {
             return;
