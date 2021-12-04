@@ -6,4 +6,4 @@ export default {
   ja: ja,
 };
 
-export type MessageSchema = typeof ja;
+export type MessageSchema = typeof ja | typeof en;

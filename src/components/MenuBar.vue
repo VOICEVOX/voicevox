@@ -52,6 +52,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  hotkey: boolean;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -234,51 +235,58 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: t("menu_bar.file.new_project"),
+            label: "newProj",
             onClick: createNewProject,
+            hotkey: true,
           },
           {
             type: "button",
-            label: t("menu_bar.file.export_audio"),
+            label: "exportAudio",
             onClick: () => {
               generateAndSaveAllAudio();
             },
+            hotkey: true,
           },
           {
             type: "button",
-            label: t("menu_bar.file.export_one_audio"),
+            label: "exportAllAudio",
             onClick: () => {
               generateAndSaveOneAudio();
             },
+            hotkey: true,
           },
           {
             type: "button",
-            label: t("menu_bar.file.read_text_file"),
+            label: "importText",
             onClick: () => {
               importTextFile();
             },
+            hotkey: true,
           },
           { type: "separator" },
           {
             type: "button",
-            label: t("menu_bar.file.save_project"),
+            label: "saveProj",
             onClick: () => {
               saveProject();
             },
+            hotkey: true,
           },
           {
             type: "button",
-            label: t("menu_bar.file.save_project_as"),
+            label: "saveProjAs",
             onClick: () => {
               saveProjectAs();
             },
+            hotkey: true,
           },
           {
             type: "button",
-            label: t("menu_bar.file.open_project"),
+            label: "openProj",
             onClick: () => {
               importProject();
             },
+            hotkey: true,
           },
         ],
       },
@@ -295,6 +303,7 @@ export default defineComponent({
             onClick: () => {
               store.dispatch("RESTART_ENGINE");
             },
+            hotkey: false,
           },
         ],
       },
@@ -313,6 +322,7 @@ export default defineComponent({
                 isHotkeySettingDialogOpen: true,
               });
             },
+            hotkey: false,
           },
           {
             type: "button",
@@ -322,6 +332,7 @@ export default defineComponent({
                 isDefaultStyleSelectDialogOpen: true,
               });
             },
+            hotkey: false,
           },
           { type: "separator" },
           {
@@ -332,6 +343,7 @@ export default defineComponent({
                 isSettingDialogOpen: true,
               });
             },
+            hotkey: false,
           },
         ],
       },
@@ -345,6 +357,7 @@ export default defineComponent({
             openHelpDialog();
           }
         },
+        hotkey: true,
       },
     ]);
 
@@ -362,13 +375,13 @@ export default defineComponent({
     };
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
-      ["新規プロジェクト", createNewProject],
-      ["音声書き出し", generateAndSaveAllAudio],
-      ["一つだけ書き出し", generateAndSaveOneAudio],
-      ["テキスト読み込む", importTextFile],
-      ["プロジェクトを上書き保存", saveProject],
-      ["プロジェクトを名前を付けて保存", saveProjectAs],
-      ["プロジェクト読み込み", importProject],
+      ["newProj", createNewProject],
+      ["exportAllAudio", generateAndSaveAllAudio],
+      ["exportAudio", generateAndSaveOneAudio],
+      ["importText", importTextFile],
+      ["saveProj", saveProject],
+      ["saveProjAs", saveProjectAs],
+      ["openProj", importProject],
     ]);
 
     setHotkeyFunctions(hotkeyMap);

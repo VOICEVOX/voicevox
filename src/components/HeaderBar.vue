@@ -71,7 +71,7 @@ export default defineComponent({
     const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // undo
       [
-        "元に戻す",
+        "undo",
         () => {
           if (!uiLocked.value && canUndo.value) {
             undo();
@@ -81,7 +81,7 @@ export default defineComponent({
       ],
       // redo
       [
-        "やり直す",
+        "redo",
         () => {
           if (!uiLocked.value && canRedo.value) {
             redo();
@@ -95,7 +95,7 @@ export default defineComponent({
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // play/stop continuously
       [
-        "連続再生/停止",
+        "togglePlaybackCon",
         () => {
           if (!uiLocked.value) {
             if (nowPlayingContinuously.value) {

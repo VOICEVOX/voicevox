@@ -121,7 +121,9 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
-export type HotkeyAction =
+export type HotkeyAction = OldHotkeyAction | HotkeyTags;
+
+export type OldHotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"
   | "再生/停止"
@@ -188,3 +190,23 @@ export type I18nSetting = {
   lang: string;
   fallbackLang: string;
 };
+
+export type HotkeyTags =
+  | "exportAllAudio"
+  | "exportAudio"
+  | "togglePlayback"
+  | "togglePlaybackCon"
+  | "showAccent"
+  | "showPitch"
+  | "showLength"
+  | "addCell"
+  | "removeCell"
+  | "unfocusCell"
+  | "refocusCell"
+  | "undo"
+  | "redo"
+  | "newProj"
+  | "saveProjAs"
+  | "saveProj"
+  | "openProj"
+  | "importText";

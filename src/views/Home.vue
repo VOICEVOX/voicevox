@@ -167,7 +167,7 @@ export default defineComponent({
     // hotkeys handled by Mousetrap
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
-        "テキスト欄にフォーカスを戻す",
+        "refocusCell",
         () => {
           if (activeAudioKey.value !== undefined) {
             focusCell({ audioKey: activeAudioKey.value });
@@ -199,7 +199,7 @@ export default defineComponent({
         if (
           !event.isComposing &&
           !uiLocked.value &&
-          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
+          parseCombo(event) == hotkeySettingsMap.value.get("addCell")
         ) {
           addAudioItem();
           event.preventDefault();
@@ -209,7 +209,7 @@ export default defineComponent({
         if (
           !event.isComposing &&
           !uiLocked.value &&
-          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
+          parseCombo(event) == hotkeySettingsMap.value.get("removeCell")
         ) {
           removeAudioItem();
           event.preventDefault();
@@ -219,8 +219,7 @@ export default defineComponent({
         if (
           !event.isComposing &&
           !uiLocked.value &&
-          parseCombo(event) ==
-            hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
+          parseCombo(event) == hotkeySettingsMap.value.get("unfocusCell")
         ) {
           if (document.activeElement instanceof HTMLInputElement) {
             document.activeElement.blur();

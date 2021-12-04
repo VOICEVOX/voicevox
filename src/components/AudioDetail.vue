@@ -241,7 +241,7 @@ export default defineComponent({
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
-        "再生/停止",
+        "togglePlayback",
         () => {
           if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
             play();
@@ -251,7 +251,7 @@ export default defineComponent({
         },
       ],
       [
-        "ｱｸｾﾝﾄ欄を表示",
+        "togglePlaybackCon",
         () => {
           if (!uiLocked.value) {
             selectedDetail.value = "accent";
@@ -259,7 +259,7 @@ export default defineComponent({
         },
       ],
       [
-        "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+        "showPitch",
         () => {
           if (!uiLocked.value) {
             selectedDetail.value = "pitch";
@@ -267,7 +267,7 @@ export default defineComponent({
         },
       ],
       [
-        "長さ欄を表示",
+        "showLength",
         () => {
           if (!uiLocked.value) {
             selectedDetail.value = "length";

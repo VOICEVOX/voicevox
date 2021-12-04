@@ -24,6 +24,7 @@ import {
   SavingSetting,
   ThemeConf,
   StyleInfo,
+  HotkeyTags,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -70,71 +71,75 @@ protocol.registerSchemesAsPrivileged([
 
 const defaultHotkeySettings: HotkeySetting[] = [
   {
-    action: "音声書き出し",
+    action: "exportAllAudio",
     combination: "Ctrl E",
   },
   {
-    action: "一つだけ書き出し",
+    action: "exportAudio",
     combination: "E",
   },
   {
-    action: "再生/停止",
+    action: "togglePlayback",
     combination: "Space",
   },
   {
-    action: "連続再生/停止",
+    action: "togglePlaybackCon",
     combination: "Shift Space",
   },
   {
-    action: "ｱｸｾﾝﾄ欄を表示",
+    action: "showAccent",
     combination: "1",
   },
   {
-    action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    action: "showPitch",
     combination: "2",
   },
   {
-    action: "テキスト欄を追加",
+    action: "showLength",
+    combination: "3",
+  },
+  {
+    action: "addCell",
     combination: "Shift Enter",
   },
   {
-    action: "テキスト欄を削除",
+    action: "removeCell",
     combination: "Shift Delete",
   },
   {
-    action: "テキスト欄からフォーカスを外す",
+    action: "unfocusCell",
     combination: "Escape",
   },
   {
-    action: "テキスト欄にフォーカスを戻す",
+    action: "refocusCell",
     combination: "Enter",
   },
   {
-    action: "元に戻す",
+    action: "undo",
     combination: "Ctrl Z",
   },
   {
-    action: "やり直す",
+    action: "redo",
     combination: "Ctrl Y",
   },
   {
-    action: "新規プロジェクト",
+    action: "newProj",
     combination: "Ctrl N",
   },
   {
-    action: "プロジェクトを名前を付けて保存",
+    action: "saveProjAs",
     combination: "Ctrl Shift S",
   },
   {
-    action: "プロジェクトを上書き保存",
+    action: "saveProj",
     combination: "Ctrl S",
   },
   {
-    action: "プロジェクト読み込み",
+    action: "openProj",
     combination: "Ctrl O",
   },
   {
-    action: "テキスト読み込む",
+    action: "importText",
     combination: "",
   },
 ];
@@ -249,6 +254,21 @@ const store = new Store<{
       });
       hotkeys.splice(6, 0, newHotkey);
       store.set("hotkeySettings", hotkeys);
+    },
+    ">=0.9.4": (store) => {
+      const lookUpTable = messages.ja.hotkey_table;
+      const oldHotkeys = store.get("hotkeySettings");
+      for (let i = 0; i < defaultHotkeySettings.length; i++) {
+        if (
+          oldHotkeys[i].action ==
+          lookUpTable[defaultHotkeySettings[i].action as HotkeyTags]
+        ) {
+          defaultHotkeySettings[i].combination = oldHotkeys[i].combination;
+        } else {
+          continue;
+        }
+      }
+      store.set("hotkeySettings", defaultHotkeySettings);
     },
   },
 });

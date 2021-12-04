@@ -41,7 +41,9 @@
       <q-icon v-else />
     </q-item-section>
 
-    <q-item-section>{{ menudata.label }}</q-item-section>
+    <q-item-section>{{
+      getMenuBarLabel(menudata.hotkey, menudata.label)
+    }}</q-item-section>
     <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
@@ -53,6 +55,8 @@ import { defineComponent, ref, PropType, computed, watch } from "vue";
 import type { MenuItemData } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 import { HotkeyAction } from "@/type/preload";
+import { useI18n } from "vue-i18n";
+import { MessageSchema } from "@/i18n";
 
 export default defineComponent({
   name: "MenuItem",
@@ -84,6 +88,19 @@ export default defineComponent({
         return hotkey.replaceAll(" ", "+");
       }
     };
+
+    const getMenuBarLabel = (hotkey: boolean, label: string) => {
+      if (hotkey) {
+        return t(`hotkey_table.${label}`);
+      } else {
+        return label;
+      }
+    };
+
+    const { t } = useI18n<{ message: MessageSchema }>({
+      useScope: "global",
+    });
+
     if (props.menudata.type === "root") {
       const selectedComputed = computed({
         get: () => props.selected,
@@ -122,9 +139,10 @@ export default defineComponent({
         subMenuOpenFlags,
         reassignSubMenuOpen,
         getMenuBarHotkey,
+        getMenuBarLabel,
       };
     }
-    return { getMenuBarHotkey };
+    return { getMenuBarHotkey, getMenuBarLabel };
   },
 });
 </script>
