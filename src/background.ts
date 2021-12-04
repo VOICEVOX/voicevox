@@ -143,7 +143,7 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
-interface StoreType {
+interface StoreOption {
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
@@ -153,7 +153,7 @@ interface StoreType {
 }
 
 // 設定ファイル
-const store = new Store<StoreType>({
+const store = new Store<StoreOption>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -367,7 +367,7 @@ const updateInfos = JSON.parse(
 );
 
 // hotkeySettingsのマイグレーション
-function migrateHotkeySettings(store: StoreConf<StoreType>) {
+function migrateHotkeySettings(store: StoreConf<StoreOption>) {
   const CONBINATION_IS_NONE = "####";
   const emptyHotkeys = defaultHotkeySettings.map((defaultHotkey) => {
     const hotkey: HotkeySetting = {
