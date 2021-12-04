@@ -368,32 +368,41 @@ const updateInfos = JSON.parse(
 
 // hotkeySettingsのマイグレーション
 function migrateHotkeySettings(store: StoreConf<StoreType>) {
-  function storeNewHotkeyforMigration(
-    store: StoreConf<StoreType>,
-    newHotkey: HotkeySetting
-  ): void {
-    const hotkeys = store.get("hotkeySettings");
-    const combinationExists = hotkeys.some(
-      (hotkey) => hotkey.combination === newHotkey.combination
+  const CONBINATION_IS_NONE = "####";
+  const emptyHotkeys = defaultHotkeySettings.map((defaultHotkey) => {
+    const hotkey: HotkeySetting = {
+      action: defaultHotkey.action,
+      combination: CONBINATION_IS_NONE,
+    };
+    return hotkey;
+  });
+  const loadedHotkeys = store.get("hotkeySettings");
+  const copiedHotkeys = emptyHotkeys.map((emptyHotkey) => {
+    return (
+      loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === emptyHotkey.action
+      ) || emptyHotkey
     );
-    if (combinationExists) {
-      newHotkey.combination = "";
+  });
+  const migratedHotkeys = copiedHotkeys.map((hotkey) => {
+    if (hotkey.combination === CONBINATION_IS_NONE) {
+      const newHotkey =
+        defaultHotkeySettings.find(
+          (defaultHotkey) => defaultHotkey.action === hotkey.action
+        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+      const combinationExists = copiedHotkeys.some(
+        (hotkey) => hotkey.combination === newHotkey.combination
+      );
+      if (combinationExists) {
+        return hotkey;
+      } else {
+        return newHotkey;
+      }
+    } else {
+      return hotkey;
     }
-    const insertionIndex = defaultHotkeySettings.findIndex(
-      (hotkey) => hotkey.action === newHotkey.action
-    );
-    hotkeys.splice(insertionIndex, 0, newHotkey);
-    store.set("hotkeySettings", hotkeys);
-  }
-
-  const hotkeys = store.get("hotkeySettings");
-  const newHotkeys: HotkeySetting[] = defaultHotkeySettings.filter(
-    (defaultHotkey) =>
-      !hotkeys.some((hotkey) => hotkey.action === defaultHotkey.action)
-  );
-  for (const newHotkey of newHotkeys) {
-    storeNewHotkeyforMigration(store, newHotkey);
-  }
+  });
+  store.set("hotkeySettings", migratedHotkeys);
 }
 
 let willQuit = false;
