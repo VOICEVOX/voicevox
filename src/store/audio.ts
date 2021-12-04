@@ -856,10 +856,13 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, dispatch },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
       ): Promise<SaveResultObject> => {
-        const defaultFileName =
-          state.audioItems[state.audioKeys[0]].text +
-          "..." +
+        const headItemText = state.audioItems[state.audioKeys[0]].text;
+        const tailItemText =
           state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+        const defaultFileName =
+          headItemText !== tailItemText
+            ? headItemText + "..." + tailItemText
+            : headItemText;
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
