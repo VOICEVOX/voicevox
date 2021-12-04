@@ -128,41 +128,13 @@ export default defineComponent({
 
     const generateAndConnectAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        const result = await store.dispatch(
-          "GENERATE_AND_CONNECT_AND_SAVE_AUDIO",
+        await store.dispatch(
+          "GENERATE_AND_CONNECT_AND_SAVE_AUDIO_WITH_DIALOG",
           {
+            $q,
             encoding: store.state.savingSetting.fileEncoding,
           }
         );
-
-        if (
-          result === undefined ||
-          result.result === "SUCCESS" ||
-          result.result === "CANCELED"
-        )
-          return;
-
-        let msg = "";
-        switch (result.result) {
-          case "WRITE_ERROR":
-            msg =
-              "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-            break;
-          case "ENGINE_ERROR":
-            msg =
-              "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-            break;
-        }
-
-        $q.dialog({
-          title: "書き出しに失敗しました。",
-          message: msg,
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "secondary",
-          },
-        });
       }
     };
 
