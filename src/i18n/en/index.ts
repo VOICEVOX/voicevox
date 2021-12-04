@@ -124,12 +124,12 @@ export default {
   },
   help_dialog: {
     root: "Help",
-    policy: "Policy[JP]",
-    library_policy: "Library Policy[JP]",
-    how_to_use: "How To Use[JP]",
-    community: "Community[JP]",
-    license: "License[JP]",
-    release_note: "Release Note[JP]",
+    policy: "Policy [JP]",
+    library_policy: "Library Policy [JP]",
+    how_to_use: "How To Use [JP]",
+    community: "Community [JP]",
+    license: "License [JP]",
+    release_note: "Release Note [JP]",
   },
   hotkey_dialog: {
     root: "Setting",

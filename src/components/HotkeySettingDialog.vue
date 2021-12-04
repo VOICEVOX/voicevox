@@ -76,7 +76,7 @@
             <template #body="props">
               <q-tr :props="props">
                 <q-td no-hover :key="props.cols[0].name" :props="props">
-                  {{ props.row.action }}
+                  {{ t(`hotkey_table.${props.row.action}`) }}
                 </q-td>
                 <q-td no-hover :key="props.cols[1].name" :props="props">
                   <q-btn
