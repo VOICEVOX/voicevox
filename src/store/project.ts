@@ -47,32 +47,32 @@ export const projectStore: VoiceVoxStoreOptions<
 
   actions: {
     CREATE_NEW_PROJECT: createUILockAction(async (context, { confirm }) => {
-        if (confirm !== false && context.getters.IS_EDITED) {
-          const result: number = await window.electron.showInfoDialog({
-            title: "警告",
-            message:
-              "プロジェクトの変更が保存されていません。\n" +
-              "変更を破棄してもよろしいですか？",
-            buttons: ["破棄", "キャンセル"],
-          });
-          if (result == 1) {
-            return;
-          }
-        }
-
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
-
-        const audioItem: AudioItem = await context.dispatch(
-          "GENERATE_AUDIO_ITEM",
-          {}
-        );
-        await context.dispatch("REGISTER_AUDIO_ITEM", {
-          audioItem,
+      if (confirm !== false && context.getters.IS_EDITED) {
+        const result: number = await window.electron.showInfoDialog({
+          title: "警告",
+          message:
+            "プロジェクトの変更が保存されていません。\n" +
+            "変更を破棄してもよろしいですか？",
+          buttons: ["破棄", "キャンセル"],
         });
+        if (result == 1) {
+          return;
+        }
+      }
 
-        context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        context.commit("CLEAR_COMMANDS");
+      await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
+
+      const audioItem: AudioItem = await context.dispatch(
+        "GENERATE_AUDIO_ITEM",
+        {}
+      );
+      await context.dispatch("REGISTER_AUDIO_ITEM", {
+        audioItem,
+      });
+
+      context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+      context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+      context.commit("CLEAR_COMMANDS");
     }),
     LOAD_PROJECT_FILE: createUILockAction(
       async (context, { filePath, confirm }) => {
@@ -237,7 +237,7 @@ export const projectStore: VoiceVoxStoreOptions<
               return;
             }
           }
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
@@ -269,34 +269,34 @@ export const projectStore: VoiceVoxStoreOptions<
       }
     ),
     SAVE_PROJECT_FILE: createUILockAction(async (context, { overwrite }) => {
-        let filePath = context.state.projectFilePath;
-        if (!overwrite || !filePath) {
-          // Write the current status to a project file.
-          const ret = await window.electron.showProjectSaveDialog({
-            title: "プロジェクトファイルの保存",
-          });
-          if (ret == undefined) {
-            return;
-          }
-          filePath = ret;
+      let filePath = context.state.projectFilePath;
+      if (!overwrite || !filePath) {
+        // Write the current status to a project file.
+        const ret = await window.electron.showProjectSaveDialog({
+          title: "プロジェクトファイルの保存",
+        });
+        if (ret == undefined) {
+          return;
         }
-        const appInfos = await window.electron.getAppInfos();
-        const { audioItems, audioKeys } = context.state;
-        const projectData: ProjectType = {
-          appVersion: appInfos.version,
-          audioKeys,
-          audioItems,
-        };
+        filePath = ret;
+      }
+      const appInfos = await window.electron.getAppInfos();
+      const { audioItems, audioKeys } = context.state;
+      const projectData: ProjectType = {
+        appVersion: appInfos.version,
+        audioKeys,
+        audioItems,
+      };
       const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
-        window.electron.writeFile({ filePath, buffer: buf });
-        if (!context.state.projectFilePath) {
-          context.commit("SET_PROJECT_FILEPATH", { filePath });
-        }
-        context.commit(
-          "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-          context.getters.LAST_COMMAND_UNIX_MILLISEC
-        );
-        return;
+      window.electron.writeFile({ filePath, buffer: buf });
+      if (!context.state.projectFilePath) {
+        context.commit("SET_PROJECT_FILEPATH", { filePath });
+      }
+      context.commit(
+        "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
+        context.getters.LAST_COMMAND_UNIX_MILLISEC
+      );
+      return;
     }),
   },
 };
