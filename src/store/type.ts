@@ -526,8 +526,8 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
-  IS_UNSET_DEFAULT_STYLE_IDS: {
-    action(): Promise<boolean>;
+  IS_UNSET_DEFAULT_STYLE_ID: {
+    action(payload: { speakerUuid: string }): Promise<boolean>;
   };
 
   LOAD_DEFAULT_STYLE_IDS: {
@@ -669,6 +669,7 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
 
 export type UiStoreState = {
   uiLockCount: number;
+  dialogLockCount: number;
   useGpu: boolean;
   inheritAudioInfo: boolean;
   isHelpDialogOpen: boolean;
@@ -685,6 +686,10 @@ type UiStoreTypes = {
     getter: boolean;
   };
 
+  MENUBAR_LOCKED: {
+    getter: boolean;
+  };
+
   ASYNC_UI_LOCK: {
     action(payload: { callback: () => Promise<void> }): void;
   };
@@ -695,6 +700,16 @@ type UiStoreTypes = {
   };
 
   UNLOCK_UI: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  LOCK_MENUBAR: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  UNLOCK_MENUBAR: {
     mutation: undefined;
     action(): void;
   };

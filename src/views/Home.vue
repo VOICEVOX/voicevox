@@ -5,7 +5,7 @@
     <header-bar />
 
     <q-page-container>
-      <q-page class="main-row-panes bg-background">
+      <q-page class="main-row-panes">
         <div v-if="engineState === 'STARTING'" class="waiting-engine">
           <div>
             <q-spinner color="primary" size="2.5rem" />
@@ -355,9 +355,15 @@ export default defineComponent({
         store.dispatch("LOAD_CHARACTER"),
         store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
       ]);
-      if (await store.dispatch("IS_UNSET_DEFAULT_STYLE_IDS")) {
-        isDefaultStyleSelectDialogOpenComputed.value = true;
+      let isUnsetDefaultStyleIds = false;
+      if (characterInfos.value == undefined) throw new Error();
+      for (const info of characterInfos.value) {
+        isUnsetDefaultStyleIds ||= await store.dispatch(
+          "IS_UNSET_DEFAULT_STYLE_ID",
+          { speakerUuid: info.metas.speakerUuid }
+        );
       }
+      isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -464,33 +470,16 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@use '@/styles' as global;
-body {
-  user-select: none;
-  border-left: solid #{global.$window-border-width} #{global.$primary};
-  border-right: solid #{global.$window-border-width} #{global.$primary};
-  border-bottom: solid #{global.$window-border-width} #{global.$primary};
-}
-
-.relative-absolute-wrapper {
-  position: relative;
-  > div {
-    position: absolute;
-    inset: 0;
-  }
-}
-</style>
-
-<style lang="scss">
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 
 .q-header {
-  height: global.$header-height;
+  height: vars.$header-height;
 }
 
 .waiting-engine {
-  background-color: var(--color-background);
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -500,8 +489,8 @@ body {
   justify-content: center;
 
   > div {
-    color: var(--color-display-dark);
-    background: var(--color-background-light);
+    color: colors.$display-dark;
+    background: colors.$background-light;
     border-radius: 6px;
     padding: 14px;
   }
@@ -516,8 +505,8 @@ body {
 
   .q-splitter--horizontal {
     height: calc(
-      100vh - #{global.$menubar-height + global.$header-height +
-        global.$window-border-width}
+      100vh - #{vars.$menubar-height + vars.$header-height +
+        vars.$window-border-width}
     );
   }
 }
@@ -531,7 +520,7 @@ body {
   height: 100%;
 
   &.is-dragging {
-    background-color: var(--color-background);
+    background-color: rgba(colors.$display-dark-rgb, 0.15);
   }
 
   .audio-cells {

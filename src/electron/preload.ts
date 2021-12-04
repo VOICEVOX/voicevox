@@ -184,8 +184,8 @@ const api: Sandbox = {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 
-  isUnsetDefaultStyleIds: async () => {
-    return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_IDS");
+  isUnsetDefaultStyleId: async (speakerUuid: string) => {
+    return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
 
   getDefaultStyleIds: async () => {

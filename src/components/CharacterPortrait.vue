@@ -54,31 +54,29 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-$background: var(--color-background);
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .character-name {
   position: absolute;
   padding: 1px 24px 1px 8px;
   background-image: linear-gradient(
     90deg,
-    rgba($background, 0.5) 0%,
-    rgba($background, 0.5) 75%,
+    rgba(colors.$background-rgb, 0.5) 0%,
+    rgba(colors.$background-rgb, 0.5) 75%,
     transparent 100%
   );
+  overflow-wrap: anywhere;
 }
 
 .character-portrait-wrapper {
   display: grid;
-  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   overflow: hidden;
   .character-portrait {
-    object-fit: none;
-    object-position: center top;
-    width: 100%;
-    height: fit-content;
+    margin: auto;
   }
 }
 </style>
