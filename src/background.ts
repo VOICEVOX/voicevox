@@ -20,7 +20,7 @@ import {
   DefaultStyleId,
   HotkeySetting,
   MetasJson,
-  SavingSetting,
+  StoreOption,
   ThemeConf,
   StyleInfo,
 } from "./type/preload";
@@ -142,15 +142,6 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "",
   },
 ];
-
-type StoreOption = {
-  useGpu: boolean;
-  inheritAudioInfo: boolean;
-  savingSetting: SavingSetting;
-  hotkeySettings: HotkeySetting[];
-  defaultStyleIds: DefaultStyleId[];
-  currentTheme: string;
-};
 
 // 設定ファイル
 const store = new Store<StoreOption>({

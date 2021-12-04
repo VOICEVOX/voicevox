@@ -148,6 +148,15 @@ export type HotkeyReturnType =
   | Promise<void>
   | Promise<boolean>;
 
+export type StoreOption = {
+  useGpu: boolean;
+  inheritAudioInfo: boolean;
+  savingSetting: SavingSetting;
+  hotkeySettings: HotkeySetting[];
+  defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
+};
+
 export type MoraDataType =
   | "consonant"
   | "vowel"
