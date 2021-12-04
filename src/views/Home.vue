@@ -284,7 +284,8 @@ export default defineComponent({
     const resizeObserverRef = ref<QResizeObserver>();
 
     // DaD
-    const updateAudioKeys = console.log;
+    const updateAudioKeys = (audioKeys: string[]) =>
+      store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
     const itemKey = (key: string) => key;
 
     // セルを追加
