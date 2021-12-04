@@ -135,7 +135,6 @@ You must add a directory of contain ldconfig command to PATH environment variabl
 EOS
 fi
 
-fi
 if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
     echo "[-] libsndfile: OK"
 elif [ -d /usr/local/Cellar/libsndfile ]; then
