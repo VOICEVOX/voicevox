@@ -229,15 +229,6 @@ export const audioStore: VoiceVoxStoreOptions<
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
     },
-    MOVE_AUDIO_ITEM(
-      state,
-      { audioKey, keyIndex }: { audioKey: string; keyIndex: number }
-    ) {
-      const oldIndex = state.audioKeys.findIndex((key) => audioKey === key);
-      if (oldIndex == -1) return;
-      state.audioKeys.splice(oldIndex, 1);
-      state.audioKeys.splice(keyIndex, 0, audioKey);
-    },
     SET_AUDIO_TEXT(
       state,
       { audioKey, text }: { audioKey: string; text: string }
@@ -988,12 +979,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
       commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
     },
-    COMMAND_MOVE_AUDIO_ITEM(
-      { commit },
-      payload: { audioKey: string; keyIndex: number }
-    ) {
-      commit("COMMAND_MOVE_AUDIO_ITEM", payload);
-    },
     async COMMAND_CHANGE_AUDIO_TEXT(
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
@@ -1502,12 +1487,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
-    },
-    COMMAND_MOVE_AUDIO_ITEM(
-      draft,
-      payload: { audioKey: string; keyIndex: number }
-    ) {
-      audioStore.mutations.MOVE_AUDIO_ITEM(draft, payload);
     },
     COMMAND_CHANGE_AUDIO_TEXT(
       draft,
