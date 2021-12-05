@@ -1026,7 +1026,11 @@ export const audioStore: VoiceVoxStoreOptions<
         quasarDialog,
         filePath,
         encoding,
-      }: { quasarDialog: QuasarDialog; filePath?: string; encoding?: EncodingType }
+      }: {
+        quasarDialog: QuasarDialog;
+        filePath?: string;
+        encoding?: EncodingType;
+      }
     ) {
       const result = await dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
         filePath,
