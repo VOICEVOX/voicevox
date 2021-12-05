@@ -91,7 +91,7 @@ export default defineComponent({
       if (!uiLocked.value) {
         await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG", {
           encoding: store.state.savingSetting.fileEncoding,
-          $q,
+          quasarDialog: $q.dialog,
         });
       }
     };
@@ -115,7 +115,7 @@ export default defineComponent({
 
       await store.dispatch("GENERATE_AND_SAVE_AUDIO_WITH_DIALOG", {
         audioKey: activeAudioKey,
-        $q,
+        quasarDialog: $q.dialog,
         encoding: store.state.savingSetting.fileEncoding,
       });
     };

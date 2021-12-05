@@ -17,6 +17,7 @@ import {
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
   IEngineConnectorFactoryActions,
+  QuasarDialog,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -803,12 +804,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch },
       {
         audioKey,
-        $q,
+        quasarDialog,
         filePath,
         encoding,
       }: {
         audioKey: string;
-        $q: QVueGlobals;
+        quasarDialog: QuasarDialog;
         filePath?: string;
         encoding?: EncodingType;
       }
@@ -833,7 +834,7 @@ export const audioStore: VoiceVoxStoreOptions<
             "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
           break;
       }
-      $q.dialog({
+      quasarDialog({
         title: "書き出しに失敗しました。",
         message: msg,
         ok: {
@@ -872,10 +873,14 @@ export const audioStore: VoiceVoxStoreOptions<
     async GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG(
       { dispatch },
       {
-        $q,
+        quasarDialog,
         dirPath,
         encoding,
-      }: { $q: QVueGlobals; dirPath?: string; encoding?: EncodingType }
+      }: {
+        quasarDialog: QuasarDialog;
+        dirPath?: string;
+        encoding?: EncodingType;
+      }
     ) {
       const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
         dirPath,
@@ -901,7 +906,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }
 
       if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-        $q.dialog({
+        quasarDialog({
           component: SaveAllResultDialog,
           componentProps: {
             successArray: successArray,

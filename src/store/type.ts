@@ -57,6 +57,8 @@ type StoreType<T, U extends "getter" | "mutation" | "action"> = {
     : never;
 };
 
+export type QuasarDialog = QVueGlobals["dialog"];
+
 /*
  * Audio Store Types
  */
@@ -276,7 +278,7 @@ type AudioStoreTypes = {
   GENERATE_AND_SAVE_AUDIO_WITH_DIALOG: {
     action(payload: {
       audioKey: string;
-      $q: QVueGlobals;
+      quasarDialog: QuasarDialog;
       filePath?: string;
       encoding?: EncodingType;
     }): void;
@@ -291,7 +293,7 @@ type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG: {
     action(payload: {
-      $q: QVueGlobals;
+      quasarDialog: QuasarDialog;
       dirPath?: string;
       encoding?: EncodingType;
     }): void;
