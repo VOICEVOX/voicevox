@@ -910,7 +910,6 @@ export const audioStore: VoiceVoxStoreOptions<
             return { result: "ENGINE_ERROR", path: filePath };
           }
           const encodedBlob = await base64Encoder(blob);
-          console.log(encodedBlob);
           if (encodedBlob === undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
@@ -955,7 +954,6 @@ export const audioStore: VoiceVoxStoreOptions<
             // 改行でsplit
             const splitPrevLab = prevLab.split("\n");
             const splitCurrentLab = currentLab.split("\n");
-            console.log(splitCurrentLab);
             // prevの最後のpauseを抽出
             const prevEndPause = splitPrevLab[splitPrevLab.length - 2];
             // currentの最初のpauseをスペースでsplit
