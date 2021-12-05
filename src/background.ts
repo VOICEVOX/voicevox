@@ -20,6 +20,7 @@ import {
   HotkeySetting,
   SavingSetting,
   ThemeConf,
+  AcceptRetrieveTelemetryStatus,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -143,6 +144,7 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
     useGpu: {
@@ -165,7 +167,7 @@ const store = new Store<{
         avoidOverwrite: { type: "boolean", default: false },
         fixedExportDir: { type: "string", default: "" },
         exportLab: { type: "boolean", default: false },
-        exportText: { type: "boolean", default: true },
+        exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
@@ -176,7 +178,7 @@ const store = new Store<{
         avoidOverwrite: false,
         fixedExportDir: "",
         exportLab: false,
-        exportText: true,
+        exportText: false,
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
@@ -211,6 +213,11 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    acceptRetrieveTelemetry: {
+      type: "string",
+      enum: ["Unconfirmed", "Accepted", "Refused"],
+      default: "Unconfirmed",
     },
   },
   migrations: {
@@ -367,6 +374,14 @@ async function createWindow() {
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
       return;
     }
+  });
+
+  win.on("resize", () => {
+    const windowSize = win.getSize();
+    win.webContents.send("DETECT_RESIZED", {
+      width: windowSize[0],
+      height: windowSize[1],
+    });
   });
 
   win.webContents.once("did-finish-load", () => {
@@ -666,6 +681,14 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
 
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
+});
+
+ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
+  return store.get("acceptRetrieveTelemetry");
+});
+
+ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
+  store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
 });
 
 // app callback

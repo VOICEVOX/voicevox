@@ -179,9 +179,7 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
-
+<style scoped lang="scss">
 .q-badge {
   padding: 0;
 }

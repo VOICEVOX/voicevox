@@ -12,6 +12,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  AcceptRetrieveTelemetryStatus,
   HotkeySetting,
   MoraDataType,
   SavingSetting,
@@ -614,6 +615,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   engineHost: string;
   themeSetting: ThemeSetting;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 };
 
 type SettingStoreTypes = {
@@ -644,6 +646,17 @@ type SettingStoreTypes = {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
   };
+
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    action(): void;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    mutation: { acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus };
+    action(payload: {
+      acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+    }): void;
+  };
 };
 
 export type SettingGetters = StoreType<SettingStoreTypes, "getter">;
@@ -663,6 +676,7 @@ export type UiStoreState = {
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
+  isAcceptRetrieveTelemetryDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
 };
@@ -717,6 +731,11 @@ type UiStoreTypes = {
   IS_HOTKEY_SETTING_DIALOG_OPEN: {
     mutation: { isHotkeySettingDialogOpen: boolean };
     action(payload: { isHotkeySettingDialogOpen: boolean }): void;
+  };
+
+  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
+    mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
+    action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
   };
 
   ON_VUEX_READY: {

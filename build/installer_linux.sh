@@ -75,6 +75,9 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
+
+Arch Linux:
+    sudo pacman -S curl
 EOS
 fi
 
@@ -109,6 +112,10 @@ Fedora:
     sudo dnf install p7zip
 Or
     sudo yum install p7zip
+
+Arch Linux:
+    sudo pacman -S p7zip
+
 MacOS:
     brew install p7zip
 EOS
@@ -116,6 +123,17 @@ fi
 echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
+
+PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
+if ! command -v ldconfig &> /dev/null; then
+    cat << EOS && exit 1
+[!] Command 'ldconfig' not found
+
+Required to check existence of required libraries.
+You must add a directory of contain ldconfig command to PATH environment variable.
+
+EOS
+fi
 
 if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
     echo "[-] libsndfile: OK"
@@ -134,6 +152,10 @@ CentOS/Fedora:
     sudo dnf install libsndfile
 Or
     sudo yum install libsndfile
+
+Arch Linux
+    sudo pacman -S libsndfile
+
 MacOS:
     brew install libsndfile
 EOS
