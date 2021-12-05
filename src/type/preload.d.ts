@@ -158,16 +158,14 @@ export type HotkeyReturnType =
   | Promise<void>
   | Promise<boolean>;
 
-export type ToolbarButtonsType =
-  | "連続再生"
-  | "停止"
-  | "元に戻す"
-  | "やり直す"
-  | "空白";
+export type ToolbarButtonTagType =
+  | "PLAY_CONTINUOUSLY"
+  | "STOP"
+  | "UNDO"
+  | "REDO"
+  | "EMPTY";
 
-export type ToolbarSetting = {
-  buttons: ToolbarButtonsType[];
-};
+export type ToolbarSetting = ToolbarButtonTagType[];
 
 export type MoraDataType =
   | "consonant"

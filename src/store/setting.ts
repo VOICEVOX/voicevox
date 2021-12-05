@@ -5,6 +5,7 @@ import {
   SavingSetting,
   ThemeColorType,
   ThemeConf,
+  ToolbarButtonTagType,
   ToolbarSetting,
 } from "@/type/preload";
 import {
@@ -33,9 +34,7 @@ export const settingStoreState: SettingStoreState = {
     audioOutputDevice: "default",
   },
   hotkeySettings: [],
-  toolbarSetting: {
-    buttons: [],
-  },
+  toolbarSetting: [],
   engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
   themeSetting: {
     currentTheme: "Default",
@@ -251,4 +250,15 @@ export const parseCombo = (event: KeyboardEvent): string => {
     }
   }
   return recordedCombo;
+};
+
+export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
+  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
+    PLAY_CONTINUOUSLY: "連続再生",
+    STOP: "停止",
+    UNDO: "元に戻す",
+    REDO: "やり直す",
+    EMPTY: "空白",
+  };
+  return tag2NameObj[tag];
 };

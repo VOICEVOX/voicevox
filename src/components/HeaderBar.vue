@@ -22,16 +22,16 @@
 import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { setHotkeyFunctions } from "@/store/setting";
+import { getToolbarButtonName, setHotkeyFunctions } from "@/store/setting";
 import {
   HotkeyAction,
   HotkeyReturnType,
-  ToolbarButtonsType,
+  ToolbarButtonTagType,
 } from "@/type/preload";
 
 type ButtonContent =
   | {
-      text: ToolbarButtonsType;
+      text: string;
       click(): void;
       disable: ComputedRef<boolean>;
     }
@@ -119,41 +119,42 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
 
-    const usableButtons: ButtonContent[] = [
-      {
-        text: "連続再生",
+    const usableButtons: Record<
+      ToolbarButtonTagType,
+      Omit<ButtonContent, "text"> | null
+    > = {
+      PLAY_CONTINUOUSLY: {
         click: playContinuously,
         disable: uiLocked,
       },
-      {
-        text: "停止",
+      STOP: {
         click: stopContinuously,
         disable: computed(() => !nowPlayingContinuously.value),
       },
-      {
-        text: "元に戻す",
+      UNDO: {
         click: undo,
         disable: computed(() => !canUndo.value || uiLocked.value),
       },
-      {
-        text: "やり直す",
+      REDO: {
         click: redo,
         disable: computed(() => !canRedo.value || uiLocked.value),
       },
-    ];
-
-    const searchButton = (button: ToolbarButtonsType): ButtonContent => {
-      if (button === "空白") {
-        return {
-          text: null,
-        };
-      } else {
-        return usableButtons.find((b) => b.text === button) as ButtonContent;
-      }
+      EMPTY: null,
     };
 
     const headerButtons = computed(() =>
-      toolbarSetting.value.buttons.map(searchButton)
+      toolbarSetting.value.map((tag) => {
+        const buttonContent = usableButtons[tag];
+        if (buttonContent) {
+          return Object.assign(buttonContent, {
+            text: getToolbarButtonName(tag),
+          }) as ButtonContent;
+        } else {
+          return {
+            text: null,
+          };
+        }
+      })
     );
 
     return {

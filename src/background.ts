@@ -205,17 +205,11 @@ const store = new Store<{
       default: defaultHotkeySettings,
     },
     toolbarSetting: {
-      properties: {
-        buttons: {
-          type: "array",
-          items: {
-            type: "string",
-          },
-        },
+      type: "array",
+      items: {
+        type: "string",
       },
-      default: {
-        buttons: ["連続再生", "停止", "空白", "元に戻す", "やり直す"],
-      },
+      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
     },
     defaultStyleIds: {
       type: "array",
