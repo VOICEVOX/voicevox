@@ -1,7 +1,8 @@
 <template>
   <q-badge
     v-if="$q.platform.is.mac"
-    color="bg-primary"
+    transparent
+    color="transparent"
     text-color="display"
     class="full-height cursor-not-allowed no-border-radius"
   >
