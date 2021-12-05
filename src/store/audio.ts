@@ -27,12 +27,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import {
-  IEngineConnectorFactory,
-  OpenAPIEngineConnectorFactory,
-} from "@/infrastructures/EngineConnector";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
-import { QVueGlobals } from "quasar";
 
 async function generateUniqueIdAndQuery(
   state: State,
