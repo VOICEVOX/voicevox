@@ -110,6 +110,7 @@ export default defineComponent({
 <style scoped lang="scss">
 .q-badge {
   padding: 0;
+  margin-left: 0;
 }
 
 .title-bar-buttons-root {
