@@ -143,7 +143,7 @@ export default defineComponent({
     ];
 
     const searchButton = (button: ToolbarButtonsType): ButtonContent => {
-      if (button === "") {
+      if (button === "空白") {
         return {
           text: null,
         };

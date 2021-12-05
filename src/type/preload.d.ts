@@ -163,7 +163,7 @@ export type ToolbarButtonsType =
   | "停止"
   | "元に戻す"
   | "やり直す"
-  | "";
+  | "空白";
 
 export type ToolbarSetting = {
   buttons: ToolbarButtonsType[];
