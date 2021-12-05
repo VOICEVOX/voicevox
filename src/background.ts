@@ -142,17 +142,15 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
-type StoreOption = {
+// 設定ファイル
+const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
-};
-
-// 設定ファイル
-const store = new Store<StoreOption>({
+}>({
   schema: {
     useGpu: {
       type: "boolean",
