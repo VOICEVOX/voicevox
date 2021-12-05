@@ -50,7 +50,6 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
-    const toolbarSetting = computed(() => store.state.toolbarSetting);
 
     const undoRedoHotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       // undo
@@ -143,7 +142,7 @@ export default defineComponent({
     };
 
     const headerButtons = computed(() =>
-      toolbarSetting.value.map((tag) => {
+      store.state.toolbarSetting.map((tag) => {
         const buttonContent = usableButtons[tag];
         if (buttonContent) {
           return Object.assign(buttonContent, {
