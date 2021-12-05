@@ -12,11 +12,6 @@ type IpcIHData = {
     return: string;
   };
 
-  GET_CHARACTER_INFOS: {
-    args: [];
-    return: import("@/type/preload").CharacterInfo[];
-  };
-
   GET_HOW_TO_USE_TEXT: {
     args: [];
     return: string;
@@ -155,11 +150,6 @@ type IpcIHData = {
   IS_UNSET_DEFAULT_STYLE_ID: {
     args: [speakerUuid: string];
     return: boolean;
-  };
-
-  GET_DEFAULT_STYLE_IDS: {
-    args: [];
-    return: import("@/type/preload").DefaultStyleId[];
   };
 
   SET_DEFAULT_STYLE_IDS: {

@@ -35,10 +35,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_APP_INFOS");
   },
 
-  getCharacterInfos: async () => {
-    return await ipcRendererInvoke("GET_CHARACTER_INFOS");
-  },
-
   getHowToUseText: async () => {
     return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
   },
@@ -186,10 +182,6 @@ const api: Sandbox = {
 
   isUnsetDefaultStyleId: async (speakerUuid: string) => {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
-  },
-
-  getDefaultStyleIds: async () => {
-    return await ipcRendererInvoke("GET_DEFAULT_STYLE_IDS");
   },
 
   setDefaultStyleIds: async (defaultStyleIds) => {
