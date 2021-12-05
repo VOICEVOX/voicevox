@@ -362,28 +362,26 @@ const updateInfos = JSON.parse(
 // hotkeySettingsのマイグレーション
 function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
-  const emptyHotkeys = defaultHotkeySettings.map((defaultHotkey) => {
-    const hotkey: HotkeySetting = {
-      action: defaultHotkey.action,
-      combination: COMBINATION_IS_NONE,
-    };
-    return hotkey;
-  });
   const loadedHotkeys = store.get("hotkeySettings");
-  const copiedHotkeys = emptyHotkeys.map((emptyHotkey) => {
-    return (
-      loadedHotkeys.find(
-        (loadedHotkey) => loadedHotkey.action === emptyHotkey.action
-      ) || emptyHotkey
-    );
-  });
-  const migratedHotkeys = copiedHotkeys.map((hotkey) => {
+  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+    (defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+      );
+      const emptyHotkey: HotkeySetting = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey || emptyHotkey;
+    }
+  );
+  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
     if (hotkey.combination === COMBINATION_IS_NONE) {
       const newHotkey =
         defaultHotkeySettings.find(
           (defaultHotkey) => defaultHotkey.action === hotkey.action
         ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
-      const combinationExists = copiedHotkeys.some(
+      const combinationExists = hotkeysWithoutNewCombination.some(
         (hotkey) => hotkey.combination === newHotkey.combination
       );
       if (combinationExists) {
