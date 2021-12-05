@@ -52,6 +52,7 @@ describe("store/vuex.js test", () => {
         },
         isPinned: false,
         hotkeySettings: [],
+        toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
       },
