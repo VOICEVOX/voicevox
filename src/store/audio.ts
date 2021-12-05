@@ -17,6 +17,7 @@ import {
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
   IEngineConnectorFactoryActions,
+  QuasarDialog,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -26,7 +27,6 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import { QVueGlobals } from "quasar";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -1023,10 +1023,10 @@ export const audioStore: VoiceVoxStoreOptions<
     async GENERATE_AND_CONNECT_AND_SAVE_AUDIO_WITH_DIALOG(
       { dispatch },
       {
-        $q,
+        quasarDialog,
         filePath,
         encoding,
-      }: { $q: QVueGlobals; filePath?: string; encoding?: EncodingType }
+      }: { quasarDialog: QuasarDialog; filePath?: string; encoding?: EncodingType }
     ) {
       const result = await dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
         filePath,
@@ -1052,7 +1052,7 @@ export const audioStore: VoiceVoxStoreOptions<
           break;
       }
 
-      $q.dialog({
+      quasarDialog({
         title: "書き出しに失敗しました。",
         message: msg,
         ok: {

@@ -131,7 +131,7 @@ export default defineComponent({
         await store.dispatch(
           "GENERATE_AND_CONNECT_AND_SAVE_AUDIO_WITH_DIALOG",
           {
-            $q,
+            quasarDialog: $q.dialog,
             encoding: store.state.savingSetting.fileEncoding,
           }
         );
