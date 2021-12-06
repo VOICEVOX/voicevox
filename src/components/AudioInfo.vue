@@ -1,11 +1,17 @@
 <template>
   <div class="root full-height q-py-md" v-if="query">
     <div class="q-px-md">
-      <div class="row no-wrap">
-        <div class="text-body1 q-mb-xs">プリセット</div>
+      <div class="row items-center no-wrap q-mb-xs">
+        <div class="text-body1">プリセット</div>
         <q-space />
 
-        <q-btn-dropdown dense flat icon="more_vert">
+        <q-btn-dropdown
+          dense
+          flat
+          no-icon-animation
+          dropdown-icon="more_vert"
+          :model-value="false"
+        >
           <q-list>
             <q-item clickable v-close-popup @click="applyPreset">
               <q-item-section avatar>
@@ -85,7 +91,7 @@
         </q-select>
       </div>
       <!-- プリセット管理ダイアログ -->
-      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
+      <preset-manage-dialog v-model:open-dialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
       <q-dialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
