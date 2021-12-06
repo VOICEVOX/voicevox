@@ -449,10 +449,12 @@ export default defineComponent({
     const presetKeys = computed(() => store.state.presetKeys);
     const audioPresetKey = computed(() => audioItem.value?.presetKey);
 
-    const changePreset = (preset: {
+    type PresetSelectModelType = {
       label: string;
       key: string | undefined;
-    }): void => {
+    };
+
+    const changePreset = (preset: PresetSelectModelType): void => {
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: props.activeAudioKey,
         presetKey: preset.key,
@@ -469,9 +471,7 @@ export default defineComponent({
     );
 
     // セルへのプリセットの設定
-    const selectablePresetList = computed<
-      { label: string; key: string | undefined }[]
-    >(() => {
+    const selectablePresetList = computed<PresetSelectModelType[]>(() => {
       const restPresetList = [];
       if (audioPresetKey.value != undefined) {
         restPresetList.push({
@@ -482,10 +482,7 @@ export default defineComponent({
       return [...restPresetList, ...presetList.value];
     });
 
-    const presetSelectModel = computed<{
-      label: string;
-      key: string | undefined;
-    }>({
+    const presetSelectModel = computed<PresetSelectModelType>({
       get: () => {
         if (
           audioPresetKey.value === undefined ||
