@@ -94,6 +94,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "2",
   },
   {
+    action: "長さ欄を表示",
+    combination: "3",
+  },
+  {
     action: "テキスト欄を追加",
     combination: "Shift Enter",
   },
@@ -223,22 +227,7 @@ const store = new Store<{
       default: "Unconfirmed",
     },
   },
-  migrations: {
-    ">=0.7.3": (store) => {
-      const newHotkey: HotkeySetting = {
-        action: "長さ欄を表示",
-        combination: "3",
-      };
-      const hotkeys = store.get("hotkeySettings");
-      hotkeys.forEach((value) => {
-        if (value.combination == newHotkey.combination) {
-          newHotkey.combination = "";
-        }
-      });
-      hotkeys.splice(6, 0, newHotkey);
-      store.set("hotkeySettings", hotkeys);
-    },
-  },
+  migrations: {},
 });
 
 // engine
@@ -376,6 +365,48 @@ const updateInfos = JSON.parse(
     encoding: "utf-8",
   })
 );
+
+// hotkeySettingsのマイグレーション
+function migrateHotkeySettings() {
+  const COMBINATION_IS_NONE = "####";
+  const loadedHotkeys = store.get("hotkeySettings");
+  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+    (defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+      );
+      const hotkeyWithoutCombination: HotkeySetting = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey || hotkeyWithoutCombination;
+    }
+  );
+  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
+    if (hotkey.combination === COMBINATION_IS_NONE) {
+      const newHotkey =
+        defaultHotkeySettings.find(
+          (defaultHotkey) => defaultHotkey.action === hotkey.action
+        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+      const combinationExists = hotkeysWithoutNewCombination.some(
+        (hotkey) => hotkey.combination === newHotkey.combination
+      );
+      if (combinationExists) {
+        const emptyHotkey = {
+          action: newHotkey.action,
+          combination: "",
+        };
+        return emptyHotkey;
+      } else {
+        return newHotkey;
+      }
+    } else {
+      return hotkey;
+    }
+  });
+  store.set("hotkeySettings", migratedHotkeys);
+}
+migrateHotkeySettings();
 
 let willQuit = false;
 // create window
