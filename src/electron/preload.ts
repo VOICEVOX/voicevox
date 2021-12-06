@@ -200,6 +200,17 @@ const api: Sandbox = {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
   },
 
+  getAcceptRetrieveTelemetry: async () => {
+    return await ipcRendererInvoke("GET_ACCEPT_RETRIEVE_TELEMETRY");
+  },
+
+  setAcceptRetrieveTelemetry: async (acceptRetrieveTelemetry) => {
+    return await ipcRendererInvoke(
+      "SET_ACCEPT_RETRIEVE_TELEMETRY",
+      acceptRetrieveTelemetry
+    );
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },

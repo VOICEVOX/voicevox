@@ -337,6 +337,37 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card> -->
+            <!--
+            NOTE: 現状、ElectronでGoogle Analyticsのopt-outが提供出来ない(起動時に設定が読めない)ため、
+                  設定が読める or 初期値の設定が出来るようになるまで無効にする
+            SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
+            FIXME: Google Analyticsのopt-out方法の提供後有効化
+
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">テレメトリー</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>テレメトリーの収集を許可する</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  v-model="acceptRetrieveTelemetryComputed"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    VOICEVOXの改善のため、ウインドウサイズや各UIの利用率などの収集を許可します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
+            -->
           </div>
         </q-page>
       </q-page-container>
@@ -433,6 +464,18 @@ export default defineComponent({
       updateAudioOutputDevices
     );
     updateAudioOutputDevices();
+
+    // SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
+    //const acceptRetrieveTelemetryComputed = computed({
+    //  get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+    //  set: (acceptRetrieveTelemetry: boolean) => {
+    //    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    //      acceptRetrieveTelemetry: acceptRetrieveTelemetry
+    //        ? "Accepted"
+    //        : "Refused",
+    //    });
+    //  },
+    //});
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -561,6 +604,7 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
+      //acceptRetrieveTelemetryComputed,
     };
   },
 });

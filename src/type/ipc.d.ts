@@ -184,6 +184,18 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [];
+    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [
+      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
+    ];
+    return: void;
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
@@ -231,6 +243,11 @@ type IpcSOData = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
+    return: void;
+  };
+
+  DETECT_RESIZED: {
+    args: [obj: { width: number; height: number }];
     return: void;
   };
 };
