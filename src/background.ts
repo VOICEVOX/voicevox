@@ -368,11 +368,11 @@ function migrateHotkeySettings() {
       const loadedHotkey = loadedHotkeys.find(
         (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
       );
-      const emptyHotkey: HotkeySetting = {
+      const hotkeyWithoutCombination: HotkeySetting = {
         action: defaultHotkey.action,
         combination: COMBINATION_IS_NONE,
       };
-      return loadedHotkey || emptyHotkey;
+      return loadedHotkey || hotkeyWithoutCombination;
     }
   );
   const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
