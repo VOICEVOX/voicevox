@@ -33,6 +33,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -49,6 +50,7 @@ export default defineComponent({
       context.emit("update:openDialog", isOpen);
 
     const store = useStore();
+    const $q = useQuasar();
 
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
@@ -62,8 +64,17 @@ export default defineComponent({
         }))
     );
 
-    const deletePreset = (key: string) =>
-      store.dispatch("DELETE_PRESET", { presetKey: key });
+    const deletePreset = (key: string) => {
+      $q.dialog({
+        title: "プリセット削除の確認",
+        message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
+        cancel: true,
+      }).onOk(async () => {
+        await store.dispatch("DELETE_PRESET", {
+          presetKey: key,
+        });
+      });
+    };
 
     return {
       updateOpenDialog,
