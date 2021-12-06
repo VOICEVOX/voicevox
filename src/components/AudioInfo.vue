@@ -465,13 +465,16 @@ export default defineComponent({
     // セルへのプリセットの設定
     const selectablePresetList = computed<
       { label: string; key: string | undefined }[]
-    >(() => [
-      {
-        key: undefined,
-        label: "プリセット解除",
-      },
-      ...presetList.value,
-    ]);
+    >(() => {
+      const restPresetList = [];
+      if (audioPresetKey.value != undefined) {
+        restPresetList.push({
+          key: undefined,
+          label: "プリセット解除",
+        });
+      }
+      return [...restPresetList, ...presetList.value];
+    });
 
     const presetSelectModel = computed<{
       label: string;
