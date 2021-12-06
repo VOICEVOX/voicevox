@@ -317,7 +317,6 @@ export const audioStore: VoiceVoxStoreOptions<
       if (presetItem == undefined) return;
 
       // Filter name property from presetItem in order to extract audioInfos.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { name: _, ...presetAudioInfos } = presetItem;
 
       // Type Assertion

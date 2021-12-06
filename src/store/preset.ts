@@ -104,8 +104,6 @@ export const presetStore: VoiceVoxStoreOptions<
         (key) => key != presetKey
       );
       // Filter the `presetKey` properties from presetItems.
-      // The destructuring assignment syntax do not support variable omitting.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [presetKey]: _, ...newPresetItems } = context.state.presetItems;
 
       await context.dispatch("SAVE_PRESET_CONFIG", {
