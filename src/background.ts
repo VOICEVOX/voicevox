@@ -385,7 +385,11 @@ function migrateHotkeySettings() {
         (hotkey) => hotkey.combination === newHotkey.combination
       );
       if (combinationExists) {
-        return hotkey;
+        const emptyHotkey = {
+          action: newHotkey.action,
+          combination: "",
+        };
+        return emptyHotkey;
       } else {
         return newHotkey;
       }
