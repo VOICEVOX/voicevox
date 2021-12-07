@@ -124,6 +124,17 @@ echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
 
+PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
+if ! command -v ldconfig &> /dev/null; then
+    cat << EOS && exit 1
+[!] Command 'ldconfig' not found
+
+Required to check existence of required libraries.
+You must add a directory of contain ldconfig command to PATH environment variable.
+
+EOS
+fi
+
 if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
     echo "[-] libsndfile: OK"
 elif [ -d /usr/local/Cellar/libsndfile ]; then
