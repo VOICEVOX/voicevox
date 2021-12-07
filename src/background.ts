@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  PresetConfig,
   ThemeConf,
   StyleInfo,
   AcceptRetrieveTelemetryStatus,
@@ -148,6 +149,7 @@ const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
+  presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
@@ -216,6 +218,39 @@ const store = new Store<{
         },
       },
       default: [],
+    },
+    presets: {
+      type: "object",
+      properties: {
+        items: {
+          type: "object",
+          patternProperties: {
+            // uuid
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                speedScale: { type: "number" },
+                pitchScale: { type: "number" },
+                intonationScale: { type: "number" },
+                volumeScale: { type: "number" },
+                prePhonemeLength: { type: "number" },
+                postPhonemeLength: { type: "number" },
+              },
+            },
+          },
+          additionalProperties: false,
+        },
+        keys: {
+          type: "array",
+          items: {
+            type: "string",
+            pattern:
+              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+          },
+        },
+      },
+      default: { items: {}, keys: [] },
     },
     currentTheme: {
       type: "string",
@@ -746,6 +781,14 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   } else {
     win.setAlwaysOnTop(true);
   }
+});
+
+ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
+  if (newPresets !== undefined) {
+    store.set("presets.items", newPresets.presetItems);
+    store.set("presets.keys", newPresets.presetKeys);
+  }
+  return store.get("presets");
 });
 
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {

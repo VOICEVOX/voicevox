@@ -7,6 +7,7 @@ import { audioStore, audioCommandStore } from "@/store/audio";
 import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
+import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
 const isDevelopment = process.env.NODE_ENV == "development";
@@ -51,6 +52,8 @@ describe("store/vuex.js test", () => {
           availableThemes: [],
         },
         isPinned: false,
+        presetItems: {},
+        presetKeys: [],
         hotkeySettings: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
@@ -63,6 +66,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.getters,
         ...audioCommandStore.getters,
         ...indexStore.getters,
+        ...presetStore.getters,
         ...proxyStore.getters,
       },
       mutations: {
@@ -73,6 +77,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
         ...indexStore.mutations,
+        ...presetStore.mutations,
         ...proxyStore.mutations,
       },
       actions: {
@@ -83,6 +88,7 @@ describe("store/vuex.js test", () => {
         ...settingStore.actions,
         ...audioCommandStore.actions,
         ...indexStore.actions,
+        ...presetStore.actions,
         ...proxyStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
@@ -120,6 +126,10 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
     assert.equal(store.state.isPinned, false);
+    assert.isObject(store.state.presetItems);
+    assert.isEmpty(store.state.presetItems);
+    assert.isArray(store.state.presetKeys);
+    assert.isEmpty(store.state.presetKeys);
     assert.isArray(store.state.hotkeySettings);
     assert.isEmpty(store.state.hotkeySettings);
     assert.propertyVal(store.state.themeSetting, "currentTheme", "Default");

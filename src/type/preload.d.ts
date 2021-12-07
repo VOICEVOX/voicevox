@@ -52,6 +52,10 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  savingPresets(newPresets?: {
+    presetItems: Record<string, Preset>;
+    presetKeys: string[];
+  }): Promise<PresetConfig>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
@@ -129,6 +133,20 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
+export type Preset = {
+  name: string;
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+};
+
+export type PresetConfig = {
+  items: Record<string, Preset>;
+  keys: string[];
+};
 export type HotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"

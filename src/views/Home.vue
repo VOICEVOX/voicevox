@@ -282,8 +282,10 @@ export default defineComponent({
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
       let styleId: number | undefined = undefined;
+      let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
+        presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -296,6 +298,7 @@ export default defineComponent({
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
+        presetKey,
         baseAudioItem,
       });
 
