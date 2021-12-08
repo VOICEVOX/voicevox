@@ -147,6 +147,18 @@ type IpcIHData = {
     return: void;
   };
 
+  SAVING_PRESETS: {
+    args: [
+      obj: {
+        newPresets?: {
+          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetKeys: string[];
+        };
+      }
+    ];
+    return: import("@/type/preload").PresetConfig;
+  };
+
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];

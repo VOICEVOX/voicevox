@@ -292,6 +292,41 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
     },
+    SET_AUDIO_PRESET(
+      state,
+      {
+        audioKey,
+        presetKey,
+      }: { audioKey: string; presetKey: string | undefined }
+    ) {
+      if (presetKey === undefined) {
+        delete state.audioItems[audioKey].presetKey;
+      } else {
+        state.audioItems[audioKey].presetKey = presetKey;
+      }
+    },
+    APPLY_AUDIO_PRESET(state, { audioKey }: { audioKey: string }) {
+      const audioItem = state.audioItems[audioKey];
+      if (
+        audioItem == undefined ||
+        audioItem.presetKey == undefined ||
+        audioItem.query == undefined
+      )
+        return;
+      const presetItem = state.presetItems[audioItem.presetKey];
+      if (presetItem == undefined) return;
+
+      // Filter name property from presetItem in order to extract audioInfos.
+      const { name: _, ...presetAudioInfos } = presetItem;
+
+      // Type Assertion
+      const audioInfos: Omit<
+        AudioQuery,
+        "accentPhrases" | "outputSamplingRate" | "outputStereo" | "kana"
+      > = presetAudioInfos;
+
+      audioItem.query = { ...audioItem.query, ...audioInfos };
+    },
     SET_AUDIO_QUERY(
       state,
       { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
@@ -434,7 +469,12 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     async GENERATE_AUDIO_ITEM(
       { state, getters, dispatch },
-      payload: { text?: string; styleId?: number; baseAudioItem?: AudioItem }
+      payload: {
+        text?: string;
+        styleId?: number;
+        presetKey?: string;
+        baseAudioItem?: AudioItem;
+      }
     ) {
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
@@ -468,6 +508,9 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query != undefined) {
         audioItem.query = query;
       }
+      if (payload.presetKey != undefined)
+        audioItem.presetKey = payload.presetKey;
+
       if (baseAudioItem && baseAudioItem.query && audioItem.query) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
         //baseAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
@@ -1375,6 +1418,27 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
+    COMMAND_SET_AUDIO_PRESET: (
+      { commit },
+      {
+        audioKey,
+        presetKey,
+      }: {
+        audioKey: string;
+        presetKey: string | undefined;
+      }
+    ) => {
+      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
+    },
+    COMMAND_APPLY_AUDIO_PRESET: ({ commit }, payload: { audioKey: string }) => {
+      commit("COMMAND_APPLY_AUDIO_PRESET", payload);
+    },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET: (
+      { commit },
+      payload: { presetKey: string }
+    ) => {
+      commit("COMMAND_FULLY_APPLY_AUDIO_PRESET", payload);
+    },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async (
         { state, commit, dispatch },
@@ -1484,6 +1548,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+        audioKey: payload.audioKey,
+      });
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
@@ -1518,6 +1585,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           audioKey: payload.audioKey,
           audioQuery: payload.query,
         });
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
+        });
       }
     },
     COMMAND_CHANGE_STYLE_ID(
@@ -1549,6 +1619,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioStore.mutations.SET_AUDIO_QUERY(draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
+        });
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
         });
       }
     },
@@ -1632,6 +1705,33 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: { audioKey: string; postPhonemeLength: number }
     ) {
       audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
+    },
+    COMMAND_SET_AUDIO_PRESET: (
+      draft,
+      {
+        audioKey,
+        presetKey,
+      }: {
+        audioKey: string;
+        presetKey: string | undefined;
+      }
+    ) => {
+      audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+    },
+    COMMAND_APPLY_AUDIO_PRESET(draft, payload: { audioKey: string }) {
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, payload);
+    },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET(
+      draft,
+      { presetKey }: { presetKey: string }
+    ) {
+      const targetAudioKeys = draft.audioKeys.filter(
+        (audioKey) => draft.audioItems[audioKey].presetKey === presetKey
+      );
+      for (const audioKey of targetAudioKeys) {
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+      }
     },
     COMMAND_IMPORT_FROM_FILE(
       draft,
