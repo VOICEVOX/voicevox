@@ -68,6 +68,7 @@ export type AudioStoreState = {
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
   _activeAudioKey?: string;
+  audioPlayOffset: number;
   nowPlayingContinuously: boolean;
 };
 
@@ -119,6 +120,11 @@ type AudioStoreTypes = {
   SET_ACTIVE_AUDIO_KEY: {
     mutation: { audioKey?: string };
     action(payload: { audioKey?: string }): void;
+  };
+
+  SET_AUDIO_PLAY_OFFSET: {
+    mutation: { offset: number };
+    action(payload: { offset: number }): void;
   };
 
   SET_AUDIO_NOW_PLAYING: {

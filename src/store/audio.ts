@@ -120,6 +120,7 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
+  audioPlayOffset: 0,
   nowPlayingContinuously: false,
 };
 
@@ -158,6 +159,9 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
+    },
+    SET_AUDIO_PLAY_OFFSET(state, { offset }: { offset: number }) {
+      state.audioPlayOffset = offset;
     },
     SET_AUDIO_NOW_PLAYING(
       state,
@@ -495,8 +499,16 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
-    SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
+    SET_ACTIVE_AUDIO_KEY(
+      { commit, dispatch },
+      { audioKey }: { audioKey?: string }
+    ) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+      // reset audio play offset
+      dispatch("SET_AUDIO_PLAY_OFFSET", { offset: 0 });
+    },
+    SET_AUDIO_PLAY_OFFSET({ commit }, { offset }: { offset: number }) {
+      commit("SET_AUDIO_PLAY_OFFSET", { offset });
     },
     async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
