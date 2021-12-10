@@ -247,6 +247,7 @@ jobs:
           - linux-cpu-prepackage
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
+          - macos-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -268,6 +269,11 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
+          # macOS CPU
+          - artifact_name: macos-cpu-prepackage
+            noengine_artifact_name: macos-noengine-cpu-prepackage
+            macos_executable_name: VOICEVOX
+            voicevox_engine_asset_name: macos-x64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -369,9 +375,17 @@ jobs:
           rm -rf prepackage/resources/app
 
       - name: Merge VOICEVOX ENGINE into prepackage/
+        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           mv voicevox_engine/voicevox_engine/* prepackage/
+          rm -rf voicevox_engine
+
+      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: |
+          mv voicevox_engine/voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
@@ -392,6 +406,13 @@ jobs:
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
+
+      - name: Recover file permissions
+        if: startsWith(matrix.artifact_name, 'macos-') # macOS
+        shell: bash
+        run: |
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
 
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
