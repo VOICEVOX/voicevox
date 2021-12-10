@@ -58,7 +58,7 @@ jobs:
             os: windows-2019
           # macOS CPU
           - artifact_name: macos-noengine-cpu-prepackage
-            artifact_path: dist_electron/macos-unpacked
+            artifact_path: dist_electron/mac
             package_name: voicevox-cpu
             macos_artifact_name: 'VOICEVOX.${ext}'
             os: macos-11
