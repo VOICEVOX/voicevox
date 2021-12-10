@@ -28,6 +28,7 @@ jobs:
           - linux-noengine-cpu-prepackage
           - windows-noengine-prepackage
           - windows-noengine-cpu-prepackage
+          - macos-noengine-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-noengine-prepackage
@@ -55,19 +56,49 @@ jobs:
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
             os: windows-2019
+          # macOS CPU
+          - artifact_name: macos-noengine-cpu-prepackage
+            artifact_path: dist_electron/macos-unpacked
+            package_name: voicevox-cpu
+            macos_artifact_name: 'VOICEVOX.${ext}'
+            os: macos-11
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
 
       # Rename executable file
-      - name: Replace package name
+      - name: Replace package name (for Windows and Ubuntu)
+        if: startsWith(matrix.os, 'windows-') || startsWith(matrix.os, 'ubuntu-')
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+      # Rename executable file
+      # NOTE: The sed command of macOS is BSD sed,
+      #       so you cannot omit the backup extension after the -i option.
+      - name: Replace package name (for macOS)
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          # GPU: "name": "voicevox" => "name": "voicevox"
+          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          sed -i '' 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # sed -i '' 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+      - name: Replace the extraFiles setting in vue.config.js for macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          sed -i '' 's|from: "build/README.txt", to: "README.txt"|from: "build/README.txt", to: "MacOS/README.txt"|' vue.config.js
+          sed -i '' 's|from: ".env.production", to: ".env"|from: ".env.production", to: "MacOS/.env"|' vue.config.js
+          str_config=$(cat vue.config.js)
+          str_config_2=${str_config//$'\n'/\\\\n}
+          echo $str_config_2 | sed -e 's|from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""|from: VOICEVOX_ENGINE_DIR, to: "MacOS/"|' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          cat vue.config.js
 
       - name: Set output Node version
         id: node-version
@@ -112,8 +143,8 @@ jobs:
         run: |
           df -h
 
-      - name: Overwrite .env.production for Linux
-        if: startsWith(matrix.os, 'ubuntu-')
+      - name: Overwrite .env.production for Linux and macOS
+        if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
           echo "ENGINE_PATH=./run" > .env.production
@@ -186,6 +217,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
+          MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: npm run electron:build_pnever -- --dir
 
       - name: Upload NoEngine Prepackage

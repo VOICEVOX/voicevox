@@ -15,6 +15,9 @@ const LINUX_ARTIFACT_NAME = process.env.LINUX_ARTIFACT_NAME;
 // ${packageName}
 const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 
+// ${productName}-${version}.${ext}
+const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
+
 module.exports = {
   configureWebpack: {
     devtool: "source-map",
@@ -81,6 +84,18 @@ module.exports = {
           target: [
             {
               target: "AppImage",
+              arch: ["x64"],
+            },
+          ],
+        },
+        mac: {
+          artifactName:
+            MACOS_ARTIFACT_NAME !== "" ? MACOS_ARTIFACT_NAME : undefined,
+          icon: "public/icon.png",
+          category: "public.app-category.utilities",
+          target: [
+            {
+              target: "dmg",
               arch: ["x64"],
             },
           ],
