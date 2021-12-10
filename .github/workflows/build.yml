@@ -361,6 +361,7 @@ jobs:
           rm -rf voicevox_engine/download voicevox_engine/tmp
 
       - name: Merge licenses.json (ENGINE, VOICEVOX)
+        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           # Unpack asar
@@ -373,6 +374,21 @@ jobs:
           # Repack asar
           asar pack prepackage/resources/app prepackage/resources/app.asar
           rm -rf prepackage/resources/app
+
+      - name: Merge licenses.json (ENGINE, VOICEVOX) (macOS)
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: |
+          # Unpack asar
+          asar extract prepackage/VOICEVOX.app/Contents/Resources/app.asar prepackage/VOICEVOX.app/Contents/Resources/app
+          rm prepackage/VOICEVOX.app/Contents/Resources/app.asar
+
+          mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
+          npm run license:merge -- -o prepackage/VOICEVOX.app/Contents/Resources/app/licenses.json -i engine_licenses.json -i prepackage/VOICEVOX.app/Contents/Resources/app/licenses.json
+
+          # Repack asar
+          asar pack prepackage/VOICEVOX.app/Contents/Resources/app prepackage/VOICEVOX.app/Contents/Resources/app.asar
+          rm -rf prepackage/VOICEVOX.app/Contents/Resources/app
 
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
