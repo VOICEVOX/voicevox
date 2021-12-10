@@ -97,7 +97,7 @@ jobs:
           sed -i '' 's|from: ".env.production", to: ".env"|from: ".env.production", to: "MacOS/.env"|' vue.config.js
           str_config=$(cat vue.config.js)
           str_config_2=${str_config//$'\n'/\\\\n}
-          echo $str_config_2 | sed -e 's|from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""|from: VOICEVOX_ENGINE_DIR, to: "MacOS/"|' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          echo $str_config_2 | sed -e 's|from: VOICEVOX_ENGINE_DIR,\\\\n[ ]*to: ""|from: VOICEVOX_ENGINE_DIR, to: "MacOS/"|' -e s/'\\\\n'/\\$'\n'/g > vue.config.js
           cat vue.config.js
 
       - name: Set output Node version
