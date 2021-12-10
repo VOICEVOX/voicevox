@@ -117,13 +117,10 @@ export default defineComponent({
         }
 
         if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-          $q.dialog({
-            component: SaveAllResultDialog,
-            componentProps: {
-              successArray: successArray,
-              writeErrorArray: writeErrorArray,
-              engineErrorArray: engineErrorArray,
-            },
+          store.dispatch("OPEN_SAVE_ALL_RESULT_DIALOG", {
+            successArray,
+            writeErrorArray,
+            engineErrorArray,
           });
         }
       }

@@ -264,5 +264,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       OPEN_HELP_DIALOG: createDialogAction({
         dialog: "HELP",
       }),
+
+      OPEN_SAVE_ALL_RESULT_DIALOG: createDialogAction({
+        dialog: "SAVE_ALL_RESULT",
+      }),
     },
   };

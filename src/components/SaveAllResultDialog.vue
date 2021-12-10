@@ -1,7 +1,7 @@
 <template>
   <q-dialog persistent ref="dialogRef">
     <!-- 仮デザイン -->
-    <q-layout container class="q-dialog-plugin background">
+    <q-layout container class="q-dialog-plugin bg-background">
       <q-header>
         <q-toolbar>
           <q-toolbar-title class="header-text"
@@ -49,15 +49,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import { useDialogPluginComponent } from "quasar";
 
 export default defineComponent({
   name: "SaveAllResultDialog",
   props: {
-    successArray: Array,
-    writeErrorArray: Array,
-    engineErrorArray: Array,
+    successArray: {
+      type: Array as PropType<(string | undefined)[]>,
+      required: true,
+    },
+    writeErrorArray: {
+      type: Array as PropType<(string | undefined)[]>,
+      required: true,
+    },
+    engineErrorArray: {
+      type: Array as PropType<(string | undefined)[]>,
+      required: true,
+    },
   },
   emits: {
     ...useDialogPluginComponent.emits,

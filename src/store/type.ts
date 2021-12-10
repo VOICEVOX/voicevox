@@ -716,6 +716,14 @@ export type DialogType = {
     context: undefined;
     result: void;
   };
+  SAVE_ALL_RESULT: {
+    context: {
+      successArray: (string | undefined)[];
+      writeErrorArray: (string | undefined)[];
+      engineErrorArray: (string | undefined)[];
+    };
+    result: void;
+  };
 };
 
 export type DialogName = keyof DialogType;
@@ -859,7 +867,9 @@ type UiStoreTypes = {
   };
 
   OPEN_DEFAULT_STYLE_SELECT_DIALOG: {
-    action(context: { characterInfos: CharacterInfo[] }): Promise<void>;
+    action(
+      context: DialogType["DEFAULT_STYLE_SELECT"]["context"]
+    ): Promise<void>;
   };
 
   OPEN_SETTING_DIALOG: {
@@ -868,6 +878,10 @@ type UiStoreTypes = {
 
   OPEN_HELP_DIALOG: {
     action(): Promise<void>;
+  };
+
+  OPEN_SAVE_ALL_RESULT_DIALOG: {
+    action(context: DialogType["SAVE_ALL_RESULT"]["context"]): Promise<void>;
   };
 };
 

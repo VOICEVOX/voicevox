@@ -11,6 +11,7 @@ import HotkeySettingDialog from "./HotkeySettingDialog.vue";
 import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import SettingDialog from "./SettingDialog.vue";
 import HelpDialog from "./HelpDialog.vue";
+import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 type Dialogs = {
   [K in DialogName]: Component;
@@ -33,6 +34,7 @@ export default defineComponent({
       DEFAULT_STYLE_SELECT: DefaultStyleSelectDialog,
       SETTING: SettingDialog,
       HELP: HelpDialog,
+      SAVE_ALL_RESULT: SaveAllResultDialog,
     };
 
     let len = 0;
