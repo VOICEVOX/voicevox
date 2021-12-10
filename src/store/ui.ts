@@ -29,6 +29,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   };
 }
 
+// HACK: 型がかなり怪しいのでなんとかしたい…
 export function createDialogAction<
   S,
   A extends ActionsBase,
@@ -54,7 +55,6 @@ export function createDialogAction<
         dialog,
         multiple: multiple ?? false,
         result: async (result) => {
-          console.log(dialog, result);
           resolve(await action?.(context, payload, result));
           context.commit("UNLOCK_UI");
           context.commit("UNLOCK_MENUBAR");
