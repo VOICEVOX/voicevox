@@ -29,12 +29,9 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useGpu: false,
         inheritAudioInfo: true,
-        isHelpDialogOpen: false,
-        isSettingDialogOpen: false,
-        isHotkeySettingDialogOpen: false,
-        isDefaultStyleSelectDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isMaximized: false,
+        dialogContexts: [],
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
@@ -113,12 +110,9 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
-    assert.equal(store.state.isHelpDialogOpen, false);
-    assert.equal(store.state.isSettingDialogOpen, false);
-    assert.equal(store.state.isHotkeySettingDialogOpen, false);
-    assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
+    assert.isArray(store.state.dialogContexts);
     assert.isObject(store.state.savingSetting);
     assert.propertyVal(store.state.savingSetting, "fileEncoding", "UTF-8");
     assert.propertyVal(store.state.savingSetting, "fixedExportEnabled", false);
