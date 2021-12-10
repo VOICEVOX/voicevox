@@ -469,6 +469,20 @@ export default defineComponent({
             : "Refused",
         });
         gtm?.enable(acceptRetrieveTelemetry);
+
+        if (acceptRetrieveTelemetry) {
+          return;
+        }
+
+        $q.dialog({
+          title: "テレメトリーの収集の無効化",
+          message:
+            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
       },
     });
 
