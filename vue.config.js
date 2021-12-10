@@ -91,7 +91,7 @@ module.exports = {
         mac: {
           artifactName:
             MACOS_ARTIFACT_NAME !== "" ? MACOS_ARTIFACT_NAME : undefined,
-          icon: "public/icon.png",
+          icon: "public/icon-mac.png",
           category: "public.app-category.utilities",
           target: [
             {
