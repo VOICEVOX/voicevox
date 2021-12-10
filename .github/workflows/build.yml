@@ -105,11 +105,6 @@ jobs:
         shell: bash
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
-      - name: Downgrade npm
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: npm install -g npm@6
-
       - name: Setup Node
         uses: actions/setup-node@master
         with:
@@ -138,6 +133,11 @@ jobs:
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+
+      - name: Downgrade npm
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: npm install -g npm@6
 
       - name: Install dependencies
         shell: bash
