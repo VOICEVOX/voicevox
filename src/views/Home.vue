@@ -105,14 +105,7 @@
       </q-page>
     </q-page-container>
   </q-layout>
-  <help-dialog v-model="isHelpDialogOpenComputed" />
-  <setting-dialog v-model="isSettingDialogOpenComputed" />
-  <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
-  <default-style-select-dialog
-    v-if="characterInfos"
-    :characterInfos="characterInfos"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
-  />
+  <dialog-container />
 </template>
 
 <script lang="ts">
@@ -130,11 +123,8 @@ import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
 import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
-import HelpDialog from "@/components/HelpDialog.vue";
-import SettingDialog from "@/components/SettingDialog.vue";
-import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import DialogContainer from "@/components/DialogContainer.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -150,17 +140,13 @@ export default defineComponent({
     AudioCell,
     AudioDetail,
     AudioInfo,
-    HelpDialog,
-    SettingDialog,
-    HotkeySettingDialog,
     CharacterPortrait,
-    DefaultStyleSelectDialog,
+    DialogContainer,
   },
 
   setup() {
     const store = useStore();
 
-    const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
@@ -349,6 +335,8 @@ export default defineComponent({
       }
     };
 
+    const characterInfos = computed(() => store.state.characterInfos);
+
     // プロジェクトを初期化
     onMounted(async () => {
       await Promise.all([
@@ -363,7 +351,10 @@ export default defineComponent({
           { speakerUuid: info.metas.speakerUuid }
         );
       }
-      isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
+      if (isUnsetDefaultStyleIds)
+        store.dispatch("OPEN_DEFAULT_STYLE_SELECT_DIALOG", {
+          characterInfos: characterInfos.value,
+        });
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -382,39 +373,6 @@ export default defineComponent({
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
-
-    // ライセンス表示
-    const isHelpDialogOpenComputed = computed({
-      get: () => store.state.isHelpDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: val }),
-    });
-
-    // 設定
-    const isSettingDialogOpenComputed = computed({
-      get: () => store.state.isSettingDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
-    });
-
-    // ショートカットキー設定
-    const isHotkeySettingDialogOpenComputed = computed({
-      get: () => store.state.isHotkeySettingDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
-          isHotkeySettingDialogOpen: val,
-        }),
-    });
-
-    // デフォルトスタイル選択
-    const characterInfos = computed(() => store.state.characterInfos);
-    const isDefaultStyleSelectDialogOpenComputed = computed({
-      get: () => store.state.isDefaultStyleSelectDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-          isDefaultStyleSelectDialogOpen: val,
-        }),
-    });
 
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
@@ -438,7 +396,6 @@ export default defineComponent({
     };
 
     return {
-      audioItems,
       audioKeys,
       uiLocked,
       addAudioCellRef,
@@ -458,11 +415,6 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       engineState,
-      isHelpDialogOpenComputed,
-      isSettingDialogOpenComputed,
-      isHotkeySettingDialogOpenComputed,
-      characterInfos,
-      isDefaultStyleSelectDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

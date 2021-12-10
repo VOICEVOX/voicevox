@@ -5,7 +5,7 @@
     transition-show="jump-up"
     transition-hide="jump-down"
     class="help-dialog"
-    v-model="modelValueComputed"
+    ref="dialogRef"
   >
     <q-layout container view="hHh Lpr lff">
       <q-drawer
@@ -55,7 +55,7 @@
                       flat
                       icon="close"
                       color="display"
-                      @click="modelValueComputed = false"
+                      @click="onDialogOK"
                     />
                   </q-toolbar>
                 </q-header>
@@ -70,7 +70,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, Component } from "vue";
+import { defineComponent, ref, Component } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import Policy from "@/components/Policy.vue";
 import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";
@@ -86,18 +87,8 @@ type Page = {
 export default defineComponent({
   name: "HelpDialog",
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
+  setup() {
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
     const pagedata: Page[] = [
       {
@@ -129,7 +120,8 @@ export default defineComponent({
     const selectedPage = ref(pagedata[0].name);
 
     return {
-      modelValueComputed,
+      dialogRef,
+      onDialogOK,
       pagedata,
       selectedPage,
     };

@@ -5,7 +5,7 @@
     transition-show="jump-up"
     transition-hide="jump-down"
     class="hotkey-setting-dialog"
-    v-model="hotkeySettingDialogOpenComputed"
+    ref="dialogRef"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -34,13 +34,7 @@
               <q-icon v-else />
             </template>
           </q-input>
-          <q-btn
-            round
-            flat
-            icon="close"
-            color="display"
-            @click="hotkeySettingDialogOpenComputed = false"
-          />
+          <q-btn round flat icon="close" color="display" @click="onDialogOK" />
         </q-toolbar>
       </q-header>
 
@@ -105,92 +99,99 @@
         </q-page>
       </q-page-container>
     </q-layout>
-  </q-dialog>
 
-  <q-dialog
-    no-esc-dismiss
-    no-shake
-    transition-show="none"
-    transition-hide="none"
-    :model-value="isHotkeyDialogOpened"
-    @update:model-value="closeHotkeyDialog"
-  >
-    <q-card class="q-py-sm q-px-md">
-      <q-card-section align="center">
-        <div class="text-h6">ショートカットキーを入力してください</div>
-      </q-card-section>
-      <q-card-section align="center">
-        <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
-          <span v-if="index !== 0"> + </span>
-          <q-chip :ripple="false" color="setting-item">
-            {{ hotkey }}
-          </q-chip>
-        </template>
-        <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
-          <div class="text-warning">
-            ショートカットキーが次の操作と重複しています
+    <q-dialog
+      no-esc-dismiss
+      no-shake
+      transition-show="none"
+      transition-hide="none"
+      :model-value="isHotkeyDialogOpened"
+      @update:model-value="closeHotkeyDialog"
+    >
+      <q-card class="q-py-sm q-px-md">
+        <q-card-section align="center">
+          <div class="text-h6">ショートカットキーを入力してください</div>
+        </q-card-section>
+        <q-card-section align="center">
+          <template
+            v-for="(hotkey, index) in lastRecord.split(' ')"
+            :key="index"
+          >
+            <span v-if="index !== 0"> + </span>
+            <q-chip :ripple="false" color="setting-item">
+              {{ hotkey }}
+            </q-chip>
+          </template>
+          <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
+          <div
+            v-if="duplicatedHotkey != undefined"
+            class="text-negative q-mt-lg"
+          >
+            <div class="text-warning">
+              ショートカットキーが次の操作と重複しています
+            </div>
+            <div class="q-mt-sm text-weight-bold text-warning">
+              「{{ duplicatedHotkey.action }}」
+            </div>
           </div>
-          <div class="q-mt-sm text-weight-bold text-warning">
-            「{{ duplicatedHotkey.action }}」
-          </div>
-        </div>
-      </q-card-section>
-      <q-card-actions align="center">
-        <q-btn
-          padding="xs md"
-          label="ショートカットキーを未設定にする"
-          unelevated
-          color="display-light"
-          text-color="display-dark"
-          class="q-mt-sm"
-          @click="
-            deleteHotkey(lastAction);
-            closeHotkeyDialog();
-          "
-        />
-        <q-btn
-          padding="xs md"
-          label="キャンセル"
-          unelevated
-          color="display-light"
-          text-color="display-dark"
-          class="q-mt-sm"
-          @click="closeHotkeyDialog"
-        />
-        <q-btn
-          v-if="duplicatedHotkey == undefined"
-          padding="xs md"
-          label="OK"
-          unelevated
-          color="primary"
-          text-color="display"
-          class="q-mt-sm"
-          @click="
-            changeHotkeySettings(lastAction, lastRecord)?.then(() =>
-              closeHotkeyDialog()
-            )
-          "
-          :disabled="confirmBtnEnabled"
-        />
-        <q-btn
-          v-else
-          padding="xs md"
-          label="上書きする"
-          unelevated
-          color="primary"
-          text-color="display"
-          class="q-mt-sm"
-          @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
-          :disabled="confirmBtnEnabled"
-        />
-      </q-card-actions>
-    </q-card>
+        </q-card-section>
+        <q-card-actions align="center">
+          <q-btn
+            padding="xs md"
+            label="ショートカットキーを未設定にする"
+            unelevated
+            color="display-light"
+            text-color="display-dark"
+            class="q-mt-sm"
+            @click="
+              deleteHotkey(lastAction);
+              closeHotkeyDialog();
+            "
+          />
+          <q-btn
+            padding="xs md"
+            label="キャンセル"
+            unelevated
+            color="display-light"
+            text-color="display-dark"
+            class="q-mt-sm"
+            @click="closeHotkeyDialog"
+          />
+          <q-btn
+            v-if="duplicatedHotkey == undefined"
+            padding="xs md"
+            label="OK"
+            unelevated
+            color="primary"
+            text-color="display"
+            class="q-mt-sm"
+            @click="
+              changeHotkeySettings(lastAction, lastRecord)?.then(() =>
+                closeHotkeyDialog()
+              )
+            "
+            :disabled="confirmBtnEnabled"
+          />
+          <q-btn
+            v-else
+            padding="xs md"
+            label="上書きする"
+            unelevated
+            color="primary"
+            text-color="display"
+            class="q-mt-sm"
+            @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
+            :disabled="confirmBtnEnabled"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-dialog>
 </template>
 
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
@@ -199,21 +200,10 @@ import { useQuasar } from "quasar";
 export default defineComponent({
   name: "HotkeySettingDialog",
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
+  setup() {
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const store = useStore();
     const $q = useQuasar();
-
-    const hotkeySettingDialogOpenComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
 
     const isHotkeyDialogOpened = ref(false);
 
@@ -351,7 +341,8 @@ export default defineComponent({
     };
 
     return {
-      hotkeySettingDialogOpenComputed,
+      dialogRef,
+      onDialogOK,
       isHotkeyDialogOpened,
       hotkeySettings,
       hotkeyColumns,

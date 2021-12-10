@@ -5,7 +5,7 @@
     transition-show="jump-up"
     transition-hide="jump-down"
     class="default-style-select-dialog"
-    v-model="modelValueComputed"
+    ref="dialogRef"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -173,31 +173,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
+import { defineComponent, computed, ref, PropType } from "vue";
 import { useStore } from "@/store";
+import { useDialogPluginComponent } from "quasar";
 import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
 
   props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
     characterInfos: {
       type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
 
-  setup(props, { emit }) {
+  setup(props) {
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const store = useStore();
-
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
 
     // アップデートで増えたキャラ・スタイルがあれば、それらに対して起動時にデフォルトスタイル選択・試聴を問うための変数
     // その他の場合は、characterInfosと同じになる
@@ -208,50 +201,42 @@ export default defineComponent({
     const selectedStyleIndexes = ref<(number | undefined)[]>([]);
 
     // ダイアログが開かれたときに初期値を求める
-    watch(
-      () => props.modelValue,
-      async (newValue, oldValue) => {
-        if (!oldValue && newValue) {
-          showCharacterInfos.value = [];
-          selectedStyleIndexes.value = await Promise.all(
-            props.characterInfos.map(async (info) => {
-              const styles = info.metas.styles;
-              const isUnsetDefaultStyleId = await store.dispatch(
-                "IS_UNSET_DEFAULT_STYLE_ID",
-                { speakerUuid: info.metas.speakerUuid }
-              );
-              if (isUnsetDefaultStyleId) {
-                isFirstTime.value = true;
-                showCharacterInfos.value.push(info);
-                return undefined;
-              }
+    showCharacterInfos.value = [];
+    Promise.all(
+      props.characterInfos.map(async (info) => {
+        const styles = info.metas.styles;
+        const isUnsetDefaultStyleId = await store.dispatch(
+          "IS_UNSET_DEFAULT_STYLE_ID",
+          { speakerUuid: info.metas.speakerUuid }
+        );
 
-              const defaultStyleId = store.state.defaultStyleIds.find(
-                (x) => x.speakerUuid === info.metas.speakerUuid
-              )?.defaultStyleId;
-
-              const index = styles.findIndex(
-                (style) => style.styleId === defaultStyleId
-              );
-              return index === -1 ? undefined : index;
-            })
-          );
-          if (!isFirstTime.value) {
-            showCharacterInfos.value = props.characterInfos;
-          } else {
-            selectedStyleIndexes.value = showCharacterInfos.value.map(
-              (info) => {
-                if (info.metas.styles.length > 1) {
-                  return undefined;
-                } else {
-                  return 0;
-                }
-              }
-            );
-          }
+        if (isUnsetDefaultStyleId) {
+          isFirstTime.value = true;
+          showCharacterInfos.value.push(info);
+          return undefined;
         }
+
+        const defaultStyleId = store.state.defaultStyleIds.find(
+          (x) => x.speakerUuid === info.metas.speakerUuid
+        )?.defaultStyleId;
+        const index = styles.findIndex(
+          (style) => style.styleId === defaultStyleId
+        );
+
+        return index === -1 ? undefined : index;
+      })
+    ).then((selected) => {
+      selectedStyleIndexes.value = selected;
+
+      if (!isFirstTime.value) {
+        showCharacterInfos.value = [...props.characterInfos];
+      } else {
+        selectedStyleIndexes.value = showCharacterInfos.value.map((info) => {
+          if (info.metas.styles.length > 1) return undefined;
+          else return 0;
+        });
       }
-    );
+    });
 
     const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
       selectedStyleIndexes.value[characterIndex] = styleIndex;
@@ -332,12 +317,12 @@ export default defineComponent({
       isFirstTime.value = false;
 
       stop();
-      modelValueComputed.value = false;
+      onDialogOK();
       pageIndex.value = 0;
     };
 
     return {
-      modelValueComputed,
+      dialogRef,
       showCharacterInfos,
       isFirstTime,
       selectedStyleIndexes,

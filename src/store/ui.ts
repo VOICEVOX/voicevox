@@ -3,6 +3,9 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
+  DialogContext,
+  DialogName,
+  DialogResult,
   UiActions,
   UiGetters,
   UiMutations,
@@ -26,18 +29,55 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   };
 }
 
+export function createDialogAction<
+  S,
+  A extends ActionsBase,
+  K extends keyof A
+>({
+  dialog,
+  multiple,
+  action,
+}: {
+  dialog: DialogName;
+  multiple?: boolean;
+  action?: (
+    context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
+    payload: Parameters<A[K]>[0],
+    result: DialogResult
+  ) => ReturnType<A[K]> extends Promise<unknown>
+    ? ReturnType<A[K]>
+    : Promise<ReturnType<A[K]>>;
+}): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
+  return (context, payload) =>
+    new Promise((resolve) => {
+      const ctx = {
+        dialog,
+        multiple: multiple ?? false,
+        result: async (result) => {
+          console.log(dialog, result);
+          resolve(await action?.(context, payload, result));
+          context.commit("UNLOCK_UI");
+          context.commit("UNLOCK_MENUBAR");
+          context.commit("REMOVE_DIALOG_CONTEXT", ctx);
+        },
+        props: payload,
+      } as DialogContext;
+
+      context.commit("LOCK_UI");
+      context.commit("LOCK_MENUBAR");
+      context.commit("ADD_DIALOG_CONTEXT", ctx);
+    }) as never;
+}
+
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
   useGpu: false,
   inheritAudioInfo: true,
-  isHelpDialogOpen: false,
-  isSettingDialogOpen: false,
-  isHotkeySettingDialogOpen: false,
-  isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isMaximized: false,
   isPinned: false,
+  dialogContexts: [],
 };
 
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
@@ -67,29 +107,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       UNLOCK_MENUBAR(state) {
         state.dialogLockCount--;
       },
-      IS_HELP_DIALOG_OPEN(
-        state,
-        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-      ) {
-        state.isHelpDialogOpen = isHelpDialogOpen;
-      },
-      IS_SETTING_DIALOG_OPEN(
-        state,
-        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-      ) {
-        state.isSettingDialogOpen = isSettingDialogOpen;
-      },
-      IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
-        state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
-      },
-      IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
-        state,
-        {
-          isDefaultStyleSelectDialogOpen,
-        }: { isDefaultStyleSelectDialogOpen: boolean }
-      ) {
-        state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
-      },
       IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
         state,
         { isAcceptRetrieveTelemetryDialogOpen }
@@ -118,6 +135,20 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       DETECT_UNPINNED(state) {
         state.isPinned = false;
       },
+
+      ADD_DIALOG_CONTEXT(state, context) {
+        if (
+          !context.multiple &&
+          state.dialogContexts.find((x) => x.dialog === context.dialog)
+        )
+          return;
+        state.dialogContexts.push(context);
+      },
+
+      REMOVE_DIALOG_CONTEXT(state, context) {
+        const idx = state.dialogContexts.indexOf(context);
+        if (idx > -1) state.dialogContexts.splice(idx, 1);
+      },
     },
 
     actions: {
@@ -138,79 +169,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           await callback();
         }
       ),
-      IS_HELP_DIALOG_OPEN(
-        { state, commit },
-        { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-      ) {
-        if (state.isHelpDialogOpen === isHelpDialogOpen) return;
-
-        if (isHelpDialogOpen) {
-          commit("LOCK_UI");
-          commit("LOCK_MENUBAR");
-        } else {
-          commit("UNLOCK_UI");
-          commit("UNLOCK_MENUBAR");
-        }
-
-        commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
-      },
-      IS_SETTING_DIALOG_OPEN(
-        { state, commit },
-        { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-      ) {
-        if (state.isSettingDialogOpen === isSettingDialogOpen) return;
-
-        if (isSettingDialogOpen) {
-          commit("LOCK_UI");
-          commit("LOCK_MENUBAR");
-        } else {
-          commit("UNLOCK_UI");
-          commit("UNLOCK_MENUBAR");
-        }
-
-        commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
-      },
-      IS_HOTKEY_SETTING_DIALOG_OPEN(
-        { state, commit },
-        { isHotkeySettingDialogOpen }
-      ) {
-        if (state.isHotkeySettingDialogOpen === isHotkeySettingDialogOpen)
-          return;
-
-        if (isHotkeySettingDialogOpen) {
-          commit("LOCK_UI");
-          commit("LOCK_MENUBAR");
-        } else {
-          commit("UNLOCK_UI");
-          commit("UNLOCK_MENUBAR");
-        }
-
-        commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
-      },
       ON_VUEX_READY() {
         window.electron.vuexReady();
-      },
-      async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
-        { state, commit },
-        { isDefaultStyleSelectDialogOpen }
-      ) {
-        if (
-          state.isDefaultStyleSelectDialogOpen ===
-          isDefaultStyleSelectDialogOpen
-        )
-          return;
-
-        if (isDefaultStyleSelectDialogOpen) {
-          commit("LOCK_UI");
-          commit("LOCK_MENUBAR");
-        } else {
-          commit("UNLOCK_UI");
-          commit("UNLOCK_MENUBAR");
-        }
-
-        commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-          isDefaultStyleSelectDialogOpen,
-        });
       },
       async IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
         { state, commit },
@@ -282,5 +242,27 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         window.electron.closeWindow();
       },
+
+      CLOSE_ALL_DIALOG({ state, commit }) {
+        [...state.dialogContexts].reverse().forEach((ctx) => {
+          commit("REMOVE_DIALOG_CONTEXT", ctx);
+        });
+      },
+
+      OPEN_HOTKEY_SETTING_DIALOG: createDialogAction({
+        dialog: "HOTKEY_SETTING",
+      }),
+
+      OPEN_DEFAULT_STYLE_SELECT_DIALOG: createDialogAction({
+        dialog: "DEFAULT_STYLE_SELECT",
+      }),
+
+      OPEN_SETTING_DIALOG: createDialogAction({
+        dialog: "SETTING",
+      }),
+
+      OPEN_HELP_DIALOG: createDialogAction({
+        dialog: "HELP",
+      }),
     },
   };

@@ -202,25 +202,12 @@ export default defineComponent({
         store.dispatch("LOAD_PROJECT_FILE", {});
       }
     };
-    const closeAllDialog = () => {
-      store.dispatch("IS_SETTING_DIALOG_OPEN", {
-        isSettingDialogOpen: false,
-      });
-      store.dispatch("IS_HELP_DIALOG_OPEN", {
-        isHelpDialogOpen: false,
-      });
-      store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
-        isHotkeySettingDialogOpen: false,
-      });
-      store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-        isDefaultStyleSelectDialogOpen: false,
-      });
+    const closeAllDialog = async () => {
+      await store.dispatch("CLOSE_ALL_DIALOG");
     };
 
     const openHelpDialog = () => {
-      store.dispatch("IS_HELP_DIALOG_OPEN", {
-        isHelpDialogOpen: true,
-      });
+      store.dispatch("OPEN_HELP_DIALOG");
     };
 
     const menudata = ref<MenuItemData[]>([
@@ -308,17 +295,15 @@ export default defineComponent({
             type: "button",
             label: "キー割り当て",
             onClick() {
-              store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
-                isHotkeySettingDialogOpen: true,
-              });
+              store.dispatch("OPEN_HOTKEY_SETTING_DIALOG");
             },
           },
           {
             type: "button",
             label: "デフォルトスタイル・試聴",
             onClick() {
-              store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-                isDefaultStyleSelectDialogOpen: true,
+              store.dispatch("OPEN_DEFAULT_STYLE_SELECT_DIALOG", {
+                characterInfos: store.state.characterInfos ?? [],
               });
             },
           },
@@ -327,9 +312,7 @@ export default defineComponent({
             type: "button",
             label: "オプション",
             onClick() {
-              store.dispatch("IS_SETTING_DIALOG_OPEN", {
-                isSettingDialogOpen: true,
-              });
+              store.dispatch("OPEN_SETTING_DIALOG");
             },
           },
         ],
@@ -337,10 +320,11 @@ export default defineComponent({
       {
         type: "button",
         label: "ヘルプ",
-        onClick: () => {
-          if (store.state.isHelpDialogOpen) closeAllDialog();
+        onClick: async () => {
+          if (store.state.dialogContexts.find((x) => x.dialog === "HELP"))
+            await closeAllDialog();
           else {
-            closeAllDialog();
+            await closeAllDialog();
             openHelpDialog();
           }
         },

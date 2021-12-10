@@ -5,7 +5,7 @@
     transition-show="jump-up"
     transition-hide="jump-down"
     class="setting-dialog"
-    v-model="settingDialogOpenedComputed"
+    ref="dialogRef"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
       <q-page-container class="root">
@@ -21,7 +21,7 @@
               flat
               icon="close"
               color="display"
-              @click="settingDialogOpenedComputed = false"
+              @click="onDialogOK"
             />
           </q-toolbar>
         </q-header>
@@ -378,27 +378,16 @@
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
+import { useQuasar, useDialogPluginComponent } from "quasar";
 import { SavingSetting } from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
+  setup() {
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const store = useStore();
     const $q = useQuasar();
-
-    const settingDialogOpenedComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
@@ -591,7 +580,8 @@ export default defineComponent({
     };
 
     return {
-      settingDialogOpenedComputed,
+      dialogRef,
+      onDialogOK,
       engineMode,
       inheritAudioInfoMode,
       currentAudioOutputDeviceComputed,

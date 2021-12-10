@@ -667,18 +667,59 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
  * Ui Store Types
  */
 
+export type DialogType = {
+  HOTKEY_SETTING: {
+    context: undefined;
+    result: void;
+  };
+  DEFAULT_STYLE_SELECT: {
+    context: { characterInfos: CharacterInfo[] };
+    result: void;
+  };
+  SETTING: {
+    context: undefined;
+    result: void;
+  };
+  HELP: {
+    context: undefined;
+    result: void;
+  };
+};
+
+export type DialogName = keyof DialogType;
+
+export type DialogContext<T extends DialogName = DialogName> = T extends infer N
+  ? N extends DialogName
+    ? {
+        dialog: N;
+        id: string;
+        multiple: boolean;
+        result: (
+          result: DialogResult & { result: "ok" | "cancel" }
+        ) => Promise<void>;
+        props: DialogType[N]["context"];
+      } extends infer C
+      ? { [K in keyof C]: C[K] }
+      : never
+    : never
+  : never;
+export type DialogResult<T extends DialogName = DialogName> = T extends infer N
+  ? N extends DialogName
+    ? { dialog: N } & DialogType[N]["result"] extends infer C
+      ? { [K in keyof C]: C[K] }
+      : never
+    : never
+  : never;
+
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
   useGpu: boolean;
   inheritAudioInfo: boolean;
-  isHelpDialogOpen: boolean;
-  isSettingDialogOpen: boolean;
-  isDefaultStyleSelectDialogOpen: boolean;
-  isHotkeySettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
+  dialogContexts: DialogContext[];
 };
 
 type UiStoreTypes = {
@@ -718,21 +759,6 @@ type UiStoreTypes = {
     getter: boolean;
   };
 
-  IS_HELP_DIALOG_OPEN: {
-    mutation: { isHelpDialogOpen: boolean };
-    action(payload: { isHelpDialogOpen: boolean }): void;
-  };
-
-  IS_SETTING_DIALOG_OPEN: {
-    mutation: { isSettingDialogOpen: boolean };
-    action(payload: { isSettingDialogOpen: boolean }): void;
-  };
-
-  IS_HOTKEY_SETTING_DIALOG_OPEN: {
-    mutation: { isHotkeySettingDialogOpen: boolean };
-    action(payload: { isHotkeySettingDialogOpen: boolean }): void;
-  };
-
   IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
     mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
     action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
@@ -740,11 +766,6 @@ type UiStoreTypes = {
 
   ON_VUEX_READY: {
     action(): void;
-  };
-
-  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
-    mutation: { isDefaultStyleSelectDialogOpen: boolean };
-    action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
   };
 
   GET_USE_GPU: {
@@ -786,6 +807,34 @@ type UiStoreTypes = {
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
+    action(): Promise<void>;
+  };
+
+  ADD_DIALOG_CONTEXT: {
+    mutation: DialogContext;
+  };
+
+  REMOVE_DIALOG_CONTEXT: {
+    mutation: DialogContext;
+  };
+
+  CLOSE_ALL_DIALOG: {
+    action(): void;
+  };
+
+  OPEN_HOTKEY_SETTING_DIALOG: {
+    action(): Promise<void>;
+  };
+
+  OPEN_DEFAULT_STYLE_SELECT_DIALOG: {
+    action(context: { characterInfos: CharacterInfo[] }): Promise<void>;
+  };
+
+  OPEN_SETTING_DIALOG: {
+    action(): Promise<void>;
+  };
+
+  OPEN_HELP_DIALOG: {
     action(): Promise<void>;
   };
 };
