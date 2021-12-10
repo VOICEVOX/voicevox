@@ -180,6 +180,10 @@ const api: Sandbox = {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 
+  savingPresets: (newPresets) => {
+    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
+  },
+
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
