@@ -44,5 +44,12 @@ export const ipcMessageReceiver: Plugin = {
         window.dataLayer?.push({ event: "windowResize", width, height });
       }, 300)
     );
+
+    window.electron.onReceivedIPCMsg(
+      "OPEN_COMMON_DIALOG",
+      async (_, context) => {
+        return await options.store.dispatch("OPEN_COMMON_DIALOG", context);
+      }
+    );
   },
 };

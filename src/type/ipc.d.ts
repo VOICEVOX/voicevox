@@ -250,4 +250,9 @@ type IpcSOData = {
     args: [obj: { width: number; height: number }];
     return: void;
   };
+
+  OPEN_COMMON_DIALOG: {
+    args: [context: import("../store/type").DialogType["COMMON"]["context"]];
+    return?: import("../store/type").DialogType["COMMON"]["result"];
+  };
 };
