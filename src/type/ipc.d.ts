@@ -67,21 +67,6 @@ type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
-    return: number;
-  };
-
-  SHOW_WARNING_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
-  };
-
-  SHOW_ERROR_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
-  };
-
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     args: [];
     return: void;

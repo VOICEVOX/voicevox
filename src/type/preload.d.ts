@@ -18,19 +18,6 @@ export interface Sandbox {
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showInfoDialog(obj: {
-    title: string;
-    message: string;
-    buttons: string[];
-  }): Promise<number>;
-  showWarningDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showErrorDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;

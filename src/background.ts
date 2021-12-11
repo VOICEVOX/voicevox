@@ -276,14 +276,11 @@ async function runEngine() {
     const hasGpu = await hasSupportedGpu();
     store.set("useGpu", hasGpu);
 
-    dialog.showMessageBox(win, {
-      message: `音声合成エンジンを${
-        hasGpu ? "GPU" : "CPU"
-      }モードで起動しました`,
-      detail:
-        "エンジンの起動モードは、画面上部の「エンジン」メニューから変更できます。",
+    ipcMainSend(win, "OPEN_COMMON_DIALOG", {
       title: "エンジンの起動モード",
-      type: "info",
+      message:
+        `音声合成エンジンを${hasGpu ? "GPU" : "CPU"}モードで起動しました。\n` +
+        "エンジンの起動モードは、画面上部の「エンジン」メニューから変更できます。",
     });
   }
   if (!store.has("inheritAudioInfo")) {
@@ -584,36 +581,6 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
     return undefined;
   }
   return result.filePaths;
-});
-
-ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
-  return dialog
-    .showMessageBox(win, {
-      type: "info",
-      buttons: buttons,
-      title: title,
-      message: message,
-      noLink: true,
-    })
-    .then((value) => {
-      return value.response;
-    });
-});
-
-ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
-  return dialog.showMessageBox(win, {
-    type: "warning",
-    title: title,
-    message: message,
-  });
-});
-
-ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
-  return dialog.showMessageBox(win, {
-    type: "error",
-    title: title,
-    message: message,
-  });
 });
 
 ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {

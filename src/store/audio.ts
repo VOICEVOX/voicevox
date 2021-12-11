@@ -898,7 +898,7 @@ export const audioStore: VoiceVoxStoreOptions<
               audioElem.removeEventListener("canplay", stop);
             };
             audioElem.addEventListener("canplay", stop);
-            window.electron.showErrorDialog({
+            dispatch("OPEN_COMMON_DIALOG", {
               title: "エラー",
               message: "再生デバイスが見つかりません",
             });

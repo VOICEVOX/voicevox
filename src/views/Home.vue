@@ -400,7 +400,7 @@ export default defineComponent({
           store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
           break;
         default:
-          store.dispatch("SHOW_WARNING_DIALOG", {
+          store.dispatch("OPEN_COMMON_DIALOG", {
             title: "対応していないファイルです",
             message:
               "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",

@@ -81,12 +81,6 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_OSS_COMMUNITY_INFOS() {
       return await window.electron.getOssCommunityInfos();
     },
-    async SHOW_WARNING_DIALOG(
-      _,
-      { title, message }: { title: string; message: string }
-    ) {
-      return await window.electron.showWarningDialog({ title, message });
-    },
     LOG_ERROR(_, ...params: unknown[]) {
       window.electron.logError(...params);
     },

@@ -49,16 +49,15 @@ export const projectStore: VoiceVoxStoreOptions<
     CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
-          const result: number = await window.electron.showInfoDialog({
+          const result = await context.dispatch("OPEN_COMMON_DIALOG", {
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
-            buttons: ["破棄", "キャンセル"],
+            cancelable: true,
+            okButtonText: "破棄",
           });
-          if (result == 1) {
-            return;
-          }
+          if (!result || result.result !== "ok") return;
         }
 
         await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
@@ -231,16 +230,15 @@ export const projectStore: VoiceVoxStoreOptions<
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
-            const result: number = await window.electron.showInfoDialog({
+            const result = await context.dispatch("OPEN_COMMON_DIALOG", {
               title: "警告",
               message:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
                 "変更を破棄してもよろしいですか？",
-              buttons: ["破棄", "キャンセル"],
+              cancelable: true,
+              okButtonText: "破棄",
             });
-            if (result == 1) {
-              return;
-            }
+            if (!result || result.result !== "ok") return;
           }
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
@@ -266,7 +264,7 @@ export const projectStore: VoiceVoxStoreOptions<
               return "ファイルフォーマットが正しくありません。";
             return err.message;
           })();
-          await window.electron.showErrorDialog({
+          await context.dispatch("OPEN_COMMON_DIALOG", {
             title: "エラー",
             message,
           });
