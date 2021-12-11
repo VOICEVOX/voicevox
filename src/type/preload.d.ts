@@ -52,6 +52,7 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
+  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;

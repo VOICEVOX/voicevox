@@ -675,6 +675,10 @@ ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
 });
 
+ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
+  return store.get("defaultStyleIds");
+});
+
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
   store.set("defaultStyleIds", defaultStyleIds);
 });

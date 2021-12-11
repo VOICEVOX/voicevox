@@ -97,14 +97,21 @@ export const indexStore: VoiceVoxStoreOptions<
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
-      const characterInfos = await state.characterInfos;
-      if (characterInfos == undefined)
-        throw new Error("state.characterInfos == undefined");
-      const defaultStyleIds = characterInfos.map<DefaultStyleId>((info) => ({
-        speakerUuid: info.metas.speakerUuid,
-        defaultStyleId: info.metas.styles[0].styleId,
-      }));
-      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+      const storeDefaultStyleIds = await window.electron.getDefaultStyleIds();
+      if (storeDefaultStyleIds.length === 0) {
+        const characterInfos = await state.characterInfos;
+        if (characterInfos == undefined)
+          throw new Error("state.characterInfos == undefined");
+        const defaultStyleIds = characterInfos.map<DefaultStyleId>((info) => ({
+          speakerUuid: info.metas.speakerUuid,
+          defaultStyleId: info.metas.styles[0].styleId,
+        }));
+        commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+      } else {
+        commit("SET_DEFAULT_STYLE_IDS", {
+          defaultStyleIds: storeDefaultStyleIds,
+        });
+      }
     },
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
