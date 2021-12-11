@@ -36,6 +36,7 @@ jobs:
             package_name: voicevox
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Linux CPU
           - artifact_name: linux-noengine-cpu-prepackage
@@ -43,24 +44,28 @@ jobs:
             package_name: voicevox-cpu
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Windows NVIDIA GPU
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox
             nsis_web_artifact_name: 'VOICEVOX Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # Windows CPU
           - artifact_name: windows-noengine-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # macOS CPU
           - artifact_name: macos-noengine-cpu-prepackage
             artifact_path: dist_electron/mac
             package_name: voicevox-cpu
             macos_artifact_name: 'VOICEVOX.${ext}'
+            sed_name: gsed
             os: macos-11
 
     runs-on: ${{ matrix.os }}
@@ -75,10 +80,6 @@ jobs:
         shell: bash
         run: |
           brew install gnu-sed
-          shopt -s expand_aliases
-          echo "alias sed='gsed'" >> ~/.bashrc
-          source ~/.bashrc
-          alias
 
       # Rename executable file
       - name: Replace package name
@@ -86,8 +87,8 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
       #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
@@ -98,14 +99,14 @@ jobs:
         if: startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
-          sed -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
-          sed -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
 
           # In order to replace two lines in sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
           # cf. https://deep.tacoskingdom.com/blog/15
           str_config=$(cat vue.config.js)
           str_config_2=${str_config//$'\n'/\\n}
-          echo $str_config_2 | sed -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          echo $str_config_2 | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
           cat vue.config.js
 
       - name: Set output Node version
@@ -484,6 +485,7 @@ jobs:
             package_name: voicevox
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Linux CPU
           - artifact_name: linux-cpu-appimage
@@ -491,18 +493,21 @@ jobs:
             package_name: voicevox-cpu
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
             package_name: voicevox
             nsis_web_artifact_name: 'VOICEVOX Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # Windows CPU
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # macOS CPU
           - artifact_name: macos-cpu-dmg
@@ -510,6 +515,7 @@ jobs:
             package_name: voicevox-cpu
             macos_artifact_name: 'VOICEVOX ${version}.${ext}'
             macos_executable_name: VOICEVOX
+            sed_name: gsed
             os: macos-11
 
     runs-on: ${{ matrix.os }}
@@ -524,9 +530,6 @@ jobs:
         shell: bash
         run: |
           brew install gnu-sed
-          shopt -s expand_aliases
-          echo "alias sed='gsed'" >> ~/.bashrc
-          source ~/.bashrc
 
       # NOTE: If the CPU/GPU builds have the same package name,
       #       the NSIS installers and the 7z files have duplicate names.
@@ -539,8 +542,8 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
