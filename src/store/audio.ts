@@ -428,16 +428,24 @@ export const audioStore: VoiceVoxStoreOptions<
           window.electron.logError(error, `Failed to get speakers.`);
           throw error;
         });
+      const base64ToUrl = function (base64: string, type: string) {
+        const buffer = Buffer.from(base64, "base64");
+        const iconBlob = new Blob([buffer.buffer], { type: type });
+        return URL.createObjectURL(iconBlob);
+      };
       const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
         const styles: StyleInfo[] = new Array(speaker.styles.length);
         speaker.styles.forEach((style, i) => {
           for (const styleInfo of speakerInfo.styleInfos) {
             if (style.id === styleInfo.id) {
+              const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+                return base64ToUrl(voiceSample, "audio/wav");
+              });
               styles[i] = {
                 styleName: style.name,
                 styleId: style.id,
-                iconBase64: styleInfo.icon,
-                voiceSampleBase64s: styleInfo.voiceSamples,
+                iconPath: base64ToUrl(styleInfo.icon, "image/png"),
+                voiceSamplePaths: voiceSamples,
               };
             }
           }
@@ -456,7 +464,7 @@ export const audioStore: VoiceVoxStoreOptions<
           });
         const styles = getStyles(speaker, speakerInfo);
         const characterInfo: CharacterInfo = {
-          portraitBase64: speakerInfo.portrait,
+          portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
           metas: {
             speakerUuid: speaker.speakerUuid,
             speakerName: speaker.name,

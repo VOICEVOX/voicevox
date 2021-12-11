@@ -1,11 +1,7 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <img
-      v-if="portraitBase64"
-      :src="'data:image/png;base64,' + portraitBase64"
-      class="character-portrait"
-    />
+    <img :src="portraitPath" class="character-portrait" />
   </div>
 </template>
 
@@ -48,11 +44,11 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
-    const portraitBase64 = computed(() => characterInfo.value?.portraitBase64);
+    const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
     return {
       characterName,
-      portraitBase64,
+      portraitPath,
     };
   },
 });
