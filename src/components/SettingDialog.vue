@@ -473,13 +473,9 @@ export default defineComponent({
         await store.dispatch("SET_USE_GPU", { useGpu });
         store.dispatch("RESTART_ENGINE");
 
-        $q.dialog({
+        store.dispatch("OPEN_COMMON_DIALOG", {
           title: "エンジンの起動モードを変更しました",
           message: "変更を適用するためにエンジンを再起動します。",
-          ok: {
-            flat: true,
-            textColor: "display",
-          },
         });
       };
 
@@ -499,29 +495,20 @@ export default defineComponent({
       });
 
       if (useGpu && !isAvailableGPUMode) {
-        $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          html: true,
-          persistent: true,
-          focus: "cancel",
-          style: {
-            width: "90vw",
-            maxWidth: "90vw",
-          },
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(change);
+        store
+          .dispatch("OPEN_COMMON_DIALOG", {
+            title: "対応するGPUデバイスが見つかりません",
+            message:
+              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。\n" +
+              "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。\n" +
+              "本当に変更しますか？",
+            cancelable: true,
+            persistent: true,
+          })
+          .then((result) => {
+            if (!result || result.result !== "ok") return;
+            change();
+          });
       } else change();
     };
 
@@ -546,23 +533,20 @@ export default defineComponent({
         });
       };
       if (key === "outputSamplingRate" && data !== 24000) {
-        $q.dialog({
-          title: "出力サンプリングレートを変更します",
-          message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-          html: true,
-          persistent: true,
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(storeDispatch);
+        store
+          .dispatch("OPEN_COMMON_DIALOG", {
+            title: "出力サンプリングレートを変更します",
+            message:
+              "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。\n変更しますか？",
+            cancelable: true,
+            persistent: true,
+            okButtonText: "変更する",
+            cancelButtonText: "変更しない",
+          })
+          .then((result) => {
+            if (!result || result.result !== "ok") return;
+            storeDispatch();
+          });
         return;
       }
       storeDispatch();

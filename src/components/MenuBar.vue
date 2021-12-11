@@ -32,8 +32,6 @@ import { useStore } from "@/store";
 import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { useQuasar } from "quasar";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { SaveResultObject } from "@/store/type";
@@ -78,7 +76,6 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
@@ -131,14 +128,10 @@ export default defineComponent({
 
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
-        $q.dialog({
+        store.dispatch("OPEN_COMMON_DIALOG", {
           title: "テキスト欄が選択されていません",
           message: "音声を書き出したいテキスト欄を選択してください。",
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "secondary",
-          },
+          okButtonText: "閉じる",
         });
         return;
       }
@@ -165,14 +158,10 @@ export default defineComponent({
           break;
       }
 
-      $q.dialog({
+      store.dispatch("OPEN_COMMON_DIALOG", {
         title: "書き出しに失敗しました。",
         message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
+        okButtonText: "閉じる",
       });
     };
 

@@ -217,7 +217,6 @@ import {
   watch,
 } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
@@ -235,7 +234,6 @@ export default defineComponent({
 
   setup(props) {
     const store = useStore();
-    const $q = useQuasar();
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
@@ -348,14 +346,10 @@ export default defineComponent({
           audioKey: props.activeAudioKey,
         });
       } catch (e) {
-        $q.dialog({
+        store.dispatch("OPEN_COMMON_DIALOG", {
           title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "display",
-          },
+          okButtonText: "閉じる",
         });
       }
     };

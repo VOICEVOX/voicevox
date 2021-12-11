@@ -195,7 +195,6 @@ import { useDialogPluginComponent } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
-import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -203,7 +202,6 @@ export default defineComponent({
   setup() {
     const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const store = useStore();
-    const $q = useQuasar();
 
     const isHotkeyDialogOpened = ref(false);
 
@@ -312,32 +310,27 @@ export default defineComponent({
     });
 
     const resetHotkey = (action: string) => {
-      $q.dialog({
-        title: "ショートカットキーを初期値に戻します",
-        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-        html: true,
-        ok: {
-          label: "初期値に戻す",
-          flat: true,
-          textColor: "secondary",
-        },
-        cancel: {
-          label: "初期値に戻さない",
-          flat: true,
-          textColor: "secondary",
-        },
-      }).onOk(() => {
-        window.electron
-          .getDefaultHotkeySettings()
-          .then((defaultSettings: HotkeySetting[]) => {
-            const setting = defaultSettings.find(
-              (value) => value.action == action
-            );
-            if (setting) {
-              changeHotkeySettings(action, setting.combination);
-            }
-          });
-      });
+      store
+        .dispatch("OPEN_COMMON_DIALOG", {
+          title: "ショートカットキーを初期値に戻します",
+          message: `${action}のショートカットキーを初期値に戻します。\n本当に戻しますか？`,
+          cancelable: true,
+          okButtonText: "初期値に戻す",
+          cancelButtonText: "初期値に戻さない",
+        })
+        .then((result) => {
+          if (!result || result.result !== "ok") return;
+          window.electron
+            .getDefaultHotkeySettings()
+            .then((defaultSettings: HotkeySetting[]) => {
+              const setting = defaultSettings.find(
+                (value) => value.action == action
+              );
+              if (setting) {
+                changeHotkeySettings(action, setting.combination);
+              }
+            });
+        });
     };
 
     return {

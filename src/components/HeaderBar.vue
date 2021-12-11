@@ -46,14 +46,12 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 
 export default defineComponent({
   setup() {
     const store = useStore();
-    const $q = useQuasar();
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
@@ -114,14 +112,10 @@ export default defineComponent({
       try {
         await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
       } catch {
-        $q.dialog({
+        store.dispatch("OPEN_COMMON_DIALOG", {
           title: "再生に失敗しました",
           message: "エンジンの再起動をお試しください。",
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "display",
-          },
+          okButtonText: "閉じる",
         });
       }
     };
