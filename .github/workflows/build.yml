@@ -87,12 +87,20 @@ jobs:
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
+      # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
+      #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
+      #       it is inappropriate to copy the extraFiles to the VOICEVOX.app/Contents/ directory.
+      #       Fix it so that it is copied to the VOICEVOX.app/Contents/MacOS/ directory.
+      #       cf. https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
       - name: Replace the extraFiles setting in vue.config.js for macOS
         if: startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
           sed -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
           sed -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
+
+          # In order to replace two lines in sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
+          # cf. https://deep.tacoskingdom.com/blog/15
           str_config=$(cat vue.config.js)
           str_config_2=${str_config//$'\n'/\\n}
           echo $str_config_2 | sed -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
