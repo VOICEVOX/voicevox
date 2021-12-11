@@ -29,7 +29,6 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useGpu: false,
         inheritAudioInfo: true,
-        isAcceptRetrieveTelemetryDialogOpen: false,
         isMaximized: false,
         dialogContexts: [],
         savedLastCommandUnixMillisec: null,
@@ -96,6 +95,7 @@ describe("store/vuex.js test", () => {
     assert.isObject(store.state);
     assert.equal(store.state.engineState, "STARTING");
     assert.isArray(store.state.defaultStyleIds);
+    assert.isEmpty(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
     assert.isArray(store.state.audioKeys);
@@ -110,9 +110,9 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
-    assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isArray(store.state.dialogContexts);
+    assert.isEmpty(store.state.dialogContexts);
     assert.isObject(store.state.savingSetting);
     assert.propertyVal(store.state.savingSetting, "fileEncoding", "UTF-8");
     assert.propertyVal(store.state.savingSetting, "fixedExportEnabled", false);
