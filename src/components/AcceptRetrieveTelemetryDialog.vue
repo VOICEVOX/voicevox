@@ -5,7 +5,7 @@
     transition-show="jump-up"
     transition-hide="jump-down"
     class="accept-retrieve-telemetry-dialog"
-    v-model="modelValueComputed"
+    ref="dialogRef"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
@@ -62,27 +62,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import { useStore } from "@/store";
 import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "AcceptRetrieveTelemetryDialog",
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
+  setup() {
+    const { dialogRef, onDialogOK } = useDialogPluginComponent();
     const store = useStore();
-
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
 
     const gtm = useGtm();
     const handler = (acceptRetrieveTelemetry: boolean) => {
@@ -93,11 +83,11 @@ export default defineComponent({
       });
       gtm?.enable(acceptRetrieveTelemetry);
 
-      modelValueComputed.value = false;
+      onDialogOK();
     };
 
     return {
-      modelValueComputed,
+      dialogRef,
       handler,
     };
   },

@@ -5,14 +5,15 @@
 <script lang="ts">
 import { defineComponent, Component, watch, ref } from "vue";
 import { DialogChainObject, useQuasar } from "quasar";
-import { useStore } from "../store";
-import type { DialogContext, DialogName, DialogResult } from "../store/type";
-import CommonDialog from "./CommonDialog.vue";
-import HotkeySettingDialog from "./HotkeySettingDialog.vue";
-import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
-import SettingDialog from "./SettingDialog.vue";
-import HelpDialog from "./HelpDialog.vue";
+import { useStore } from "@/store";
+import type { DialogContext, DialogName, DialogResult } from "@/store/type";
+import CommonDialog from "@/components/CommonDialog.vue";
+import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
+import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import SettingDialog from "@/components/SettingDialog.vue";
+import HelpDialog from "@/components/HelpDialog.vue";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 
 type Dialogs = {
   [K in DialogName]: Component;
@@ -38,6 +39,7 @@ export default defineComponent({
       SETTING: SettingDialog,
       HELP: HelpDialog,
       SAVE_ALL_RESULT: SaveAllResultDialog,
+      ACCEPT_RETRIEVE_TELEMETRY: AcceptRetrieveTelemetryDialog,
     };
 
     let len = 0;

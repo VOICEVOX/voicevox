@@ -75,7 +75,6 @@ export const uiStoreState: UiStoreState = {
   dialogLockCount: 0,
   useGpu: false,
   inheritAudioInfo: true,
-  isAcceptRetrieveTelemetryDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   dialogContexts: [],
@@ -107,13 +106,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       UNLOCK_MENUBAR(state) {
         state.dialogLockCount--;
-      },
-      IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
-        state,
-        { isAcceptRetrieveTelemetryDialogOpen }
-      ) {
-        state.isAcceptRetrieveTelemetryDialogOpen =
-          isAcceptRetrieveTelemetryDialogOpen;
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
@@ -172,23 +164,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ),
       ON_VUEX_READY() {
         window.electron.vuexReady();
-      },
-      async IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
-        { state, commit },
-        { isAcceptRetrieveTelemetryDialogOpen }
-      ) {
-        if (
-          state.isAcceptRetrieveTelemetryDialogOpen ===
-          isAcceptRetrieveTelemetryDialogOpen
-        )
-          return;
-
-        if (isAcceptRetrieveTelemetryDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
-
-        commit("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
-          isAcceptRetrieveTelemetryDialogOpen,
-        });
       },
       async GET_USE_GPU({ commit }) {
         commit("SET_USE_GPU", {
@@ -275,6 +250,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
       OPEN_SAVE_ALL_RESULT_DIALOG: createDialogAction({
         dialog: "SAVE_ALL_RESULT",
+      }),
+
+      OPEN_ACCEPT_RETRIEVE_TELEMETRY_DIALOG: createDialogAction({
+        dialog: "ACCEPT_RETRIEVE_TELEMETRY",
       }),
     },
   };

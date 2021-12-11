@@ -106,9 +106,6 @@
     </q-page-container>
   </q-layout>
   <dialog-container />
-  <accept-retrieve-telemetry-dialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
 </template>
 
 <script lang="ts">
@@ -128,7 +125,6 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DialogContainer from "@/components/DialogContainer.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -147,7 +143,6 @@ export default defineComponent({
     AudioInfo,
     CharacterPortrait,
     DialogContainer,
-    AcceptRetrieveTelemetryDialog,
   },
 
   setup() {
@@ -352,18 +347,27 @@ export default defineComponent({
         store.dispatch("LOAD_CHARACTER"),
         store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
       ]);
+
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
+
       for (const info of characterInfos.value) {
         isUnsetDefaultStyleIds ||= await store.dispatch(
           "IS_UNSET_DEFAULT_STYLE_ID",
           { speakerUuid: info.metas.speakerUuid }
         );
       }
+      if (store.state.acceptRetrieveTelemetry === "Unconfirmed") {
+        await store.dispatch("OPEN_ACCEPT_RETRIEVE_TELEMETRY_DIALOG");
+      }
+      const gtm = useGtm();
+      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
+
       if (isUnsetDefaultStyleIds)
         store.dispatch("OPEN_DEFAULT_STYLE_SELECT_DIALOG", {
           characterInfos: characterInfos.value,
         });
+
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -378,25 +382,10 @@ export default defineComponent({
       hotkeyActionsNative.forEach((item) => {
         document.addEventListener("keyup", item);
       });
-
-      isAcceptRetrieveTelemetryDialogOpenComputed.value =
-        store.state.acceptRetrieveTelemetry === "Unconfirmed";
-      const gtm = useGtm();
-      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
     });
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
-
-    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
-      get: () =>
-        !store.state.isDefaultStyleSelectDialogOpen &&
-        store.state.isAcceptRetrieveTelemetryDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
-          isAcceptRetrieveTelemetryDialogOpen: val,
-        }),
-    });
 
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
@@ -439,7 +428,6 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       engineState,
-      isAcceptRetrieveTelemetryDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

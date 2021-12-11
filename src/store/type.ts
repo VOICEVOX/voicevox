@@ -713,28 +713,38 @@ export type DialogType = {
       result: "ok" | "cancel";
     };
   };
+
   HOTKEY_SETTING: {
     context: undefined;
     result: void;
   };
+
   DEFAULT_STYLE_SELECT: {
     context: { characterInfos: CharacterInfo[] };
     result: void;
   };
+
   SETTING: {
     context: undefined;
     result: void;
   };
+
   HELP: {
     context: undefined;
     result: void;
   };
+
   SAVE_ALL_RESULT: {
     context: {
       successArray: (string | undefined)[];
       writeErrorArray: (string | undefined)[];
       engineErrorArray: (string | undefined)[];
     };
+    result: void;
+  };
+
+  ACCEPT_RETRIEVE_TELEMETRY: {
+    context: undefined;
     result: void;
   };
 };
@@ -775,7 +785,6 @@ export type UiStoreState = {
   dialogLockCount: number;
   useGpu: boolean;
   inheritAudioInfo: boolean;
-  isAcceptRetrieveTelemetryDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   dialogContexts: DialogContext[];
@@ -816,11 +825,6 @@ type UiStoreTypes = {
 
   SHOULD_SHOW_PANES: {
     getter: boolean;
-  };
-
-  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
-    mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
-    action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
   };
 
   ON_VUEX_READY: {
@@ -903,6 +907,10 @@ type UiStoreTypes = {
 
   OPEN_SAVE_ALL_RESULT_DIALOG: {
     action: DialogActionType<"SAVE_ALL_RESULT">;
+  };
+
+  OPEN_ACCEPT_RETRIEVE_TELEMETRY_DIALOG: {
+    action: DialogActionType<"ACCEPT_RETRIEVE_TELEMETRY">;
   };
 };
 

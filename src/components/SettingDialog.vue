@@ -463,14 +463,10 @@ export default defineComponent({
           return;
         }
 
-        $q.dialog({
+        store.dispatch("OPEN_COMMON_DIALOG", {
           title: "テレメトリーの収集の無効化",
           message:
-            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
-          ok: {
-            flat: true,
-            textColor: "display",
-          },
+            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります。",
         });
       },
     });
