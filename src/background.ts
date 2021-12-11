@@ -158,7 +158,7 @@ const store = new Store<{
   schema: {
     useGpu: {
       type: "boolean",
-      default: false,
+      default: undefined,
     },
     inheritAudioInfo: {
       type: "boolean",
