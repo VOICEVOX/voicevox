@@ -20,6 +20,7 @@ type Dialogs = {
 type DialogData = {
   dialogObject: DialogChainObject;
   context: DialogContext;
+  closed?: boolean;
 };
 
 export default defineComponent({
@@ -49,26 +50,29 @@ export default defineComponent({
         );
 
         for (const context of contexts) {
-          dialogs.value.push({
+          const dialogData: DialogData = {
             dialogObject: $q
               .dialog({
                 component: components[context.dialog],
                 componentProps: context.props,
               })
               .onOk((payload: DialogResult) => {
+                dialogData.closed = true;
                 context.result({ result: "ok", ...payload });
               })
               .onCancel((payload: DialogResult) => {
+                dialogData.closed = true;
                 context.result({ result: "cancel", ...payload });
               }),
             context,
-          });
+          };
+          dialogs.value.push(dialogData);
         }
       } else {
         // contextが減ったら減った分強制的に閉じる
         dialogs.value = dialogs.value.filter((x) => {
           if (store.state.dialogContexts.indexOf(x.context) > -1) return true;
-          else x.dialogObject.hide();
+          else if (!x.closed) x.dialogObject.hide();
         });
       }
 
