@@ -227,6 +227,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
       OPEN_COMMON_DIALOG: createDialogAction({
         dialog: "COMMON",
+        multiple: true,
         async action(_context, _payload, result) {
           return result;
         },
