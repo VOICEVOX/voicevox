@@ -19,13 +19,18 @@ function ipcRendererInvoke(channel: string, ...args: unknown[]): unknown {
 
 function ipcRendererOn<T extends keyof IpcSOData>(
   channel: T,
-  listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
+  listener: (
+    event: IpcRendererEvent,
+    ...args: IpcSOData[T]["args"]
+  ) => IpcSOData[T]["return"] | Promise<IpcSOData[T]["return"]>
 ): IpcRenderer;
 function ipcRendererOn(
   channel: string,
-  listener: (event: IpcRendererEvent, ...args: unknown[]) => void
+  listener: (event: IpcRendererEvent, ...args: unknown[]) => Promise<unknown>
 ) {
-  return ipcRenderer.on(channel, listener);
+  return ipcRenderer.on(channel, async (event, id, ...args) => {
+    event.sender.send(channel, id, await listener(event, ...args));
+  });
 }
 
 let tempDir: string;
@@ -140,8 +145,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
 
-  onReceivedIPCMsg: (channel, callback) => {
-    return ipcRendererOn(channel, callback);
+  onReceivedIPCMsg: (channel, listener) => {
+    return ipcRendererOn(channel, listener);
   },
 
   closeWindow: () => {

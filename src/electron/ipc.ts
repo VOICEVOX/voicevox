@@ -1,4 +1,5 @@
 import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
+import { v4 as uuidv4 } from "uuid";
 import log from "electron-log";
 
 export function ipcMainHandle<T extends keyof IpcIHData>(
@@ -29,11 +30,27 @@ export function ipcMainSend<T extends keyof IpcSOData>(
   win: BrowserWindow,
   channel: T,
   ...args: IpcSOData[T]["args"]
-): void;
+): Promise<IpcSOData[T]["return"]>;
 export function ipcMainSend(
   win: BrowserWindow,
   channel: string,
   ...args: unknown[]
-): void {
-  return win.webContents.send(channel, ...args);
+): Promise<unknown> {
+  return new Promise((resolve) => {
+    const uuid = uuidv4();
+
+    const listener = (
+      _event: Electron.Event,
+      _channel: string,
+      id: string,
+      context: unknown
+    ) => {
+      if (id !== uuid) return;
+      win.webContents.off("ipc-message", listener);
+      resolve(context);
+    };
+
+    win.webContents.on("ipc-message", listener);
+    win.webContents.send(channel, uuid, ...args);
+  });
 }

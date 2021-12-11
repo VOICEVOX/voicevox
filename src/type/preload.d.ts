@@ -40,7 +40,10 @@ export interface Sandbox {
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
+    listener: (
+      event: IpcRendererEvent,
+      ...args: IpcSOData[T]["args"]
+    ) => IpcSOData[T]["return"] | Promise<IpcSOData[T]["return"]>
   ): IpcRenderer;
   closeWindow(): void;
   minimizeWindow(): void;

@@ -40,11 +40,9 @@ export const ipcMessageReceiver: Plugin = {
 
     window.electron.onReceivedIPCMsg(
       "DETECT_RESIZED",
-      debounce(
-        (_, { width, height }) =>
-          window.dataLayer?.push({ event: "windowResize", width, height }),
-        300
-      )
+      debounce((_, { width, height }) => {
+        window.dataLayer?.push({ event: "windowResize", width, height });
+      }, 300)
     );
   },
 };

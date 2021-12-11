@@ -470,12 +470,10 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
-  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
-  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("maximize", () => ipcMainSend(win, "DETECT_MAXIMIZED"));
+  win.on("unmaximize", () => ipcMainSend(win, "DETECT_UNMAXIMIZED"));
   win.on("always-on-top-changed", () => {
-    win.webContents.send(
-      win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
-    );
+    ipcMainSend(win, win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED");
   });
   win.on("close", (event) => {
     if (!willQuit) {
@@ -487,7 +485,7 @@ async function createWindow() {
 
   win.on("resize", () => {
     const windowSize = win.getSize();
-    win.webContents.send("DETECT_RESIZED", {
+    ipcMainSend(win, "DETECT_RESIZED", {
       width: windowSize[0],
       height: windowSize[1],
     });
