@@ -692,87 +692,6 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
  * Ui Store Types
  */
 
-export type DialogType = {
-  COMMON: {
-    context: {
-      title: string;
-      message: string;
-      persistent?: boolean;
-      cancelable?: boolean;
-      okButtonText?: string;
-      cancelButtonText?: string;
-    };
-    result: {
-      result: "ok" | "cancel";
-    };
-  };
-
-  HOTKEY_SETTING: {
-    context: undefined;
-    result: void;
-  };
-
-  DEFAULT_STYLE_SELECT: {
-    context: { characterInfos: CharacterInfo[] };
-    result: void;
-  };
-
-  SETTING: {
-    context: undefined;
-    result: void;
-  };
-
-  HELP: {
-    context: undefined;
-    result: void;
-  };
-
-  SAVE_ALL_RESULT: {
-    context: {
-      successArray: (string | undefined)[];
-      writeErrorArray: (string | undefined)[];
-      engineErrorArray: (string | undefined)[];
-    };
-    result: void;
-  };
-
-  ACCEPT_RETRIEVE_TELEMETRY: {
-    context: undefined;
-    result: void;
-  };
-};
-
-export type DialogName = keyof DialogType;
-
-export type DialogContext<T extends DialogName = DialogName> = T extends infer N
-  ? N extends DialogName
-    ? {
-        dialog: N;
-        multiple: boolean;
-        result: (result?: DialogResult) => Promise<void>;
-        props: DialogType[N]["context"];
-      } extends infer C
-      ? { [K in keyof C]: C[K] }
-      : never
-    : never
-  : never;
-export type DialogResult<T extends DialogName = DialogName> = T extends infer N
-  ? N extends DialogName
-    ? DialogType[N]["result"] extends infer C
-      ? { [K in keyof C]: C[K] }
-      : never
-    : never
-  : never;
-
-type DialogActionType<T extends DialogName> =
-  DialogType[T]["context"] extends undefined
-    ? () => Promise<DialogResult<T>>
-    : (
-        context: DialogType[T]["context"]
-      ) => Promise<
-        DialogResult<T> extends void ? void : DialogResult<T> | undefined
-      >;
-
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
@@ -780,7 +699,6 @@ export type UiStoreState = {
   inheritAudioInfo: boolean;
   isMaximized: boolean;
   isPinned: boolean;
-  dialogContexts: DialogContext[];
 };
 
 type UiStoreTypes = {
@@ -865,7 +783,102 @@ type UiStoreTypes = {
   CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
   };
+};
 
+export type UiGetters = StoreType<UiStoreTypes, "getter">;
+export type UiMutations = StoreType<UiStoreTypes, "mutation">;
+export type UiActions = StoreType<UiStoreTypes, "action">;
+
+/*
+ * Dialog Store Types
+ */
+
+export type DialogType = {
+  COMMON: {
+    context: {
+      title: string;
+      message: string;
+      persistent?: boolean;
+      cancelable?: boolean;
+      okButtonText?: string;
+      cancelButtonText?: string;
+    };
+    result: {
+      result: "ok" | "cancel";
+    };
+  };
+
+  HOTKEY_SETTING: {
+    context: undefined;
+    result: void;
+  };
+
+  DEFAULT_STYLE_SELECT: {
+    context: { characterInfos: CharacterInfo[] };
+    result: void;
+  };
+
+  SETTING: {
+    context: undefined;
+    result: void;
+  };
+
+  HELP: {
+    context: undefined;
+    result: void;
+  };
+
+  SAVE_ALL_RESULT: {
+    context: {
+      successArray: (string | undefined)[];
+      writeErrorArray: (string | undefined)[];
+      engineErrorArray: (string | undefined)[];
+    };
+    result: void;
+  };
+
+  ACCEPT_RETRIEVE_TELEMETRY: {
+    context: undefined;
+    result: void;
+  };
+};
+
+export type DialogName = keyof DialogType;
+
+export type DialogContext<T extends DialogName = DialogName> = T extends infer N
+  ? N extends DialogName
+    ? {
+        dialog: N;
+        multiple: boolean;
+        result: (result?: DialogResult) => Promise<void>;
+        props: DialogType[N]["context"];
+      } extends infer C
+      ? { [K in keyof C]: C[K] }
+      : never
+    : never
+  : never;
+export type DialogResult<T extends DialogName = DialogName> = T extends infer N
+  ? N extends DialogName
+    ? DialogType[N]["result"] extends infer C
+      ? { [K in keyof C]: C[K] }
+      : never
+    : never
+  : never;
+
+type DialogActionType<T extends DialogName> =
+  DialogType[T]["context"] extends undefined
+    ? () => Promise<DialogResult<T>>
+    : (
+        context: DialogType[T]["context"]
+      ) => Promise<
+        DialogResult<T> extends void ? void : DialogResult<T> | undefined
+      >;
+
+export type DialogStoreState = {
+  dialogContexts: DialogContext[];
+};
+
+type DialogStoreTypes = {
   ADD_DIALOG_CONTEXT: {
     mutation: DialogContext;
   };
@@ -907,13 +920,13 @@ type UiStoreTypes = {
   };
 };
 
-export type UiGetters = StoreType<UiStoreTypes, "getter">;
-export type UiMutations = StoreType<UiStoreTypes, "mutation">;
-export type UiActions = StoreType<UiStoreTypes, "action">;
+export type DialogGetters = StoreType<DialogStoreTypes, "getter">;
+export type DialogMutations = StoreType<DialogStoreTypes, "mutation">;
+export type DialogActions = StoreType<DialogStoreTypes, "action">;
 
 /*
-  Preset Store Types
-*/
+ * Preset Store Types
+ */
 
 export type PresetStoreState = {
   presetKeys: string[];
@@ -998,6 +1011,7 @@ export type State = AudioStoreState &
   ProjectStoreState &
   SettingStoreState &
   UiStoreState &
+  DialogStoreState &
   PresetStoreState &
   ProxyStoreState;
 
@@ -1008,6 +1022,7 @@ type AllStoreTypes = AudioStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
+  DialogStoreTypes &
   PresetStoreTypes &
   ProxyStoreTypes;
 

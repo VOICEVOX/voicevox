@@ -17,6 +17,7 @@ import { commandStoreState, commandStore } from "./command";
 import { audioStoreState, audioStore, audioCommandStore } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
+import { dialogStoreState, dialogStore } from "./dialog";
 import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
 import { proxyStore, proxyStoreState } from "./proxy";
@@ -119,6 +120,7 @@ export const indexStore: VoiceVoxStoreOptions<
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
     ...uiStoreState,
+    ...dialogStoreState,
     ...audioStoreState,
     ...commandStoreState,
     ...projectStoreState,
@@ -131,6 +133,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
 
   getters: {
     ...uiStore.getters,
+    ...dialogStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
     ...projectStore.getters,
@@ -143,6 +146,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
 
   mutations: {
     ...uiStore.mutations,
+    ...dialogStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
     ...projectStore.mutations,
@@ -155,6 +159,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
 
   actions: {
     ...uiStore.actions,
+    ...dialogStore.actions,
     ...audioStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,

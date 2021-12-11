@@ -6,6 +6,7 @@ import { commandStore } from "@/store/command";
 import { audioStore, audioCommandStore } from "@/store/audio";
 import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
+import { dialogStore } from "@/store/dialog";
 import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
@@ -56,6 +57,7 @@ describe("store/vuex.js test", () => {
       },
       getters: {
         ...uiStore.getters,
+        ...dialogStore.getters,
         ...audioStore.getters,
         ...commandStore.getters,
         ...projectStore.getters,
@@ -67,6 +69,7 @@ describe("store/vuex.js test", () => {
       },
       mutations: {
         ...uiStore.mutations,
+        ...dialogStore.mutations,
         ...audioStore.mutations,
         ...commandStore.mutations,
         ...projectStore.mutations,
@@ -78,6 +81,7 @@ describe("store/vuex.js test", () => {
       },
       actions: {
         ...uiStore.actions,
+        ...dialogStore.actions,
         ...audioStore.actions,
         ...commandStore.actions,
         ...projectStore.actions,
