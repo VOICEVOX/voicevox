@@ -14,6 +14,10 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "./styles/_index.scss";
 
+// NOTE: 起動後、設定を読み込んでからvue-gtmを有効化する関係上、dataLayerの用意が間に合わず、値が欠落してしまう箇所が存在する
+//       ため、それを防止するため自前でdataLayerをあらかじめ用意する
+window.dataLayer = [];
+
 createApp(App)
   .use(store, storeKey)
   .use(router)
@@ -21,10 +25,7 @@ createApp(App)
     createGtm({
       id: process.env.VUE_APP_GTM_CONTAINER_ID ?? "GTM-DUMMY",
       vueRouter: router,
-      // NOTE: 現状、ElectronでGoogle Analyticsのopt-outが提供出来ない(起動時に設定が読めない)ため、
-      //       設定が読める or 初期値の設定が出来るようになるまで無効にする
-      // SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
-      // FIXME: Google Analyticsのopt-out方法の提供後削除
+      // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
       enabled: false,
     })
   )
