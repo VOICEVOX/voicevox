@@ -641,7 +641,7 @@ jobs:
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
-        if: endsWith(matrix.artifact_name, "-nsis-web") || endsWith(matrix.artifact_name, "-appimage") # windows and linux
+        if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage') # windows and linux
         shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
@@ -650,7 +650,7 @@ jobs:
         run: npm run electron:build_pnever -- --prepackaged "prepackage/"
 
       - name: Build Electron (for macOS)
-        if: endsWith(matrix.artifact_name, "-dmg") # macOS
+        if: endsWith(matrix.artifact_name, '-dmg') # macOS
         shell: bash
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
