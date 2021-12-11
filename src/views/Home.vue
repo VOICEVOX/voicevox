@@ -106,6 +106,9 @@
     </q-page-container>
   </q-layout>
   <dialog-container />
+  <accept-retrieve-telemetry-dialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -125,11 +128,13 @@ import AudioInfo from "@/components/AudioInfo.vue";
 import MenuBar from "@/components/MenuBar.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DialogContainer from "@/components/DialogContainer.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "Home",
@@ -142,6 +147,7 @@ export default defineComponent({
     AudioInfo,
     CharacterPortrait,
     DialogContainer,
+    AcceptRetrieveTelemetryDialog,
   },
 
   setup() {
@@ -372,10 +378,25 @@ export default defineComponent({
       hotkeyActionsNative.forEach((item) => {
         document.addEventListener("keyup", item);
       });
+
+      isAcceptRetrieveTelemetryDialogOpenComputed.value =
+        store.state.acceptRetrieveTelemetry === "Unconfirmed";
+      const gtm = useGtm();
+      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
     });
 
     // エンジン待機
     const engineState = computed(() => store.state.engineState);
+
+    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isDefaultStyleSelectDialogOpen &&
+        store.state.isAcceptRetrieveTelemetryDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+          isAcceptRetrieveTelemetryDialogOpen: val,
+        }),
+    });
 
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
@@ -418,6 +439,7 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       engineState,
+      isAcceptRetrieveTelemetryDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

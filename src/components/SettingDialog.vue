@@ -337,12 +337,6 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card> -->
-            <!--
-            NOTE: 現状、ElectronでGoogle Analyticsのopt-outが提供出来ない(起動時に設定が読めない)ため、
-                  設定が読める or 初期値の設定が出来るようになるまで無効にする
-            SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
-            FIXME: Google Analyticsのopt-out方法の提供後有効化
-
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">テレメトリー</div>
@@ -367,7 +361,6 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
-            -->
           </div>
         </q-page>
       </q-page-container>
@@ -380,6 +373,7 @@ import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar, useDialogPluginComponent } from "quasar";
 import { SavingSetting } from "@/type/preload";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -454,17 +448,32 @@ export default defineComponent({
     );
     updateAudioOutputDevices();
 
-    // SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
-    //const acceptRetrieveTelemetryComputed = computed({
-    //  get: () => store.state.acceptRetrieveTelemetry == "Accepted",
-    //  set: (acceptRetrieveTelemetry: boolean) => {
-    //    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-    //      acceptRetrieveTelemetry: acceptRetrieveTelemetry
-    //        ? "Accepted"
-    //        : "Refused",
-    //    });
-    //  },
-    //});
+    const gtm = useGtm();
+    const acceptRetrieveTelemetryComputed = computed({
+      get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+      set: (acceptRetrieveTelemetry: boolean) => {
+        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+          acceptRetrieveTelemetry: acceptRetrieveTelemetry
+            ? "Accepted"
+            : "Refused",
+        });
+        gtm?.enable(acceptRetrieveTelemetry);
+
+        if (acceptRetrieveTelemetry) {
+          return;
+        }
+
+        $q.dialog({
+          title: "テレメトリーの収集の無効化",
+          message:
+            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
+      },
+    });
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -578,7 +587,7 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
-      //acceptRetrieveTelemetryComputed,
+      acceptRetrieveTelemetryComputed,
     };
   },
 });
