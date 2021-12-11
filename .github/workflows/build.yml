@@ -423,17 +423,6 @@ jobs:
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
 
-      - name: Recover file permissions for macOS build
-        if: startsWith(matrix.artifact_name, 'macos-') # macOS
-        shell: bash
-        run: |
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
-
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
