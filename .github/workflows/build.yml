@@ -134,20 +134,9 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-test-
 
-      # - name: Downgrade npm
-      #   if: startsWith(matrix.os, 'macos-')
-      #   shell: bash
-      #   run: npm install -g npm@6
-
       - name: Install dependencies
         shell: bash
         run: npm ci
-
-      # cf. https://github.com/electron-userland/electron-builder/issues/5668
-      # - name: Install the suitable version of electron-builder for macOS
-      #   if: startsWith(matrix.os, 'macos-')
-      #   shell: bash
-      #   run: npm install electron-builder@22.11.7
 
       - name: Show disk space (debug info)
         shell: bash
