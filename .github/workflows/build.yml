@@ -67,9 +67,19 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      # NOTE: The default sed of macOS is BSD sed.
+      #       There is a difference in specification between BSD sed and GNU sed,
+      #       so you need to install GNU sed.
+      - name: Install GNU sed on macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          brew install gnu-sed
+          echo "alias sed='gsed'" >> ~/.bashrc
+          source ~/.bashrc
+
       # Rename executable file
-      - name: Replace package name (for Windows and Ubuntu)
-        if: startsWith(matrix.os, 'windows-') || startsWith(matrix.os, 'ubuntu-')
+      - name: Replace package name
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
@@ -77,27 +87,15 @@ jobs:
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-      # Rename executable file
-      # NOTE: The sed command of macOS is BSD sed,
-      #       so you cannot omit the backup extension after the -i option.
-      - name: Replace package name (for macOS)
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: |
-          # GPU: "name": "voicevox" => "name": "voicevox"
-          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i '' 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i '' 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
-
       - name: Replace the extraFiles setting in vue.config.js for macOS
         if: startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
-          sed -i '' 's|from: "build/README.txt", to: "README.txt"|from: "build/README.txt", to: "MacOS/README.txt"|' vue.config.js
-          sed -i '' 's|from: ".env.production", to: ".env"|from: ".env.production", to: "MacOS/.env"|' vue.config.js
+          sed -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
+          sed -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
           str_config=$(cat vue.config.js)
-          str_config_2=${str_config//$'\n'/\\\\n}
-          echo $str_config_2 | sed -e 's|from: VOICEVOX_ENGINE_DIR,\\\\n[ ]*to: ""|from: VOICEVOX_ENGINE_DIR, to: "MacOS/"|' -e s/'\\\\n'/\\$'\n'/g > vue.config.js
+          str_config_2=${str_config//$'\n'/\\n}
+          echo $str_config_2 | sed -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
           cat vue.config.js
 
       - name: Set output Node version
@@ -519,6 +517,17 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      # NOTE: The default sed of macOS is BSD sed.
+      #       There is a difference in specification between BSD sed and GNU sed,
+      #       so you need to install GNU sed.
+      - name: Install GNU sed on macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          brew install gnu-sed
+          echo "alias sed='gsed'" >> ~/.bashrc
+          source ~/.bashrc
+
       # NOTE: If the CPU/GPU builds have the same package name,
       #       the NSIS installers and the 7z files have duplicate names.
       #       For Linux, If they have the same product name,
@@ -526,25 +535,12 @@ jobs:
       #       Files with the same name cannot be uploaded to a single GitHub Release,
       #       so different package/product names should be used for CPU/GPU builds.
       - name: Replace package name (for Windows and Ubuntu)
-        if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage')
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
-
-      # Rename executable file
-      # NOTE: The sed command of macOS is BSD sed,
-      #       so you cannot omit the backup extension after the -i option.
-      - name: Replace package name (for macOS)
-        if: endsWith(matrix.os, '-dmg')
-        shell: bash
-        run: |
-          # GPU: "name": "voicevox" => "name": "voicevox"
-          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i '' 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i '' 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
