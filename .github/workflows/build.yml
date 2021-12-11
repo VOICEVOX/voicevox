@@ -522,7 +522,7 @@ jobs:
           - artifact_name: macos-cpu-dmg
             engine_artifact_name: macos-cpu-prepackage
             package_name: voicevox-cpu
-            macos_artifact_name: 'VOICEVOX.${ext}'
+            macos_artifact_name: 'VOICEVOX ${version}.${ext}'
             macos_executable_name: VOICEVOX
             os: macos-11
 
