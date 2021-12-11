@@ -75,6 +75,7 @@ jobs:
         shell: bash
         run: |
           brew install gnu-sed
+          shopt -s expand_aliases
           echo "alias sed='gsed'" >> ~/.bashrc
           source ~/.bashrc
           alias
@@ -523,6 +524,7 @@ jobs:
         shell: bash
         run: |
           brew install gnu-sed
+          shopt -s expand_aliases
           echo "alias sed='gsed'" >> ~/.bashrc
           source ~/.bashrc
 
