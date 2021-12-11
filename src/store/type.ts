@@ -700,6 +700,19 @@ export type SettingActions = StoreType<SettingStoreTypes, "action">;
  */
 
 export type DialogType = {
+  COMMON: {
+    context: {
+      title: string;
+      message: string;
+      persistent?: boolean;
+      cancelable?: boolean;
+      okButtonText?: string;
+      cancelButtonText?: string;
+    };
+    result: {
+      result: "ok" | "cancel";
+    };
+  };
   HOTKEY_SETTING: {
     context: undefined;
     result: void;
@@ -866,6 +879,10 @@ type UiStoreTypes = {
 
   CLOSE_ALL_DIALOG: {
     action(): void;
+  };
+
+  OPEN_COMMON_DIALOG: {
+    action: DialogActionType<"COMMON">;
   };
 
   OPEN_HOTKEY_SETTING_DIALOG: {

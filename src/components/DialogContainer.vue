@@ -7,6 +7,7 @@ import { defineComponent, Component, watch, ref } from "vue";
 import { DialogChainObject, useQuasar } from "quasar";
 import { useStore } from "../store";
 import type { DialogContext, DialogName, DialogResult } from "../store/type";
+import CommonDialog from "./CommonDialog.vue";
 import HotkeySettingDialog from "./HotkeySettingDialog.vue";
 import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import SettingDialog from "./SettingDialog.vue";
@@ -31,6 +32,7 @@ export default defineComponent({
     const $q = useQuasar();
 
     const components: Dialogs = {
+      COMMON: CommonDialog,
       HOTKEY_SETTING: HotkeySettingDialog,
       DEFAULT_STYLE_SELECT: DefaultStyleSelectDialog,
       SETTING: SettingDialog,

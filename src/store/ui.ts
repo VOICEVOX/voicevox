@@ -250,6 +250,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         });
       },
 
+      OPEN_COMMON_DIALOG: createDialogAction({
+        dialog: "COMMON",
+        async action(_context, _payload, result) {
+          return result;
+        },
+      }),
+
       OPEN_HOTKEY_SETTING_DIALOG: createDialogAction({
         dialog: "HOTKEY_SETTING",
       }),
