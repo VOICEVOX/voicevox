@@ -17,8 +17,6 @@ import {
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
   IEngineConnectorFactoryActions,
-  QuasarDialog,
-  SaveAllResultDialogType,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -795,50 +793,6 @@ export const audioStore: VoiceVoxStoreOptions<
         return { result: "SUCCESS", path: filePath };
       }
     ),
-    async GENERATE_AND_SAVE_AUDIO_WITH_DIALOG(
-      { dispatch },
-      {
-        audioKey,
-        quasarDialog,
-        filePath,
-        encoding,
-      }: {
-        audioKey: string;
-        quasarDialog: QuasarDialog;
-        filePath?: string;
-        encoding?: EncodingType;
-      }
-    ) {
-      const result: SaveResultObject = await dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey,
-          filePath,
-          encoding,
-        }
-      );
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-      quasarDialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
-      });
-    },
     GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
       async (
         { state, dispatch },
@@ -865,54 +819,6 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    async GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG(
-      { dispatch },
-      {
-        quasarDialog,
-        saveAllResultDialog,
-        dirPath,
-        encoding,
-      }: {
-        quasarDialog: QuasarDialog;
-        saveAllResultDialog: SaveAllResultDialogType;
-        dirPath?: string;
-        encoding?: EncodingType;
-      }
-    ) {
-      const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
-        dirPath,
-        encoding,
-      });
-      const successArray: Array<string | undefined> = [];
-      const writeErrorArray: Array<string | undefined> = [];
-      const engineErrorArray: Array<string | undefined> = [];
-      if (result) {
-        for (const item of result) {
-          switch (item.result) {
-            case "SUCCESS":
-              successArray.push(item.path);
-              break;
-            case "WRITE_ERROR":
-              writeErrorArray.push(item.path);
-              break;
-            case "ENGINE_ERROR":
-              engineErrorArray.push(item.path);
-              break;
-          }
-        }
-      }
-
-      if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-        quasarDialog({
-          component: saveAllResultDialog,
-          componentProps: {
-            successArray: successArray,
-            writeErrorArray: writeErrorArray,
-            engineErrorArray: engineErrorArray,
-          },
-        });
-      }
-    },
     PLAY_AUDIO: createUILockAction(
       async (
         { state, commit, dispatch },

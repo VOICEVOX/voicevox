@@ -20,8 +20,6 @@ import {
   UpdateInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
-import { QVueGlobals } from "quasar";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 
 export type AudioItem = {
   text: string;
@@ -57,10 +55,6 @@ type StoreType<T, U extends "getter" | "mutation" | "action"> = {
     ? R
     : never;
 };
-
-export type QuasarDialog = QVueGlobals["dialog"];
-
-export type SaveAllResultDialogType = typeof SaveAllResultDialog;
 
 /*
  * Audio Store Types
@@ -278,29 +272,11 @@ type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
-  GENERATE_AND_SAVE_AUDIO_WITH_DIALOG: {
-    action(payload: {
-      audioKey: string;
-      quasarDialog: QuasarDialog;
-      filePath?: string;
-      encoding?: EncodingType;
-    }): void;
-  };
-
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
     }): SaveResultObject[] | undefined;
-  };
-
-  GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG: {
-    action(payload: {
-      quasarDialog: QuasarDialog;
-      saveAllResultDialog: SaveAllResultDialogType;
-      dirPath?: string;
-      encoding?: EncodingType;
-    }): void;
   };
 
   PLAY_AUDIO: {

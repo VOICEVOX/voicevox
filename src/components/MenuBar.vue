@@ -31,9 +31,12 @@ import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
+import {
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "@/components/Dialog";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -89,10 +92,10 @@ export default defineComponent({
 
     const generateAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG", {
+        await generateAndSaveAllAudioWithDialog({
           encoding: store.state.savingSetting.fileEncoding,
           quasarDialog: $q.dialog,
-          saveAllResultDialog: SaveAllResultDialog,
+          dispatch: store.dispatch,
         });
       }
     };
@@ -114,10 +117,11 @@ export default defineComponent({
         return;
       }
 
-      await store.dispatch("GENERATE_AND_SAVE_AUDIO_WITH_DIALOG", {
+      await generateAndSaveOneAudioWithDialog({
         audioKey: activeAudioKey,
-        quasarDialog: $q.dialog,
         encoding: store.state.savingSetting.fileEncoding,
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
       });
     };
 
