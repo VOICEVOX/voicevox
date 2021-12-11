@@ -501,6 +501,7 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - macos-cpu-dmg
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-appimage
@@ -528,6 +529,12 @@ jobs:
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
             os: windows-2019
+          # macOS CPU
+          - artifact_name: macos-cpu-dmg
+            engine_artifact_name: macos-cpu-prepackage
+            package_name: voicevox-cpu
+            macos_artifact_name: 'VOICEVOX.${ext}'
+            os: macos-11
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -539,13 +546,26 @@ jobs:
       #       the AppImages have duplicate names.
       #       Files with the same name cannot be uploaded to a single GitHub Release,
       #       so different package/product names should be used for CPU/GPU builds.
-      - name: Replace package name
+      - name: Replace package name (for Windows and Ubuntu)
+        if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage')
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+      # Rename executable file
+      # NOTE: The sed command of macOS is BSD sed,
+      #       so you cannot omit the backup extension after the -i option.
+      - name: Replace package name (for macOS)
+        if: endsWith(matrix.os, '-dmg')
+        shell: bash
+        run: |
+          # GPU: "name": "voicevox" => "name": "voicevox"
+          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          sed -i '' 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # sed -i '' 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
@@ -559,6 +579,17 @@ jobs:
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
+
+      - name: Recover file permissions for macOS build
+        if: endsWith(matrix.artifact_name, '-dmg') # macOS
+        shell: bash
+        run: |
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
       - name: Show disk space (debug info)
         shell: bash
@@ -610,12 +641,20 @@ jobs:
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
+        if: endsWith(matrix.artifact_name, "-nsis-web") || endsWith(matrix.artifact_name, "-appimage") # windows and linux
         shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: npm run electron:build_pnever -- --prepackaged "prepackage/"
+
+      - name: Build Electron (for macOS)
+        if: endsWith(matrix.artifact_name, "-dmg") # macOS
+        shell: bash
+        env:
+          MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+        run: npm run electron:build_pnever -- --prepackaged "prepackage/VOICEVOX.app"
 
       - name: Show disk space (debug info)
         shell: bash
@@ -629,6 +668,14 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: |
             dist_electron/*.AppImage
+
+      - name: Upload macOS dmg artifact
+        if: endsWith(matrix.artifact_name, '-dmg')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist_electron/*.dmg
 
       - name: Create Windows NSIS Web artifact directory
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -670,6 +717,7 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - macos-cpu-dmg
         include:
           - artifact_name: linux-nvidia-appimage
             appimage_7z_name: VOICEVOX.AppImage
@@ -677,6 +725,7 @@ jobs:
             appimage_7z_name: VOICEVOX-CPU.AppImage
           - artifact_name: windows-nvidia-nsis-web
           - artifact_name: windows-cpu-nsis-web
+          - artifact_name: macos-cpu-dmg
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -764,3 +813,13 @@ jobs:
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
           file: artifact/*.exe
+
+      # macOS dmg
+      - name: Upload macOS dmg to Release assets
+        if: endsWith(matrix.artifact_name, '-dmg')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.dmg
