@@ -58,11 +58,11 @@ export default defineComponent({
               })
               .onOk((payload: DialogResult) => {
                 dialogData.closed = true;
-                context.result({ result: "ok", ...payload });
+                context.result(payload);
               })
-              .onCancel((payload: DialogResult) => {
+              .onCancel(() => {
                 dialogData.closed = true;
-                context.result({ result: "cancel", ...payload });
+                context.result();
               }),
             context,
           };

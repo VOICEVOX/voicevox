@@ -33,18 +33,19 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 export function createDialogAction<
   S,
   A extends ActionsBase,
-  K extends keyof A
+  K extends keyof A,
+  N extends DialogName
 >({
   dialog,
   multiple,
   action,
 }: {
-  dialog: DialogName;
+  dialog: N;
   multiple?: boolean;
   action?: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0],
-    result: DialogResult
+    result?: DialogResult<N>
   ) => ReturnType<A[K]> extends Promise<unknown>
     ? ReturnType<A[K]>
     : Promise<ReturnType<A[K]>>;
@@ -54,14 +55,14 @@ export function createDialogAction<
       const ctx = {
         dialog,
         multiple: multiple ?? false,
-        result: async (result) => {
+        result: async (result?: DialogResult<N>) => {
           resolve(await action?.(context, payload, result));
           context.commit("UNLOCK_UI");
           context.commit("UNLOCK_MENUBAR");
           context.commit("REMOVE_DIALOG_CONTEXT", ctx);
         },
         props: payload,
-      } as DialogContext;
+      } as DialogContext<N>;
 
       context.commit("LOCK_UI");
       context.commit("LOCK_MENUBAR");

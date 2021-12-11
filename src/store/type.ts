@@ -732,11 +732,8 @@ export type DialogContext<T extends DialogName = DialogName> = T extends infer N
   ? N extends DialogName
     ? {
         dialog: N;
-        id: string;
         multiple: boolean;
-        result: (
-          result: DialogResult & { result: "ok" | "cancel" }
-        ) => Promise<void>;
+        result: (result?: DialogResult) => Promise<void>;
         props: DialogType[N]["context"];
       } extends infer C
       ? { [K in keyof C]: C[K] }
@@ -745,11 +742,20 @@ export type DialogContext<T extends DialogName = DialogName> = T extends infer N
   : never;
 export type DialogResult<T extends DialogName = DialogName> = T extends infer N
   ? N extends DialogName
-    ? { dialog: N } & DialogType[N]["result"] extends infer C
+    ? DialogType[N]["result"] extends infer C
       ? { [K in keyof C]: C[K] }
       : never
     : never
   : never;
+
+type DialogActionType<T extends DialogName> =
+  DialogType[T]["context"] extends undefined
+    ? () => Promise<DialogResult<T>>
+    : (
+        context: DialogType[T]["context"]
+      ) => Promise<
+        DialogResult<T> extends void ? void : DialogResult<T> | undefined
+      >;
 
 export type UiStoreState = {
   uiLockCount: number;
@@ -863,25 +869,23 @@ type UiStoreTypes = {
   };
 
   OPEN_HOTKEY_SETTING_DIALOG: {
-    action(): Promise<void>;
+    action: DialogActionType<"HOTKEY_SETTING">;
   };
 
   OPEN_DEFAULT_STYLE_SELECT_DIALOG: {
-    action(
-      context: DialogType["DEFAULT_STYLE_SELECT"]["context"]
-    ): Promise<void>;
+    action: DialogActionType<"DEFAULT_STYLE_SELECT">;
   };
 
   OPEN_SETTING_DIALOG: {
-    action(): Promise<void>;
+    action: DialogActionType<"SETTING">;
   };
 
   OPEN_HELP_DIALOG: {
-    action(): Promise<void>;
+    action: DialogActionType<"HELP">;
   };
 
   OPEN_SAVE_ALL_RESULT_DIALOG: {
-    action(context: DialogType["SAVE_ALL_RESULT"]["context"]): Promise<void>;
+    action: DialogActionType<"SAVE_ALL_RESULT">;
   };
 };
 
