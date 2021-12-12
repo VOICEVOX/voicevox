@@ -55,9 +55,21 @@ function parseTextFile(
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
-  for (const info of characterInfos || []) {
-    for (const style of info.metas.styles) {
-      characters.set(info.metas.speakerName, style.styleId);
+  {
+    const uuid2StyleIds = new Map<string, number>();
+    for (const defaultStyleId of defaultStyleIds || []) {
+      const speakerUuid = defaultStyleId.speakerUuid;
+      const styleId = defaultStyleId.defaultStyleId;
+      uuid2StyleIds.set(speakerUuid, styleId);
+    }
+    for (const characterInfo of characterInfos || []) {
+      const uuid = characterInfo.metas.speakerUuid;
+      const styleId =
+        uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
+      const speakerName = characterInfo.metas.speakerName;
+      if (styleId !== undefined) {
+        characters.set(speakerName, styleId);
+      }
     }
   }
   if (!characters.size) return [];
