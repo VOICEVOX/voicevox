@@ -722,6 +722,7 @@ jobs:
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
           - macos-cpu-dmg
+          - macos-cpu-prepackage-zip
         include:
           - artifact_name: linux-nvidia-appimage
             appimage_7z_name: VOICEVOX.AppImage
@@ -730,6 +731,7 @@ jobs:
           - artifact_name: windows-nvidia-nsis-web
           - artifact_name: windows-cpu-nsis-web
           - artifact_name: macos-cpu-dmg
+          - artifact_name: macos-cpu-prepackage-zip
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -827,3 +829,13 @@ jobs:
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
           file: artifact/*.dmg
+
+      # macOS zip
+      - name: Upload macOS zip to Release assets
+        if: startsWith(matrix.artifact_name, 'macos-') && endsWith(matrix.artifact_name, '-zip')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.zip
