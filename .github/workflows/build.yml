@@ -285,8 +285,8 @@ jobs:
           # macOS CPU
           - artifact_name: macos-cpu-prepackage
             noengine_artifact_name: macos-noengine-cpu-prepackage
-            macos_executable_name: VOICEVOX
             voicevox_engine_asset_name: macos-x64
+            macos_executable_name: VOICEVOX
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
 
     runs-on: ${{ matrix.os }}
