@@ -102,7 +102,7 @@ jobs:
           "${{ matrix.sed_name }}" -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
           "${{ matrix.sed_name }}" -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
 
-          # In order to replace two lines in sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
+          # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
           # cf. https://deep.tacoskingdom.com/blog/15
           str_config=$(cat vue.config.js)
           str_config_2=${str_config//$'\n'/\\n}
