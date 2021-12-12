@@ -36,6 +36,8 @@
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
+          :class="[accentPhraseIndex === playPoint && 'bg-red-2']"
+          @click="setPlayAndStartPoint(accentPhraseIndex)"
         >
           <template v-if="selectedDetail === 'accent'">
             <audio-accent
@@ -222,7 +224,7 @@ import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { Mora } from "@/openapi/models";
+import { AccentPhrase, Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -292,8 +294,62 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
+    const startPoint = ref(0);
+    const playPoint = ref<number | null>(null);
+    let accentPhraseOffsets: number[] = [];
+    watch(startPoint, (value) => {
+      store.dispatch("SET_AUDIO_PLAY_OFFSET", {
+        offset: accentPhraseOffsets[value],
+      });
+    });
+
+    const setPlayAndStartPoint = (accentPhraseIndex: number) => {
+      // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
+      // UIロックというものにそぐわない挙動になるので何もしないようにする
+      if (uiLocked.value) return;
+
+      if (playPoint.value !== accentPhraseIndex) {
+        playPoint.value = accentPhraseIndex;
+        startPoint.value = accentPhraseIndex;
+      } else {
+        // 選択解除で最初から再生できるようにする
+        playPoint.value = null;
+        startPoint.value = 0;
+      }
+    };
+
+    const updateAccentPhraseOffsets = (
+      newPhrases: AccentPhrase[] | undefined
+    ) => {
+      accentPhraseOffsets = [];
+
+      if (newPhrases === undefined) return;
+
+      let length = 0;
+      accentPhraseOffsets.push(length);
+      // pre phoneme lengthは最初のアクセント句の一部として扱う
+      length += query.value !== undefined ? query.value.prePhonemeLength : 0;
+      newPhrases.forEach((phrase, i) => {
+        phrase.moras.forEach((m) => {
+          length += m.consonantLength !== undefined ? m.consonantLength : 0;
+          length += m.vowelLength;
+        });
+        length +=
+          phrase.pauseMora !== undefined ? phrase.pauseMora.vowelLength : 0;
+        // post phoneme lengthは最後のアクセント句の一部として扱う
+        if (i === newPhrases.length - 1) {
+          length +=
+            query.value !== undefined ? query.value.postPhonemeLength : 0;
+        }
+        accentPhraseOffsets.push(length);
+      });
+    };
+
     const lastPitches = ref<number[][]>([]);
     watch(accentPhrases, (newPhrases) => {
+      updateAccentPhraseOffsets(newPhrases);
+      playPoint.value = null;
+      startPoint.value = 0;
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
@@ -339,6 +395,13 @@ export default defineComponent({
         data,
         type,
       });
+      // 音素長の調節を行った際には、AccentPhraseのwatchに引っかからないので、
+      // ここでAccentPhraseOffsetsを更新する
+      if (type === "consonant" || type === "vowel") {
+        updateAccentPhraseOffsets(
+          store.state.audioItems[props.activeAudioKey].query?.accentPhrases
+        );
+      }
     };
 
     // audio play
@@ -570,6 +633,8 @@ export default defineComponent({
     return {
       selectDetail,
       selectedDetail,
+      playPoint,
+      setPlayAndStartPoint,
       uiLocked,
       audioItem,
       query,
