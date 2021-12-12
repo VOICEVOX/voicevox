@@ -874,9 +874,7 @@ type DialogActionType<T extends DialogName> =
     ? () => Promise<DialogResult<T>>
     : (
         context: DialogType[T]["context"]
-      ) => Promise<
-        DialogResult<T> extends void ? void : DialogResult<T> | undefined
-      >;
+      ) => DialogResult<T> extends void ? void : DialogResult<T> | undefined;
 
 export type DialogStoreState = {
   dialogContexts: DialogContext[];

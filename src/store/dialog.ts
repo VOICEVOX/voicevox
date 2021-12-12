@@ -30,17 +30,15 @@ export function createDialogAction<
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0],
     result?: DialogResult<N>
-  ) => ReturnType<A[K]> extends Promise<unknown>
-    ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>;
+  ) => ReturnType<A[K]>;
 }): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload) =>
     new Promise((resolve) => {
       const ctx = {
         dialog,
         multiple: multiple ?? false,
-        result: async (result?: DialogResult<N>) => {
-          resolve(await action?.(context, payload, result));
+        result: (result?: DialogResult<N>) => {
+          resolve(action?.(context, payload, result));
           context.commit("UNLOCK_UI");
           context.commit("UNLOCK_MENUBAR");
           context.commit("REMOVE_DIALOG_CONTEXT", ctx);
@@ -89,7 +87,7 @@ export const dialogStore: VoiceVoxStoreOptions<
     OPEN_COMMON_DIALOG: createDialogAction({
       dialog: "COMMON",
       multiple: true,
-      async action(_context, _payload, result) {
+      action(_context, _payload, result) {
         return result;
       },
     }),
