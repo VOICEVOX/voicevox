@@ -563,7 +563,7 @@ jobs:
       #       the AppImages have duplicate names.
       #       Files with the same name cannot be uploaded to a single GitHub Release,
       #       so different package/product names should be used for CPU/GPU builds.
-      - name: Replace package name (for Windows and Ubuntu)
+      - name: Replace package name
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
