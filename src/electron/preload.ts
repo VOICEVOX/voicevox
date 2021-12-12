@@ -180,6 +180,10 @@ const api: Sandbox = {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 
+  savingPresets: (newPresets) => {
+    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
+  },
+
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
@@ -194,6 +198,17 @@ const api: Sandbox = {
 
   setDefaultStyleIds: async (defaultStyleIds) => {
     await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+  },
+
+  getAcceptRetrieveTelemetry: async () => {
+    return await ipcRendererInvoke("GET_ACCEPT_RETRIEVE_TELEMETRY");
+  },
+
+  setAcceptRetrieveTelemetry: async (acceptRetrieveTelemetry) => {
+    return await ipcRendererInvoke(
+      "SET_ACCEPT_RETRIEVE_TELEMETRY",
+      acceptRetrieveTelemetry
+    );
   },
 
   getDefaultHotkeySettings: async () => {

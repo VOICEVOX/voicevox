@@ -1,6 +1,7 @@
 <template>
   <q-bar class="bg-background q-pa-none relative-position">
-    <img src="icon.png" class="window-logo" alt="application logo" />
+    <min-max-close-buttons v-if="$q.platform.is.mac" />
+    <img v-else src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
@@ -28,6 +29,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
+import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
@@ -69,6 +71,7 @@ export default defineComponent({
   name: "MenuBar",
 
   components: {
+    MinMaxCloseButtons,
     MenuButton,
     TitleBarButtons,
   },

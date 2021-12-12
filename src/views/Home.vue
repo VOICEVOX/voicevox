@@ -113,6 +113,9 @@
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
+  <accept-retrieve-telemetry-dialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -135,11 +138,13 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "Home",
@@ -155,6 +160,7 @@ export default defineComponent({
     HotkeySettingDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
+    AcceptRetrieveTelemetryDialog,
   },
 
   setup() {
@@ -282,8 +288,10 @@ export default defineComponent({
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
       let styleId: number | undefined = undefined;
+      let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
+        presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -296,6 +304,7 @@ export default defineComponent({
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
+        presetKey,
         baseAudioItem,
       });
 
@@ -378,6 +387,11 @@ export default defineComponent({
       hotkeyActionsNative.forEach((item) => {
         document.addEventListener("keyup", item);
       });
+
+      isAcceptRetrieveTelemetryDialogOpenComputed.value =
+        store.state.acceptRetrieveTelemetry === "Unconfirmed";
+      const gtm = useGtm();
+      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
     });
 
     // エンジン待機
@@ -413,6 +427,16 @@ export default defineComponent({
       set: (val) =>
         store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen: val,
+        }),
+    });
+
+    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isDefaultStyleSelectDialogOpen &&
+        store.state.isAcceptRetrieveTelemetryDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+          isAcceptRetrieveTelemetryDialogOpen: val,
         }),
     });
 
@@ -463,6 +487,7 @@ export default defineComponent({
       isHotkeySettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
+      isAcceptRetrieveTelemetryDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

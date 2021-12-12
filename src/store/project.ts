@@ -61,7 +61,7 @@ export const projectStore: VoiceVoxStoreOptions<
           }
         }
 
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
@@ -242,7 +242,7 @@ export const projectStore: VoiceVoxStoreOptions<
               return;
             }
           }
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
@@ -361,6 +361,7 @@ const audioItemSchema = {
   optionalProperties: {
     styleId: { type: "int32" },
     query: audioQuerySchema,
+    presetKey: { type: "string" },
   },
 } as const;
 
