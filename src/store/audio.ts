@@ -21,6 +21,7 @@ import {
 import { createUILockAction } from "./ui";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   MoraDataType,
 } from "@/type/preload";
@@ -50,6 +51,7 @@ async function generateUniqueIdAndQuery(
 
 function parseTextFile(
   body: string,
+  defaultStyleIds: DefaultStyleId[],
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
@@ -1468,6 +1470,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
         for (const { text, styleId } of parseTextFile(
           body,
+          state.defaultStyleIds,
           state.characterInfos
         )) {
           //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
