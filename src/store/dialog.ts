@@ -30,15 +30,15 @@ export function createDialogAction<
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
     payload: Parameters<A[K]>[0],
     result?: DialogResult<N>
-  ) => ReturnType<A[K]>;
+  ) => ReturnType<A[K]> | Promise<ReturnType<A[K]>>;
 }): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload) =>
     new Promise((resolve) => {
       const ctx = {
         dialog,
         multiple: multiple ?? false,
-        result: (result?: DialogResult<N>) => {
-          resolve(action?.(context, payload, result));
+        result: async (result?: DialogResult<N>) => {
+          resolve(await action?.(context, payload, result));
           context.commit("UNLOCK_UI");
           context.commit("UNLOCK_MENUBAR");
           context.commit("REMOVE_DIALOG_CONTEXT", ctx);

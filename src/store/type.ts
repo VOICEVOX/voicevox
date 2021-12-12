@@ -871,7 +871,7 @@ export type DialogResult<T extends DialogName = DialogName> = T extends infer N
 
 type DialogActionType<T extends DialogName> =
   DialogType[T]["context"] extends undefined
-    ? () => Promise<DialogResult<T>>
+    ? () => DialogResult<T>
     : (
         context: DialogType[T]["context"]
       ) => DialogResult<T> extends void ? void : DialogResult<T> | undefined;
