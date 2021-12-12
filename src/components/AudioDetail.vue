@@ -31,13 +31,14 @@
         </div>
       </div>
 
-      <div class="overflow-hidden-y accent-phrase-table">
+      <div class="overflow-hidden-y accent-phrase-table" id="audio-detail">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
           :class="[accentPhraseIndex === playPoint && 'bg-red-2']"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
+          :id="`accent-phrase-${accentPhraseIndex}`"
         >
           <template v-if="selectedDetail === 'accent'">
             <audio-accent
@@ -438,6 +439,46 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+
+    const scrollToPlayPoint = () => {
+      const audioDetailElem = document.getElementById(
+        "audio-detail"
+      ) as HTMLElement;
+      const elem = document.getElementById(`accent-phrase-${playPoint.value}`);
+      if (elem) {
+        // 再生されているアクセント句を大体真ん中に持ってくる
+        const scrollCount = Math.max(
+          elem.offsetLeft - audioDetailElem.offsetWidth / 2,
+          0
+        );
+        audioDetailElem.scroll(scrollCount, 0);
+      }
+    };
+
+    // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
+    let focusInterval: ReturnType<typeof setInterval> | undefined;
+    watch(nowPlaying, (newState) => {
+      if (newState) {
+        focusInterval = setInterval(() => {
+          const currentTime = store.getters.AUDIO_ELEM_CURRENT_TIME;
+          for (let i = 1; i < accentPhraseOffsets.length; i++) {
+            if (
+              currentTime !== undefined &&
+              accentPhraseOffsets[i - 1] < currentTime &&
+              currentTime < accentPhraseOffsets[i]
+            ) {
+              playPoint.value = i - 1;
+              scrollToPlayPoint();
+            }
+          }
+        }, 100);
+      } else if (focusInterval !== undefined) {
+        clearInterval(focusInterval);
+        focusInterval = undefined;
+        playPoint.value = startPoint.value;
+        scrollToPlayPoint();
+      }
+    });
 
     const pronunciationByPhrase = computed(() => {
       let textArray: Array<string> = [];
