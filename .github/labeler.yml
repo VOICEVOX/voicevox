@@ -1,6 +1,6 @@
 mac:
-    - '(mac|MAC|Mac|マック)'
+    - '\[x\] macOS'
 linux:
-    - '(linux|Linux|リナックス)'
+    - '\[x\] Linux'
 win:
-    - '(win|WIN|Win|ウィンドウズ)(dows|DOWS)?'
+    - '\[x\] Windows'
