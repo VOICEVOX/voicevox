@@ -21,6 +21,7 @@ describe("store/vuex.js test", () => {
         audioItems: {},
         audioKeys: [],
         audioStates: {},
+        audioPlayOffset: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
         nowPlayingContinuously: false,
