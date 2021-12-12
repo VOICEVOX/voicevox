@@ -61,7 +61,7 @@ function parseTextFile(
       (info) => info.metas.speakerUuid === defaultStyleId.speakerUuid
     )?.metas.speakerName;
     if (speakerName === undefined) {
-      return [];
+      continue;
     } else {
       characters.set(speakerName, defaultStyleId.defaultStyleId);
     }
