@@ -1,0 +1,6 @@
+mac:
+    - '(mac|MAC|Mac|マック)'
+linux:
+    - '(linux|Linux|リナックス)'
+win:
+    - '(win|WIN|Win|ウィンドウズ)(dows|DOWS)?'
