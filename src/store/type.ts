@@ -558,6 +558,10 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
+  GET_PRIVACY_POLICY_TEXT: {
+    action(): Promise<string>;
+  };
+
   IS_UNSET_DEFAULT_STYLE_ID: {
     action(payload: { speakerUuid: string }): Promise<boolean>;
   };

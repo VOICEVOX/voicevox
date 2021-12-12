@@ -398,6 +398,11 @@ const updateInfos = JSON.parse(
   })
 );
 
+const privacyPolicyText = fs.readFileSync(
+  path.join(__static, "privacy_policy.md"),
+  "utf-8"
+);
+
 // hotkeySettingsのマイグレーション
 function migrateHotkeySettings() {
   const COMBINATION_IS_NONE = "####";
@@ -536,6 +541,10 @@ ipcMainHandle("GET_UPDATE_INFOS", () => {
 
 ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
+});
+
+ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
+  return privacyPolicyText;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
