@@ -858,6 +858,7 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
         audioElem.src = URL.createObjectURL(blob);
+        audioElem.currentTime = state.audioPlayOffset;
 
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
@@ -904,6 +905,7 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
+        const currentAudioPlayOffset = state.audioPlayOffset;
 
         let index = 0;
         if (currentAudioKey !== undefined) {
@@ -922,6 +924,7 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         } finally {
           commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+          commit("SET_AUDIO_PLAY_OFFSET", { offset: currentAudioPlayOffset });
           commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
         }
       }
