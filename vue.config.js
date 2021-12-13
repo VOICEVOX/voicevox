@@ -81,9 +81,7 @@ module.exports = {
             LINUX_EXECUTABLE_NAME !== "" ? LINUX_EXECUTABLE_NAME : undefined,
           icon: "public/icon.png",
           category: "AudioVideo",
-          mimeTypes: [
-            "application/x-voicevox"
-          ],
+          mimeTypes: ["application/x-voicevox"],
           target: [
             {
               target: "AppImage",
