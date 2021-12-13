@@ -506,6 +506,7 @@ async function createWindow() {
           filePath: filePathOnMac,
           confirm: false,
         });
+        filePathOnMac = null;
       }
     } else {
       if (process.argv.length >= 2) {
