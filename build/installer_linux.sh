@@ -41,6 +41,7 @@ IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
+MIME_INSTALL_DIR=${MIME_INSTALL_DIR:-$HOME/.local/share/mime}
 
 if [ "$FORCE_INSTALL" != "1" ] && [ -f "${APP_DIR}/VOICEVOX.AppImage" ]; then
     echo "[*] VOICEVOX already installed in '${APP_DIR}/VOICEVOX.AppImage'."
@@ -338,6 +339,7 @@ VOICEVOX_INSTALLED_FILES=(
     ${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop
     ${ICON_INSTALL_DIR}/voicevox.png
     ${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png
+    ${MIME_INSTALL_DIR}/packages/voicevox.xml
 )
 
 VOICEVOX_INSTALLED_DIR=(
@@ -400,6 +402,7 @@ chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
 sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE} %U/" "${DESKTOP_FILE}" > _
+sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE} %U/" "${DESKTOP_FILE}" > _
 mv _ "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
@@ -411,6 +414,25 @@ echo "[+] Installing icon..."
 mkdir -p "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
 cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
+
+# Register file association
+echo "[+] Registering file association..."
+
+mkdir -p "${MIME_INSTALL_DIR}/packages"
+cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
+<?xml version="1.0" encoding="utf-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-voicevox">
+        <comment>VOICEVOX Project file</comment>
+	    <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
+        <sub-class-of type="application/json" />
+        <glob pattern="*.vvproj" />
+		<icon name="voicevox" />
+    </mime-type>
+</mime-info>
+EOS
+
+update-mime-database "${MIME_INSTALL_DIR}"
 
 # Remove extract dir
 echo "[+] Removing temporal directory..."
