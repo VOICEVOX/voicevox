@@ -52,7 +52,7 @@
             </q-card-section>
 
             <q-card-section class="text-body1">
-              <p>ダミープライバシーポリシー</p>
+              <div v-html="privacyPolicy"></div>
             </q-card-section>
           </q-card>
         </q-page>
@@ -62,9 +62,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useGtm } from "@gtm-support/vue-gtm";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 export default defineComponent({
   name: "AcceptRetrieveTelemetryDialog",
@@ -96,9 +97,18 @@ export default defineComponent({
       modelValueComputed.value = false;
     };
 
+    const md = useMarkdownIt();
+    const privacyPolicy = ref("");
+    onMounted(async () => {
+      privacyPolicy.value = md.render(
+        await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+      );
+    });
+
     return {
       modelValueComputed,
       handler,
+      privacyPolicy,
     };
   },
 });

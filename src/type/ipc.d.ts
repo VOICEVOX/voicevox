@@ -42,6 +42,11 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_PRIVACY_POLICY_TEXT: {
+    args: [];
+    return: string;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
