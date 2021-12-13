@@ -194,6 +194,7 @@ jobs:
             popd
             pushd "$FILEPATH/voice_samples"
             # Explore character voice_samples directory.
+            # VOICEPATH example: "./0_000.wav"
             for VOICEPATH in ./*
               do
               # Same as for ICONPATH
@@ -207,7 +208,6 @@ jobs:
         run: |
           rm build/README.txt
           rm public/policy.md
-          # "<(echo)" has the effect of adding a new line.
           {
             cat resource/editor/README.md
             echo
