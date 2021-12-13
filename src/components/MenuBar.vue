@@ -34,7 +34,6 @@ import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { SaveResultObject } from "@/store/type";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -90,36 +89,9 @@ export default defineComponent({
 
     const generateAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        const result = await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+        await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG", {
           encoding: store.state.savingSetting.fileEncoding,
         });
-
-        let successArray: Array<string | undefined> = [];
-        let writeErrorArray: Array<string | undefined> = [];
-        let engineErrorArray: Array<string | undefined> = [];
-        if (result) {
-          for (const item of result) {
-            switch (item.result) {
-              case "SUCCESS":
-                successArray.push(item.path);
-                break;
-              case "WRITE_ERROR":
-                writeErrorArray.push(item.path);
-                break;
-              case "ENGINE_ERROR":
-                engineErrorArray.push(item.path);
-                break;
-            }
-          }
-        }
-
-        if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-          store.dispatch("OPEN_SAVE_ALL_RESULT_DIALOG", {
-            successArray,
-            writeErrorArray,
-            engineErrorArray,
-          });
-        }
       }
     };
 
@@ -136,32 +108,9 @@ export default defineComponent({
         return;
       }
 
-      const result: SaveResultObject = await store.dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey: activeAudioKey,
-          encoding: store.state.savingSetting.fileEncoding,
-        }
-      );
-
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-
-      store.dispatch("OPEN_COMMON_DIALOG", {
-        title: "書き出しに失敗しました。",
-        message: msg,
-        okButtonText: "閉じる",
+      await store.dispatch("GENERATE_AND_SAVE_AUDIO_WITH_DIALOG", {
+        audioKey: activeAudioKey,
+        encoding: store.state.savingSetting.fileEncoding,
       });
     };
 

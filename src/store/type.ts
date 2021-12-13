@@ -280,11 +280,23 @@ type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
+  GENERATE_AND_SAVE_AUDIO_WITH_DIALOG: {
+    action(
+      ...payload: Parameters<AudioActions["GENERATE_AND_SAVE_AUDIO"]>
+    ): Promise<void>;
+  };
+
   GENERATE_AND_SAVE_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
     }): SaveResultObject[] | undefined;
+  };
+
+  GENERATE_AND_SAVE_ALL_AUDIO_WITH_DIALOG: {
+    action(
+      ...payload: Parameters<AudioActions["GENERATE_AND_SAVE_ALL_AUDIO"]>
+    ): Promise<void>;
   };
 
   PLAY_AUDIO: {

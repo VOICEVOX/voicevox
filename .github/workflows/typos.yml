@@ -7,6 +7,7 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - '**'
+  workflow_dispatch:
 
 jobs:
   build:

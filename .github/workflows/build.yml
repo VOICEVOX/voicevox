@@ -7,6 +7,7 @@ on:
   release:
     types:
       - created
+  workflow_dispatch:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"

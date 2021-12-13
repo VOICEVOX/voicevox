@@ -4,7 +4,7 @@
     <q-layout container class="q-dialog-plugin bg-background">
       <q-header>
         <q-toolbar>
-          <q-toolbar-title class="header-text"
+          <q-toolbar-title class="text-display"
             >音声書き出し結果</q-toolbar-title
           >
         </q-toolbar>
