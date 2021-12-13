@@ -449,6 +449,7 @@ function migrateHotkeySettings() {
 migrateHotkeySettings();
 
 let willQuit = false;
+let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -499,9 +500,18 @@ async function createWindow() {
   });
 
   win.webContents.once("did-finish-load", () => {
-    if (process.argv.length >= 2) {
-      const filePath = process.argv[1];
-      ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+    if (process.platform === "darwin") {
+      if (filePathOnMac != null) {
+        ipcMainSend(win, "LOAD_PROJECT_FILE", {
+          filePath: filePathOnMac,
+          confirm: false,
+        });
+      }
+    } else {
+      if (process.argv.length >= 2) {
+        const filePath = process.argv[1];
+        ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+      }
     }
   });
 }
@@ -887,6 +897,14 @@ app.on("before-quit", (event) => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+app.once("will-finish-launching", () => {
+  // macOS only
+  app.once("open-file", (event, filePath) => {
+    event.preventDefault();
+    filePathOnMac = filePath;
+  });
 });
 
 app.on("ready", async () => {
