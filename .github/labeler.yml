@@ -1,6 +1,6 @@
-mac:
+'OS：mac':
     - '\[x\] macOS'
-linux:
+'OS：linux':
     - '\[x\] Linux'
-win:
+'OS：win':
     - '\[x\] Windows'
