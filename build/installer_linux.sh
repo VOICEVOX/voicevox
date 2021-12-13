@@ -423,10 +423,10 @@ cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
     <mime-type type="application/x-voicevox">
         <comment>VOICEVOX Project file</comment>
-	    <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
+        <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
         <sub-class-of type="application/json" />
         <glob pattern="*.vvproj" />
-		<icon name="voicevox" />
+        <icon name="voicevox" />
     </mime-type>
 </mime-info>
 EOS
