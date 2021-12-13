@@ -67,9 +67,7 @@ function parseTextFile(
       const styleId =
         uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
       const speakerName = characterInfo.metas.speakerName;
-      if (styleId !== undefined) {
-        characters.set(speakerName, styleId);
-      }
+      characters.set(speakerName, styleId);
     }
   }
   if (!characters.size) return [];
