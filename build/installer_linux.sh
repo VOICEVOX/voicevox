@@ -432,7 +432,21 @@ cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 </mime-info>
 EOS
 
-update-mime-database "${MIME_INSTALL_DIR}"
+# Update file association database
+echo "[+] Updating file association database..."
+if command -v update-mime-database &> /dev/null; then
+    update-mime-database "${MIME_INSTALL_DIR}"
+else
+    echo "[-] Skipped: Command 'update-mime-database' not found"
+fi
+
+# Update desktop file database
+echo "[+] Updating desktop file database..."
+if command -v update-desktop-database &> /dev/null; then
+    update-desktop-database
+else
+    echo "[-] Skipped: Command 'update-desktop-database' not found"
+fi
 
 # Remove extract dir
 echo "[+] Removing temporal directory..."
