@@ -1,5 +1,5 @@
+name: Build
 
-name: build
 on:
   push:
     branches:
@@ -7,6 +7,7 @@ on:
   release:
     types:
       - created
+  workflow_dispatch:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
@@ -28,6 +29,7 @@ jobs:
           - linux-noengine-cpu-prepackage
           - windows-noengine-prepackage
           - windows-noengine-cpu-prepackage
+          - macos-noengine-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-noengine-prepackage
@@ -35,6 +37,7 @@ jobs:
             package_name: voicevox
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Linux CPU
           - artifact_name: linux-noengine-cpu-prepackage
@@ -42,23 +45,42 @@ jobs:
             package_name: voicevox-cpu
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Windows NVIDIA GPU
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox
             nsis_web_artifact_name: 'VOICEVOX Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # Windows CPU
           - artifact_name: windows-noengine-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
+          # macOS CPU
+          - artifact_name: macos-noengine-cpu-prepackage
+            artifact_path: dist_electron/mac
+            package_name: voicevox-cpu
+            macos_artifact_name: 'VOICEVOX.${ext}'
+            sed_name: gsed
+            os: macos-11
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      # NOTE: The default sed of macOS is BSD sed.
+      #       There is a difference in specification between BSD sed and GNU sed,
+      #       so you need to install GNU sed.
+      - name: Install GNU sed on macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          brew install gnu-sed
 
       # Rename executable file
       - name: Replace package name
@@ -66,8 +88,26 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+      # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
+      #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
+      #       it is inappropriate to copy the extraFiles to the VOICEVOX.app/Contents/ directory.
+      #       Fix it so that it is copied to the VOICEVOX.app/Contents/MacOS/ directory.
+      #       cf. https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
+      - name: Replace the extraFiles setting in vue.config.js for macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          "${{ matrix.sed_name }}" -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
+
+          # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
+          # cf. https://deep.tacoskingdom.com/blog/15
+          str_config="$(cat vue.config.js)"
+          echo "${str_config//$'\n'/\\n}" | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          cat vue.config.js
 
       - name: Set output Node version
         id: node-version
@@ -112,8 +152,8 @@ jobs:
         run: |
           df -h
 
-      - name: Overwrite .env.production for Linux
-        if: startsWith(matrix.os, 'ubuntu-')
+      - name: Overwrite .env.production for Linux and macOS
+        if: startsWith(matrix.os, 'ubuntu-') || startsWith(matrix.os, 'macos-')
         shell: bash
         run: |
           echo "ENGINE_PATH=./run" > .env.production
@@ -135,14 +175,15 @@ jobs:
           # Explore characters directory.
           # Character directory name is uuid, but this script can automatically detect character directory name.
           # We don't need to change this code when add more characters.
-          for FILEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+          # FILEPATH example: "./35b2c544-660e-401e-b503-0e14c635303a"
+          for FILEPATH in ./*
             do
             # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`
-            pushd $FILEPATH/icons
+            SPEAKER_NAME="$(jq -r '.speakerName' "$FILEPATH/metas.json")"
+            pushd "$FILEPATH/icons"
             # Explore character icons directory.
             # ICONPATH example: "./0.png"
-            for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            for ICONPATH in ./*.png
               do
               # ":2" part is python slice like, can remove "./" part from ICONPATH
               # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
@@ -151,9 +192,10 @@ jobs:
               mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
             done
             popd
-            pushd $FILEPATH/voice_samples
+            pushd "$FILEPATH/voice_samples"
             # Explore character voice_samples directory.
-            for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            # VOICEPATH example: "./0_000.wav"
+            for VOICEPATH in ./*.wav
               do
               # Same as for ICONPATH
               mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
@@ -166,8 +208,12 @@ jobs:
         run: |
           rm build/README.txt
           rm public/policy.md
-          # "<(echo)" has the effect of adding a new line.
-          cat resource/editor/README.md <(echo) resource/editor/ACKNOWLEDGMENTS.md > build/README.txt
+          {
+            cat resource/editor/README.md
+            echo
+            cat resource/editor/ACKNOWLEDGMENTS.md
+          } \
+          > build/README.txt
           cp build/README.txt public/policy.md
 
       - name: Generate public/licenses.json
@@ -186,6 +232,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
+          MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: npm run electron:build_pnever -- --dir
 
       - name: Upload NoEngine Prepackage
@@ -215,6 +262,7 @@ jobs:
           - linux-cpu-prepackage
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
+          - macos-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -222,20 +270,31 @@ jobs:
             voicevox_engine_asset_name: linux-nvidia
             linux_executable_name: voicevox
             targz_name: VOICEVOX
+            app_asar_dir: prepackage/resources
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
             noengine_artifact_name: linux-noengine-cpu-prepackage
             voicevox_engine_asset_name: linux-cpu
             linux_executable_name: voicevox
             targz_name: VOICEVOX-CPU
+            app_asar_dir: prepackage/resources
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
+            app_asar_dir: prepackage/resources
           # Windows CPU
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
+            app_asar_dir: prepackage/resources
+          # macOS CPU
+          - artifact_name: macos-cpu-prepackage
+            noengine_artifact_name: macos-noengine-cpu-prepackage
+            voicevox_engine_asset_name: macos-x64
+            macos_executable_name: VOICEVOX
+            zip_name: voicevox-cpu-macos-x64
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -314,10 +373,10 @@ jobs:
 
           # Extract first file to extract all parts
           # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
-          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/tmp/
+          7z x "voicevox_engine/download/$(head -n1 voicevox_engine/download/list.txt)" -ovoicevox_engine/tmp/
 
           mkdir -p voicevox_engine/voicevox_engine
-          mv voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/* voicevox_engine/voicevox_engine
+          mv "voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}"/* voicevox_engine/voicevox_engine
 
           # remove downloads to free space
           rm -rf voicevox_engine/download voicevox_engine/tmp
@@ -326,20 +385,28 @@ jobs:
         shell: bash
         run: |
           # Unpack asar
-          asar extract prepackage/resources/app.asar prepackage/resources/app
-          rm prepackage/resources/app.asar
+          asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
+          rm "${{ matrix.app_asar_dir }}/app.asar"
 
           mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
-          npm run license:merge -- -o prepackage/resources/app/licenses.json -i engine_licenses.json -i prepackage/resources/app/licenses.json
+          npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/licenses.json"
 
           # Repack asar
-          asar pack prepackage/resources/app prepackage/resources/app.asar
-          rm -rf prepackage/resources/app
+          asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
+          rm -rf "${{ matrix.app_asar_dir }}/app"
 
       - name: Merge VOICEVOX ENGINE into prepackage/
+        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           mv voicevox_engine/voicevox_engine/* prepackage/
+          rm -rf voicevox_engine
+
+      - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/MacOS/
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: |
+          mv voicevox_engine/voicevox_engine/* prepackage/VOICEVOX.app/Contents/MacOS/
           rm -rf voicevox_engine
 
       - name: Show disk space (debug info)
@@ -360,6 +427,17 @@ jobs:
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
+
+      - name: Recover file permissions for macOS build
+        if: startsWith(matrix.artifact_name, 'macos-') # macOS
+        shell: bash
+        run: |
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
@@ -400,6 +478,20 @@ jobs:
           name: ${{ matrix.artifact_name }}-targz
           path: "${{ matrix.targz_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz"
 
+      - name: Create macOS zip
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: |
+          mv prepackage VOICEVOX
+          zip "${{ matrix.zip_name }}.zip" -r VOICEVOX
+
+      - name: Upload macOS zip artifact
+        if: startsWith(matrix.artifact_name, 'macos-')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}-zip
+          path: "${{ matrix.zip_name }}.zip"
+
 
   build-distributable:
     if: github.event.release.tag_name != '' # If release
@@ -417,6 +509,7 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - macos-cpu-dmg
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-appimage
@@ -424,6 +517,7 @@ jobs:
             package_name: voicevox
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Linux CPU
           - artifact_name: linux-cpu-appimage
@@ -431,23 +525,43 @@ jobs:
             package_name: voicevox-cpu
             linux_artifact_name: 'VOICEVOX.${ext}'
             linux_executable_name: voicevox
+            sed_name: sed
             os: ubuntu-18.04
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
             package_name: voicevox
             nsis_web_artifact_name: 'VOICEVOX Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
           # Windows CPU
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
             package_name: voicevox-cpu
             nsis_web_artifact_name: 'VOICEVOX-CPU Web Setup ${version}.${ext}'
+            sed_name: sed
             os: windows-2019
+          # macOS CPU
+          - artifact_name: macos-cpu-dmg
+            engine_artifact_name: macos-cpu-prepackage
+            package_name: voicevox-cpu
+            macos_artifact_name: 'VOICEVOX ${version}.${ext}'
+            macos_executable_name: VOICEVOX
+            sed_name: gsed
+            os: macos-11
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@master
+
+      # NOTE: The default sed of macOS is BSD sed.
+      #       There is a difference in specification between BSD sed and GNU sed,
+      #       so you need to install GNU sed.
+      - name: Install GNU sed on macOS
+        if: startsWith(matrix.os, 'macos-')
+        shell: bash
+        run: |
+          brew install gnu-sed
 
       # NOTE: If the CPU/GPU builds have the same package name,
       #       the NSIS installers and the 7z files have duplicate names.
@@ -460,8 +574,8 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
@@ -475,6 +589,17 @@ jobs:
         run: |
           chmod +x "prepackage/${{ matrix.linux_executable_name }}"
           chmod +x "prepackage/run"
+
+      - name: Recover file permissions for macOS build
+        if: endsWith(matrix.artifact_name, '-dmg') # macOS
+        shell: bash
+        run: |
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
+          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
+          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
       - name: Show disk space (debug info)
         shell: bash
@@ -526,12 +651,20 @@ jobs:
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
+        if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage') # windows and linux
         shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: npm run electron:build_pnever -- --prepackaged "prepackage/"
+
+      - name: Build Electron (for macOS)
+        if: endsWith(matrix.artifact_name, '-dmg') # macOS
+        shell: bash
+        env:
+          MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+        run: npm run electron:build_pnever -- --prepackaged "prepackage/VOICEVOX.app"
 
       - name: Show disk space (debug info)
         shell: bash
@@ -545,6 +678,14 @@ jobs:
           name: ${{ matrix.artifact_name }}
           path: |
             dist_electron/*.AppImage
+
+      - name: Upload macOS dmg artifact
+        if: endsWith(matrix.artifact_name, '-dmg')
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist_electron/*.dmg
 
       - name: Create Windows NSIS Web artifact directory
         if: endsWith(matrix.artifact_name, '-nsis-web')
@@ -586,6 +727,8 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - macos-cpu-dmg
+          - macos-cpu-prepackage-zip
         include:
           - artifact_name: linux-nvidia-appimage
             appimage_7z_name: VOICEVOX.AppImage
@@ -593,6 +736,8 @@ jobs:
             appimage_7z_name: VOICEVOX-CPU.AppImage
           - artifact_name: windows-nvidia-nsis-web
           - artifact_name: windows-cpu-nsis-web
+          - artifact_name: macos-cpu-dmg
+          - artifact_name: macos-cpu-prepackage-zip
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -680,3 +825,23 @@ jobs:
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
           file: artifact/*.exe
+
+      # macOS dmg
+      - name: Upload macOS dmg to Release assets
+        if: endsWith(matrix.artifact_name, '-dmg')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.dmg
+
+      # macOS zip
+      - name: Upload macOS zip to Release assets
+        if: startsWith(matrix.artifact_name, 'macos-') && endsWith(matrix.artifact_name, '-zip')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.zip

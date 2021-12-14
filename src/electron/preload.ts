@@ -59,6 +59,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
 
+  getPrivacyPolicyText: async () => {
+    return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
+  },
+
   saveTempAudioFile: async ({ relativePath, buffer }) => {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
@@ -178,6 +182,10 @@ const api: Sandbox = {
 
   changePinWindow: () => {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+  },
+
+  savingPresets: (newPresets) => {
+    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
   },
 
   hotkeySettings: (newData) => {

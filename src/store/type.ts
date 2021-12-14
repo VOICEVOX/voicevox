@@ -20,6 +20,7 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
+  Preset,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
@@ -27,6 +28,7 @@ export type AudioItem = {
   text: string;
   styleId?: number;
   query?: AudioQuery;
+  presetKey?: string;
 };
 
 export type AudioState = {
@@ -138,6 +140,7 @@ type AudioStoreTypes = {
     action(payload: {
       text?: string;
       styleId?: number;
+      presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
@@ -166,6 +169,10 @@ type AudioStoreTypes = {
 
   REMOVE_AUDIO_ITEM: {
     mutation: { audioKey: string };
+  };
+
+  SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
   };
 
   REMOVE_ALL_AUDIO_ITEM: {
@@ -247,6 +254,10 @@ type AudioStoreTypes = {
     };
   };
 
+  APPLY_AUDIO_PRESET: {
+    mutation: { audioKey: string };
+  };
+
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
@@ -287,6 +298,13 @@ type AudioStoreTypes = {
 
   STOP_AUDIO: {
     action(payload: { audioKey: string }): void;
+  };
+
+  SET_AUDIO_PRESET: {
+    mutation: {
+      audioKey: string;
+      presetKey: string | undefined;
+    };
   };
 
   PLAY_CONTINUOUSLY_AUDIO: {
@@ -334,6 +352,11 @@ type AudioCommandStoreTypes = {
   COMMAND_REMOVE_AUDIO_ITEM: {
     mutation: { audioKey: string };
     action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
+    action(payload: { audioKeys: string[] }): void;
   };
 
   COMMAND_CHANGE_AUDIO_TEXT: {
@@ -430,6 +453,24 @@ type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
   };
 
+  COMMAND_SET_AUDIO_PRESET: {
+    mutation: {
+      audioKey: string;
+      presetKey: string | undefined;
+    };
+    action(payload: { audioKey: string; presetKey: string | undefined }): void;
+  };
+
+  COMMAND_APPLY_AUDIO_PRESET: {
+    mutation: { audioKey: string };
+    action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_FULLY_APPLY_AUDIO_PRESET: {
+    mutation: { presetKey: string };
+    action(payload: { presetKey: string }): void;
+  };
+
   COMMAND_IMPORT_FROM_FILE: {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
@@ -524,6 +565,10 @@ type IndexStoreTypes = {
   };
 
   GET_OSS_COMMUNITY_INFOS: {
+    action(): Promise<string>;
+  };
+
+  GET_PRIVACY_POLICY_TEXT: {
     action(): Promise<string>;
   };
 
@@ -806,6 +851,50 @@ export type UiMutations = StoreType<UiStoreTypes, "mutation">;
 export type UiActions = StoreType<UiStoreTypes, "action">;
 
 /*
+  Preset Store Types
+*/
+
+export type PresetStoreState = {
+  presetKeys: string[];
+  presetItems: Record<string, Preset>;
+};
+
+type PresetStoreTypes = {
+  SET_PRESET_ITEMS: {
+    mutation: {
+      presetItems: Record<string, Preset>;
+    };
+  };
+  SET_PRESET_KEYS: {
+    mutation: {
+      presetKeys: string[];
+    };
+  };
+  GET_PRESET_CONFIG: {
+    action(): void;
+  };
+  SAVE_PRESET_CONFIG: {
+    action(payload: {
+      presetItems: Record<string, Preset>;
+      presetKeys: string[];
+    }): void;
+  };
+  ADD_PRESET: {
+    action(payload: { presetData: Preset }): Promise<string>;
+  };
+  UPDATE_PRESET: {
+    action(payload: { presetData: Preset; presetKey: string }): void;
+  };
+  DELETE_PRESET: {
+    action(payload: { presetKey: string }): void;
+  };
+};
+
+export type PresetGetters = StoreType<PresetStoreTypes, "getter">;
+export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
+export type PresetActions = StoreType<PresetStoreTypes, "action">;
+
+/*
  * Setting Store Types
  */
 
@@ -848,6 +937,7 @@ export type State = AudioStoreState &
   ProjectStoreState &
   SettingStoreState &
   UiStoreState &
+  PresetStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -857,6 +947,7 @@ type AllStoreTypes = AudioStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
+  PresetStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;

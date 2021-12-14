@@ -42,6 +42,11 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_PRIVACY_POLICY_TEXT: {
+    args: [];
+    return: string;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
@@ -145,6 +150,18 @@ type IpcIHData = {
   CHANGE_PIN_WINDOW: {
     args: [];
     return: void;
+  };
+
+  SAVING_PRESETS: {
+    args: [
+      obj: {
+        newPresets?: {
+          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetKeys: string[];
+        };
+      }
+    ];
+    return: import("@/type/preload").PresetConfig;
   };
 
   HOTKEY_SETTINGS: {

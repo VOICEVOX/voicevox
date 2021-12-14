@@ -21,6 +21,7 @@ import {
 import { createUILockAction } from "./ui";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   MoraDataType,
 } from "@/type/preload";
@@ -50,12 +51,23 @@ async function generateUniqueIdAndQuery(
 
 function parseTextFile(
   body: string,
+  defaultStyleIds: DefaultStyleId[],
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
-  for (const info of characterInfos || []) {
-    for (const style of info.metas.styles) {
-      characters.set(info.metas.speakerName, style.styleId);
+  {
+    const uuid2StyleIds = new Map<string, number>();
+    for (const defaultStyleId of defaultStyleIds || []) {
+      const speakerUuid = defaultStyleId.speakerUuid;
+      const styleId = defaultStyleId.defaultStyleId;
+      uuid2StyleIds.set(speakerUuid, styleId);
+    }
+    for (const characterInfo of characterInfos || []) {
+      const uuid = characterInfo.metas.speakerUuid;
+      const styleId =
+        uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
+      const speakerName = characterInfo.metas.speakerName;
+      characters.set(speakerName, styleId);
     }
   }
   if (!characters.size) return [];
@@ -229,6 +241,9 @@ export const audioStore: VoiceVoxStoreOptions<
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
     },
+    SET_AUDIO_KEYS(state, { audioKeys }: { audioKeys: string[] }) {
+      state.audioKeys = audioKeys;
+    },
     SET_AUDIO_TEXT(
       state,
       { audioKey, text }: { audioKey: string; text: string }
@@ -291,6 +306,41 @@ export const audioStore: VoiceVoxStoreOptions<
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
+    },
+    SET_AUDIO_PRESET(
+      state,
+      {
+        audioKey,
+        presetKey,
+      }: { audioKey: string; presetKey: string | undefined }
+    ) {
+      if (presetKey === undefined) {
+        delete state.audioItems[audioKey].presetKey;
+      } else {
+        state.audioItems[audioKey].presetKey = presetKey;
+      }
+    },
+    APPLY_AUDIO_PRESET(state, { audioKey }: { audioKey: string }) {
+      const audioItem = state.audioItems[audioKey];
+      if (
+        audioItem == undefined ||
+        audioItem.presetKey == undefined ||
+        audioItem.query == undefined
+      )
+        return;
+      const presetItem = state.presetItems[audioItem.presetKey];
+      if (presetItem == undefined) return;
+
+      // Filter name property from presetItem in order to extract audioInfos.
+      const { name: _, ...presetAudioInfos } = presetItem;
+
+      // Type Assertion
+      const audioInfos: Omit<
+        AudioQuery,
+        "accentPhrases" | "outputSamplingRate" | "outputStereo" | "kana"
+      > = presetAudioInfos;
+
+      audioItem.query = { ...audioItem.query, ...audioInfos };
     },
     SET_AUDIO_QUERY(
       state,
@@ -434,7 +484,12 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     async GENERATE_AUDIO_ITEM(
       { state, getters, dispatch },
-      payload: { text?: string; styleId?: number; baseAudioItem?: AudioItem }
+      payload: {
+        text?: string;
+        styleId?: number;
+        presetKey?: string;
+        baseAudioItem?: AudioItem;
+      }
     ) {
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
@@ -468,6 +523,9 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query != undefined) {
         audioItem.query = query;
       }
+      if (payload.presetKey != undefined)
+        audioItem.presetKey = payload.presetKey;
+
       if (baseAudioItem && baseAudioItem.query && audioItem.query) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
         //baseAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
@@ -979,6 +1037,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
       commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
     },
+    COMMAND_SET_AUDIO_KEYS({ commit }, payload: { audioKeys: string[] }) {
+      commit("COMMAND_SET_AUDIO_KEYS", payload);
+    },
     async COMMAND_CHANGE_AUDIO_TEXT(
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
@@ -1375,6 +1436,27 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
     },
+    COMMAND_SET_AUDIO_PRESET: (
+      { commit },
+      {
+        audioKey,
+        presetKey,
+      }: {
+        audioKey: string;
+        presetKey: string | undefined;
+      }
+    ) => {
+      commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
+    },
+    COMMAND_APPLY_AUDIO_PRESET: ({ commit }, payload: { audioKey: string }) => {
+      commit("COMMAND_APPLY_AUDIO_PRESET", payload);
+    },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET: (
+      { commit },
+      payload: { presetKey: string }
+    ) => {
+      commit("COMMAND_FULLY_APPLY_AUDIO_PRESET", payload);
+    },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async (
         { state, commit, dispatch },
@@ -1404,6 +1486,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
         for (const { text, styleId } of parseTextFile(
           body,
+          state.defaultStyleIds,
           state.characterInfos
         )) {
           //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
@@ -1484,9 +1567,15 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+        audioKey: payload.audioKey,
+      });
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
+    },
+    COMMAND_SET_AUDIO_KEYS(draft, payload: { audioKeys: string[] }) {
+      audioStore.mutations.SET_AUDIO_KEYS(draft, payload);
     },
     COMMAND_CHANGE_AUDIO_TEXT(
       draft,
@@ -1517,6 +1606,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioStore.mutations.SET_AUDIO_QUERY(draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
+        });
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
         });
       }
     },
@@ -1549,6 +1641,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         audioStore.mutations.SET_AUDIO_QUERY(draft, {
           audioKey: payload.audioKey,
           audioQuery: payload.query,
+        });
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+          audioKey: payload.audioKey,
         });
       }
     },
@@ -1632,6 +1727,33 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: { audioKey: string; postPhonemeLength: number }
     ) {
       audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
+    },
+    COMMAND_SET_AUDIO_PRESET: (
+      draft,
+      {
+        audioKey,
+        presetKey,
+      }: {
+        audioKey: string;
+        presetKey: string | undefined;
+      }
+    ) => {
+      audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+    },
+    COMMAND_APPLY_AUDIO_PRESET(draft, payload: { audioKey: string }) {
+      audioStore.mutations.APPLY_AUDIO_PRESET(draft, payload);
+    },
+    COMMAND_FULLY_APPLY_AUDIO_PRESET(
+      draft,
+      { presetKey }: { presetKey: string }
+    ) {
+      const targetAudioKeys = draft.audioKeys.filter(
+        (audioKey) => draft.audioItems[audioKey].presetKey === presetKey
+      );
+      for (const audioKey of targetAudioKeys) {
+        audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
+      }
     },
     COMMAND_IMPORT_FROM_FILE(
       draft,

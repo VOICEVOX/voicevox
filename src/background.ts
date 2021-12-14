@@ -21,6 +21,7 @@ import {
   HotkeySetting,
   MetasJson,
   SavingSetting,
+  PresetConfig,
   ThemeConf,
   StyleInfo,
   AcceptRetrieveTelemetryStatus,
@@ -95,6 +96,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "2",
   },
   {
+    action: "長さ欄を表示",
+    combination: "3",
+  },
+  {
     action: "テキスト欄を追加",
     combination: "Shift Enter",
   },
@@ -145,6 +150,7 @@ const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
+  presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
@@ -222,6 +228,39 @@ const store = new Store<{
       },
       default: [],
     },
+    presets: {
+      type: "object",
+      properties: {
+        items: {
+          type: "object",
+          patternProperties: {
+            // uuid
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                speedScale: { type: "number" },
+                pitchScale: { type: "number" },
+                intonationScale: { type: "number" },
+                volumeScale: { type: "number" },
+                prePhonemeLength: { type: "number" },
+                postPhonemeLength: { type: "number" },
+              },
+            },
+          },
+          additionalProperties: false,
+        },
+        keys: {
+          type: "array",
+          items: {
+            type: "string",
+            pattern:
+              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+          },
+        },
+      },
+      default: { items: {}, keys: [] },
+    },
     currentTheme: {
       type: "string",
       default: "Default",
@@ -232,22 +271,7 @@ const store = new Store<{
       default: "Unconfirmed",
     },
   },
-  migrations: {
-    ">=0.7.3": (store) => {
-      const newHotkey: HotkeySetting = {
-        action: "長さ欄を表示",
-        combination: "3",
-      };
-      const hotkeys = store.get("hotkeySettings");
-      hotkeys.forEach((value) => {
-        if (value.combination == newHotkey.combination) {
-          newHotkey.combination = "";
-        }
-      });
-      hotkeys.splice(6, 0, newHotkey);
-      store.set("hotkeySettings", hotkeys);
-    },
-  },
+  migrations: {},
 });
 
 // engine
@@ -386,6 +410,53 @@ const updateInfos = JSON.parse(
   })
 );
 
+const privacyPolicyText = fs.readFileSync(
+  path.join(__static, "privacy_policy.md"),
+  "utf-8"
+);
+
+// hotkeySettingsのマイグレーション
+function migrateHotkeySettings() {
+  const COMBINATION_IS_NONE = "####";
+  const loadedHotkeys = store.get("hotkeySettings");
+  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+    (defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+      );
+      const hotkeyWithoutCombination: HotkeySetting = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey || hotkeyWithoutCombination;
+    }
+  );
+  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
+    if (hotkey.combination === COMBINATION_IS_NONE) {
+      const newHotkey =
+        defaultHotkeySettings.find(
+          (defaultHotkey) => defaultHotkey.action === hotkey.action
+        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+      const combinationExists = hotkeysWithoutNewCombination.some(
+        (hotkey) => hotkey.combination === newHotkey.combination
+      );
+      if (combinationExists) {
+        const emptyHotkey = {
+          action: newHotkey.action,
+          combination: "",
+        };
+        return emptyHotkey;
+      } else {
+        return newHotkey;
+      }
+    } else {
+      return hotkey;
+    }
+  });
+  store.set("hotkeySettings", migratedHotkeys);
+}
+migrateHotkeySettings();
+
 let willQuit = false;
 // create window
 async function createWindow() {
@@ -484,6 +555,10 @@ ipcMainHandle("GET_UPDATE_INFOS", () => {
 
 ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
+});
+
+ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
+  return privacyPolicyText;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
@@ -731,6 +806,14 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   } else {
     win.setAlwaysOnTop(true);
   }
+});
+
+ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
+  if (newPresets !== undefined) {
+    store.set("presets.items", newPresets.presetItems);
+    store.set("presets.keys", newPresets.presetKeys);
+  }
+  return store.get("presets");
 });
 
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {

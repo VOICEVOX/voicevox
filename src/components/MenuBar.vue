@@ -1,6 +1,7 @@
 <template>
   <q-bar class="bg-background q-pa-none relative-position">
-    <img src="icon.png" class="window-logo" alt="application logo" />
+    <min-max-close-buttons v-if="$q.platform.is.mac" />
+    <img v-else src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
@@ -28,13 +29,16 @@
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
+import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { SaveResultObject } from "@/store/type";
+import {
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "@/components/Dialog";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -69,6 +73,7 @@ export default defineComponent({
   name: "MenuBar",
 
   components: {
+    MinMaxCloseButtons,
     MenuButton,
     TitleBarButtons,
   },
@@ -90,39 +95,11 @@ export default defineComponent({
 
     const generateAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        const result = await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+        await generateAndSaveAllAudioWithDialog({
           encoding: store.state.savingSetting.fileEncoding,
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
         });
-
-        let successArray: Array<string | undefined> = [];
-        let writeErrorArray: Array<string | undefined> = [];
-        let engineErrorArray: Array<string | undefined> = [];
-        if (result) {
-          for (const item of result) {
-            switch (item.result) {
-              case "SUCCESS":
-                successArray.push(item.path);
-                break;
-              case "WRITE_ERROR":
-                writeErrorArray.push(item.path);
-                break;
-              case "ENGINE_ERROR":
-                engineErrorArray.push(item.path);
-                break;
-            }
-          }
-        }
-
-        if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-          $q.dialog({
-            component: SaveAllResultDialog,
-            componentProps: {
-              successArray: successArray,
-              writeErrorArray: writeErrorArray,
-              engineErrorArray: engineErrorArray,
-            },
-          });
-        }
       }
     };
 
@@ -143,36 +120,11 @@ export default defineComponent({
         return;
       }
 
-      const result: SaveResultObject = await store.dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey: activeAudioKey,
-          encoding: store.state.savingSetting.fileEncoding,
-        }
-      );
-
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-
-      $q.dialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
+      await generateAndSaveOneAudioWithDialog({
+        audioKey: activeAudioKey,
+        encoding: store.state.savingSetting.fileEncoding,
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
       });
     };
 
