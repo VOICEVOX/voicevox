@@ -1,5 +1,5 @@
+name: Build
 
-name: build
 on:
   push:
     branches:
@@ -105,9 +105,8 @@ jobs:
 
           # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
           # cf. https://deep.tacoskingdom.com/blog/15
-          str_config=$(cat vue.config.js)
-          str_config_2=${str_config//$'\n'/\\n}
-          echo $str_config_2 | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          str_config="$(cat vue.config.js)"
+          echo "${str_config//$'\n'/\\n}" | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
           cat vue.config.js
 
       - name: Set output Node version
@@ -176,14 +175,15 @@ jobs:
           # Explore characters directory.
           # Character directory name is uuid, but this script can automatically detect character directory name.
           # We don't need to change this code when add more characters.
-          for FILEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+          # FILEPATH example: "./35b2c544-660e-401e-b503-0e14c635303a"
+          for FILEPATH in ./*
             do
             # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME=`cat $FILEPATH/metas.json | jq -r '.speakerName'`
-            pushd $FILEPATH/icons
+            SPEAKER_NAME="$(jq -r '.speakerName' "$FILEPATH/metas.json")"
+            pushd "$FILEPATH/icons"
             # Explore character icons directory.
             # ICONPATH example: "./0.png"
-            for ICONPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            for ICONPATH in ./*.png
               do
               # ":2" part is python slice like, can remove "./" part from ICONPATH
               # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
@@ -192,9 +192,10 @@ jobs:
               mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
             done
             popd
-            pushd $FILEPATH/voice_samples
+            pushd "$FILEPATH/voice_samples"
             # Explore character voice_samples directory.
-            for VOICEPATH in `find . -mindepth 1 -maxdepth 1 -name '*'`
+            # VOICEPATH example: "./0_000.wav"
+            for VOICEPATH in ./*.wav
               do
               # Same as for ICONPATH
               mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
@@ -207,8 +208,12 @@ jobs:
         run: |
           rm build/README.txt
           rm public/policy.md
-          # "<(echo)" has the effect of adding a new line.
-          cat resource/editor/README.md <(echo) resource/editor/ACKNOWLEDGMENTS.md > build/README.txt
+          {
+            cat resource/editor/README.md
+            echo
+            cat resource/editor/ACKNOWLEDGMENTS.md
+          } \
+          > build/README.txt
           cp build/README.txt public/policy.md
 
       - name: Generate public/licenses.json
@@ -368,10 +373,10 @@ jobs:
 
           # Extract first file to extract all parts
           # Destination: voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/
-          7z x "voicevox_engine/download/$(cat voicevox_engine/download/list.txt | head -n1)" -ovoicevox_engine/tmp/
+          7z x "voicevox_engine/download/$(head -n1 voicevox_engine/download/list.txt)" -ovoicevox_engine/tmp/
 
           mkdir -p voicevox_engine/voicevox_engine
-          mv voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}/* voicevox_engine/voicevox_engine
+          mv "voicevox_engine/tmp/${{ matrix.voicevox_engine_asset_name }}"/* voicevox_engine/voicevox_engine
 
           # remove downloads to free space
           rm -rf voicevox_engine/download voicevox_engine/tmp
