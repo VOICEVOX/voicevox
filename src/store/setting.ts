@@ -218,8 +218,11 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.shiftKey) {
     recordedCombo += "Shift ";
   }
-  if (event.metaKey) {
-    recordedCombo += "Meta ";
+  const ua = window.navigator.userAgent.toLowerCase();
+  if (ua.indexOf("mac os x") !== -1) {
+    if (event.metaKey) {
+      recordedCombo += "Meta ";
+    }
   }
   if (event.key === " ") {
     recordedCombo += "Space";
