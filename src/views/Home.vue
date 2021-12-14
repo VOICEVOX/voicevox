@@ -374,10 +374,10 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await Promise.all([
-        store.dispatch("LOAD_CHARACTER"),
-        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
-      ]);
+      await store.dispatch("START_WAITING_ENGINE");
+      await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
       for (const info of characterInfos.value) {

@@ -16,14 +16,11 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import {
-  CharacterInfo,
   DefaultStyleId,
   HotkeySetting,
-  MetasJson,
   SavingSetting,
   PresetConfig,
   ThemeConf,
-  StyleInfo,
   AcceptRetrieveTelemetryStatus,
 } from "./type/preload";
 
@@ -333,48 +330,8 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-// キャラクター情報の読み込み
-declare let __static: string;
-const characterInfos: CharacterInfo[] = [];
-for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
-  const dirPath = path.join("characters", dirRelPath);
-  const policy = fs.readFileSync(
-    path.join(__static, dirPath, "policy.md"),
-    "utf-8"
-  );
-  const {
-    speakerName,
-    speakerUuid,
-    styles: stylesOrigin,
-  }: MetasJson = JSON.parse(
-    fs.readFileSync(path.join(__static, dirPath, "metas.json"), "utf-8")
-  );
-  const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
-    styleName,
-    styleId,
-    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
-    voiceSamplePaths: [...Array(3).keys()].map((x) =>
-      path.join(
-        dirPath,
-        "voice_samples",
-        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
-      )
-    ),
-  }));
-  const portraitPath = path.join(dirPath, "portrait.png");
-
-  characterInfos.push({
-    portraitPath,
-    metas: {
-      speakerName,
-      speakerUuid,
-      styles,
-      policy,
-    },
-  });
-}
-
 // 使い方テキストの読み込み
+declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -533,10 +490,6 @@ ipcMainHandle("GET_APP_INFOS", () => {
 
 ipcMainHandle("GET_TEMP_DIR", () => {
   return tempDir;
-});
-
-ipcMainHandle("GET_CHARACTER_INFOS", () => {
-  return characterInfos;
 });
 
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
@@ -817,15 +770,7 @@ ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
 });
 
 ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
-  const defaultStyleIds = store.get("defaultStyleIds");
-  if (defaultStyleIds.length === 0) {
-    return characterInfos.map<DefaultStyleId>((info) => ({
-      speakerUuid: info.metas.speakerUuid,
-      defaultStyleId: info.metas.styles[0].styleId,
-    }));
-  } else {
-    return defaultStyleIds;
-  }
+  return store.get("defaultStyleIds");
 });
 
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {

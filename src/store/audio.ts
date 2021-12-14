@@ -1,4 +1,4 @@
-import { AudioQuery, AccentPhrase } from "@/openapi";
+import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -24,6 +24,7 @@ import {
   DefaultStyleId,
   Encoding as EncodingType,
   MoraDataType,
+  StyleInfo,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
@@ -467,8 +468,70 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit }) => {
-      const characterInfos = await window.electron.getCharacterInfos();
+    LOAD_CHARACTER: createUILockAction(async ({ commit, dispatch }) => {
+      const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        action: "speakersSpeakersGet",
+        payload: [],
+      })
+        .then(toDispatchResponse("speakersSpeakersGet"))
+        .catch((error) => {
+          window.electron.logError(error, `Failed to get speakers.`);
+          throw error;
+        });
+      const base64ToUrl = function (base64: string, type: string) {
+        const buffer = Buffer.from(base64, "base64");
+        const iconBlob = new Blob([buffer.buffer], { type: type });
+        return URL.createObjectURL(iconBlob);
+      };
+      const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
+        const styles: StyleInfo[] = new Array(speaker.styles.length);
+        speaker.styles.forEach((style, i) => {
+          const styleInfo = speakerInfo.styleInfos.find(
+            (styleInfo) => style.id === styleInfo.id
+          );
+          if (!styleInfo)
+            throw new Error(
+              `Not found the style id "${style.id}" of "${speaker.name}". `
+            );
+          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+            return base64ToUrl(voiceSample, "audio/wav");
+          });
+          styles[i] = {
+            styleName: style.name,
+            styleId: style.id,
+            iconPath: base64ToUrl(styleInfo.icon, "image/png"),
+            voiceSamplePaths: voiceSamples,
+          };
+        });
+        return styles;
+      };
+      const getSpeakerInfo = async function (speaker: Speaker) {
+        const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          action: "speakerInfoSpeakerInfoGet",
+          payload: [{ speakerUuid: speaker.speakerUuid }],
+        })
+          .then(toDispatchResponse("speakerInfoSpeakerInfoGet"))
+          .catch((error) => {
+            window.electron.logError(error, `Failed to get speakers.`);
+            throw error;
+          });
+        const styles = getStyles(speaker, speakerInfo);
+        const characterInfo: CharacterInfo = {
+          portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
+          metas: {
+            speakerUuid: speaker.speakerUuid,
+            speakerName: speaker.name,
+            styles: styles,
+            policy: speakerInfo.policy,
+          },
+        };
+        return characterInfo;
+      };
+      const characterInfos: CharacterInfo[] = await Promise.all(
+        speakers.map(async (speaker) => {
+          return await getSpeakerInfo(speaker);
+        })
+      );
 
       commit("SET_CHARACTER_INFOS", { characterInfos });
     }),

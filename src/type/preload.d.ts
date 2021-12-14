@@ -2,7 +2,6 @@ import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharacterInfos(): Promise<CharacterInfo[]>;
   getHowToUseText(): Promise<string>;
   getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;

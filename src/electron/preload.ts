@@ -35,10 +35,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_APP_INFOS");
   },
 
-  getCharacterInfos: async () => {
-    return await ipcRendererInvoke("GET_CHARACTER_INFOS");
-  },
-
   getHowToUseText: async () => {
     return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
   },
