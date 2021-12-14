@@ -1014,27 +1014,6 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         if (state.savingSetting.exportLab) {
-          // pauが重なっているのを取り除く
-          for (let i = 1; i < labs.length; i++) {
-            const prevLab = labs[i - 1];
-            const currentLab = labs[i];
-            // 改行でsplit
-            const splitPrevLab = prevLab.split("\n");
-            const splitCurrentLab = currentLab.split("\n");
-            // prevの最後のpauseを抽出
-            const prevEndPause = splitPrevLab[splitPrevLab.length - 2];
-            // currentの最初のpauseをスペースでsplit
-            const splitCurrentStartPause = splitCurrentLab[0].split(" ");
-            // currentの最初のpauseの開始時刻をprevの最後のpauseの開始時刻にする
-            splitCurrentStartPause[0] = prevEndPause.split(" ")[0];
-            // 改行でsplitしたcurrentの最初のpauseを、編集したもので置き換える
-            splitCurrentLab[0] = splitCurrentStartPause.join(" ");
-            // prevの最後のpauseは開始時刻を取得して用済みなので消す
-            splitPrevLab.splice(0, splitPrevLab.length - 2);
-            labs[i - 1] = splitPrevLab.join("\n");
-            labs[i] = splitCurrentLab.join("\n");
-          }
-
           // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
           const labString = labs.join("");
 
