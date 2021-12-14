@@ -21,6 +21,7 @@ import {
 import { createUILockAction } from "./ui";
 import {
   CharacterInfo,
+  DefaultStyleId,
   Encoding as EncodingType,
   MoraDataType,
 } from "@/type/preload";
@@ -50,12 +51,23 @@ async function generateUniqueIdAndQuery(
 
 function parseTextFile(
   body: string,
+  defaultStyleIds: DefaultStyleId[],
   characterInfos?: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
-  for (const info of characterInfos || []) {
-    for (const style of info.metas.styles) {
-      characters.set(info.metas.speakerName, style.styleId);
+  {
+    const uuid2StyleIds = new Map<string, number>();
+    for (const defaultStyleId of defaultStyleIds || []) {
+      const speakerUuid = defaultStyleId.speakerUuid;
+      const styleId = defaultStyleId.defaultStyleId;
+      uuid2StyleIds.set(speakerUuid, styleId);
+    }
+    for (const characterInfo of characterInfos || []) {
+      const uuid = characterInfo.metas.speakerUuid;
+      const styleId =
+        uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
+      const speakerName = characterInfo.metas.speakerName;
+      characters.set(speakerName, styleId);
     }
   }
   if (!characters.size) return [];
@@ -228,6 +240,9 @@ export const audioStore: VoiceVoxStoreOptions<
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
+    },
+    SET_AUDIO_KEYS(state, { audioKeys }: { audioKeys: string[] }) {
+      state.audioKeys = audioKeys;
     },
     SET_AUDIO_TEXT(
       state,
@@ -1022,6 +1037,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     COMMAND_REMOVE_AUDIO_ITEM({ commit }, payload: { audioKey: string }) {
       commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
     },
+    COMMAND_SET_AUDIO_KEYS({ commit }, payload: { audioKeys: string[] }) {
+      commit("COMMAND_SET_AUDIO_KEYS", payload);
+    },
     async COMMAND_CHANGE_AUDIO_TEXT(
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
@@ -1468,6 +1486,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
         for (const { text, styleId } of parseTextFile(
           body,
+          state.defaultStyleIds,
           state.characterInfos
         )) {
           //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
@@ -1554,6 +1573,9 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_REMOVE_AUDIO_ITEM(draft, payload: { audioKey: string }) {
       audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
+    },
+    COMMAND_SET_AUDIO_KEYS(draft, payload: { audioKeys: string[] }) {
+      audioStore.mutations.SET_AUDIO_KEYS(draft, payload);
     },
     COMMAND_CHANGE_AUDIO_TEXT(
       draft,
