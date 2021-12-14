@@ -309,14 +309,6 @@ type AudioStoreTypes = {
     }): SaveResultObject | undefined;
   };
 
-  GENERATE_AND_CONNECT_AND_SAVE_AUDIO_WITH_DIALOG: {
-    action(payload: {
-      quasarDialog: QuasarDialog;
-      filePath?: string;
-      encoding?: EncodingType;
-    }): void;
-  };
-
   PLAY_AUDIO: {
     action(payload: { audioKey: string }): boolean;
   };

@@ -36,6 +36,7 @@ import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
+  generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
@@ -105,13 +106,11 @@ export default defineComponent({
 
     const generateAndConnectAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        await store.dispatch(
-          "GENERATE_AND_CONNECT_AND_SAVE_AUDIO_WITH_DIALOG",
-          {
-            quasarDialog: $q.dialog,
-            encoding: store.state.savingSetting.fileEncoding,
-          }
-        );
+        await generateAndConnectAndSaveAudioWithDialog({
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
+          encoding: store.state.savingSetting.fileEncoding,
+        });
       }
     };
 
