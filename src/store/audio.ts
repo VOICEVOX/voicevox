@@ -17,7 +17,6 @@ import {
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
   IEngineConnectorFactoryActions,
-  QuasarDialog,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
