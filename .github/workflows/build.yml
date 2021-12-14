@@ -105,9 +105,8 @@ jobs:
 
           # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
           # cf. https://deep.tacoskingdom.com/blog/15
-          str_config=$(cat vue.config.js)
-          str_config_2=${str_config//$'\n'/\\n}
-          echo $str_config_2 | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
+          str_config="$(cat vue.config.js)"
+          echo "${str_config//$'\n'/\\n}" | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
           cat vue.config.js
 
       - name: Set output Node version
