@@ -7,7 +7,11 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
+    <q-btn
+      flat
+      class="q-pa-none character-button item-handle"
+      :disable="uiLocked"
+    >
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
       <q-menu
@@ -426,8 +430,8 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .audio-cell {
   display: flex;
@@ -439,7 +443,7 @@ export default defineComponent({
   }
   .character-button {
     border: solid 1px;
-    border-color: global.$primary-light;
+    border-color: colors.$primary-light;
     font-size: 0;
     height: fit-content;
     img {
@@ -449,48 +453,48 @@ export default defineComponent({
     }
   }
   .q-input {
-    .q-field__control {
+    :deep(.q-field__control) {
       height: 2rem;
       background: none;
-      border-bottom: 1px solid global.$primary-light;
+      border-bottom: 1px solid colors.$primary-light;
       &::before {
         border-bottom: none;
       }
     }
-    .q-field__after {
+    :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
       display: none;
     }
-    &.q-field--filled.q-field--highlighted .q-field__control:before {
-      background-color: rgba(var(--color-display-rgb), 0.08);
+    &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
+      background-color: rgba(colors.$display-rgb, 0.08);
     }
   }
-  &:hover > .q-input > .q-field__after {
+  &:hover > .q-input > :deep(.q-field__after) {
     display: flex;
+  }
+
+  :deep(input) {
+    caret-color: colors.$display;
+    color: colors.$display;
   }
 }
 
 .character-menu {
   .q-item {
-    color: var(--color-display);
+    color: colors.$display;
   }
   .q-btn-group {
-    > .q-btn:first-child > .q-btn__content {
+    > .q-btn:first-child > :deep(.q-btn__content) {
       justify-content: flex-start;
     }
     > div:last-child:hover {
-      background-color: rgba(global.$primary-rgb, 0.1);
+      background-color: rgba(colors.$primary-rgb, 0.1);
     }
   }
   .selected-character-item,
   .opened-character-item {
-    background-color: rgba(global.$primary-rgb, 0.2);
+    background-color: rgba(colors.$primary-rgb, 0.2);
   }
-}
-
-input {
-  caret-color: var(--color-display);
-  color: var(--color-display);
 }
 </style>

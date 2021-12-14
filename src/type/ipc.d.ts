@@ -42,6 +42,11 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_PRIVACY_POLICY_TEXT: {
+    args: [];
+    return: string;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
@@ -147,6 +152,18 @@ type IpcIHData = {
     return: void;
   };
 
+  SAVING_PRESETS: {
+    args: [
+      obj: {
+        newPresets?: {
+          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetKeys: string[];
+        };
+      }
+    ];
+    return: import("@/type/preload").PresetConfig;
+  };
+
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];
@@ -170,6 +187,18 @@ type IpcIHData = {
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
     return: import("@/type/preload").HotkeySetting[];
+  };
+
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [];
+    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [
+      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
+    ];
+    return: void;
   };
 
   THEME: {
@@ -219,6 +248,11 @@ type IpcSOData = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
+    return: void;
+  };
+
+  DETECT_RESIZED: {
+    args: [obj: { width: number; height: number }];
     return: void;
   };
 };

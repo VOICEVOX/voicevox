@@ -337,6 +337,30 @@
                 </q-btn-toggle>
               </q-card-actions>
             </q-card> -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">テレメトリー</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>テレメトリーの収集を許可する</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  v-model="acceptRetrieveTelemetryComputed"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    VOICEVOXの改善のため、ウインドウサイズや各UIの利用率などの収集を許可します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -349,6 +373,7 @@ import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { SavingSetting } from "@/type/preload";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -433,6 +458,33 @@ export default defineComponent({
       updateAudioOutputDevices
     );
     updateAudioOutputDevices();
+
+    const gtm = useGtm();
+    const acceptRetrieveTelemetryComputed = computed({
+      get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+      set: (acceptRetrieveTelemetry: boolean) => {
+        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+          acceptRetrieveTelemetry: acceptRetrieveTelemetry
+            ? "Accepted"
+            : "Refused",
+        });
+        gtm?.enable(acceptRetrieveTelemetry);
+
+        if (acceptRetrieveTelemetry) {
+          return;
+        }
+
+        $q.dialog({
+          title: "テレメトリーの収集の無効化",
+          message:
+            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
+      },
+    });
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -561,14 +613,14 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
+      acceptRetrieveTelemetryComputed,
     };
   },
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
-@import "~quasar/src/css/variables";
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .hotkey-table {
   width: 100%;
@@ -577,7 +629,7 @@ export default defineComponent({
 .setting-card {
   @extend .hotkey-table;
   min-width: 475px;
-  background: var(--color-background);
+  background: colors.$background;
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

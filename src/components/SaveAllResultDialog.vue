@@ -1,10 +1,10 @@
 <template>
   <q-dialog persistent ref="dialogRef">
     <!-- 仮デザイン -->
-    <q-layout container class="q-dialog-plugin background">
+    <q-layout container class="q-dialog-plugin bg-background">
       <q-header>
         <q-toolbar>
-          <q-toolbar-title class="header-text"
+          <q-toolbar-title class="text-display"
             >音声書き出し結果</q-toolbar-title
           >
         </q-toolbar>
@@ -73,30 +73,21 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss" scoped>
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/colors' as colors;
 
 .q-page-container {
   margin-top: 1em;
 }
 
 .q-item {
-  border-bottom: solid 0.1rem global.$primary;
+  border-bottom: solid 0.1rem colors.$primary;
 }
 
 .success {
   color: green;
 }
-
 .error {
   color: red;
-}
-
-.header-text {
-  color: var(--color-display);
-}
-
-.background {
-  background-color: var(--color-background);
 }
 </style>

@@ -37,6 +37,7 @@ export const settingStoreState: SettingStoreState = {
     currentTheme: "Default",
     availableThemes: [],
   },
+  acceptRetrieveTelemetry: "Unconfirmed",
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -74,6 +75,9 @@ export const settingStore: VoiceVoxStoreOptions<
         state.themeSetting.availableThemes = themes;
       }
       state.themeSetting.currentTheme = currentTheme;
+    },
+    SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
+      state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
     },
   },
   actions: {
@@ -160,6 +164,21 @@ export const settingStore: VoiceVoxStoreOptions<
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });
+    },
+    GET_ACCEPT_RETRIEVE_TELEMETRY({ dispatch }) {
+      window.electron
+        .getAcceptRetrieveTelemetry()
+        .then((acceptRetrieveTelemetry) =>
+          dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry })
+        );
+    },
+    SET_ACCEPT_RETRIEVE_TELEMETRY({ commit }, { acceptRetrieveTelemetry }) {
+      window.dataLayer?.push({
+        event: "updateAcceptRetrieveTelemetry",
+        acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
+      });
+      window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
+      commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
     },
   },
 };

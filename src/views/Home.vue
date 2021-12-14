@@ -59,15 +59,22 @@
                         loadDraggedFile($event);
                       "
                     >
-                      <div class="audio-cells">
-                        <audio-cell
-                          v-for="audioKey in audioKeys"
-                          :key="audioKey"
-                          :audioKey="audioKey"
-                          :ref="addAudioCellRef"
-                          @focusCell="focusCell"
-                        />
-                      </div>
+                      <draggable
+                        class="audio-cells"
+                        :modelValue="audioKeys"
+                        @update:modelValue="updateAudioKeys"
+                        :itemKey="itemKey"
+                        ghost-class="ghost"
+                        handle=".item-handle"
+                      >
+                        <template v-slot:item="{ element }">
+                          <audio-cell
+                            :audioKey="element"
+                            :ref="addAudioCellRef"
+                            @focusCell="focusCell"
+                          />
+                        </template>
+                      </draggable>
                       <div class="add-button-wrapper">
                         <q-btn
                           fab
@@ -113,6 +120,9 @@
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
+  <accept-retrieve-telemetry-dialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
 </template>
 
 <script lang="ts">
@@ -125,6 +135,7 @@ import {
   watch,
 } from "vue";
 import { useStore } from "@/store";
+import draggable from "vuedraggable";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -135,16 +146,19 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "Home",
 
   components: {
+    draggable,
     MenuBar,
     HeaderBar,
     AudioCell,
@@ -155,6 +169,7 @@ export default defineComponent({
     HotkeySettingDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
+    AcceptRetrieveTelemetryDialog,
   },
 
   setup() {
@@ -275,6 +290,11 @@ export default defineComponent({
 
     const resizeObserverRef = ref<QResizeObserver>();
 
+    // DaD
+    const updateAudioKeys = (audioKeys: string[]) =>
+      store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
+    const itemKey = (key: string) => key;
+
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
       () => store.getters.ACTIVE_AUDIO_KEY
@@ -282,8 +302,10 @@ export default defineComponent({
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
       let styleId: number | undefined = undefined;
+      let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
+        presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -296,6 +318,7 @@ export default defineComponent({
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
+        presetKey,
         baseAudioItem,
       });
 
@@ -378,6 +401,11 @@ export default defineComponent({
       hotkeyActionsNative.forEach((item) => {
         document.addEventListener("keyup", item);
       });
+
+      isAcceptRetrieveTelemetryDialogOpenComputed.value =
+        store.state.acceptRetrieveTelemetry === "Unconfirmed";
+      const gtm = useGtm();
+      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
     });
 
     // エンジン待機
@@ -416,6 +444,16 @@ export default defineComponent({
         }),
     });
 
+    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isDefaultStyleSelectDialogOpen &&
+        store.state.isAcceptRetrieveTelemetryDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+          isAcceptRetrieveTelemetryDialogOpen: val,
+        }),
+    });
+
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -443,6 +481,8 @@ export default defineComponent({
       uiLocked,
       addAudioCellRef,
       activeAudioKey,
+      itemKey,
+      updateAudioKeys,
       addAudioItem,
       shouldShowPanes,
       focusCell,
@@ -463,6 +503,7 @@ export default defineComponent({
       isHotkeySettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
+      isAcceptRetrieveTelemetryDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
@@ -470,33 +511,16 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@use '@/styles' as global;
-body {
-  user-select: none;
-  border-left: solid #{global.$window-border-width} #{global.$primary};
-  border-right: solid #{global.$window-border-width} #{global.$primary};
-  border-bottom: solid #{global.$window-border-width} #{global.$primary};
-}
-
-.relative-absolute-wrapper {
-  position: relative;
-  > div {
-    position: absolute;
-    inset: 0;
-  }
-}
-</style>
-
-<style lang="scss">
-@use '@/styles' as global;
+<style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 
 .q-header {
-  height: global.$header-height;
+  height: vars.$header-height;
 }
 
 .waiting-engine {
-  background-color: rgba(var(--color-display-dark-rgb), 0.15);
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -506,8 +530,8 @@ body {
   justify-content: center;
 
   > div {
-    color: var(--color-display-dark);
-    background: var(--color-background-light);
+    color: colors.$display-dark;
+    background: colors.$background-light;
     border-radius: 6px;
     padding: 14px;
   }
@@ -522,10 +546,14 @@ body {
 
   .q-splitter--horizontal {
     height: calc(
-      100vh - #{global.$menubar-height + global.$header-height +
-        global.$window-border-width}
+      100vh - #{vars.$menubar-height + vars.$header-height +
+        vars.$window-border-width}
     );
   }
+}
+
+.ghost {
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
 }
 
 .audio-cell-pane {
@@ -537,7 +565,7 @@ body {
   height: 100%;
 
   &.is-dragging {
-    background-color: var(--color-background);
+    background-color: rgba(colors.$display-dark-rgb, 0.15);
   }
 
   .audio-cells {
