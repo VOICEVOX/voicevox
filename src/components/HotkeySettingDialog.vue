@@ -84,7 +84,7 @@
                       getHotkeyText(props.row.action, props.row.combination)
                         .split(' ')
                         .map((hotkeyText) => {
-                          return hotkeyText === 'Meta' ? 'Cmd' : hotkeyText
+                          return hotkeyText === 'Meta' ? 'Cmd' : hotkeyText;
                         })
                         .join(' + ')
                     "
@@ -126,7 +126,7 @@
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
           <q-chip :ripple="false" color="setting-item">
-            {{ hotkey === 'Meta' ? 'Cmd' : hotkey }}
+            {{ hotkey === "Meta" ? "Cmd" : hotkey }}
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
