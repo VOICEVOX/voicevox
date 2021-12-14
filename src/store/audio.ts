@@ -936,6 +936,16 @@ export const audioStore: VoiceVoxStoreOptions<
         if (!filePath) {
           return { result: "CANCELED", path: "" };
         }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
+        }
+
         const encodedBlobs: string[] = [];
         const labs: string[] = [];
         const texts: string[] = [];
