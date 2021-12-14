@@ -436,19 +436,22 @@ export const audioStore: VoiceVoxStoreOptions<
       const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
         const styles: StyleInfo[] = new Array(speaker.styles.length);
         speaker.styles.forEach((style, i) => {
-          for (const styleInfo of speakerInfo.styleInfos) {
-            if (style.id === styleInfo.id) {
-              const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-                return base64ToUrl(voiceSample, "audio/wav");
-              });
-              styles[i] = {
-                styleName: style.name,
-                styleId: style.id,
-                iconPath: base64ToUrl(styleInfo.icon, "image/png"),
-                voiceSamplePaths: voiceSamples,
-              };
-            }
-          }
+          const styleInfo = speakerInfo.styleInfos.find(
+            (styleInfo) => style.id === styleInfo.id
+          );
+          if (!styleInfo)
+            throw new Error(
+              `Not found the style id "${style.id}" of "${speaker.name}". `
+            );
+          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+            return base64ToUrl(voiceSample, "audio/wav");
+          });
+          styles[i] = {
+            styleName: style.name,
+            styleId: style.id,
+            iconPath: base64ToUrl(styleInfo.icon, "image/png"),
+            voiceSamplePaths: voiceSamples,
+          };
         });
         return styles;
       };
