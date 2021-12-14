@@ -22,7 +22,7 @@
 import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { getToolbarButtonName, setHotkeyFunctions } from "@/store/setting";
+import { setHotkeyFunctions } from "@/store/setting";
 import {
   HotkeyAction,
   HotkeyReturnType,
@@ -37,6 +37,17 @@ type ButtonContent = {
 
 type SpacerContent = {
   text: null;
+};
+
+export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
+  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
+    PLAY_CONTINUOUSLY: "連続再生",
+    STOP: "停止",
+    UNDO: "元に戻す",
+    REDO: "やり直す",
+    EMPTY: "空白",
+  };
+  return tag2NameObj[tag];
 };
 
 export default defineComponent({

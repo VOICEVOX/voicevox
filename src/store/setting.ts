@@ -5,7 +5,6 @@ import {
   SavingSetting,
   ThemeColorType,
   ThemeConf,
-  ToolbarButtonTagType,
   ToolbarSetting,
 } from "@/type/preload";
 import {
@@ -250,15 +249,4 @@ export const parseCombo = (event: KeyboardEvent): string => {
     }
   }
   return recordedCombo;
-};
-
-export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
-  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
-    PLAY_CONTINUOUSLY: "連続再生",
-    STOP: "停止",
-    UNDO: "元に戻す",
-    REDO: "やり直す",
-    EMPTY: "空白",
-  };
-  return tag2NameObj[tag];
 };
