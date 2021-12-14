@@ -29,15 +29,15 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 
-type ButtonContent =
-  | {
-      text: string;
-      click(): void;
-      disable: ComputedRef<boolean>;
-    }
-  | {
-      text: null;
-    };
+type ButtonContent = {
+  text: string;
+  click(): void;
+  disable: ComputedRef<boolean>;
+};
+
+type SpacerContent = {
+  text: null;
+};
 
 export default defineComponent({
   setup() {
@@ -142,12 +142,13 @@ export default defineComponent({
     };
 
     const headerButtons = computed(() =>
-      store.state.toolbarSetting.map((tag) => {
+      store.state.toolbarSetting.map<ButtonContent | SpacerContent>((tag) => {
         const buttonContent = usableButtons[tag];
         if (buttonContent) {
-          return Object.assign(buttonContent, {
+          return {
+            ...buttonContent,
             text: getToolbarButtonName(tag),
-          }) as ButtonContent;
+          };
         } else {
           return {
             text: null,
