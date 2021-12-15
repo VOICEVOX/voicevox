@@ -218,6 +218,8 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.shiftKey) {
     recordedCombo += "Shift ";
   }
+  // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
+  // macOS の場合のみ Meta (Cmd) キーを他のキーと組み合わせられるようにする
   if (Platform.is.mac) {
     if (event.metaKey) {
       recordedCombo += "Meta ";
