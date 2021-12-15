@@ -15,7 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
-import { Dark, setCssVar, colors } from "quasar";
+import { Dark, setCssVar, colors, Platform } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -218,8 +218,7 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.shiftKey) {
     recordedCombo += "Shift ";
   }
-  const ua = window.navigator.userAgent.toLowerCase();
-  if (ua.indexOf("mac os x") !== -1) {
+  if (Platform.is.mac) {
     if (event.metaKey) {
       recordedCombo += "Meta ";
     }
