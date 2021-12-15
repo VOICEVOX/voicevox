@@ -92,3 +92,49 @@ export async function generateAndSaveAllAudioWithDialog({
     });
   }
 }
+
+export async function generateAndConnectAndSaveAudioWithDialog({
+  quasarDialog,
+  dispatch,
+  filePath,
+  encoding,
+}: {
+  quasarDialog: QuasarDialog;
+  dispatch: Dispatch<AllActions>;
+  filePath?: string;
+  encoding?: EncodingType;
+}): Promise<void> {
+  const result = await dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
+    filePath,
+    encoding,
+  });
+
+  if (
+    result === undefined ||
+    result.result === "SUCCESS" ||
+    result.result === "CANCELED"
+  )
+    return;
+
+  let msg = "";
+  switch (result.result) {
+    case "WRITE_ERROR":
+      msg =
+        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      break;
+    case "ENGINE_ERROR":
+      msg =
+        "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+      break;
+  }
+
+  quasarDialog({
+    title: "書き出しに失敗しました。",
+    message: msg,
+    ok: {
+      label: "閉じる",
+      flat: true,
+      textColor: "secondary",
+    },
+  });
+}

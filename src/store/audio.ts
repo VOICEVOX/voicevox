@@ -725,6 +725,80 @@ export const audioStore: VoiceVoxStoreOptions<
           throw error;
         });
     },
+    GENERATE_LAB: createUILockAction(
+      async (
+        { state },
+        { audioKey, offset }: { audioKey: string; offset?: number }
+      ) => {
+        const query = state.audioItems[audioKey].query;
+        if (query == undefined) return;
+        const speedScale = query.speedScale;
+
+        let labString = "";
+        let timestamp = offset !== undefined ? offset : 0;
+
+        labString += timestamp.toFixed() + " ";
+        timestamp += (query.prePhonemeLength * 10000000) / speedScale;
+        labString += timestamp.toFixed() + " ";
+        labString += "pau" + "\n";
+
+        query.accentPhrases.forEach((accentPhrase) => {
+          accentPhrase.moras.forEach((mora) => {
+            if (
+              mora.consonantLength !== undefined &&
+              mora.consonant !== undefined
+            ) {
+              labString += timestamp.toFixed() + " ";
+              timestamp += (mora.consonantLength * 10000000) / speedScale;
+              labString += timestamp.toFixed() + " ";
+              labString += mora.consonant + "\n";
+            }
+            labString += timestamp.toFixed() + " ";
+            timestamp += (mora.vowelLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            if (mora.vowel != "N") {
+              labString += mora.vowel.toLowerCase() + "\n";
+            } else {
+              labString += mora.vowel + "\n";
+            }
+          });
+          if (accentPhrase.pauseMora !== undefined) {
+            labString += timestamp.toFixed() + " ";
+            timestamp +=
+              (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+            labString += timestamp.toFixed() + " ";
+            labString += accentPhrase.pauseMora.vowel + "\n";
+          }
+        });
+
+        labString += timestamp.toFixed() + " ";
+        timestamp += (query.postPhonemeLength * 10000000) / speedScale;
+        labString += timestamp.toFixed() + " ";
+        labString += "pau" + "\n";
+
+        return labString;
+      }
+    ),
+    CONNECT_AUDIO: createUILockAction(
+      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          action: "connectWavesConnectWavesPost",
+          payload: [
+            {
+              requestBody: encodedBlobs,
+            },
+          ],
+        })
+          .then(toDispatchResponse("connectWavesConnectWavesPost"))
+          .then(async (blob) => {
+            return blob;
+          })
+          .catch((e) => {
+            window.electron.logError(e);
+            return null;
+          });
+      }
+    ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
         const audioItem: AudioItem = JSON.parse(
@@ -818,52 +892,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         if (state.savingSetting.exportLab) {
-          const query = state.audioItems[audioKey].query;
-          if (query == undefined)
+          const labString = await dispatch("GENERATE_LAB", { audioKey });
+          if (labString === undefined)
             return { result: "WRITE_ERROR", path: filePath };
-          const speedScale = query.speedScale;
-
-          let labString = "";
-          let timestamp = 0;
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.prePhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
-
-          query.accentPhrases.forEach((accentPhrase) => {
-            accentPhrase.moras.forEach((mora) => {
-              if (
-                mora.consonantLength !== undefined &&
-                mora.consonant !== undefined
-              ) {
-                labString += timestamp.toFixed() + " ";
-                timestamp += (mora.consonantLength * 10000000) / speedScale;
-                labString += timestamp.toFixed() + " ";
-                labString += mora.consonant + "\n";
-              }
-              labString += timestamp.toFixed() + " ";
-              timestamp += (mora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              if (mora.vowel != "N") {
-                labString += mora.vowel.toLowerCase() + "\n";
-              } else {
-                labString += mora.vowel + "\n";
-              }
-            });
-            if (accentPhrase.pauseMora !== undefined) {
-              labString += timestamp.toFixed() + " ";
-              timestamp +=
-                (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
-              labString += timestamp.toFixed() + " ";
-              labString += accentPhrase.pauseMora.vowel + "\n";
-            }
-          });
-
-          labString += timestamp.toFixed() + " ";
-          timestamp += (query.postPhonemeLength * 10000000) / speedScale;
-          labString += timestamp.toFixed() + " ";
-          labString += "pau" + "\n";
 
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
           const labBlob = new Blob([bom, labString], {
@@ -938,6 +969,164 @@ export const audioStore: VoiceVoxStoreOptions<
           });
           return Promise.all(promises);
         }
+      }
+    ),
+    GENERATE_AND_CONNECT_AND_SAVE_AUDIO: createUILockAction(
+      async (
+        { state, dispatch },
+        { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
+      ): Promise<SaveResultObject> => {
+        const headItemText = state.audioItems[state.audioKeys[0]].text;
+        const tailItemText =
+          state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
+        const defaultFileName =
+          headItemText !== tailItemText
+            ? headItemText + "..." + tailItemText
+            : headItemText;
+        if (state.savingSetting.fixedExportEnabled) {
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            defaultFileName
+          );
+        } else {
+          filePath ??= await window.electron.showAudioSaveDialog({
+            title: "音声を全て繋げて保存",
+            defaultPath: defaultFileName,
+          });
+        }
+
+        if (!filePath) {
+          return { result: "CANCELED", path: "" };
+        }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
+        }
+
+        const encodedBlobs: string[] = [];
+        const labs: string[] = [];
+        const texts: string[] = [];
+
+        let labOffset = 0;
+
+        const base64Encoder = (blob: Blob): Promise<string | undefined> => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              // string/undefined以外が来ることはないと思うが、型定義的にArrayBufferも来るので、toStringする
+              const result = reader.result?.toString();
+              if (result) {
+                // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
+                resolve(result.slice(result.indexOf(",") + 1));
+              } else {
+                reject();
+              }
+            };
+            reader.readAsDataURL(blob);
+          });
+        };
+
+        for (const audioKey of state.audioKeys) {
+          let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
+          if (!blob) {
+            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          }
+          if (blob === null) {
+            return { result: "ENGINE_ERROR", path: filePath };
+          }
+          const encodedBlob = await base64Encoder(blob);
+          if (encodedBlob === undefined) {
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+          encodedBlobs.push(encodedBlob);
+          // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
+          const lab = await dispatch("GENERATE_LAB", {
+            audioKey,
+            offset: labOffset,
+          });
+          if (lab === undefined) {
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+          labs.push(lab);
+          texts.push(state.audioItems[audioKey].text);
+          // 最終音素の終了時刻を取得する
+          const splitLab = lab.split(" ");
+          labOffset = Number(splitLab[splitLab.length - 2]);
+        }
+
+        const connectedWav = await dispatch("CONNECT_AUDIO", {
+          encodedBlobs,
+        });
+        if (!connectedWav) {
+          return { result: "ENGINE_ERROR", path: filePath };
+        }
+
+        try {
+          window.electron.writeFile({
+            filePath,
+            buffer: await connectedWav.arrayBuffer(),
+          });
+        } catch (e) {
+          window.electron.logError(e);
+          return { result: "WRITE_ERROR", path: filePath };
+        }
+
+        if (state.savingSetting.exportLab) {
+          // GENERATE_LABで生成される文字列はすべて改行で終わるので、改行なしに結合する
+          const labString = labs.join("");
+
+          const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+          const labBlob = new Blob([bom, labString], {
+            type: "text/plain;charset=UTF-8",
+          });
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".lab"),
+              buffer: await labBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+        }
+
+        if (state.savingSetting.exportText) {
+          const textBlob = ((): Blob => {
+            const text = texts.join("\n");
+            if (!encoding || encoding === "UTF-8") {
+              const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+              return new Blob([bom, text], {
+                type: "text/plain;charset=UTF-8",
+              });
+            }
+            const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+              to: "SJIS",
+              type: "arraybuffer",
+            });
+            return new Blob([new Uint8Array(sjisArray)], {
+              type: "text/plain;charset=Shift_JIS",
+            });
+          })();
+
+          try {
+            window.electron.writeFile({
+              filePath: filePath.replace(/\.wav$/, ".txt"),
+              buffer: await textBlob.arrayBuffer(),
+            });
+          } catch (e) {
+            window.electron.logError(e);
+            return { result: "WRITE_ERROR", path: filePath };
+          }
+        }
+
+        return { result: "SUCCESS", path: filePath };
       }
     ),
     PLAY_AUDIO: createUILockAction(

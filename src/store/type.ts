@@ -22,6 +22,7 @@ import {
   Preset,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import { QVueGlobals } from "quasar";
 
 export type AudioItem = {
   text: string;
@@ -58,6 +59,8 @@ type StoreType<T, U extends "getter" | "mutation" | "action"> = {
     ? R
     : never;
 };
+
+export type QuasarDialog = QVueGlobals["dialog"];
 
 /*
  * Audio Store Types
@@ -272,8 +275,16 @@ type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  GENERATE_LAB: {
+    action(payload: { audioKey: string; offset?: number }): string | undefined;
+  };
+
   GENERATE_AUDIO: {
     action(payload: { audioKey: string }): Blob | null;
+  };
+
+  CONNECT_AUDIO: {
+    action(payload: { encodedBlobs: string[] }): Blob | null;
   };
 
   GENERATE_AND_SAVE_AUDIO: {
@@ -289,6 +300,13 @@ type AudioStoreTypes = {
       dirPath?: string;
       encoding?: EncodingType;
     }): SaveResultObject[] | undefined;
+  };
+
+  GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
+    action(payload: {
+      filePath?: string;
+      encoding?: EncodingType;
+    }): SaveResultObject | undefined;
   };
 
   PLAY_AUDIO: {

@@ -76,6 +76,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "E",
   },
   {
+    action: "音声を繋げて書き出し",
+    combination: "",
+  },
+  {
     action: "再生/停止",
     combination: "Space",
   },

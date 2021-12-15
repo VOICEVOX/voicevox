@@ -150,6 +150,7 @@ export type PresetConfig = {
 export type HotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"
+  | "音声を繋げて書き出し"
   | "再生/停止"
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
