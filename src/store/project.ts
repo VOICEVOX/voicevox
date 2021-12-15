@@ -154,6 +154,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 }
 
                 // set phoneme length
+                // 0.7 未満のプロジェクトファイルは styleId ではなく characterIndex なので、ここだけ characterIndex とした
                 if (audioItem.characterIndex === undefined)
                   throw new Error("audioItem.characterIndex === undefined");
                 await context
