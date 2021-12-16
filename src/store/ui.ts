@@ -33,6 +33,7 @@ export const uiStoreState: UiStoreState = {
   inheritAudioInfo: true,
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
+  isUpdateCheckDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isMaximized: false,
@@ -77,6 +78,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
+      },
+      IS_UPDATE_CHECK_DIALOG_OPEN(
+        state,
+        { isUpdateCheckDialogOpen }: { isUpdateCheckDialogOpen: boolean }
+      ) {
+        state.isUpdateCheckDialogOpen = isUpdateCheckDialogOpen;
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
         state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
@@ -161,6 +168,20 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
+      },
+      async IS_UPDATE_CHECK_DIALOG_OPEN(
+        { state, commit },
+        { isUpdateCheckDialogOpen }: { isUpdateCheckDialogOpen: boolean }
+      ) {
+        const result: number = await window.electron.showInfoDialog({
+          title: "自動アップデートチェック",
+          message: "自動アップデートチェックを行います。\nよろしいですか？",
+          buttons: ["はい", "いいえ"],
+        });
+        if (result == 1) {
+          return;
+        }
+        window.electron.updateCheck();
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(
         { state, commit },

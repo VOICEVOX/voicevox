@@ -97,6 +97,16 @@ type IpcIHData = {
     return: boolean;
   };
 
+  ENABLE_AUTO_UPDATE_CHECK: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
+  UPDATE_CHECK: {
+    args: [];
+    return: void;
+  };
+
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;

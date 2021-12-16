@@ -329,6 +329,16 @@ export default defineComponent({
               });
             },
           },
+          { type: "separator" },
+          {
+            type: "button",
+            label: "アップデート確認",
+            onClick() {
+              store.dispatch("IS_UPDATE_CHECK_DIALOG_OPEN", {
+                isUpdateCheckDialogOpen: true,
+              });
+            },
+          },
         ],
       },
       {

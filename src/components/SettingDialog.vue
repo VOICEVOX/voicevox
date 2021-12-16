@@ -305,6 +305,28 @@
                   </q-tooltip>
                 </q-select>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>自動アップデートチェック</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.enableAutoUpdateCheck"
+                  @update:model-value="
+                    handleSavingSettingChange('enableAutoUpdateCheck', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    起動時にアップデートチェックを行います
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <!-- 今後実験的機能を追加する場合はここに追加 -->
             <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->

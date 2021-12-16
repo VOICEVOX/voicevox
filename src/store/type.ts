@@ -661,6 +661,7 @@ export type UiStoreState = {
   inheritAudioInfo: boolean;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isUpdateCheckDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isMaximized: boolean;
@@ -712,6 +713,11 @@ type UiStoreTypes = {
   IS_SETTING_DIALOG_OPEN: {
     mutation: { isSettingDialogOpen: boolean };
     action(payload: { isSettingDialogOpen: boolean }): void;
+  };
+
+  IS_UPDATE_CHECK_DIALOG_OPEN: {
+    mutation: { isUpdateCheckDialogOpen: boolean };
+    action(payload: { isUpdateCheckDialogOpen: boolean }): void;
   };
 
   IS_HOTKEY_SETTING_DIALOG_OPEN: {

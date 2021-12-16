@@ -136,6 +136,14 @@ const api: Sandbox = {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
   },
 
+  enableAutoUpdateCheck: (newValue) => {
+    return ipcRendererInvoke("ENABLE_AUTO_UPDATE_CHECK", { newValue });
+  },
+
+  updateCheck: () => {
+    return ipcRendererInvoke("UPDATE_CHECK");
+  },
+
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },

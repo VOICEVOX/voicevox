@@ -49,6 +49,7 @@ if (isDevelopment) {
 }
 
 autoUpdater.logger = log;
+autoUpdater.autoDownload = false;
 
 let win: BrowserWindow;
 
@@ -175,6 +176,7 @@ const store = new Store<{
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
+        enableAutoUpdateCheck: { type: "boolean", default: false },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -186,6 +188,7 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
+        enableAutoUpdateCheck: false,
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -568,6 +571,18 @@ ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   return store.get("inheritAudioInfo", false);
 });
 
+ipcMainHandle("ENABLE_AUTO_UPDATE_CHECK", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("enableAutoUpdateCheck", newValue);
+  }
+
+  return store.get("enableAutoUpdateCheck", false);
+});
+
+ipcMainHandle("UPDATE_CHECK", () => {
+  autoUpdater.checkForUpdatesAndNotify();
+});
+
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
@@ -800,7 +815,10 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
-  autoUpdater.checkForUpdatesAndNotify();
+  const enableAutoUpdateCheck = store.get("enableAutoUpdateCheck", false);
+  if (enableAutoUpdateCheck) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
 });
 
 app.on("second-instance", () => {
@@ -834,6 +852,19 @@ autoUpdater.on("checking-for-update", () => {
 // アップデートが見つかった
 autoUpdater.on("update-available", () => {
   log.info(process.pid, "Update available.");
+  const dialogOpts = {
+    type: "info",
+    buttons: ["はい", "いいえ"],
+    message: "アップデート",
+    detail:
+      "新しいバージョンをがありました。更新をダウンロードしますか？",
+  }
+  // ダイアログを表示しすぐに再起動するか確認
+  dialog.showMessageBox(win, dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) {
+      autoUpdater.downloadUpdate();
+    }
+  });
 });
 // アップデートがなかった（最新版だった）
 autoUpdater.on("update-not-available", () => {
