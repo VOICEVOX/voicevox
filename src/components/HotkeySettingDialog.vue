@@ -322,7 +322,7 @@ export default defineComponent({
     };
 
     const confirmBtnEnabled = computed(() => {
-      let modifierKeys = ["Ctrl", "Shift", "Alt"];
+      const modifierKeys = ["Ctrl", "Shift", "Alt"];
       if ($q.platform.is.mac) {
         modifierKeys.push("Meta");
       }
