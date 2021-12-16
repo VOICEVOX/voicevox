@@ -81,7 +81,8 @@ export default defineComponent({
       if (hotkey === undefined) {
         return "";
       } else {
-        // macOS の場合のみ Meta キーが使用される。macOS の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
+        // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
+        // Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
         return hotkey.replaceAll(" ", "+").replaceAll("Meta", "Cmd");
       }
     };

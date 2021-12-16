@@ -219,16 +219,17 @@ export const parseCombo = (event: KeyboardEvent): string => {
     recordedCombo += "Shift ";
   }
   // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
-  // macOS の場合のみ Meta (Cmd) キーを他のキーと組み合わせられるようにする
-  if (Platform.is.mac) {
-    if (event.metaKey) {
-      recordedCombo += "Meta ";
-    }
+  if (event.metaKey) {
+    recordedCombo += "Meta ";
   }
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    if (["Control", "Shift", "Alt", "Meta"].indexOf(event.key) == -1) {
+    const modifierKeys = ["Control", "Shift", "Alt"];
+    if (Platform.is.mac) {
+      modifierKeys.push("Meta");
+    }
+    if (modifierKeys.indexOf(event.key) == -1) {
       recordedCombo +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     } else {
