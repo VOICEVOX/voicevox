@@ -15,7 +15,7 @@ import {
 } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
-import { Dark, setCssVar, colors, Platform } from "quasar";
+import { Dark, setCssVar, colors } from "quasar";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -219,11 +219,8 @@ export const parseCombo = (event: KeyboardEvent): string => {
     recordedCombo += "Shift ";
   }
   // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
-  // Mac の場合のみ Meta キーを修飾キーとして取り扱う
-  if (Platform.is.mac) {
-    if (event.metaKey) {
-      recordedCombo += "Meta ";
-    }
+  if (event.metaKey) {
+    recordedCombo += "Meta ";
   }
   if (event.key === " ") {
     recordedCombo += "Space";
