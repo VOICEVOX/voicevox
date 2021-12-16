@@ -228,11 +228,7 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    const modifierKeys = ["Control", "Shift", "Alt"];
-    if (Platform.is.mac) {
-      modifierKeys.push("Meta");
-    }
-    if (modifierKeys.indexOf(event.key) == -1) {
+    if (["Control", "Shift", "Alt", "Meta"].indexOf(event.key) == -1) {
       recordedCombo +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     } else {
