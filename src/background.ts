@@ -856,9 +856,8 @@ autoUpdater.on("update-available", () => {
     type: "info",
     buttons: ["はい", "いいえ"],
     message: "アップデート",
-    detail:
-      "新しいバージョンをがありました。更新をダウンロードしますか？",
-  }
+    detail: "新しいバージョンをがありました。更新をダウンロードしますか？",
+  };
   // ダイアログを表示しすぐに再起動するか確認
   dialog.showMessageBox(win, dialogOpts).then((returnValue) => {
     if (returnValue.response === 0) {

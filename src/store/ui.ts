@@ -173,15 +173,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { state, commit },
         { isUpdateCheckDialogOpen }: { isUpdateCheckDialogOpen: boolean }
       ) {
-        const result: number = await window.electron.showInfoDialog({
-          title: "自動アップデートチェック",
-          message: "自動アップデートチェックを行います。\nよろしいですか？",
-          buttons: ["はい", "いいえ"],
-        });
-        if (result == 1) {
-          return;
+        if (state.isUpdateCheckDialogOpen === isUpdateCheckDialogOpen) return;
+
+        if (isUpdateCheckDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+
+          const result: number = await window.electron.showInfoDialog({
+            title: "自動アップデートチェック",
+            message: "自動アップデートチェックを行います。\nよろしいですか？",
+            buttons: ["はい", "いいえ"],
+          });
+          if (result == 1) {
+            return;
+          }
+          window.electron.updateCheck();
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
         }
-        window.electron.updateCheck();
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(
         { state, commit },
