@@ -83,6 +83,11 @@
                     :label="
                       getHotkeyText(props.row.action, props.row.combination)
                         .split(' ')
+                        .map((hotkeyText) => {
+                          // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
+                          // Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
+                          return hotkeyText === 'Meta' ? 'Cmd' : hotkeyText;
+                        })
                         .join(' + ')
                     "
                     @click="openHotkeyDialog(props.row.action)"
@@ -122,8 +127,12 @@
       <q-card-section align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
+          <!--
+          Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
+          Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
+          -->
           <q-chip :ripple="false" color="setting-item">
-            {{ hotkey }}
+            {{ hotkey === "Meta" ? "Cmd" : hotkey }}
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
@@ -315,7 +324,7 @@ export default defineComponent({
     const confirmBtnEnabled = computed(() => {
       return (
         lastRecord.value == "" ||
-        ["Ctrl", "Shift", "Alt"].indexOf(
+        ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
           lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
         ) > -1
       );
