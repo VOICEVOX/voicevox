@@ -36,7 +36,7 @@
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
-          :class="[accentPhraseIndex === playPoint && 'bg-red-2']"
+          :class="[accentPhraseIndex === activePoint && 'bg-red-2']"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
           :id="`accent-phrase-${accentPhraseIndex}`"
         >
@@ -296,7 +296,7 @@ export default defineComponent({
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
     const startPoint = ref<number | null>(null);
-    const playPoint = ref<number | null>(null);
+    const activePoint = ref<number | null>(null);
     let accentPhraseOffsets: number[] = [];
     watch(startPoint, (value) => {
       // startPointの時は、null合体代入によって0が代入され、最初のアクセント句が再生開始位置となる
@@ -311,12 +311,12 @@ export default defineComponent({
       // UIロックというものにそぐわない挙動になるので何もしないようにする
       if (uiLocked.value) return;
 
-      if (playPoint.value !== accentPhraseIndex) {
-        playPoint.value = accentPhraseIndex;
+      if (activePoint.value !== accentPhraseIndex) {
+        activePoint.value = accentPhraseIndex;
         startPoint.value = accentPhraseIndex;
       } else {
         // 選択解除で最初から再生できるようにする
-        playPoint.value = null;
+        activePoint.value = null;
         startPoint.value = null;
       }
     };
@@ -351,7 +351,7 @@ export default defineComponent({
     const lastPitches = ref<number[][]>([]);
     watch(accentPhrases, (newPhrases) => {
       updateAccentPhraseOffsets(newPhrases);
-      playPoint.value = null;
+      activePoint.value = null;
       startPoint.value = null;
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
@@ -442,12 +442,14 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
-    const scrollToPlayPoint = () => {
+    const scrollToActivePoint = () => {
       const audioDetailElem = document.getElementById(
         "audio-detail"
       ) as HTMLElement;
       const firstElem = document.getElementById("accent-phrase-0");
-      const elem = document.getElementById(`accent-phrase-${playPoint.value}`);
+      const elem = document.getElementById(
+        `accent-phrase-${activePoint.value}`
+      );
       if (firstElem && elem) {
         // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
         // const scrollCount = Math.max(
@@ -485,18 +487,18 @@ export default defineComponent({
               accentPhraseOffsets[i - 1] < currentTime &&
               currentTime < accentPhraseOffsets[i]
             ) {
-              playPoint.value = i - 1;
-              scrollToPlayPoint();
+              activePoint.value = i - 1;
+              scrollToActivePoint();
             }
           }
         }, 100);
       } else if (focusInterval !== undefined) {
         clearInterval(focusInterval);
         focusInterval = undefined;
-        // startPointがnullの場合、一旦最初のアクセント句までスクロール、その後playPointの選択を解除(nullに)する
-        playPoint.value = startPoint.value ?? 0;
-        scrollToPlayPoint();
-        if (startPoint.value === null) playPoint.value = startPoint.value;
+        // startPointがnullの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(nullに)する
+        activePoint.value = startPoint.value ?? 0;
+        scrollToActivePoint();
+        if (startPoint.value === null) activePoint.value = startPoint.value;
       }
     });
 
@@ -694,7 +696,7 @@ export default defineComponent({
     return {
       selectDetail,
       selectedDetail,
-      playPoint,
+      activePoint,
       setPlayAndStartPoint,
       uiLocked,
       audioItem,
