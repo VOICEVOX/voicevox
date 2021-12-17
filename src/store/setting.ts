@@ -218,10 +218,14 @@ export const parseCombo = (event: KeyboardEvent): string => {
   if (event.shiftKey) {
     recordedCombo += "Shift ";
   }
+  // event.metaKey は Mac キーボードでは Cmd キー、Windows キーボードでは Windows キーの押下で true になる
+  if (event.metaKey) {
+    recordedCombo += "Meta ";
+  }
   if (event.key === " ") {
     recordedCombo += "Space";
   } else {
-    if (["Control", "Shift", "Alt"].indexOf(event.key) == -1) {
+    if (["Control", "Shift", "Alt", "Meta"].indexOf(event.key) == -1) {
       recordedCombo +=
         event.key.length > 1 ? event.key : event.key.toUpperCase();
     } else {
