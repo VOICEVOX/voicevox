@@ -295,10 +295,12 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
-    const startPoint = ref(0);
+    const startPoint = ref<number | null>(null);
     const playPoint = ref<number | null>(null);
     let accentPhraseOffsets: number[] = [];
     watch(startPoint, (value) => {
+      // startPointの時は、null合体代入によって0が代入され、最初のアクセント句が再生開始位置となる
+      value ??= 0;
       store.dispatch("SET_AUDIO_PLAY_OFFSET", {
         offset: accentPhraseOffsets[value],
       });
@@ -315,7 +317,7 @@ export default defineComponent({
       } else {
         // 選択解除で最初から再生できるようにする
         playPoint.value = null;
-        startPoint.value = 0;
+        startPoint.value = null;
       }
     };
 
@@ -350,7 +352,7 @@ export default defineComponent({
     watch(accentPhrases, (newPhrases) => {
       updateAccentPhraseOffsets(newPhrases);
       playPoint.value = null;
-      startPoint.value = 0;
+      startPoint.value = null;
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
@@ -479,8 +481,10 @@ export default defineComponent({
       } else if (focusInterval !== undefined) {
         clearInterval(focusInterval);
         focusInterval = undefined;
-        playPoint.value = startPoint.value;
+        // startPointがnullの場合、一旦最初のアクセント句までスクロール、その後playPointの選択を解除(nullに)する
+        playPoint.value = startPoint.value ?? 0;
         scrollToPlayPoint();
+        if (startPoint.value === null) playPoint.value = startPoint.value;
       }
     });
 
