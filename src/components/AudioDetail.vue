@@ -36,7 +36,10 @@
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
-          :class="[accentPhraseIndex === activePoint && 'bg-red-2']"
+          :class="[
+            accentPhraseIndex === activePoint && 'mora-table-focus',
+            uiLocked || 'mora-table-hover',
+          ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
           :id="`accent-phrase-${accentPhraseIndex}`"
         >
@@ -828,6 +831,16 @@ $pitch-label-height: 24px;
           position: relative;
         }
       }
+    }
+
+    .mora-table-hover:hover {
+      cursor: pointer;
+      background-color: rgba(colors.$accent-phrase-focus-rgb, 0.3);
+    }
+
+    .mora-table-focus {
+      // hover色に負けるので、importantが必要
+      background-color: colors.$accent-phrase-focus !important;
     }
   }
 }
