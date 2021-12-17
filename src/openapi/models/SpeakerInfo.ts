@@ -13,6 +13,12 @@
  */
 
 import { exists, mapValues } from '../runtime';
+import {
+    StyleInfo,
+    StyleInfoFromJSON,
+    StyleInfoFromJSONTyped,
+    StyleInfoToJSON
+} from "./";
 /**
  * 話者の追加情報
  * @export
@@ -33,16 +39,10 @@ export interface SpeakerInfo {
     portrait: string;
     /**
      * 
-     * @type {{ [key: string]: string; }}
-     * @memberof SpeakerInfo
+     * @type Array<StyleInfo>
+     * @memberof StyleInfos
      */
-    icons: { [key: string]: string; };
-    /**
-     * 
-     * @type {{ [key: string]: string; }}
-     * @memberof SpeakerInfo
-     */
-    voiceSamples: { [key: string]: string; };
+    styleInfos: Array<StyleInfo>;
 }
 
 export function SpeakerInfoFromJSON(json: any): SpeakerInfo {
@@ -57,8 +57,7 @@ export function SpeakerInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean
         
         'policy': json['policy'],
         'portrait': json['portrait'],
-        'icons': json['icons'],
-        'voiceSamples': json['voice_samples'],
+        'styleInfos': ((json['style_infos'] as Array<any>).map(StyleInfoFromJSON)),
     };
 }
 
@@ -73,8 +72,7 @@ export function SpeakerInfoToJSON(value?: SpeakerInfo | null): any {
         
         'policy': value.policy,
         'portrait': value.portrait,
-        'icons': value.icons,
-        'voice_samples': value.voiceSamples,
+        'style_infos': ((value.styleInfos as Array<any>).map(StyleInfoToJSON)),
     };
 }
 

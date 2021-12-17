@@ -36,6 +36,7 @@ import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
+  generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
@@ -99,6 +100,16 @@ export default defineComponent({
           encoding: store.state.savingSetting.fileEncoding,
           quasarDialog: $q.dialog,
           dispatch: store.dispatch,
+        });
+      }
+    };
+
+    const generateAndConnectAndSaveAllAudio = async () => {
+      if (!uiLocked.value) {
+        await generateAndConnectAndSaveAudioWithDialog({
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
+          encoding: store.state.savingSetting.fileEncoding,
         });
       }
     };
@@ -197,6 +208,13 @@ export default defineComponent({
             label: "一つだけ書き出し",
             onClick: () => {
               generateAndSaveOneAudio();
+            },
+          },
+          {
+            type: "button",
+            label: "音声を繋げて書き出し",
+            onClick: () => {
+              generateAndConnectAndSaveAllAudio();
             },
           },
           {
@@ -313,6 +331,7 @@ export default defineComponent({
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
       ["一つだけ書き出し", generateAndSaveOneAudio],
+      ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
       ["テキスト読み込む", importTextFile],
       ["プロジェクトを上書き保存", saveProject],
       ["プロジェクトを名前を付けて保存", saveProjectAs],
