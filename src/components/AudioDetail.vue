@@ -444,11 +444,15 @@ export default defineComponent({
       const audioDetailElem = document.getElementById(
         "audio-detail"
       ) as HTMLElement;
+      const firstElem = document.getElementById("accent-phrase-0");
       const elem = document.getElementById(`accent-phrase-${playPoint.value}`);
-      if (elem) {
-        // 再生されているアクセント句を大体真ん中に持ってくる
+      if (firstElem && elem) {
+        // 再生されているアクセント句を中央に持ってくる
         const scrollCount = Math.max(
-          elem.offsetLeft - audioDetailElem.offsetWidth / 2,
+          elem.offsetLeft -
+            firstElem.offsetLeft +
+            elem.offsetWidth / 2 -
+            audioDetailElem.offsetWidth / 2,
           0
         );
         audioDetailElem.scroll(scrollCount, 0);
