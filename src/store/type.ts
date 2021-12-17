@@ -89,7 +89,7 @@ type AudioStoreTypes = {
     getter: boolean;
   };
 
-  AUDIO_ELEM_CURRENT_TIME: {
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
   };
 

@@ -145,7 +145,7 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ENGINE_READY: (state) => {
       return state.engineState === "READY";
     },
-    AUDIO_ELEM_CURRENT_TIME: (state) => {
+    ACTIVE_AUDIO_ELEM_CURRENT_TIME: (state) => {
       return state._activeAudioKey !== undefined
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;

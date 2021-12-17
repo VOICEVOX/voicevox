@@ -480,7 +480,7 @@ export default defineComponent({
     watch(nowPlaying, (newState) => {
       if (newState) {
         focusInterval = setInterval(() => {
-          const currentTime = store.getters.AUDIO_ELEM_CURRENT_TIME;
+          const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
           for (let i = 1; i < accentPhraseOffsets.length; i++) {
             if (
               currentTime !== undefined &&
