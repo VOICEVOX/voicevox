@@ -41,7 +41,6 @@ import {
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
-import { UpdateInfo } from "../type/preload";
 type MenuItemBase<T extends string> = {
   type: T;
   label?: string;
