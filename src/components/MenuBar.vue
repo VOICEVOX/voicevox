@@ -18,7 +18,8 @@
       {{
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
-        "VOICEVOX"
+        "VOICEVOX" +
+        (currentVersion !== undefined ? " - ver " + currentVersion : "")
       }}
     </div>
     <q-space />
@@ -40,7 +41,7 @@ import {
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
-
+import { UpdateInfo } from "../type/preload";
 type MenuItemBase<T extends string> = {
   type: T;
   label?: string;
@@ -82,7 +83,12 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-
+    const infos = ref<UpdateInfo[]>();
+    store.dispatch("GET_UPDATE_INFOS").then((obj) => (infos.value = obj));
+    const currentVersion = computed(() => {
+      if (!infos.value) return "";
+      return infos.value[0].version;
+    });
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
@@ -350,6 +356,7 @@ export default defineComponent({
     });
 
     return {
+      currentVersion,
       uiLocked,
       menubarLocked,
       projectName,
