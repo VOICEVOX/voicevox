@@ -19,7 +19,7 @@
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
         "VOICEVOX" +
-        (currentVersion !== undefined ? " - ver " + currentVersion : "")
+        (currentVersion ? " - ver " + currentVersion : "")
       }}
     </div>
     <q-space />
