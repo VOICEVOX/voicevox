@@ -83,11 +83,9 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-    const infos = ref<UpdateInfo[]>();
-    store.dispatch("GET_UPDATE_INFOS").then((obj) => (infos.value = obj));
-    const currentVersion = computed(() => {
-      if (!infos.value) return "";
-      return infos.value[0].version;
+    const currentVersion = ref("");
+    window.electron.getAppInfos().then((obj) => {
+      currentVersion.value = obj.version;
     });
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
