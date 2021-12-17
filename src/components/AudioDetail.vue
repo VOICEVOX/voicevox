@@ -449,15 +449,27 @@ export default defineComponent({
       const firstElem = document.getElementById("accent-phrase-0");
       const elem = document.getElementById(`accent-phrase-${playPoint.value}`);
       if (firstElem && elem) {
-        // 再生されているアクセント句を中央に持ってくる
-        const scrollCount = Math.max(
-          elem.offsetLeft -
-            firstElem.offsetLeft +
-            elem.offsetWidth / 2 -
-            audioDetailElem.offsetWidth / 2,
-          0
-        );
-        audioDetailElem.scroll(scrollCount, 0);
+        // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
+        // const scrollCount = Math.max(
+        //   elem.offsetLeft -
+        //     firstElem.offsetLeft +
+        //     elem.offsetWidth / 2 -
+        //     audioDetailElem.offsetWidth / 2,
+        //   0
+        // );
+        // audioDetailElem.scroll(scrollCount, 0);
+        const displayedPart =
+          audioDetailElem.offsetLeft + audioDetailElem.offsetWidth;
+        const nextAccentPhraseStart = elem.offsetLeft - firstElem.offsetLeft;
+        const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
+        // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
+        if (
+          nextAccentPhraseEnd <= audioDetailElem.scrollLeft ||
+          displayedPart <= nextAccentPhraseStart
+        ) {
+          const scrollCount = elem.offsetLeft - firstElem.offsetLeft;
+          audioDetailElem.scroll(scrollCount, 0);
+        }
       }
     };
 
