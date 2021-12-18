@@ -280,7 +280,7 @@ export const projectStore: VoiceVoxStoreOptions<
         if (!overwrite || !filePath) {
           let defaultFileName: string | undefined = undefined;
 
-          // if new project
+          // if new project: generated name
           if (!filePath) {
             const headItemText =
               context.state.audioItems[context.state.audioKeys[0]].text;
@@ -299,12 +299,12 @@ export const projectStore: VoiceVoxStoreOptions<
                 ? defaultFileNameStem + ".vvproj"
                 : "Untitled.vvproj";
           }
-          // else: existing project but will not overwrite
+          // else (existing project but will not overwrite): use current project path
 
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
             title: "プロジェクトファイルの保存",
-            defaultPath: defaultFileName,
+            defaultPath: defaultFileName ?? filePath,
           });
           if (ret == undefined) {
             return;
