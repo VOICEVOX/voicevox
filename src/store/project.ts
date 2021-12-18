@@ -278,9 +278,29 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
+          let defaultFileName: string | undefined = undefined;
+
+          if (!filePath) {
+            const headItemText =
+              context.state.audioItems[context.state.audioKeys[0]].text;
+            const tailItemText =
+              context.state.audioItems[
+                context.state.audioKeys[context.state.audioKeys.length - 1]
+              ].text;
+
+            const defaultFileNameStem =
+              headItemText !== tailItemText
+                ? headItemText + "..." + tailItemText
+                : headItemText;
+            defaultFileName =
+              defaultFileNameStem !== ""
+                ? defaultFileNameStem + ".vvproj" : "Untitled.vvproj";
+          }
+
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
             title: "プロジェクトファイルの保存",
+            defaultPath: defaultFileName,
           });
           if (ret == undefined) {
             return;
