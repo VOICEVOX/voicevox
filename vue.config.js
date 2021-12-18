@@ -101,6 +101,9 @@ module.exports = {
             },
           ],
         },
+        dmg: {
+          icon: "public/icon-dmg.png",
+        },
       },
     },
   },
