@@ -22,6 +22,7 @@ import {
   PresetConfig,
   ThemeConf,
   AcceptRetrieveTelemetryStatus,
+  ToolbarSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -152,6 +153,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -208,6 +210,13 @@ const store = new Store<{
         },
       },
       default: defaultHotkeySettings,
+    },
+    toolbarSetting: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
     },
     defaultStyleIds: {
       type: "array",
@@ -714,6 +723,13 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
     store.set("savingSetting", newData);
   }
   return store.get("savingSetting");
+});
+
+ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("toolbarSetting", newData);
+  }
+  return store.get("toolbarSetting");
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {

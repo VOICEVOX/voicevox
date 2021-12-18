@@ -50,6 +50,7 @@ export interface Sandbox {
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   savingPresets(newPresets?: {
@@ -175,6 +176,15 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type ToolbarButtonTagType =
+  | "PLAY_CONTINUOUSLY"
+  | "STOP"
+  | "UNDO"
+  | "REDO"
+  | "EMPTY";
+
+export type ToolbarSetting = ToolbarButtonTagType[];
 
 export type MoraDataType =
   | "consonant"

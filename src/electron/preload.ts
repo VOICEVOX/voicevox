@@ -188,6 +188,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 
+  toolbarSetting: (newData) => {
+    return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
+  },
+
   isUnsetDefaultStyleId: async (speakerUuid: string) => {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
