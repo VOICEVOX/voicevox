@@ -70,7 +70,7 @@ protocol.registerSchemesAsPrivileged([
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
-    combination: "Ctrl E",
+    combination: process.platform !== "darwin" ? "Ctrl E" : "Meta E",
   },
   {
     action: "一つだけ書き出し",
@@ -118,27 +118,28 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "元に戻す",
-    combination: "Ctrl Z",
+    combination: process.platform !== "darwin" ? "Ctrl Z" : "Meta Z",
   },
   {
     action: "やり直す",
-    combination: "Ctrl Y",
+    combination: process.platform !== "darwin" ? "Ctrl Y" : "Shift Meta Z",
   },
   {
     action: "新規プロジェクト",
-    combination: "Ctrl N",
+    combination: process.platform !== "darwin" ? "Ctrl N" : "Meta N",
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: "Ctrl Shift S",
+    combination:
+      process.platform !== "darwin" ? "Ctrl Shift S" : "Shift Meta S",
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: "Ctrl S",
+    combination: process.platform !== "darwin" ? "Ctrl S" : "Meta S",
   },
   {
     action: "プロジェクト読み込み",
-    combination: "Ctrl O",
+    combination: process.platform !== "darwin" ? "Ctrl O" : "Meta O",
   },
   {
     action: "テキスト読み込む",
