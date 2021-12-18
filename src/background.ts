@@ -67,10 +67,11 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+const isMac = process.platform === "darwin";
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
-    combination: "Ctrl E",
+    combination: !isMac ? "Ctrl E" : "Meta E",
   },
   {
     action: "一つだけ書き出し",
@@ -118,27 +119,27 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "元に戻す",
-    combination: "Ctrl Z",
+    combination: !isMac ? "Ctrl Z" : "Meta Z",
   },
   {
     action: "やり直す",
-    combination: "Ctrl Y",
+    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
   },
   {
     action: "新規プロジェクト",
-    combination: "Ctrl N",
+    combination: !isMac ? "Ctrl N" : "Meta N",
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: "Ctrl Shift S",
+    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: "Ctrl S",
+    combination: !isMac ? "Ctrl S" : "Meta S",
   },
   {
     action: "プロジェクト読み込み",
-    combination: "Ctrl O",
+    combination: !isMac ? "Ctrl O" : "Meta O",
   },
   {
     action: "テキスト読み込む",
@@ -470,7 +471,7 @@ async function createWindow() {
   });
 
   win.webContents.once("did-finish-load", () => {
-    if (process.platform === "darwin") {
+    if (isMac) {
       if (filePathOnMac != null) {
         ipcMainSend(win, "LOAD_PROJECT_FILE", {
           filePath: filePathOnMac,
