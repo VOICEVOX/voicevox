@@ -55,6 +55,7 @@ describe("store/vuex.js test", () => {
         presetItems: {},
         presetKeys: [],
         hotkeySettings: [],
+        toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
       },
