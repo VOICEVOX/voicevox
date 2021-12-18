@@ -18,8 +18,9 @@
 <img src="res/image14.png" style="max-height: 16rem" /> → <img src="res/image15.png" style="max-height: 16rem" />
 
 ### Mac版
-
 初回起動時はAppleに登録されていないアプリケーションとして警告ダイアログが表示されます。
+<img src="res/gatekeeper.png" style="max-height: 16rem" />
+
 その際は以下の手順で起動してください。
 
 1. MacのFinderで、「VOICEVOX」を検索します。Launchpadは使用しないでください。Launchpadではショートカットメニューにアクセスできません。
