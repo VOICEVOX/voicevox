@@ -278,10 +278,10 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
-          let defaultFileName: string | undefined = undefined;
+          let defaultPath: string;
 
-          // if new project: generated name
           if (!filePath) {
+            // if new project: use generated name
             const headItemText =
               context.state.audioItems[context.state.audioKeys[0]].text;
             const tailItemText =
@@ -294,17 +294,19 @@ export const projectStore: VoiceVoxStoreOptions<
                 ? headItemText + "..." + tailItemText
                 : headItemText;
 
-            defaultFileName =
+            defaultPath =
               defaultFileNameStem !== ""
                 ? defaultFileNameStem + ".vvproj"
                 : "Untitled.vvproj";
+          } else {
+            // if saveAs for existing project: use current project path
+            defaultPath = filePath;
           }
-          // else (existing project but will not overwrite): use current project path
 
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
             title: "プロジェクトファイルの保存",
-            defaultPath: defaultFileName ?? filePath,
+            defaultPath,
           });
           if (ret == undefined) {
             return;
