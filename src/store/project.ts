@@ -292,9 +292,11 @@ export const projectStore: VoiceVoxStoreOptions<
               headItemText !== tailItemText
                 ? headItemText + "..." + tailItemText
                 : headItemText;
+
             defaultFileName =
               defaultFileNameStem !== ""
-                ? defaultFileNameStem + ".vvproj" : "Untitled.vvproj";
+                ? defaultFileNameStem + ".vvproj"
+                : "Untitled.vvproj";
           }
 
           // Write the current status to a project file.
