@@ -279,7 +279,18 @@ GPU モードでよく発生する現象で、長い音声を生成するには�
 
 設定がなにか問題を起こしている可能性があります。一度ソフトウェアを終了して後述のパスにある設定ファイルを消去してもう一度起動してみてください。
 
+** Windows：**
+
 設定ファイルのパス：`C:\Users\(ユーザー名)\AppData\Roaming\voicevox`もしくは`voicevox-cpu`
+
+** Mac*：**
+
+設定ファイルのパス：`/Users/(UserName)/Library/Application\ Support/voicevox-cpu`
+
+設定ファイルのパス：`/Users/(UserName)/Library/Saved\ Application\ State/jp.hiroshiba.voicevox.savedState`
+
+ログファイルのパス：`/Users/(UserName)/Library/Logs/voicevox-cpu `
+
 
 ## ご感想・ご要望・バグ報告など
 
