@@ -18,7 +18,8 @@
       {{
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
-        "VOICEVOX"
+        "VOICEVOX" +
+        (currentVersion ? " - Ver. " + currentVersion : "")
       }}
     </div>
     <q-space />
@@ -82,7 +83,10 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-
+    const currentVersion = ref("");
+    window.electron.getAppInfos().then((obj) => {
+      currentVersion.value = obj.version;
+    });
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
@@ -350,6 +354,7 @@ export default defineComponent({
     });
 
     return {
+      currentVersion,
       uiLocked,
       menubarLocked,
       projectName,
