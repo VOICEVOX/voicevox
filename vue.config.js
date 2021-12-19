@@ -102,8 +102,6 @@ module.exports = {
           ],
         },
         dmg: {
-          artifactName:
-            MACOS_ARTIFACT_NAME !== "" ? MACOS_ARTIFACT_NAME : undefined,
           icon: "public/icon-dmg.icns",
         },
       },
