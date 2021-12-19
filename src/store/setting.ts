@@ -209,9 +209,6 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     GET_ENABLE_INTERROGATIVE({ dispatch }) {
       window.electron.getEnableInterrogative().then((enableInterrogative) => {
-        console.log(
-          "getEnableInterrogative  enableInterrogative:" + enableInterrogative
-        );
         dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
       });
     },

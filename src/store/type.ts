@@ -220,7 +220,11 @@ type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_QUERY: {
-    action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
+    action(payload: {
+      text: string;
+      styleId: number;
+      enableInterrogative: boolean;
+    }): Promise<AudioQuery>;
   };
 
   SET_AUDIO_STYLE_ID: {
@@ -236,6 +240,7 @@ type AudioStoreTypes = {
       text: string;
       styleId: number;
       isKana?: boolean;
+      enableInterrogative?: boolean;
     }): Promise<AccentPhrase[]>;
   };
 

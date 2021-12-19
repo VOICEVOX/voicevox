@@ -576,6 +576,7 @@ export const audioStore: VoiceVoxStoreOptions<
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
             styleId,
+            enableInterrogative: state.enableInterrogative,
           }).catch(() => undefined)
         : undefined;
 
@@ -641,7 +642,13 @@ export const audioStore: VoiceVoxStoreOptions<
         text,
         styleId,
         isKana,
-      }: { text: string; styleId: number; isKana?: boolean }
+        enableInterrogative,
+      }: {
+        text: string;
+        styleId: number;
+        isKana?: boolean;
+        enableInterrogative?: boolean;
+      }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "accentPhrasesAccentPhrasesPost",
@@ -650,6 +657,7 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
+            enableInterrogative,
           },
         ],
       })
@@ -710,11 +718,21 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     FETCH_AUDIO_QUERY(
       { dispatch },
-      { text, styleId }: { text: string; styleId: number }
+      {
+        text,
+        styleId,
+        enableInterrogative,
+      }: { text: string; styleId: number; enableInterrogative?: boolean }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "audioQueryAudioQueryPost",
-        payload: [{ text, speaker: styleId }],
+        payload: [
+          {
+            text,
+            speaker: styleId,
+            enableInterrogative,
+          },
+        ],
       })
         .then(toDispatchResponse("audioQueryAudioQueryPost"))
         .catch((error) => {
@@ -1309,6 +1327,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             {
               text,
               styleId,
+              enableInterrogative: state.enableInterrogative,
             }
           );
           commit("COMMAND_CHANGE_AUDIO_TEXT", {
@@ -1321,6 +1340,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text,
             styleId,
+            enableInterrogative: state.enableInterrogative,
           });
           commit("COMMAND_CHANGE_AUDIO_TEXT", {
             audioKey,
@@ -1364,6 +1384,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text: text,
             styleId,
+            enableInterrogative: state.enableInterrogative,
           });
           commit("COMMAND_CHANGE_STYLE_ID", {
             styleId,
