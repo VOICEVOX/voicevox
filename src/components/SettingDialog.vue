@@ -306,13 +306,13 @@
                 </q-select>
               </q-card-actions>
             </q-card>
-            <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
-            <!-- <q-card flat class="setting-card">
+            <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <!-- 今後実験的機能を追加する場合はここに追加 -->
+              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+              <!-- <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>Theme</div>
                 <q-space />
                 <q-btn-toggle
@@ -335,8 +335,26 @@
                     The colors in themes are not decided yet
                   </q-tooltip>
                 </q-btn-toggle>
+              </q-card-actions> -->
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文自動調整</div>
+                <q-space />
+                <q-toggle
+                  :model-value="enableInterrogative"
+                  @update:model-value="changeEnableInterrogative($event)"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    疑問文のアクセント句を自動調整する
+                  </q-tooltip>
+                </q-toggle>
               </q-card-actions>
-            </q-card> -->
+            </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">テレメトリー</div>
@@ -401,6 +419,8 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const enableInterrogative = computed(() => store.state.enableInterrogative);
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -550,6 +570,11 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeEnableInterrogative = async (enableInterrogative: boolean) => {
+      if (store.state.enableInterrogative === enableInterrogative) return;
+      store.dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -603,9 +628,11 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      enableInterrogative,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      changeEnableInterrogative,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

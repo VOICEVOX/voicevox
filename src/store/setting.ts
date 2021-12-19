@@ -40,6 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   acceptRetrieveTelemetry: "Unconfirmed",
+  enableInterrogative: false,
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -83,6 +84,12 @@ export const settingStore: VoiceVoxStoreOptions<
         state.themeSetting.availableThemes = themes;
       }
       state.themeSetting.currentTheme = currentTheme;
+    },
+    SET_ENABLE_INTERROGATIVE(
+      state,
+      { enableInterrogative }: { enableInterrogative: boolean }
+    ) {
+      state.enableInterrogative = enableInterrogative;
     },
     SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -199,6 +206,18 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+    },
+    GET_ENABLE_INTERROGATIVE({ dispatch }) {
+      window.electron.getEnableInterrogative().then((enableInterrogative) => {
+        console.log(
+          "getEnableInterrogative  enableInterrogative:" + enableInterrogative
+        );
+        dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
+      });
+    },
+    SET_ENABLE_INTERROGATIVE({ commit }, { enableInterrogative }) {
+      window.electron.setEnableInterrogative(enableInterrogative);
+      commit("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
     },
   },
 };

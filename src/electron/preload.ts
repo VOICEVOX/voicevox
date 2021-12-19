@@ -215,6 +215,17 @@ const api: Sandbox = {
     );
   },
 
+  getEnableInterrogative: async () => {
+    return await ipcRendererInvoke("GET_ENABLE_INTERROGATIVE");
+  },
+
+  setEnableInterrogative: async (enableInterrogative) => {
+    return await ipcRendererInvoke(
+      "SET_ENABLE_INTERROGATIVE",
+      enableInterrogative
+    );
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },

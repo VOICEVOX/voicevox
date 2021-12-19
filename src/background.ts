@@ -157,6 +157,7 @@ const store = new Store<{
   toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  enableInterrogative: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
@@ -266,6 +267,10 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    enableInterrogative: {
+      type: "boolean",
+      default: false,
     },
     acceptRetrieveTelemetry: {
       type: "string",
@@ -808,6 +813,14 @@ ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_ENABLE_INTERROGATIVE", () => {
+  return store.get("enableInterrogative");
+});
+
+ipcMainHandle("SET_ENABLE_INTERROGATIVE", (_, enableInterrogative) => {
+  store.set("enableInterrogative", enableInterrogative);
 });
 
 // app callback

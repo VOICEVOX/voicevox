@@ -200,6 +200,14 @@ type IpcIHData = {
     ];
     return: void;
   };
+  GET_ENABLE_INTERROGATIVE: {
+    args: [];
+    return: boolean;
+  };
+  SET_ENABLE_INTERROGATIVE: {
+    args: [enableInterrogative: boolean];
+    return: void;
+  };
 
   THEME: {
     args: [obj: { newData?: string }];

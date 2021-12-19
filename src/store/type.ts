@@ -681,6 +681,7 @@ export type SettingStoreState = {
   engineHost: string;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  enableInterrogative: boolean;
 };
 
 type SettingStoreTypes = {
@@ -730,6 +731,15 @@ type SettingStoreTypes = {
     action(payload: {
       acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
     }): void;
+  };
+
+  GET_ENABLE_INTERROGATIVE: {
+    action(): void;
+  };
+
+  SET_ENABLE_INTERROGATIVE: {
+    mutation: { enableInterrogative: boolean };
+    action(payload: { enableInterrogative: boolean }): void;
   };
 };
 
