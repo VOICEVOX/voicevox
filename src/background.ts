@@ -815,8 +815,8 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
-  const enableAutoUpdateCheck = store.get("enableAutoUpdateCheck", false);
-  if (enableAutoUpdateCheck) {
+  const savingSetting = store.get("savingSetting");
+  if (savingSetting.enableAutoUpdateCheck) {
     autoUpdater.checkForUpdatesAndNotify();
   }
 });

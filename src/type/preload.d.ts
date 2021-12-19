@@ -110,6 +110,7 @@ export type SavingSetting = {
   outputStereo: boolean;
   outputSamplingRate: number;
   audioOutputDevice: string;
+  enableAutoUpdateCheck: boolean;
 };
 
 export type DefaultStyleId = {
