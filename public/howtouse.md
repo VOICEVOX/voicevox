@@ -172,7 +172,10 @@
 - 3
   - 長さ欄を表示
 - スライダーの上でマウスホイール
-  - スライダーの値を変更します（スライダー →<img src="res/image16.png" style="max-height: 1rem" />）
+  - スライダーの値を変更します
+  - Ctrl キーを押しながらマウスホイールを使うと更に細かく調整できます
+  - スライダー →<img src="res/image16.png" style="max-height: 1rem" />
+  
 
 ## 設定画面
 
