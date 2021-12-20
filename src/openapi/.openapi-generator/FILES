@@ -10,6 +10,7 @@ models/Preset.ts
 models/Speaker.ts
 models/SpeakerInfo.ts
 models/SpeakerStyle.ts
+models/StyleInfo.ts
 models/ValidationError.ts
 models/index.ts
 runtime.ts
