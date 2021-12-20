@@ -222,3 +222,7 @@ export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
 };
+
+export type ExperimentalSetting = {
+  enableInterrogative: boolean;
+};

@@ -58,6 +58,9 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
+        experimentalSetting: {
+          enableInterrogative: false,
+        },
       },
       getters: {
         ...uiStore.getters,

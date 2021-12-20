@@ -18,6 +18,7 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ExperimentalSetting,
   ToolbarSetting,
   UpdateInfo,
   Preset,
@@ -686,7 +687,7 @@ export type SettingStoreState = {
   engineHost: string;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  enableInterrogative: boolean;
+  experimentalSetting: ExperimentalSetting;
 };
 
 type SettingStoreTypes = {

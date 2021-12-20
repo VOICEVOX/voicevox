@@ -40,7 +40,9 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   acceptRetrieveTelemetry: "Unconfirmed",
-  enableInterrogative: false,
+  experimentalSetting: {
+    enableInterrogative: false,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -89,7 +91,7 @@ export const settingStore: VoiceVoxStoreOptions<
       state,
       { enableInterrogative }: { enableInterrogative: boolean }
     ) {
-      state.enableInterrogative = enableInterrogative;
+      state.experimentalSetting.enableInterrogative = enableInterrogative;
     },
     SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;

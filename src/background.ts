@@ -21,6 +21,7 @@ import {
   SavingSetting,
   PresetConfig,
   ThemeConf,
+  ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
 } from "./type/preload";
@@ -157,7 +158,7 @@ const store = new Store<{
   toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
-  enableInterrogative: boolean;
+  experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
@@ -268,9 +269,14 @@ const store = new Store<{
       type: "string",
       default: "Default",
     },
-    enableInterrogative: {
-      type: "boolean",
-      default: false,
+    experimentalSetting: {
+      type: "object",
+      properties: {
+        enableInterrogative: {
+          type: "boolean",
+          default: false,
+        },
+      },
     },
     acceptRetrieveTelemetry: {
       type: "string",
@@ -816,11 +822,11 @@ ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
 });
 
 ipcMainHandle("GET_ENABLE_INTERROGATIVE", () => {
-  return store.get("enableInterrogative");
+  return store.get("experimentalSetting.enableInterrogative");
 });
 
 ipcMainHandle("SET_ENABLE_INTERROGATIVE", (_, enableInterrogative) => {
-  store.set("enableInterrogative", enableInterrogative);
+  store.set("experimentalSetting.enableInterrogative", enableInterrogative);
 });
 
 // app callback

@@ -420,7 +420,9 @@ export default defineComponent({
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 
-    const enableInterrogative = computed(() => store.state.enableInterrogative);
+    const enableInterrogative = computed(
+      () => store.state.experimentalSetting.enableInterrogative
+    );
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -571,7 +573,11 @@ export default defineComponent({
     };
 
     const changeEnableInterrogative = async (enableInterrogative: boolean) => {
-      if (store.state.enableInterrogative === enableInterrogative) return;
+      if (
+        store.state.experimentalSetting.enableInterrogative ===
+        enableInterrogative
+      )
+        return;
       store.dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
     };
 
