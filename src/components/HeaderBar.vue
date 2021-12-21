@@ -1,54 +1,54 @@
 <template>
   <q-header class="q-py-sm">
     <q-toolbar>
-      <q-btn
-        unelevated
-        color="background-light"
-        text-color="display-dark"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="uiLocked"
-        @click="playContinuously"
-        >連続再生</q-btn
-      >
-      <q-btn
-        unelevated
-        color="background-light"
-        text-color="display-dark"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!nowPlayingContinuously"
-        @click="stopContinuously"
-        >停止</q-btn
-      >
-
-      <q-space />
-      <q-btn
-        unelevated
-        color="background-light"
-        text-color="display-dark"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!canUndo || uiLocked"
-        @click="undo"
-        >元に戻す</q-btn
-      >
-      <q-btn
-        unelevated
-        color="background-light"
-        text-color="display-dark"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="!canRedo || uiLocked"
-        @click="redo"
-        >やり直す</q-btn
-      >
+      <template v-for="button in headerButtons" :key="button.text">
+        <q-space v-if="button.text === null" />
+        <q-btn
+          v-else
+          unelevated
+          color="background-light"
+          text-color="display-dark"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="button.disable.value"
+          @click="button.click"
+          >{{ button.text }}</q-btn
+        >
+      </template>
     </q-toolbar>
   </q-header>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { setHotkeyFunctions } from "@/store/setting";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import {
+  HotkeyAction,
+  HotkeyReturnType,
+  ToolbarButtonTagType,
+} from "@/type/preload";
+
+type ButtonContent = {
+  text: string;
+  click(): void;
+  disable: ComputedRef<boolean>;
+};
+
+type SpacerContent = {
+  text: null;
+};
+
+export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
+  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
+    PLAY_CONTINUOUSLY: "連続再生",
+    STOP: "停止",
+    UNDO: "元に戻す",
+    REDO: "やり直す",
+    EMPTY: "空白",
+  };
+  return tag2NameObj[tag];
+};
 
 export default defineComponent({
   setup() {
@@ -129,15 +129,47 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
 
+    const usableButtons: Record<
+      ToolbarButtonTagType,
+      Omit<ButtonContent, "text"> | null
+    > = {
+      PLAY_CONTINUOUSLY: {
+        click: playContinuously,
+        disable: uiLocked,
+      },
+      STOP: {
+        click: stopContinuously,
+        disable: computed(() => !nowPlayingContinuously.value),
+      },
+      UNDO: {
+        click: undo,
+        disable: computed(() => !canUndo.value || uiLocked.value),
+      },
+      REDO: {
+        click: redo,
+        disable: computed(() => !canRedo.value || uiLocked.value),
+      },
+      EMPTY: null,
+    };
+
+    const headerButtons = computed(() =>
+      store.state.toolbarSetting.map<ButtonContent | SpacerContent>((tag) => {
+        const buttonContent = usableButtons[tag];
+        if (buttonContent) {
+          return {
+            ...buttonContent,
+            text: getToolbarButtonName(tag),
+          };
+        } else {
+          return {
+            text: null,
+          };
+        }
+      })
+    );
+
     return {
-      uiLocked,
-      canUndo,
-      canRedo,
-      nowPlayingContinuously,
-      undo,
-      redo,
-      playContinuously,
-      stopContinuously,
+      headerButtons,
     };
   },
 });
