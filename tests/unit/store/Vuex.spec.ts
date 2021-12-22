@@ -140,5 +140,6 @@ describe("store/vuex.js test", () => {
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
+    assert.equal(store.state.experimentalSetting.enableInterrogative, false);
   });
 });
