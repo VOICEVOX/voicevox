@@ -415,7 +415,7 @@ export const audioStore: VoiceVoxStoreOptions<
           break;
         case "pause": {
           const pauseMora = query.accentPhrases[accentPhraseIndex].pauseMora;
-          if (pauseMora !== undefined) {
+          if (pauseMora !== undefined && pauseMora !== null) {
             pauseMora.vowelLength = data;
           }
           break;
@@ -762,7 +762,10 @@ export const audioStore: VoiceVoxStoreOptions<
               labString += mora.vowel + "\n";
             }
           });
-          if (accentPhrase.pauseMora !== undefined) {
+          if (
+            accentPhrase.pauseMora !== undefined &&
+            accentPhrase.pauseMora !== null
+          ) {
             labString += timestamp.toFixed() + " ";
             timestamp +=
               (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
