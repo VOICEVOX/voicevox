@@ -125,7 +125,7 @@ export default defineComponent({
         component: UpdateInfo,
       },
       {
-        name:"お問い合わせ",
+        name: "お問い合わせ",
         component: ContactWindow,
       },
     ];
