@@ -570,6 +570,10 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
+  GET_Coninfo_TEXT: {
+    action(): Promise<string>;
+  };
+
   GET_POLICY_TEXT: {
     action(): Promise<string>;
   };
