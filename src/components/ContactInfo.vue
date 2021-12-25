@@ -11,13 +11,13 @@ import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 export default defineComponent({
   setup() {
     const store = useStore();
-    const policy = ref("");
+    const Contact = ref("");
     const md = useMarkdownIt();
     onMounted(async () => {
-      policy.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
+      Contact.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
     });
     return {
-      policy,
+      Contact,
     };
   },
 });
