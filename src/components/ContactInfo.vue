@@ -14,7 +14,7 @@ export default defineComponent({
     const Contact = ref("");
     const md = useMarkdownIt();
     onMounted(async () => {
-      Contact.value = md.render(await store.dispatch("GET_ConInfo_TEXT"));
+      Contact.value = md.render(await store.dispatch("GET_Coninfo_TEXT"));
     });
     return {
       Contact,
