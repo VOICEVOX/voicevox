@@ -85,6 +85,9 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_PRIVACY_POLICY_TEXT() {
       return await window.electron.getPrivacyPolicyText();
     },
+    async GET_Coninfo_TEXT() {
+      return await window.electron.getConinfo_Text();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }
@@ -132,7 +135,6 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_TOOLBAR_SETTING"));
       promises.push(dispatch("GET_THEME_SETTING"));
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
-
       Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
       });
