@@ -77,7 +77,7 @@ import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
 import UpdateInfo from "@/components/UpdateInfo.vue";
 import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
-
+import ContactWindow from "@/components/ContactInfo.vue";
 type Page = {
   name: string;
   component: Component;
@@ -123,6 +123,10 @@ export default defineComponent({
       {
         name: "アップデート情報",
         component: UpdateInfo,
+      },
+      {
+        name:"お問い合わせ",
+        component: ContactWindow,
       },
     ];
 
