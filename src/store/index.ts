@@ -85,8 +85,8 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_PRIVACY_POLICY_TEXT() {
       return await window.electron.getPrivacyPolicyText();
     },
-    async GET_Coninfo_TEXT() {
-      return await window.electron.getConinfo_Text();
+    async GET_CONTACT_TEXT() {
+      return await window.electron.getContactText();
     },
     async SHOW_WARNING_DIALOG(
       _,

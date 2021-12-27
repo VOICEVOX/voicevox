@@ -8,7 +8,7 @@ export interface Sandbox {
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
-  getConinfo_Text(): Promise<string>;
+  getContactText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   getBaseName(obj: { filePath: string }): string;
