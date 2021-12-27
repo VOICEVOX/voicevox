@@ -1,6 +1,9 @@
 <template>
   <q-bar class="bg-background q-pa-none relative-position">
-    <min-max-close-buttons v-if="$q.platform.is.mac" />
+    <div
+      v-if="$q.platform.is.mac && !isFullscreen"
+      class="mac-traffic-light-space"
+    ></div>
     <img v-else src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, index) of menudata"
@@ -30,7 +33,6 @@
 <script lang="ts">
 import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
 import { useStore } from "@/store";
-import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
@@ -75,7 +77,6 @@ export default defineComponent({
   name: "MenuBar",
 
   components: {
-    MinMaxCloseButtons,
     MenuButton,
     TitleBarButtons,
   },
@@ -91,6 +92,7 @@ export default defineComponent({
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
     const isEdited = computed(() => store.getters.IS_EDITED);
+    const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -359,6 +361,7 @@ export default defineComponent({
       menubarLocked,
       projectName,
       isEdited,
+      isFullscreen,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
@@ -397,5 +400,9 @@ export default defineComponent({
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.mac-traffic-light-space {
+  margin-right: 70px;
 }
 </style>

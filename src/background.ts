@@ -427,6 +427,8 @@ async function createWindow() {
     width: 800,
     height: 600,
     frame: false,
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
     webPreferences: {
@@ -449,6 +451,12 @@ async function createWindow() {
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("enter-full-screen", () =>
+    win.webContents.send("DETECT_ENTER_FULLSCREEN")
+  );
+  win.on("leave-full-screen", () =>
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN")
+  );
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"

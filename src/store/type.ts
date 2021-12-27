@@ -753,6 +753,7 @@ export type UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
+  isFullscreen: boolean;
 };
 
 type UiStoreTypes = {
@@ -857,6 +858,20 @@ type UiStoreTypes = {
   DETECT_UNPINNED: {
     mutation: undefined;
     action(): void;
+  };
+
+  DETECT_ENTER_FULLSCREEN: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  DETECT_LEAVE_FULLSCREEN: {
+    mutation: undefined;
+    action(): void;
+  };
+
+  IS_FULLSCREEN: {
+    getter: boolean;
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
