@@ -200,12 +200,12 @@ type IpcIHData = {
     ];
     return: void;
   };
-  GET_ENABLE_INTERROGATIVE: {
+  GET_EXPERIMENTAL_SETTING: {
     args: [];
-    return: boolean;
+    return: ExperimentalSetting;
   };
-  SET_ENABLE_INTERROGATIVE: {
-    args: [enableInterrogative: boolean];
+  SET_EXPERIMENTAL_SETTING: {
+    args: [experimentalSetting: ExperimentalSetting];
     return: void;
   };
 

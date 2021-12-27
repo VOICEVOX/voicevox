@@ -215,13 +215,13 @@ const api: Sandbox = {
     );
   },
 
-  getEnableInterrogative: async () => {
-    return await ipcRendererInvoke("GET_ENABLE_INTERROGATIVE");
+  getExperimentalSetting: async () => {
+    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
   },
 
-  setEnableInterrogative: async (enableInterrogative) => {
+  setExperimentalSetting: async (enableInterrogative) => {
     return await ipcRendererInvoke(
-      "SET_ENABLE_INTERROGATIVE",
+      "SET_EXPERIMENTAL_SETTING",
       enableInterrogative
     );
   },

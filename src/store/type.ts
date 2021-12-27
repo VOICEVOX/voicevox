@@ -739,13 +739,13 @@ type SettingStoreTypes = {
     }): void;
   };
 
-  GET_ENABLE_INTERROGATIVE: {
+  GET_EXPERIMENTAL_SETTING: {
     action(): void;
   };
 
-  SET_ENABLE_INTERROGATIVE: {
-    mutation: { enableInterrogative: boolean };
-    action(payload: { enableInterrogative: boolean }): void;
+  SET_EXPERIMENTAL_SETTING: {
+    mutation: { experimentalSetting: ExperimentalSetting };
+    action(payload: { experimentalSetting: ExperimentalSetting }): void;
   };
 };
 

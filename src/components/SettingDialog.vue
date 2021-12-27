@@ -340,8 +340,10 @@
                 <div>疑問文自動調整</div>
                 <q-space />
                 <q-toggle
-                  :model-value="enableInterrogative"
-                  @update:model-value="changeEnableInterrogative($event)"
+                  :model-value="experimentalSetting.enableInterrogative"
+                  @update:model-value="
+                    changeExperimentalSetting('enableInterrogative', $event)
+                  "
                 >
                   <q-tooltip
                     :delay="500"
@@ -390,7 +392,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting } from "@/type/preload";
+import { SavingSetting, ExperimentalSetting } from "@/type/preload";
 import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
@@ -420,9 +422,7 @@ export default defineComponent({
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 
-    const enableInterrogative = computed(
-      () => store.state.experimentalSetting.enableInterrogative
-    );
+    const experimentalSetting = computed(() => store.state.experimentalSetting);
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -572,13 +572,13 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
-    const changeEnableInterrogative = async (enableInterrogative: boolean) => {
-      if (
-        store.state.experimentalSetting.enableInterrogative ===
-        enableInterrogative
-      )
-        return;
-      store.dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
+    const changeExperimentalSetting = async (
+      key: keyof ExperimentalSetting,
+      data: boolean
+    ) => {
+      store.dispatch("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: { ...experimentalSetting.value, [key]: data },
+      });
     };
 
     const restartEngineProcess = () => {
@@ -634,11 +634,11 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
-      enableInterrogative,
+      experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
-      changeEnableInterrogative,
+      changeExperimentalSetting,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

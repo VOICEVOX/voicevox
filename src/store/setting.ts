@@ -3,6 +3,7 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ExperimentalSetting,
   ThemeColorType,
   ThemeConf,
   ToolbarSetting,
@@ -87,11 +88,11 @@ export const settingStore: VoiceVoxStoreOptions<
       }
       state.themeSetting.currentTheme = currentTheme;
     },
-    SET_ENABLE_INTERROGATIVE(
+    SET_EXPERIMENTAL_SETTING(
       state,
-      { enableInterrogative }: { enableInterrogative: boolean }
+      { experimentalSetting }: { experimentalSetting: ExperimentalSetting }
     ) {
-      state.experimentalSetting.enableInterrogative = enableInterrogative;
+      state.experimentalSetting = experimentalSetting;
     },
     SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -209,14 +210,14 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
     },
-    GET_ENABLE_INTERROGATIVE({ dispatch }) {
-      window.electron.getEnableInterrogative().then((enableInterrogative) => {
-        dispatch("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
+    GET_EXPERIMENTAL_SETTING({ dispatch }) {
+      window.electron.getExperimentalSetting().then((experimentalSetting) => {
+        dispatch("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
       });
     },
-    SET_ENABLE_INTERROGATIVE({ commit }, { enableInterrogative }) {
-      window.electron.setEnableInterrogative(enableInterrogative);
-      commit("SET_ENABLE_INTERROGATIVE", { enableInterrogative });
+    SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
+      window.electron.setExperimentalSetting(experimentalSetting);
+      commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
   },
 };

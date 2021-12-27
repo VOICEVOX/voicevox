@@ -66,8 +66,10 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
-  getEnableInterrogative(): Promise<boolean>;
-  setEnableInterrogative(enableInterrogative: boolean): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(
+    enableInterrogative: ExperimentalSetting
+  ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;

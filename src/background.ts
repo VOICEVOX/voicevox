@@ -274,8 +274,10 @@ const store = new Store<{
       properties: {
         enableInterrogative: {
           type: "boolean",
-          default: false,
         },
+      },
+      default: {
+        enableInterrogative: false,
       },
     },
     acceptRetrieveTelemetry: {
@@ -821,12 +823,12 @@ ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
 });
 
-ipcMainHandle("GET_ENABLE_INTERROGATIVE", () => {
-  return store.get("experimentalSetting.enableInterrogative");
+ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
+  return store.get("experimentalSetting");
 });
 
-ipcMainHandle("SET_ENABLE_INTERROGATIVE", (_, enableInterrogative) => {
-  store.set("experimentalSetting.enableInterrogative", enableInterrogative);
+ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
+  store.set("experimentalSetting", experimentalSetting);
 });
 
 // app callback
