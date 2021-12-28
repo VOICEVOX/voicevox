@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
+import { app, protocol, BrowserWindow, dialog, Menu, shell, nativeTheme } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -448,6 +448,8 @@ async function createWindow() {
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
+
+  nativeTheme.themeSource = "light";
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
