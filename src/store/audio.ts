@@ -121,7 +121,8 @@ function buildFileName(state: State, audioKey: string) {
     return preFileName + `_${characterName}_${text}.wav`;
   }
 
-  return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
+  const sanitizedStyleName = sanitizeFileName(styleName);
+  return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
