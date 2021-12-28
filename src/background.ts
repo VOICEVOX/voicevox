@@ -5,7 +5,15 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, Menu, shell, nativeTheme } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  dialog,
+  Menu,
+  shell,
+  nativeTheme,
+} from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
