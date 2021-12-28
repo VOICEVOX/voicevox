@@ -28,12 +28,12 @@ export function buildProjectFileName(state: State, extension?: string): string {
   const tailItemText =
     state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
 
-  const shortenedText =
+  const headTailItemText =
     headItemText !== tailItemText
       ? headItemText + "..." + tailItemText
       : headItemText;
 
-  let defaultFileNameStem = sanitizeFileName(shortenedText);
+  let defaultFileNameStem = sanitizeFileName(headTailItemText);
 
   if (defaultFileNameStem === "") {
     defaultFileNameStem = "Untitled";
