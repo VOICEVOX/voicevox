@@ -976,17 +976,17 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, dispatch },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
       ): Promise<SaveResultObject> => {
-        const defaultFileNameStem = buildProjectFileName(state);
+        const defaultFileName = buildProjectFileName(state, "wav");
 
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
-            defaultFileNameStem + ".wav"
+            defaultFileName
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileNameStem + ".wav",
+            defaultPath: defaultFileName,
           });
         }
 
