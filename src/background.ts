@@ -457,7 +457,7 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
-  nativeTheme.themeSource = "light";
+  if (isMac) nativeTheme.themeSource = "light";
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
