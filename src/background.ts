@@ -274,6 +274,7 @@ const store = new Store<{
       properties: {
         enableInterrogative: {
           type: "boolean",
+          default: false,
         },
       },
       default: {
