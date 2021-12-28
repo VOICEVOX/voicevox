@@ -28,7 +28,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import { buildProjectFileName, sanitizeFileName } from "@/utility/file";
+import { buildProjectFileName, sanitizeFileName } from "./utility";
 
 async function generateUniqueIdAndQuery(
   state: State,

@@ -7,7 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
-import { buildProjectFileName } from "@/utility/file";
+import { buildProjectFileName } from "./utility";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
