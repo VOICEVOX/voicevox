@@ -7,6 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
+import { buildProjectFileName } from "@/utility/file";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -282,22 +283,7 @@ export const projectStore: VoiceVoxStoreOptions<
 
           if (!filePath) {
             // if new project: use generated name
-            const headItemText =
-              context.state.audioItems[context.state.audioKeys[0]].text;
-            const tailItemText =
-              context.state.audioItems[
-                context.state.audioKeys[context.state.audioKeys.length - 1]
-              ].text;
-
-            const defaultFileNameStem =
-              headItemText !== tailItemText
-                ? headItemText + "..." + tailItemText
-                : headItemText;
-
-            defaultPath =
-              defaultFileNameStem !== ""
-                ? defaultFileNameStem + ".vvproj"
-                : "Untitled.vvproj";
+            defaultPath = buildProjectFileName(context.state, "vvproj");
           } else {
             // if saveAs for existing project: use current project path
             defaultPath = filePath;

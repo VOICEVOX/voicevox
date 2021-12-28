@@ -28,6 +28,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
+import { buildProjectFileName, sanitizeFileName } from "@/utility/file";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -121,28 +122,6 @@ function buildFileName(state: State, audioKey: string) {
   }
 
   return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
-}
-
-function sanitizeFileName(fileName: string) {
-  // \x00 - \x1f: ASCII 制御文字
-  //   \x00: Null
-  //   ...
-  //   \x1f: Unit separator
-  // \x22: "
-  // \x2a: *
-  // \x2f: /
-  // \x3a: :
-  // \x3c: <
-  // \x3e: >
-  // \x3f: ?
-  // \x5c: \
-  // \x7c: |
-  // \x7f: DEL
-
-  // eslint-disable-next-line no-control-regex
-  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
-
-  return fileName.replace(sanitizer, "");
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -996,22 +975,17 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, dispatch },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
       ): Promise<SaveResultObject> => {
-        const headItemText = state.audioItems[state.audioKeys[0]].text;
-        const tailItemText =
-          state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
-        const defaultFileName =
-          headItemText !== tailItemText
-            ? headItemText + "..." + tailItemText
-            : headItemText;
+        const defaultFileNameStem = buildProjectFileName(state);
+
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
-            defaultFileName
+            defaultFileNameStem
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileName,
+            defaultPath: defaultFileNameStem,
           });
         }
 
