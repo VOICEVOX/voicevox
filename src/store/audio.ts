@@ -981,12 +981,12 @@ export const audioStore: VoiceVoxStoreOptions<
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
-            defaultFileNameStem
+            defaultFileNameStem + ".wav"
           );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileNameStem,
+            defaultPath: defaultFileNameStem + ".wav",
           });
         }
 
