@@ -239,7 +239,8 @@ jobs:
       - name: Make disable dark mode for macOS
         if: startsWith(matrix.os, 'macos-')
         shell: bash
-        run: "${{ matrix.sed_name }}" -i 's/<key>NSRequiresAquaSystemAppearance<\/key><false\/>/<key>NSRequiresAquaSystemAppearance<\/key><true\/>/' "${{ matrix.artifact_path }}/${{ matrix.artifact_name }}/Contents/Info.plist"
+        run: |
+          "${{ matrix.sed_name }}" -i 's/<key>NSRequiresAquaSystemAppearance<\/key><false\/>/<key>NSRequiresAquaSystemAppearance<\/key><true\/>/' '${{ matrix.artifact_path }}/${{ matrix.artifact_name }}/Contents/Info.plist'
 
       - name: Upload NoEngine Prepackage
         uses: actions/upload-artifact@v2
