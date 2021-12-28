@@ -89,8 +89,6 @@ function parseTextFile(
 }
 
 function buildFileName(state: State, audioKey: string) {
-  // eslint-disable-next-line no-control-regex
-  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
@@ -110,8 +108,8 @@ function buildFileName(state: State, audioKey: string) {
     throw new Error();
   }
 
-  const characterName = character.metas.speakerName.replace(sanitizer, "");
-  let text = audioItem.text.replace(sanitizer, "");
+  const characterName = sanitizeFileName(character.metas.speakerName);
+  let text = sanitizeFileName(audioItem.text);
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
@@ -123,6 +121,28 @@ function buildFileName(state: State, audioKey: string) {
   }
 
   return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
+}
+
+function sanitizeFileName(fileName: string) {
+  // \x00 - \x1f: ASCII 制御文字
+  //   \x00: Null
+  //   ...
+  //   \x1f: Unit separator
+  // \x22: "
+  // \x2a: *
+  // \x2f: /
+  // \x3a: :
+  // \x3c: <
+  // \x3e: >
+  // \x3f: ?
+  // \x5c: \
+  // \x7c: |
+  // \x7f: DEL
+
+  // eslint-disable-next-line no-control-regex
+  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
+
+  return fileName.replace(sanitizer, "");
 }
 
 const audioBlobCache: Record<string, Blob> = {};
