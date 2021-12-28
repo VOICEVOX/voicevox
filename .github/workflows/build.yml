@@ -237,7 +237,7 @@ jobs:
         run: npm run electron:build_pnever -- --dir
 
       - name: Make disable dark mode for macOS
-        if: startsWith(matrix.os, "macos-")
+        if: startsWith(matrix.os, 'macos-')
         shell: bash
         run: "${{ matrix.sed_name }}" -i 's/<key>NSRequiresAquaSystemAppearance<\/key><false\/>/<key>NSRequiresAquaSystemAppearance<\/key><true\/>/' "${{ matrix.artifact_path }}/${{ matrix.artifact_name }}/Contents/Info.plist"
 
