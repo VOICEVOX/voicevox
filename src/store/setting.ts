@@ -3,6 +3,7 @@ import {
   HotkeyReturnType,
   HotkeySetting,
   SavingSetting,
+  ExperimentalSetting,
   ThemeColorType,
   ThemeConf,
   ToolbarSetting,
@@ -40,6 +41,9 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   acceptRetrieveTelemetry: "Unconfirmed",
+  experimentalSetting: {
+    enableInterrogative: false,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -83,6 +87,12 @@ export const settingStore: VoiceVoxStoreOptions<
         state.themeSetting.availableThemes = themes;
       }
       state.themeSetting.currentTheme = currentTheme;
+    },
+    SET_EXPERIMENTAL_SETTING(
+      state,
+      { experimentalSetting }: { experimentalSetting: ExperimentalSetting }
+    ) {
+      state.experimentalSetting = experimentalSetting;
     },
     SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
@@ -199,6 +209,15 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+    },
+    GET_EXPERIMENTAL_SETTING({ dispatch }) {
+      window.electron.getExperimentalSetting().then((experimentalSetting) => {
+        dispatch("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+      });
+    },
+    SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
+      window.electron.setExperimentalSetting(experimentalSetting);
+      commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
   },
 };

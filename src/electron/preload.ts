@@ -215,6 +215,17 @@ const api: Sandbox = {
     );
   },
 
+  getExperimentalSetting: async () => {
+    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
+  },
+
+  setExperimentalSetting: async (enableInterrogative) => {
+    return await ipcRendererInvoke(
+      "SET_EXPERIMENTAL_SETTING",
+      enableInterrogative
+    );
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },

@@ -132,6 +132,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_TOOLBAR_SETTING"));
       promises.push(dispatch("GET_THEME_SETTING"));
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
+      promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
       Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");

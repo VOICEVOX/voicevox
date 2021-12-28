@@ -18,6 +18,7 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ExperimentalSetting,
   ToolbarSetting,
   UpdateInfo,
   Preset,
@@ -681,6 +682,7 @@ export type SettingStoreState = {
   engineHost: string;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  experimentalSetting: ExperimentalSetting;
 };
 
 type SettingStoreTypes = {
@@ -730,6 +732,15 @@ type SettingStoreTypes = {
     action(payload: {
       acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
     }): void;
+  };
+
+  GET_EXPERIMENTAL_SETTING: {
+    action(): void;
+  };
+
+  SET_EXPERIMENTAL_SETTING: {
+    mutation: { experimentalSetting: ExperimentalSetting };
+    action(payload: { experimentalSetting: ExperimentalSetting }): void;
   };
 };
 

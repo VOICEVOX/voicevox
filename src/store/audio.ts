@@ -636,12 +636,16 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { dispatch, state },
       {
         text,
         styleId,
         isKana,
-      }: { text: string; styleId: number; isKana?: boolean }
+      }: {
+        text: string;
+        styleId: number;
+        isKana?: boolean;
+      }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "accentPhrasesAccentPhrasesPost",
@@ -650,6 +654,7 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -709,12 +714,18 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "audioQueryAudioQueryPost",
-        payload: [{ text, speaker: styleId }],
+        payload: [
+          {
+            text,
+            speaker: styleId,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
+          },
+        ],
       })
         .then(toDispatchResponse("audioQueryAudioQueryPost"))
         .catch((error) => {

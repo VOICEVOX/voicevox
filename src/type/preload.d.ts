@@ -66,6 +66,10 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(
+    enableInterrogative: ExperimentalSetting
+  ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
@@ -219,4 +223,8 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type ExperimentalSetting = {
+  enableInterrogative: boolean;
 };

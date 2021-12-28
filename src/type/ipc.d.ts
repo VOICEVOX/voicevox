@@ -200,6 +200,14 @@ type IpcIHData = {
     ];
     return: void;
   };
+  GET_EXPERIMENTAL_SETTING: {
+    args: [];
+    return: ExperimentalSetting;
+  };
+  SET_EXPERIMENTAL_SETTING: {
+    args: [experimentalSetting: ExperimentalSetting];
+    return: void;
+  };
 
   THEME: {
     args: [obj: { newData?: string }];

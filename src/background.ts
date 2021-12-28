@@ -21,6 +21,7 @@ import {
   SavingSetting,
   PresetConfig,
   ThemeConf,
+  ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
 } from "./type/preload";
@@ -157,6 +158,7 @@ const store = new Store<{
   toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
@@ -266,6 +268,18 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    experimentalSetting: {
+      type: "object",
+      properties: {
+        enableInterrogative: {
+          type: "boolean",
+          default: false,
+        },
+      },
+      default: {
+        enableInterrogative: false,
+      },
     },
     acceptRetrieveTelemetry: {
       type: "string",
@@ -808,6 +822,14 @@ ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
+  return store.get("experimentalSetting");
+});
+
+ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
+  store.set("experimentalSetting", experimentalSetting);
 });
 
 // app callback
