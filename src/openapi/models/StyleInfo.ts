@@ -14,48 +14,48 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 
+ * スタイルの追加情報
  * @export
- * @interface ValidationError
+ * @interface StyleInfo
  */
-export interface ValidationError {
+export interface StyleInfo {
+    /**
+     * 
+     * @type {number}
+     * @memberof StyleInfo
+     */
+    id: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof StyleInfo
+     */
+    icon: string;
     /**
      * 
      * @type {Array<string>}
-     * @memberof ValidationError
+     * @memberof StyleInfo
      */
-    loc: Array<string>;
-    /**
-     * 
-     * @type {string}
-     * @memberof ValidationError
-     */
-    msg: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ValidationError
-     */
-    type: string;
+    voiceSamples: Array<string>;
 }
 
-export function ValidationErrorFromJSON(json: any): ValidationError {
-    return ValidationErrorFromJSONTyped(json, false);
+export function StyleInfoFromJSON(json: any): StyleInfo {
+    return StyleInfoFromJSONTyped(json, false);
 }
 
-export function ValidationErrorFromJSONTyped(json: any, ignoreDiscriminator: boolean): ValidationError {
+export function StyleInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean): StyleInfo {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'loc': json['loc'],
-        'msg': json['msg'],
-        'type': json['type'],
+        'id': json['id'],
+        'icon': json['icon'],
+        'voiceSamples': json['voice_samples'],
     };
 }
 
-export function ValidationErrorToJSON(value?: ValidationError | null): any {
+export function StyleInfoToJSON(value?: StyleInfo | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -64,9 +64,9 @@ export function ValidationErrorToJSON(value?: ValidationError | null): any {
     }
     return {
         
-        'loc': value.loc,
-        'msg': value.msg,
-        'type': value.type,
+        'id': value.id,
+        'icon': value.icon,
+        'voice_samples': value.voiceSamples,
     };
 }
 

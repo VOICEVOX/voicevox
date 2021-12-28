@@ -2,12 +2,12 @@ import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharacterInfos(): Promise<CharacterInfo[]>;
   getHowToUseText(): Promise<string>;
   getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
+  getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   getBaseName(obj: { filePath: string }): string;
@@ -50,6 +50,7 @@ export interface Sandbox {
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   savingPresets(newPresets?: {
@@ -150,6 +151,7 @@ export type PresetConfig = {
 export type HotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"
+  | "音声を繋げて書き出し"
   | "再生/停止"
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
@@ -174,6 +176,15 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type ToolbarButtonTagType =
+  | "PLAY_CONTINUOUSLY"
+  | "STOP"
+  | "UNDO"
+  | "REDO"
+  | "EMPTY";
+
+export type ToolbarSetting = ToolbarButtonTagType[];
 
 export type MoraDataType =
   | "consonant"

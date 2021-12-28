@@ -18,10 +18,12 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ToolbarSetting,
   UpdateInfo,
   Preset,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
+import { QVueGlobals } from "quasar";
 
 export type AudioItem = {
   text: string;
@@ -58,6 +60,8 @@ type StoreType<T, U extends "getter" | "mutation" | "action"> = {
     ? R
     : never;
 };
+
+export type QuasarDialog = QVueGlobals["dialog"];
 
 /*
  * Audio Store Types
@@ -170,6 +174,10 @@ type AudioStoreTypes = {
     mutation: { audioKey: string };
   };
 
+  SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
+  };
+
   REMOVE_ALL_AUDIO_ITEM: {
     action(): void;
   };
@@ -268,8 +276,16 @@ type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  GENERATE_LAB: {
+    action(payload: { audioKey: string; offset?: number }): string | undefined;
+  };
+
   GENERATE_AUDIO: {
     action(payload: { audioKey: string }): Blob | null;
+  };
+
+  CONNECT_AUDIO: {
+    action(payload: { encodedBlobs: string[] }): Blob | null;
   };
 
   GENERATE_AND_SAVE_AUDIO: {
@@ -285,6 +301,13 @@ type AudioStoreTypes = {
       dirPath?: string;
       encoding?: EncodingType;
     }): SaveResultObject[] | undefined;
+  };
+
+  GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
+    action(payload: {
+      filePath?: string;
+      encoding?: EncodingType;
+    }): SaveResultObject | undefined;
   };
 
   PLAY_AUDIO: {
@@ -347,6 +370,11 @@ type AudioCommandStoreTypes = {
   COMMAND_REMOVE_AUDIO_ITEM: {
     mutation: { audioKey: string };
     action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_SET_AUDIO_KEYS: {
+    mutation: { audioKeys: string[] };
+    action(payload: { audioKeys: string[] }): void;
   };
 
   COMMAND_CHANGE_AUDIO_TEXT: {
@@ -558,6 +586,10 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
+  GET_PRIVACY_POLICY_TEXT: {
+    action(): Promise<string>;
+  };
+
   IS_UNSET_DEFAULT_STYLE_ID: {
     action(payload: { speakerUuid: string }): Promise<boolean>;
   };
@@ -645,6 +677,7 @@ export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
 export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   engineHost: string;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -668,6 +701,15 @@ type SettingStoreTypes = {
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
+  };
+
+  GET_TOOLBAR_SETTING: {
+    action(): void;
+  };
+
+  SET_TOOLBAR_SETTING: {
+    mutation: { toolbarSetting: ToolbarSetting };
+    action(payload: { data: ToolbarSetting }): void;
   };
 
   GET_THEME_SETTING: {

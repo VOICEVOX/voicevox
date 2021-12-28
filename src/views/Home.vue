@@ -59,15 +59,22 @@
                         loadDraggedFile($event);
                       "
                     >
-                      <div class="audio-cells">
-                        <audio-cell
-                          v-for="audioKey in audioKeys"
-                          :key="audioKey"
-                          :audioKey="audioKey"
-                          :ref="addAudioCellRef"
-                          @focusCell="focusCell"
-                        />
-                      </div>
+                      <draggable
+                        class="audio-cells"
+                        :modelValue="audioKeys"
+                        @update:modelValue="updateAudioKeys"
+                        :itemKey="itemKey"
+                        ghost-class="ghost"
+                        handle=".item-handle"
+                      >
+                        <template v-slot:item="{ element }">
+                          <audio-cell
+                            :audioKey="element"
+                            :ref="addAudioCellRef"
+                            @focusCell="focusCell"
+                          />
+                        </template>
+                      </draggable>
                       <div class="add-button-wrapper">
                         <q-btn
                           fab
@@ -128,6 +135,7 @@ import {
   watch,
 } from "vue";
 import { useStore } from "@/store";
+import draggable from "vuedraggable";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -150,6 +158,7 @@ export default defineComponent({
   name: "Home",
 
   components: {
+    draggable,
     MenuBar,
     HeaderBar,
     AudioCell,
@@ -281,6 +290,11 @@ export default defineComponent({
 
     const resizeObserverRef = ref<QResizeObserver>();
 
+    // DaD
+    const updateAudioKeys = (audioKeys: string[]) =>
+      store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
+    const itemKey = (key: string) => key;
+
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
       () => store.getters.ACTIVE_AUDIO_KEY
@@ -360,10 +374,10 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      await Promise.all([
-        store.dispatch("LOAD_CHARACTER"),
-        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
-      ]);
+      await store.dispatch("START_WAITING_ENGINE");
+      await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
       for (const info of characterInfos.value) {
@@ -467,6 +481,8 @@ export default defineComponent({
       uiLocked,
       addAudioCellRef,
       activeAudioKey,
+      itemKey,
+      updateAudioKeys,
       addAudioItem,
       shouldShowPanes,
       focusCell,
@@ -534,6 +550,10 @@ export default defineComponent({
         vars.$window-border-width}
     );
   }
+}
+
+.ghost {
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
 }
 
 .audio-cell-pane {

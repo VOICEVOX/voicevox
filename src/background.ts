@@ -16,15 +16,13 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import {
-  CharacterInfo,
   DefaultStyleId,
   HotkeySetting,
-  MetasJson,
   SavingSetting,
   PresetConfig,
   ThemeConf,
-  StyleInfo,
   AcceptRetrieveTelemetryStatus,
+  ToolbarSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -69,14 +67,19 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+const isMac = process.platform === "darwin";
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
-    combination: "Ctrl E",
+    combination: !isMac ? "Ctrl E" : "Meta E",
   },
   {
     action: "一つだけ書き出し",
     combination: "E",
+  },
+  {
+    action: "音声を繋げて書き出し",
+    combination: "",
   },
   {
     action: "再生/停止",
@@ -116,27 +119,27 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "元に戻す",
-    combination: "Ctrl Z",
+    combination: !isMac ? "Ctrl Z" : "Meta Z",
   },
   {
     action: "やり直す",
-    combination: "Ctrl Y",
+    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
   },
   {
     action: "新規プロジェクト",
-    combination: "Ctrl N",
+    combination: !isMac ? "Ctrl N" : "Meta N",
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: "Ctrl Shift S",
+    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: "Ctrl S",
+    combination: !isMac ? "Ctrl S" : "Meta S",
   },
   {
     action: "プロジェクト読み込み",
-    combination: "Ctrl O",
+    combination: !isMac ? "Ctrl O" : "Meta O",
   },
   {
     action: "テキスト読み込む",
@@ -151,6 +154,7 @@ const store = new Store<{
   savingSetting: SavingSetting;
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -207,6 +211,13 @@ const store = new Store<{
         },
       },
       default: defaultHotkeySettings,
+    },
+    toolbarSetting: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
     },
     defaultStyleIds: {
       type: "array",
@@ -333,48 +344,8 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-// キャラクター情報の読み込み
-declare let __static: string;
-const characterInfos: CharacterInfo[] = [];
-for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
-  const dirPath = path.join("characters", dirRelPath);
-  const policy = fs.readFileSync(
-    path.join(__static, dirPath, "policy.md"),
-    "utf-8"
-  );
-  const {
-    speakerName,
-    speakerUuid,
-    styles: stylesOrigin,
-  }: MetasJson = JSON.parse(
-    fs.readFileSync(path.join(__static, dirPath, "metas.json"), "utf-8")
-  );
-  const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
-    styleName,
-    styleId,
-    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
-    voiceSamplePaths: [...Array(3).keys()].map((x) =>
-      path.join(
-        dirPath,
-        "voice_samples",
-        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
-      )
-    ),
-  }));
-  const portraitPath = path.join(dirPath, "portrait.png");
-
-  characterInfos.push({
-    portraitPath,
-    metas: {
-      speakerName,
-      speakerUuid,
-      styles,
-      policy,
-    },
-  });
-}
-
 // 使い方テキストの読み込み
+declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -399,6 +370,11 @@ const updateInfos = JSON.parse(
   fs.readFileSync(path.join(__static, "updateInfos.json"), {
     encoding: "utf-8",
   })
+);
+
+const privacyPolicyText = fs.readFileSync(
+  path.join(__static, "privacy_policy.md"),
+  "utf-8"
 );
 
 // hotkeySettingsのマイグレーション
@@ -444,6 +420,7 @@ function migrateHotkeySettings() {
 migrateHotkeySettings();
 
 let willQuit = false;
+let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
@@ -494,9 +471,19 @@ async function createWindow() {
   });
 
   win.webContents.once("did-finish-load", () => {
-    if (process.argv.length >= 2) {
-      const filePath = process.argv[1];
-      ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+    if (isMac) {
+      if (filePathOnMac != null) {
+        ipcMainSend(win, "LOAD_PROJECT_FILE", {
+          filePath: filePathOnMac,
+          confirm: false,
+        });
+        filePathOnMac = null;
+      }
+    } else {
+      if (process.argv.length >= 2) {
+        const filePath = process.argv[1];
+        ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+      }
     }
   });
 }
@@ -519,10 +506,6 @@ ipcMainHandle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMainHandle("GET_CHARACTER_INFOS", () => {
-  return characterInfos;
-});
-
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
   return howToUseText;
 });
@@ -541,6 +524,10 @@ ipcMainHandle("GET_UPDATE_INFOS", () => {
 
 ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
+});
+
+ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
+  return privacyPolicyText;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
@@ -739,6 +726,13 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   return store.get("savingSetting");
 });
 
+ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("toolbarSetting", newData);
+  }
+  return store.get("toolbarSetting");
+});
+
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");
@@ -797,15 +791,7 @@ ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
 });
 
 ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
-  const defaultStyleIds = store.get("defaultStyleIds");
-  if (defaultStyleIds.length === 0) {
-    return characterInfos.map<DefaultStyleId>((info) => ({
-      speakerUuid: info.metas.speakerUuid,
-      defaultStyleId: info.metas.styles[0].styleId,
-    }));
-  } else {
-    return defaultStyleIds;
-  }
+  return store.get("defaultStyleIds");
 });
 
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
@@ -878,6 +864,14 @@ app.on("before-quit", (event) => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+app.once("will-finish-launching", () => {
+  // macOS only
+  app.once("open-file", (event, filePath) => {
+    event.preventDefault();
+    filePathOnMac = filePath;
+  });
 });
 
 app.on("ready", async () => {

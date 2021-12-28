@@ -154,12 +154,13 @@ export const projectStore: VoiceVoxStoreOptions<
                 }
 
                 // set phoneme length
-                if (audioItem.styleId == undefined)
-                  throw new Error("audioItem.styleId == undefined");
+                // 0.7 未満のプロジェクトファイルは styleId ではなく characterIndex なので、ここだけ characterIndex とした
+                if (audioItem.characterIndex === undefined)
+                  throw new Error("audioItem.characterIndex === undefined");
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
-                    styleId: audioItem.styleId,
+                    styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
                     accentPhrases.forEach((newAccentPhrase, i) => {

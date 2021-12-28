@@ -35,10 +35,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_APP_INFOS");
   },
 
-  getCharacterInfos: async () => {
-    return await ipcRendererInvoke("GET_CHARACTER_INFOS");
-  },
-
   getHowToUseText: async () => {
     return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
   },
@@ -57,6 +53,10 @@ const api: Sandbox = {
 
   getOssCommunityInfos: async () => {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
+  },
+
+  getPrivacyPolicyText: async () => {
+    return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {
@@ -186,6 +186,10 @@ const api: Sandbox = {
 
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
+  },
+
+  toolbarSetting: (newData) => {
+    return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
   },
 
   isUnsetDefaultStyleId: async (speakerUuid: string) => {

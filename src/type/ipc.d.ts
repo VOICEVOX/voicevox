@@ -12,11 +12,6 @@ type IpcIHData = {
     return: string;
   };
 
-  GET_CHARACTER_INFOS: {
-    args: [];
-    return: import("@/type/preload").CharacterInfo[];
-  };
-
   GET_HOW_TO_USE_TEXT: {
     args: [];
     return: string;
@@ -38,6 +33,11 @@ type IpcIHData = {
   };
 
   GET_OSS_COMMUNITY_INFOS: {
+    args: [];
+    return: string;
+  };
+
+  GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
   };
@@ -162,6 +162,11 @@ type IpcIHData = {
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];
+  };
+
+  TOOLBAR_SETTING: {
+    args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
+    return: import("@/type/preload").ToolbarSetting;
   };
 
   IS_UNSET_DEFAULT_STYLE_ID: {
