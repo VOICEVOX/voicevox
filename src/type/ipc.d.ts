@@ -254,6 +254,16 @@ type IpcSOData = {
     return: void;
   };
 
+  DETECT_ENTER_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_LEAVE_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
     return: void;

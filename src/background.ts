@@ -5,7 +5,15 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  dialog,
+  Menu,
+  shell,
+  nativeTheme,
+} from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -441,6 +449,8 @@ async function createWindow() {
     width: 800,
     height: 600,
     frame: false,
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
     webPreferences: {
@@ -461,8 +471,17 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
+  // Macではdarkモードかつウィンドウが非アクティブのときに閉じるボタンなどが見えなくなるので、lightモードに固定
+  if (isMac) nativeTheme.themeSource = "light";
+
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("enter-full-screen", () =>
+    win.webContents.send("DETECT_ENTER_FULLSCREEN")
+  );
+  win.on("leave-full-screen", () =>
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN")
+  );
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"

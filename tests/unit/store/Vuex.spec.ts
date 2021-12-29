@@ -52,6 +52,7 @@ describe("store/vuex.js test", () => {
           availableThemes: [],
         },
         isPinned: false,
+        isFullscreen: false,
         presetItems: {},
         presetKeys: [],
         hotkeySettings: [],
