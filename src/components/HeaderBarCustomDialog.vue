@@ -149,10 +149,9 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch, Ref } from "vue";
 import { useStore } from "@/store";
-import { ToolbarButtonTagType } from "@/type/preload";
+import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
 import { getToolbarButtonName } from "@/components/HeaderBar.vue";
 import { useQuasar } from "quasar";
-import { ToolbarButtonsType, ToolbarSetting } from "@/type/preload";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -169,7 +168,7 @@ export default defineComponent({
 
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting]);
-    const selectedButton: Ref<ToolbarButtonsType | undefined> = ref(
+    const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
       toolbarButtons.value[0]
     );
     watch(
