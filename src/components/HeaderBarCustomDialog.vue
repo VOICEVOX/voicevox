@@ -96,6 +96,27 @@
                 >削除する</q-btn
               >
             </q-card-actions>
+            <q-card-actions>
+              <div class="text-h5">表示するボタンの選択</div>
+            </q-card-actions>
+            <q-card-actions class="no-padding">
+              <q-list class="usable-button-list">
+                <q-item
+                  v-for="(desc, key) in usableButtonsDesc"
+                  :key="key"
+                  tag="label"
+                  v-ripple
+                >
+                  <q-item-section>
+                    <q-item-label>{{ getToolbarButtonName(key) }}</q-item-label>
+                    <q-item-label caption>{{ desc }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section avatar>
+                    <q-toggle v-model="toolbarButtons" :val="key" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card-actions>
           </q-card>
         </q-page>
       </q-page-container>
@@ -106,6 +127,8 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { ToolbarButtonTagType } from "@/type/preload";
+import { getToolbarButtonName } from "@/components/HeaderBar";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -128,6 +151,15 @@ export default defineComponent({
         selectedButton.value = newData[0];
       }
     );
+    const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
+      PLAY_CONTINUOUSLY:
+        "選択されているテキスト以降のすべてのテキストを読み上げます。",
+      STOP: "テキストが読み上げられているときに、それを止めます。",
+      UNDO: "操作を一つ戻します。",
+      REDO: "元に戻した操作をやり直します。",
+      EMPTY:
+        "これはボタンではありません、ボタンを左右に配置したい際に使います。",
+    };
 
     const headerBarCustomDialogOpenComputed = computed({
       get: () => props.modelValue,
@@ -180,6 +212,8 @@ export default defineComponent({
       moveRightButton,
       removeButton,
       saveCustomToolbar,
+      usableButtonsDesc,
+      getToolbarButtonName,
     };
   },
 });
@@ -205,6 +239,17 @@ export default defineComponent({
   width: 100%;
   min-width: 460px;
   background: var(--color-background);
+}
+
+.usable-button-list {
+  // menubar-height + header-height * 2(main+preview) + window-border-width
+  // 52(preview part title & buttons) * 2 + 46(select part title)
+  height: calc(
+    100vh - #{global.$menubar-height + (global.$header-height * 2) +
+      global.$window-border-width + (52px * 2) + 46px}
+  );
+  width: 100%;
+  overflow-y: scroll;
 }
 
 .radio {
