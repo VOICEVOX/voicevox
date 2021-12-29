@@ -156,6 +156,14 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
+const defaultToolbarButtonSetting: ToolbarSetting = [
+  "PLAY_CONTINUOUSLY",
+  "STOP",
+  "EMPTY",
+  "UNDO",
+  "REDO",
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
@@ -227,7 +235,7 @@ const store = new Store<{
       items: {
         type: "string",
       },
-      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
+      default: defaultToolbarButtonSetting,
     },
     defaultStyleIds: {
       type: "array",
