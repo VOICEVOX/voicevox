@@ -337,7 +337,7 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles' as global;
+@use '@/styles/variables' as vars;
 .header-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
   overflow-x: hidden;
@@ -349,7 +349,7 @@ export default defineComponent({
 }
 
 .preview-toolbar {
-  height: global.$header-height;
+  height: vars.$header-height;
 }
 
 .preview-card {
@@ -362,8 +362,8 @@ export default defineComponent({
   // menubar-height + header-height * 2(main+preview) + window-border-width
   // 52(preview part buttons) * 2 + 46(select part title)
   height: calc(
-    100vh - #{global.$menubar-height + (global.$header-height * 2) +
-      global.$window-border-width + 52px + 46px}
+    100vh - #{vars.$menubar-height + (vars.$header-height * 2) +
+      vars.$window-border-width + 52px + 46px}
   );
   width: 100%;
   overflow-y: scroll;
