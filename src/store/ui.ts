@@ -211,8 +211,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         if (state.isToolbarSettingDialogOpen === isToolbarSettingDialogOpen)
           return;
 
-        if (isToolbarSettingDialogOpen) commit("LOCK_UI");
-        else commit("UNLOCK_UI");
+        if (isToolbarSettingDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
 
         commit("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
           isToolbarSettingDialogOpen,
