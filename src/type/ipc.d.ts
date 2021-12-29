@@ -58,7 +58,7 @@ type IpcIHData = {
   };
 
   SHOW_PROJECT_SAVE_DIALOG: {
-    args: [obj: { title: string }];
+    args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
 

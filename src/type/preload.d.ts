@@ -16,7 +16,10 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
+  showProjectSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showInfoDialog(obj: {
     title: string;

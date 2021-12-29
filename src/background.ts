@@ -565,9 +565,10 @@ ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   const result = await dialog.showSaveDialog(win, {
     title,
+    defaultPath,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
