@@ -128,7 +128,7 @@
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType } from "@/type/preload";
-import { getToolbarButtonName } from "@/components/HeaderBar";
+import { getToolbarButtonName } from "@/components/HeaderBar.vue";
 import { useQuasar } from "quasar";
 
 export default defineComponent({
