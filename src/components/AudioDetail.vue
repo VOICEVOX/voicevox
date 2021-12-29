@@ -356,7 +356,7 @@ export default defineComponent({
           accentPhrase.moras.forEach((mora, moraIndex) => {
             switch (type) {
               case "pitch":
-                {
+                if (mora.pitch > 0) {
                   const newData = Math.max(
                     minPitch,
                     Math.min(maxPitch, mora.pitch + diffData)
