@@ -59,8 +59,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.pitch"
                 :uiLocked="uiLocked"
-                :min="3"
-                :max="6.5"
+                :min="minPitch"
+                :max="maxPitch"
                 :disable="mora.pitch == 0.0"
                 :type="'pitch'"
                 :clip="false"
@@ -84,8 +84,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.consonantLength"
                 :uiLocked="uiLocked"
-                :min="0"
-                :max="0.3"
+                :min="minMoraLength"
+                :max="maxMoraLength"
                 :step="0.001"
                 :type="'consonant'"
                 :clip="true"
@@ -99,8 +99,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.vowelLength"
                 :uiLocked="uiLocked"
-                :min="0"
-                :max="0.3"
+                :min="minMoraLength"
+                :max="maxMoraLength"
                 :step="0.001"
                 :type="'vowel'"
                 :clip="mora.consonant ? true : false"
@@ -323,22 +323,94 @@ export default defineComponent({
       });
     };
 
+    const maxPitch = 6.5;
+    const minPitch = 3;
+    const maxMoraLength = 0.3;
+    const minMoraLength = 0;
     const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
       data: number,
       type: MoraDataType
     ) => {
-      if (type == "pitch") {
-        lastPitches.value[accentPhraseIndex][moraIndex] = data;
+      if (altKeyFlag.value) {
+        if (accentPhrases.value !== undefined) {
+          const accentPhrase = accentPhrases.value[accentPhraseIndex];
+          const targetMora = accentPhrase.moras[moraIndex];
+
+          let diffData = data;
+          switch (type) {
+            case "pitch":
+              diffData -= targetMora.pitch;
+              break;
+            case "consonant":
+              if (targetMora.consonantLength !== undefined) {
+                diffData -= targetMora.consonantLength;
+              }
+              break;
+            case "vowel":
+              diffData -= targetMora.vowelLength;
+              break;
+          }
+
+          accentPhrase.moras.forEach((mora, moraIndex) => {
+            switch (type) {
+              case "pitch":
+                {
+                  const newData = Math.max(
+                    minPitch,
+                    Math.min(maxPitch, mora.pitch + diffData)
+                  );
+                  lastPitches.value[accentPhraseIndex][moraIndex] = newData;
+                  store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+                    audioKey: props.activeAudioKey,
+                    accentPhraseIndex,
+                    moraIndex,
+                    data: newData,
+                    type,
+                  });
+                }
+                break;
+              case "consonant":
+              case "vowel":
+                if (mora.consonantLength !== undefined) {
+                  store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+                    audioKey: props.activeAudioKey,
+                    accentPhraseIndex,
+                    moraIndex,
+                    data: Math.max(
+                      minMoraLength,
+                      Math.min(maxMoraLength, mora.consonantLength + diffData)
+                    ),
+                    type: "consonant",
+                  });
+                }
+                store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+                  audioKey: props.activeAudioKey,
+                  accentPhraseIndex,
+                  moraIndex,
+                  data: Math.max(
+                    minMoraLength,
+                    Math.min(maxMoraLength, mora.vowelLength + diffData)
+                  ),
+                  type: "vowel",
+                });
+                break;
+            }
+          });
+        }
+      } else {
+        if (type == "pitch") {
+          lastPitches.value[accentPhraseIndex][moraIndex] = data;
+        }
+        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+          audioKey: props.activeAudioKey,
+          accentPhraseIndex,
+          moraIndex,
+          data,
+          type,
+        });
       }
-      store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-        audioKey: props.activeAudioKey,
-        accentPhraseIndex,
-        moraIndex,
-        data,
-        type,
-      });
     };
 
     // audio play
@@ -524,14 +596,12 @@ export default defineComponent({
     };
 
     const shiftKeyFlag = ref(false);
+    const altKeyFlag = ref(false);
 
-    const setShiftKeyFlag = (event: KeyboardEvent) => {
+    const keyEventListter = (event: KeyboardEvent) => {
       shiftKeyFlag.value = event.shiftKey;
+      altKeyFlag.value = event.altKey;
     };
-
-    function resetShiftKeyFlag(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag.value = false;
-    }
 
     const handleChangeVoicing = (
       mora: Mora,
@@ -558,16 +628,20 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      window.addEventListener("keyup", resetShiftKeyFlag);
-      document.addEventListener("keydown", setShiftKeyFlag);
+      window.addEventListener("keyup", keyEventListter);
+      document.addEventListener("keydown", keyEventListter);
     });
 
     onUnmounted(() => {
-      window.removeEventListener("keyup", resetShiftKeyFlag);
-      document.removeEventListener("keydown", setShiftKeyFlag);
+      window.removeEventListener("keyup", keyEventListter);
+      document.removeEventListener("keydown", keyEventListter);
     });
 
     return {
+      maxPitch,
+      minPitch,
+      maxMoraLength,
+      minMoraLength,
       selectDetail,
       selectedDetail,
       uiLocked,
