@@ -21,7 +21,7 @@
               text-color="display-dark"
               class="text-no-wrap text-bold q-mr-sm"
               @click="applyDefaultSetting"
-              :disable="!defaultOrNotFlag"
+              :disable="isDefault"
               >デフォルトに戻す</q-btn
             >
             <q-btn
@@ -30,7 +30,7 @@
               text-color="display-dark"
               class="text-no-wrap text-bold q-mr-sm"
               @click="saveCustomToolbar"
-              :disable="!changedOrNotFlag"
+              :disable="!isChanged"
               >保存</q-btn
             >
             <!-- close button -->
@@ -199,7 +199,7 @@ export default defineComponent({
     };
 
     const headerBarCustomDialogOpenComputed = computed({
-      get: () => props.modelValue || changedOrNotFlag.value,
+      get: () => props.modelValue || isChanged.value,
       set: (val) => emit("update:modelValue", val),
     });
 
@@ -215,12 +215,18 @@ export default defineComponent({
     const removable = computed(() => selectedButton.value !== undefined);
 
     // 配列の比較は出来ないので、文字列として結合したものを比較する
-    const changedOrNotFlag = computed(() => {
+    const isChanged = computed(() => {
       const nowSetting = store.state.toolbarSetting;
-      return toolbarButtons.value.join("") !== nowSetting.join("");
+      return (
+        toolbarButtons.value.length != nowSetting.length ||
+        toolbarButtons.value.some((e, i) => e != nowSetting[i])
+      );
     });
-    const defaultOrNotFlag = computed(() => {
-      return toolbarButtons.value.join("") !== defaultSetting.join("");
+    const isDefault = computed(() => {
+      return (
+        toolbarButtons.value.length == defaultSetting.length &&
+        toolbarButtons.value.every((e, i) => e == defaultSetting[i])
+      );
     });
 
     const moveLeftButton = () => {
@@ -286,7 +292,7 @@ export default defineComponent({
     };
 
     const finishOrNotDialog = () => {
-      if (changedOrNotFlag.value) {
+      if (isChanged.value) {
         $q.dialog({
           title: "カスタマイズを終了しますか？",
           message:
@@ -321,8 +327,8 @@ export default defineComponent({
       leftShiftable,
       rightShiftable,
       removable,
-      changedOrNotFlag,
-      defaultOrNotFlag,
+      isChanged,
+      isDefault,
       moveLeftButton,
       moveRightButton,
       removeButton,
