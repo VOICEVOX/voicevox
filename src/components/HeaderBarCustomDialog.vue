@@ -72,7 +72,7 @@
                   v-model="selectedButton"
                   size="0"
                   :val="button"
-                  :label="button"
+                  :label="getToolbarButtonName(button)"
                   :class="
                     (selectedButton === button ? 'radio-selected' : 'radio') +
                     ' text-no-wrap text-bold text-display q-mr-sm'
@@ -90,7 +90,7 @@
             </q-toolbar>
             <q-card-actions>
               <div v-if="selectedButton !== undefined" class="text-h5">
-                「{{ selectedButton }}」を選択中
+                「{{ getToolbarButtonName(selectedButton) }}」を選択中
               </div>
               <q-space />
               <q-btn
