@@ -48,33 +48,18 @@
             <q-toolbar class="bg-primary preview-toolbar">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
-                  v-if="button === 'EMPTY'"
-                  v-model="selectedButton"
-                  size="0"
-                  :val="button"
-                  :label="button"
-                  :class="
-                    (selectedButton === button
-                      ? 'radio-space-selected'
-                      : 'radio-space') + ' text-no-wrap q-mr-sm'
-                  "
-                  ><q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    >{{ usableButtonsDesc[button] }}</q-tooltip
-                  ></q-radio
-                >
-                <q-radio
-                  v-else
                   v-model="selectedButton"
                   size="0"
                   :val="button"
                   :label="getToolbarButtonName(button)"
                   :class="
-                    (selectedButton === button ? 'radio-selected' : 'radio') +
+                    (button === 'EMPTY'
+                      ? selectedButton === button
+                        ? 'radio-space-selected'
+                        : 'radio-space'
+                      : selectedButton === button
+                      ? 'radio-selected'
+                      : 'radio') +
                     ' text-no-wrap text-bold text-display q-mr-sm'
                   "
                   ><q-tooltip
