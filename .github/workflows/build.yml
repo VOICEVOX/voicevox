@@ -396,15 +396,6 @@ jobs:
           asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
           rm -rf "${{ matrix.app_asar_dir }}/app"
 
-      # NOTE: Normally, you should be able to set the language settings for macOS
-      #       by setting mac.electronLaunguages in the electronBuilder section of
-      #       vue.config.js. However, for some reason, it doesn't work.
-      #       As a workaround, you can manually create a directory for language settings.
-      - name: Make .lproj directories in Resources directory of VOICEVOX.app
-        if: startsWith(matrix.artifact_name, 'macos-')
-        shell: bash
-        run: mkdir prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
-
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
@@ -448,6 +439,13 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
+
+      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
+      - name: Make .lproj directories in Resources directory of VOICEVOX.app
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
@@ -610,6 +608,13 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
+
+      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
+      - name: Make .lproj directories in Resources directory of VOICEVOX.app
+        if: endsWith(matrix.artifact_name, '-dmg')
+        shell: bash
+        run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
       - name: Show disk space (debug info)
         shell: bash
