@@ -159,6 +159,7 @@ jobs:
           echo "ENGINE_PATH=./run" > .env.production
           echo "VUE_APP_ENGINE_URL=http://127.0.0.1:50021" >> .env.production
           echo "VUE_APP_GTM_CONTAINER_ID=GTM-DUMMY" >> .env.production
+          echo 'VUE_APP_DEFAULT_ENGINE_HOSTS=[{"key":"074fc39e-678b-4c13-8916-ffca8d505d1d","executionEnabled":true,"executionFilePath":"./run","host":"http://127.0.0.1:50021"}]' >> .env.production
 
       - name: Checkout Product Version Resource
         uses: actions/checkout@v2

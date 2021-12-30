@@ -32,6 +32,7 @@ import {
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
+  EngineHostSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -55,6 +56,16 @@ if (isDevelopment) {
     path.join(app.getPath("appData"), `${app.getName()}-dev`)
   );
 }
+
+const defaultEngineHosts: EngineHostSetting[] = (() => {
+  const defaultEngineHostsEnv = process.env.VUE_APP_DEFAULT_ENGINE_HOSTS;
+
+  if (defaultEngineHostsEnv) {
+    return JSON.parse(defaultEngineHostsEnv) as EngineHostSetting[];
+  }
+
+  return [];
+})();
 
 let win: BrowserWindow;
 
@@ -161,6 +172,7 @@ const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
+  engineHosts: EngineHostSetting[];
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
@@ -206,6 +218,19 @@ const store = new Store<{
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
       },
+    },
+    engineHosts: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          key: { type: "string" },
+          host: { type: "string" },
+          executionEnabled: { type: "boolean" },
+          executionFilePath: { type: "string" },
+        },
+      },
+      default: defaultEngineHosts,
     },
     // To future developers: if you are to modify the store schema with array type,
     // for example, the hotkeySettings below,
