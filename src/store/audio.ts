@@ -450,6 +450,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
+              host: state.engineHost,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
@@ -468,8 +469,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit, dispatch }) => {
+    LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: state.engineHost,
         action: "speakersSpeakersGet",
         payload: [],
       })
@@ -507,6 +509,7 @@ export const audioStore: VoiceVoxStoreOptions<
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: state.engineHost,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -648,6 +651,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: state.engineHost,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -668,13 +672,14 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { dispatch },
+      { dispatch, state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: state.engineHost,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -718,6 +723,7 @@ export const audioStore: VoiceVoxStoreOptions<
       { text, styleId }: { text: string; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: state.engineHost,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -794,8 +800,12 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     CONNECT_AUDIO: createUILockAction(
-      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+      async (
+        { dispatch, state },
+        { encodedBlobs }: { encodedBlobs: string[] }
+      ) => {
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: state.engineHost,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -829,6 +839,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: state.engineHost,
           action: "synthesisSynthesisPost",
           payload: [
             {
