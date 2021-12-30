@@ -10,8 +10,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.9.3
-  VOICEVOX_RESOURCE_VERSION: 0.9.2
+  VOICEVOX_ENGINE_VERSION: 0.9.4
+  VOICEVOX_RESOURCE_VERSION: 0.9.4
 
 jobs:
   build-noengine-prepackage:

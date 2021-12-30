@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.9.4",
+    "descriptions": ["キャラクター「雨晴はう」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.9.3",
     "descriptions": ["特定環境でエンジンが起動しないバグの修正"],
     "contributors": ["y-chan"]
