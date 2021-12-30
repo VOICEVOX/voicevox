@@ -236,16 +236,6 @@ jobs:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: npm run electron:build_pnever -- --dir
 
-      - name: Confirm ja.lproj directory existing
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: |
-          if [ -d "${{ matrix.artifact_path }}/VOICEVOX.app/Contents/Resources/ja.lproj" ]; then
-            echo "ja.lproj dir exists."
-          else
-            echo "ja.lproj dir does not exist."
-          fi
-
       - name: Upload NoEngine Prepackage
         uses: actions/upload-artifact@v2
         with:
@@ -347,16 +337,6 @@ jobs:
         with:
           name: ${{ matrix.noengine_artifact_name }}
           path: ./prepackage
-
-      - name: Confirm ja.lproj directory existing
-        if: startsWith(matrix.artifact_name, 'macos-')
-        shell: bash
-        run: |
-          if [ -d "${{ matrix.app_asar_dir }}/ja.lproj" ]; then
-            echo "ja.lproj dir exists."
-          else
-            echo "ja.lproj dir does not exist."
-          fi
 
       # Download VOICEVOX ENGINE
       - name: Create directory voicevox_engine/download
