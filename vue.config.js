@@ -100,7 +100,6 @@ module.exports = {
               arch: ["x64"],
             },
           ],
-          electronLanguages: ["ja", "en"],
         },
         dmg: {
           icon: "public/icon-dmg.icns",
