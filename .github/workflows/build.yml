@@ -240,7 +240,7 @@ jobs:
       #       by setting mac.electronLaunguages in the electronBuilder section of
       #       vue.config.js. However, for some reason, it doesn't work.
       #       As a workaround, you can manually create a directory for language settings.
-      - name: Make .lproj files in Resources directory of VOICEVOX.app
+      - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.os, 'macos-')
         shell: bash
         run: mkdir "${{ matrix.artifact_path }}/VOICEVOX.app/Contents/Resources/ja.lproj" "${{ matrix.artifact_path }}/VOICEVOX.app/Contents/Resources/en.lproj"
