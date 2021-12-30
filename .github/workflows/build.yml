@@ -396,6 +396,15 @@ jobs:
           asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
           rm -rf "${{ matrix.app_asar_dir }}/app"
 
+      # NOTE: Normally, you should be able to set the language settings for macOS
+      #       by setting mac.electronLaunguages in the electronBuilder section of
+      #       vue.config.js. However, for some reason, it doesn't work.
+      #       As a workaround, you can manually create a directory for language settings.
+      - name: Make .lproj files in Resources directory of VOICEVOX.app
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: mkdir prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
+
       - name: Merge VOICEVOX ENGINE into prepackage/
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         shell: bash
