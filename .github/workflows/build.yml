@@ -11,7 +11,7 @@ on:
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.9.4
-  VOICEVOX_RESOURCE_VERSION: 0.9.4
+  VOICEVOX_RESOURCE_VERSION: 0.9.5
 
 jobs:
   build-noengine-prepackage:
