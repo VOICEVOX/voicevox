@@ -306,13 +306,13 @@
                 </q-select>
               </q-card-actions>
             </q-card>
-            <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
-            <!-- <q-card flat class="setting-card">
+            <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <!-- 今後実験的機能を追加する場合はここに追加 -->
+              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+              <!-- <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>Theme</div>
                 <q-space />
                 <q-btn-toggle
@@ -335,8 +335,28 @@
                     The colors in themes are not decided yet
                   </q-tooltip>
                 </q-btn-toggle>
+              </q-card-actions> -->
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文自動調整</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableInterrogative"
+                  @update:model-value="
+                    changeExperimentalSetting('enableInterrogative', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    疑問文のアクセント句を自動調整する
+                  </q-tooltip>
+                </q-toggle>
               </q-card-actions>
-            </q-card> -->
+            </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">テレメトリー</div>
@@ -372,7 +392,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting } from "@/type/preload";
+import { SavingSetting, ExperimentalSetting } from "@/type/preload";
 import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
@@ -401,6 +421,8 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const experimentalSetting = computed(() => store.state.experimentalSetting);
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -550,6 +572,15 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeExperimentalSetting = async (
+      key: keyof ExperimentalSetting,
+      data: boolean
+    ) => {
+      store.dispatch("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: { ...experimentalSetting.value, [key]: data },
+      });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -603,9 +634,11 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      changeExperimentalSetting,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

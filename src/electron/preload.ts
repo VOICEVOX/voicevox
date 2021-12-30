@@ -92,8 +92,11 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
 
-  showProjectSaveDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", { title });
+  showProjectSaveDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", {
+      title,
+      defaultPath,
+    });
   },
 
   showProjectLoadDialog: ({ title }) => {
@@ -212,6 +215,17 @@ const api: Sandbox = {
     return await ipcRendererInvoke(
       "SET_ACCEPT_RETRIEVE_TELEMETRY",
       acceptRetrieveTelemetry
+    );
+  },
+
+  getExperimentalSetting: async () => {
+    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
+  },
+
+  setExperimentalSetting: async (enableInterrogative) => {
+    return await ipcRendererInvoke(
+      "SET_EXPERIMENTAL_SETTING",
+      enableInterrogative
     );
   },
 
