@@ -22,6 +22,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  EngineHostSetting,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -680,6 +681,7 @@ export type SettingStoreState = {
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
   engineHost: string;
+  engineHosts: EngineHostSetting[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;

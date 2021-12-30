@@ -141,6 +141,15 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
+export type EngineKey = string;
+
+export type EngineHostSetting = {
+  key: EngineKey;
+  host: string;
+  executionEnabled: boolean;
+  executionFilePath: string;
+};
+
 export type Preset = {
   name: string;
   speedScale: number;
