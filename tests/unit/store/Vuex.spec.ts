@@ -10,6 +10,7 @@ import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
+import { EngineKey } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -59,6 +60,14 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
+        engineHosts: [
+          {
+            key: "88022f86-c823-436e-85a3-500c629749c4" as EngineKey,
+            executionEnabled: false,
+            executionFilePath: "",
+            host: "http://127.0.0.1",
+          },
+        ],
         experimentalSetting: {
           enableInterrogative: false,
         },
