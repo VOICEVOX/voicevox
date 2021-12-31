@@ -52,12 +52,16 @@ describe("store/vuex.js test", () => {
           availableThemes: [],
         },
         isPinned: false,
+        isFullscreen: false,
         presetItems: {},
         presetKeys: [],
         hotkeySettings: [],
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
+        experimentalSetting: {
+          enableInterrogative: false,
+        },
       },
       getters: {
         ...uiStore.getters,
@@ -137,5 +141,6 @@ describe("store/vuex.js test", () => {
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
+    assert.equal(store.state.experimentalSetting.enableInterrogative, false);
   });
 });

@@ -28,6 +28,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
+import { buildProjectFileName, sanitizeFileName } from "./utility";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -89,8 +90,6 @@ function parseTextFile(
 }
 
 function buildFileName(state: State, audioKey: string) {
-  // eslint-disable-next-line no-control-regex
-  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
@@ -110,8 +109,8 @@ function buildFileName(state: State, audioKey: string) {
     throw new Error();
   }
 
-  const characterName = character.metas.speakerName.replace(sanitizer, "");
-  let text = audioItem.text.replace(sanitizer, "");
+  const characterName = sanitizeFileName(character.metas.speakerName);
+  let text = sanitizeFileName(audioItem.text);
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
@@ -122,7 +121,8 @@ function buildFileName(state: State, audioKey: string) {
     return preFileName + `_${characterName}_${text}.wav`;
   }
 
-  return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
+  const sanitizedStyleName = sanitizeFileName(styleName);
+  return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -636,12 +636,16 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { dispatch, state },
       {
         text,
         styleId,
         isKana,
-      }: { text: string; styleId: number; isKana?: boolean }
+      }: {
+        text: string;
+        styleId: number;
+        isKana?: boolean;
+      }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "accentPhrasesAccentPhrasesPost",
@@ -650,6 +654,7 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -709,12 +714,18 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "audioQueryAudioQueryPost",
-        payload: [{ text, speaker: styleId }],
+        payload: [
+          {
+            text,
+            speaker: styleId,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
+          },
+        ],
       })
         .then(toDispatchResponse("audioQueryAudioQueryPost"))
         .catch((error) => {
@@ -979,13 +990,8 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, dispatch },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
       ): Promise<SaveResultObject> => {
-        const headItemText = state.audioItems[state.audioKeys[0]].text;
-        const tailItemText =
-          state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
-        const defaultFileName =
-          headItemText !== tailItemText
-            ? headItemText + "..." + tailItemText
-            : headItemText;
+        const defaultFileName = buildProjectFileName(state, "wav");
+
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,

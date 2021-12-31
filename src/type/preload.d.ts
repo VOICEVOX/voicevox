@@ -16,7 +16,10 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
+  showProjectSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showInfoDialog(obj: {
     title: string;
@@ -65,6 +68,10 @@ export interface Sandbox {
   getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
+  ): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(
+    enableInterrogative: ExperimentalSetting
   ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -219,4 +226,8 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type ExperimentalSetting = {
+  enableInterrogative: boolean;
 };

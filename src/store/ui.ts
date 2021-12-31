@@ -38,6 +38,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: false,
   isMaximized: false,
   isPinned: false,
+  isFullscreen: false,
 };
 
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
@@ -51,6 +52,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       SHOULD_SHOW_PANES(_, getters) {
         return getters.ACTIVE_AUDIO_KEY != undefined;
+      },
+      IS_FULLSCREEN(state) {
+        return state.isFullscreen;
       },
     },
 
@@ -117,6 +121,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       DETECT_UNPINNED(state) {
         state.isPinned = false;
+      },
+      DETECT_ENTER_FULLSCREEN(state) {
+        state.isFullscreen = true;
+      },
+      DETECT_LEAVE_FULLSCREEN(state) {
+        state.isFullscreen = false;
       },
     },
 
@@ -265,6 +275,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async DETECT_UNPINNED({ commit }) {
         commit("DETECT_UNPINNED");
+      },
+      async DETECT_ENTER_FULLSCREEN({ commit }) {
+        commit("DETECT_ENTER_FULLSCREEN");
+      },
+      async DETECT_LEAVE_FULLSCREEN({ commit }) {
+        commit("DETECT_LEAVE_FULLSCREEN");
       },
       async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
         if (getters.IS_EDITED) {
