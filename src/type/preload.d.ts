@@ -230,4 +230,5 @@ export type ThemeSetting = {
 
 export type ExperimentalSetting = {
   enableInterrogative: boolean;
+  enableReorderCell: boolean;
 };

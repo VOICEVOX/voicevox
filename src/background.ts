@@ -284,9 +284,14 @@ const store = new Store<{
           type: "boolean",
           default: false,
         },
+        enableReorderCell: {
+          type: "boolean",
+          default: false,
+        },
       },
       default: {
         enableInterrogative: false,
+        enableReorderCell: false,
       },
     },
     acceptRetrieveTelemetry: {
