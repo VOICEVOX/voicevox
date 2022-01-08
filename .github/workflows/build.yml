@@ -11,8 +11,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.10.preview.2
-  VOICEVOX_RESOURCE_VERSION: 0.9.2
+  VOICEVOX_ENGINE_VERSION: 0.10.preview.10
+  VOICEVOX_RESOURCE_VERSION: 0.10.preview.2
 
 jobs:
   build-noengine-prepackage:
@@ -440,6 +440,13 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
+      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
+      - name: Make .lproj directories in Resources directory of VOICEVOX.app
+        if: startsWith(matrix.artifact_name, 'macos-')
+        shell: bash
+        run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
+
       - name: Set BUILD_IDENTIFIER env var
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
@@ -601,6 +608,13 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
+
+      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
+      - name: Make .lproj directories in Resources directory of VOICEVOX.app
+        if: endsWith(matrix.artifact_name, '-dmg')
+        shell: bash
+        run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
       - name: Show disk space (debug info)
         shell: bash

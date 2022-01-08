@@ -69,6 +69,7 @@ describe("store/vuex.js test", () => {
         ],
         experimentalSetting: {
           enableInterrogative: false,
+          enableReorderCell: false,
         },
       },
       getters: {
@@ -150,5 +151,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
     assert.equal(store.state.experimentalSetting.enableInterrogative, false);
+    assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });
 });
