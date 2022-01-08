@@ -142,10 +142,7 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
-export type EngineKey = string;
-
 export type Engine = {
-  key: EngineKey;
   host: string;
   executionEnabled: boolean;
   executionFilePath: string;

@@ -320,12 +320,12 @@ let engineProcess: ChildProcess;
 async function runEngine() {
   const engine = engines[0]; // TODO: 複数エンジン対応
 
-  if (! engine.executionEnabled) {
+  if (!engine.executionEnabled) {
     log.info("Skipped engine execution");
     return;
   }
 
-  if (! engine.executionFilePath) {
+  if (!engine.executionFilePath) {
     log.info("Skipped engine execution because executionFilePath is empty");
     return;
   }
