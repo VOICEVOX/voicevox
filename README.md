@@ -18,7 +18,7 @@ npm ci
 
 ## 実行
 
-`.env.production`をコピーして`.env`を作成し、`ENGINE_PATH`に`voicevox_engine`があるパスを指定します。
+`.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINES`内の`executionFilePath`に`voicevox_engine`があるパスを指定します。
 とりあえず [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
 ```bash
