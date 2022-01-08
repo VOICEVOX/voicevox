@@ -125,6 +125,7 @@ export const indexStore: VoiceVoxStoreOptions<
       const promises = [];
 
       promises.push(dispatch("GET_USE_GPU"));
+      promises.push(dispatch("GET_ENGINE_HOSTS"));
       promises.push(dispatch("GET_PRESET_CONFIG"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
       promises.push(dispatch("GET_SAVING_SETTING"));

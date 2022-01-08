@@ -313,7 +313,7 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
-  log.info(JSON.stringify(store.get("engineHosts")));
+  log.info(JSON.stringify(engineHosts));
 
   willQuitEngine = false;
 
@@ -707,7 +707,7 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 });
 
 ipcMainHandle("ENGINE_HOSTS", () => {
-  return store.get("engineHosts");
+  return engineHosts;
 });
 
 /**
