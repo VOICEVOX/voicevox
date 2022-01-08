@@ -441,8 +441,7 @@ export const audioStore: VoiceVoxStoreOptions<
   actions: {
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }) => {
-        window.electron.logInfo(JSON.stringify(state.engineHosts));
-        window.electron.logInfo(state.engineHost);
+        const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
 
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {
@@ -453,6 +452,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
+              host: engineHost,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
@@ -471,8 +471,11 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit, dispatch }) => {
+    LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
+      const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: engineHost,
         action: "speakersSpeakersGet",
         payload: [],
       })
@@ -509,7 +512,10 @@ export const audioStore: VoiceVoxStoreOptions<
         return styles;
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
+        const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: engineHost,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -650,7 +656,10 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
+      const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: engineHost,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -671,13 +680,16 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { dispatch },
+      { dispatch, state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
+      const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: engineHost,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -720,7 +732,10 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
+      const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        host: engineHost,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -797,8 +812,14 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     CONNECT_AUDIO: createUILockAction(
-      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+      async (
+        { dispatch, state },
+        { encodedBlobs }: { encodedBlobs: string[] }
+      ) => {
+        const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: engineHost,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -818,6 +839,8 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
+        const engineHost = state.engineHosts[0]; // TODO: 複数エンジン対応
+
         const audioItem: AudioItem = JSON.parse(
           JSON.stringify(state.audioItems[audioKey])
         );
@@ -832,6 +855,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          host: engineHost,
           action: "synthesisSynthesisPost",
           payload: [
             {
