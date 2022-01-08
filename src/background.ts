@@ -707,6 +707,7 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 });
 
 ipcMainHandle("ENGINE_HOSTS", () => {
+  // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
   return engineHosts;
 });
 
