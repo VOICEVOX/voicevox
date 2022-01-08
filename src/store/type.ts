@@ -680,7 +680,6 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineHost: string;
   engineHosts: EngineHostSetting[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;

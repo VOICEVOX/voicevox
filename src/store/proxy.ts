@@ -24,7 +24,7 @@ const proxyStoreCreator = (
     mutations: {},
     actions: {
       INVOKE_ENGINE_CONNECTOR({ rootState }, payload) {
-        const instance = _engineFactory.instance(rootState.engineHost);
+        const instance = _engineFactory.instance(rootState.engineHost); // FIXME:
         const action = payload.action;
         const args = payload.payload;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
