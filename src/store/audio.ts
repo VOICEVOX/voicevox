@@ -442,9 +442,6 @@ export const audioStore: VoiceVoxStoreOptions<
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const engine = state.engines[0]; // TODO: 複数エンジン対応
-        window.electron.logInfo(
-          "START_WAITING_ENGINE: " + JSON.stringify(state.engines)
-        );
 
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {

@@ -106,7 +106,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.useGpu = useGpu;
       },
       SET_ENGINES(state, { engines }: { engines: Engine[] }) {
-        window.electron.logInfo(`ui SET_ENGINES: ${JSON.stringify(engines)}`);
         state.engines = engines;
       },
       SET_INHERIT_AUDIOINFO(
@@ -255,13 +254,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         });
       },
       async GET_ENGINES({ state, commit }) {
-        window.electron.logInfo("ui GET_ENGINES: request engines");
         commit("SET_ENGINES", {
           engines: await window.electron.engines(),
         });
-        window.electron.logInfo(
-          `ui GET_ENGINES: result ${JSON.stringify(state.engines)}`
-        );
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {
         commit("SET_INHERIT_AUDIOINFO", {

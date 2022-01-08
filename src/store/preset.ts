@@ -34,7 +34,6 @@ export const presetStore: VoiceVoxStoreOptions<
   },
   actions: {
     GET_PRESET_CONFIG: async (context) => {
-      window.electron.logInfo("preset: GET_PRESET_CONFIG");
       const presetConfig = await window.electron.savingPresets();
       if (
         presetConfig === undefined ||

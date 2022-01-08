@@ -374,7 +374,10 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
-      window.electron.logInfo("Home: onMounted");
+      // 起動時、エンジンの設定はbackground側にのみあって、UI側にはない
+      // Appコンポーネントでbackgroundから設定を取得すると、取得完了前にHomeコンポーネントがマウントされてしまう
+      // エンジンの起動を待機する前に、エンジンの設定をbackgroundから取得済みなことを保証する
+      await store.dispatch("INIT_VUEX");
 
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");

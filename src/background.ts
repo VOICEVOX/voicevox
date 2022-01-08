@@ -313,8 +313,6 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
-  log.info("runEngine: " + JSON.stringify(engines));
-
   willQuitEngine = false;
 
   // 最初のエンジンモード
@@ -708,7 +706,6 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 
 ipcMainHandle("ENGINES", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
-  log.info("ipc background ENGINES", engines);
   return engines;
 });
 
