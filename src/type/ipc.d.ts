@@ -1,3 +1,5 @@
+import { EngineHostSetting } from "@/type/preload";
+
 /**
  * invoke, handle
  */
@@ -125,6 +127,11 @@ type IpcIHData = {
   LOG_INFO: {
     args: [...params: unknown[]];
     return: void;
+  };
+
+  ENGINE_HOSTS: {
+    args: [];
+    return: EngineHostSetting[];
   };
 
   RESTART_ENGINE: {

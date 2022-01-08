@@ -844,6 +844,12 @@ type UiStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
+  GET_ENGINE_HOSTS: {
+    action(): void;
+  };
+
+  SET_ENGINE_HOSTS: { mutation: { engineHosts: EngineHostSetting[] } };
+
   GET_INHERIT_AUDIOINFO: {
     action(): void;
   };

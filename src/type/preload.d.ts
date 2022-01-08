@@ -50,6 +50,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
+  engineHosts(): Promise<EngineHostSetting[]>;
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
