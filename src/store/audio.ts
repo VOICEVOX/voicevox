@@ -458,6 +458,8 @@ export const audioStore: VoiceVoxStoreOptions<
             }).then(toDispatchResponse("versionVersionGet"));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            // engineがundefinedの場合にログ出力されないので、複数エンジン対応が終わるまでオプショナルチェーンにしておく
             window.electron.logInfo(`Waiting engine ${engine?.host}`);
             continue;
           }
