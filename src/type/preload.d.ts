@@ -50,7 +50,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
-  engineHosts(): Promise<EngineHostSetting[]>;
+  engineHosts(): Promise<EngineHost[]>;
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -144,7 +144,7 @@ export type HotkeySetting = {
 
 export type EngineKey = string;
 
-export type EngineHostSetting = {
+export type EngineHost = {
   key: EngineKey;
   host: string;
   executionEnabled: boolean;

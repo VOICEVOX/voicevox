@@ -32,7 +32,7 @@ import {
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
-  EngineHostSetting,
+  EngineHost,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -57,11 +57,11 @@ if (isDevelopment) {
   );
 }
 
-const engineHosts: EngineHostSetting[] = (() => {
+const engineHosts: EngineHost[] = (() => {
   const defaultEngineHostsEnv = process.env.DEFAULT_ENGINE_HOSTS;
 
   if (defaultEngineHostsEnv) {
-    return JSON.parse(defaultEngineHostsEnv) as EngineHostSetting[];
+    return JSON.parse(defaultEngineHostsEnv) as EngineHost[];
   }
 
   return [];

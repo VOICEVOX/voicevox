@@ -22,7 +22,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
-  EngineHostSetting,
+  EngineHost,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -680,7 +680,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineHosts: EngineHostSetting[];
+  engineHosts: EngineHost[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -847,7 +847,7 @@ type UiStoreTypes = {
     action(): void;
   };
 
-  SET_ENGINE_HOSTS: { mutation: { engineHosts: EngineHostSetting[] } };
+  SET_ENGINE_HOSTS: { mutation: { engineHosts: EngineHost[] } };
 
   GET_INHERIT_AUDIOINFO: {
     action(): void;
