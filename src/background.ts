@@ -32,7 +32,7 @@ import {
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
-  EngineHost,
+  Engine,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -57,11 +57,11 @@ if (isDevelopment) {
   );
 }
 
-const engineHosts: EngineHost[] = (() => {
-  const defaultEngineHostsEnv = process.env.DEFAULT_ENGINE_HOSTS;
+const engines: Engine[] = (() => {
+  const defaultEnginesEnv = process.env.DEFAULT_ENGINES;
 
-  if (defaultEngineHostsEnv) {
-    return JSON.parse(defaultEngineHostsEnv) as EngineHost[];
+  if (defaultEnginesEnv) {
+    return JSON.parse(defaultEnginesEnv) as Engine[];
   }
 
   return [];
@@ -313,7 +313,7 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
-  log.info(JSON.stringify(engineHosts));
+  log.info("runEngine: " + JSON.stringify(engines));
 
   willQuitEngine = false;
 
@@ -706,9 +706,10 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
-ipcMainHandle("ENGINE_HOSTS", () => {
+ipcMainHandle("ENGINES", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
-  return engineHosts;
+  log.info("ipc background ENGINES", engines);
+  return engines;
 });
 
 /**

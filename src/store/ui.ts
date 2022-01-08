@@ -9,7 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
-import { EngineHost } from "@/type/preload";
+import { Engine } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -105,8 +105,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
-      SET_ENGINE_HOSTS(state, { engineHosts }: { engineHosts: EngineHost[] }) {
-        state.engineHosts = engineHosts;
+      SET_ENGINES(state, { engines }: { engines: Engine[] }) {
+        window.electron.logInfo(`ui SET_ENGINES: ${JSON.stringify(engines)}`);
+        state.engines = engines;
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -253,10 +254,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
-      async GET_ENGINE_HOSTS({ commit }) {
-        commit("SET_ENGINE_HOSTS", {
-          engineHosts: await window.electron.engineHosts(),
+      async GET_ENGINES({ state, commit }) {
+        window.electron.logInfo("ui GET_ENGINES: request engines");
+        commit("SET_ENGINES", {
+          engines: await window.electron.engines(),
         });
+        window.electron.logInfo(
+          `ui GET_ENGINES: result ${JSON.stringify(state.engines)}`
+        );
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {
         commit("SET_INHERIT_AUDIOINFO", {

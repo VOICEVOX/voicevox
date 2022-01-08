@@ -374,6 +374,8 @@ export default defineComponent({
 
     // プロジェクトを初期化
     onMounted(async () => {
+      window.electron.logInfo("Home: onMounted");
+
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
