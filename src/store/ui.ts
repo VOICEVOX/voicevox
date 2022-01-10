@@ -253,7 +253,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
-      async GET_ENGINES({ state, commit }) {
+      async GET_ENGINES({ commit }) {
         commit("SET_ENGINES", {
           engines: await window.electron.engines(),
         });
