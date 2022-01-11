@@ -60,6 +60,7 @@
                       "
                     >
                       <draggable
+                        v-if="enableReorderCell"
                         class="audio-cells"
                         :modelValue="audioKeys"
                         @update:modelValue="updateAudioKeys"
@@ -75,6 +76,15 @@
                           />
                         </template>
                       </draggable>
+                      <div v-else class="audio-cells">
+                        <audio-cell
+                          v-for="audioKey in audioKeys"
+                          :key="audioKey"
+                          :audioKey="audioKey"
+                          :ref="addAudioCellRef"
+                          @focusCell="focusCell"
+                        />
+                      </div>
                       <div class="add-button-wrapper">
                         <q-btn
                           fab
@@ -294,6 +304,10 @@ export default defineComponent({
     const resizeObserverRef = ref<QResizeObserver>();
 
     // DaD
+    const enableReorderCell = computed(
+      () => store.state.experimentalSetting.enableReorderCell
+    );
+
     const updateAudioKeys = (audioKeys: string[]) =>
       store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
     const itemKey = (key: string) => key;
@@ -493,6 +507,7 @@ export default defineComponent({
       uiLocked,
       addAudioCellRef,
       activeAudioKey,
+      enableReorderCell,
       itemKey,
       updateAudioKeys,
       addAudioItem,
