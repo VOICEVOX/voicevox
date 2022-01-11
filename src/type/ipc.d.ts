@@ -189,6 +189,11 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  GET_DEFAULT_TOOLBAR_SETTING: {
+    args: [];
+    return: import("@/type/preload").ToolbarSetting;
+  };
+
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
     args: [];
     return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
