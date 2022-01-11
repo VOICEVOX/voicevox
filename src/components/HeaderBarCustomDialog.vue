@@ -234,6 +234,8 @@ export default defineComponent({
       ];
     };
 
+    // ボタンが追加されたときはそれをフォーカスし、
+    // 削除されたときは一番最初のボタンをフォーカスするようにする
     watch(
       () => toolbarButtons.value,
       (newData, oldData) => {
