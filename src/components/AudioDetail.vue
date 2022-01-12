@@ -463,7 +463,7 @@ export default defineComponent({
         // );
         // audioDetailElem.scroll(scrollCount, 0);
         const displayedPart =
-          audioDetailElem.offsetLeft + audioDetailElem.offsetWidth;
+          audioDetailElem.scrollLeft + audioDetailElem.offsetWidth;
         const nextAccentPhraseStart = elem.offsetLeft - firstElem.offsetLeft;
         const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
         // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
