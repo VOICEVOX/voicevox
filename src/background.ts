@@ -5,7 +5,15 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  dialog,
+  Menu,
+  shell,
+  nativeTheme,
+} from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -16,14 +24,14 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import {
-  CharacterInfo,
   DefaultStyleId,
   HotkeySetting,
-  MetasJson,
   SavingSetting,
+  PresetConfig,
   ThemeConf,
-  StyleInfo,
+  ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
+  ToolbarSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -68,14 +76,19 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+const isMac = process.platform === "darwin";
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
-    combination: "Ctrl E",
+    combination: !isMac ? "Ctrl E" : "Meta E",
   },
   {
     action: "一つだけ書き出し",
     combination: "E",
+  },
+  {
+    action: "音声を繋げて書き出し",
+    combination: "",
   },
   {
     action: "再生/停止",
@@ -92,6 +105,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
     combination: "2",
+  },
+  {
+    action: "長さ欄を表示",
+    combination: "3",
   },
   {
     action: "テキスト欄を追加",
@@ -111,27 +128,27 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "元に戻す",
-    combination: "Ctrl Z",
+    combination: !isMac ? "Ctrl Z" : "Meta Z",
   },
   {
     action: "やり直す",
-    combination: "Ctrl Y",
+    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
   },
   {
     action: "新規プロジェクト",
-    combination: "Ctrl N",
+    combination: !isMac ? "Ctrl N" : "Meta N",
   },
   {
     action: "プロジェクトを名前を付けて保存",
-    combination: "Ctrl Shift S",
+    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
   },
   {
     action: "プロジェクトを上書き保存",
-    combination: "Ctrl S",
+    combination: !isMac ? "Ctrl S" : "Meta S",
   },
   {
     action: "プロジェクト読み込み",
-    combination: "Ctrl O",
+    combination: !isMac ? "Ctrl O" : "Meta O",
   },
   {
     action: "テキスト読み込む",
@@ -139,14 +156,25 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
+const defaultToolbarButtonSetting: ToolbarSetting = [
+  "PLAY_CONTINUOUSLY",
+  "STOP",
+  "EMPTY",
+  "UNDO",
+  "REDO",
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
   savingSetting: SavingSetting;
+  presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
@@ -202,6 +230,13 @@ const store = new Store<{
       },
       default: defaultHotkeySettings,
     },
+    toolbarSetting: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: defaultToolbarButtonSetting,
+    },
     defaultStyleIds: {
       type: "array",
       items: {
@@ -213,9 +248,59 @@ const store = new Store<{
       },
       default: [],
     },
+    presets: {
+      type: "object",
+      properties: {
+        items: {
+          type: "object",
+          patternProperties: {
+            // uuid
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                speedScale: { type: "number" },
+                pitchScale: { type: "number" },
+                intonationScale: { type: "number" },
+                volumeScale: { type: "number" },
+                prePhonemeLength: { type: "number" },
+                postPhonemeLength: { type: "number" },
+              },
+            },
+          },
+          additionalProperties: false,
+        },
+        keys: {
+          type: "array",
+          items: {
+            type: "string",
+            pattern:
+              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+          },
+        },
+      },
+      default: { items: {}, keys: [] },
+    },
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    experimentalSetting: {
+      type: "object",
+      properties: {
+        enableInterrogative: {
+          type: "boolean",
+          default: false,
+        },
+        enableReorderCell: {
+          type: "boolean",
+          default: false,
+        },
+      },
+      default: {
+        enableInterrogative: false,
+        enableReorderCell: false,
+      },
     },
     acceptRetrieveTelemetry: {
       type: "string",
@@ -223,22 +308,7 @@ const store = new Store<{
       default: "Unconfirmed",
     },
   },
-  migrations: {
-    ">=0.7.3": (store) => {
-      const newHotkey: HotkeySetting = {
-        action: "長さ欄を表示",
-        combination: "3",
-      };
-      const hotkeys = store.get("hotkeySettings");
-      hotkeys.forEach((value) => {
-        if (value.combination == newHotkey.combination) {
-          newHotkey.combination = "";
-        }
-      });
-      hotkeys.splice(6, 0, newHotkey);
-      store.set("hotkeySettings", hotkeys);
-    },
-  },
+  migrations: {},
 });
 
 // engine
@@ -309,48 +379,8 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir);
 }
 
-// キャラクター情報の読み込み
-declare let __static: string;
-const characterInfos: CharacterInfo[] = [];
-for (const dirRelPath of fs.readdirSync(path.join(__static, "characters"))) {
-  const dirPath = path.join("characters", dirRelPath);
-  const policy = fs.readFileSync(
-    path.join(__static, dirPath, "policy.md"),
-    "utf-8"
-  );
-  const {
-    speakerName,
-    speakerUuid,
-    styles: stylesOrigin,
-  }: MetasJson = JSON.parse(
-    fs.readFileSync(path.join(__static, dirPath, "metas.json"), "utf-8")
-  );
-  const styles = stylesOrigin.map<StyleInfo>(({ styleName, styleId }) => ({
-    styleName,
-    styleId,
-    iconPath: path.join(dirPath, "icons", `${speakerName}_${styleId}.png`),
-    voiceSamplePaths: [...Array(3).keys()].map((x) =>
-      path.join(
-        dirPath,
-        "voice_samples",
-        `${speakerName}_${styleId}_${(x + 1).toString().padStart(3, "0")}.wav`
-      )
-    ),
-  }));
-  const portraitPath = path.join(dirPath, "portrait.png");
-
-  characterInfos.push({
-    portraitPath,
-    metas: {
-      speakerName,
-      speakerUuid,
-      styles,
-      policy,
-    },
-  });
-}
-
 // 使い方テキストの読み込み
+declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -377,13 +407,63 @@ const updateInfos = JSON.parse(
   })
 );
 
+const privacyPolicyText = fs.readFileSync(
+  path.join(__static, "privacy_policy.md"),
+  "utf-8"
+);
+
+// hotkeySettingsのマイグレーション
+function migrateHotkeySettings() {
+  const COMBINATION_IS_NONE = "####";
+  const loadedHotkeys = store.get("hotkeySettings");
+  const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
+    (defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action
+      );
+      const hotkeyWithoutCombination: HotkeySetting = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey || hotkeyWithoutCombination;
+    }
+  );
+  const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
+    if (hotkey.combination === COMBINATION_IS_NONE) {
+      const newHotkey =
+        defaultHotkeySettings.find(
+          (defaultHotkey) => defaultHotkey.action === hotkey.action
+        ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+      const combinationExists = hotkeysWithoutNewCombination.some(
+        (hotkey) => hotkey.combination === newHotkey.combination
+      );
+      if (combinationExists) {
+        const emptyHotkey = {
+          action: newHotkey.action,
+          combination: "",
+        };
+        return emptyHotkey;
+      } else {
+        return newHotkey;
+      }
+    } else {
+      return hotkey;
+    }
+  });
+  store.set("hotkeySettings", migratedHotkeys);
+}
+migrateHotkeySettings();
+
 let willQuit = false;
+let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
   win = new BrowserWindow({
     width: 800,
     height: 600,
     frame: false,
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
     webPreferences: {
@@ -404,8 +484,17 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
+  // Macではdarkモードかつウィンドウが非アクティブのときに閉じるボタンなどが見えなくなるので、lightモードに固定
+  if (isMac) nativeTheme.themeSource = "light";
+
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("enter-full-screen", () =>
+    win.webContents.send("DETECT_ENTER_FULLSCREEN")
+  );
+  win.on("leave-full-screen", () =>
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN")
+  );
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
@@ -428,9 +517,19 @@ async function createWindow() {
   });
 
   win.webContents.once("did-finish-load", () => {
-    if (process.argv.length >= 2) {
-      const filePath = process.argv[1];
-      ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+    if (isMac) {
+      if (filePathOnMac != null) {
+        ipcMainSend(win, "LOAD_PROJECT_FILE", {
+          filePath: filePathOnMac,
+          confirm: false,
+        });
+        filePathOnMac = null;
+      }
+    } else {
+      if (process.argv.length >= 2) {
+        const filePath = process.argv[1];
+        ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+      }
     }
   });
 }
@@ -453,10 +552,6 @@ ipcMainHandle("GET_TEMP_DIR", () => {
   return tempDir;
 });
 
-ipcMainHandle("GET_CHARACTER_INFOS", () => {
-  return characterInfos;
-});
-
 ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
   return howToUseText;
 });
@@ -475,6 +570,10 @@ ipcMainHandle("GET_UPDATE_INFOS", () => {
 
 ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
+});
+
+ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
+  return privacyPolicyText;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
@@ -498,9 +597,10 @@ ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   const result = await dialog.showSaveDialog(win, {
     title,
+    defaultPath,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
@@ -673,6 +773,13 @@ ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   return store.get("savingSetting");
 });
 
+ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
+  if (newData !== undefined) {
+    store.set("toolbarSetting", newData);
+  }
+  return store.get("toolbarSetting");
+});
+
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");
@@ -717,21 +824,21 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
+ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
+  if (newPresets !== undefined) {
+    store.set("presets.items", newPresets.presetItems);
+    store.set("presets.keys", newPresets.presetKeys);
+  }
+  return store.get("presets");
+});
+
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   const defaultStyleIds = store.get("defaultStyleIds");
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
 });
 
 ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
-  const defaultStyleIds = store.get("defaultStyleIds");
-  if (defaultStyleIds.length === 0) {
-    return characterInfos.map<DefaultStyleId>((info) => ({
-      speakerUuid: info.metas.speakerUuid,
-      defaultStyleId: info.metas.styles[0].styleId,
-    }));
-  } else {
-    return defaultStyleIds;
-  }
+  return store.get("defaultStyleIds");
 });
 
 ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
@@ -742,12 +849,24 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
 
+ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+  return defaultToolbarButtonSetting;
+});
+
 ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
   return store.get("acceptRetrieveTelemetry");
 });
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
+  return store.get("experimentalSetting");
+});
+
+ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
+  store.set("experimentalSetting", experimentalSetting);
 });
 
 // app callback
@@ -763,9 +882,7 @@ app.on("web-contents-created", (e, contents) => {
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  app.quit();
 });
 
 // Called before window closing
@@ -806,6 +923,14 @@ app.on("before-quit", (event) => {
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+app.once("will-finish-launching", () => {
+  // macOS only
+  app.once("open-file", (event, filePath) => {
+    event.preventDefault();
+    filePathOnMac = filePath;
+  });
 });
 
 app.on("ready", async () => {

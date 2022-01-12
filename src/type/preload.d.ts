@@ -2,12 +2,12 @@ import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharacterInfos(): Promise<CharacterInfo[]>;
   getHowToUseText(): Promise<string>;
   getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
+  getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   getBaseName(obj: { filePath: string }): string;
@@ -16,7 +16,10 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
+  showProjectSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showInfoDialog(obj: {
     title: string;
@@ -50,8 +53,13 @@ export interface Sandbox {
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  savingPresets(newPresets?: {
+    presetItems: Record<string, Preset>;
+    presetKeys: string[];
+  }): Promise<PresetConfig>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
@@ -61,7 +69,12 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(
+    enableInterrogative: ExperimentalSetting
+  ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }
@@ -129,9 +142,24 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
+export type Preset = {
+  name: string;
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+};
+
+export type PresetConfig = {
+  items: Record<string, Preset>;
+  keys: string[];
+};
 export type HotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"
+  | "音声を繋げて書き出し"
   | "再生/停止"
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
@@ -156,6 +184,15 @@ export type HotkeyReturnType =
   | boolean
   | Promise<void>
   | Promise<boolean>;
+
+export type ToolbarButtonTagType =
+  | "PLAY_CONTINUOUSLY"
+  | "STOP"
+  | "UNDO"
+  | "REDO"
+  | "EMPTY";
+
+export type ToolbarSetting = ToolbarButtonTagType[];
 
 export type MoraDataType =
   | "consonant"
@@ -190,4 +227,9 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type ExperimentalSetting = {
+  enableInterrogative: boolean;
+  enableReorderCell: boolean;
 };

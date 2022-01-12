@@ -306,13 +306,13 @@
                 </q-select>
               </q-card-actions>
             </q-card>
-            <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
-            <!-- <q-card flat class="setting-card">
+            <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <!-- 今後実験的機能を追加する場合はここに追加 -->
+              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+              <!-- <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>Theme</div>
                 <q-space />
                 <q-btn-toggle
@@ -335,14 +335,48 @@
                     The colors in themes are not decided yet
                   </q-tooltip>
                 </q-btn-toggle>
+              </q-card-actions> -->
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文自動調整</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableInterrogative"
+                  @update:model-value="
+                    changeExperimentalSetting('enableInterrogative', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    疑問文のアクセント句を自動調整する
+                  </q-tooltip>
+                </q-toggle>
               </q-card-actions>
-            </q-card> -->
-            <!--
-            NOTE: 現状、ElectronでGoogle Analyticsのopt-outが提供出来ない(起動時に設定が読めない)ため、
-                  設定が読める or 初期値の設定が出来るようになるまで無効にする
-            SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
-            FIXME: Google Analyticsのopt-out方法の提供後有効化
-
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>テキスト欄の並び替え</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableReorderCell"
+                  @update:model-value="
+                    changeExperimentalSetting('enableReorderCell', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキスト欄をドラッグ＆ドロップで並び替える．
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">テレメトリー</div>
@@ -367,7 +401,6 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
-            -->
           </div>
         </q-page>
       </q-page-container>
@@ -379,7 +412,8 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting } from "@/type/preload";
+import { SavingSetting, ExperimentalSetting } from "@/type/preload";
+import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -407,6 +441,8 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const experimentalSetting = computed(() => store.state.experimentalSetting);
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -465,17 +501,32 @@ export default defineComponent({
     );
     updateAudioOutputDevices();
 
-    // SEE: https://github.com/VOICEVOX/voicevox/pull/497#issuecomment-985721509
-    //const acceptRetrieveTelemetryComputed = computed({
-    //  get: () => store.state.acceptRetrieveTelemetry == "Accepted",
-    //  set: (acceptRetrieveTelemetry: boolean) => {
-    //    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-    //      acceptRetrieveTelemetry: acceptRetrieveTelemetry
-    //        ? "Accepted"
-    //        : "Refused",
-    //    });
-    //  },
-    //});
+    const gtm = useGtm();
+    const acceptRetrieveTelemetryComputed = computed({
+      get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+      set: (acceptRetrieveTelemetry: boolean) => {
+        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+          acceptRetrieveTelemetry: acceptRetrieveTelemetry
+            ? "Accepted"
+            : "Refused",
+        });
+        gtm?.enable(acceptRetrieveTelemetry);
+
+        if (acceptRetrieveTelemetry) {
+          return;
+        }
+
+        $q.dialog({
+          title: "テレメトリーの収集の無効化",
+          message:
+            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
+      },
+    });
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -541,6 +592,15 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeExperimentalSetting = async (
+      key: keyof ExperimentalSetting,
+      data: boolean
+    ) => {
+      store.dispatch("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: { ...experimentalSetting.value, [key]: data },
+      });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -594,9 +654,11 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      changeExperimentalSetting,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,
@@ -604,7 +666,7 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
-      //acceptRetrieveTelemetryComputed,
+      acceptRetrieveTelemetryComputed,
     };
   },
 });

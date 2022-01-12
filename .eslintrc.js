@@ -24,6 +24,12 @@ module.exports = {
         endOfLine: "auto",
       },
     ],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        ignoreRestSiblings: true,
+      },
+    ],
   },
   overrides: [
     {

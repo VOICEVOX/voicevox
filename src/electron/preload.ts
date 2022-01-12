@@ -35,10 +35,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_APP_INFOS");
   },
 
-  getCharacterInfos: async () => {
-    return await ipcRendererInvoke("GET_CHARACTER_INFOS");
-  },
-
   getHowToUseText: async () => {
     return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
   },
@@ -57,6 +53,10 @@ const api: Sandbox = {
 
   getOssCommunityInfos: async () => {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
+  },
+
+  getPrivacyPolicyText: async () => {
+    return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
   },
 
   saveTempAudioFile: async ({ relativePath, buffer }) => {
@@ -92,8 +92,11 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
 
-  showProjectSaveDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", { title });
+  showProjectSaveDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", {
+      title,
+      defaultPath,
+    });
   },
 
   showProjectLoadDialog: ({ title }) => {
@@ -180,8 +183,16 @@ const api: Sandbox = {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 
+  savingPresets: (newPresets) => {
+    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
+  },
+
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
+  },
+
+  toolbarSetting: (newData) => {
+    return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
   },
 
   isUnsetDefaultStyleId: async (speakerUuid: string) => {
@@ -207,8 +218,23 @@ const api: Sandbox = {
     );
   },
 
+  getExperimentalSetting: async () => {
+    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
+  },
+
+  setExperimentalSetting: async (enableInterrogative) => {
+    return await ipcRendererInvoke(
+      "SET_EXPERIMENTAL_SETTING",
+      enableInterrogative
+    );
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+  },
+
+  getDefaultToolbarSetting: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_TOOLBAR_SETTING");
   },
 
   theme: (newData) => {

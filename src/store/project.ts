@@ -7,6 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
+import { buildProjectFileName } from "./utility";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -61,7 +62,7 @@ export const projectStore: VoiceVoxStoreOptions<
           }
         }
 
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
@@ -154,12 +155,13 @@ export const projectStore: VoiceVoxStoreOptions<
                 }
 
                 // set phoneme length
-                if (audioItem.styleId == undefined)
-                  throw new Error("audioItem.styleId == undefined");
+                // 0.7 未満のプロジェクトファイルは styleId ではなく characterIndex なので、ここだけ characterIndex とした
+                if (audioItem.characterIndex === undefined)
+                  throw new Error("audioItem.characterIndex === undefined");
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
-                    styleId: audioItem.styleId,
+                    styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
                     accentPhrases.forEach((newAccentPhrase, i) => {
@@ -242,7 +244,7 @@ export const projectStore: VoiceVoxStoreOptions<
               return;
             }
           }
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
@@ -277,9 +279,20 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
+          let defaultPath: string;
+
+          if (!filePath) {
+            // if new project: use generated name
+            defaultPath = buildProjectFileName(context.state, "vvproj");
+          } else {
+            // if saveAs for existing project: use current project path
+            defaultPath = filePath;
+          }
+
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
             title: "プロジェクトファイルの保存",
+            defaultPath,
           });
           if (ret == undefined) {
             return;
@@ -361,6 +374,7 @@ const audioItemSchema = {
   optionalProperties: {
     styleId: { type: "int32" },
     query: audioQuerySchema,
+    presetKey: { type: "string" },
   },
 } as const;
 
