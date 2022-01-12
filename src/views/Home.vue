@@ -6,10 +6,19 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <div v-if="engineState === 'STARTING'" class="waiting-engine">
+        <div
+          v-if="!readyUserOperation || engineState === 'STARTING'"
+          class="waiting-engine"
+        >
           <div>
             <q-spinner color="primary" size="2.5rem" />
-            <div>エンジン起動中・・・</div>
+            <div class="q-mt-xs">
+              {{
+                engineState === "STARTING"
+                  ? "エンジン起動中・・・"
+                  : "データ準備中・・・"
+              }}
+            </div>
           </div>
         </div>
         <q-splitter
@@ -379,6 +388,7 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    // Electronのデフォルトのundo/redoを無効化
     const disableDefaultUndoRedo = (event: KeyboardEvent) => {
       // ctrl+z, ctrl+shift+z, ctrl+y
       if (
@@ -389,7 +399,8 @@ export default defineComponent({
       }
     };
 
-    // プロジェクトを初期化
+    // ソフトウェアを初期化
+    const readyUserOperation = ref(false);
     onMounted(async () => {
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
@@ -404,6 +415,7 @@ export default defineComponent({
         );
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
+
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -423,6 +435,8 @@ export default defineComponent({
         store.state.acceptRetrieveTelemetry === "Unconfirmed";
       const gtm = useGtm();
       gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
+
+      readyUserOperation.value = true;
     });
 
     // エンジン待機
@@ -524,6 +538,7 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
+      readyUserOperation,
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
