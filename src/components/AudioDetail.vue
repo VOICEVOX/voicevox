@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <div class="overflow-hidden-y accent-phrase-table" id="audio-detail">
+      <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -444,15 +444,13 @@ export default defineComponent({
       () => store.state.nowPlayingContinuously
     );
 
+    const audioDetail = ref<HTMLElement>();
     const scrollToActivePoint = () => {
-      const audioDetailElem = document.getElementById(
-        "audio-detail"
-      ) as HTMLElement;
       const firstElem = document.getElementById("accent-phrase-0");
       const elem = document.getElementById(
         `accent-phrase-${activePoint.value}`
       );
-      if (firstElem && elem) {
+      if (audioDetail.value && firstElem && elem) {
         // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
         // const scrollCount = Math.max(
         //   elem.offsetLeft -
@@ -463,16 +461,16 @@ export default defineComponent({
         // );
         // audioDetailElem.scroll(scrollCount, 0);
         const displayedPart =
-          audioDetailElem.scrollLeft + audioDetailElem.offsetWidth;
+          audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
         const nextAccentPhraseStart = elem.offsetLeft - firstElem.offsetLeft;
         const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
         // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
         if (
-          nextAccentPhraseEnd <= audioDetailElem.scrollLeft ||
+          nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
           displayedPart <= nextAccentPhraseStart
         ) {
           const scrollCount = elem.offsetLeft - firstElem.offsetLeft;
-          audioDetailElem.scroll(scrollCount, 0);
+          audioDetail.value.scroll(scrollCount, 0);
         }
       }
     };
@@ -720,6 +718,7 @@ export default defineComponent({
       getHoveredText,
       shiftKeyFlag,
       handleChangeVoicing,
+      audioDetail,
     };
   },
 });
