@@ -7,7 +7,7 @@
     <q-page-container>
       <q-page class="main-row-panes">
         <div
-          v-if="!readyUserOperation || engineState === 'STARTING'"
+          v-if="!isCompletedInitialStartup || engineState === 'STARTING'"
           class="waiting-engine"
         >
           <div>
@@ -400,7 +400,7 @@ export default defineComponent({
     };
 
     // ソフトウェアを初期化
-    const readyUserOperation = ref(false);
+    const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
@@ -436,7 +436,7 @@ export default defineComponent({
       const gtm = useGtm();
       gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
 
-      readyUserOperation.value = true;
+      isCompletedInitialStartup.value = true;
     });
 
     // エンジン待機
@@ -538,7 +538,7 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
-      readyUserOperation,
+      isCompletedInitialStartup,
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
