@@ -76,7 +76,7 @@ export default defineComponent({
       step: () => props.step,
       scrollStep: () => props.step * 10,
       scrollMinStep: () => props.step,
-      disableScroll: () => props.shiftKeyFlag,
+      disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
     });
 
     const valueLabel = reactive({
