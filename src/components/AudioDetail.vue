@@ -333,7 +333,18 @@ export default defineComponent({
       data: number,
       type: MoraDataType
     ) => {
-      if (altKeyFlag.value) {
+      if (altKeyFlag.value === false) {
+        if (type == "pitch") {
+          lastPitches.value[accentPhraseIndex][moraIndex] = data;
+        }
+        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+          audioKey: props.activeAudioKey,
+          accentPhraseIndex,
+          moraIndex,
+          data,
+          type,
+        });
+      } else {
         if (accentPhrases.value !== undefined) {
           const accentPhrase = accentPhrases.value[accentPhraseIndex];
           const targetMora = accentPhrase.moras[moraIndex];
@@ -399,17 +410,6 @@ export default defineComponent({
             }
           });
         }
-      } else {
-        if (type == "pitch") {
-          lastPitches.value[accentPhraseIndex][moraIndex] = data;
-        }
-        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-          audioKey: props.activeAudioKey,
-          accentPhraseIndex,
-          moraIndex,
-          data,
-          type,
-        });
       }
     };
 
