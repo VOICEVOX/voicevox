@@ -1,6 +1,6 @@
 <template>
   <q-page class="relative-absolute-wrapper scroller markdown-body">
-    <div class="q-pa-md markdown" v-html="Contact"></div>
+    <div class="q-pa-md markdown" v-html="howToUse"></div>
   </q-page>
 </template>
 
@@ -11,13 +11,13 @@ import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 export default defineComponent({
   setup() {
     const store = useStore();
-    const ContactInfo = ref("");
+    const howToUse = ref("");
     const md = useMarkdownIt();
     onMounted(async () => {
-      ContactInfo.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
+      howToUse.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
     });
     return {
-      ContactInfo,
+      howToUse,
     };
   },
 });
@@ -35,3 +35,4 @@ export default defineComponent({
   border: 1px solid #333;
 }
 </style>
+
