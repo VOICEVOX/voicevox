@@ -402,7 +402,7 @@ export default defineComponent({
       });
       // 音素長の調節を行った際には、AccentPhraseのwatchに引っかからないので、
       // ここでAccentPhraseOffsetsを更新する
-      if (type === "consonant" || type === "vowel") {
+      if (type === "consonant" || type === "vowel" || type === "pause") {
         updateAccentPhraseOffsets(
           store.state.audioItems[props.activeAudioKey].query?.accentPhrases
         );
