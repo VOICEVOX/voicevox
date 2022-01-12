@@ -340,8 +340,7 @@ export default defineComponent({
           length += m.consonantLength !== undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        length +=
-          phrase.pauseMora !== undefined ? phrase.pauseMora.vowelLength : 0;
+        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === newPhrases.length - 1) {
           length +=
