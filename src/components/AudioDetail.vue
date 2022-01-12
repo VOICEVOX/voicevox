@@ -333,7 +333,7 @@ export default defineComponent({
       data: number,
       type: MoraDataType
     ) => {
-      if (altKeyFlag.value === false) {
+      if (!altKeyFlag.value) {
         if (type == "pitch") {
           lastPitches.value[accentPhraseIndex][moraIndex] = data;
         }
