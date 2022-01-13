@@ -228,7 +228,7 @@ import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { AccentPhrase, Mora } from "@/openapi/models";
+import { Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
