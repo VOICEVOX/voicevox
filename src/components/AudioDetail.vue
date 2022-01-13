@@ -300,12 +300,36 @@ export default defineComponent({
 
     const startPoint = ref<number | null>(null);
     const activePoint = ref<number | null>(null);
-    let accentPhraseOffsets: number[] = [];
+    let accentPhraseOffsets = computed(() => {
+      if (accentPhrases.value === undefined) return [];
+
+      const offsetsBase: number[] = [];
+      let length = 0;
+      offsetsBase.push(length);
+      // pre phoneme lengthは最初のアクセント句の一部として扱う
+      length += query.value !== undefined ? query.value.prePhonemeLength : 0;
+      let i = 0;
+      for (const phrase of accentPhrases.value) {
+        phrase.moras.forEach((m) => {
+          length += m.consonantLength !== undefined ? m.consonantLength : 0;
+          length += m.vowelLength;
+        });
+        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        // post phoneme lengthは最後のアクセント句の一部として扱う
+        if (i === accentPhrases.value.length - 1) {
+          length +=
+            query.value !== undefined ? query.value.postPhonemeLength : 0;
+        }
+        offsetsBase.push(length);
+        i++;
+      }
+      return offsetsBase;
+    });
     watch(startPoint, (value) => {
       // startPointの時は、null合体代入によって0が代入され、最初のアクセント句が再生開始位置となる
       value ??= 0;
       store.dispatch("SET_AUDIO_PLAY_OFFSET", {
-        offset: accentPhraseOffsets[value],
+        offset: accentPhraseOffsets.value[value],
       });
     });
 
@@ -324,35 +348,8 @@ export default defineComponent({
       }
     };
 
-    const updateAccentPhraseOffsets = (
-      newPhrases: AccentPhrase[] | undefined
-    ) => {
-      accentPhraseOffsets = [];
-
-      if (newPhrases === undefined) return;
-
-      let length = 0;
-      accentPhraseOffsets.push(length);
-      // pre phoneme lengthは最初のアクセント句の一部として扱う
-      length += query.value !== undefined ? query.value.prePhonemeLength : 0;
-      newPhrases.forEach((phrase, i) => {
-        phrase.moras.forEach((m) => {
-          length += m.consonantLength !== undefined ? m.consonantLength : 0;
-          length += m.vowelLength;
-        });
-        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
-        // post phoneme lengthは最後のアクセント句の一部として扱う
-        if (i === newPhrases.length - 1) {
-          length +=
-            query.value !== undefined ? query.value.postPhonemeLength : 0;
-        }
-        accentPhraseOffsets.push(length);
-      });
-    };
-
     const lastPitches = ref<number[][]>([]);
     watch(accentPhrases, (newPhrases) => {
-      updateAccentPhraseOffsets(newPhrases);
       activePoint.value = null;
       startPoint.value = null;
       if (newPhrases) {
@@ -400,13 +397,6 @@ export default defineComponent({
         data,
         type,
       });
-      // 音素長の調節を行った際には、AccentPhraseのwatchに引っかからないので、
-      // ここでAccentPhraseOffsetsを更新する
-      if (type === "consonant" || type === "vowel" || type === "pause") {
-        updateAccentPhraseOffsets(
-          store.state.audioItems[props.activeAudioKey].query?.accentPhrases
-        );
-      }
     };
 
     // audio play
@@ -481,11 +471,11 @@ export default defineComponent({
       if (newState) {
         focusInterval = setInterval(() => {
           const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-          for (let i = 1; i < accentPhraseOffsets.length; i++) {
+          for (let i = 1; i < accentPhraseOffsets.value.length; i++) {
             if (
               currentTime !== undefined &&
-              accentPhraseOffsets[i - 1] < currentTime &&
-              currentTime < accentPhraseOffsets[i]
+              accentPhraseOffsets.value[i - 1] < currentTime &&
+              currentTime < accentPhraseOffsets.value[i]
             ) {
               activePoint.value = i - 1;
               scrollToActivePoint();
