@@ -349,67 +349,13 @@ export default defineComponent({
           throw Error("accentPhrases.value === undefined");
         }
         const accentPhrase = accentPhrases.value[accentPhraseIndex];
-        const targetMora = accentPhrase.moras[moraIndex];
-
-        let diffData = data;
-        switch (type) {
-          case "pitch":
-            diffData -= targetMora.pitch;
-            break;
-          case "consonant":
-            if (targetMora.consonantLength !== undefined) {
-              diffData -= targetMora.consonantLength;
-            }
-            break;
-          case "vowel":
-            diffData -= targetMora.vowelLength;
-            break;
-        }
-
-        accentPhrase.moras.forEach((mora, moraIndex) => {
-          switch (type) {
-            case "pitch":
-              if (mora.pitch > 0) {
-                const newData = Math.max(
-                  minPitch,
-                  Math.min(maxPitch, mora.pitch + diffData)
-                );
-                lastPitches.value[accentPhraseIndex][moraIndex] = newData;
-                store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-                  audioKey: props.activeAudioKey,
-                  accentPhraseIndex,
-                  moraIndex,
-                  data: newData,
-                  type,
-                });
-              }
-              break;
-            case "consonant":
-            case "vowel":
-              if (mora.consonantLength !== undefined) {
-                store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-                  audioKey: props.activeAudioKey,
-                  accentPhraseIndex,
-                  moraIndex,
-                  data: Math.max(
-                    minMoraLength,
-                    Math.min(maxMoraLength, mora.consonantLength + diffData)
-                  ),
-                  type: "consonant",
-                });
-              }
-              store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-                audioKey: props.activeAudioKey,
-                accentPhraseIndex,
-                moraIndex,
-                data: Math.max(
-                  minMoraLength,
-                  Math.min(maxMoraLength, mora.vowelLength + diffData)
-                ),
-                type: "vowel",
-              });
-              break;
-          }
+        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+          audioKey: props.activeAudioKey,
+          accentPhraseIndex,
+          accentPhrase,
+          moraIndex,
+          data,
+          type,
         });
       }
     };

@@ -442,6 +442,25 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE: {
+    mutation: {
+      audioKey: string;
+      accentPhraseIndex: number;
+      accentPhrase: AccentPhrase;
+      moraIndex: number;
+      data: number;
+      type: MoraDataType;
+    };
+    action(payload: {
+      audioKey: string;
+      accentPhraseIndex: number;
+      accentPhrase: AccentPhrase;
+      moraIndex: number;
+      data: number;
+      type: MoraDataType;
+    }): void;
+  };
+
   COMMAND_SET_AUDIO_SPEED_SCALE: {
     mutation: { audioKey: string; speedScale: number };
     action(payload: { audioKey: string; speedScale: number }): void;
