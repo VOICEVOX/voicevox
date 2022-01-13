@@ -133,6 +133,7 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
+  // audio elementの再生オフセット
   audioPlayOffset: 0,
   nowPlayingContinuously: false,
 };

@@ -298,7 +298,9 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
+    // 再生開始アクセント句
     const startPoint = ref<number | null>(null);
+    // アクティブ(再生されている状態)なアクセント句
     const activePoint = ref<number | null>(null);
     let accentPhraseOffsets = computed(() => {
       if (accentPhrases.value === undefined) return [];
@@ -469,6 +471,8 @@ export default defineComponent({
     let focusInterval: ReturnType<typeof setInterval> | undefined;
     watch(nowPlaying, (newState) => {
       if (newState) {
+        // 現在再生されているaudio elementの再生時刻を0.1秒毎に取得(監視)し、
+        // それに合わせてフォーカスするアクセント句を変えていく
         focusInterval = setInterval(() => {
           const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
           for (let i = 1; i < accentPhraseOffsets.value.length; i++) {
