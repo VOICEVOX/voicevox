@@ -436,15 +436,14 @@ export default defineComponent({
 
     const audioDetail = ref<HTMLElement>();
     const scrollToActivePoint = () => {
-      const firstElem = document.getElementById("accent-phrase-0");
       const elem = document.getElementById(
         `accent-phrase-${activePoint.value}`
       );
-      if (audioDetail.value && firstElem && elem) {
+      if (audioDetail.value && elem) {
         // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
         // const scrollCount = Math.max(
         //   elem.offsetLeft -
-        //     firstElem.offsetLeft +
+        //     audioDetail.value.offsetLeft +
         //     elem.offsetWidth / 2 -
         //     audioDetailElem.offsetWidth / 2,
         //   0
@@ -452,14 +451,15 @@ export default defineComponent({
         // audioDetailElem.scroll(scrollCount, 0);
         const displayedPart =
           audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
-        const nextAccentPhraseStart = elem.offsetLeft - firstElem.offsetLeft;
+        const nextAccentPhraseStart =
+          elem.offsetLeft - audioDetail.value.offsetLeft;
         const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
         // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
         if (
           nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
           displayedPart <= nextAccentPhraseStart
         ) {
-          const scrollCount = elem.offsetLeft - firstElem.offsetLeft;
+          const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
           audioDetail.value.scroll(scrollCount, 0);
         }
       }
