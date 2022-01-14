@@ -41,7 +41,7 @@
             uiLocked || 'mora-table-hover',
           ]"
           @click="setPlayAndStartPoint(accentPhraseIndex)"
-          :id="`accent-phrase-${accentPhraseIndex}`"
+          :ref="addAccentPhraseElem"
         >
           <template v-if="selectedDetail === 'accent'">
             <audio-accent
@@ -216,6 +216,7 @@
 import {
   computed,
   defineComponent,
+  onBeforeUpdate,
   onMounted,
   onUnmounted,
   reactive,
@@ -437,33 +438,40 @@ export default defineComponent({
     );
 
     const audioDetail = ref<HTMLElement>();
+    let accentPhraseElems: HTMLElement[] = [];
+    const addAccentPhraseElem = (elem: HTMLElement) => {
+      if (elem) {
+        accentPhraseElems.push(elem);
+      }
+    };
+    onBeforeUpdate(() => {
+      accentPhraseElems = [];
+    });
+
     const scrollToActivePoint = () => {
-      const elem = document.getElementById(
-        `accent-phrase-${activePoint.value}`
-      );
-      if (audioDetail.value && elem) {
-        // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
-        // const scrollCount = Math.max(
-        //   elem.offsetLeft -
-        //     audioDetail.value.offsetLeft +
-        //     elem.offsetWidth / 2 -
-        //     audioDetailElem.offsetWidth / 2,
-        //   0
-        // );
-        // audioDetailElem.scroll(scrollCount, 0);
-        const displayedPart =
-          audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
-        const nextAccentPhraseStart =
-          elem.offsetLeft - audioDetail.value.offsetLeft;
-        const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
-        // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
-        if (
-          nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
-          displayedPart <= nextAccentPhraseStart
-        ) {
-          const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
-          audioDetail.value.scroll(scrollCount, 0);
-        }
+      if (activePoint.value === null || !audioDetail.value) return;
+      const elem = accentPhraseElems[activePoint.value];
+      // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
+      // const scrollCount = Math.max(
+      //   elem.offsetLeft -
+      //     audioDetail.value.offsetLeft +
+      //     elem.offsetWidth / 2 -
+      //     audioDetailElem.offsetWidth / 2,
+      //   0
+      // );
+      // audioDetailElem.scroll(scrollCount, 0);
+      const displayedPart =
+        audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
+      const nextAccentPhraseStart =
+        elem.offsetLeft - audioDetail.value.offsetLeft;
+      const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
+      // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
+      if (
+        nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
+        displayedPart <= nextAccentPhraseStart
+      ) {
+        const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
+        audioDetail.value.scroll(scrollCount, 0);
       }
     };
 
@@ -704,6 +712,7 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      addAccentPhraseElem,
       pronunciationByPhrase,
       handleChangePronounce,
       handleHoverText,
