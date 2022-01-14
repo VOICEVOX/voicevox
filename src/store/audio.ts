@@ -1666,7 +1666,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: {
         audioKey: string;
         accentPhraseIndex: number;
-        accentPhrase: AccentPhrase;
         moraIndex: number;
         data: number;
         type: MoraDataType;
@@ -1971,7 +1970,6 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       payload: {
         audioKey: string;
         accentPhraseIndex: number;
-        accentPhrase: AccentPhrase;
         moraIndex: number;
         data: number;
         type: MoraDataType;
@@ -1981,14 +1979,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const minPitch = 3;
       const maxMoraLength = 0.3;
       const minMoraLength = 0;
-      const {
-        audioKey,
-        accentPhraseIndex,
-        accentPhrase,
-        moraIndex,
-        data,
-        type,
-      } = payload;
+      const { audioKey, accentPhraseIndex, moraIndex, data, type } = payload;
+      const audioItem = draft.audioItems[audioKey];
+      if (audioItem.query === undefined) {
+        throw Error("draft.audioItems[audioKey].query === undefined");
+      }
+      const accentPhrase = audioItem.query.accentPhrases[accentPhraseIndex];
       const targetMora = accentPhrase.moras[moraIndex];
 
       let diffData = data;
@@ -2034,7 +2030,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
                   minMoraLength,
                   Math.min(maxMoraLength, mora.consonantLength + diffData)
                 ),
-                type,
+                type: "consonant",
               });
             }
             audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {

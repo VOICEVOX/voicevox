@@ -348,11 +348,9 @@ export default defineComponent({
         if (accentPhrases.value === undefined) {
           throw Error("accentPhrases.value === undefined");
         }
-        const accentPhrase = accentPhrases.value[accentPhraseIndex];
         store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
           audioKey: props.activeAudioKey,
           accentPhraseIndex,
-          accentPhrase,
           moraIndex,
           data,
           type,

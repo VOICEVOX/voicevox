@@ -446,7 +446,6 @@ type AudioCommandStoreTypes = {
     mutation: {
       audioKey: string;
       accentPhraseIndex: number;
-      accentPhrase: AccentPhrase;
       moraIndex: number;
       data: number;
       type: MoraDataType;
@@ -454,7 +453,6 @@ type AudioCommandStoreTypes = {
     action(payload: {
       audioKey: string;
       accentPhraseIndex: number;
-      accentPhrase: AccentPhrase;
       moraIndex: number;
       data: number;
       type: MoraDataType;
