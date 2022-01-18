@@ -97,6 +97,11 @@ type IpcIHData = {
     return: boolean;
   };
 
+  ACTIVE_POINT_SCROLL_MODE: {
+    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
+    return: import("@/type/preload").ActivePointScrollMode;
+  };
+
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;

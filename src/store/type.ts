@@ -22,6 +22,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  ActivePointScrollMode,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -767,6 +768,7 @@ export type UiStoreState = {
   dialogLockCount: number;
   useGpu: boolean;
   inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -865,6 +867,15 @@ type UiStoreTypes = {
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
+  };
+
+  GET_ACTIVE_POINT_SCROLL_MODE: {
+    action(): void;
+  };
+
+  SET_ACTIVE_POINT_SCROLL_MODE: {
+    mutation: { activePointScrollMode: ActivePointScrollMode };
+    action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
   };
 
   DETECT_UNMAXIMIZED: {

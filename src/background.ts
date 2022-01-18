@@ -32,6 +32,7 @@ import {
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
+  ActivePointScrollMode,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -168,6 +169,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
   savingSetting: SavingSetting;
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
@@ -185,6 +187,11 @@ const store = new Store<{
     inheritAudioInfo: {
       type: "boolean",
       default: true,
+    },
+    activePointScrollMode: {
+      type: "string",
+      enum: ["CONTINUOUSLY", "PAGE", "OFF"],
+      default: "OFF",
     },
     savingSetting: {
       type: "object",
@@ -678,6 +685,14 @@ ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   }
 
   return store.get("inheritAudioInfo", false);
+});
+
+ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("activePointScrollMode", newValue);
+  }
+
+  return store.get("activePointScrollMode", "OFF");
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
