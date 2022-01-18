@@ -308,6 +308,7 @@ export default defineComponent({
     // アクティブ(再生されている状態)なアクセント句
     const activePoint = ref<number | null>(null);
     let accentPhraseOffsets = computed(() => {
+      console.log("conputing");
       if (query.value === undefined || accentPhrases.value === undefined)
         return [];
 
@@ -332,13 +333,17 @@ export default defineComponent({
       }
       return offsetsBase;
     });
-    watch(startPoint, (value) => {
-      // startPointの時は、null合体代入によって0が代入され、最初のアクセント句が再生開始位置となる
-      value ??= 0;
+
+    const setAudioPlayOffset = () => {
       store.dispatch("SET_AUDIO_PLAY_OFFSET", {
-        offset: accentPhraseOffsets.value[value],
+        // startPointの時は、null合体演算子によって0になり、最初のアクセント句が再生開始位置となる
+        offset: accentPhraseOffsets.value[startPoint.value ?? 0],
       });
-    });
+    };
+
+    // 再生開始位置・話速変更時に、play offsetを更新する
+    watch(startPoint, setAudioPlayOffset);
+    watch(() => query.value?.speedScale, setAudioPlayOffset);
 
     const setPlayAndStartPoint = (accentPhraseIndex: number) => {
       // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
@@ -396,6 +401,10 @@ export default defineComponent({
     ) => {
       if (type == "pitch") {
         lastPitches.value[accentPhraseIndex][moraIndex] = data;
+      }
+      // 母音・子音継続長、ポーズ継続長を更新時、play offsetを更新する
+      if (type === "consonant" || type === "vowel" || type === "pause") {
+        setAudioPlayOffset();
       }
       store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
         audioKey: props.activeAudioKey,
