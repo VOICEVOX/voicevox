@@ -30,6 +30,7 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useGpu: false,
         inheritAudioInfo: true,
+        activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
@@ -122,6 +123,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
+    assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
