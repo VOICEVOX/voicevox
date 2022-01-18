@@ -299,6 +299,10 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
+    const activePointScrollMode = computed(
+      () => store.state.activePointScrollMode
+    );
+
     // 再生開始アクセント句
     const startPoint = ref<number | null>(null);
     // アクティブ(再生されている状態)なアクセント句
@@ -451,27 +455,32 @@ export default defineComponent({
     const scrollToActivePoint = () => {
       if (activePoint.value === null || !audioDetail.value) return;
       const elem = accentPhraseElems[activePoint.value];
-      // TODO: 再生されているアクセント句を中央に持ってくる機能はオプショナルにする
-      // const scrollCount = Math.max(
-      //   elem.offsetLeft -
-      //     audioDetail.value.offsetLeft +
-      //     elem.offsetWidth / 2 -
-      //     audioDetailElem.offsetWidth / 2,
-      //   0
-      // );
-      // audioDetailElem.scroll(scrollCount, 0);
-      const displayedPart =
-        audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
-      const nextAccentPhraseStart =
-        elem.offsetLeft - audioDetail.value.offsetLeft;
-      const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
-      // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
-      if (
-        nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
-        displayedPart <= nextAccentPhraseStart
-      ) {
-        const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
+      if (activePointScrollMode.value === "CONTINUOUSLY") {
+        const scrollCount = Math.max(
+          elem.offsetLeft -
+            audioDetail.value.offsetLeft +
+            elem.offsetWidth / 2 -
+            audioDetail.value.offsetWidth / 2,
+          0
+        );
         audioDetail.value.scroll(scrollCount, 0);
+      } else if (activePointScrollMode.value === "PAGE") {
+        const displayedPart =
+          audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
+        const nextAccentPhraseStart =
+          elem.offsetLeft - audioDetail.value.offsetLeft;
+        const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
+        // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
+        if (
+          nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
+          displayedPart <= nextAccentPhraseStart
+        ) {
+          const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
+          audioDetail.value.scroll(scrollCount, 0);
+        }
+      } else {
+        // activePointScrollMode.value === "OFF"
+        return;
       }
     };
 
