@@ -479,7 +479,7 @@ export default defineComponent({
     let focusInterval: ReturnType<typeof setInterval> | undefined;
     watch(nowPlaying, (newState) => {
       if (newState) {
-        // 現在再生されているaudio elementの再生時刻を0.1秒毎に取得(監視)し、
+        // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
         // それに合わせてフォーカスするアクセント句を変えていく
         focusInterval = setInterval(() => {
           const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
@@ -493,7 +493,7 @@ export default defineComponent({
               scrollToActivePoint();
             }
           }
-        }, 100);
+        }, 10);
       } else if (focusInterval !== undefined) {
         clearInterval(focusInterval);
         focusInterval = undefined;
