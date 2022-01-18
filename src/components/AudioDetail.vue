@@ -304,13 +304,14 @@ export default defineComponent({
     // アクティブ(再生されている状態)なアクセント句
     const activePoint = ref<number | null>(null);
     let accentPhraseOffsets = computed(() => {
-      if (accentPhrases.value === undefined) return [];
+      if (query.value === undefined || accentPhrases.value === undefined)
+        return [];
 
       const offsetsBase: number[] = [];
       let length = 0;
       offsetsBase.push(length);
       // pre phoneme lengthは最初のアクセント句の一部として扱う
-      length += query.value !== undefined ? query.value.prePhonemeLength : 0;
+      length += query.value.prePhonemeLength;
       let i = 0;
       for (const phrase of accentPhrases.value) {
         phrase.moras.forEach((m) => {
@@ -320,10 +321,9 @@ export default defineComponent({
         length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.value.length - 1) {
-          length +=
-            query.value !== undefined ? query.value.postPhonemeLength : 0;
+          length += query.value.postPhonemeLength;
         }
-        offsetsBase.push(length);
+        offsetsBase.push(length / query.value.speedScale);
         i++;
       }
       return offsetsBase;
