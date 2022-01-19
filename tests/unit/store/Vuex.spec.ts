@@ -22,7 +22,7 @@ describe("store/vuex.js test", () => {
         audioItems: {},
         audioKeys: [],
         audioStates: {},
-        audioPlayOffset: 0,
+        audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
         nowPlayingContinuously: false,
@@ -114,7 +114,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.audioKeys);
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
-    assert.equal(store.state.audioPlayOffset, 0);
+    assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
