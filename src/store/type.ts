@@ -76,7 +76,7 @@ export type AudioStoreState = {
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
   _activeAudioKey?: string;
-  audioPlayOffset: number;
+  audioPlayStartPoint: number | null;
   nowPlayingContinuously: boolean;
 };
 
@@ -134,9 +134,9 @@ type AudioStoreTypes = {
     action(payload: { audioKey?: string }): void;
   };
 
-  SET_AUDIO_PLAY_OFFSET: {
-    mutation: { offset: number };
-    action(payload: { offset: number }): void;
+  SET_AUDIO_PLAY_START_POINT: {
+    mutation: { startPoint: number | null };
+    action(payload: { startPoint: number | null }): void;
   };
 
   SET_AUDIO_NOW_PLAYING: {
@@ -290,6 +290,10 @@ type AudioStoreTypes = {
 
   GENERATE_LAB: {
     action(payload: { audioKey: string; offset?: number }): string | undefined;
+  };
+
+  GET_AUDIO_PLAY_OFFSETS: {
+    action(payload: { audioKey: string }): number[];
   };
 
   GENERATE_AUDIO: {

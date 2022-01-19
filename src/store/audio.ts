@@ -134,7 +134,7 @@ export const audioStoreState: AudioStoreState = {
   audioKeys: [],
   audioStates: {},
   // audio elementの再生オフセット
-  audioPlayOffset: 0,
+  audioPlayStartPoint: 0,
   nowPlayingContinuously: false,
 };
 
@@ -179,8 +179,11 @@ export const audioStore: VoiceVoxStoreOptions<
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
     },
-    SET_AUDIO_PLAY_OFFSET(state, { offset }: { offset: number }) {
-      state.audioPlayOffset = offset;
+    SET_AUDIO_PLAY_START_POINT(
+      state,
+      { startPoint }: { startPoint: number | null }
+    ) {
+      state.audioPlayStartPoint = startPoint;
     },
     SET_AUDIO_NOW_PLAYING(
       state,
@@ -631,11 +634,14 @@ export const audioStore: VoiceVoxStoreOptions<
       { audioKey }: { audioKey?: string }
     ) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
-      // reset audio play offset
-      dispatch("SET_AUDIO_PLAY_OFFSET", { offset: 0 });
+      // reset audio play start point
+      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: null });
     },
-    SET_AUDIO_PLAY_OFFSET({ commit }, { offset }: { offset: number }) {
-      commit("SET_AUDIO_PLAY_OFFSET", { offset });
+    SET_AUDIO_PLAY_START_POINT(
+      { commit },
+      { startPoint }: { startPoint: number | null }
+    ) {
+      commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
     async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
@@ -811,6 +817,32 @@ export const audioStore: VoiceVoxStoreOptions<
         return labString;
       }
     ),
+    GET_AUDIO_PLAY_OFFSETS({ state }, { audioKey }: { audioKey: string }) {
+      const query = state.audioItems[audioKey].query;
+      const accentPhrases = query?.accentPhrases;
+      if (query === undefined || accentPhrases === undefined) return [];
+
+      const offsets: number[] = [];
+      let length = 0;
+      offsets.push(length);
+      // pre phoneme lengthは最初のアクセント句の一部として扱う
+      length += query.prePhonemeLength;
+      let i = 0;
+      for (const phrase of accentPhrases) {
+        phrase.moras.forEach((m) => {
+          length += m.consonantLength !== undefined ? m.consonantLength : 0;
+          length += m.vowelLength;
+        });
+        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        // post phoneme lengthは最後のアクセント句の一部として扱う
+        if (i === accentPhrases.length - 1) {
+          length += query.postPhonemeLength;
+        }
+        offsets.push(length / query.speedScale);
+        i++;
+      }
+      return offsets;
+    },
     CONNECT_AUDIO: createUILockAction(
       async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
@@ -1183,7 +1215,10 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
         audioElem.src = URL.createObjectURL(blob);
-        audioElem.currentTime = state.audioPlayOffset;
+        audioElem.currentTime =
+          (await dispatch("GET_AUDIO_PLAY_OFFSETS", { audioKey }))[
+            state.audioPlayStartPoint ?? 0
+          ] ?? 0;
 
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
@@ -1230,7 +1265,7 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
-        const currentAudioPlayOffset = state.audioPlayOffset;
+        const currentAudioPlayStartPoint = state.audioPlayStartPoint;
 
         let index = 0;
         if (currentAudioKey !== undefined) {
@@ -1249,7 +1284,9 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         } finally {
           commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
-          commit("SET_AUDIO_PLAY_OFFSET", { offset: currentAudioPlayOffset });
+          commit("SET_AUDIO_PLAY_START_POINT", {
+            startPoint: currentAudioPlayStartPoint,
+          });
           commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
         }
       }

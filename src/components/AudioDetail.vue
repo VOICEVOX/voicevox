@@ -304,46 +304,16 @@ export default defineComponent({
     );
 
     // 再生開始アクセント句
-    const startPoint = ref<number | null>(null);
+    const startPoint = computed({
+      get: () => {
+        return store.state.audioPlayStartPoint;
+      },
+      set: (startPoint) => {
+        store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
+      },
+    });
     // アクティブ(再生されている状態)なアクセント句
     const activePoint = ref<number | null>(null);
-    let accentPhraseOffsets = computed(() => {
-      console.log("conputing");
-      if (query.value === undefined || accentPhrases.value === undefined)
-        return [];
-
-      const offsetsBase: number[] = [];
-      let length = 0;
-      offsetsBase.push(length);
-      // pre phoneme lengthは最初のアクセント句の一部として扱う
-      length += query.value.prePhonemeLength;
-      let i = 0;
-      for (const phrase of accentPhrases.value) {
-        phrase.moras.forEach((m) => {
-          length += m.consonantLength !== undefined ? m.consonantLength : 0;
-          length += m.vowelLength;
-        });
-        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
-        // post phoneme lengthは最後のアクセント句の一部として扱う
-        if (i === accentPhrases.value.length - 1) {
-          length += query.value.postPhonemeLength;
-        }
-        offsetsBase.push(length / query.value.speedScale);
-        i++;
-      }
-      return offsetsBase;
-    });
-
-    const setAudioPlayOffset = () => {
-      store.dispatch("SET_AUDIO_PLAY_OFFSET", {
-        // startPointの時は、null合体演算子によって0になり、最初のアクセント句が再生開始位置となる
-        offset: accentPhraseOffsets.value[startPoint.value ?? 0],
-      });
-    };
-
-    // 再生開始位置・話速変更時に、play offsetを更新する
-    watch(startPoint, setAudioPlayOffset);
-    watch(() => query.value?.speedScale, setAudioPlayOffset);
 
     const setPlayAndStartPoint = (accentPhraseIndex: number) => {
       // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
@@ -362,8 +332,12 @@ export default defineComponent({
 
     const lastPitches = ref<number[][]>([]);
     watch(accentPhrases, (newPhrases) => {
-      activePoint.value = null;
-      startPoint.value = null;
+      activePoint.value = startPoint.value;
+      // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
+      // DOMの描画が少し遅いので、Timeoutを挟まないとスクロールに失敗する
+      setTimeout(() => {
+        scrollToActivePoint();
+      }, 100);
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
@@ -426,10 +400,6 @@ export default defineComponent({
           type,
         });
       }
-      // 母音・子音継続長、ポーズ継続長を更新時、play offsetを更新する
-      if (type === "consonant" || type === "vowel" || type === "pause") {
-        setAudioPlayOffset();
-      }
     };
 
     // audio play
@@ -481,6 +451,8 @@ export default defineComponent({
     const scrollToActivePoint = () => {
       if (activePoint.value === null || !audioDetail.value) return;
       const elem = accentPhraseElems[activePoint.value];
+      if (elem === undefined) return;
+
       if (activePointScrollMode.value === "CONTINUOUSLY") {
         const scrollCount = Math.max(
           elem.offsetLeft -
@@ -512,17 +484,23 @@ export default defineComponent({
 
     // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
     let focusInterval: ReturnType<typeof setInterval> | undefined;
-    watch(nowPlaying, (newState) => {
+    watch(nowPlaying, async (newState) => {
       if (newState) {
+        const accentPhraseOffsets = await store.dispatch(
+          "GET_AUDIO_PLAY_OFFSETS",
+          {
+            audioKey: props.activeAudioKey,
+          }
+        );
         // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
         // それに合わせてフォーカスするアクセント句を変えていく
         focusInterval = setInterval(() => {
           const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-          for (let i = 1; i < accentPhraseOffsets.value.length; i++) {
+          for (let i = 1; i < accentPhraseOffsets.length; i++) {
             if (
               currentTime !== undefined &&
-              accentPhraseOffsets.value[i - 1] < currentTime &&
-              currentTime < accentPhraseOffsets.value[i]
+              accentPhraseOffsets[i - 1] < currentTime &&
+              currentTime < accentPhraseOffsets[i]
             ) {
               activePoint.value = i - 1;
               scrollToActivePoint();
