@@ -873,12 +873,12 @@ $pitch-label-height: 24px;
 
     .mora-table-hover:hover {
       cursor: pointer;
-      background-color: rgba(colors.$accent-phrase-focus-rgb, 0.3);
+      background-color: rgba(colors.$active-point-focus-rgb, 0.5);
     }
 
     .mora-table-focus {
       // hover色に負けるので、importantが必要
-      background-color: colors.$accent-phrase-focus !important;
+      background-color: colors.$active-point-focus !important;
     }
   }
 }
