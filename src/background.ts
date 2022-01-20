@@ -167,6 +167,14 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
+const defaultToolbarButtonSetting: ToolbarSetting = [
+  "PLAY_CONTINUOUSLY",
+  "STOP",
+  "EMPTY",
+  "UNDO",
+  "REDO",
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
@@ -238,7 +246,7 @@ const store = new Store<{
       items: {
         type: "string",
       },
-      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
+      default: defaultToolbarButtonSetting,
     },
     defaultStyleIds: {
       type: "array",
@@ -867,6 +875,10 @@ ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
 
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
+});
+
+ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+  return defaultToolbarButtonSetting;
 });
 
 ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {

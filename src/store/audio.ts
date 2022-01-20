@@ -1691,6 +1691,18 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
     },
+    COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE(
+      { commit },
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        data: number;
+        type: MoraDataType;
+      }
+    ) {
+      commit("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", payload);
+    },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       { commit },
       payload: { audioKey: string; speedScale: number }
@@ -1982,6 +1994,88 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);
+    },
+    COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE(
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        data: number;
+        type: MoraDataType;
+      }
+    ) {
+      const maxPitch = 6.5;
+      const minPitch = 3;
+      const maxMoraLength = 0.3;
+      const minMoraLength = 0;
+      const { audioKey, accentPhraseIndex, moraIndex, data, type } = payload;
+      const audioItem = draft.audioItems[audioKey];
+      if (audioItem.query === undefined) {
+        throw Error("draft.audioItems[audioKey].query === undefined");
+      }
+      const accentPhrase = audioItem.query.accentPhrases[accentPhraseIndex];
+      const targetMora = accentPhrase.moras[moraIndex];
+
+      let diffData = data;
+      switch (type) {
+        case "pitch":
+          diffData -= targetMora.pitch;
+          break;
+        case "consonant":
+          if (targetMora.consonantLength !== undefined) {
+            diffData -= targetMora.consonantLength;
+          }
+          break;
+        case "vowel":
+          diffData -= targetMora.vowelLength;
+          break;
+      }
+
+      accentPhrase.moras.forEach((mora, moraIndex) => {
+        switch (type) {
+          case "pitch":
+            if (mora.pitch > 0) {
+              const newData = Math.max(
+                minPitch,
+                Math.min(maxPitch, mora.pitch + diffData)
+              );
+              audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+                audioKey,
+                accentPhraseIndex,
+                moraIndex,
+                data: newData,
+                type,
+              });
+            }
+            break;
+          case "consonant":
+          case "vowel":
+            if (mora.consonantLength !== undefined) {
+              audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+                audioKey,
+                accentPhraseIndex,
+                moraIndex,
+                data: Math.max(
+                  minMoraLength,
+                  Math.min(maxMoraLength, mora.consonantLength + diffData)
+                ),
+                type: "consonant",
+              });
+            }
+            audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+              audioKey,
+              accentPhraseIndex,
+              moraIndex,
+              data: Math.max(
+                minMoraLength,
+                Math.min(maxMoraLength, mora.vowelLength + diffData)
+              ),
+              type: "vowel",
+            });
+            break;
+        }
+      });
     },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       draft,

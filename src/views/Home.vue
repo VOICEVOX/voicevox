@@ -6,10 +6,19 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <div v-if="engineState === 'STARTING'" class="waiting-engine">
+        <div
+          v-if="!isCompletedInitialStartup || engineState === 'STARTING'"
+          class="waiting-engine"
+        >
           <div>
             <q-spinner color="primary" size="2.5rem" />
-            <div>エンジン起動中・・・</div>
+            <div class="q-mt-xs">
+              {{
+                engineState === "STARTING"
+                  ? "エンジン起動中・・・"
+                  : "データ準備中・・・"
+              }}
+            </div>
           </div>
         </div>
         <q-splitter
@@ -125,6 +134,7 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
+  <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
@@ -154,6 +164,7 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
+import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
@@ -177,6 +188,7 @@ export default defineComponent({
     HelpDialog,
     SettingDialog,
     HotkeySettingDialog,
+    HeaderBarCustomDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
     AcceptRetrieveTelemetryDialog,
@@ -376,6 +388,7 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    // Electronのデフォルトのundo/redoを無効化
     const disableDefaultUndoRedo = (event: KeyboardEvent) => {
       // ctrl+z, ctrl+shift+z, ctrl+y
       if (
@@ -386,7 +399,8 @@ export default defineComponent({
       }
     };
 
-    // プロジェクトを初期化
+    // ソフトウェアを初期化
+    const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
       // 起動時、エンジンの設定はbackground側にのみあって、UI側にはない
       // Appコンポーネントでbackgroundから設定を取得すると、取得完了前にHomeコンポーネントがマウントされてしまう
@@ -406,6 +420,7 @@ export default defineComponent({
         );
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
+
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -425,6 +440,8 @@ export default defineComponent({
         store.state.acceptRetrieveTelemetry === "Unconfirmed";
       const gtm = useGtm();
       gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
+
+      isCompletedInitialStartup.value = true;
     });
 
     // エンジン待機
@@ -450,6 +467,15 @@ export default defineComponent({
       set: (val) =>
         store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
           isHotkeySettingDialogOpen: val,
+        }),
+    });
+
+    // ツールバーのカスタム設定
+    const isToolbarSettingDialogOpenComputed = computed({
+      get: () => store.state.isToolbarSettingDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+          isToolbarSettingDialogOpen: val,
         }),
     });
 
@@ -517,10 +543,12 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
+      isCompletedInitialStartup,
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
+      isToolbarSettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
