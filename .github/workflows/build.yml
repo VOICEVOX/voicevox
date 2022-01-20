@@ -12,7 +12,7 @@ on:
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.10.preview.10
-  VOICEVOX_RESOURCE_VERSION: 0.10.preview.2
+  VOICEVOX_RESOURCE_VERSION: 0.10.preview.3
 
 jobs:
   build-noengine-prepackage:
@@ -203,7 +203,7 @@ jobs:
             popd
           done
 
-      - name: Create and replace README.txt and policy.md
+      - name: Create and replace software resources
         shell: bash
         run: |
           rm build/README.txt
@@ -215,6 +215,8 @@ jobs:
           } \
           > build/README.txt
           cp build/README.txt public/policy.md
+
+          cp resource/editor/PRIVACYPOLICY.md public/privacyPolicy.md
 
       - name: Generate public/licenses.json
         shell: bash

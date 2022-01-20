@@ -431,7 +431,7 @@ const updateInfos = JSON.parse(
 );
 
 const privacyPolicyText = fs.readFileSync(
-  path.join(__static, "privacy_policy.md"),
+  path.join(__static, "privacyPolicy.md"),
   "utf-8"
 );
 

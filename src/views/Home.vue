@@ -407,6 +407,16 @@ export default defineComponent({
       // エンジンの起動を待機する前に、エンジンの設定をbackgroundから取得済みなことを保証する
       await store.dispatch("INIT_VUEX");
 
+      // Google Tag Manager
+      const gtm = useGtm();
+      watch(
+        () => store.state.acceptRetrieveTelemetry,
+        (acceptRetrieveTelemetry) => {
+          gtm?.enable(acceptRetrieveTelemetry === "Accepted");
+        },
+        { immediate: true }
+      );
+
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
@@ -438,8 +448,6 @@ export default defineComponent({
 
       isAcceptRetrieveTelemetryDialogOpenComputed.value =
         store.state.acceptRetrieveTelemetry === "Unconfirmed";
-      const gtm = useGtm();
-      gtm?.enable(store.state.acceptRetrieveTelemetry === "Accepted");
 
       isCompletedInitialStartup.value = true;
     });

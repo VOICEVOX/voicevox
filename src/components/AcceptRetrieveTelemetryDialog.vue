@@ -12,7 +12,7 @@
         <q-toolbar>
           <div class="column">
             <q-toolbar-title class="text-display"
-              >テレメトリーの収集</q-toolbar-title
+              >使いやすさ向上のためのお願い</q-toolbar-title
             >
           </div>
 
@@ -24,7 +24,7 @@
               label="拒否"
               color="background-light"
               text-color="display-dark"
-              class="text-no-wrap q-mr-md"
+              class="text-no-wrap q-mr-md text-bold"
               @click="handler(false)"
             />
 
@@ -33,7 +33,7 @@
               label="許可"
               color="background-light"
               text-color="display-dark"
-              class="text-no-wrap"
+              class="text-no-wrap text-bold"
               @click="handler(true)"
             />
           </div>
@@ -42,10 +42,13 @@
 
       <q-page-container>
         <q-page>
-          <div class="text-body1 q-mb-lg">
-            VOICEVOXでは、利便性の向上のため、ウインドウサイズや各UIの利用率などの情報をGoogle
-            Analyticsを用いて収集、分析に使用します。
-          </div>
+          <p class="text-body1 q-mb-lg">
+            VOICEVOXはより使いやすいソフトウェアを目指して開発されています。<br />
+            ボタンの配置換えなどの方針を決める際は、各UIの利用率などの情報が重要になります。<br />
+            もしよろしければ、ソフトウェアの利用状況のデータ収集にご協力お願いします。<br />
+            <br />
+            （入力されたテキストデータや音声データの情報は収集しておりませんのでご安心ください。）
+          </p>
           <q-card flat bordered>
             <q-card-section>
               <div class="text-h5">プライバシーポリシー</div>
@@ -64,7 +67,6 @@
 <script lang="ts">
 import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
-import { useGtm } from "@gtm-support/vue-gtm";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 export default defineComponent({
@@ -85,14 +87,12 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const gtm = useGtm();
     const handler = (acceptRetrieveTelemetry: boolean) => {
       store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: acceptRetrieveTelemetry
           ? "Accepted"
           : "Refused",
       });
-      gtm?.enable(acceptRetrieveTelemetry);
 
       modelValueComputed.value = false;
     };
