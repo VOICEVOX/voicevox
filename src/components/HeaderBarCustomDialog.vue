@@ -73,7 +73,7 @@
                 >
               </template>
             </q-toolbar>
-            <q-card-actions>
+            <q-card-actions class="no-wrap text-no-wrap">
               <div v-if="selectedButton !== undefined" class="text-h5">
                 「{{ getToolbarButtonName(selectedButton) }}」を選択中
               </div>
