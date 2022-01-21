@@ -449,10 +449,13 @@ export default defineComponent({
     });
 
     const scrollToActivePoint = () => {
-      if (activePoint.value === undefined || !audioDetail.value) return;
+      if (
+        activePoint.value === undefined ||
+        !audioDetail.value ||
+        accentPhraseElems.length === 0
+      )
+        return;
       const elem = accentPhraseElems[activePoint.value];
-      // accent phraseが一つもない場合に再生されるとundefinedになるので、returnしている
-      if (elem === undefined) return;
 
       if (activePointScrollMode.value === "CONTINUOUSLY") {
         const scrollCount = Math.max(
