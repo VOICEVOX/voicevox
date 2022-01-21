@@ -73,7 +73,7 @@
                 >
               </template>
             </q-toolbar>
-            <q-card-actions>
+            <q-card-actions class="no-wrap text-no-wrap">
               <div v-if="selectedButton !== undefined" class="text-h5">
                 「{{ getToolbarButtonName(selectedButton) }}」を選択中
               </div>
@@ -177,8 +177,16 @@ export default defineComponent({
       PLAY_CONTINUOUSLY:
         "選択されているテキスト以降のすべてのテキストを読み上げます。",
       STOP: "テキストが読み上げられているときに、それを止めます。",
+      SAVE_ONE:
+        "選択されているテキストの読み上げを音声ファイルに書き出します。",
+      SAVE_ALL:
+        "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
+      SAVE_CONNECT_ALL:
+        "入力されているすべてのテキストの読み上げを一つの音声ファイルに繋げて書き出します。",
+      SAVE_PROJECT: "プロジェクトを上書き保存します。",
       UNDO: "操作を一つ戻します。",
       REDO: "元に戻した操作をやり直します。",
+      IMPORT_TEXT: "テキストファイル(.txt)を読み込みます。",
       EMPTY:
         "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
     };
