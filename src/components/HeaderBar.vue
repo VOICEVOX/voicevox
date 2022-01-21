@@ -169,7 +169,7 @@ export default defineComponent({
       },
       SAVE_ONE: {
         click: generateAndSaveOneAudio,
-        disable: computed(() => !activeAudioKey.value),
+        disable: computed(() => !activeAudioKey.value || uiLocked.value),
       },
       SAVE_ALL: {
         click: generateAndSaveAllAudio,
