@@ -415,10 +415,10 @@
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">テレメトリー</div>
+                <div class="text-h5">データ収集</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>テレメトリーの収集を許可する</div>
+                <div>ソフトウェア利用状況のデータ収集を許可する</div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -432,7 +432,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    VOICEVOXの改善のため、ウインドウサイズや各UIの利用率などの収集を許可します
+                    各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -453,7 +453,6 @@ import {
   ExperimentalSetting,
   ActivePointScrollMode,
 } from "@/type/preload";
-import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -569,7 +568,6 @@ export default defineComponent({
     );
     updateAudioOutputDevices();
 
-    const gtm = useGtm();
     const acceptRetrieveTelemetryComputed = computed({
       get: () => store.state.acceptRetrieveTelemetry == "Accepted",
       set: (acceptRetrieveTelemetry: boolean) => {
@@ -578,16 +576,15 @@ export default defineComponent({
             ? "Accepted"
             : "Refused",
         });
-        gtm?.enable(acceptRetrieveTelemetry);
 
         if (acceptRetrieveTelemetry) {
           return;
         }
 
         $q.dialog({
-          title: "テレメトリーの収集の無効化",
+          title: "ソフトウェア利用状況のデータ収集の無効化",
           message:
-            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+            "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
           ok: {
             flat: true,
             textColor: "display",
