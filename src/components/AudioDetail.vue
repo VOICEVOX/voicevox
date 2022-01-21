@@ -216,6 +216,7 @@
 import {
   computed,
   defineComponent,
+  nextTick,
   onBeforeUpdate,
   onMounted,
   onUnmounted,
@@ -331,13 +332,12 @@ export default defineComponent({
     };
 
     const lastPitches = ref<number[][]>([]);
-    watch(accentPhrases, (newPhrases) => {
+    watch(accentPhrases, async (newPhrases) => {
       activePoint.value = startPoint.value;
       // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
-      // DOMの描画が少し遅いので、Timeoutを挟まないとスクロールに失敗する
-      setTimeout(() => {
-        scrollToActivePoint();
-      }, 100);
+      // DOMの描画が少し遅いので、nextTickをはさむ
+      await nextTick();
+      scrollToActivePoint();
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
