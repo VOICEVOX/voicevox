@@ -817,7 +817,8 @@ export const audioStore: VoiceVoxStoreOptions<
     GET_AUDIO_PLAY_OFFSETS({ state }, { audioKey }: { audioKey: string }) {
       const query = state.audioItems[audioKey].query;
       const accentPhrases = query?.accentPhrases;
-      if (query === undefined || accentPhrases === undefined) return [];
+      if (query === undefined || accentPhrases === undefined)
+        throw Error("query === undefined or accentPhrases === undefined");
 
       const offsets: number[] = [];
       let length = 0;
