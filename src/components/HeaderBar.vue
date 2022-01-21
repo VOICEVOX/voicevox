@@ -51,6 +51,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     SAVE_ONE: "一つだけ書き出し",
     SAVE_ALL: "音声書き出し",
     SAVE_CONNECT_ALL: "音声を繋げて書き出し",
+    SAVE_PROJECT: "プロジェクト保存",
     UNDO: "元に戻す",
     REDO: "やり直す",
     IMPORT_TEXT: "テキスト読み込み",
@@ -160,6 +161,9 @@ export default defineComponent({
         encoding: store.state.savingSetting.fileEncoding,
       });
     };
+    const saveProject = async () => {
+      await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    };
     const importTextFile = () => {
       store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
     };
@@ -186,6 +190,10 @@ export default defineComponent({
       },
       SAVE_CONNECT_ALL: {
         click: generateAndConnectAndSaveAudio,
+        disable: uiLocked,
+      },
+      SAVE_PROJECT: {
+        click: saveProject,
         disable: uiLocked,
       },
       UNDO: {
