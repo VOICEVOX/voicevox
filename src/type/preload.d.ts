@@ -190,6 +190,7 @@ export type ToolbarButtonTagType =
   | "STOP"
   | "SAVE_ONE"
   | "SAVE_ALL"
+  | "SAVE_CONNECT_ALL"
   | "UNDO"
   | "REDO"
   | "IMPORT_TEXT"

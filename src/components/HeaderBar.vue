@@ -29,6 +29,7 @@ import {
   ToolbarButtonTagType,
 } from "@/type/preload";
 import {
+  generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
@@ -49,6 +50,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     STOP: "停止",
     SAVE_ONE: "一つだけ書き出し",
     SAVE_ALL: "音声書き出し",
+    SAVE_CONNECT_ALL: "音声を繋げて書き出し",
     UNDO: "元に戻す",
     REDO: "やり直す",
     IMPORT_TEXT: "テキスト読み込み",
@@ -151,6 +153,13 @@ export default defineComponent({
         encoding: store.state.savingSetting.fileEncoding,
       });
     };
+    const generateAndConnectAndSaveAudio = async () => {
+      await generateAndConnectAndSaveAudioWithDialog({
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
     const importTextFile = () => {
       store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
     };
@@ -173,6 +182,10 @@ export default defineComponent({
       },
       SAVE_ALL: {
         click: generateAndSaveAllAudio,
+        disable: uiLocked,
+      },
+      SAVE_CONNECT_ALL: {
+        click: generateAndConnectAndSaveAudio,
         disable: uiLocked,
       },
       UNDO: {
