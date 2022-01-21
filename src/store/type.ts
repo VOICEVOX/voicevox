@@ -76,7 +76,7 @@ export type AudioStoreState = {
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
   _activeAudioKey?: string;
-  audioPlayStartPoint: number | null;
+  audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
@@ -135,8 +135,8 @@ type AudioStoreTypes = {
   };
 
   SET_AUDIO_PLAY_START_POINT: {
-    mutation: { startPoint: number | null };
-    action(payload: { startPoint: number | null }): void;
+    mutation: { startPoint?: number };
+    action(payload: { startPoint?: number }): void;
   };
 
   SET_AUDIO_NOW_PLAYING: {

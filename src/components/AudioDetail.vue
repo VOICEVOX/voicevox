@@ -314,7 +314,7 @@ export default defineComponent({
       },
     });
     // アクティブ(再生されている状態)なアクセント句
-    const activePoint = ref<number | null>(null);
+    const activePoint = ref<number | undefined>(undefined);
 
     const setPlayAndStartPoint = (accentPhraseIndex: number) => {
       // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
@@ -326,8 +326,8 @@ export default defineComponent({
         startPoint.value = accentPhraseIndex;
       } else {
         // 選択解除で最初から再生できるようにする
-        activePoint.value = null;
-        startPoint.value = null;
+        activePoint.value = undefined;
+        startPoint.value = undefined;
       }
     };
 
@@ -449,7 +449,7 @@ export default defineComponent({
     });
 
     const scrollToActivePoint = () => {
-      if (activePoint.value === null || !audioDetail.value) return;
+      if (activePoint.value === undefined || !audioDetail.value) return;
       const elem = accentPhraseElems[activePoint.value];
       if (elem === undefined) return;
 
@@ -510,10 +510,11 @@ export default defineComponent({
       } else if (focusInterval !== undefined) {
         clearInterval(focusInterval);
         focusInterval = undefined;
-        // startPointがnullの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(nullに)する
+        // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
         activePoint.value = startPoint.value ?? 0;
         scrollToActivePoint();
-        if (startPoint.value === null) activePoint.value = startPoint.value;
+        if (startPoint.value === undefined)
+          activePoint.value = startPoint.value;
       }
     });
 

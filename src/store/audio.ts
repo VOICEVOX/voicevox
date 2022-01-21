@@ -134,7 +134,7 @@ export const audioStoreState: AudioStoreState = {
   audioKeys: [],
   audioStates: {},
   // audio elementの再生オフセット
-  audioPlayStartPoint: 0,
+  audioPlayStartPoint: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -179,10 +179,7 @@ export const audioStore: VoiceVoxStoreOptions<
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
     },
-    SET_AUDIO_PLAY_START_POINT(
-      state,
-      { startPoint }: { startPoint: number | null }
-    ) {
+    SET_AUDIO_PLAY_START_POINT(state, { startPoint }: { startPoint?: number }) {
       state.audioPlayStartPoint = startPoint;
     },
     SET_AUDIO_NOW_PLAYING(
@@ -635,11 +632,11 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
       // reset audio play start point
-      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: null });
+      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
     },
     SET_AUDIO_PLAY_START_POINT(
       { commit },
-      { startPoint }: { startPoint: number | null }
+      { startPoint }: { startPoint?: number }
     ) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
