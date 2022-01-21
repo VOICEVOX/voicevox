@@ -1213,10 +1213,16 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
         audioElem.src = URL.createObjectURL(blob);
-        audioElem.currentTime =
-          (await dispatch("GET_AUDIO_PLAY_OFFSETS", { audioKey }))[
-            state.audioPlayStartPoint ?? 0
-          ] ?? 0;
+        const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+          audioKey,
+        });
+        if (accentPhraseOffsets.length === 0) {
+          audioElem.currentTime = 0;
+        } else {
+          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          if (startTime === undefined) throw Error("startTime === undefined");
+          audioElem.currentTime = startTime;
+        }
 
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
