@@ -460,8 +460,7 @@ export const audioStore: VoiceVoxStoreOptions<
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
             // TODO: engineがundefinedの場合にログ出力されないためオプショナルチェーンにしている。複数エンジン対応が終わったら解除
-            // TODO: URLには認証情報が載ることがある。将来的にはURLをそのままログ出力しないようにする
-            window.electron.logInfo(`Waiting engine ${engine?.host}`);
+            window.electron.logInfo(`Waiting engine ${engine?.key}`);
             continue;
           }
           engineState = "READY";
