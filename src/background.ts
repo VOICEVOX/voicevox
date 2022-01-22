@@ -373,6 +373,50 @@ async function runEngine() {
   });
 }
 
+function killEngine({
+  onKillStart,
+  onKilled,
+  onError,
+}: {
+  onKillStart?: VoidFunction;
+  onKilled?: VoidFunction;
+  onError?: (error: unknown) => void;
+}) {
+  if (engineProcess == undefined) {
+    // nop if no process started (already killed or not started yet)
+    log.info(`ENGINE process not started`);
+    onKilled?.();
+    return;
+  }
+
+  // considering the case that ENGINE process killed after checking process status
+  engineProcess.once("close", () => {
+    log.info("ENGINE process closed");
+    onKilled?.();
+  });
+
+  log.info(
+    `ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+  );
+
+  const engineNotExited = engineProcess.exitCode === null;
+  const engineNotKilled = engineProcess.signalCode === null;
+
+  if (engineNotExited && engineNotKilled) {
+    log.info(`Killing ENGINE process (PID=${engineProcess.pid})...`);
+    onKillStart?.();
+
+    willQuitEngine = true;
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error: unknown) {
+      onError?.(error);
+    }
+  } else {
+    log.info("ENGINE process already closed");
+  }
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -893,32 +937,20 @@ app.on("before-quit", (event) => {
     return;
   }
 
-  // considering the case that ENGINE process killed after checking process status
-  engineProcess.once("close", () => {
-    log.info("ENGINE killed. Quitting app");
-    app.quit(); // attempt to quit app again
-  });
-
-  log.info(
-    `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
-  );
-
-  const engineNotExited = engineProcess.exitCode === null;
-  const engineNotKilled = engineProcess.signalCode === null;
-
-  if (engineNotExited && engineNotKilled) {
-    log.info("Killing ENGINE before app quit");
-    event.preventDefault();
-
-    log.info(`Killing ENGINE (PID=${engineProcess.pid})...`);
-    willQuitEngine = true;
-    try {
-      engineProcess.pid != undefined && treeKill(engineProcess.pid);
-    } catch (error: unknown) {
-      log.error("engine kill error");
+  killEngine({
+    onKillStart: () => {
+      log.info("Interrupt app quit to kill ENGINE");
+      event.preventDefault();
+    },
+    onKilled: () => {
+      log.info("ENGINE killed. Quitting app");
+      app.quit(); // attempt to quit app again
+    },
+    onError: (error: unknown) => {
+      log.error("Error during killing ENGINE process");
       log.error(error);
-    }
-  }
+    },
+  });
 });
 
 app.on("activate", () => {
