@@ -233,6 +233,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },
 
+  getDefaultToolbarSetting: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_TOOLBAR_SETTING");
+  },
+
   theme: (newData) => {
     return ipcRenderer.invoke("THEME", { newData });
   },

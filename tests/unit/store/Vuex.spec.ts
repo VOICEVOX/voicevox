@@ -32,6 +32,7 @@ describe("store/vuex.js test", () => {
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
+        isToolbarSettingDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isMaximized: false,

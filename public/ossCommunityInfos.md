@@ -17,7 +17,7 @@ Python や FastAPI や OpenJTalk で構成されています。
 #### [VOICEVOX コア](https://github.com/Hiroshiba/voicevox_core)
 
 音声合成に必要な計算を実行するためのモジュールで、動的ライブラリの形で提供しています。
-C++ や libtorch で構成されています。
+C++ や onnxruntime で構成されています。
 
 ---
 

@@ -74,6 +74,7 @@ export interface Sandbox {
     enableInterrogative: ExperimentalSetting
   ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }
@@ -187,8 +188,13 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
+  | "SAVE_ONE"
+  | "SAVE_ALL"
+  | "SAVE_CONNECT_ALL"
+  | "SAVE_PROJECT"
   | "UNDO"
   | "REDO"
+  | "IMPORT_TEXT"
   | "EMPTY";
 
 export type ToolbarSetting = ToolbarButtonTagType[];
