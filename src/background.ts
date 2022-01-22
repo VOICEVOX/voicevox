@@ -327,6 +327,7 @@ let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
   const engine = engines[0]; // TODO: 複数エンジン対応
+  if (!engine) throw new Error(`No such engine registered: index == 0`);
 
   if (!engine.executionEnabled) {
     log.info("Skipped engine execution");
