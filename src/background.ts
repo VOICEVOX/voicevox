@@ -59,7 +59,10 @@ if (isDevelopment) {
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
+if (!isDevelopment && !app.requestSingleInstanceLock()) {
+  log.info("VOICEVOX already running. Cancelling launch");
+  app.quit();
+}
 
 process.on("uncaughtException", (error) => {
   log.error(error);
