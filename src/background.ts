@@ -939,10 +939,12 @@ app.on("before-quit", (event) => {
 
   killEngine({
     onKillStart: () => {
+      // executed synchronously to cancel before-quit event
       log.info("Interrupt app quit to kill ENGINE");
       event.preventDefault();
     },
     onKilled: () => {
+      // maybe executed asynchronously to catch process closed event
       log.info("ENGINE killed. Quitting app");
       app.quit(); // attempt to quit app again
     },
