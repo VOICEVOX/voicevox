@@ -27,7 +27,9 @@ const proxyStoreCreator = (
         const engineKey = payload.engineKey;
         const engine = state.engines.find((engine) => engine.key === engineKey);
         if (!engine)
-          throw new Error(`Engine not found for engineKey == ${engineKey}`);
+          throw new Error(
+            `No such engine registered: engineKey == ${engineKey}`
+          );
 
         const instance = _engineFactory.instance(engine.host);
         const action = payload.action;
