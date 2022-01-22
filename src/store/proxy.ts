@@ -23,8 +23,13 @@ const proxyStoreCreator = (
     getters: {},
     mutations: {},
     actions: {
-      INVOKE_ENGINE_CONNECTOR(_, payload) {
-        const instance = _engineFactory.instance(payload.host);
+      INVOKE_ENGINE_CONNECTOR({ state }, payload) {
+        const engineKey = payload.engineKey;
+        const engine = state.engines.find((engine) => engine.key === engineKey);
+        if (!engine)
+          throw new Error(`Engine not found for engineKey == ${engineKey}`);
+
+        const instance = _engineFactory.instance(engine.host);
         const action = payload.action;
         const args = payload.payload;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

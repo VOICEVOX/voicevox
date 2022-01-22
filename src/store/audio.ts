@@ -452,7 +452,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
-              host: engine.host,
+              engineKey: engine.key,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
@@ -478,7 +478,7 @@ export const audioStore: VoiceVoxStoreOptions<
       const engine = state.engines[0]; // TODO: 複数エンジン対応
 
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        host: engine.host,
+        engineKey: engine.key,
         action: "speakersSpeakersGet",
         payload: [],
       })
@@ -518,7 +518,7 @@ export const audioStore: VoiceVoxStoreOptions<
         const engine = state.engines[0]; // TODO: 複数エンジン対応
 
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-          host: engine.host,
+          engineKey: engine.key,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -662,7 +662,7 @@ export const audioStore: VoiceVoxStoreOptions<
       const engine = state.engines[0]; // TODO: 複数エンジン対応
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        host: engine.host,
+        engineKey: engine.key,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -692,7 +692,7 @@ export const audioStore: VoiceVoxStoreOptions<
       const engine = state.engines[0]; // TODO: 複数エンジン対応
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        host: engine.host,
+        engineKey: engine.key,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -738,7 +738,7 @@ export const audioStore: VoiceVoxStoreOptions<
       const engine = state.engines[0]; // TODO: 複数エンジン対応
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        host: engine.host,
+        engineKey: engine.key,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -822,7 +822,7 @@ export const audioStore: VoiceVoxStoreOptions<
         const engine = state.engines[0]; // TODO: 複数エンジン対応
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
-          host: engine.host,
+          engineKey: engine.key,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -858,7 +858,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
-          host: engine.host,
+          engineKey: engine.key,
           action: "synthesisSynthesisPost",
           payload: [
             {

@@ -981,7 +981,7 @@ export type IEngineConnectorFactoryActions = ReturnType<
 type IEngineConnectorFactoryActionsMapper<K> =
   K extends keyof IEngineConnectorFactoryActions
     ? (payload: {
-        host: string;
+        engineKey: string;
         action: K;
         payload: Parameters<IEngineConnectorFactoryActions[K]>;
       }) => ReturnType<IEngineConnectorFactoryActions[K]>

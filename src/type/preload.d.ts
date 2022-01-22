@@ -144,6 +144,7 @@ export type HotkeySetting = {
 };
 
 export type Engine = {
+  key: string;
   host: string;
   executionEnabled: boolean;
   executionFilePath: string;
