@@ -135,8 +135,8 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
-      await Promise.all(promises).then(async () => {
-        await dispatch("ON_VUEX_READY");
+      await Promise.all(promises).then(() => {
+        dispatch("ON_VUEX_READY");
       });
     },
   },
