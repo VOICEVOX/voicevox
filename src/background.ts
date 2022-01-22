@@ -385,7 +385,6 @@ function killEngine({
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
     log.info(`ENGINE process not started`);
-    onKilled?.();
     return;
   }
 
@@ -944,7 +943,7 @@ app.on("before-quit", (event) => {
       event.preventDefault();
     },
     onKilled: () => {
-      // maybe executed asynchronously to catch process closed event
+      // executed asynchronously to catch process closed event
       log.info("ENGINE killed. Quitting app");
       app.quit(); // attempt to quit app again
     },
