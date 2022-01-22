@@ -159,6 +159,7 @@ const defaultHotkeySettings: HotkeySetting[] = [
 const defaultToolbarButtonSetting: ToolbarSetting = [
   "PLAY_CONTINUOUSLY",
   "STOP",
+  "EXPORT_AUDIO_ONE",
   "EMPTY",
   "UNDO",
   "REDO",

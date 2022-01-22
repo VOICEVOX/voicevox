@@ -297,7 +297,7 @@ type AudioStoreTypes = {
     }): SaveResultObject;
   };
 
-  GENERATE_AND_SAVE_ALL_AUDIO: {
+  GENERATE_AND_EXPORT_AUDIO_ALL_AUDIO: {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
