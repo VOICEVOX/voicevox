@@ -891,6 +891,7 @@ app.on("web-contents-created", (e, contents) => {
 });
 
 app.on("window-all-closed", () => {
+  log.info("All windows closed. Quitting app");
   app.quit();
 });
 
@@ -967,6 +968,7 @@ if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", (data) => {
       if (data === "graceful-exit") {
+        log.info("Received graceful-exit");
         app.quit();
       }
     });
