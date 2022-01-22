@@ -339,7 +339,6 @@ async function runEngine() {
     store.set("inheritAudioInfo", true);
   }
   const useGpu = store.get("useGpu");
-  // const inheritAudioInfo = store.get("inheritAudioInfo");
 
   log.info(`Starting ENGINE`);
   log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
