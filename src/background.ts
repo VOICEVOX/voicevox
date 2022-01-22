@@ -341,7 +341,8 @@ async function runEngine() {
   const useGpu = store.get("useGpu");
   const inheritAudioInfo = store.get("inheritAudioInfo");
 
-  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
+  log.info(`Starting ENGINE`);
+  log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -350,21 +351,24 @@ async function runEngine() {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
+  log.info(`ENGINE path: ${enginePath}`);
+  log.info(`ENGINE args: ${JSON.stringify(args)}`);
+
   engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info("ENGINE: " + data.toString("utf-8"));
+    log.info(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error("ENGINE: " + data.toString("utf-8"));
+    log.error(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE: exited with code ${code}`);
+    log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE: process exited with code ${code}`);
 
     if (!willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
