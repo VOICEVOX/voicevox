@@ -124,7 +124,6 @@ export const indexStore: VoiceVoxStoreOptions<
     async INIT_VUEX({ dispatch }) {
       const promises = [];
 
-      promises.push(dispatch("GET_ENGINES"));
       promises.push(dispatch("GET_USE_GPU"));
       promises.push(dispatch("GET_PRESET_CONFIG"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));

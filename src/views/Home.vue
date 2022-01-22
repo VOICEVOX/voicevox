@@ -402,20 +402,7 @@ export default defineComponent({
     // ソフトウェアを初期化
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
-      // 起動時、エンジンの設定はbackground側にのみあって、UI側にはない
-      // Appコンポーネントでbackgroundから設定を取得すると、取得完了前にHomeコンポーネントがマウントされてしまう
-      // エンジンの起動を待機する前に、エンジンの設定をbackgroundから取得済みなことを保証する
-      await store.dispatch("INIT_VUEX");
-
-      // Google Tag Manager
-      const gtm = useGtm();
-      watch(
-        () => store.state.acceptRetrieveTelemetry,
-        (acceptRetrieveTelemetry) => {
-          gtm?.enable(acceptRetrieveTelemetry === "Accepted");
-        },
-        { immediate: true }
-      );
+      await store.dispatch("GET_ENGINES");
 
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
