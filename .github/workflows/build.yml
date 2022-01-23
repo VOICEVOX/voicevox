@@ -711,8 +711,12 @@ jobs:
         artifact_name:
           - linux-nvidia-appimage
           - linux-cpu-appimage
+          - linux-nvidia-prepackage-zip
+          - linux-cpu-prepackage-zip
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-nvidia-prepackage-zip
+          - windows-cpu-prepackage-zip
           - macos-cpu-dmg
           - macos-cpu-prepackage-zip
         include:
@@ -720,14 +724,6 @@ jobs:
             appimage_7z_name: VOICEVOX.AppImage
           - artifact_name: linux-cpu-appimage
             appimage_7z_name: VOICEVOX-CPU.AppImage
-          - artifact_name: linux-nvidia-prepackage-zip
-          - artifact_name: linux-cpu-prepackage-zip
-          - artifact_name: windows-nvidia-nsis-web
-          - artifact_name: windows-cpu-nsis-web
-          - artifact_name: windows-nvidia-prepackage-zip
-          - artifact_name: windows-cpu-prepackage-zip
-          - artifact_name: macos-cpu-dmg
-          - artifact_name: macos-cpu-prepackage-zip
 
     runs-on: ${{ matrix.os }}
     steps:
