@@ -460,8 +460,7 @@ export const audioStore: VoiceVoxStoreOptions<
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // TODO: engineがundefinedの場合にログ出力されないためオプショナルチェーンにしている。複数エンジン対応が終わったら解除
-            window.electron.logInfo(`Waiting engine ${engine?.key}`);
+            window.electron.logInfo(`Waiting engine ${engine.key}`);
             continue;
           }
           engineState = "READY";
