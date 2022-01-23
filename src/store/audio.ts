@@ -1221,7 +1221,9 @@ export const audioStore: VoiceVoxStoreOptions<
         } else {
           const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
           if (startTime === undefined) throw Error("startTime === undefined");
-          audioElem.currentTime = startTime;
+          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+          // 再生に影響のない程度かつ切り捨てられない値を加算する
+          audioElem.currentTime = startTime + 10e-6;
         }
 
         audioElem
