@@ -330,12 +330,12 @@ async function runEngine() {
   if (!engine) throw new Error(`No such engine registered: index == 0`);
 
   if (!engine.executionEnabled) {
-    log.info("Skipped engine execution");
+    log.info("Skipped engine execution: disabled");
     return;
   }
 
   if (!engine.executionFilePath) {
-    log.info("Skipped engine execution because executionFilePath is empty");
+    log.info("Skipped engine execution: empty executionFilePath");
     return;
   }
 
