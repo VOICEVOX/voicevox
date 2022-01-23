@@ -59,7 +59,10 @@ if (isDevelopment) {
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
+if (!isDevelopment && !app.requestSingleInstanceLock()) {
+  log.info("VOICEVOX already running. Cancelling launch");
+  app.quit();
+}
 
 process.on("uncaughtException", (error) => {
   log.error(error);
@@ -337,9 +340,9 @@ async function runEngine() {
     store.set("inheritAudioInfo", true);
   }
   const useGpu = store.get("useGpu");
-  const inheritAudioInfo = store.get("inheritAudioInfo");
 
-  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
+  log.info(`Starting ENGINE`);
+  log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -348,21 +351,24 @@ async function runEngine() {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
+  log.info(`ENGINE path: ${enginePath}`);
+  log.info(`ENGINE args: ${JSON.stringify(args)}`);
+
   engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info("ENGINE: " + data.toString("utf-8"));
+    log.info(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error("ENGINE: " + data.toString("utf-8"));
+    log.error(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE: exited with code ${code}`);
+    log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE: process exited with code ${code}`);
 
     if (!willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
@@ -371,6 +377,60 @@ async function runEngine() {
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
       );
     }
+  });
+}
+
+async function restartEngine() {
+  await new Promise<void>((resolve, reject) => {
+    log.info(
+      `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+    );
+
+    // エンジンのプロセスがすでに終了している、またはkillされている場合
+    const engineExited = engineProcess.exitCode !== null;
+    const engineKilled = engineProcess.signalCode !== null;
+
+    if (engineExited || engineKilled) {
+      log.info(
+        "ENGINE process is not started yet or already killed. Starting ENGINE..."
+      );
+
+      runEngine();
+      resolve();
+      return;
+    }
+
+    // エンジンエラー時のエラーウィンドウ抑制用。
+    willQuitEngine = true;
+
+    // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
+    // closeイベントはexitイベントよりも後に発火します。
+    const restartEngineOnProcessClosedCallback = () => {
+      log.info("ENGINE process killed. Restarting ENGINE...");
+
+      runEngine();
+      resolve();
+    };
+    engineProcess.once("close", restartEngineOnProcessClosedCallback);
+
+    // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+    log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
+    treeKill(engineProcess.pid, (error) => {
+      // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+      if (error != null) {
+        log.error("Failed to kill ENGINE");
+        log.error(error);
+
+        // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
+        // listenerを削除してENGINEの意図しない再起動を防止
+        engineProcess.removeListener(
+          "close",
+          restartEngineOnProcessClosedCallback
+        );
+
+        reject();
+      }
+    });
   });
 }
 
@@ -711,61 +771,9 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle(
-  "RESTART_ENGINE",
-  () =>
-    new Promise<void>((resolve, reject) => {
-      log.info(
-        `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
-      );
-
-      // エンジンのプロセスがすでに終了している、またはkillされている場合
-      const engineExited = engineProcess.exitCode !== null;
-      const engineKilled = engineProcess.signalCode !== null;
-
-      if (engineExited || engineKilled) {
-        log.info(
-          "ENGINE process is not started yet or already killed. Starting ENGINE..."
-        );
-
-        runEngine();
-        resolve();
-        return;
-      }
-
-      // エンジンエラー時のエラーウィンドウ抑制用。
-      willQuitEngine = true;
-
-      // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
-      // closeイベントはexitイベントよりも後に発火します。
-      const restartEngineOnProcessClosedCallback = () => {
-        log.info("ENGINE process killed. Restarting ENGINE...");
-
-        runEngine();
-        resolve();
-      };
-      engineProcess.once("close", restartEngineOnProcessClosedCallback);
-
-      // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
-      treeKill(engineProcess.pid, (error) => {
-        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-        if (error != null) {
-          log.error("Failed to kill ENGINE");
-          log.error(error);
-
-          // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
-          // listenerを削除してENGINEの意図しない再起動を防止
-          engineProcess.removeListener(
-            "close",
-            restartEngineOnProcessClosedCallback
-          );
-
-          reject();
-        }
-      });
-    })
-);
+ipcMainHandle("RESTART_ENGINE", async () => {
+  await restartEngine();
+});
 
 ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   if (newData !== undefined) {
@@ -883,6 +891,7 @@ app.on("web-contents-created", (e, contents) => {
 });
 
 app.on("window-all-closed", () => {
+  log.info("All windows closed. Quitting app");
   app.quit();
 });
 
@@ -959,6 +968,7 @@ if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", (data) => {
       if (data === "graceful-exit") {
+        log.info("Received graceful-exit");
         app.quit();
       }
     });
