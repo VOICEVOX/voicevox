@@ -103,8 +103,13 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
+  showInfoDialog: ({ title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+      title,
+      message,
+      buttons,
+      cancelId,
+    });
   },
 
   showWarningDialog: ({ title, message }) => {

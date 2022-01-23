@@ -25,6 +25,7 @@ export interface Sandbox {
     title: string;
     message: string;
     buttons: string[];
+    cancelId?: number;
   }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
