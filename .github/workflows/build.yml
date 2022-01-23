@@ -455,38 +455,33 @@ jobs:
         shell: bash
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
-      - name: Set BUILD_IDENTIFIER env var
-        shell: bash
-        run: |
-          echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
       - name: Create Linux tar.gz
         if: startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz" VOICEVOX/
+          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz" VOICEVOX/
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-targz
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz"
 
       - name: Create Windows & Mac zip
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          zip "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip" -r VOICEVOX
+          zip "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip" -r VOICEVOX
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-zip
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
 
 
   build-distributable:
