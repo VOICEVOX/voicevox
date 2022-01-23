@@ -58,7 +58,7 @@ export async function generateAndSaveAllAudioWithDialog({
   dirPath?: string;
   encoding?: EncodingType;
 }): Promise<void> {
-  const result = await dispatch("GENERATE_AND_EXPORT_AUDIO_ALL_AUDIO", {
+  const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
     dirPath,
     encoding,
   });

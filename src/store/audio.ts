@@ -959,7 +959,7 @@ export const audioStore: VoiceVoxStoreOptions<
         return { result: "SUCCESS", path: filePath };
       }
     ),
-    GENERATE_AND_EXPORT_AUDIO_ALL_AUDIO: createUILockAction(
+    GENERATE_AND_SAVE_ALL_AUDIO: createUILockAction(
       async (
         { state, dispatch },
         { dirPath, encoding }: { dirPath?: string; encoding?: EncodingType }
