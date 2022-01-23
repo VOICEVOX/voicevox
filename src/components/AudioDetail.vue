@@ -503,7 +503,7 @@ export default defineComponent({
           for (let i = 1; i < accentPhraseOffsets.length; i++) {
             if (
               currentTime !== undefined &&
-              accentPhraseOffsets[i - 1] < currentTime &&
+              accentPhraseOffsets[i - 1] <= currentTime &&
               currentTime < accentPhraseOffsets[i]
             ) {
               activePoint.value = i - 1;
