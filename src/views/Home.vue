@@ -173,7 +173,6 @@ import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import { useGtm } from "@gtm-support/vue-gtm";
 
 export default defineComponent({
   name: "Home",
