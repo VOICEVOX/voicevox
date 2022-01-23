@@ -40,6 +40,9 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
+  activePointScrollMode(
+    newValue?: ActivePointScrollMode
+  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -119,6 +122,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SavingSetting = {
   exportLab: boolean;
@@ -219,7 +224,8 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "pause-hovered";
+  | "pause-hovered"
+  | "active-point-focus";
 
 export type ThemeConf = {
   name: string;

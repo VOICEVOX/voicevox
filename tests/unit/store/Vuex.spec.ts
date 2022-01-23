@@ -22,6 +22,7 @@ describe("store/vuex.js test", () => {
         audioItems: {},
         audioKeys: [],
         audioStates: {},
+        audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
         nowPlayingContinuously: false,
@@ -29,6 +30,7 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useGpu: false,
         inheritAudioInfo: true,
+        activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
@@ -112,6 +114,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.audioKeys);
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
+    assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
@@ -120,6 +123,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
+    assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);

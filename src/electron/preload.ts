@@ -139,6 +139,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
   },
 
+  activePointScrollMode: (newValue) => {
+    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
+  },
+
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
