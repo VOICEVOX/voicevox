@@ -61,6 +61,7 @@ describe("store/vuex.js test", () => {
         acceptRetrieveTelemetry: "Unconfirmed",
         engines: [
           {
+            key: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
