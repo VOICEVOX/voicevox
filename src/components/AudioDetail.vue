@@ -475,7 +475,7 @@ export default defineComponent({
         // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
         if (
           nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
-          displayedPart <= nextAccentPhraseStart
+          displayedPart <= nextAccentPhraseEnd
         ) {
           const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
           audioDetail.value.scroll(scrollCount, 0);
