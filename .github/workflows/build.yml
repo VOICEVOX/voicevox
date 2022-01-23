@@ -272,31 +272,33 @@ jobs:
             noengine_artifact_name: linux-noengine-prepackage
             voicevox_engine_asset_name: linux-nvidia
             linux_executable_name: voicevox
-            targz_name: VOICEVOX
+            compressed_artifact_name: voicevox-linux-nvidia
             app_asar_dir: prepackage/resources
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
             noengine_artifact_name: linux-noengine-cpu-prepackage
             voicevox_engine_asset_name: linux-cpu
             linux_executable_name: voicevox
-            targz_name: VOICEVOX-CPU
+            compressed_artifact_name: voicevox-linux-cpu
             app_asar_dir: prepackage/resources
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-prepackage
             noengine_artifact_name: windows-noengine-prepackage
             voicevox_engine_asset_name: windows-nvidia
+            compressed_artifact_name: voicevox-windows-nvidia
             app_asar_dir: prepackage/resources
           # Windows CPU
           - artifact_name: windows-cpu-prepackage
             noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
+            compressed_artifact_name: voicevox-windows-cpu
             app_asar_dir: prepackage/resources
           # macOS CPU
           - artifact_name: macos-cpu-prepackage
             noengine_artifact_name: macos-noengine-cpu-prepackage
             voicevox_engine_asset_name: macos-x64
             macos_executable_name: VOICEVOX
-            zip_name: voicevox-cpu-macos-x64
+            compressed_artifact_name: voicevox-macos-cpu
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
 
     runs-on: ${{ matrix.os }}
@@ -450,57 +452,37 @@ jobs:
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
       - name: Set BUILD_IDENTIFIER env var
-        if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
         run: |
           echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-      # Create tar.gz for Linux
-      #
-      # Due to GitHub Actions limitation (https://github.com/actions/upload-artifact/issues/38),
-      # file permissions are lost in actions/upload-artifact.
-      # To distribute binaries (voicevox, run) with execute permission,
-      # we need to pack all the files in tarball (tar.gz) before uploading.
-      # https://github.com/actions/upload-artifact/blob/11e311c8b504ea40cbed20583a64d75b4735cff3/README.md#maintaining-file-permissions-and-case-sensitive-files
-      #
-      # voicevox-x.x.x.tar.gz
-      # - VOICEVOX/
-      #   - voicevox
-      #   - run
-      #
       - name: Create Linux tar.gz
-        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        if: startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          tar cf "${{ matrix.targz_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz" VOICEVOX/
-
-      - name: Show disk space (debug info)
-        if: startsWith(matrix.artifact_name, 'linux-') # linux
-        shell: bash
-        run: |
-          df -h
+          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz" VOICEVOX/
 
       - name: Upload Linux tar.gz artifact
-        if: startsWith(matrix.artifact_name, 'linux-') # linux
+        if: startsWith(matrix.artifact_name, 'linux-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-targz
-          path: "${{ matrix.targz_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz"
 
-      - name: Create macOS zip
-        if: startsWith(matrix.artifact_name, 'macos-')
+      - name: Create Windows & Mac zip
+        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          zip "${{ matrix.zip_name }}.zip" -r VOICEVOX
+          zip "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip" -r VOICEVOX
 
-      - name: Upload macOS zip artifact
-        if: startsWith(matrix.artifact_name, 'macos-')
+      - name: Upload Windows & Mac zip artifact
+        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-zip
-          path: "${{ matrix.zip_name }}.zip"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip"
 
 
   build-distributable:
@@ -742,8 +724,12 @@ jobs:
         artifact_name:
           - linux-nvidia-appimage
           - linux-cpu-appimage
+          - linux-nvidia-prepackage-targz
+          - linux-cpu-prepackage-targz
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-nvidia-prepackage-zip
+          - windows-cpu-prepackage-zip
           - macos-cpu-dmg
           - macos-cpu-prepackage-zip
         include:
@@ -751,10 +737,6 @@ jobs:
             appimage_7z_name: VOICEVOX.AppImage
           - artifact_name: linux-cpu-appimage
             appimage_7z_name: VOICEVOX-CPU.AppImage
-          - artifact_name: windows-nvidia-nsis-web
-          - artifact_name: windows-cpu-nsis-web
-          - artifact_name: macos-cpu-dmg
-          - artifact_name: macos-cpu-prepackage-zip
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -853,9 +835,19 @@ jobs:
           file_glob: true
           file: artifact/*.dmg
 
-      # macOS zip
-      - name: Upload macOS zip to Release assets
-        if: startsWith(matrix.artifact_name, 'macos-') && endsWith(matrix.artifact_name, '-zip')
+      # targz
+      - name: Upload targz to Release assets
+        if: endsWith(matrix.artifact_name, '-targz')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }} # == github.event.release.tag_name
+          file_glob: true
+          file: artifact/*.tar.gz
+
+      # zip
+      - name: Upload zip to Release assets
+        if: endsWith(matrix.artifact_name, '-zip')
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
