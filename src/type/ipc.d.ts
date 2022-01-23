@@ -68,7 +68,14 @@ type IpcIHData = {
   };
 
   SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
+    args: [
+      obj: {
+        title: string;
+        message: string;
+        buttons: string[];
+        cancelId?: number;
+      }
+    ];
     return: number;
   };
 

@@ -690,33 +690,37 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   return result.filePaths;
 });
 
-ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
-  return dialog
-    .showMessageBox(win, {
-      type: "info",
-      buttons: buttons,
-      title: title,
-      message: message,
-      noLink: true,
-    })
-    .then((value) => {
-      return value.response;
-    });
-});
+ipcMainHandle(
+  "SHOW_INFO_DIALOG",
+  (_, { title, message, buttons, cancelId }) => {
+    return dialog
+      .showMessageBox(win, {
+        type: "info",
+        buttons,
+        title,
+        message,
+        noLink: true,
+        cancelId,
+      })
+      .then((value) => {
+        return value.response;
+      });
+  }
+);
 
 ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
 ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "error",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
