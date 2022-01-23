@@ -33,6 +33,7 @@ import {
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
 } from "@/components/Dialog";
+import { getToolbarButtonName } from "@/store/utility";
 
 type ButtonContent = {
   text: string;
@@ -42,22 +43,6 @@ type ButtonContent = {
 
 type SpacerContent = {
   text: null;
-};
-
-export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
-  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
-    PLAY_CONTINUOUSLY: "連続再生",
-    STOP: "停止",
-    SAVE_ONE: "一つだけ書き出し",
-    SAVE_ALL: "音声書き出し",
-    SAVE_CONNECT_ALL: "音声を繋げて書き出し",
-    SAVE_PROJECT: "プロジェクト保存",
-    UNDO: "元に戻す",
-    REDO: "やり直す",
-    IMPORT_TEXT: "テキスト読み込み",
-    EMPTY: "空白",
-  };
-  return tag2NameObj[tag];
 };
 
 export default defineComponent({
@@ -180,15 +165,15 @@ export default defineComponent({
         click: stopContinuously,
         disable: computed(() => !nowPlayingContinuously.value),
       },
-      SAVE_ONE: {
+      EXPORT_AUDIO_ONE: {
         click: generateAndSaveOneAudio,
         disable: computed(() => !activeAudioKey.value || uiLocked.value),
       },
-      SAVE_ALL: {
+      EXPORT_AUDIO_ALL: {
         click: generateAndSaveAllAudio,
         disable: uiLocked,
       },
-      SAVE_CONNECT_ALL: {
+      EXPORT_AUDIO_CONNECT_ALL: {
         click: generateAndConnectAndSaveAudio,
         disable: uiLocked,
       },

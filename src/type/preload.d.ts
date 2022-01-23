@@ -188,9 +188,9 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
-  | "SAVE_ONE"
-  | "SAVE_ALL"
-  | "SAVE_CONNECT_ALL"
+  | "EXPORT_AUDIO_ONE"
+  | "EXPORT_AUDIO_ALL"
+  | "EXPORT_AUDIO_CONNECT_ALL"
   | "SAVE_PROJECT"
   | "UNDO"
   | "REDO"

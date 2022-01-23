@@ -135,8 +135,8 @@
 import { computed, defineComponent, ref, watch, Ref } from "vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
-import { getToolbarButtonName } from "@/components/HeaderBar.vue";
 import { useQuasar } from "quasar";
+import { getToolbarButtonName } from "@/store/utility";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
@@ -177,11 +177,11 @@ export default defineComponent({
       PLAY_CONTINUOUSLY:
         "選択されているテキスト以降のすべてのテキストを読み上げます。",
       STOP: "テキストが読み上げられているときに、それを止めます。",
-      SAVE_ONE:
+      EXPORT_AUDIO_ONE:
         "選択されているテキストの読み上げを音声ファイルに書き出します。",
-      SAVE_ALL:
+      EXPORT_AUDIO_ALL:
         "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
-      SAVE_CONNECT_ALL:
+      EXPORT_AUDIO_CONNECT_ALL:
         "入力されているすべてのテキストの読み上げを一つの音声ファイルに繋げて書き出します。",
       SAVE_PROJECT: "プロジェクトを上書き保存します。",
       UNDO: "操作を一つ戻します。",
