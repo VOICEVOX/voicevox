@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
+  VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.10.preview.10
   VOICEVOX_RESOURCE_VERSION: 0.10.preview.3
 
@@ -163,7 +163,7 @@ jobs:
       - name: Checkout Product Version Resource
         uses: actions/checkout@v2
         with:
-          repository: Hiroshiba/voicevox_resource
+          repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
 
