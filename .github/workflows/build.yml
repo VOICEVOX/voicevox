@@ -843,7 +843,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }} # == github.event.release.tag_name
           file_glob: true
-          file: artifact/*.targz
+          file: artifact/*.tar.gz
 
       # zip
       - name: Upload zip to Release assets
