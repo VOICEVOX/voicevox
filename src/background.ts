@@ -696,11 +696,11 @@ ipcMainHandle(
     return dialog
       .showMessageBox(win, {
         type: "info",
-        buttons: buttons,
-        title: title,
-        message: message,
+        buttons,
+        title,
+        message,
         noLink: true,
-        cancelId: cancelId,
+        cancelId,
       })
       .then((value) => {
         return value.response;
@@ -711,16 +711,16 @@ ipcMainHandle(
 ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
 ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "error",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
