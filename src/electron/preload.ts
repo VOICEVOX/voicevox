@@ -103,8 +103,13 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
+  showInfoDialog: ({ title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+      title,
+      message,
+      buttons,
+      cancelId,
+    });
   },
 
   showWarningDialog: ({ title, message }) => {
@@ -137,6 +142,10 @@ const api: Sandbox = {
 
   inheritAudioInfo: (newValue) => {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
+  },
+
+  activePointScrollMode: (newValue) => {
+    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
   },
 
   isAvailableGPUMode: () => {

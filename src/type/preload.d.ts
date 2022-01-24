@@ -25,6 +25,7 @@ export interface Sandbox {
     title: string;
     message: string;
     buttons: string[];
+    cancelId?: number;
   }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
@@ -40,6 +41,9 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
+  activePointScrollMode(
+    newValue?: ActivePointScrollMode
+  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -120,6 +124,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Accepted"
   | "Refused";
 
+export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
@@ -188,9 +194,9 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
-  | "SAVE_ONE"
-  | "SAVE_ALL"
-  | "SAVE_CONNECT_ALL"
+  | "EXPORT_AUDIO_ONE"
+  | "EXPORT_AUDIO_ALL"
+  | "EXPORT_AUDIO_CONNECT_ALL"
   | "SAVE_PROJECT"
   | "UNDO"
   | "REDO"
@@ -219,7 +225,8 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "pause-hovered";
+  | "pause-hovered"
+  | "active-point-focus";
 
 export type ThemeConf = {
   name: string;

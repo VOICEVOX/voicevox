@@ -68,7 +68,14 @@ type IpcIHData = {
   };
 
   SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
+    args: [
+      obj: {
+        title: string;
+        message: string;
+        buttons: string[];
+        cancelId?: number;
+      }
+    ];
     return: number;
   };
 
@@ -95,6 +102,11 @@ type IpcIHData = {
   INHERIT_AUDIOINFO: {
     args: [obj: { newValue?: boolean }];
     return: boolean;
+  };
+
+  ACTIVE_POINT_SCROLL_MODE: {
+    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
+    return: import("@/type/preload").ActivePointScrollMode;
   };
 
   IS_AVAILABLE_GPU_MODE: {
