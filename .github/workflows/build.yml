@@ -13,6 +13,8 @@ env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/Hiroshiba/voicevox_engine"
   VOICEVOX_ENGINE_VERSION: 0.10.preview.10
   VOICEVOX_RESOURCE_VERSION: 0.10.preview.3
+  VOICEVOX_EDITOR_VERSION: |- # releaseのときはタグが、それ以外は0.0.0がバージョン名に
+    ${{ github.event.release.tag_name != '' && github.event.release.tag_name || '0.0.0' }}
 
 jobs:
   build-noengine-prepackage:
@@ -83,13 +85,15 @@ jobs:
           brew install gnu-sed
 
       # Rename executable file
-      - name: Replace package name
+      - name: Replace package name & version
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+          "${{ matrix.sed_name }}" -i 's/"version": "0.0.0"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
       #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
@@ -450,38 +454,33 @@ jobs:
         shell: bash
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
-      - name: Set BUILD_IDENTIFIER env var
-        shell: bash
-        run: |
-          echo "BUILD_IDENTIFIER=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
       - name: Create Linux tar.gz
         if: startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz" VOICEVOX/
+          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz" VOICEVOX/
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-targz
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.tar.gz"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz"
 
       - name: Create Windows & Mac zip
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          zip "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip" -r VOICEVOX
+          zip "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip" -r VOICEVOX
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.artifact_name }}-zip
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.BUILD_IDENTIFIER }}.zip"
+          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
 
 
   build-distributable:
@@ -560,13 +559,15 @@ jobs:
       #       the AppImages have duplicate names.
       #       Files with the same name cannot be uploaded to a single GitHub Release,
       #       so different package/product names should be used for CPU/GPU builds.
-      - name: Replace package name
+      - name: Replace package name & version
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
+
+          "${{ matrix.sed_name }}" -i 's/"version": "0.0.0"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
