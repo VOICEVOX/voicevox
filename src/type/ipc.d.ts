@@ -1,4 +1,4 @@
-import { Engine } from "@/type/preload";
+import { EngineInfo } from "@/type/preload";
 
 /**
  * invoke, handle
@@ -131,7 +131,7 @@ type IpcIHData = {
 
   ENGINES: {
     args: [];
-    return: Engine[];
+    return: EngineInfo[];
   };
 
   RESTART_ENGINE: {
