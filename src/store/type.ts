@@ -22,6 +22,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  ActivePointScrollMode,
   EngineInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -76,6 +77,7 @@ export type AudioStoreState = {
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
   _activeAudioKey?: string;
+  audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
@@ -94,6 +96,10 @@ type AudioStoreTypes = {
 
   IS_ENGINE_READY: {
     getter: boolean;
+  };
+
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+    getter: number | undefined;
   };
 
   START_WAITING_ENGINE: {
@@ -127,6 +133,11 @@ type AudioStoreTypes = {
   SET_ACTIVE_AUDIO_KEY: {
     mutation: { audioKey?: string };
     action(payload: { audioKey?: string }): void;
+  };
+
+  SET_AUDIO_PLAY_START_POINT: {
+    mutation: { startPoint?: number };
+    action(payload: { startPoint?: number }): void;
   };
 
   SET_AUDIO_NOW_PLAYING: {
@@ -280,6 +291,10 @@ type AudioStoreTypes = {
 
   GENERATE_LAB: {
     action(payload: { audioKey: string; offset?: number }): string | undefined;
+  };
+
+  GET_AUDIO_PLAY_OFFSETS: {
+    action(payload: { audioKey: string }): number[];
   };
 
   GENERATE_AUDIO: {
@@ -775,6 +790,7 @@ export type UiStoreState = {
   dialogLockCount: number;
   useGpu: boolean;
   inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -879,6 +895,15 @@ type UiStoreTypes = {
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
+  };
+
+  GET_ACTIVE_POINT_SCROLL_MODE: {
+    action(): void;
+  };
+
+  SET_ACTIVE_POINT_SCROLL_MODE: {
+    mutation: { activePointScrollMode: ActivePointScrollMode };
+    action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
   };
 
   DETECT_UNMAXIMIZED: {
