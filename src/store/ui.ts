@@ -9,10 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
-import {
-  ActivePointScrollMode,
-  EngineInfo,
-} from "@/type/preload";
+import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
