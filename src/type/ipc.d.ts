@@ -37,6 +37,11 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_CONTACT_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;

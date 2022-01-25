@@ -1,6 +1,6 @@
 <template>
-  <q-page class="relative-absolute-wrapper scroller markdown-body">
-    <div class="q-pa-md markdown" v-html="contact"></div>
+  <q-page class="relative-absolute-wrapper scroller bg-background">
+    <div class="q-pa-md markdown markdown-body" v-html="contact"></div>
   </q-page>
 </template>
 
@@ -8,16 +8,20 @@
 import { defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
 export default defineComponent({
   setup() {
     const store = useStore();
-    const contact_info = ref("");
+    const contact = ref("");
+
     const md = useMarkdownIt();
+
     onMounted(async () => {
-      contact_info.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
+      contact.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
     });
+
     return {
-      contact_info,
+      contact,
     };
   },
 });
@@ -35,4 +39,3 @@ export default defineComponent({
   border: 1px solid #333;
 }
 </style>
-
