@@ -88,6 +88,9 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_CONTACT_TEXT() {
       return await window.electron.getContactText();
     },
+    async GET_Q_AND_A_TEXT() {
+      return await window.electron.getQAndAText();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }

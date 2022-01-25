@@ -42,6 +42,11 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_Q_AND_A_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;

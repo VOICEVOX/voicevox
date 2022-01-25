@@ -471,6 +471,9 @@ const ossLicenses = JSON.parse(
 // 問い合わせの読み込み
 const contactText = fs.readFileSync(path.join(__static, "contact.md"), "utf-8");
 
+// Q&Aの読み込み
+const qAndAText = fs.readFileSync(path.join(__static, "qAndA.md"), "utf-8");
+
 // アップデート情報の読み込み
 const updateInfos = JSON.parse(
   fs.readFileSync(path.join(__static, "updateInfos.json"), {
@@ -645,6 +648,10 @@ ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
 
 ipcMainHandle("GET_CONTACT_TEXT", () => {
   return contactText;
+});
+
+ipcMainHandle("GET_Q_AND_A_TEXT", () => {
+  return qAndAText;
 });
 
 ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
