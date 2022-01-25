@@ -603,6 +603,10 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
+  GET_CONTACT_TEXT: {
+    action(): Promise<string>;
+  };
+
   GET_POLICY_TEXT: {
     action(): Promise<string>;
   };
