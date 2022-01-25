@@ -51,6 +51,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
   },
 
+  getContactText: async () => {
+    return await ipcRendererInvoke("GET_CONTACT_TEXT");
+  },
+
   getOssCommunityInfos: async () => {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
