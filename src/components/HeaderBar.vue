@@ -28,6 +28,12 @@ import {
   HotkeyReturnType,
   ToolbarButtonTagType,
 } from "@/type/preload";
+import {
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "@/components/Dialog";
+import { getToolbarButtonName } from "@/store/utility";
 
 type ButtonContent = {
   text: string;
@@ -39,17 +45,6 @@ type SpacerContent = {
   text: null;
 };
 
-export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
-  const tag2NameObj: Record<ToolbarButtonTagType, string> = {
-    PLAY_CONTINUOUSLY: "連続再生",
-    STOP: "停止",
-    UNDO: "元に戻す",
-    REDO: "やり直す",
-    EMPTY: "空白",
-  };
-  return tag2NameObj[tag];
-};
-
 export default defineComponent({
   setup() {
     const store = useStore();
@@ -58,6 +53,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const canUndo = computed(() => store.getters.CAN_UNDO);
     const canRedo = computed(() => store.getters.CAN_REDO);
+    const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
@@ -128,6 +124,34 @@ export default defineComponent({
     const stopContinuously = () => {
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
+    const generateAndSaveOneAudio = async () => {
+      await generateAndSaveOneAudioWithDialog({
+        audioKey: activeAudioKey.value as string,
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
+    const generateAndSaveAllAudio = async () => {
+      await generateAndSaveAllAudioWithDialog({
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
+    const generateAndConnectAndSaveAudio = async () => {
+      await generateAndConnectAndSaveAudioWithDialog({
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
+        encoding: store.state.savingSetting.fileEncoding,
+      });
+    };
+    const saveProject = async () => {
+      await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    };
+    const importTextFile = () => {
+      store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
+    };
 
     const usableButtons: Record<
       ToolbarButtonTagType,
@@ -141,6 +165,22 @@ export default defineComponent({
         click: stopContinuously,
         disable: computed(() => !nowPlayingContinuously.value),
       },
+      EXPORT_AUDIO_ONE: {
+        click: generateAndSaveOneAudio,
+        disable: computed(() => !activeAudioKey.value || uiLocked.value),
+      },
+      EXPORT_AUDIO_ALL: {
+        click: generateAndSaveAllAudio,
+        disable: uiLocked,
+      },
+      EXPORT_AUDIO_CONNECT_ALL: {
+        click: generateAndConnectAndSaveAudio,
+        disable: uiLocked,
+      },
+      SAVE_PROJECT: {
+        click: saveProject,
+        disable: uiLocked,
+      },
       UNDO: {
         click: undo,
         disable: computed(() => !canUndo.value || uiLocked.value),
@@ -148,6 +188,10 @@ export default defineComponent({
       REDO: {
         click: redo,
         disable: computed(() => !canRedo.value || uiLocked.value),
+      },
+      IMPORT_TEXT: {
+        click: importTextFile,
+        disable: uiLocked,
       },
       EMPTY: null,
     };

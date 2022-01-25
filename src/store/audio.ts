@@ -28,6 +28,7 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
+import { buildProjectFileName, sanitizeFileName } from "./utility";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -89,8 +90,6 @@ function parseTextFile(
 }
 
 function buildFileName(state: State, audioKey: string) {
-  // eslint-disable-next-line no-control-regex
-  const sanitizer = /[\x00-\x1f\x22\x2a\x2f\x3a\x3c\x3e\x3f\x5c\x7c\x7f]/g;
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
@@ -110,8 +109,8 @@ function buildFileName(state: State, audioKey: string) {
     throw new Error();
   }
 
-  const characterName = character.metas.speakerName.replace(sanitizer, "");
-  let text = audioItem.text.replace(sanitizer, "");
+  const characterName = sanitizeFileName(character.metas.speakerName);
+  let text = sanitizeFileName(audioItem.text);
   if (text.length > 10) {
     text = text.substring(0, 9) + "…";
   }
@@ -122,7 +121,8 @@ function buildFileName(state: State, audioKey: string) {
     return preFileName + `_${characterName}_${text}.wav`;
   }
 
-  return preFileName + `_${characterName}（${styleName}）_${text}.wav`;
+  const sanitizedStyleName = sanitizeFileName(styleName);
+  return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -133,6 +133,8 @@ export const audioStoreState: AudioStoreState = {
   audioItems: {},
   audioKeys: [],
   audioStates: {},
+  // audio elementの再生オフセット
+  audioPlayStartPoint: undefined,
   nowPlayingContinuously: false,
 };
 
@@ -157,6 +159,11 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ENGINE_READY: (state) => {
       return state.engineState === "READY";
     },
+    ACTIVE_AUDIO_ELEM_CURRENT_TIME: (state) => {
+      return state._activeAudioKey !== undefined
+        ? audioElements[state._activeAudioKey]?.currentTime
+        : undefined;
+    },
   },
 
   mutations: {
@@ -171,6 +178,9 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
+    },
+    SET_AUDIO_PLAY_START_POINT(state, { startPoint }: { startPoint?: number }) {
+      state.audioPlayStartPoint = startPoint;
     },
     SET_AUDIO_NOW_PLAYING(
       state,
@@ -616,8 +626,19 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
       return audioKey;
     },
-    SET_ACTIVE_AUDIO_KEY({ commit }, { audioKey }: { audioKey?: string }) {
+    SET_ACTIVE_AUDIO_KEY(
+      { commit, dispatch },
+      { audioKey }: { audioKey?: string }
+    ) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
+      // reset audio play start point
+      dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
+    },
+    SET_AUDIO_PLAY_START_POINT(
+      { commit },
+      { startPoint }: { startPoint?: number }
+    ) {
+      commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
     async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
       const audioItem = state.audioItems[audioKey];
@@ -636,12 +657,16 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { dispatch, state },
       {
         text,
         styleId,
         isKana,
-      }: { text: string; styleId: number; isKana?: boolean }
+      }: {
+        text: string;
+        styleId: number;
+        isKana?: boolean;
+      }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "accentPhrasesAccentPhrasesPost",
@@ -650,6 +675,7 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -709,12 +735,18 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         action: "audioQueryAudioQueryPost",
-        payload: [{ text, speaker: styleId }],
+        payload: [
+          {
+            text,
+            speaker: styleId,
+            enableInterrogative: state.experimentalSetting.enableInterrogative,
+          },
+        ],
       })
         .then(toDispatchResponse("audioQueryAudioQueryPost"))
         .catch((error) => {
@@ -782,6 +814,33 @@ export const audioStore: VoiceVoxStoreOptions<
         return labString;
       }
     ),
+    GET_AUDIO_PLAY_OFFSETS({ state }, { audioKey }: { audioKey: string }) {
+      const query = state.audioItems[audioKey].query;
+      const accentPhrases = query?.accentPhrases;
+      if (query === undefined || accentPhrases === undefined)
+        throw Error("query === undefined or accentPhrases === undefined");
+
+      const offsets: number[] = [];
+      let length = 0;
+      offsets.push(length);
+      // pre phoneme lengthは最初のアクセント句の一部として扱う
+      length += query.prePhonemeLength;
+      let i = 0;
+      for (const phrase of accentPhrases) {
+        phrase.moras.forEach((m) => {
+          length += m.consonantLength !== undefined ? m.consonantLength : 0;
+          length += m.vowelLength;
+        });
+        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        // post phoneme lengthは最後のアクセント句の一部として扱う
+        if (i === accentPhrases.length - 1) {
+          length += query.postPhonemeLength;
+        }
+        offsets.push(length / query.speedScale);
+        i++;
+      }
+      return offsets;
+    },
     CONNECT_AUDIO: createUILockAction(
       async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
@@ -979,13 +1038,8 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, dispatch },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
       ): Promise<SaveResultObject> => {
-        const headItemText = state.audioItems[state.audioKeys[0]].text;
-        const tailItemText =
-          state.audioItems[state.audioKeys[state.audioKeys.length - 1]].text;
-        const defaultFileName =
-          headItemText !== tailItemText
-            ? headItemText + "..." + tailItemText
-            : headItemText;
+        const defaultFileName = buildProjectFileName(state, "wav");
+
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
@@ -1159,6 +1213,18 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
         audioElem.src = URL.createObjectURL(blob);
+        const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+          audioKey,
+        });
+        if (accentPhraseOffsets.length === 0) {
+          audioElem.currentTime = 0;
+        } else {
+          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+          if (startTime === undefined) throw Error("startTime === undefined");
+          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+          // 再生に影響のない程度かつ切り捨てられない値を加算する
+          audioElem.currentTime = startTime + 10e-6;
+        }
 
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
@@ -1205,6 +1271,7 @@ export const audioStore: VoiceVoxStoreOptions<
     PLAY_CONTINUOUSLY_AUDIO: createUILockAction(
       async ({ state, commit, dispatch }) => {
         const currentAudioKey = state._activeAudioKey;
+        const currentAudioPlayStartPoint = state.audioPlayStartPoint;
 
         let index = 0;
         if (currentAudioKey !== undefined) {
@@ -1223,6 +1290,9 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         } finally {
           commit("SET_ACTIVE_AUDIO_KEY", { audioKey: currentAudioKey });
+          commit("SET_AUDIO_PLAY_START_POINT", {
+            startPoint: currentAudioPlayStartPoint,
+          });
           commit("SET_NOW_PLAYING_CONTINUOUSLY", { nowPlaying: false });
         }
       }
@@ -1611,7 +1681,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       const originAccentPhrases = query.accentPhrases;
 
-      // https://github.com/Hiroshiba/voicevox/issues/248
+      // https://github.com/VOICEVOX/voicevox/issues/248
       // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
       // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
       const newAccentPhrases = [
@@ -1654,6 +1724,18 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       commit("COMMAND_SET_AUDIO_MORA_DATA", payload);
+    },
+    COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE(
+      { commit },
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        data: number;
+        type: MoraDataType;
+      }
+    ) {
+      commit("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", payload);
     },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       { commit },
@@ -1946,6 +2028,88 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       audioStore.mutations.SET_AUDIO_MORA_DATA(draft, payload);
+    },
+    COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE(
+      draft,
+      payload: {
+        audioKey: string;
+        accentPhraseIndex: number;
+        moraIndex: number;
+        data: number;
+        type: MoraDataType;
+      }
+    ) {
+      const maxPitch = 6.5;
+      const minPitch = 3;
+      const maxMoraLength = 0.3;
+      const minMoraLength = 0;
+      const { audioKey, accentPhraseIndex, moraIndex, data, type } = payload;
+      const audioItem = draft.audioItems[audioKey];
+      if (audioItem.query === undefined) {
+        throw Error("draft.audioItems[audioKey].query === undefined");
+      }
+      const accentPhrase = audioItem.query.accentPhrases[accentPhraseIndex];
+      const targetMora = accentPhrase.moras[moraIndex];
+
+      let diffData = data;
+      switch (type) {
+        case "pitch":
+          diffData -= targetMora.pitch;
+          break;
+        case "consonant":
+          if (targetMora.consonantLength !== undefined) {
+            diffData -= targetMora.consonantLength;
+          }
+          break;
+        case "vowel":
+          diffData -= targetMora.vowelLength;
+          break;
+      }
+
+      accentPhrase.moras.forEach((mora, moraIndex) => {
+        switch (type) {
+          case "pitch":
+            if (mora.pitch > 0) {
+              const newData = Math.max(
+                minPitch,
+                Math.min(maxPitch, mora.pitch + diffData)
+              );
+              audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+                audioKey,
+                accentPhraseIndex,
+                moraIndex,
+                data: newData,
+                type,
+              });
+            }
+            break;
+          case "consonant":
+          case "vowel":
+            if (mora.consonantLength !== undefined) {
+              audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+                audioKey,
+                accentPhraseIndex,
+                moraIndex,
+                data: Math.max(
+                  minMoraLength,
+                  Math.min(maxMoraLength, mora.consonantLength + diffData)
+                ),
+                type: "consonant",
+              });
+            }
+            audioStore.mutations.SET_AUDIO_MORA_DATA(draft, {
+              audioKey,
+              accentPhraseIndex,
+              moraIndex,
+              data: Math.max(
+                minMoraLength,
+                Math.min(maxMoraLength, mora.vowelLength + diffData)
+              ),
+              type: "vowel",
+            });
+            break;
+        }
+      });
     },
     COMMAND_SET_AUDIO_SPEED_SCALE(
       draft,

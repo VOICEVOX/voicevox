@@ -92,16 +92,24 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
 
-  showProjectSaveDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", { title });
+  showProjectSaveDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", {
+      title,
+      defaultPath,
+    });
   },
 
   showProjectLoadDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
+  showInfoDialog: ({ title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+      title,
+      message,
+      buttons,
+      cancelId,
+    });
   },
 
   showWarningDialog: ({ title, message }) => {
@@ -134,6 +142,10 @@ const api: Sandbox = {
 
   inheritAudioInfo: (newValue) => {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
+  },
+
+  activePointScrollMode: (newValue) => {
+    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
   },
 
   isAvailableGPUMode: () => {
@@ -215,8 +227,23 @@ const api: Sandbox = {
     );
   },
 
+  getExperimentalSetting: async () => {
+    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
+  },
+
+  setExperimentalSetting: async (enableInterrogative) => {
+    return await ipcRendererInvoke(
+      "SET_EXPERIMENTAL_SETTING",
+      enableInterrogative
+    );
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+  },
+
+  getDefaultToolbarSetting: async () => {
+    return await ipcRendererInvoke("GET_DEFAULT_TOOLBAR_SETTING");
   },
 
   theme: (newData) => {

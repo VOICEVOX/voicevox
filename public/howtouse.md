@@ -15,11 +15,11 @@
 
 起動しようとすると「Windows によって PC が保護されました」というダイアログが表示されるかもしれません。その際は「詳細情報」をクリックし、「実行」を選んでください。
 
-<img src="res/image14.png" style="max-height: 16rem" /> → <img src="res/image15.png" style="max-height: 16rem" />
+<img src="res/image14.png" style="max-height: 16rem" alt="「Windows によって PC が保護されました」というダイアログ" /> → <img src="res/image15.png" style="max-height: 16rem" alt="「詳細情報」をクリックし、「実行」を選んでいる様子。" />
 
 ### Mac版
 初回起動時はAppleに登録されていないアプリケーションとして警告ダイアログが表示されます。  
-<img src="res/gatekeeper.png" style="max-height: 16rem" />
+<img src="res/gatekeeper.png" style="max-height: 16rem" alt="「VOICEVOXは開発を検証できないため開けません」というダイアログ。" />
 
 その際は以下の手順で起動してください。
 
@@ -36,7 +36,7 @@ Macでこれらの環境設定を変更するには、アップルメニュー  
 過去にIntel 搭載モデルの Mac 用に開発された Appを使ったことがない方は、「VOICEVOX」をはじめて開く際に、Rosetta をインストールするかどうかを確認するメッセージが表示されます。  
 Rosetta をいったんインストールしたら、Rosetta を必要とするほかの App でも使えるようになるので、再びインストールするよう案内されることはありません。
   
-<img src="res/macos-big-sur-software-update-rosetta-alert.jpg" style="max-height: 16rem" />
+<img src="res/macos-big-sur-software-update-rosetta-alert.jpg" style="max-height: 16rem" alt="Rosetta をインストールするかどうかを確認するメッセージ。" />
   
 Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソースをご覧ください。（Appleサポートページに飛びます）
 - [Apple シリコン搭載の Mac コンピュータに関して](https://support.apple.com/ja-jp/HT211814)
@@ -51,17 +51,17 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 ※Mac版ではGPUモードに対応していないためGPU モードはご利用頂けません。
 
-<img src="res/image4.png" style="max-height: 8rem" />
+<img src="res/image4.png" style="max-height: 8rem" alt="音声合成エンジンを起動している様子。" />
 
 ## 音声の生成
 
 キャラクターアイコンの右にある空白をクリックしてテキストを入力してみてください。
 
-<img src="res/image19.png" style="max-height: 12rem" />
+<img src="res/image19.png" style="max-height: 12rem" alt="キャラクターアイコンの右にある空白。" />
 
 エンターボタンを押して文章を確定すると、画面の下の方に読みとアクセントが表示されます。（１回目は反映まで数秒ほど時間がかかることがあります。）
 
-<img src="res/image6.png" style="max-height: 14rem" />
+<img src="res/image6.png" style="max-height: 14rem" alt="画面の下の方に読みとアクセントが表示された様子。" />
 
 再生ボタンを押すと音声が生成され、音声が再生されます。
 
@@ -69,13 +69,13 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 右下の＋ボタンを押すとテキスト欄が増え、複数の文章を並べることができます。
 
-<img src="res/image10.png" style="max-height: 14rem" />
+<img src="res/image10.png" style="max-height: 14rem" alt="テキスト欄が増えた様子。" />
 
 ## キャラクターの変更
 
 テキスト入力欄の左にあるアイコンをクリックすると、テキストを読み上げてくれるキャラクターを変更することができます。
 
-<img src="res/image7.png" style="max-height: 12rem" />
+<img src="res/image7.png" style="max-height: 12rem" alt="左にあるアイコンをクリックしてほかのキャラクターアイコンが表示されている様子。" />
 
 ## 単語の接続変更
 
@@ -83,19 +83,19 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 例えば「ディープラーニング」がこのように分かれてしまった場合は、
 
-<img src="res/image9.png" style="max-height: 16rem" />
+<img src="res/image9.png" style="max-height: 16rem" alt="「ディープラーニング」が「ディープ」と「ラーニング」に分かれた様子。" />
 
 ２つの隙間をクリックすると
 
-<img src="res/image3.png" style="max-height: 8rem" />
+<img src="res/image3.png" style="max-height: 8rem" alt="「ディープ」と「ラーニング」の間にマウスカーソルを合わせている様子。マウスカーソルが当たっている部分が青色になります。" />
 
 このように１語にまとめることができます
 
-<img src="res/image8.png" style="max-height: 7rem" />
+<img src="res/image8.png" style="max-height: 7rem" alt="「ディープ」と「ラーニング」が「ディープラーニング」の１語にまとまった様子。" />
 
 逆に切り離したい場合は、文字の間をクリックして切り離すことができます。
 
-<img src="res/image13.png" style="max-height: 8rem" />
+<img src="res/image13.png" style="max-height: 8rem" alt="「ディープ」と「ラーニング」の間にマウスカーソルを合わせている様子。マウスカーソルが当たっている部分が青色になります。"/>
 
 ## アクセントの変更
 
@@ -104,7 +104,7 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 アクセント箇所を変えるには、読みの上にあるバーを左右に動かします。
 例えば「ディープラーニング」を「↑ ディープラ ↓ アニング」と読んでほしい場合は、「ラ」の位置まで丸をスライドします。
 
-<img src="res/image8.png" style="max-height: 8rem" /> → <img src="res/image1.png" style="max-height: 8rem" />
+<img src="res/image8.png" style="max-height: 8rem" alt="「ディープラーニング」" /> → <img src="res/image1.png" style="max-height: 8rem" alt="「↑ ディープラ ↓ アニング」" />
 
 ## イントネーションの変更
 
@@ -112,17 +112,17 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 「イントネーション」をクリックして現れる縦線のバーを上下させることで抑揚を表現できます。
 
-<img src="res/image2.png" style="max-height: 8rem" />
+<img src="res/image2.png" style="max-height: 8rem" alt="「イントネーション」をクリックして現れる縦線のバー。" />
 
 イントネーション調整スペースを縦に広くすることで、より細かく抑揚を調整することもできます。
 
-<img src="res/image18.png" style="max-height: 14rem" />
+<img src="res/image18.png" style="max-height: 14rem" alt="イントネーション調整スペースを縦に広くした様子。" />
 
 マウスホイールで調整することもできます。Ctrl キーを押しながらマウスホイールを使うと更に細かく調整できます。
 
 また、「キ」や「ツ」や「ス」などが無声化されている場合、バーが灰色になっています。イントネーション欄のテキストをクリックすることで無声化を解くことができます。
 
-<img src="res/image5.png" style="max-height: 10rem" /> → <img src="res/image12.png" style="max-height: 10rem" />
+<img src="res/image5.png" style="max-height: 10rem" alt="「キツツキデス」の「キ」と「ツ」と「ス」のバーが灰色になっている様子" /> → <img src="res/image12.png" style="max-height: 10rem" alt="「キツツキデス」のすべての文字のバーが青色で表示されている様子。" />
 
 無声化できるものはイ行とウ行だけです。
 
@@ -130,13 +130,13 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 読みが思っているものと違う場合は、アクセント欄で読みをクリックすることで後から修正することもできます。テキスト欄と同様に、ひらがなや句読点、漢字も入力できます。
 
-<img src="res/image20.png" style="max-height: 12rem" />
+<img src="res/image20.png" style="max-height: 12rem" alt="アクセント欄で読みをクリックした様子。修正したいテキストが表示されたテキストボックスが表示されています。テキストボックスの内容を書き換えることで読みを修正できます。" />
 
 ## スタイルの変更
 
 キャラクターによっては複数のスタイル（喋り方）を変えることができます。キャラクターの変更と同様に、テキスト欄左のアイコンから選択できます。
 
-<img src="res/image21.png" style="max-height: 12rem" />
+<img src="res/image21.png" style="max-height: 12rem" alt="キャラクターのアイコンをクリックすると別のキャラクターアイコンが表示されている様子。" />
 
 キャラクターを選択したときに適用されるスタイルは、設定の「デフォルトスタイル」で変更できます。
 
@@ -147,7 +147,7 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 「長さ」をクリックして現れる縦線のバーを上げるとその音を長く、下げると短くできます。
 右のバーが母音、左のバーが子音に対応しています。
 
-<img src="res/image22.png" style="max-height: 12rem" />
+<img src="res/image22.png" style="max-height: 12rem" alt="一つの文字のバーが中央で縦に分かれている様子。" />
 
 ## 音声ファイル・テキストファイルの書き出し
 
@@ -168,7 +168,7 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 このように読み込まれます。
 
-<img src="res/image17.png" style="max-height: 12rem" />
+<img src="res/image17.png" style="max-height: 12rem" alt="テキストがと見込まれた様子。四国めたん「おはようございます」、四国めたん「こんにちは」、ずんだもん「こんばんは」、四国めたん「さようなら」のように、キャラクターと文章が読み込まれています。" />
 
 ## プロジェクトファイルの保存・読み込み
 
@@ -205,7 +205,8 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 - スライダーの上でマウスホイール
   - スライダーの値を変更します
   - Ctrl キーを押しながらマウスホイールを使うと更に細かく調整できます
-  - スライダー →<img src="res/image16.png" style="max-height: 1rem" />
+  - スライダー →<img src="res/image16.png" style="max-height: 1rem" alt="スライダー、緑色の棒。" />
+  - Alt キーを押しながらイントネーションや長さを調整することで、同じアクセント区間内を同時に調整できます
   
 
 
@@ -214,12 +215,12 @@ Apple Silicon搭載のMacとRosettaの詳しい情報はこちらのリソース
 
 右上の歯車マークから設定画面を表示できます。
 
-### エンジン
+### 「エンジン」項目
 
 エンジンの起動モードの起動モードを変更できます。
 GPU モードを利用するには、3GB 以上のメモリがある NVIDIA 製 GPU が必要です。
 
-### 保存
+### 「保存」項目
 
 #### 文字コード
 
@@ -232,6 +233,14 @@ GPU モードを利用するには、3GB 以上のメモリがある NVIDIA 製 
 #### 上書き防止
 
 同じファイル名のファイルがあった場合に連番として保存します。
+
+### 「データ収集」項目
+
+#### ソフトウェア利用状況のデータ収集を許可する
+
+各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。  
+入力されたテキストデータや音声データの情報は収集しておりませんのでご安心ください。
+
 
 ## その他
 
@@ -253,6 +262,24 @@ Zip ファイルを解凍した場合、ダウンロードした ZIP ファイ�
 
 
 ## よくある Q&A
+
+### Q. ダウンロードできない
+
+ブラウザのセキュリティ機能によって、ファイルをダウンロードして保存するときにプログラムの安全性に係る警告が表示されることがあります。  
+以下の手順に従ってダウンロードしてください。
+
+#### 「安全にダウンロードすることはできません」メッセージが表示された場合
+
+1. 画面右上の「安全にダウンロードすることはできません」にマウスポインターを合わせます。
+2. 「・・・」→「保存」ボタンの順にクリックします。
+3. VOICEVOXのホームページからダウンロードしたインストーラーなど、安全性が確認できる場合は、「保持する」ボタンをクリックします。アプリケーションやファイルの提供元が不明など、安全性が確認できない場合は、「キャンセル」ボタンをクリックします。VOICEVOXのホームページからダウンロードするインストーラーなどでも「発行元」に「不明」と表示されることがあります。「不明」と表示されても、安全性が確認できる場合は保存してください。
+
+#### 「一般的にダウンロードされていません」または「お使いのデバイスに問題を起こす可能性があるため、ブロックされました」というメッセージが表示された場合
+
+1. 画面右上の「一般的にダウンロードされていません」または「お使いのデバイスに問題を起こす可能性があるため、ブロックされました」にマウスポインターを合わせます。
+2. 「・・・」→「保存」ボタンの順にクリックします。
+3. 「ダウンロードしているファイルまたはそのソースが信頼できることを確認してから、ファイルを開いてください。」と表示されます。「詳細表示」をクリックします。
+4. VOICEVOXのホームページからダウンロードしたインストーラーなど、安全性が確認できる場合は、「保持する」をクリックします。アプリやファイルの提供元が不明など、安全性が確認できない場合は、「削除」ボタンをクリックします。VOICEVOXのホームページからダウンロードするインストーラーなどでも「発行元」に「不明」と表示されることがあります。「不明」と表示されても、安全性が確認できる場合は保存してください。
 
 ### Q. インストールディレクトリはどこですか？
 #### Windows版

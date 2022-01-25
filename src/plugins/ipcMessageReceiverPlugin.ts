@@ -34,6 +34,14 @@ export const ipcMessageReceiver: Plugin = {
       options.store.dispatch("DETECT_UNPINNED");
     });
 
+    window.electron.onReceivedIPCMsg("DETECT_ENTER_FULLSCREEN", () =>
+      options.store.dispatch("DETECT_ENTER_FULLSCREEN")
+    );
+
+    window.electron.onReceivedIPCMsg("DETECT_LEAVE_FULLSCREEN", () =>
+      options.store.dispatch("DETECT_LEAVE_FULLSCREEN")
+    );
+
     window.electron.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", () => {
       options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
     });

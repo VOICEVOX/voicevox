@@ -27,7 +27,7 @@ BANNER
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
-REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
+REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
 APP_DIR=${APP_DIR:-$HOME/.voicevox}

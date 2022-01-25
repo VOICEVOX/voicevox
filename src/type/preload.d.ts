@@ -17,12 +17,16 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
+  showProjectSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showInfoDialog(obj: {
     title: string;
     message: string;
     buttons: string[];
+    cancelId?: number;
   }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
@@ -38,6 +42,9 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
+  activePointScrollMode(
+    newValue?: ActivePointScrollMode
+  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -67,7 +74,12 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(
+    enableInterrogative: ExperimentalSetting
+  ): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }
@@ -112,6 +124,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SavingSetting = {
   exportLab: boolean;
@@ -181,8 +195,13 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
+  | "EXPORT_AUDIO_ONE"
+  | "EXPORT_AUDIO_ALL"
+  | "EXPORT_AUDIO_CONNECT_ALL"
+  | "SAVE_PROJECT"
   | "UNDO"
   | "REDO"
+  | "IMPORT_TEXT"
   | "EMPTY";
 
 export type ToolbarSetting = ToolbarButtonTagType[];
@@ -207,7 +226,8 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "pause-hovered";
+  | "pause-hovered"
+  | "active-point-focus";
 
 export type ThemeConf = {
   name: string;
@@ -220,4 +240,9 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type ExperimentalSetting = {
+  enableInterrogative: boolean;
+  enableReorderCell: boolean;
 };

@@ -130,11 +130,14 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_USE_GPU"));
       promises.push(dispatch("GET_PRESET_CONFIG"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
+      promises.push(dispatch("GET_ACTIVE_POINT_SCROLL_MODE"));
       promises.push(dispatch("GET_SAVING_SETTING"));
       promises.push(dispatch("GET_HOTKEY_SETTINGS"));
       promises.push(dispatch("GET_TOOLBAR_SETTING"));
       promises.push(dispatch("GET_THEME_SETTING"));
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
+      promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
+
       Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
       });

@@ -58,7 +58,7 @@ type IpcIHData = {
   };
 
   SHOW_PROJECT_SAVE_DIALOG: {
-    args: [obj: { title: string }];
+    args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
 
@@ -68,7 +68,14 @@ type IpcIHData = {
   };
 
   SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
+    args: [
+      obj: {
+        title: string;
+        message: string;
+        buttons: string[];
+        cancelId?: number;
+      }
+    ];
     return: number;
   };
 
@@ -95,6 +102,11 @@ type IpcIHData = {
   INHERIT_AUDIOINFO: {
     args: [obj: { newValue?: boolean }];
     return: boolean;
+  };
+
+  ACTIVE_POINT_SCROLL_MODE: {
+    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
+    return: import("@/type/preload").ActivePointScrollMode;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -189,6 +201,11 @@ type IpcIHData = {
     return: import("@/type/preload").HotkeySetting[];
   };
 
+  GET_DEFAULT_TOOLBAR_SETTING: {
+    args: [];
+    return: import("@/type/preload").ToolbarSetting;
+  };
+
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
     args: [];
     return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
@@ -198,6 +215,14 @@ type IpcIHData = {
     args: [
       acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
     ];
+    return: void;
+  };
+  GET_EXPERIMENTAL_SETTING: {
+    args: [];
+    return: ExperimentalSetting;
+  };
+  SET_EXPERIMENTAL_SETTING: {
+    args: [experimentalSetting: ExperimentalSetting];
     return: void;
   };
 
@@ -242,6 +267,16 @@ type IpcSOData = {
   };
 
   DETECT_UNPINNED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_ENTER_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_LEAVE_FULLSCREEN: {
     args: [];
     return: void;
   };

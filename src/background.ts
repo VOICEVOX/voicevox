@@ -5,7 +5,15 @@ import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 
-import { app, protocol, BrowserWindow, dialog, Menu, shell } from "electron";
+import {
+  app,
+  protocol,
+  BrowserWindow,
+  dialog,
+  Menu,
+  shell,
+  nativeTheme,
+} from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
@@ -21,8 +29,10 @@ import {
   SavingSetting,
   PresetConfig,
   ThemeConf,
+  ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
   ToolbarSetting,
+  ActivePointScrollMode,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -50,7 +60,10 @@ if (isDevelopment) {
 let win: BrowserWindow;
 
 // 多重起動防止
-if (!isDevelopment && !app.requestSingleInstanceLock()) app.quit();
+if (!isDevelopment && !app.requestSingleInstanceLock()) {
+  log.info("VOICEVOX already running. Cancelling launch");
+  app.quit();
+}
 
 process.on("uncaughtException", (error) => {
   log.error(error);
@@ -147,16 +160,27 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
 ];
 
+const defaultToolbarButtonSetting: ToolbarSetting = [
+  "PLAY_CONTINUOUSLY",
+  "STOP",
+  "EXPORT_AUDIO_ONE",
+  "EMPTY",
+  "UNDO",
+  "REDO",
+];
+
 // 設定ファイル
 const store = new Store<{
   useGpu: boolean;
   inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
   savingSetting: SavingSetting;
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
 }>({
   schema: {
@@ -167,6 +191,11 @@ const store = new Store<{
     inheritAudioInfo: {
       type: "boolean",
       default: true,
+    },
+    activePointScrollMode: {
+      type: "string",
+      enum: ["CONTINUOUSLY", "PAGE", "OFF"],
+      default: "OFF",
     },
     savingSetting: {
       type: "object",
@@ -217,7 +246,7 @@ const store = new Store<{
       items: {
         type: "string",
       },
-      default: ["PLAY_CONTINUOUSLY", "STOP", "EMPTY", "UNDO", "REDO"],
+      default: defaultToolbarButtonSetting,
     },
     defaultStyleIds: {
       type: "array",
@@ -267,6 +296,23 @@ const store = new Store<{
       type: "string",
       default: "Default",
     },
+    experimentalSetting: {
+      type: "object",
+      properties: {
+        enableInterrogative: {
+          type: "boolean",
+          default: false,
+        },
+        enableReorderCell: {
+          type: "boolean",
+          default: false,
+        },
+      },
+      default: {
+        enableInterrogative: false,
+        enableReorderCell: false,
+      },
+    },
     acceptRetrieveTelemetry: {
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Refused"],
@@ -301,9 +347,9 @@ async function runEngine() {
     store.set("inheritAudioInfo", true);
   }
   const useGpu = store.get("useGpu");
-  const inheritAudioInfo = store.get("inheritAudioInfo");
 
-  log.info(`Starting ENGINE in ${useGpu ? "GPU" : "CPU"} mode`);
+  log.info(`Starting ENGINE`);
+  log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -312,21 +358,24 @@ async function runEngine() {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
+  log.info(`ENGINE path: ${enginePath}`);
+  log.info(`ENGINE args: ${JSON.stringify(args)}`);
+
   engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info("ENGINE: " + data.toString("utf-8"));
+    log.info(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error("ENGINE: " + data.toString("utf-8"));
+    log.error(`ENGINE: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE: terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE: exited with code ${code}`);
+    log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE: process exited with code ${code}`);
 
     if (!willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
@@ -335,6 +384,60 @@ async function runEngine() {
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
       );
     }
+  });
+}
+
+async function restartEngine() {
+  await new Promise<void>((resolve, reject) => {
+    log.info(
+      `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+    );
+
+    // エンジンのプロセスがすでに終了している、またはkillされている場合
+    const engineExited = engineProcess.exitCode !== null;
+    const engineKilled = engineProcess.signalCode !== null;
+
+    if (engineExited || engineKilled) {
+      log.info(
+        "ENGINE process is not started yet or already killed. Starting ENGINE..."
+      );
+
+      runEngine();
+      resolve();
+      return;
+    }
+
+    // エンジンエラー時のエラーウィンドウ抑制用。
+    willQuitEngine = true;
+
+    // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
+    // closeイベントはexitイベントよりも後に発火します。
+    const restartEngineOnProcessClosedCallback = () => {
+      log.info("ENGINE process killed. Restarting ENGINE...");
+
+      runEngine();
+      resolve();
+    };
+    engineProcess.once("close", restartEngineOnProcessClosedCallback);
+
+    // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+    log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
+    treeKill(engineProcess.pid, (error) => {
+      // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+      if (error != null) {
+        log.error("Failed to kill ENGINE");
+        log.error(error);
+
+        // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
+        // listenerを削除してENGINEの意図しない再起動を防止
+        engineProcess.removeListener(
+          "close",
+          restartEngineOnProcessClosedCallback
+        );
+
+        reject();
+      }
+    });
   });
 }
 
@@ -373,7 +476,7 @@ const updateInfos = JSON.parse(
 );
 
 const privacyPolicyText = fs.readFileSync(
-  path.join(__static, "privacy_policy.md"),
+  path.join(__static, "privacyPolicy.md"),
   "utf-8"
 );
 
@@ -427,6 +530,8 @@ async function createWindow() {
     width: 800,
     height: 600,
     frame: false,
+    titleBarStyle: "hidden",
+    trafficLightPosition: { x: 6, y: 4 },
     minWidth: 320,
     show: false,
     webPreferences: {
@@ -447,8 +552,17 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
+  // Macではdarkモードかつウィンドウが非アクティブのときに閉じるボタンなどが見えなくなるので、lightモードに固定
+  if (isMac) nativeTheme.themeSource = "light";
+
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
+  win.on("enter-full-screen", () =>
+    win.webContents.send("DETECT_ENTER_FULLSCREEN")
+  );
+  win.on("leave-full-screen", () =>
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN")
+  );
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED"
@@ -551,9 +665,10 @@ ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title }) => {
+ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   const result = await dialog.showSaveDialog(win, {
     title,
+    defaultPath,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
     properties: ["showOverwriteConfirmation"],
   });
@@ -575,33 +690,37 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   return result.filePaths;
 });
 
-ipcMainHandle("SHOW_INFO_DIALOG", (_, { title, message, buttons }) => {
-  return dialog
-    .showMessageBox(win, {
-      type: "info",
-      buttons: buttons,
-      title: title,
-      message: message,
-      noLink: true,
-    })
-    .then((value) => {
-      return value.response;
-    });
-});
+ipcMainHandle(
+  "SHOW_INFO_DIALOG",
+  (_, { title, message, buttons, cancelId }) => {
+    return dialog
+      .showMessageBox(win, {
+        type: "info",
+        buttons,
+        title,
+        message,
+        noLink: true,
+        cancelId,
+      })
+      .then((value) => {
+        return value.response;
+      });
+  }
+);
 
 ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
 ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "error",
-    title: title,
-    message: message,
+    title,
+    message,
   });
 });
 
@@ -631,6 +750,14 @@ ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   }
 
   return store.get("inheritAudioInfo", false);
+});
+
+ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("activePointScrollMode", newValue);
+  }
+
+  return store.get("activePointScrollMode", "OFF");
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -663,61 +790,9 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle(
-  "RESTART_ENGINE",
-  () =>
-    new Promise<void>((resolve, reject) => {
-      log.info(
-        `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
-      );
-
-      // エンジンのプロセスがすでに終了している、またはkillされている場合
-      const engineExited = engineProcess.exitCode !== null;
-      const engineKilled = engineProcess.signalCode !== null;
-
-      if (engineExited || engineKilled) {
-        log.info(
-          "ENGINE process is not started yet or already killed. Starting ENGINE..."
-        );
-
-        runEngine();
-        resolve();
-        return;
-      }
-
-      // エンジンエラー時のエラーウィンドウ抑制用。
-      willQuitEngine = true;
-
-      // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
-      // closeイベントはexitイベントよりも後に発火します。
-      const restartEngineOnProcessClosedCallback = () => {
-        log.info("ENGINE process killed. Restarting ENGINE...");
-
-        runEngine();
-        resolve();
-      };
-      engineProcess.once("close", restartEngineOnProcessClosedCallback);
-
-      // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
-      treeKill(engineProcess.pid, (error) => {
-        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-        if (error != null) {
-          log.error("Failed to kill ENGINE");
-          log.error(error);
-
-          // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
-          // listenerを削除してENGINEの意図しない再起動を防止
-          engineProcess.removeListener(
-            "close",
-            restartEngineOnProcessClosedCallback
-          );
-
-          reject();
-        }
-      });
-    })
-);
+ipcMainHandle("RESTART_ENGINE", async () => {
+  await restartEngine();
+});
 
 ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
   if (newData !== undefined) {
@@ -802,12 +877,24 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
   return defaultHotkeySettings;
 });
 
+ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+  return defaultToolbarButtonSetting;
+});
+
 ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
   return store.get("acceptRetrieveTelemetry");
 });
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
+  return store.get("experimentalSetting");
+});
+
+ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
+  store.set("experimentalSetting", experimentalSetting);
 });
 
 // app callback
@@ -823,6 +910,7 @@ app.on("web-contents-created", (e, contents) => {
 });
 
 app.on("window-all-closed", () => {
+  log.info("All windows closed. Quitting app");
   app.quit();
 });
 
@@ -899,6 +987,7 @@ if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", (data) => {
       if (data === "graceful-exit") {
+        log.info("Received graceful-exit");
         app.quit();
       }
     });
