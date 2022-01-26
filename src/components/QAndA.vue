@@ -34,8 +34,4 @@ export default defineComponent({
     overflow: auto;
   }
 }
-
-.markdown :deep(img) {
-  border: 1px solid #333;
-}
 </style>
