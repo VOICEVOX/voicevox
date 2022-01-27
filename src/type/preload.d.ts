@@ -228,7 +228,8 @@ export type ThemeColorType =
   | "markdown-background"
   | "markdown-hyperlink"
   | "pause-hovered"
-  | "active-point-focus";
+  | "active-point-focus"
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;
