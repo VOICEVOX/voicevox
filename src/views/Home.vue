@@ -502,6 +502,7 @@ export default defineComponent({
     const isAcceptTermsDialogOpenComputed = computed({
       get: () =>
         !store.state.isDefaultStyleSelectDialogOpen &&
+        !store.state.isAcceptRetrieveTelemetryDialogOpen &&
         store.state.isAcceptTermsDialogOpen,
       set: (val) =>
         store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
