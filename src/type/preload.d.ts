@@ -76,9 +76,7 @@ export interface Sandbox {
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(
-    enableInterrogative: ExperimentalSetting
-  ): Promise<void>;
+  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -244,6 +242,7 @@ export type ThemeSetting = {
 };
 
 export type ExperimentalSetting = {
+  enablePreset: boolean;
   enableInterrogative: boolean;
   enableReorderCell: boolean;
 };

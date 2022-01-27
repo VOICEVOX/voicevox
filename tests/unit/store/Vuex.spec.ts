@@ -63,6 +63,7 @@ describe("store/vuex.js test", () => {
         acceptRetrieveTelemetry: "Unconfirmed",
         engineHost: "http://127.0.0.1",
         experimentalSetting: {
+          enablePreset: false,
           enableInterrogative: false,
           enableReorderCell: false,
         },
@@ -147,6 +148,7 @@ describe("store/vuex.js test", () => {
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
+    assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(store.state.experimentalSetting.enableInterrogative, false);
     assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });

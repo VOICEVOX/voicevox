@@ -299,6 +299,7 @@ const store = new Store<{
     experimentalSetting: {
       type: "object",
       properties: {
+        enablePreset: { type: "boolean", default: false },
         enableInterrogative: {
           type: "boolean",
           default: false,
@@ -309,6 +310,7 @@ const store = new Store<{
         },
       },
       default: {
+        enablePreset: false,
         enableInterrogative: false,
         enableReorderCell: false,
       },

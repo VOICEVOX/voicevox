@@ -318,7 +318,7 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
     },
-    SET_AUDIO_PRESET(
+    SET_AUDIO_PRESET_KEY(
       state,
       {
         audioKey,
@@ -2157,7 +2157,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         presetKey: string | undefined;
       }
     ) => {
-      audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
+      audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, { audioKey, presetKey });
       audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
     },
     COMMAND_APPLY_AUDIO_PRESET(draft, payload: { audioKey: string }) {
