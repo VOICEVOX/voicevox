@@ -143,6 +143,7 @@
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
+  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -168,6 +169,7 @@ import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -191,6 +193,7 @@ export default defineComponent({
     CharacterPortrait,
     DefaultStyleSelectDialog,
     AcceptRetrieveTelemetryDialog,
+    AcceptTermsDialog,
   },
 
   setup() {
@@ -433,6 +436,10 @@ export default defineComponent({
       isAcceptRetrieveTelemetryDialogOpenComputed.value =
         store.state.acceptRetrieveTelemetry === "Unconfirmed";
 
+      isAcceptTermsDialogOpenComputed.value =
+        process.env.NODE_ENV == "production" &&
+        store.state.acceptTerms !== "Accepted";
+
       isCompletedInitialStartup.value = true;
     });
 
@@ -491,6 +498,17 @@ export default defineComponent({
         }),
     });
 
+    // 利用規約表示
+    const isAcceptTermsDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isDefaultStyleSelectDialogOpen &&
+        store.state.isAcceptTermsDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen: val,
+        }),
+    });
+
     // ドラッグ＆ドロップ
     const dragEventCounter = ref(0);
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
@@ -544,6 +562,7 @@ export default defineComponent({
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
+      isAcceptTermsDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

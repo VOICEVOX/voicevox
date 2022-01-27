@@ -227,6 +227,15 @@ type IpcIHData = {
     ];
     return: void;
   };
+  GET_ACCEPT_TERMS: {
+    args: [];
+    return: import("@/type/preload").AcceptTermsStatus;
+  };
+
+  SET_ACCEPT_TERMS: {
+    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
+    return: void;
+  };
   GET_EXPERIMENTAL_SETTING: {
     args: [];
     return: ExperimentalSetting;

@@ -31,6 +31,7 @@ import {
   ThemeConf,
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
+  AcceptTermsStatus,
   ToolbarSetting,
   ActivePointScrollMode,
 } from "./type/preload";
@@ -182,6 +183,7 @@ const store = new Store<{
   currentTheme: string;
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
 }>({
   schema: {
     useGpu: {
@@ -316,6 +318,11 @@ const store = new Store<{
     acceptRetrieveTelemetry: {
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Refused"],
+      default: "Unconfirmed",
+    },
+    acceptTerms: {
+      type: "string",
+      enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
     },
   },
@@ -901,6 +908,14 @@ ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_ACCEPT_TERMS", () => {
+  return store.get("acceptTems");
+});
+
+ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
+  store.set("acceptTems", acceptTerms);
 });
 
 ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {

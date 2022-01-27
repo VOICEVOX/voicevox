@@ -75,6 +75,8 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getAcceptTerms(): Promise<AcceptTermsStatus>;
+  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
   setExperimentalSetting(
     enableInterrogative: ExperimentalSetting
@@ -125,6 +127,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
