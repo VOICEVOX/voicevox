@@ -83,6 +83,42 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>再生中のアクセント句を追従</div>
+                <q-space />
+                <div class="scroll-mode-toggle">
+                  <q-radio
+                    v-for="(obj, key) in activePointScrollModeOptions"
+                    :key="key"
+                    v-model="activePointScrollMode"
+                    :val="key"
+                    :label="obj.label"
+                    size="0"
+                    :class="[
+                      'q-px-md',
+                      'q-py-sm',
+                      key !== activePointScrollMode && 'scroll-mode-button',
+                      key === activePointScrollMode &&
+                        'scroll-mode-button-selected',
+                    ]"
+                    :style="[
+                      key === 'CONTINUOUSLY' && 'border-radius: 3px 0 0 3px',
+                      key === 'OFF' && 'border-radius: 0 3px 3px 0',
+                    ]"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生中のアクセント句を追従し、自動でスクロールします。
+                      {{ `「${obj.label}」モードは${obj.desc}` }}
+                    </q-tooltip>
+                  </q-radio>
+                </div>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -379,10 +415,10 @@
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
-                <div class="text-h5">テレメトリー</div>
+                <div class="text-h5">データ収集</div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>テレメトリーの収集を許可する</div>
+                <div>ソフトウェア利用状況のデータ収集を許可する</div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -396,7 +432,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    VOICEVOXの改善のため、ウインドウサイズや各UIの利用率などの収集を許可します
+                    各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -412,8 +448,11 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting, ExperimentalSetting } from "@/type/preload";
-import { useGtm } from "@gtm-support/vue-gtm";
+import {
+  SavingSetting,
+  ExperimentalSetting,
+  ActivePointScrollMode,
+} from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -441,6 +480,34 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+    const activePointScrollMode = computed({
+      get: () => store.state.activePointScrollMode,
+      set: (activePointScrollMode: ActivePointScrollMode) => {
+        store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode,
+        });
+      },
+    });
+    const activePointScrollModeOptions: Record<
+      ActivePointScrollMode,
+      {
+        label: string;
+        desc: string;
+      }
+    > = {
+      CONTINUOUSLY: {
+        label: "連続",
+        desc: "アクセント句を真ん中に表示します。",
+      },
+      PAGE: {
+        label: "ページめくり",
+        desc: "再生中のアクセント句が表示範囲外にある場合にスクロールします。",
+      },
+      OFF: {
+        label: "オフ",
+        desc: "自動でスクロールしません。",
+      },
+    };
 
     const experimentalSetting = computed(() => store.state.experimentalSetting);
 
@@ -501,7 +568,6 @@ export default defineComponent({
     );
     updateAudioOutputDevices();
 
-    const gtm = useGtm();
     const acceptRetrieveTelemetryComputed = computed({
       get: () => store.state.acceptRetrieveTelemetry == "Accepted",
       set: (acceptRetrieveTelemetry: boolean) => {
@@ -510,16 +576,15 @@ export default defineComponent({
             ? "Accepted"
             : "Refused",
         });
-        gtm?.enable(acceptRetrieveTelemetry);
 
         if (acceptRetrieveTelemetry) {
           return;
         }
 
         $q.dialog({
-          title: "テレメトリーの収集の無効化",
+          title: "ソフトウェア利用状況のデータ収集の無効化",
           message:
-            "テレメトリーの収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+            "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
           ok: {
             flat: true,
             textColor: "display",
@@ -654,6 +719,8 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      activePointScrollMode,
+      activePointScrollModeOptions,
       experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
@@ -683,6 +750,24 @@ export default defineComponent({
   @extend .hotkey-table;
   min-width: 475px;
   background: colors.$background;
+}
+
+.scroll-mode-toggle {
+  background: colors.$background;
+  border-radius: 3px;
+}
+
+.scroll-mode-button {
+  color: colors.$display;
+  transition: 0.5s;
+}
+
+.scroll-mode-button-selected {
+  background: colors.$primary;
+}
+
+.scroll-mode-button:hover {
+  background: rgba(colors.$primary-rgb, 0.2);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

@@ -56,6 +56,7 @@ export const projectStore: VoiceVoxStoreOptions<
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
             buttons: ["破棄", "キャンセル"],
+            cancelId: 1,
           });
           if (result == 1) {
             return;
@@ -239,6 +240,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
                 "変更を破棄してもよろしいですか？",
               buttons: ["破棄", "キャンセル"],
+              cancelId: 1,
             });
             if (result == 1) {
               return;

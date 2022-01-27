@@ -9,6 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
+import { ActivePointScrollMode } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -31,6 +32,7 @@ export const uiStoreState: UiStoreState = {
   dialogLockCount: 0,
   useGpu: false,
   inheritAudioInfo: true,
+  activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
@@ -116,6 +118,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { inheritAudioInfo }: { inheritAudioInfo: boolean }
       ) {
         state.inheritAudioInfo = inheritAudioInfo;
+      },
+      SET_ACTIVE_POINT_SCROLL_MODE(
+        state,
+        {
+          activePointScrollMode,
+        }: { activePointScrollMode: ActivePointScrollMode }
+      ) {
+        state.activePointScrollMode = activePointScrollMode;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -290,6 +300,23 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           ),
         });
       },
+      async GET_ACTIVE_POINT_SCROLL_MODE({ commit }) {
+        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode: await window.electron.activePointScrollMode(),
+        });
+      },
+      async SET_ACTIVE_POINT_SCROLL_MODE(
+        { commit },
+        {
+          activePointScrollMode,
+        }: { activePointScrollMode: ActivePointScrollMode }
+      ) {
+        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode: await window.electron.activePointScrollMode(
+            activePointScrollMode
+          ),
+        });
+      },
       async DETECT_UNMAXIMIZED({ commit }) {
         commit("DETECT_UNMAXIMIZED");
       },
@@ -316,6 +343,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
             buttons: ["破棄", "キャンセル"],
+            cancelId: 1,
           });
           if (result == 1) {
             return;

@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "0.9.4",
+  "version": "0.0.0",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
@@ -36,9 +36,9 @@
     "electron-store": "8.0.0",
     "encoding-japanese": "1.0.30",
     "immer": "9.0.2",
-    "lodash.debounce": "^4.0.8",
+    "lodash.debounce": "4.0.8",
     "markdown-it": "12.0.4",
-    "quasar": "2.1.2",
+    "quasar": "2.3.4",
     "source-map-support": "0.5.19",
     "systeminformation": "5.8.0",
     "tree-kill": "1.2.2",
@@ -74,7 +74,7 @@
     "@vue/test-utils": "2.0.0-rc.6",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
-    "electron": "^16.0.1",
+    "electron": "16.0.6",
     "electron-devtools-installer": "3.2.0",
     "eslint": "6.8.0",
     "eslint-plugin-prettier": "3.4.0",
