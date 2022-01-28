@@ -1,80 +1,59 @@
 <template>
   <div class="root full-height q-py-md" v-if="query">
-    <div class="q-px-md">
+    <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-space />
-
-        <q-btn-dropdown
-          dense
-          flat
-          no-icon-animation
-          dropdown-icon="more_vert"
-          :model-value="false"
-        >
-          <q-list>
-            <q-item clickable v-close-popup @click="applyPreset">
-              <q-item-section avatar>
-                <q-avatar
-                  icon="settings_backup_restore"
-                  color="primary-light"
-                  text-color="display-dark"
-                ></q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>プリセット適用</q-item-label>
-                <q-item-label caption
-                  >選択中の設定をプリセット値に戻す
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item clickable v-close-popup @click="registerPreset">
-              <q-item-section avatar>
-                <q-avatar
-                  icon="add_circle_outline"
-                  color="primary-light"
-                  text-color="display-dark"
-                ></q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>プリセット登録</q-item-label>
-                <q-item-label caption
-                  >現在の設定をプリセットに追加
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item
-              clickable
-              v-close-popup
-              @click="showsPresetEditDialog = true"
-            >
-              <q-item-section avatar>
-                <q-avatar
-                  icon="edit_note"
-                  color="primary-light"
-                  text-color="display-dark"
-                ></q-avatar>
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>プリセット管理</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
+        <q-btn dense flat icon="more_vert">
+          <q-menu transition-duration="100">
+            <q-list>
+              <q-item
+                clickable
+                v-close-popup
+                @click="registerPreset({ overwrite: false })"
+              >
+                <q-item-section avatar>
+                  <q-avatar
+                    icon="add_circle_outline"
+                    color="primary-light"
+                    text-color="display-dark"
+                  ></q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>プリセット新規登録</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item
+                clickable
+                v-close-popup
+                @click="showsPresetEditDialog = true"
+              >
+                <q-item-section avatar>
+                  <q-avatar
+                    icon="edit_note"
+                    color="primary-light"
+                    text-color="display-dark"
+                  ></q-avatar>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>プリセット管理</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </div>
 
-      <div
-        class="no-margin no-padding full-width"
-        @wheel="setPresetByScroll($event.deltaY)"
-      >
+      <div class="full-width row" @wheel="setPresetByScroll($event)">
         <q-select
           v-model="presetSelectModel"
           :options="selectablePresetList"
-          class="overflow-hidden"
+          class="col overflow-hidden"
           color="primary-light"
           text-color="display-dark"
           outlined
           dense
+          transition-show="none"
+          transition-hide="none"
         >
           <template v-slot:selected-item="scope">
             <div class="preset-select-label">
@@ -89,6 +68,17 @@
             </q-item>
           </template>
         </q-select>
+
+        <q-btn
+          dense
+          outline
+          class="col-auto q-ml-xs"
+          size="sm"
+          text-color="display-dark"
+          :label="isRegisteredPreset ? '再登録' : '登録'"
+          v-show="!isRegisteredPreset || isChangedPreset"
+          @click="registerPreset({ overwrite: isRegisteredPreset })"
+        />
       </div>
       <!-- プリセット管理ダイアログ -->
       <preset-manage-dialog v-model:open-dialog="showsPresetEditDialog" />
@@ -100,7 +90,7 @@
             <div class="text-h6">プリセット登録</div>
           </q-card-section>
 
-          <q-form @submit.prevent="checkRewrite">
+          <q-form @submit.prevent="checkRewritePreset">
             <q-card-section class="q-pt-none" text-color="display-dark">
               <q-select
                 fill-input
@@ -131,15 +121,14 @@
         </q-card>
       </q-dialog>
 
-      <!-- プリセット上書きダイアログ -->
+      <!-- プリセット再登録ダイアログ -->
       <q-dialog
         v-model="showsPresetRewriteDialog"
         @before-hide="closeAllDialog"
       >
-        <q-card style="min-width: 350px">
+        <q-card>
           <q-card-section>
-            <div class="text-h6">プリセットの上書き</div>
-            <div>同名のプリセットがあります。</div>
+            <div class="text-h6">プリセットの再登録</div>
           </q-card-section>
           <q-card-section>
             <q-list>
@@ -148,14 +137,14 @@
                   <q-avatar icon="arrow_forward" text-color="blue" />
                 </q-item-section>
                 <q-item-section>
-                  プリセットを上書きし、このプリセットが設定されたテキスト欄全てに適用する
+                  プリセットを再登録し、このプリセットが設定されたテキスト欄全てに再適用する
                 </q-item-section>
               </q-item>
               <q-item clickable class="no-margin" @click="updatePreset(false)">
                 <q-item-section avatar>
                   <q-avatar icon="arrow_forward" text-color="blue" />
                 </q-item-section>
-                <q-item-section> プリセットの上書きのみ行う </q-item-section>
+                <q-item-section> プリセットの再登録のみ行う </q-item-section>
               </q-item>
               <q-item
                 clickable
@@ -172,6 +161,8 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+
+      <q-separator class="q-mt-md" />
     </div>
 
     <div class="q-mx-md">
@@ -445,19 +436,53 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
 
+    // プリセット
+    const enablePreset = computed(
+      () => store.state.experimentalSetting.enablePreset
+    );
+
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
     const audioPresetKey = computed(() => audioItem.value?.presetKey);
+    const isRegisteredPreset = computed(
+      () =>
+        audioPresetKey.value != undefined &&
+        presetItems.value[audioPresetKey.value] != undefined
+    );
+
+    // 入力パラメータがプリセットから変更されたか
+    const isChangedPreset = computed(() => {
+      if (!isRegisteredPreset.value) return false;
+
+      // プリセットの値を取得
+      if (audioPresetKey.value == undefined)
+        throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+      const preset = presetItems.value[audioPresetKey.value];
+      const { name: _, ...presetParts } = preset;
+
+      // 入力パラメータと比較
+      const keys = Object.keys(presetParts) as (keyof Omit<Preset, "name">)[];
+      return keys.some(
+        (key) => presetParts[key] !== presetPartsFromParameter.value[key]
+      );
+    });
 
     type PresetSelectModelType = {
       label: string;
       key: string | undefined;
     };
 
-    const changePreset = (preset: PresetSelectModelType): void => {
+    // プリセットの変更
+    const changePreset = (
+      presetOrPresetKey: PresetSelectModelType | string
+    ): void => {
+      const presetKey =
+        typeof presetOrPresetKey === "string"
+          ? presetOrPresetKey
+          : presetOrPresetKey.key;
       store.dispatch("COMMAND_SET_AUDIO_PRESET", {
         audioKey: props.activeAudioKey,
-        presetKey: preset.key,
+        presetKey,
       });
     };
 
@@ -473,7 +498,7 @@ export default defineComponent({
     // セルへのプリセットの設定
     const selectablePresetList = computed<PresetSelectModelType[]>(() => {
       const restPresetList = [];
-      if (audioPresetKey.value != undefined) {
+      if (isRegisteredPreset.value) {
         restPresetList.push({
           key: undefined,
           label: "プリセット解除",
@@ -484,15 +509,14 @@ export default defineComponent({
 
     const presetSelectModel = computed<PresetSelectModelType>({
       get: () => {
-        if (
-          audioPresetKey.value === undefined ||
-          !presetKeys.value.includes(audioPresetKey.value) ||
-          presetItems.value[audioPresetKey.value] == undefined
-        )
+        if (!isRegisteredPreset.value)
           return {
-            label: "プリセットを選択",
+            label: "プリセット選択",
             key: undefined,
           };
+
+        if (audioPresetKey.value == undefined)
+          throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
         return {
           label: presetItems.value[audioPresetKey.value].name,
           key: audioPresetKey.value,
@@ -503,7 +527,9 @@ export default defineComponent({
       },
     });
 
-    const setPresetByScroll = (deltaY: number) => {
+    const setPresetByScroll = (event: WheelEvent) => {
+      event.preventDefault();
+
       const presetNumber = selectablePresetList.value.length;
       if (presetNumber === 0 || presetNumber === undefined) return;
 
@@ -511,7 +537,7 @@ export default defineComponent({
         (value) => value.key == presetSelectModel.value.key
       );
 
-      const isUp = deltaY > 0;
+      const isUp = event.deltaY > 0;
       const newIndex = isUp ? nowIndex + 1 : nowIndex - 1;
       if (newIndex < 0 || presetNumber <= newIndex) return;
 
@@ -520,29 +546,38 @@ export default defineComponent({
       changePreset(selectablePresetList.value[newIndex]);
     };
 
-    // プリセットの登録・上書き
+    // プリセットの登録・再登録
     const showsPresetNameDialog = ref(false);
     const showsPresetRewriteDialog = ref(false);
-    const presetName = ref("");
+    const presetNameInDialog = ref("");
 
     const setPresetName = (name: string) => {
-      presetName.value = name;
+      presetNameInDialog.value = name;
     };
 
     const closeAllDialog = () => {
-      presetName.value = "";
+      presetNameInDialog.value = "";
       showsPresetNameDialog.value = false;
       showsPresetRewriteDialog.value = false;
     };
 
-    const registerPreset = () => {
-      showsPresetNameDialog.value = true;
-      if (
-        audioPresetKey.value != undefined &&
-        presetItems.value[audioPresetKey.value] != undefined
-      ) {
-        presetName.value = presetItems.value[audioPresetKey.value].name;
+    // プリセットの登録
+    const registerPreset = ({ overwrite }: { overwrite: boolean }) => {
+      // 既存の場合は名前をセット
+      if (isRegisteredPreset.value) {
+        if (audioPresetKey.value == undefined)
+          throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+        presetNameInDialog.value = presetItems.value[audioPresetKey.value].name;
       }
+
+      // 既存で再登録する場合は再登録ダイアログを表示
+      if (isRegisteredPreset.value && overwrite) {
+        showsPresetRewriteDialog.value = true;
+        return;
+      }
+
+      // それ以外はダイアログを表示
+      showsPresetNameDialog.value = true;
     };
 
     const presetOptionsList = ref<string[]>([]);
@@ -560,15 +595,17 @@ export default defineComponent({
       });
     };
 
-    const checkRewrite = () => {
-      if (presetList.value.find((e) => e.label === presetName.value)) {
+    const checkRewritePreset = async () => {
+      if (presetList.value.find((e) => e.label === presetNameInDialog.value)) {
         showsPresetRewriteDialog.value = true;
       } else {
-        addPreset();
+        const audioPresetKey = await addPreset();
+        changePreset(audioPresetKey);
       }
     };
 
-    const createPresetData = (title: string): Preset | undefined => {
+    // 入力パラメータから、name以外のPresetを取得
+    const presetPartsFromParameter = computed<Omit<Preset, "name">>(() => {
       if (
         speedScaleSlider.state.currentValue.value == null ||
         pitchScaleSlider.state.currentValue.value == null ||
@@ -577,9 +614,9 @@ export default defineComponent({
         prePhonemeLengthSlider.state.currentValue.value == null ||
         postPhonemeLengthSlider.state.currentValue.value == null
       )
-        return undefined;
+        throw new Error("slider value is null");
+
       return {
-        name: title,
         speedScale: speedScaleSlider.state.currentValue.value,
         pitchScale: pitchScaleSlider.state.currentValue.value,
         intonationScale: intonationScaleSlider.state.currentValue.value,
@@ -587,27 +624,32 @@ export default defineComponent({
         prePhonemeLength: prePhonemeLengthSlider.state.currentValue.value,
         postPhonemeLength: postPhonemeLengthSlider.state.currentValue.value,
       };
+    });
+
+    const createPresetData = (name: string): Preset => {
+      return { name, ...presetPartsFromParameter.value };
     };
 
+    // プリセット新規追加
     const addPreset = () => {
-      const title = presetName.value;
-      const newPreset = createPresetData(title);
+      const name = presetNameInDialog.value;
+      const newPreset = createPresetData(name);
       if (newPreset == undefined) throw Error("newPreset == undefined");
 
-      store.dispatch("ADD_PRESET", {
+      closeAllDialog();
+
+      return store.dispatch("ADD_PRESET", {
         presetData: newPreset,
       });
-
-      closeAllDialog();
     };
 
     const updatePreset = async (fullApply: boolean) => {
       const key = presetList.value.find(
-        (preset) => preset.label === presetName.value
+        (preset) => preset.label === presetNameInDialog.value
       )?.key;
       if (key === undefined) return;
 
-      const title = presetName.value;
+      const title = presetNameInDialog.value;
       const newPreset = createPresetData(title);
       if (newPreset == undefined) return;
 
@@ -639,17 +681,20 @@ export default defineComponent({
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
       applyPreset,
+      enablePreset,
+      isRegisteredPreset,
+      isChangedPreset,
       presetList,
       selectablePresetList,
       presetOptionsList,
       filterPresetOptionsList,
       presetSelectModel,
       setPresetByScroll,
-      checkRewrite,
+      checkRewritePreset,
       updatePreset,
       registerPreset,
       showsPresetNameDialog,
-      presetName,
+      presetName: presetNameInDialog,
       closeAllDialog,
       showsPresetEditDialog,
       showsPresetRewriteDialog,

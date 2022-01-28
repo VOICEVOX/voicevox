@@ -4,11 +4,11 @@
 
 #### CPU 版
 
-Windows・Mac・Linux 搭載の PC に対応しています。
+Windows／Mac／Linux 搭載の PC に対応しています。
 
 #### GPU 版
 
-Windows・Linux と Nvidia 製 GPU 搭載の PC に対応しています。
+Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
 
 ## インストールに関する質問
 

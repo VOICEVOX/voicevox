@@ -373,7 +373,27 @@
                 </q-btn-toggle>
               </q-card-actions> -->
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>疑問文自動調整</div>
+                <div>プリセット機能</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enablePreset"
+                  @update:model-value="
+                    changeExperimentalSetting('enablePreset', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    プリセット機能を有効にする
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文を自動調整</div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enableInterrogative"
@@ -388,7 +408,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    疑問文のアクセント句を自動調整する
+                    疑問文のとき語尾の音高を自動的に上げる
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>

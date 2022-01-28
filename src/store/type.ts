@@ -334,7 +334,7 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): void;
   };
 
-  SET_AUDIO_PRESET: {
+  SET_AUDIO_PRESET_KEY: {
     mutation: {
       audioKey: string;
       presetKey: string | undefined;
