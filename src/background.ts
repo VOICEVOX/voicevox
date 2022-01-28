@@ -300,7 +300,7 @@ const store = new Store<{
       type: "object",
       properties: {
         enablePreset: { type: "boolean", default: false },
-        enableInterrogative: {
+        enableInterrogativeUpspeak: {
           type: "boolean",
           default: false,
         },
@@ -311,7 +311,7 @@ const store = new Store<{
       },
       default: {
         enablePreset: false,
-        enableInterrogative: false,
+        enableInterrogativeUpspeak: false,
         enableReorderCell: false,
       },
     },

@@ -42,7 +42,12 @@ async function generateUniqueIdAndQuery(
   }
 
   const data = new TextEncoder().encode(
-    JSON.stringify([audioItem.text, audioQuery, audioItem.styleId])
+    JSON.stringify([
+      audioItem.text,
+      audioQuery,
+      audioItem.styleId,
+      state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
+    ])
   );
   const digest = await crypto.subtle.digest("SHA-256", data);
   const id = Array.from(new Uint8Array(digest))
@@ -657,7 +662,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch, state },
+      { dispatch },
       {
         text,
         styleId,
@@ -675,7 +680,6 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
-            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -735,7 +739,7 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch, state },
+      { dispatch },
       { text, styleId }: { text: string; styleId: number }
     ) {
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
@@ -744,7 +748,6 @@ export const audioStore: VoiceVoxStoreOptions<
           {
             text,
             speaker: styleId,
-            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -882,6 +885,8 @@ export const audioStore: VoiceVoxStoreOptions<
             {
               audioQuery,
               speaker,
+              enableInterrogativeUpspeak:
+                state.experimentalSetting.enableInterrogativeUpspeak,
             },
           ],
         })
