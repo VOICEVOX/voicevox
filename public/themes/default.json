@@ -15,6 +15,7 @@
     "markdown-background": "#FFFFFF",
     "markdown-hyperlink": "#0969DA",
     "pause-hovered": "#CCDDFF",
-    "active-point-focus": "#FFEDEC"
+    "active-point-focus": "#EEF3FF",
+    "active-point-focus-hover": "#F7FAFF"
   }
 }
