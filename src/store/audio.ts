@@ -1865,10 +1865,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
         let baseAudioItem: AudioItem | undefined = undefined;
-        if (state.inheritAudioInfo) {
-          baseAudioItem = state._activeAudioKey
-            ? state.audioItems[state._activeAudioKey]
-            : undefined;
+        let basePresetKey: string | undefined = undefined;
+        if (state.inheritAudioInfo && state._activeAudioKey) {
+          baseAudioItem = state.audioItems[state._activeAudioKey];
+          basePresetKey = baseAudioItem.presetKey;
         }
         for (const text of texts.filter((value) => value != "")) {
           const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
@@ -1878,6 +1878,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
             baseAudioItem,
+            presetKey: basePresetKey,
           });
 
           audioKeyItemPairs.push({
