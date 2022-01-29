@@ -84,7 +84,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>再生中のアクセント句を追従</div>
+                <div>再生位置を追従</div>
                 <q-space />
                 <div class="scroll-mode-toggle">
                   <q-radio
@@ -113,7 +113,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      再生中のアクセント句を追従し、自動でスクロールします。
+                      再生位置を追従し、自動でスクロールします。
                       {{ `「${obj.label}」モードは${obj.desc}` }}
                     </q-tooltip>
                   </q-radio>
@@ -222,28 +222,6 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>labファイルを生成</div>
-                <q-space />
-                <q-toggle
-                  name="enabled"
-                  align="left"
-                  :model-value="savingSetting.exportLab"
-                  @update:model-value="
-                    handleSavingSettingChange('exportLab', $event)
-                  "
-                >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを生成します
-                  </q-tooltip>
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
@@ -260,6 +238,28 @@
                     transition-hide="jump-right"
                   >
                     テキストをtxtファイルとして書き出します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>labファイルを書き出し</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リップシンク用のlabファイルを書き出します
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -373,7 +373,27 @@
                 </q-btn-toggle>
               </q-card-actions> -->
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>疑問文自動調整</div>
+                <div>プリセット機能</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enablePreset"
+                  @update:model-value="
+                    changeExperimentalSetting('enablePreset', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    プリセット機能を有効にする
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文を自動調整</div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enableInterrogative"
@@ -388,7 +408,7 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    疑問文のアクセント句を自動調整する
+                    疑問文のとき語尾の音高を自動的に上げる
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -497,11 +517,11 @@ export default defineComponent({
     > = {
       CONTINUOUSLY: {
         label: "連続",
-        desc: "アクセント句を真ん中に表示します。",
+        desc: "再生位置を真ん中に表示します。",
       },
       PAGE: {
         label: "ページめくり",
-        desc: "再生中のアクセント句が表示範囲外にある場合にスクロールします。",
+        desc: "再生位置が表示範囲外にある場合にスクロールします。",
       },
       OFF: {
         label: "オフ",
