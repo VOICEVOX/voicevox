@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.10.3",
+    "descriptions": ["プロジェクトファイルが読み込めないバグを修正"],
+    "contributors": ["Segu-g", "y-chan"]
+  },
+  {
     "version": "0.10.2",
     "descriptions": [
       "コアを Onnx 化して高速化・低容量化",
