@@ -347,7 +347,7 @@ const accentPhraseSchema = {
   },
   optionalProperties: {
     pauseMora: moraSchema,
-    is_interrogative: { type: "boolean" },
+    isInterrogative: { type: "boolean" },
   },
 } as const;
 
