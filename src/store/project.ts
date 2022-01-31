@@ -344,6 +344,7 @@ const accentPhraseSchema = {
       elements: moraSchema,
     },
     accent: { type: "int32" },
+    is_interrogative: { type: "boolean" },
   },
   optionalProperties: {
     pauseMora: moraSchema,
