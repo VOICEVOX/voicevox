@@ -211,17 +211,6 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (baseVersionIsLow(appVersionList, [0, 10, 0])) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
-              if (audioItem.query != null) {
-                for (const accentPhrase of audioItem.query.accentPhrases) {
-                  accentPhrase.is_interrogative = false;
-                }
-              }
-            }
-          }
-
           // Validation check
           const ajv = new Ajv();
           const validate = ajv.compile(projectSchema);
@@ -355,10 +344,10 @@ const accentPhraseSchema = {
       elements: moraSchema,
     },
     accent: { type: "int32" },
-    is_interrogative: { type: "boolean" },
   },
   optionalProperties: {
     pauseMora: moraSchema,
+    is_interrogative: { type: "boolean" },
   },
 } as const;
 
