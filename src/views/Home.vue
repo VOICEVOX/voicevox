@@ -478,10 +478,21 @@ export default defineComponent({
         }),
     });
 
+    // 利用規約表示
+    const isAcceptTermsDialogOpenComputed = computed({
+      get: () => store.state.isAcceptTermsDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen: val,
+        }),
+    });
+
     // デフォルトスタイル選択
     const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
-      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
         store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen: val,
@@ -490,23 +501,12 @@ export default defineComponent({
 
     const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
       get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
         !store.state.isDefaultStyleSelectDialogOpen &&
         store.state.isAcceptRetrieveTelemetryDialogOpen,
       set: (val) =>
         store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
           isAcceptRetrieveTelemetryDialogOpen: val,
-        }),
-    });
-
-    // 利用規約表示
-    const isAcceptTermsDialogOpenComputed = computed({
-      get: () =>
-        !store.state.isDefaultStyleSelectDialogOpen &&
-        !store.state.isAcceptRetrieveTelemetryDialogOpen &&
-        store.state.isAcceptTermsDialogOpen,
-      set: (val) =>
-        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
-          isAcceptTermsDialogOpen: val,
         }),
     });
 
