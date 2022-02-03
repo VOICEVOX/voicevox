@@ -12,7 +12,7 @@
         <q-toolbar>
           <div class="column">
             <q-toolbar-title class="text-display"
-              >ソフトウェアの利用規約に関するお知らせ</q-toolbar-title
+              >利用規約に関するお知らせ</q-toolbar-title
             >
           </div>
 
@@ -21,7 +21,7 @@
           <div class="row items-center no-wrap">
             <q-btn
               unelevated
-              label="同意しない"
+              label="同意せずに終了"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap q-mr-md text-bold"
@@ -30,7 +30,7 @@
 
             <q-btn
               unelevated
-              label="同意する"
+              label="同意して使用開始"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap text-bold"
@@ -52,7 +52,7 @@
             </q-card-section>
 
             <q-card-section>
-              <div class="q-pa-md markdown markdown-body" v-html="terms"></div>
+              <div class="q-pa-md markdown markdown-body" v-html="terms" />
             </q-card-section>
           </q-card>
         </q-page>
@@ -88,6 +88,7 @@ export default defineComponent({
       store.dispatch("SET_ACCEPT_TERMS", {
         acceptTerms: acceptTerms ? "Accepted" : "Rejected",
       });
+      !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
 
       modelValueComputed.value = false;
     };
