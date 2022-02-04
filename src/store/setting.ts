@@ -43,7 +43,7 @@ export const settingStoreState: SettingStoreState = {
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
-    enableInterrogative: false,
+    enableInterrogativeUpspeak: false,
     enableReorderCell: false,
   },
 };

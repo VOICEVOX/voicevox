@@ -119,7 +119,7 @@ export const projectStore: VoiceVoxStoreOptions<
           }
 
           // Migration
-          if (appVersionList < [0, 4, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 4, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
                 obj.audioItems[audioItemsKey].characterIndex =
@@ -138,7 +138,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 5, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 5, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.query != null) {
@@ -184,7 +184,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 7, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 7, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.characterIndex != null) {
@@ -201,7 +201,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 8, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 8, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.speaker !== null) {
@@ -347,6 +347,7 @@ const accentPhraseSchema = {
   },
   optionalProperties: {
     pauseMora: moraSchema,
+    isInterrogative: { type: "boolean" },
   },
 } as const;
 
@@ -409,4 +410,17 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
   const appVersion = textArray.map(Number) as VersionType;
   if (!appVersion.every((item) => Number.isInteger(item))) return undefined;
   return appVersion;
+};
+
+const baseVersionIsLow = (base: VersionType, target: VersionType): boolean => {
+  let result = false;
+  for (let i = 0; i < 3; i++) {
+    if (base[i] > target[i]) {
+      break;
+    } else if (base[i] < target[i]) {
+      result = true;
+      break;
+    }
+  }
+  return result;
 };

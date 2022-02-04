@@ -244,6 +244,6 @@ export type ThemeSetting = {
 
 export type ExperimentalSetting = {
   enablePreset: boolean;
-  enableInterrogative: boolean;
+  enableInterrogativeUpspeak: boolean;
   enableReorderCell: boolean;
 };

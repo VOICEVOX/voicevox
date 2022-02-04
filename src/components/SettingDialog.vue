@@ -396,9 +396,12 @@
                 <div>疑問文を自動調整</div>
                 <q-space />
                 <q-toggle
-                  :model-value="experimentalSetting.enableInterrogative"
+                  :model-value="experimentalSetting.enableInterrogativeUpspeak"
                   @update:model-value="
-                    changeExperimentalSetting('enableInterrogative', $event)
+                    changeExperimentalSetting(
+                      'enableInterrogativeUpspeak',
+                      $event
+                    )
                   "
                 >
                   <q-tooltip
