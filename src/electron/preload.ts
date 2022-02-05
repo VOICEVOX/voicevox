@@ -247,11 +247,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
   },
 
-  setExperimentalSetting: async (enableInterrogative) => {
-    return await ipcRendererInvoke(
-      "SET_EXPERIMENTAL_SETTING",
-      enableInterrogative
-    );
+  setExperimentalSetting: async (setting) => {
+    return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
   },
 
   getDefaultHotkeySettings: async () => {

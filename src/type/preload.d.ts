@@ -78,9 +78,7 @@ export interface Sandbox {
   getAcceptTerms(): Promise<AcceptTermsStatus>;
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(
-    enableInterrogative: ExperimentalSetting
-  ): Promise<void>;
+  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -232,7 +230,8 @@ export type ThemeColorType =
   | "markdown-background"
   | "markdown-hyperlink"
   | "pause-hovered"
-  | "active-point-focus";
+  | "active-point-focus"
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;
@@ -248,6 +247,7 @@ export type ThemeSetting = {
 };
 
 export type ExperimentalSetting = {
-  enableInterrogative: boolean;
+  enablePreset: boolean;
+  enableInterrogativeUpspeak: boolean;
   enableReorderCell: boolean;
 };
