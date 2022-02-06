@@ -27,16 +27,16 @@ export default defineComponent({
     });
 
     const latestVersion = ref("");
-    let tags: string[] = [];
     fetch("https://api.github.com/repos/VOICEVOX/voicevox/releases")
       .then((res) => res.json())
       .then((obj) => {
-        obj.map((item: { prerelease: boolean; tag_name: string }) => {
-          item.prerelease === false ? tags.push(item.tag_name) : undefined;
+        obj.find((item: { prerelease: boolean }) => {
+          item.prerelease === false;
         });
+        return obj;
       })
-      .then(() => {
-        latestVersion.value = tags[0];
+      .then((obj) => {
+        latestVersion.value = obj[0].tag_name;
       });
 
     const html = computed(() => {
