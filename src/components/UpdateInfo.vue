@@ -33,9 +33,6 @@ export default defineComponent({
         obj.find((item: { prerelease: boolean }) => {
           item.prerelease === false;
         });
-        return obj;
-      })
-      .then((obj) => {
         latestVersion.value = obj[0].tag_name;
       });
 
