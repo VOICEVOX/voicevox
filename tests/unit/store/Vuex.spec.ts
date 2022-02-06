@@ -22,6 +22,7 @@ describe("store/vuex.js test", () => {
         audioItems: {},
         audioKeys: [],
         audioStates: {},
+        audioPlayStartPoint: 0,
         uiLockCount: 0,
         dialogLockCount: 0,
         nowPlayingContinuously: false,
@@ -29,12 +30,14 @@ describe("store/vuex.js test", () => {
         redoCommands: [],
         useGpu: false,
         inheritAudioInfo: true,
+        activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
         isToolbarSettingDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
+        isAcceptTermsDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
@@ -59,9 +62,11 @@ describe("store/vuex.js test", () => {
         hotkeySettings: [],
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
+        acceptTerms: "Unconfirmed",
         engineHost: "http://127.0.0.1",
         experimentalSetting: {
-          enableInterrogative: false,
+          enablePreset: false,
+          enableInterrogativeUpspeak: false,
           enableReorderCell: false,
         },
       },
@@ -112,6 +117,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.audioKeys);
     assert.isObject(store.state.audioStates);
     assert.isEmpty(store.state.audioStates);
+    assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
     assert.isArray(store.state.undoCommands);
@@ -120,11 +126,13 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
+    assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
+    assert.equal(store.state.isAcceptTermsDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
     assert.isObject(store.state.savingSetting);
     assert.propertyVal(store.state.savingSetting, "fileEncoding", "UTF-8");
@@ -143,7 +151,12 @@ describe("store/vuex.js test", () => {
     assert.property(store.state.themeSetting, "availableThemes");
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
-    assert.equal(store.state.experimentalSetting.enableInterrogative, false);
+    assert.equal(store.state.acceptTerms, "Unconfirmed");
+    assert.equal(store.state.experimentalSetting.enablePreset, false);
+    assert.equal(
+      store.state.experimentalSetting.enableInterrogativeUpspeak,
+      false
+    );
     assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });
 });

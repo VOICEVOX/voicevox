@@ -37,6 +37,16 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_CONTACT_TEXT: {
+    args: [];
+    return: string;
+  };
+
+  GET_Q_AND_A_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
@@ -68,7 +78,14 @@ type IpcIHData = {
   };
 
   SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
+    args: [
+      obj: {
+        title: string;
+        message: string;
+        buttons: string[];
+        cancelId?: number;
+      }
+    ];
     return: number;
   };
 
@@ -95,6 +112,11 @@ type IpcIHData = {
   INHERIT_AUDIOINFO: {
     args: [obj: { newValue?: boolean }];
     return: boolean;
+  };
+
+  ACTIVE_POINT_SCROLL_MODE: {
+    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
+    return: import("@/type/preload").ActivePointScrollMode;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -203,6 +225,15 @@ type IpcIHData = {
     args: [
       acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
     ];
+    return: void;
+  };
+  GET_ACCEPT_TERMS: {
+    args: [];
+    return: import("@/type/preload").AcceptTermsStatus;
+  };
+
+  SET_ACCEPT_TERMS: {
+    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
     return: void;
   };
   GET_EXPERIMENTAL_SETTING: {

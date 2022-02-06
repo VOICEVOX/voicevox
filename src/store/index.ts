@@ -85,6 +85,12 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_PRIVACY_POLICY_TEXT() {
       return await window.electron.getPrivacyPolicyText();
     },
+    async GET_CONTACT_TEXT() {
+      return await window.electron.getContactText();
+    },
+    async GET_Q_AND_A_TEXT() {
+      return await window.electron.getQAndAText();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }
@@ -127,11 +133,13 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_USE_GPU"));
       promises.push(dispatch("GET_PRESET_CONFIG"));
       promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
+      promises.push(dispatch("GET_ACTIVE_POINT_SCROLL_MODE"));
       promises.push(dispatch("GET_SAVING_SETTING"));
       promises.push(dispatch("GET_HOTKEY_SETTINGS"));
       promises.push(dispatch("GET_TOOLBAR_SETTING"));
       promises.push(dispatch("GET_THEME_SETTING"));
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
+      promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
       Promise.all(promises).then(() => {

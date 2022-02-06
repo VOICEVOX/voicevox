@@ -9,6 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
+import { ActivePointScrollMode } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -31,12 +32,14 @@ export const uiStoreState: UiStoreState = {
   dialogLockCount: 0,
   useGpu: false,
   inheritAudioInfo: true,
+  activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
+  isAcceptTermsDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -108,6 +111,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.isAcceptRetrieveTelemetryDialogOpen =
           isAcceptRetrieveTelemetryDialogOpen;
       },
+      IS_ACCEPT_TERMS_DIALOG_OPEN(state, { isAcceptTermsDialogOpen }) {
+        state.isAcceptTermsDialogOpen = isAcceptTermsDialogOpen;
+      },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
@@ -116,6 +122,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { inheritAudioInfo }: { inheritAudioInfo: boolean }
       ) {
         state.inheritAudioInfo = inheritAudioInfo;
+      },
+      SET_ACTIVE_POINT_SCROLL_MODE(
+        state,
+        {
+          activePointScrollMode,
+        }: { activePointScrollMode: ActivePointScrollMode }
+      ) {
+        state.activePointScrollMode = activePointScrollMode;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -265,6 +279,19 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           isAcceptRetrieveTelemetryDialogOpen,
         });
       },
+      async IS_ACCEPT_TERMS_DIALOG_OPEN(
+        { state, commit },
+        { isAcceptTermsDialogOpen }
+      ) {
+        if (state.isAcceptTerms_DialogOpen === isAcceptTermsDialogOpen) return;
+
+        if (isAcceptTermsDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen,
+        });
+      },
       async GET_USE_GPU({ commit }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(),
@@ -287,6 +314,23 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         commit("SET_INHERIT_AUDIOINFO", {
           inheritAudioInfo: await window.electron.inheritAudioInfo(
             inheritAudioInfo
+          ),
+        });
+      },
+      async GET_ACTIVE_POINT_SCROLL_MODE({ commit }) {
+        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode: await window.electron.activePointScrollMode(),
+        });
+      },
+      async SET_ACTIVE_POINT_SCROLL_MODE(
+        { commit },
+        {
+          activePointScrollMode,
+        }: { activePointScrollMode: ActivePointScrollMode }
+      ) {
+        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode: await window.electron.activePointScrollMode(
+            activePointScrollMode
           ),
         });
       },
@@ -316,6 +360,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
             buttons: ["破棄", "キャンセル"],
+            cancelId: 1,
           });
           if (result == 1) {
             return;

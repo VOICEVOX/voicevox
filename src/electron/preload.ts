@@ -51,6 +51,14 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
   },
 
+  getContactText: async () => {
+    return await ipcRendererInvoke("GET_CONTACT_TEXT");
+  },
+
+  getQAndAText: async () => {
+    return await ipcRendererInvoke("GET_Q_AND_A_TEXT");
+  },
+
   getOssCommunityInfos: async () => {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
@@ -103,8 +111,13 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", { title, message, buttons });
+  showInfoDialog: ({ title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+      title,
+      message,
+      buttons,
+      cancelId,
+    });
   },
 
   showWarningDialog: ({ title, message }) => {
@@ -137,6 +150,10 @@ const api: Sandbox = {
 
   inheritAudioInfo: (newValue) => {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
+  },
+
+  activePointScrollMode: (newValue) => {
+    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
   },
 
   isAvailableGPUMode: () => {
@@ -218,15 +235,20 @@ const api: Sandbox = {
     );
   },
 
+  getAcceptTerms: async () => {
+    return await ipcRendererInvoke("GET_ACCEPT_TERMS");
+  },
+
+  setAcceptTerms: async (acceptTerms) => {
+    return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
+  },
+
   getExperimentalSetting: async () => {
     return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
   },
 
-  setExperimentalSetting: async (enableInterrogative) => {
-    return await ipcRendererInvoke(
-      "SET_EXPERIMENTAL_SETTING",
-      enableInterrogative
-    );
+  setExperimentalSetting: async (setting) => {
+    return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
   },
 
   getDefaultHotkeySettings: async () => {

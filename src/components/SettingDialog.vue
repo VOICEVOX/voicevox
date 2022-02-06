@@ -83,6 +83,42 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>再生位置を追従</div>
+                <q-space />
+                <div class="scroll-mode-toggle">
+                  <q-radio
+                    v-for="(obj, key) in activePointScrollModeOptions"
+                    :key="key"
+                    v-model="activePointScrollMode"
+                    :val="key"
+                    :label="obj.label"
+                    size="0"
+                    :class="[
+                      'q-px-md',
+                      'q-py-sm',
+                      key !== activePointScrollMode && 'scroll-mode-button',
+                      key === activePointScrollMode &&
+                        'scroll-mode-button-selected',
+                    ]"
+                    :style="[
+                      key === 'CONTINUOUSLY' && 'border-radius: 3px 0 0 3px',
+                      key === 'OFF' && 'border-radius: 0 3px 3px 0',
+                    ]"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生位置を追従し、自動でスクロールします。
+                      {{ `「${obj.label}」モードは${obj.desc}` }}
+                    </q-tooltip>
+                  </q-radio>
+                </div>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -186,28 +222,6 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>labファイルを生成</div>
-                <q-space />
-                <q-toggle
-                  name="enabled"
-                  align="left"
-                  :model-value="savingSetting.exportLab"
-                  @update:model-value="
-                    handleSavingSettingChange('exportLab', $event)
-                  "
-                >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを生成します
-                  </q-tooltip>
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
@@ -224,6 +238,28 @@
                     transition-hide="jump-right"
                   >
                     テキストをtxtファイルとして書き出します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>labファイルを書き出し</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リップシンク用のlabファイルを書き出します
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -337,12 +373,12 @@
                 </q-btn-toggle>
               </q-card-actions> -->
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>疑問文自動調整</div>
+                <div>プリセット機能</div>
                 <q-space />
                 <q-toggle
-                  :model-value="experimentalSetting.enableInterrogative"
+                  :model-value="experimentalSetting.enablePreset"
                   @update:model-value="
-                    changeExperimentalSetting('enableInterrogative', $event)
+                    changeExperimentalSetting('enablePreset', $event)
                   "
                 >
                   <q-tooltip
@@ -352,7 +388,30 @@
                     transition-show="jump-left"
                     transition-hide="jump-right"
                   >
-                    疑問文のアクセント句を自動調整する
+                    プリセット機能を有効にする
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文を自動調整</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableInterrogativeUpspeak"
+                  @update:model-value="
+                    changeExperimentalSetting(
+                      'enableInterrogativeUpspeak',
+                      $event
+                    )
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    疑問文のとき語尾の音高を自動的に上げる
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -412,7 +471,11 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting, ExperimentalSetting } from "@/type/preload";
+import {
+  SavingSetting,
+  ExperimentalSetting,
+  ActivePointScrollMode,
+} from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -440,6 +503,34 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+    const activePointScrollMode = computed({
+      get: () => store.state.activePointScrollMode,
+      set: (activePointScrollMode: ActivePointScrollMode) => {
+        store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode,
+        });
+      },
+    });
+    const activePointScrollModeOptions: Record<
+      ActivePointScrollMode,
+      {
+        label: string;
+        desc: string;
+      }
+    > = {
+      CONTINUOUSLY: {
+        label: "連続",
+        desc: "再生位置を真ん中に表示します。",
+      },
+      PAGE: {
+        label: "ページめくり",
+        desc: "再生位置が表示範囲外にある場合にスクロールします。",
+      },
+      OFF: {
+        label: "オフ",
+        desc: "自動でスクロールしません。",
+      },
+    };
 
     const experimentalSetting = computed(() => store.state.experimentalSetting);
 
@@ -651,6 +742,8 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      activePointScrollMode,
+      activePointScrollModeOptions,
       experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
@@ -680,6 +773,24 @@ export default defineComponent({
   @extend .hotkey-table;
   min-width: 475px;
   background: colors.$background;
+}
+
+.scroll-mode-toggle {
+  background: colors.$background;
+  border-radius: 3px;
+}
+
+.scroll-mode-button {
+  color: colors.$display;
+  transition: 0.5s;
+}
+
+.scroll-mode-button-selected {
+  background: colors.$primary;
+}
+
+.scroll-mode-button:hover {
+  background: rgba(colors.$primary-rgb, 0.2);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

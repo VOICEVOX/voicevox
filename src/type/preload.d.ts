@@ -7,6 +7,8 @@ export interface Sandbox {
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
+  getQAndAText(): Promise<string>;
+  getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
@@ -25,6 +27,7 @@ export interface Sandbox {
     title: string;
     message: string;
     buttons: string[];
+    cancelId?: number;
   }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
@@ -40,6 +43,9 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
+  activePointScrollMode(
+    newValue?: ActivePointScrollMode
+  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -69,10 +75,10 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getAcceptTerms(): Promise<AcceptTermsStatus>;
+  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(
-    enableInterrogative: ExperimentalSetting
-  ): Promise<void>;
+  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -119,6 +125,10 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
+
+export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SavingSetting = {
   exportLab: boolean;
@@ -188,9 +198,9 @@ export type HotkeyReturnType =
 export type ToolbarButtonTagType =
   | "PLAY_CONTINUOUSLY"
   | "STOP"
-  | "SAVE_ONE"
-  | "SAVE_ALL"
-  | "SAVE_CONNECT_ALL"
+  | "EXPORT_AUDIO_ONE"
+  | "EXPORT_AUDIO_ALL"
+  | "EXPORT_AUDIO_CONNECT_ALL"
   | "SAVE_PROJECT"
   | "UNDO"
   | "REDO"
@@ -219,7 +229,9 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "pause-hovered";
+  | "pause-hovered"
+  | "active-point-focus"
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;
@@ -235,6 +247,7 @@ export type ThemeSetting = {
 };
 
 export type ExperimentalSetting = {
-  enableInterrogative: boolean;
+  enablePreset: boolean;
+  enableInterrogativeUpspeak: boolean;
   enableReorderCell: boolean;
 };

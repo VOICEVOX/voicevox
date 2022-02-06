@@ -42,7 +42,8 @@ export const settingStoreState: SettingStoreState = {
   },
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
-    enableInterrogative: false,
+    enablePreset: false,
+    enableInterrogativeUpspeak: false,
     enableReorderCell: false,
   },
 };
@@ -97,6 +98,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
+    },
+    SET_ACCEPT_TERMS(state, { acceptTerms }) {
+      state.acceptTerms = acceptTerms;
     },
   },
   actions: {
@@ -210,6 +214,19 @@ export const settingStore: VoiceVoxStoreOptions<
       });
       window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+    },
+    GET_ACCEPT_TERMS({ dispatch }) {
+      window.electron
+        .getAcceptTerms()
+        .then((acceptTerms) => dispatch("SET_ACCEPT_TERMS", { acceptTerms }));
+    },
+    SET_ACCEPT_TERMS({ commit }, { acceptTerms }) {
+      window.dataLayer?.push({
+        event: "updateAcceptTerms",
+        acceptTerms: acceptTerms == "Accepted",
+      });
+      window.electron.setAcceptTerms(acceptTerms);
+      commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
     GET_EXPERIMENTAL_SETTING({ dispatch }) {
       window.electron.getExperimentalSetting().then((experimentalSetting) => {
