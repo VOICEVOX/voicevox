@@ -75,6 +75,8 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getAcceptTerms(): Promise<AcceptTermsStatus>;
+  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
@@ -123,6 +125,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
@@ -244,6 +248,6 @@ export type ThemeSetting = {
 
 export type ExperimentalSetting = {
   enablePreset: boolean;
-  enableInterrogative: boolean;
+  enableInterrogativeUpspeak: boolean;
   enableReorderCell: boolean;
 };

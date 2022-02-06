@@ -235,6 +235,14 @@ const api: Sandbox = {
     );
   },
 
+  getAcceptTerms: async () => {
+    return await ipcRendererInvoke("GET_ACCEPT_TERMS");
+  },
+
+  setAcceptTerms: async (acceptTerms) => {
+    return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
+  },
+
   getExperimentalSetting: async () => {
     return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
   },

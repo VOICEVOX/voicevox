@@ -39,6 +39,7 @@ export const uiStoreState: UiStoreState = {
   isToolbarSettingDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
+  isAcceptTermsDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -109,6 +110,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         state.isAcceptRetrieveTelemetryDialogOpen =
           isAcceptRetrieveTelemetryDialogOpen;
+      },
+      IS_ACCEPT_TERMS_DIALOG_OPEN(state, { isAcceptTermsDialogOpen }) {
+        state.isAcceptTermsDialogOpen = isAcceptTermsDialogOpen;
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
@@ -273,6 +277,19 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
           isAcceptRetrieveTelemetryDialogOpen,
+        });
+      },
+      async IS_ACCEPT_TERMS_DIALOG_OPEN(
+        { state, commit },
+        { isAcceptTermsDialogOpen }
+      ) {
+        if (state.isAcceptTerms_DialogOpen === isAcceptTermsDialogOpen) return;
+
+        if (isAcceptTermsDialogOpen) commit("LOCK_UI");
+        else commit("UNLOCK_UI");
+
+        commit("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen,
         });
       },
       async GET_USE_GPU({ commit }) {
