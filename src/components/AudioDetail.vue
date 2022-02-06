@@ -150,7 +150,13 @@
               @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
               @click="handleChangeVoicing(mora, accentPhraseIndex, moraIndex)"
             >
-              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+              {{
+                getHoveredText(mora, accentPhraseIndex, moraIndex) +
+                (accentPhrase.isInterrogative &&
+                moraIndex === accentPhrase.moras.length - 1
+                  ? "？"
+                  : "")
+              }}
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -529,6 +535,9 @@ export default defineComponent({
         accentPhrase.moras.forEach((mora) => {
           textString += mora.text;
         });
+        if (accentPhrase.isInterrogative) {
+          textString += "？";
+        }
         if (accentPhrase.pauseMora) {
           textString += "、";
         }

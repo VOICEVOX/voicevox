@@ -1541,6 +1541,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             ],
             accent: accentPhrases[accentPhraseIndex].accent,
             pauseMora: accentPhrases[accentPhraseIndex + 1].pauseMora,
+            isInterrogative:
+              accentPhrases[accentPhraseIndex + 1].isInterrogative,
           };
           accentPhrases.splice(accentPhraseIndex, 2, newAccentPhrase);
         };
@@ -1559,6 +1561,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
                 ? moraIndex + 1
                 : accentPhrases[accentPhraseIndex].accent,
             pauseMora: undefined,
+            isInterrogative: false,
           };
           const newAccentPhrase2: AccentPhrase = {
             moras: accentPhrases[accentPhraseIndex].moras.slice(moraIndex + 1),
@@ -1567,6 +1570,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
                 ? accentPhrases[accentPhraseIndex].accent - moraIndex - 1
                 : 1,
             pauseMora: accentPhrases[accentPhraseIndex].pauseMora,
+            isInterrogative: accentPhrases[accentPhraseIndex].isInterrogative,
           };
           accentPhrases.splice(
             accentPhraseIndex,
