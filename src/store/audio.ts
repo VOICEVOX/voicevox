@@ -1657,7 +1657,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         // アクセントを各句の末尾につける
         // 文中に「？、」「、」がある場合は、そこで句切りとみなす
         const pureKatakanaWithAccent = pureKatakana.replace(
-          /(？、|、|[^？、]$|？$)/g,
+          /(？、|、|(?<=[^？、])$|？$)/g,
           "'$1"
         );
 
