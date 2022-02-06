@@ -810,15 +810,15 @@ $pitch-label-height: 24px;
       div {
         padding: 0px;
         &.text-cell {
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 48px;
+          max-width: 48px;
           grid-row-start: 3;
           text-align: center;
           color: colors.$display;
         }
         &.text-cell-hovered {
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 48px;
+          max-width: 48px;
           grid-row-start: 3;
           text-align: center;
           color: colors.$display;
