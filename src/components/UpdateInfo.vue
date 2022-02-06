@@ -32,7 +32,7 @@ export default defineComponent({
       .then((res) => res.json())
       .then((obj) => {
         obj.map((item: { prerelease: boolean; tag_name: string }) => {
-          if (item.prerelease == false) {
+          if (item.prerelease === false) {
             tags.push(item.tag_name);
           }
         });
@@ -45,17 +45,15 @@ export default defineComponent({
       let html = "";
       if (currentVersion.value === latestVersion.value) {
         html += `<h3>お使いの VOICEBOX は最新です！</h3>`;
-        html += `<hr />`;
-        html += `<h3>変更履歴</h3>`;
       } else {
         html += `<h3>アップデートがあります！</h3>`;
         html += `<p>現在のバージョン：` + currentVersion.value + `</p>`;
         html += `<p>最新のバージョン：` + latestVersion.value + `</p>`;
         html += `<h4>最新版のダウンロードページ</h4>`;
         html += `<a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a>`;
-        html += "<hr />";
-        html += `<h3>変更履歴</h3>`;
       }
+      html += `<hr />`;
+      html += `<h3>アップデート履歴</h3>`;
       for (const info of infos.value) {
         const version: string = info.version;
         const descriptions: string[] = info.descriptions;
