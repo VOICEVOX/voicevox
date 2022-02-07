@@ -47,7 +47,6 @@ export default defineComponent({
         })
           .then((response) => {
             if (!response.ok) {
-              console.error("response.ok:", response.ok);
               console.error("esponse.status:", response.status);
               isCheckingFailed.value = true;
             } else {
@@ -66,7 +65,6 @@ export default defineComponent({
                 );
               }
             );
-            console.log("obj:", obj);
             obj ? (latestVersion.value = obj.tag_name) : undefined;
             isCheckingFinished.value = true;
           })
