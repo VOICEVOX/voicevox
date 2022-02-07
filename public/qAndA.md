@@ -47,6 +47,10 @@ Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
 
 `/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
 
+### Q. アップデート方法を教えてください。
+
+ホームページから最新版を再インストールすることでアップデートできます。
+
 ## 使い方に関する質問
 
 ### Q. 使い方がわかりません。
