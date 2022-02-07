@@ -47,7 +47,6 @@ export default defineComponent({
         })
           .then((response) => {
             if (!response.ok) {
-              console.error("esponse.status:", response.status);
               isCheckingFailed.value = true;
             } else {
               return response.json();
@@ -68,8 +67,7 @@ export default defineComponent({
             obj ? (latestVersion.value = obj.tag_name) : undefined;
             isCheckingFinished.value = true;
           })
-          .catch((err) => {
-            console.error(err);
+          .catch(() => {
             isCheckingFailed.value = true;
           });
       });
