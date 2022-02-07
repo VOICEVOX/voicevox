@@ -28,63 +28,64 @@ export default defineComponent({
 
     let isCheckingFailed = ref<boolean>(false);
 
-    const currentVersion = ref("");
-    window.electron.getAppInfos().then((obj) => {
-      currentVersion.value = obj.version;
-    });
+    let isCheckingFinished = ref<boolean>(false);
 
+    const currentVersion = ref("");
     const latestVersion = ref("");
-    fetch("https://api.github.com/repos/VOICEVOX/voicevox/releases", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          console.error("response.ok:", response.ok);
-          console.error("esponse.status:", response.status);
-          isCheckingFailed.value = true;
-        }
-        return response.json();
-      })
+    window.electron
+      .getAppInfos()
       .then((obj) => {
-        obj.find(
-          (item: { prerelease: boolean; tag_name: string }) =>
-            item.prerelease === false &&
-            baseVersionIsLow(
-              versionTextParse(currentVersion.value) as VersionType,
-              versionTextParse(item.tag_name) as VersionType
-            )
-        );
-        latestVersion.value = obj[0].tag_name;
+        currentVersion.value = obj.version;
       })
-      .catch((err) => {
-        console.error(err);
-        isCheckingFailed.value = true;
+      .then(() => {
+        fetch("https://api.github.com/repos/VOICEVOX/voicevox/releases", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        })
+          .then((response) => {
+            if (!response.ok) {
+              console.error("response.ok:", response.ok);
+              console.error("esponse.status:", response.status);
+              isCheckingFailed.value = true;
+            } else {
+              return response.json();
+            }
+          })
+          .then((json) => {
+            const obj = json.find(
+              (item: { prerelease: boolean; tag_name: string }) => {
+                return (
+                  !item.prerelease &&
+                  baseVersionIsLow(
+                    versionTextParse(currentVersion.value) as VersionType,
+                    versionTextParse(item.tag_name) as VersionType
+                  )
+                );
+              }
+            );
+            console.log("obj:", obj);
+            obj ? (latestVersion.value = obj.tag_name) : undefined;
+            isCheckingFinished.value = true;
+          })
+          .catch((err) => {
+            console.error(err);
+            isCheckingFailed.value = true;
+          });
       });
 
-    const isCheckingUpdatesFailed = computed(() => {
+    const isCheckingFailedcomputed = computed(() => {
       return isCheckingFailed.value;
     });
 
-    const isFetchingFinished = computed(() => {
-      if (!isCheckingUpdatesFailed.value && latestVersion.value.length > 0) {
-        return true;
-      } else {
-        return false;
-      }
+    const isCheckingFinishedComputed = computed(() => {
+      return isCheckingFinished.value;
     });
 
     const isUpdateAvailable = computed(() => {
-      if (isFetchingFinished.value) {
-        return baseVersionIsLow(
-          versionTextParse(currentVersion.value) as VersionType,
-          versionTextParse(latestVersion.value) as VersionType
-        );
-      }
-      return false;
+      return isCheckingFinished.value && latestVersion.value !== "";
     });
 
     const html = computed(() => {
@@ -94,13 +95,14 @@ export default defineComponent({
 
       if (isUpdateAvailable.value) {
         html += `<h3>アップデートがあります！</h3>`;
-        html += `<p>現在のバージョン：${currentVersion.value}</p>`;
-        html += `<p>最新のバージョン：${latestVersion.value}</p>`;
         html += `<h4>最新版のダウンロードページ</h4>`;
         html += `<a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a>`;
-      } else if (isFetchingFinished.value) {
+      } else if (isCheckingFinishedComputed.value && !isUpdateAvailable.value) {
         html += `<h3>お使いの VOICEBOX は最新です！</h3>`;
-      } else if (!isCheckingUpdatesFailed.value) {
+      } else if (
+        !isCheckingFinishedComputed.value &&
+        !isCheckingFailedcomputed.value
+      ) {
         html += `<h3>アップデートを確認中です…</h3>`;
       } else {
         html += `<h3>アップデートの確認に失敗しました…</h3>`;
