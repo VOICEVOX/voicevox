@@ -12,11 +12,6 @@ type IpcIHData = {
     return: string;
   };
 
-  GET_CHARACTER_INFOS: {
-    args: [];
-    return: import("@/type/preload").CharacterInfo[];
-  };
-
   GET_HOW_TO_USE_TEXT: {
     args: [];
     return: string;
@@ -42,6 +37,21 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_CONTACT_TEXT: {
+    args: [];
+    return: string;
+  };
+
+  GET_Q_AND_A_TEXT: {
+    args: [];
+    return: string;
+  };
+
+  GET_PRIVACY_POLICY_TEXT: {
+    args: [];
+    return: string;
+  };
+
   SHOW_AUDIO_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
@@ -58,7 +68,7 @@ type IpcIHData = {
   };
 
   SHOW_PROJECT_SAVE_DIALOG: {
-    args: [obj: { title: string }];
+    args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
 
@@ -68,7 +78,14 @@ type IpcIHData = {
   };
 
   SHOW_INFO_DIALOG: {
-    args: [obj: { title: string; message: string; buttons: string[] }];
+    args: [
+      obj: {
+        title: string;
+        message: string;
+        buttons: string[];
+        cancelId?: number;
+      }
+    ];
     return: number;
   };
 
@@ -95,6 +112,11 @@ type IpcIHData = {
   INHERIT_AUDIOINFO: {
     args: [obj: { newValue?: boolean }];
     return: boolean;
+  };
+
+  ACTIVE_POINT_SCROLL_MODE: {
+    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
+    return: import("@/type/preload").ActivePointScrollMode;
   };
 
   IS_AUTO_UPDATE_CHECK: {
@@ -157,9 +179,26 @@ type IpcIHData = {
     return: void;
   };
 
+  SAVING_PRESETS: {
+    args: [
+      obj: {
+        newPresets?: {
+          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetKeys: string[];
+        };
+      }
+    ];
+    return: import("@/type/preload").PresetConfig;
+  };
+
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
     return: import("@/type/preload").HotkeySetting[];
+  };
+
+  TOOLBAR_SETTING: {
+    args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
+    return: import("@/type/preload").ToolbarSetting;
   };
 
   IS_UNSET_DEFAULT_STYLE_ID: {
@@ -180,6 +219,40 @@ type IpcIHData = {
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
     return: import("@/type/preload").HotkeySetting[];
+  };
+
+  GET_DEFAULT_TOOLBAR_SETTING: {
+    args: [];
+    return: import("@/type/preload").ToolbarSetting;
+  };
+
+  GET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [];
+    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
+  };
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    args: [
+      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
+    ];
+    return: void;
+  };
+  GET_ACCEPT_TERMS: {
+    args: [];
+    return: import("@/type/preload").AcceptTermsStatus;
+  };
+
+  SET_ACCEPT_TERMS: {
+    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
+    return: void;
+  };
+  GET_EXPERIMENTAL_SETTING: {
+    args: [];
+    return: ExperimentalSetting;
+  };
+  SET_EXPERIMENTAL_SETTING: {
+    args: [experimentalSetting: ExperimentalSetting];
+    return: void;
   };
 
   THEME: {
@@ -227,8 +300,23 @@ type IpcSOData = {
     return: void;
   };
 
+  DETECT_ENTER_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_LEAVE_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [];
+    return: void;
+  };
+
+  DETECT_RESIZED: {
+    args: [obj: { width: number; height: number }];
     return: void;
   };
 };

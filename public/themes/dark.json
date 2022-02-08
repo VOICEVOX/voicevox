@@ -14,6 +14,8 @@
     "markdown-color": "#c9d1d9",
     "markdown-background": "#0D1117",
     "markdown-hyperlink": "#58A6FF",
-    "pause-hovered": "#333A44"
+    "pause-hovered": "#333A44",
+    "active-point-focus": "#EEF3FF",
+    "active-point-focus-hover": "#F7FAFF"
   }
 }

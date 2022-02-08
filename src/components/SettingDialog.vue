@@ -83,6 +83,42 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>再生位置を追従</div>
+                <q-space />
+                <div class="scroll-mode-toggle">
+                  <q-radio
+                    v-for="(obj, key) in activePointScrollModeOptions"
+                    :key="key"
+                    v-model="activePointScrollMode"
+                    :val="key"
+                    :label="obj.label"
+                    size="0"
+                    :class="[
+                      'q-px-md',
+                      'q-py-sm',
+                      key !== activePointScrollMode && 'scroll-mode-button',
+                      key === activePointScrollMode &&
+                        'scroll-mode-button-selected',
+                    ]"
+                    :style="[
+                      key === 'CONTINUOUSLY' && 'border-radius: 3px 0 0 3px',
+                      key === 'OFF' && 'border-radius: 0 3px 3px 0',
+                    ]"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生位置を追従し、自動でスクロールします。
+                      {{ `「${obj.label}」モードは${obj.desc}` }}
+                    </q-tooltip>
+                  </q-radio>
+                </div>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -186,28 +222,6 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>labファイルを生成</div>
-                <q-space />
-                <q-toggle
-                  name="enabled"
-                  align="left"
-                  :model-value="savingSetting.exportLab"
-                  @update:model-value="
-                    handleSavingSettingChange('exportLab', $event)
-                  "
-                >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを生成します
-                  </q-tooltip>
-                </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <q-space />
                 <q-toggle
@@ -224,6 +238,28 @@
                     transition-hide="jump-right"
                   >
                     テキストをtxtファイルとして書き出します
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>labファイルを書き出し</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  :model-value="savingSetting.exportLab"
+                  @update:model-value="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    リップシンク用のlabファイルを書き出します
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
@@ -324,13 +360,13 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
-            <!-- 今後実験的機能を追加する場合はここに追加 -->
-            <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
-            <!-- <q-card flat class="setting-card">
+            <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <!-- 今後実験的機能を追加する場合はここに追加 -->
+              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
+              <!-- <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>Theme</div>
                 <q-space />
                 <q-btn-toggle
@@ -353,8 +389,95 @@
                     The colors in themes are not decided yet
                   </q-tooltip>
                 </q-btn-toggle>
+              </q-card-actions> -->
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>プリセット機能</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enablePreset"
+                  @update:model-value="
+                    changeExperimentalSetting('enablePreset', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    プリセット機能を有効にする
+                  </q-tooltip>
+                </q-toggle>
               </q-card-actions>
-            </q-card> -->
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>疑問文を自動調整</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableInterrogativeUpspeak"
+                  @update:model-value="
+                    changeExperimentalSetting(
+                      'enableInterrogativeUpspeak',
+                      $event
+                    )
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    疑問文のとき語尾の音高を自動的に上げる
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>テキスト欄の並び替え</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableReorderCell"
+                  @update:model-value="
+                    changeExperimentalSetting('enableReorderCell', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    テキスト欄をドラッグ＆ドロップで並び替える．
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">データ収集</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>ソフトウェア利用状況のデータ収集を許可する</div>
+                <q-space />
+                <q-toggle
+                  name="enabled"
+                  align="left"
+                  v-model="acceptRetrieveTelemetryComputed"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
+            </q-card>
           </div>
         </q-page>
       </q-page-container>
@@ -366,7 +489,11 @@
 import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import { SavingSetting } from "@/type/preload";
+import {
+  SavingSetting,
+  ExperimentalSetting,
+  ActivePointScrollMode,
+} from "@/type/preload";
 
 export default defineComponent({
   name: "SettingDialog",
@@ -394,6 +521,36 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+    const activePointScrollMode = computed({
+      get: () => store.state.activePointScrollMode,
+      set: (activePointScrollMode: ActivePointScrollMode) => {
+        store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode,
+        });
+      },
+    });
+    const activePointScrollModeOptions: Record<
+      ActivePointScrollMode,
+      {
+        label: string;
+        desc: string;
+      }
+    > = {
+      CONTINUOUSLY: {
+        label: "連続",
+        desc: "再生位置を真ん中に表示します。",
+      },
+      PAGE: {
+        label: "ページめくり",
+        desc: "再生位置が表示範囲外にある場合にスクロールします。",
+      },
+      OFF: {
+        label: "オフ",
+        desc: "自動でスクロールしません。",
+      },
+    };
+
+    const experimentalSetting = computed(() => store.state.experimentalSetting);
 
     const isAutoUpdateCheck = computed(() => store.state.isAutoUpdateCheck);
 
@@ -453,6 +610,31 @@ export default defineComponent({
       updateAudioOutputDevices
     );
     updateAudioOutputDevices();
+
+    const acceptRetrieveTelemetryComputed = computed({
+      get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+      set: (acceptRetrieveTelemetry: boolean) => {
+        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+          acceptRetrieveTelemetry: acceptRetrieveTelemetry
+            ? "Accepted"
+            : "Refused",
+        });
+
+        if (acceptRetrieveTelemetry) {
+          return;
+        }
+
+        $q.dialog({
+          title: "ソフトウェア利用状況のデータ収集の無効化",
+          message:
+            "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
+      },
+    });
 
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
@@ -518,6 +700,15 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeExperimentalSetting = async (
+      key: keyof ExperimentalSetting,
+      data: boolean
+    ) => {
+      store.dispatch("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: { ...experimentalSetting.value, [key]: data },
+      });
+    };
+
     const changeIsAutoUpdateCheck = async (isAutoUpdateCheck: boolean) => {
       if (store.state.isAutoUpdateCheck === isAutoUpdateCheck) return;
       store.dispatch("SET_IS_AUTO_UPDATE_CHECK", { isAutoUpdateCheck });
@@ -576,9 +767,13 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      activePointScrollMode,
+      activePointScrollModeOptions,
+      experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      changeExperimentalSetting,
       isAutoUpdateCheck,
       changeIsAutoUpdateCheck,
       restartEngineProcess,
@@ -588,6 +783,7 @@ export default defineComponent({
       currentThemeNameComputed,
       currentThemeComputed,
       availableThemeNameComputed,
+      acceptRetrieveTelemetryComputed,
     };
   },
 });
@@ -604,6 +800,24 @@ export default defineComponent({
   @extend .hotkey-table;
   min-width: 475px;
   background: colors.$background;
+}
+
+.scroll-mode-toggle {
+  background: colors.$background;
+  border-radius: 3px;
+}
+
+.scroll-mode-button {
+  color: colors.$display;
+  transition: 0.5s;
+}
+
+.scroll-mode-button-selected {
+  background: colors.$primary;
+}
+
+.scroll-mode-button:hover {
+  background: rgba(colors.$primary-rgb, 0.2);
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {

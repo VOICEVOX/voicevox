@@ -27,7 +27,7 @@ BANNER
 
 NAME=$(basename "${NAME:-linux-nvidia-appimage}")
 VERSION=$(basename "${VERSION:-}")
-REPO_URL=${REPO_URL:-https://github.com/Hiroshiba/voicevox}
+REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
@@ -41,6 +41,7 @@ IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
+MIME_INSTALL_DIR=${MIME_INSTALL_DIR:-$HOME/.local/share/mime}
 
 if [ "$FORCE_INSTALL" != "1" ] && [ -f "${APP_DIR}/VOICEVOX.AppImage" ]; then
     echo "[*] VOICEVOX already installed in '${APP_DIR}/VOICEVOX.AppImage'."
@@ -123,6 +124,17 @@ fi
 echo "[-] 7z command: ${COMMAND_7Z}"
 
 echo "[+] Checking runtime prerequisites..."
+
+PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
+if ! command -v ldconfig &> /dev/null; then
+    cat << EOS && exit 1
+[!] Command 'ldconfig' not found
+
+Required to check existence of required libraries.
+You must add a directory of contain ldconfig command to PATH environment variable.
+
+EOS
+fi
 
 if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
     echo "[-] libsndfile: OK"
@@ -327,6 +339,7 @@ VOICEVOX_INSTALLED_FILES=(
     ${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop
     ${ICON_INSTALL_DIR}/voicevox.png
     ${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png
+    ${MIME_INSTALL_DIR}/packages/voicevox.xml
 )
 
 VOICEVOX_INSTALLED_DIR=(
@@ -388,7 +401,7 @@ DESKTOP_FILE=$(find squashfs-root -maxdepth 1 -name '*.desktop' | head -1)
 chmod +x "${DESKTOP_FILE}"
 
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
-sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE}/" "${DESKTOP_FILE}" > _
+sed "s/Exec=.*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE} %U/" "${DESKTOP_FILE}" > _
 mv _ "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
@@ -400,6 +413,39 @@ echo "[+] Installing icon..."
 mkdir -p "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
 cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
+
+# Register file association
+echo "[+] Registering file association..."
+
+mkdir -p "${MIME_INSTALL_DIR}/packages"
+cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
+<?xml version="1.0" encoding="utf-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-voicevox">
+        <comment>VOICEVOX Project file</comment>
+        <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
+        <sub-class-of type="application/json" />
+        <glob pattern="*.vvproj" />
+        <icon name="voicevox" />
+    </mime-type>
+</mime-info>
+EOS
+
+# Update file association database
+echo "[+] Updating file association database..."
+if command -v update-mime-database &> /dev/null; then
+    update-mime-database "${MIME_INSTALL_DIR}"
+else
+    echo "[-] Skipped: Command 'update-mime-database' not found"
+fi
+
+# Update desktop file database
+echo "[+] Updating desktop file database..."
+if command -v update-desktop-database &> /dev/null; then
+    update-desktop-database
+else
+    echo "[-] Skipped: Command 'update-desktop-database' not found"
+fi
 
 # Remove extract dir
 echo "[+] Removing temporal directory..."

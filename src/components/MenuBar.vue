@@ -1,6 +1,10 @@
 <template>
   <q-bar class="bg-background q-pa-none relative-position">
-    <img src="icon.png" class="window-logo" alt="application logo" />
+    <div
+      v-if="$q.platform.is.mac && !isFullscreen"
+      class="mac-traffic-light-space"
+    ></div>
+    <img v-else src="icon.png" class="window-logo" alt="application logo" />
     <menu-button
       v-for="(root, index) of menudata"
       :key="index"
@@ -17,7 +21,8 @@
       {{
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
-        "VOICEVOX"
+        "VOICEVOX" +
+        (currentVersion ? " - Ver. " + currentVersion : "")
       }}
     </div>
     <q-space />
@@ -31,10 +36,13 @@ import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
 import { useQuasar } from "quasar";
-import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { SaveResultObject } from "@/store/type";
+import {
+  generateAndConnectAndSaveAudioWithDialog,
+  generateAndSaveAllAudioWithDialog,
+  generateAndSaveOneAudioWithDialog,
+} from "@/components/Dialog";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -76,11 +84,15 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-
+    const currentVersion = ref("");
+    window.electron.getAppInfos().then((obj) => {
+      currentVersion.value = obj.version;
+    });
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
     const isEdited = computed(() => store.getters.IS_EDITED);
+    const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -90,39 +102,21 @@ export default defineComponent({
 
     const generateAndSaveAllAudio = async () => {
       if (!uiLocked.value) {
-        const result = await store.dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+        await generateAndSaveAllAudioWithDialog({
+          encoding: store.state.savingSetting.fileEncoding,
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
+        });
+      }
+    };
+
+    const generateAndConnectAndSaveAllAudio = async () => {
+      if (!uiLocked.value) {
+        await generateAndConnectAndSaveAudioWithDialog({
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
           encoding: store.state.savingSetting.fileEncoding,
         });
-
-        let successArray: Array<string | undefined> = [];
-        let writeErrorArray: Array<string | undefined> = [];
-        let engineErrorArray: Array<string | undefined> = [];
-        if (result) {
-          for (const item of result) {
-            switch (item.result) {
-              case "SUCCESS":
-                successArray.push(item.path);
-                break;
-              case "WRITE_ERROR":
-                writeErrorArray.push(item.path);
-                break;
-              case "ENGINE_ERROR":
-                engineErrorArray.push(item.path);
-                break;
-            }
-          }
-        }
-
-        if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
-          $q.dialog({
-            component: SaveAllResultDialog,
-            componentProps: {
-              successArray: successArray,
-              writeErrorArray: writeErrorArray,
-              engineErrorArray: engineErrorArray,
-            },
-          });
-        }
       }
     };
 
@@ -143,36 +137,11 @@ export default defineComponent({
         return;
       }
 
-      const result: SaveResultObject = await store.dispatch(
-        "GENERATE_AND_SAVE_AUDIO",
-        {
-          audioKey: activeAudioKey,
-          encoding: store.state.savingSetting.fileEncoding,
-        }
-      );
-
-      if (result.result === "SUCCESS" || result.result === "CANCELED") return;
-
-      let msg = "";
-      switch (result.result) {
-        case "WRITE_ERROR":
-          msg =
-            "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
-          break;
-        case "ENGINE_ERROR":
-          msg =
-            "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
-          break;
-      }
-
-      $q.dialog({
-        title: "書き出しに失敗しました。",
-        message: msg,
-        ok: {
-          label: "閉じる",
-          flat: true,
-          textColor: "secondary",
-        },
+      await generateAndSaveOneAudioWithDialog({
+        audioKey: activeAudioKey,
+        encoding: store.state.savingSetting.fileEncoding,
+        quasarDialog: $q.dialog,
+        dispatch: store.dispatch,
       });
     };
 
@@ -208,6 +177,9 @@ export default defineComponent({
       });
       store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
         isHotkeySettingDialogOpen: false,
+      });
+      store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+        isToolbarSettingDialogOpen: false,
       });
       store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
@@ -245,6 +217,13 @@ export default defineComponent({
             label: "一つだけ書き出し",
             onClick: () => {
               generateAndSaveOneAudio();
+            },
+          },
+          {
+            type: "button",
+            label: "音声を繋げて書き出し",
+            onClick: () => {
+              generateAndConnectAndSaveAllAudio();
             },
           },
           {
@@ -312,6 +291,15 @@ export default defineComponent({
           },
           {
             type: "button",
+            label: "ツールバーのカスタマイズ",
+            onClick() {
+              store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+                isToolbarSettingDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
             label: "デフォルトスタイル・試聴",
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
@@ -371,6 +359,7 @@ export default defineComponent({
       ["新規プロジェクト", createNewProject],
       ["音声書き出し", generateAndSaveAllAudio],
       ["一つだけ書き出し", generateAndSaveOneAudio],
+      ["音声を繋げて書き出し", generateAndConnectAndSaveAllAudio],
       ["テキスト読み込む", importTextFile],
       ["プロジェクトを上書き保存", saveProject],
       ["プロジェクトを名前を付けて保存", saveProjectAs],
@@ -389,10 +378,12 @@ export default defineComponent({
     });
 
     return {
+      currentVersion,
       uiLocked,
       menubarLocked,
       projectName,
       isEdited,
+      isFullscreen,
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
@@ -431,5 +422,9 @@ export default defineComponent({
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.mac-traffic-light-space {
+  margin-right: 70px;
 }
 </style>

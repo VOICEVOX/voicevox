@@ -7,6 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
+import { buildProjectFileName } from "./utility";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -55,13 +56,14 @@ export const projectStore: VoiceVoxStoreOptions<
               "プロジェクトの変更が保存されていません。\n" +
               "変更を破棄してもよろしいですか？",
             buttons: ["破棄", "キャンセル"],
+            cancelId: 1,
           });
           if (result == 1) {
             return;
           }
         }
 
-        await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+        await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
         const audioItem: AudioItem = await context.dispatch(
           "GENERATE_AUDIO_ITEM",
@@ -117,7 +119,7 @@ export const projectStore: VoiceVoxStoreOptions<
           }
 
           // Migration
-          if (appVersionList < [0, 4, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 4, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
                 obj.audioItems[audioItemsKey].characterIndex =
@@ -136,7 +138,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 5, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 5, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.query != null) {
@@ -154,12 +156,13 @@ export const projectStore: VoiceVoxStoreOptions<
                 }
 
                 // set phoneme length
-                if (audioItem.styleId == undefined)
-                  throw new Error("audioItem.styleId == undefined");
+                // 0.7 未満のプロジェクトファイルは styleId ではなく characterIndex なので、ここだけ characterIndex とした
+                if (audioItem.characterIndex === undefined)
+                  throw new Error("audioItem.characterIndex === undefined");
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
-                    styleId: audioItem.styleId,
+                    styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
                     accentPhrases.forEach((newAccentPhrase, i) => {
@@ -181,7 +184,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 7, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 7, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.characterIndex != null) {
@@ -198,7 +201,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (appVersionList < [0, 8, 0]) {
+          if (baseVersionIsLow(appVersionList, [0, 8, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.speaker !== null) {
@@ -237,12 +240,13 @@ export const projectStore: VoiceVoxStoreOptions<
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
                 "変更を破棄してもよろしいですか？",
               buttons: ["破棄", "キャンセル"],
+              cancelId: 1,
             });
             if (result == 1) {
               return;
             }
           }
-          await context.dispatch("REMOVE_ALL_AUDIO_ITEM", undefined);
+          await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
           const { audioItems, audioKeys } = obj as ProjectType;
 
@@ -277,9 +281,20 @@ export const projectStore: VoiceVoxStoreOptions<
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
+          let defaultPath: string;
+
+          if (!filePath) {
+            // if new project: use generated name
+            defaultPath = buildProjectFileName(context.state, "vvproj");
+          } else {
+            // if saveAs for existing project: use current project path
+            defaultPath = filePath;
+          }
+
           // Write the current status to a project file.
           const ret = await window.electron.showProjectSaveDialog({
             title: "プロジェクトファイルの保存",
+            defaultPath,
           });
           if (ret == undefined) {
             return;
@@ -332,6 +347,7 @@ const accentPhraseSchema = {
   },
   optionalProperties: {
     pauseMora: moraSchema,
+    isInterrogative: { type: "boolean" },
   },
 } as const;
 
@@ -361,6 +377,7 @@ const audioItemSchema = {
   optionalProperties: {
     styleId: { type: "int32" },
     query: audioQuerySchema,
+    presetKey: { type: "string" },
   },
 } as const;
 
@@ -393,4 +410,17 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
   const appVersion = textArray.map(Number) as VersionType;
   if (!appVersion.every((item) => Number.isInteger(item))) return undefined;
   return appVersion;
+};
+
+const baseVersionIsLow = (base: VersionType, target: VersionType): boolean => {
+  let result = false;
+  for (let i = 0; i < 3; i++) {
+    if (base[i] > target[i]) {
+      break;
+    } else if (base[i] < target[i]) {
+      result = true;
+      break;
+    }
+  }
+  return result;
 };

@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "0.9.3",
+  "version": "0.0.0",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
@@ -27,6 +27,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
     "ajv": "8.6.2",
     "core-js": "3.12.1",
@@ -36,14 +37,16 @@
     "electron-updater": "4.6.1",
     "encoding-japanese": "1.0.30",
     "immer": "9.0.2",
+    "lodash.debounce": "4.0.8",
     "markdown-it": "12.0.4",
-    "quasar": "2.1.2",
+    "quasar": "2.3.4",
     "source-map-support": "0.5.19",
     "systeminformation": "5.8.0",
     "tree-kill": "1.2.2",
     "uuid": "3.4.0",
     "vue": "3.0.11",
     "vue-router": "4.0.8",
+    "vuedraggable": "4.1.0",
     "vuex": "4.0.0"
   },
   "devDependencies": {
@@ -51,6 +54,7 @@
     "@types/chai": "4.2.18",
     "@types/electron-devtools-installer": "2.2.0",
     "@types/encoding-japanese": "1.0.18",
+    "@types/lodash.debounce": "^4.0.6",
     "@types/markdown-it": "12.2.0",
     "@types/mocha": "5.2.7",
     "@types/mousetrap": "1.6.8",
@@ -71,7 +75,7 @@
     "@vue/test-utils": "2.0.0-rc.6",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
-    "electron": "^16.0.1",
+    "electron": "16.0.6",
     "electron-devtools-installer": "3.2.0",
     "eslint": "6.8.0",
     "eslint-plugin-prettier": "3.4.0",

@@ -2,12 +2,14 @@ import { IpcRenderer, IpcRendererEvent } from "electron";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getCharacterInfos(): Promise<CharacterInfo[]>;
   getHowToUseText(): Promise<string>;
   getPolicyText(): Promise<string>;
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
+  getQAndAText(): Promise<string>;
+  getContactText(): Promise<string>;
+  getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   getBaseName(obj: { filePath: string }): string;
@@ -16,12 +18,16 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: { title: string }): Promise<string | undefined>;
+  showProjectSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showInfoDialog(obj: {
     title: string;
     message: string;
     buttons: string[];
+    cancelId?: number;
   }): Promise<number>;
   showWarningDialog(obj: {
     title: string;
@@ -37,6 +43,9 @@ export interface Sandbox {
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
+  activePointScrollMode(
+    newValue?: ActivePointScrollMode
+  ): Promise<ActivePointScrollMode>;
   isAutoUpdateCheck(newValue?: boolean): Promise<boolean>;
   updateCheck(): void;
   isAvailableGPUMode(): Promise<boolean>;
@@ -52,14 +61,28 @@ export interface Sandbox {
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
+  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
+  savingPresets(newPresets?: {
+    presetItems: Record<string, Preset>;
+    presetKeys: string[];
+  }): Promise<PresetConfig>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
     defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
   ): Promise<void>;
+  getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
+  setAcceptRetrieveTelemetry(
+    acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
+  ): Promise<void>;
+  getAcceptTerms(): Promise<AcceptTermsStatus>;
+  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
+  getExperimentalSetting(): Promise<ExperimentalSetting>;
+  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
 }
@@ -100,6 +123,15 @@ export type UpdateInfo = {
 
 export type Encoding = "UTF-8" | "Shift_JIS";
 
+export type AcceptRetrieveTelemetryStatus =
+  | "Unconfirmed"
+  | "Accepted"
+  | "Refused";
+
+export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
+
+export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
@@ -122,9 +154,24 @@ export type HotkeySetting = {
   combination: HotkeyCombo;
 };
 
+export type Preset = {
+  name: string;
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+};
+
+export type PresetConfig = {
+  items: Record<string, Preset>;
+  keys: string[];
+};
 export type HotkeyAction =
   | "音声書き出し"
   | "一つだけ書き出し"
+  | "音声を繋げて書き出し"
   | "再生/停止"
   | "連続再生/停止"
   | "ｱｸｾﾝﾄ欄を表示"
@@ -150,6 +197,20 @@ export type HotkeyReturnType =
   | Promise<void>
   | Promise<boolean>;
 
+export type ToolbarButtonTagType =
+  | "PLAY_CONTINUOUSLY"
+  | "STOP"
+  | "EXPORT_AUDIO_ONE"
+  | "EXPORT_AUDIO_ALL"
+  | "EXPORT_AUDIO_CONNECT_ALL"
+  | "SAVE_PROJECT"
+  | "UNDO"
+  | "REDO"
+  | "IMPORT_TEXT"
+  | "EMPTY";
+
+export type ToolbarSetting = ToolbarButtonTagType[];
+
 export type MoraDataType =
   | "consonant"
   | "vowel"
@@ -170,7 +231,9 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "pause-hovered";
+  | "pause-hovered"
+  | "active-point-focus"
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;
@@ -183,4 +246,10 @@ export type ThemeConf = {
 export type ThemeSetting = {
   currentTheme: string;
   availableThemes: ThemeConf[];
+};
+
+export type ExperimentalSetting = {
+  enablePreset: boolean;
+  enableInterrogativeUpspeak: boolean;
+  enableReorderCell: boolean;
 };

@@ -6,10 +6,19 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <div v-if="engineState === 'STARTING'" class="waiting-engine">
+        <div
+          v-if="!isCompletedInitialStartup || engineState === 'STARTING'"
+          class="waiting-engine"
+        >
           <div>
             <q-spinner color="primary" size="2.5rem" />
-            <div>エンジン起動中・・・</div>
+            <div class="q-mt-xs">
+              {{
+                engineState === "STARTING"
+                  ? "エンジン起動中・・・"
+                  : "データ準備中・・・"
+              }}
+            </div>
           </div>
         </div>
         <q-splitter
@@ -59,7 +68,24 @@
                         loadDraggedFile($event);
                       "
                     >
-                      <div class="audio-cells">
+                      <draggable
+                        v-if="enableReorderCell"
+                        class="audio-cells"
+                        :modelValue="audioKeys"
+                        @update:modelValue="updateAudioKeys"
+                        :itemKey="itemKey"
+                        ghost-class="ghost"
+                        handle=".item-handle"
+                      >
+                        <template v-slot:item="{ element }">
+                          <audio-cell
+                            :audioKey="element"
+                            :ref="addAudioCellRef"
+                            @focusCell="focusCell"
+                          />
+                        </template>
+                      </draggable>
+                      <div v-else class="audio-cells">
                         <audio-cell
                           v-for="audioKey in audioKeys"
                           :key="audioKey"
@@ -108,11 +134,16 @@
   <help-dialog v-model="isHelpDialogOpenComputed" />
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
+  <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
+  <accept-retrieve-telemetry-dialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
+  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -125,6 +156,7 @@ import {
   watch,
 } from "vue";
 import { useStore } from "@/store";
+import draggable from "vuedraggable";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -133,8 +165,11 @@ import MenuBar from "@/components/MenuBar.vue";
 import HelpDialog from "@/components/HelpDialog.vue";
 import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
+import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -145,6 +180,7 @@ export default defineComponent({
   name: "Home",
 
   components: {
+    draggable,
     MenuBar,
     HeaderBar,
     AudioCell,
@@ -153,8 +189,11 @@ export default defineComponent({
     HelpDialog,
     SettingDialog,
     HotkeySettingDialog,
+    HeaderBarCustomDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
+    AcceptRetrieveTelemetryDialog,
+    AcceptTermsDialog,
   },
 
   setup() {
@@ -275,6 +314,15 @@ export default defineComponent({
 
     const resizeObserverRef = ref<QResizeObserver>();
 
+    // DaD
+    const enableReorderCell = computed(
+      () => store.state.experimentalSetting.enableReorderCell
+    );
+
+    const updateAudioKeys = (audioKeys: string[]) =>
+      store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
+    const itemKey = (key: string) => key;
+
     // セルを追加
     const activeAudioKey = computed<string | undefined>(
       () => store.getters.ACTIVE_AUDIO_KEY
@@ -282,8 +330,10 @@ export default defineComponent({
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
       let styleId: number | undefined = undefined;
+      let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
         styleId = store.state.audioItems[prevAudioKey].styleId;
+        presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -296,6 +346,7 @@ export default defineComponent({
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         styleId,
+        presetKey,
         baseAudioItem,
       });
 
@@ -339,6 +390,7 @@ export default defineComponent({
       audioCellRefs[audioKey].focusTextField();
     };
 
+    // Electronのデフォルトのundo/redoを無効化
     const disableDefaultUndoRedo = (event: KeyboardEvent) => {
       // ctrl+z, ctrl+shift+z, ctrl+y
       if (
@@ -349,12 +401,13 @@ export default defineComponent({
       }
     };
 
-    // プロジェクトを初期化
+    // ソフトウェアを初期化
+    const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
-      await Promise.all([
-        store.dispatch("LOAD_CHARACTER"),
-        store.dispatch("LOAD_DEFAULT_STYLE_IDS"),
-      ]);
+      await store.dispatch("START_WAITING_ENGINE");
+      await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
       for (const info of characterInfos.value) {
@@ -364,6 +417,7 @@ export default defineComponent({
         );
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
+
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -378,6 +432,15 @@ export default defineComponent({
       hotkeyActionsNative.forEach((item) => {
         document.addEventListener("keyup", item);
       });
+
+      isAcceptRetrieveTelemetryDialogOpenComputed.value =
+        store.state.acceptRetrieveTelemetry === "Unconfirmed";
+
+      isAcceptTermsDialogOpenComputed.value =
+        process.env.NODE_ENV == "production" &&
+        store.state.acceptTerms !== "Accepted";
+
+      isCompletedInitialStartup.value = true;
     });
 
     // エンジン待機
@@ -406,13 +469,44 @@ export default defineComponent({
         }),
     });
 
+    // ツールバーのカスタム設定
+    const isToolbarSettingDialogOpenComputed = computed({
+      get: () => store.state.isToolbarSettingDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+          isToolbarSettingDialogOpen: val,
+        }),
+    });
+
+    // 利用規約表示
+    const isAcceptTermsDialogOpenComputed = computed({
+      get: () => store.state.isAcceptTermsDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen: val,
+        }),
+    });
+
     // デフォルトスタイル選択
     const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
-      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
         store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen: val,
+        }),
+    });
+
+    const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        !store.state.isDefaultStyleSelectDialogOpen &&
+        store.state.isAcceptRetrieveTelemetryDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+          isAcceptRetrieveTelemetryDialogOpen: val,
         }),
     });
 
@@ -443,6 +537,9 @@ export default defineComponent({
       uiLocked,
       addAudioCellRef,
       activeAudioKey,
+      enableReorderCell,
+      itemKey,
+      updateAudioKeys,
       addAudioItem,
       shouldShowPanes,
       focusCell,
@@ -457,12 +554,16 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
+      isCompletedInitialStartup,
       engineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
+      isToolbarSettingDialogOpenComputed,
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
+      isAcceptRetrieveTelemetryDialogOpenComputed,
+      isAcceptTermsDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };
@@ -509,6 +610,10 @@ export default defineComponent({
         vars.$window-border-width}
     );
   }
+}
+
+.ghost {
+  background-color: rgba(colors.$display-dark-rgb, 0.15);
 }
 
 .audio-cell-pane {

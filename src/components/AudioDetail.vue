@@ -31,11 +31,17 @@
         </div>
       </div>
 
-      <div class="overflow-hidden-y accent-phrase-table">
+      <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
+          :class="[
+            accentPhraseIndex === activePoint && 'mora-table-focus',
+            uiLocked || 'mora-table-hover',
+          ]"
+          @click="setPlayAndStartPoint(accentPhraseIndex)"
+          :ref="addAccentPhraseElem"
         >
           <template v-if="selectedDetail === 'accent'">
             <audio-accent
@@ -59,8 +65,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.pitch"
                 :uiLocked="uiLocked"
-                :min="3"
-                :max="6.5"
+                :min="minPitch"
+                :max="maxPitch"
                 :disable="mora.pitch == 0.0"
                 :type="'pitch'"
                 :clip="false"
@@ -84,8 +90,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.consonantLength"
                 :uiLocked="uiLocked"
-                :min="0"
-                :max="0.3"
+                :min="minMoraLength"
+                :max="maxMoraLength"
                 :step="0.001"
                 :type="'consonant'"
                 :clip="true"
@@ -99,8 +105,8 @@
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.vowelLength"
                 :uiLocked="uiLocked"
-                :min="0"
-                :max="0.3"
+                :min="minMoraLength"
+                :max="maxMoraLength"
                 :step="0.001"
                 :type="'vowel'"
                 :clip="mora.consonant ? true : false"
@@ -210,6 +216,8 @@
 import {
   computed,
   defineComponent,
+  nextTick,
+  onBeforeUpdate,
   onMounted,
   onUnmounted,
   reactive,
@@ -292,8 +300,44 @@ export default defineComponent({
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
 
+    const activePointScrollMode = computed(
+      () => store.state.activePointScrollMode
+    );
+
+    // 再生開始アクセント句
+    const startPoint = computed({
+      get: () => {
+        return store.state.audioPlayStartPoint;
+      },
+      set: (startPoint) => {
+        store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
+      },
+    });
+    // アクティブ(再生されている状態)なアクセント句
+    const activePoint = ref<number | undefined>(undefined);
+
+    const setPlayAndStartPoint = (accentPhraseIndex: number) => {
+      // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
+      // UIロックというものにそぐわない挙動になるので何もしないようにする
+      if (uiLocked.value) return;
+
+      if (activePoint.value !== accentPhraseIndex) {
+        activePoint.value = accentPhraseIndex;
+        startPoint.value = accentPhraseIndex;
+      } else {
+        // 選択解除で最初から再生できるようにする
+        activePoint.value = undefined;
+        startPoint.value = undefined;
+      }
+    };
+
     const lastPitches = ref<number[][]>([]);
-    watch(accentPhrases, (newPhrases) => {
+    watch(accentPhrases, async (newPhrases) => {
+      activePoint.value = startPoint.value;
+      // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
+      // DOMの描画が少し遅いので、nextTickをはさむ
+      await nextTick();
+      scrollToActivePoint();
       if (newPhrases) {
         lastPitches.value = newPhrases.map((phrase) =>
           phrase.moras.map((mora) => mora.pitch)
@@ -323,22 +367,39 @@ export default defineComponent({
       });
     };
 
+    const maxPitch = 6.5;
+    const minPitch = 3;
+    const maxMoraLength = 0.3;
+    const minMoraLength = 0;
     const changeMoraData = (
       accentPhraseIndex: number,
       moraIndex: number,
       data: number,
       type: MoraDataType
     ) => {
-      if (type == "pitch") {
-        lastPitches.value[accentPhraseIndex][moraIndex] = data;
+      if (!altKeyFlag.value) {
+        if (type == "pitch") {
+          lastPitches.value[accentPhraseIndex][moraIndex] = data;
+        }
+        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+          audioKey: props.activeAudioKey,
+          accentPhraseIndex,
+          moraIndex,
+          data,
+          type,
+        });
+      } else {
+        if (accentPhrases.value === undefined) {
+          throw Error("accentPhrases.value === undefined");
+        }
+        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+          audioKey: props.activeAudioKey,
+          accentPhraseIndex,
+          moraIndex,
+          data,
+          type,
+        });
       }
-      store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-        audioKey: props.activeAudioKey,
-        accentPhraseIndex,
-        moraIndex,
-        data,
-        type,
-      });
     };
 
     // audio play
@@ -375,6 +436,91 @@ export default defineComponent({
     const nowPlayingContinuously = computed(
       () => store.state.nowPlayingContinuously
     );
+
+    const audioDetail = ref<HTMLElement>();
+    let accentPhraseElems: HTMLElement[] = [];
+    const addAccentPhraseElem = (elem: HTMLElement) => {
+      if (elem) {
+        accentPhraseElems.push(elem);
+      }
+    };
+    onBeforeUpdate(() => {
+      accentPhraseElems = [];
+    });
+
+    const scrollToActivePoint = () => {
+      if (
+        activePoint.value === undefined ||
+        !audioDetail.value ||
+        accentPhraseElems.length === 0
+      )
+        return;
+      const elem = accentPhraseElems[activePoint.value];
+
+      if (activePointScrollMode.value === "CONTINUOUSLY") {
+        const scrollCount = Math.max(
+          elem.offsetLeft -
+            audioDetail.value.offsetLeft +
+            elem.offsetWidth / 2 -
+            audioDetail.value.offsetWidth / 2,
+          0
+        );
+        audioDetail.value.scroll(scrollCount, 0);
+      } else if (activePointScrollMode.value === "PAGE") {
+        const displayedPart =
+          audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
+        const nextAccentPhraseStart =
+          elem.offsetLeft - audioDetail.value.offsetLeft;
+        const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
+        // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
+        if (
+          nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
+          displayedPart <= nextAccentPhraseEnd
+        ) {
+          const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
+          audioDetail.value.scroll(scrollCount, 0);
+        }
+      } else {
+        // activePointScrollMode.value === "OFF"
+        return;
+      }
+    };
+
+    // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
+    let focusInterval: ReturnType<typeof setInterval> | undefined;
+    watch(nowPlaying, async (newState) => {
+      if (newState) {
+        const accentPhraseOffsets = await store.dispatch(
+          "GET_AUDIO_PLAY_OFFSETS",
+          {
+            audioKey: props.activeAudioKey,
+          }
+        );
+        // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
+        // それに合わせてフォーカスするアクセント句を変えていく
+        focusInterval = setInterval(() => {
+          const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
+          for (let i = 1; i < accentPhraseOffsets.length; i++) {
+            if (
+              currentTime !== undefined &&
+              accentPhraseOffsets[i - 1] <= currentTime &&
+              currentTime < accentPhraseOffsets[i]
+            ) {
+              activePoint.value = i - 1;
+              scrollToActivePoint();
+            }
+          }
+        }, 10);
+      } else if (focusInterval !== undefined) {
+        clearInterval(focusInterval);
+        focusInterval = undefined;
+        // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
+        activePoint.value = startPoint.value ?? 0;
+        scrollToActivePoint();
+        if (startPoint.value === undefined)
+          activePoint.value = startPoint.value;
+      }
+    });
 
     const pronunciationByPhrase = computed(() => {
       let textArray: Array<string> = [];
@@ -524,14 +670,12 @@ export default defineComponent({
     };
 
     const shiftKeyFlag = ref(false);
+    const altKeyFlag = ref(false);
 
-    const setShiftKeyFlag = (event: KeyboardEvent) => {
+    const keyEventListter = (event: KeyboardEvent) => {
       shiftKeyFlag.value = event.shiftKey;
+      altKeyFlag.value = event.altKey;
     };
-
-    function resetShiftKeyFlag(event: KeyboardEvent) {
-      if (event.key === "Shift") shiftKeyFlag.value = false;
-    }
 
     const handleChangeVoicing = (
       mora: Mora,
@@ -558,18 +702,24 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      window.addEventListener("keyup", resetShiftKeyFlag);
-      document.addEventListener("keydown", setShiftKeyFlag);
+      window.addEventListener("keyup", keyEventListter);
+      document.addEventListener("keydown", keyEventListter);
     });
 
     onUnmounted(() => {
-      window.removeEventListener("keyup", resetShiftKeyFlag);
-      document.removeEventListener("keydown", setShiftKeyFlag);
+      window.removeEventListener("keyup", keyEventListter);
+      document.removeEventListener("keydown", keyEventListter);
     });
 
     return {
+      maxPitch,
+      minPitch,
+      maxMoraLength,
+      minMoraLength,
       selectDetail,
       selectedDetail,
+      activePoint,
+      setPlayAndStartPoint,
       uiLocked,
       audioItem,
       query,
@@ -582,6 +732,7 @@ export default defineComponent({
       nowPlaying,
       nowGenerating,
       nowPlayingContinuously,
+      addAccentPhraseElem,
       pronunciationByPhrase,
       handleChangePronounce,
       handleHoverText,
@@ -590,6 +741,7 @@ export default defineComponent({
       getHoveredText,
       shiftKeyFlag,
       handleChangeVoicing,
+      audioDetail,
     };
   },
 });
@@ -700,6 +852,16 @@ $pitch-label-height: 24px;
           position: relative;
         }
       }
+    }
+
+    .mora-table-hover:hover {
+      cursor: pointer;
+      background-color: colors.$active-point-focus-hover;
+    }
+
+    .mora-table-focus {
+      // hover色に負けるので、importantが必要
+      background-color: colors.$active-point-focus !important;
     }
   }
 }
