@@ -404,7 +404,9 @@ interface ProjectType {
 
 export type VersionType = [number, number, number];
 
-const versionTextParse = (appVersionText: string): VersionType | undefined => {
+export const versionTextParse = (
+  appVersionText: string
+): VersionType | undefined => {
   const textArray = appVersionText.split(".");
   if (textArray.length !== 3) return undefined;
   const appVersion = textArray.map(Number) as VersionType;
@@ -412,7 +414,10 @@ const versionTextParse = (appVersionText: string): VersionType | undefined => {
   return appVersion;
 };
 
-const baseVersionIsLow = (base: VersionType, target: VersionType): boolean => {
+export const baseVersionIsLow = (
+  base: VersionType,
+  target: VersionType
+): boolean => {
   let result = false;
   for (let i = 0; i < 3; i++) {
     if (base[i] > target[i]) {
