@@ -67,12 +67,15 @@ export default defineComponent({
             obj ? (latestVersion.value = obj.tag_name) : undefined;
             isCheckingFinished.value = true;
           })
-          .catch(() => {
-            isCheckingFailed.value = true;
+          .catch((err) => {
+            throw new Error(err);
           });
+      })
+      .catch(() => {
+        isCheckingFailed.value = true;
       });
 
-    const isCheckingFailedcomputed = computed(() => {
+    const isCheckingFailedComputed = computed(() => {
       return isCheckingFailed.value;
     });
 
@@ -97,7 +100,7 @@ export default defineComponent({
         html += `<h3>お使いの VOICEBOX は最新です！</h3>`;
       } else if (
         !isCheckingFinishedComputed.value &&
-        !isCheckingFailedcomputed.value
+        !isCheckingFailedComputed.value
       ) {
         html += `<h3>アップデートを確認中です…</h3>`;
       } else {
