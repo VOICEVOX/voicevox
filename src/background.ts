@@ -212,14 +212,14 @@ const store = new Store<{
           enum: ["UTF-8", "Shift_JIS"],
           default: "UTF-8",
         },
-        fixedExportEnabled: {type: "boolean", default: false},
-        avoidOverwrite: {type: "boolean", default: false},
-        fixedExportDir: {type: "string", default: ""},
-        exportLab: {type: "boolean", default: false},
-        exportText: {type: "boolean", default: false},
-        outputStereo: {type: "boolean", default: false},
-        outputSamplingRate: {type: "number", default: 24000},
-        audioOutputDevice: {type: "string", default: "default"},
+        fixedExportEnabled: { type: "boolean", default: false },
+        avoidOverwrite: { type: "boolean", default: false },
+        fixedExportDir: { type: "string", default: "" },
+        exportLab: { type: "boolean", default: false },
+        exportText: { type: "boolean", default: false },
+        outputStereo: { type: "boolean", default: false },
+        outputSamplingRate: { type: "number", default: 24000 },
+        audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -242,8 +242,8 @@ const store = new Store<{
       items: {
         type: "object",
         properties: {
-          action: {type: "string"},
-          combination: {type: "string"},
+          action: { type: "string" },
+          combination: { type: "string" },
         },
       },
       default: defaultHotkeySettings,
@@ -260,8 +260,8 @@ const store = new Store<{
       items: {
         type: "object",
         properties: {
-          speakerUuid: {type: "string"},
-          defaultStyleId: {type: "number"},
+          speakerUuid: { type: "string" },
+          defaultStyleId: { type: "number" },
         },
       },
       default: [],
@@ -276,13 +276,13 @@ const store = new Store<{
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
               type: "object",
               properties: {
-                name: {type: "string"},
-                speedScale: {type: "number"},
-                pitchScale: {type: "number"},
-                intonationScale: {type: "number"},
-                volumeScale: {type: "number"},
-                prePhonemeLength: {type: "number"},
-                postPhonemeLength: {type: "number"},
+                name: { type: "string" },
+                speedScale: { type: "number" },
+                pitchScale: { type: "number" },
+                intonationScale: { type: "number" },
+                volumeScale: { type: "number" },
+                prePhonemeLength: { type: "number" },
+                postPhonemeLength: { type: "number" },
               },
             },
           },
@@ -293,11 +293,11 @@ const store = new Store<{
           items: {
             type: "string",
             pattern:
-                "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
           },
         },
       },
-      default: {items: {}, keys: []},
+      default: { items: {}, keys: [] },
     },
     currentTheme: {
       type: "string",
@@ -310,7 +310,7 @@ const store = new Store<{
     experimentalSetting: {
       type: "object",
       properties: {
-        enablePreset: {type: "boolean", default: false},
+        enablePreset: { type: "boolean", default: false },
         enableInterrogativeUpspeak: {
           type: "boolean",
           default: false,
