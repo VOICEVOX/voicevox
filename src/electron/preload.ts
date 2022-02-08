@@ -136,8 +136,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
   },
 
-  enableAutoUpdateCheck: (newValue) => {
-    return ipcRendererInvoke("ENABLE_AUTO_UPDATE_CHECK", { newValue });
+  isAutoUpdateCheck: (newValue) => {
+    return ipcRendererInvoke("IS_AUTO_UPDATE_CHECK", { newValue });
   },
 
   updateCheck: () => {

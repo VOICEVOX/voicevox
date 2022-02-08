@@ -309,12 +309,8 @@
                 <div>自動アップデートチェック</div>
                 <q-space />
                 <q-toggle
-                  name="enabled"
-                  align="left"
-                  :model-value="savingSetting.enableAutoUpdateCheck"
-                  @update:model-value="
-                    handleSavingSettingChange('enableAutoUpdateCheck', $event)
-                  "
+                  :model-value="isAutoUpdateCheck"
+                  @update:model-value="changeIsAutoUpdateCheck($event)"
                 >
                   <q-tooltip
                     :delay="500"
@@ -398,6 +394,8 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+
+    const isAutoUpdateCheck = computed(() => store.state.isAutoUpdateCheck);
 
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
@@ -520,6 +518,11 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeIsAutoUpdateCheck = async (isAutoUpdateCheck: boolean) => {
+      if (store.state.isAutoUpdateCheck === isAutoUpdateCheck) return;
+      store.dispatch("SET_IS_AUTO_UPDATE_CHECK", { isAutoUpdateCheck });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE");
     };
@@ -576,6 +579,8 @@ export default defineComponent({
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      isAutoUpdateCheck,
+      changeIsAutoUpdateCheck,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

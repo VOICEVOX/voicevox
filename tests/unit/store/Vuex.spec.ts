@@ -35,6 +35,7 @@ describe("store/vuex.js test", () => {
         isDefaultStyleSelectDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
+        isAutoUpdateCheck: false,
         savingSetting: {
           fileEncoding: "UTF-8",
           fixedExportEnabled: false,
@@ -45,7 +46,6 @@ describe("store/vuex.js test", () => {
           outputStereo: false,
           outputSamplingRate: 24000,
           audioOutputDevice: "default",
-          enableAutoUpdateCheck: false,
         },
         themeSetting: {
           currentTheme: "Default",
@@ -107,6 +107,7 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.redoCommands);
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
+    assert.equal(store.state.isAutoUpdateCheck, false);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isUpdateCheckDialogOpen, false);

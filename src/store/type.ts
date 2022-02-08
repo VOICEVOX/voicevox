@@ -666,6 +666,7 @@ export type UiStoreState = {
   isHotkeySettingDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
+  isAutoUpdateCheck: boolean;
 };
 
 type UiStoreTypes = {
@@ -750,6 +751,11 @@ type UiStoreTypes = {
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
+  };
+
+  SET_IS_AUTO_UPDATE_CHECK: {
+    mutation: { isAutoUpdateCheck: boolean };
+    action(payload: { isAutoUpdateCheck: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {

@@ -150,6 +150,7 @@ const store = new Store<{
   hotkeySettings: HotkeySetting[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  isAutoUpdateCheck: boolean;
 }>({
   schema: {
     useGpu: {
@@ -176,7 +177,6 @@ const store = new Store<{
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
-        enableAutoUpdateCheck: { type: "boolean", default: false },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -188,7 +188,6 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
-        enableAutoUpdateCheck: false,
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -220,6 +219,10 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    isAutoUpdateCheck: {
+      type: "boolean",
+      default: false,
     },
   },
   migrations: {
@@ -571,16 +574,20 @@ ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   return store.get("inheritAudioInfo", false);
 });
 
-ipcMainHandle("ENABLE_AUTO_UPDATE_CHECK", (_, { newValue }) => {
+ipcMainHandle("IS_AUTO_UPDATE_CHECK", (_, { newValue }) => {
   if (newValue !== undefined) {
-    store.set("enableAutoUpdateCheck", newValue);
+    store.set("isAutoUpdateCheck", newValue);
   }
 
-  return store.get("enableAutoUpdateCheck", false);
+  return store.get("isAutoUpdateCheck", false);
 });
 
-ipcMainHandle("UPDATE_CHECK", () => {
-  autoUpdater.checkForUpdatesAndNotify();
+ipcMainHandle("UPDATE_CHECK", async () => {
+  try {
+    await autoUpdater.checkForUpdatesAndNotify();
+  } catch (err: unknown) {
+    return;
+  }
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
@@ -815,9 +822,9 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
-  const savingSetting = store.get("savingSetting");
-  if (savingSetting.enableAutoUpdateCheck) {
-    autoUpdater.checkForUpdatesAndNotify();
+  const isAutoUpdateCheck = store.get("isAutoUpdateCheck");
+  if (isAutoUpdateCheck) {
+    await autoUpdater.checkForUpdatesAndNotify();
   }
 });
 
@@ -856,35 +863,19 @@ autoUpdater.on("update-available", () => {
     type: "info",
     buttons: ["はい", "いいえ"],
     message: "アップデート",
-    detail: "新しいバージョンをがありました。更新をダウンロードしますか？",
+    detail: "新しいバージョンをがありました。公式サイトを開きますか？",
   };
   // ダイアログを表示しすぐに再起動するか確認
   dialog.showMessageBox(win, dialogOpts).then((returnValue) => {
     if (returnValue.response === 0) {
-      autoUpdater.downloadUpdate();
+      shell.openExternal("https://voicevox.hiroshiba.jp/");
+      log.info(process.pid, "Open Official Site.");
     }
   });
 });
 // アップデートがなかった（最新版だった）
 autoUpdater.on("update-not-available", () => {
   log.info(process.pid, "Update not available.");
-});
-// アップデートのダウンロードが完了
-autoUpdater.on("update-downloaded", () => {
-  const dialogOpts = {
-    type: "info",
-    buttons: ["更新して再起動", "あとで"],
-    message: "アップデート",
-    detail:
-      "新しいバージョンをダウンロードしました。再起動して更新を適用しますか？",
-  };
-
-  // ダイアログを表示しすぐに再起動するか確認
-  dialog.showMessageBox(win, dialogOpts).then((returnValue) => {
-    if (returnValue.response === 0) {
-      autoUpdater.quitAndInstall();
-    }
-  });
 });
 // エラーが発生
 autoUpdater.on("error", (err) => {

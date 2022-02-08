@@ -38,6 +38,7 @@ export const uiStoreState: UiStoreState = {
   isDefaultStyleSelectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
+  isAutoUpdateCheck: false,
 };
 
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
@@ -104,6 +105,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { inheritAudioInfo }: { inheritAudioInfo: boolean }
       ) {
         state.inheritAudioInfo = inheritAudioInfo;
+      },
+      SET_IS_AUTO_UPDATE_CHECK(
+        state,
+        { isAutoUpdateCheck }: { isAutoUpdateCheck: boolean }
+      ) {
+        state.isAutoUpdateCheck = isAutoUpdateCheck;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -180,17 +187,16 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           commit("LOCK_MENUBAR");
 
           const result: number = await window.electron.showInfoDialog({
-            title: "自動アップデートチェック",
-            message: "自動アップデートチェックを行います。\nよろしいですか？",
+            title: "アップデートチェック",
+            message: "アップデートチェックを行います。\nよろしいですか？",
             buttons: ["はい", "いいえ"],
           });
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
           if (result == 1) {
             return;
           }
           window.electron.updateCheck();
-        } else {
-          commit("UNLOCK_UI");
-          commit("UNLOCK_MENUBAR");
         }
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(
@@ -257,6 +263,16 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         commit("SET_INHERIT_AUDIOINFO", {
           inheritAudioInfo: await window.electron.inheritAudioInfo(
             inheritAudioInfo
+          ),
+        });
+      },
+      async SET_IS_AUTO_UPDATE_CHECK(
+        { commit },
+        { isAutoUpdateCheck }: { isAutoUpdateCheck: boolean }
+      ) {
+        commit("SET_IS_AUTO_UPDATE_CHECK", {
+          isAutoUpdateCheck: await window.electron.isAutoUpdateCheck(
+            isAutoUpdateCheck
           ),
         });
       },

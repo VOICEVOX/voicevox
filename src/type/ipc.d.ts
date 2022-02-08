@@ -97,7 +97,7 @@ type IpcIHData = {
     return: boolean;
   };
 
-  ENABLE_AUTO_UPDATE_CHECK: {
+  IS_AUTO_UPDATE_CHECK: {
     args: [obj: { newValue?: boolean }];
     return: boolean;
   };
