@@ -85,6 +85,12 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_PRIVACY_POLICY_TEXT() {
       return await window.electron.getPrivacyPolicyText();
     },
+    async GET_CONTACT_TEXT() {
+      return await window.electron.getContactText();
+    },
+    async GET_Q_AND_A_TEXT() {
+      return await window.electron.getQAndAText();
+    },
     async SHOW_WARNING_DIALOG(
       _,
       { title, message }: { title: string; message: string }
@@ -133,6 +139,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_TOOLBAR_SETTING"));
       promises.push(dispatch("GET_THEME_SETTING"));
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
+      promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
       await Promise.all(promises).then(() => {

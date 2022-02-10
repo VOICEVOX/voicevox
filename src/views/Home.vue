@@ -143,6 +143,7 @@
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
+  <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
 </template>
 
 <script lang="ts">
@@ -168,6 +169,7 @@ import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -191,6 +193,7 @@ export default defineComponent({
     CharacterPortrait,
     DefaultStyleSelectDialog,
     AcceptRetrieveTelemetryDialog,
+    AcceptTermsDialog,
   },
 
   setup() {
@@ -435,6 +438,10 @@ export default defineComponent({
       isAcceptRetrieveTelemetryDialogOpenComputed.value =
         store.state.acceptRetrieveTelemetry === "Unconfirmed";
 
+      isAcceptTermsDialogOpenComputed.value =
+        process.env.NODE_ENV == "production" &&
+        store.state.acceptTerms !== "Accepted";
+
       isCompletedInitialStartup.value = true;
     });
 
@@ -473,10 +480,21 @@ export default defineComponent({
         }),
     });
 
+    // 利用規約表示
+    const isAcceptTermsDialogOpenComputed = computed({
+      get: () => store.state.isAcceptTermsDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+          isAcceptTermsDialogOpen: val,
+        }),
+    });
+
     // デフォルトスタイル選択
     const characterInfos = computed(() => store.state.characterInfos);
     const isDefaultStyleSelectDialogOpenComputed = computed({
-      get: () => store.state.isDefaultStyleSelectDialogOpen,
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
         store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen: val,
@@ -485,6 +503,7 @@ export default defineComponent({
 
     const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
       get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
         !store.state.isDefaultStyleSelectDialogOpen &&
         store.state.isAcceptRetrieveTelemetryDialogOpen,
       set: (val) =>
@@ -546,6 +565,7 @@ export default defineComponent({
       characterInfos,
       isDefaultStyleSelectDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
+      isAcceptTermsDialogOpenComputed,
       dragEventCounter,
       loadDraggedFile,
     };

@@ -42,7 +42,12 @@ async function generateUniqueIdAndQuery(
   }
 
   const data = new TextEncoder().encode(
-    JSON.stringify([audioItem.text, audioQuery, audioItem.styleId])
+    JSON.stringify([
+      audioItem.text,
+      audioQuery,
+      audioItem.styleId,
+      state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
+    ])
   );
   const digest = await crypto.subtle.digest("SHA-256", data);
   const id = Array.from(new Uint8Array(digest))
@@ -318,7 +323,7 @@ export const audioStore: VoiceVoxStoreOptions<
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
     },
-    SET_AUDIO_PRESET(
+    SET_AUDIO_PRESET_KEY(
       state,
       {
         audioKey,
@@ -670,7 +675,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch, state },
+      { dispatch },
       {
         text,
         styleId,
@@ -692,7 +697,6 @@ export const audioStore: VoiceVoxStoreOptions<
             text,
             speaker: styleId,
             isKana,
-            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -756,7 +760,7 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch, state },
+      { dispatch },
       { text, styleId }: { text: string; styleId: number }
     ) {
       const engine = state.engines[0]; // TODO: 複数エンジン対応
@@ -769,7 +773,6 @@ export const audioStore: VoiceVoxStoreOptions<
           {
             text,
             speaker: styleId,
-            enableInterrogative: state.experimentalSetting.enableInterrogative,
           },
         ],
       })
@@ -918,6 +921,8 @@ export const audioStore: VoiceVoxStoreOptions<
             {
               audioQuery,
               speaker,
+              enableInterrogativeUpspeak:
+                state.experimentalSetting.enableInterrogativeUpspeak,
             },
           ],
         })
@@ -1717,7 +1722,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       const originAccentPhrases = query.accentPhrases;
 
-      // https://github.com/Hiroshiba/voicevox/issues/248
+      // https://github.com/VOICEVOX/voicevox/issues/248
       // newAccentPhrasesSegmentは1つの文章として合成されているためMoraDataが不自然になる。
       // MoraDataを正しく計算する為MoraDataだけを文章全体で再計算する。
       const newAccentPhrases = [
@@ -1901,10 +1906,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         const audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] =
           [];
         let baseAudioItem: AudioItem | undefined = undefined;
-        if (state.inheritAudioInfo) {
-          baseAudioItem = state._activeAudioKey
-            ? state.audioItems[state._activeAudioKey]
-            : undefined;
+        let basePresetKey: string | undefined = undefined;
+        if (state.inheritAudioInfo && state._activeAudioKey) {
+          baseAudioItem = state.audioItems[state._activeAudioKey];
+          basePresetKey = baseAudioItem.presetKey;
         }
         for (const text of texts.filter((value) => value != "")) {
           const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
@@ -1914,6 +1919,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             text,
             styleId,
             baseAudioItem,
+            presetKey: basePresetKey,
           });
 
           audioKeyItemPairs.push({
@@ -2193,7 +2199,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         presetKey: string | undefined;
       }
     ) => {
-      audioStore.mutations.SET_AUDIO_PRESET(draft, { audioKey, presetKey });
+      audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, { audioKey, presetKey });
       audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
     },
     COMMAND_APPLY_AUDIO_PRESET(draft, payload: { audioKey: string }) {

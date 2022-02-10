@@ -31,6 +31,7 @@ import {
   ThemeConf,
   ExperimentalSetting,
   AcceptRetrieveTelemetryStatus,
+  AcceptTermsStatus,
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
@@ -193,6 +194,7 @@ const store = new Store<{
   currentTheme: string;
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
 }>({
   schema: {
     useGpu: {
@@ -310,7 +312,8 @@ const store = new Store<{
     experimentalSetting: {
       type: "object",
       properties: {
-        enableInterrogative: {
+        enablePreset: { type: "boolean", default: false },
+        enableInterrogativeUpspeak: {
           type: "boolean",
           default: false,
         },
@@ -320,13 +323,19 @@ const store = new Store<{
         },
       },
       default: {
-        enableInterrogative: false,
+        enablePreset: false,
+        enableInterrogativeUpspeak: false,
         enableReorderCell: false,
       },
     },
     acceptRetrieveTelemetry: {
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Refused"],
+      default: "Unconfirmed",
+    },
+    acceptTerms: {
+      type: "string",
+      enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
     },
   },
@@ -491,6 +500,12 @@ const policyText = fs.readFileSync(path.join(__static, "policy.md"), "utf-8");
 const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, "licenses.json"), { encoding: "utf-8" })
 );
+
+// 問い合わせの読み込み
+const contactText = fs.readFileSync(path.join(__static, "contact.md"), "utf-8");
+
+// Q&Aの読み込み
+const qAndAText = fs.readFileSync(path.join(__static, "qAndA.md"), "utf-8");
 
 // アップデート情報の読み込み
 const updateInfos = JSON.parse(
@@ -662,6 +677,14 @@ ipcMainHandle("GET_UPDATE_INFOS", () => {
 
 ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
   return ossCommunityInfos;
+});
+
+ipcMainHandle("GET_CONTACT_TEXT", () => {
+  return contactText;
+});
+
+ipcMainHandle("GET_Q_AND_A_TEXT", () => {
+  return qAndAText;
 });
 
 ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
@@ -916,6 +939,14 @@ ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
 
 ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
   store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
+});
+
+ipcMainHandle("GET_ACCEPT_TERMS", () => {
+  return store.get("acceptTems");
+});
+
+ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
+  store.set("acceptTems", acceptTerms);
 });
 
 ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {

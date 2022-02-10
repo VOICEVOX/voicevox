@@ -1,5 +1,59 @@
 [
   {
+    "version": "0.10.4",
+    "descriptions": ["途中に疑問形があるとおかしくなる問題を修正"],
+    "contributors": ["takana-v"]
+  },
+  {
+    "version": "0.10.3",
+    "descriptions": ["プロジェクトファイルが読み込めないバグを修正"],
+    "contributors": ["Segu-g", "y-chan"]
+  },
+  {
+    "version": "0.10.2",
+    "descriptions": [
+      "コアを Onnx 化して高速化・低容量化",
+      "プリセット機能を追加",
+      "Mac版VOICEVOX",
+      "テキスト欄の並び替え",
+      "音声を繋げて書き出す機能を追加",
+      "疑問文のとき語尾の音高を上げて擬似的に疑問文のようにする",
+      "単語内のパラメータの一括調整機能を追加",
+      "ツールバーのカスタマイズ",
+      "再生位置を追従する機能を追加",
+      "音声を途中から再生する機能を追加",
+      "キャラクター名の辞書を追加",
+      "UXの向上",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "amamama",
+      "aoirint",
+      "Apple-Yuki",
+      "AsPulse",
+      "eggplants",
+      "gobosan",
+      "Hiroshiba",
+      "madosuki",
+      "mes51",
+      "MT224244",
+      "Oyaki122",
+      "PickledChair",
+      "qwerty2501",
+      "raa0121",
+      "Segu-g",
+      "shigobu",
+      "shirowanisan",
+      "takana-v",
+      "tarepan",
+      "y-chan",
+      "Yosshi999",
+      "YTJVDCM",
+      "yuqquu"
+    ]
+  },
+  {
     "version": "0.9.4",
     "descriptions": ["キャラクター「雨晴はう」を追加"],
     "contributors": []

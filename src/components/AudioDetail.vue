@@ -856,7 +856,7 @@ $pitch-label-height: 24px;
 
     .mora-table-hover:hover {
       cursor: pointer;
-      background-color: rgba(colors.$active-point-focus-rgb, 0.5);
+      background-color: colors.$active-point-focus-hover;
     }
 
     .mora-table-focus {

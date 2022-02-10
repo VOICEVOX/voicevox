@@ -39,6 +39,16 @@ type IpcIHData = {
     return: string;
   };
 
+  GET_CONTACT_TEXT: {
+    args: [];
+    return: string;
+  };
+
+  GET_Q_AND_A_TEXT: {
+    args: [];
+    return: string;
+  };
+
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
@@ -222,6 +232,15 @@ type IpcIHData = {
     args: [
       acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
     ];
+    return: void;
+  };
+  GET_ACCEPT_TERMS: {
+    args: [];
+    return: import("@/type/preload").AcceptTermsStatus;
+  };
+
+  SET_ACCEPT_TERMS: {
+    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
     return: void;
   };
   GET_EXPERIMENTAL_SETTING: {

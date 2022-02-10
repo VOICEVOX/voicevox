@@ -13,6 +13,7 @@ import {
   DefaultStyleId,
   Encoding as EncodingType,
   AcceptRetrieveTelemetryStatus,
+  AcceptTermsStatus,
   HotkeySetting,
   MoraDataType,
   SavingSetting,
@@ -335,7 +336,7 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): void;
   };
 
-  SET_AUDIO_PRESET: {
+  SET_AUDIO_PRESET_KEY: {
     mutation: {
       audioKey: string;
       presetKey: string | undefined;
@@ -604,6 +605,14 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
+  GET_CONTACT_TEXT: {
+    action(): Promise<string>;
+  };
+
+  GET_Q_AND_A_TEXT: {
+    action(): Promise<string>;
+  };
+
   GET_POLICY_TEXT: {
     action(): Promise<string>;
   };
@@ -760,11 +769,20 @@ type SettingStoreTypes = {
     action(): void;
   };
 
+  GET_ACCEPT_TERMS: {
+    action(): void;
+  };
+
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
     mutation: { acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus };
     action(payload: {
       acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
     }): void;
+  };
+
+  SET_ACCEPT_TERMS: {
+    mutation: { acceptTerms: AcceptTermsStatus };
+    action(payload: { acceptTerms: AcceptTermsStatus }): void;
   };
 
   GET_EXPERIMENTAL_SETTING: {
@@ -797,6 +815,7 @@ export type UiStoreState = {
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
+  isAcceptTermsDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -862,6 +881,11 @@ type UiStoreTypes = {
   IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
     mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
     action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
+  };
+
+  IS_ACCEPT_TERMS_DIALOG_OPEN: {
+    mutation: { isAcceptTermsDialogOpen: boolean };
+    action(payload: { isAcceptTermsDialogOpen: boolean }): void;
   };
 
   ON_VUEX_READY: {

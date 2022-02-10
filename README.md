@@ -2,14 +2,14 @@
 
 [VOICEVOX](https://voicevox.hiroshiba.jp/) のエディターです。
 
-（エンジンは [VOICEVOX ENGINE](https://github.com/Hiroshiba/voicevox_engine/) 、
-コアは [VOICEVOX CORE](https://github.com/Hiroshiba/voicevox_core/) 、
+（エンジンは [VOICEVOX ENGINE](https://github.com/VOICEVOX/voicevox_engine/) 、
+コアは [VOICEVOX CORE](https://github.com/VOICEVOX/voicevox_core/) 、
 全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
 
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
-Node.js をインストール後、[このリポジトリ](https://github.com/Hiroshiba/voicevox.git) を
+Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
 
 ```bash
@@ -25,7 +25,7 @@ npm ci
 npm run electron:serve
 ```
 
-音声合成エンジンのリポジトリはこちらです <https://github.com/Hiroshiba/voicevox_engine>
+音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
 
 ## 貢献者の方へ
 

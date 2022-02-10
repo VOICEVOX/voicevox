@@ -7,6 +7,8 @@ export interface Sandbox {
   getOssLicenses(): Promise<Record<string, string>[]>;
   getUpdateInfos(): Promise<UpdateInfo[]>;
   getOssCommunityInfos(): Promise<string>;
+  getQAndAText(): Promise<string>;
+  getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
@@ -74,10 +76,10 @@ export interface Sandbox {
   setAcceptRetrieveTelemetry(
     acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
   ): Promise<void>;
+  getAcceptTerms(): Promise<AcceptTermsStatus>;
+  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(
-    enableInterrogative: ExperimentalSetting
-  ): Promise<void>;
+  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -124,6 +126,8 @@ export type AcceptRetrieveTelemetryStatus =
   | "Unconfirmed"
   | "Accepted"
   | "Refused";
+
+export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
@@ -234,7 +238,8 @@ export type ThemeColorType =
   | "markdown-background"
   | "markdown-hyperlink"
   | "pause-hovered"
-  | "active-point-focus";
+  | "active-point-focus"
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;
@@ -250,6 +255,7 @@ export type ThemeSetting = {
 };
 
 export type ExperimentalSetting = {
-  enableInterrogative: boolean;
+  enablePreset: boolean;
+  enableInterrogativeUpspeak: boolean;
   enableReorderCell: boolean;
 };

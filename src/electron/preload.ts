@@ -51,6 +51,14 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_UPDATE_INFOS");
   },
 
+  getContactText: async () => {
+    return await ipcRendererInvoke("GET_CONTACT_TEXT");
+  },
+
+  getQAndAText: async () => {
+    return await ipcRendererInvoke("GET_Q_AND_A_TEXT");
+  },
+
   getOssCommunityInfos: async () => {
     return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
   },
@@ -231,15 +239,20 @@ const api: Sandbox = {
     );
   },
 
+  getAcceptTerms: async () => {
+    return await ipcRendererInvoke("GET_ACCEPT_TERMS");
+  },
+
+  setAcceptTerms: async (acceptTerms) => {
+    return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
+  },
+
   getExperimentalSetting: async () => {
     return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
   },
 
-  setExperimentalSetting: async (enableInterrogative) => {
-    return await ipcRendererInvoke(
-      "SET_EXPERIMENTAL_SETTING",
-      enableInterrogative
-    );
+  setExperimentalSetting: async (setting) => {
+    return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
   },
 
   getDefaultHotkeySettings: async () => {
