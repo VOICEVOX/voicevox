@@ -404,7 +404,7 @@ export default defineComponent({
     // ソフトウェアを初期化
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
-      await store.dispatch("GET_ENGINES");
+      await store.dispatch("GET_ENGINE_INFOS");
 
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");

@@ -59,11 +59,11 @@ if (isDevelopment) {
   );
 }
 
-const engines: EngineInfo[] = (() => {
-  const defaultEnginesEnv = process.env.DEFAULT_ENGINES;
+const engineInfos: EngineInfo[] = (() => {
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
 
-  if (defaultEnginesEnv) {
-    return JSON.parse(defaultEnginesEnv) as EngineInfo[];
+  if (defaultEngineInfosEnv) {
+    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
   return [];
@@ -346,16 +346,16 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
-  const engine = engines[0]; // TODO: 複数エンジン対応
-  if (!engine) throw new Error(`No such engine registered: index == 0`);
+  const engineInfo = engineInfos[0]; // TODO: 複数エンジン対応
+  if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
 
-  if (!engine.executionEnabled) {
-    log.info("Skipped engine execution: disabled");
+  if (!engineInfo.executionEnabled) {
+    log.info("Skipped engineInfo execution: disabled");
     return;
   }
 
-  if (!engine.executionFilePath) {
-    log.info("Skipped engine execution: empty executionFilePath");
+  if (!engineInfo.executionFilePath) {
+    log.info("Skipped engineInfo execution: empty executionFilePath");
     return;
   }
 
@@ -387,7 +387,7 @@ async function runEngine() {
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
-    engine.executionFilePath ?? "run.exe"
+    engineInfo.executionFilePath ?? "run.exe"
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
@@ -833,9 +833,9 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
-ipcMainHandle("ENGINES", () => {
+ipcMainHandle("ENGINE_INFOS", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
-  return engines;
+  return engineInfos;
 });
 
 /**

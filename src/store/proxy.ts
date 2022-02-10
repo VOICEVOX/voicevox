@@ -25,13 +25,15 @@ const proxyStoreCreator = (
     actions: {
       INVOKE_ENGINE_CONNECTOR({ state }, payload) {
         const engineKey = payload.engineKey;
-        const engine = state.engines.find((engine) => engine.key === engineKey);
-        if (!engine)
+        const engineInfo = state.engineInfos.find(
+          (engineInfo) => engineInfo.key === engineKey
+        );
+        if (!engineInfo)
           throw new Error(
-            `No such engine registered: engineKey == ${engineKey}`
+            `No such engineInfo registered: engineKey == ${engineKey}`
           );
 
-        const instance = _engineFactory.instance(engine.host);
+        const instance = _engineFactory.instance(engineInfo.host);
         const action = payload.action;
         const args = payload.payload;
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

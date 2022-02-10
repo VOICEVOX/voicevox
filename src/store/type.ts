@@ -721,7 +721,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engines: EngineInfo[];
+  engineInfos: EngineInfo[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -906,11 +906,11 @@ type UiStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
-  GET_ENGINES: {
+  GET_ENGINE_INFOS: {
     action(): void;
   };
 
-  SET_ENGINES: { mutation: { engines: EngineInfo[] } };
+  SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
 
   GET_INHERIT_AUDIOINFO: {
     action(): void;

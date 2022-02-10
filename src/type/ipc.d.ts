@@ -151,7 +151,7 @@ type IpcIHData = {
     return: void;
   };
 
-  ENGINES: {
+  ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
   };

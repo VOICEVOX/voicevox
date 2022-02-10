@@ -117,8 +117,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
       },
-      SET_ENGINES(state, { engines }: { engines: EngineInfo[] }) {
-        state.engines = engines;
+      SET_ENGINE_INFOS(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
+        state.engineInfos = engineInfos;
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -305,9 +305,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           useGpu: await window.electron.useGpu(useGpu),
         });
       },
-      async GET_ENGINES({ commit }) {
-        commit("SET_ENGINES", {
-          engines: await window.electron.engines(),
+      async GET_ENGINE_INFOS({ commit }) {
+        commit("SET_ENGINE_INFOS", {
+          engineInfos: await window.electron.engineInfos(),
         });
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {

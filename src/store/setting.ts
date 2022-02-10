@@ -35,7 +35,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   toolbarSetting: [],
-  engines: [],
+  engineInfos: [],
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],

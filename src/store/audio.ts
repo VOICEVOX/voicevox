@@ -456,8 +456,9 @@ export const audioStore: VoiceVoxStoreOptions<
   actions: {
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }) => {
-        const engine = state.engines[0]; // TODO: 複数エンジン対応
-        if (!engine) throw new Error(`No such engine registered: index == 0`);
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
 
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {
@@ -468,14 +469,14 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engine.key,
+              engineKey: engineInfo.key,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            window.electron.logInfo(`Waiting engine ${engine.key}`);
+            window.electron.logInfo(`Waiting engine ${engineInfo.key}`);
             continue;
           }
           engineState = "READY";
@@ -489,11 +490,12 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
-      const engine = state.engines[0]; // TODO: 複数エンジン対応
-      if (!engine) throw new Error(`No such engine registered: index == 0`);
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
 
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engine.key,
+        engineKey: engineInfo.key,
         action: "speakersSpeakersGet",
         payload: [],
       })
@@ -530,11 +532,12 @@ export const audioStore: VoiceVoxStoreOptions<
         return styles;
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
-        const engine = state.engines[0]; // TODO: 複数エンジン対応
-        if (!engine) throw new Error(`No such engine registered: index == 0`);
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
 
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-          engineKey: engine.key,
+          engineKey: engineInfo.key,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -675,7 +678,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { state, dispatch },
       {
         text,
         styleId,
@@ -686,11 +689,12 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
-      const engine = state.engines[0]; // TODO: 複数エンジン対応
-      if (!engine) throw new Error(`No such engine registered: index == 0`);
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engine.key,
+        engineKey: engineInfo.key,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -716,11 +720,12 @@ export const audioStore: VoiceVoxStoreOptions<
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
-      const engine = state.engines[0]; // TODO: 複数エンジン対応
-      if (!engine) throw new Error(`No such engine registered: index == 0`);
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engine.key,
+        engineKey: engineInfo.key,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -760,14 +765,15 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
-      const engine = state.engines[0]; // TODO: 複数エンジン対応
-      if (!engine) throw new Error(`No such engine registered: index == 0`);
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engine.key,
+        engineKey: engineInfo.key,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -874,11 +880,12 @@ export const audioStore: VoiceVoxStoreOptions<
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engine = state.engines[0]; // TODO: 複数エンジン対応
-        if (!engine) throw new Error(`No such engine registered: index == 0`);
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
-          engineKey: engine.key,
+          engineKey: engineInfo.key,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -898,8 +905,9 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
-        const engine = state.engines[0]; // TODO: 複数エンジン対応
-        if (!engine) throw new Error(`No such engine registered: index == 0`);
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
 
         const audioItem: AudioItem = JSON.parse(
           JSON.stringify(state.audioItems[audioKey])
@@ -915,7 +923,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
-          engineKey: engine.key,
+          engineKey: engineInfo.key,
           action: "synthesisSynthesisPost",
           payload: [
             {
