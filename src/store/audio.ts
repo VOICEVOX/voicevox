@@ -1632,9 +1632,13 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
-      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)と全角長音(U+30FC)のみで構成される場合、
-      // 「読み仮名」としてこれを処理する
-      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
+      // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
+      //  * ひらがな(U+3041~U+3094)
+      //  * カタカナ(U+30A1~U+30F4)
+      //  * 全角長音(U+30FC)
+      //  * 読点(U+3001)
+      //  * クエスチョン(U+FF1F)
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
       if (kanaRegex.test(newPronunciation)) {
         // ひらがなが混ざっている場合はカタカナに変換
         const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
@@ -1650,10 +1654,17 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           .replace(/(?<=[ン]ー*)ー/g, "ン")
           .replace(/(?<=[ッ]ー*)ー/g, "ッ");
 
-        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // アクセントを各句の末尾につける
+        // 文中に「？、」「、」がある場合は、そこで句切りとみなす
+        const pureKatakanaWithAccent = pureKatakana.replace(
+          /(？、|、|(?<=[^？、])$|？$)/g,
+          "'$1"
+        );
+
+        // accent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
-          text: pureKatakana + "'",
+          text: pureKatakanaWithAccent,
           styleId,
           isKana: true,
         }).catch(
