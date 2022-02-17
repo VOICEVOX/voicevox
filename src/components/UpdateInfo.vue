@@ -13,11 +13,7 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { UpdateInfo } from "../type/preload";
-import {
-  VersionType,
-  versionTextParse,
-  baseVersionIsLow,
-} from "@/store/project";
+import semver from "semver";
 
 export default defineComponent({
   setup() {
@@ -57,10 +53,9 @@ export default defineComponent({
               (item: { prerelease: boolean; tag_name: string }) => {
                 return (
                   !item.prerelease &&
-                  baseVersionIsLow(
-                    versionTextParse(currentVersion.value) as VersionType,
-                    versionTextParse(item.tag_name) as VersionType
-                  )
+                  semver.valid(currentVersion.value) &&
+                  semver.valid(item.tag_name) &&
+                  semver.lt(currentVersion.value, item.tag_name)
                 );
               }
             );
