@@ -7,11 +7,7 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn
-      flat
-      class="q-pa-none character-button item-handle"
-      :disable="uiLocked"
-    >
+    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
       <q-menu
