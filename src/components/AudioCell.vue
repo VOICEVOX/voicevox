@@ -431,7 +431,14 @@ export default defineComponent({
 
 .audio-cell {
   display: flex;
-  margin: 1rem 1rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0.2rem 0.5rem;
+  &:first-child {
+    margin-top: 0.6rem;
+  }
+  &:last-child {
+    margin-bottom: 0.6rem;
+  }
   gap: 0px 1rem;
   .active-arrow {
     left: -5px;
