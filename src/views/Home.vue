@@ -75,10 +75,10 @@
                         @update:modelValue="updateAudioKeys"
                         :itemKey="itemKey"
                         ghost-class="ghost"
-                        handle=".item-handle"
                       >
                         <template v-slot:item="{ element }">
                           <audio-cell
+                            class="draggable-cursor"
                             :audioKey="element"
                             :ref="addAudioCellRef"
                             @focusCell="focusCell"
@@ -640,6 +640,11 @@ export default defineComponent({
 
     padding-bottom: 70px;
   }
+
+  .draggable-cursor {
+    cursor: grab;
+  }
+
   .add-button-wrapper {
     position: absolute;
     right: 0px;
