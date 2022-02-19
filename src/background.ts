@@ -621,6 +621,7 @@ if (!isDevelopment && !isMac) {
   Menu.setApplicationMenu(null);
 }
 
+// create menu (only for macOS)
 function createMenu() {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -1025,6 +1026,7 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
+  // For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
   if (isMac) {
     createMenu();
   }
