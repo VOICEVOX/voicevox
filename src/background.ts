@@ -617,8 +617,28 @@ async function createWindow() {
   });
 }
 
-if (!isDevelopment) {
+if (!isDevelopment && !isMac) {
   Menu.setApplicationMenu(null);
+}
+
+function createMenu() {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: "VOICEVOX",
+      submenu: [{ role: "quit" }],
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
+        { role: "selectAll" },
+      ],
+    },
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 // プロセス間通信
@@ -1005,6 +1025,9 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
+  if (isMac) {
+    createMenu();
+  }
 });
 
 app.on("second-instance", () => {
