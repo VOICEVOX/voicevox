@@ -617,29 +617,29 @@ async function createWindow() {
   });
 }
 
-if (!isDevelopment && !isMac) {
-  Menu.setApplicationMenu(null);
-}
+const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: "VOICEVOX",
+    submenu: [{ role: "quit" }],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "selectAll" },
+    ],
+  },
+];
 
-// create menu (only for macOS)
-function createMenu() {
-  const template: Electron.MenuItemConstructorOptions[] = [
-    {
-      label: "VOICEVOX",
-      submenu: [{ role: "quit" }],
-    },
-    {
-      label: "Edit",
-      submenu: [
-        { role: "cut" },
-        { role: "copy" },
-        { role: "paste" },
-        { role: "selectAll" },
-      ],
-    },
-  ];
-
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+// For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
+if (isMac) {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
+} else {
+  if (!isDevelopment) {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 // プロセス間通信
@@ -1026,10 +1026,6 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngine());
-  // For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
-  if (isMac) {
-    createMenu();
-  }
 });
 
 app.on("second-instance", () => {
