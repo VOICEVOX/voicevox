@@ -1,3 +1,5 @@
+import { EngineInfo } from "@/type/preload";
+
 /**
  * invoke, handle
  */
@@ -147,6 +149,11 @@ type IpcIHData = {
   LOG_INFO: {
     args: [...params: unknown[]];
     return: void;
+  };
+
+  ENGINE_INFOS: {
+    args: [];
+    return: EngineInfo[];
   };
 
   RESTART_ENGINE: {

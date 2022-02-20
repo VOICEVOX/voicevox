@@ -63,7 +63,14 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineHost: "http://127.0.0.1",
+        engineInfos: [
+          {
+            key: "88022f86-c823-436e-85a3-500c629749c4",
+            executionEnabled: false,
+            executionFilePath: "",
+            host: "http://127.0.0.1",
+          },
+        ],
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
