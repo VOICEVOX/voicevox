@@ -617,8 +617,29 @@ async function createWindow() {
   });
 }
 
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
+const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: "VOICEVOX",
+    submenu: [{ role: "quit" }],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "selectAll" },
+    ],
+  },
+];
+
+// For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
+if (isMac) {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
+} else {
+  if (!isDevelopment) {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 // プロセス間通信
