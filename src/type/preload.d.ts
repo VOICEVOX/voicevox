@@ -56,6 +56,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
+  engineInfos(): Promise<EngineInfo[]>;
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -150,6 +151,13 @@ export type DefaultStyleId = {
 export type HotkeySetting = {
   action: HotkeyAction;
   combination: HotkeyCombo;
+};
+
+export type EngineInfo = {
+  key: string;
+  host: string;
+  executionEnabled: boolean;
+  executionFilePath: string;
 };
 
 export type Preset = {

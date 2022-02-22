@@ -20,7 +20,6 @@ export default defineComponent({
   setup() {
     const store = useStore();
     store.dispatch("INIT_VUEX");
-    store.dispatch("START_WAITING_ENGINE");
 
     // Google Tag Manager
     const gtm = useGtm();
