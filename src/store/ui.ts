@@ -9,7 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
-import { ActivePointScrollMode } from "@/type/preload";
+import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -116,6 +116,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
+      },
+      SET_ENGINE_INFOS(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
+        state.engineInfos = engineInfos;
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -300,6 +303,11 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
+        });
+      },
+      async GET_ENGINE_INFOS({ commit }) {
+        commit("SET_ENGINE_INFOS", {
+          engineInfos: await window.electron.engineInfos(),
         });
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {

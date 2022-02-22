@@ -24,6 +24,7 @@ import {
   UpdateInfo,
   Preset,
   ActivePointScrollMode,
+  EngineInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -720,7 +721,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineHost: string;
+  engineInfos: EngineInfo[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -905,6 +906,12 @@ type UiStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
+
   GET_INHERIT_AUDIOINFO: {
     action(): void;
   };
@@ -1023,6 +1030,7 @@ export type IEngineConnectorFactoryActions = ReturnType<
 type IEngineConnectorFactoryActionsMapper<K> =
   K extends keyof IEngineConnectorFactoryActions
     ? (payload: {
+        engineKey: string;
         action: K;
         payload: Parameters<IEngineConnectorFactoryActions[K]>;
       }) => ReturnType<IEngineConnectorFactoryActions[K]>

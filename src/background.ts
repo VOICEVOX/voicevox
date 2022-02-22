@@ -34,6 +34,7 @@ import {
   AcceptTermsStatus,
   ToolbarSetting,
   ActivePointScrollMode,
+  EngineInfo,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -57,6 +58,16 @@ if (isDevelopment) {
     path.join(app.getPath("appData"), `${app.getName()}-dev`)
   );
 }
+
+const engineInfos: EngineInfo[] = (() => {
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+
+  if (defaultEngineInfosEnv) {
+    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  }
+
+  return [];
+})();
 
 let win: BrowserWindow;
 
@@ -335,6 +346,19 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
+  const engineInfo = engineInfos[0]; // TODO: 複数エンジン対応
+  if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
+
+  if (!engineInfo.executionEnabled) {
+    log.info("Skipped engineInfo execution: disabled");
+    return;
+  }
+
+  if (!engineInfo.executionFilePath) {
+    log.info("Skipped engineInfo execution: empty executionFilePath");
+    return;
+  }
+
   willQuitEngine = false;
 
   // 最初のエンジンモード
@@ -363,7 +387,7 @@ async function runEngine() {
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
-    process.env.ENGINE_PATH ?? "run.exe"
+    engineInfo.executionFilePath ?? "run.exe"
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
@@ -617,8 +641,29 @@ async function createWindow() {
   });
 }
 
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
+const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: "VOICEVOX",
+    submenu: [{ role: "quit" }],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "selectAll" },
+    ],
+  },
+];
+
+// For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
+if (isMac) {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
+} else {
+  if (!isDevelopment) {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 // プロセス間通信
@@ -807,6 +852,11 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
 
 ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
+});
+
+ipcMainHandle("ENGINE_INFOS", () => {
+  // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
+  return engineInfos;
 });
 
 /**

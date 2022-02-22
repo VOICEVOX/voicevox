@@ -35,7 +35,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   toolbarSetting: [],
-  engineHost: process.env.VUE_APP_ENGINE_URL as unknown as string,
+  engineInfos: [],
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],

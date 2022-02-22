@@ -456,6 +456,10 @@ export const audioStore: VoiceVoxStoreOptions<
   actions: {
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {
           engineState = state.engineState;
@@ -465,12 +469,14 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
+              engineKey: engineInfo.key,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
-            window.electron.logInfo("waiting engine...");
+
+            window.electron.logInfo(`Waiting engine ${engineInfo.key}`);
             continue;
           }
           engineState = "READY";
@@ -483,8 +489,13 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit, dispatch }) => {
+    LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "speakersSpeakersGet",
         payload: [],
       })
@@ -521,7 +532,12 @@ export const audioStore: VoiceVoxStoreOptions<
         return styles;
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -662,7 +678,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { state, dispatch },
       {
         text,
         styleId,
@@ -673,7 +689,12 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -693,13 +714,18 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { dispatch },
+      { dispatch, state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -739,10 +765,15 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -845,8 +876,16 @@ export const audioStore: VoiceVoxStoreOptions<
       return offsets;
     },
     CONNECT_AUDIO: createUILockAction(
-      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+      async (
+        { dispatch, state },
+        { encodedBlobs }: { encodedBlobs: string[] }
+      ) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -866,6 +905,10 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     GENERATE_AUDIO: createUILockAction(
       async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         const audioItem: AudioItem = JSON.parse(
           JSON.stringify(state.audioItems[audioKey])
         );
@@ -880,6 +923,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "synthesisSynthesisPost",
           payload: [
             {
@@ -1632,9 +1676,13 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
-      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)と全角長音(U+30FC)のみで構成される場合、
-      // 「読み仮名」としてこれを処理する
-      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
+      // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
+      //  * ひらがな(U+3041~U+3094)
+      //  * カタカナ(U+30A1~U+30F4)
+      //  * 全角長音(U+30FC)
+      //  * 読点(U+3001)
+      //  * クエスチョン(U+FF1F)
+      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
       if (kanaRegex.test(newPronunciation)) {
         // ひらがなが混ざっている場合はカタカナに変換
         const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
@@ -1650,10 +1698,17 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           .replace(/(?<=[ン]ー*)ー/g, "ン")
           .replace(/(?<=[ッ]ー*)ー/g, "ッ");
 
-        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // アクセントを各句の末尾につける
+        // 文中に「？、」「、」がある場合は、そこで句切りとみなす
+        const pureKatakanaWithAccent = pureKatakana.replace(
+          /(？、|、|(?<=[^？、])$|？$)/g,
+          "'$1"
+        );
+
+        // accent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
-          text: pureKatakana + "'",
+          text: pureKatakanaWithAccent,
           styleId,
           isKana: true,
         }).catch(

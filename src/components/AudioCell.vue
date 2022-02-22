@@ -7,11 +7,7 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn
-      flat
-      class="q-pa-none character-button item-handle"
-      :disable="uiLocked"
-    >
+    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
       <q-menu
@@ -435,7 +431,14 @@ export default defineComponent({
 
 .audio-cell {
   display: flex;
-  margin: 1rem 1rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0.2rem 0.5rem;
+  &:first-child {
+    margin-top: 0.6rem;
+  }
+  &:last-child {
+    margin-bottom: 0.6rem;
+  }
   gap: 0px 1rem;
   .active-arrow {
     left: -5px;

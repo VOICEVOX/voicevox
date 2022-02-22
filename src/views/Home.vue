@@ -75,10 +75,10 @@
                         @update:modelValue="updateAudioKeys"
                         :itemKey="itemKey"
                         ghost-class="ghost"
-                        handle=".item-handle"
                       >
                         <template v-slot:item="{ element }">
                           <audio-cell
+                            class="draggable-cursor"
                             :audioKey="element"
                             :ref="addAudioCellRef"
                             @focusCell="focusCell"
@@ -404,6 +404,8 @@ export default defineComponent({
     // ソフトウェアを初期化
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
+      await store.dispatch("GET_ENGINE_INFOS");
+
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
@@ -640,6 +642,11 @@ export default defineComponent({
 
     padding-bottom: 70px;
   }
+
+  .draggable-cursor {
+    cursor: grab;
+  }
+
   .add-button-wrapper {
     position: absolute;
     right: 0px;

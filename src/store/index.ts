@@ -14,7 +14,12 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { commandStoreState, commandStore } from "./command";
-import { audioStoreState, audioStore, audioCommandStore } from "./audio";
+import {
+  audioStoreState,
+  audioStore,
+  audioCommandStore,
+  audioCommandStoreState,
+} from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
@@ -142,7 +147,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
-      Promise.all(promises).then(() => {
+      await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
       });
     },
@@ -156,7 +161,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...commandStoreState,
     ...projectStoreState,
     ...settingStoreState,
-    ...audioCommandStore,
+    ...audioCommandStoreState,
     ...indexStoreState,
     ...presetStoreState,
     ...proxyStoreState,
