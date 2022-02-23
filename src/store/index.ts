@@ -35,6 +35,7 @@ export const storeKey: InjectionKey<
 
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
+  userCharacterOrder: [],
 };
 
 export const indexStore: VoiceVoxStoreOptions<
@@ -69,6 +70,9 @@ export const indexStore: VoiceVoxStoreOptions<
           audioItem.styleId = defaultStyleId;
         }
       }
+    },
+    SET_USER_CHARACTER_ORDER(state, { userCharacterOrder }) {
+      state.userCharacterOrder = userCharacterOrder;
     },
   },
   actions: {
@@ -107,6 +111,26 @@ export const indexStore: VoiceVoxStoreOptions<
     },
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
+    },
+    async LOAD_USER_CHARACTER_ORDER({ commit }) {
+      const userCharacterOrder = await window.electron.getUserCharacterOrder();
+      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+    },
+    async SET_USER_CHARACTER_ORDER({ commit }, userCharacterOrder) {
+      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+      await window.electron.setUserCharacterOrder(userCharacterOrder);
+    },
+    GET_NEW_CHARACTERS({ state }) {
+      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+
+      // キャラクター表示順序に含まれていなければ新規キャラとみなす
+      const allSpeakerUuid = state.characterInfos.map(
+        (characterInfo) => characterInfo.metas.speakerUuid
+      );
+      const newSpeakerUuid = allSpeakerUuid.filter(
+        (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
+      );
+      return newSpeakerUuid;
     },
     async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);

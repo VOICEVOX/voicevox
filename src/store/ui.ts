@@ -37,6 +37,7 @@ export const uiStoreState: UiStoreState = {
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
+  isCharacterOrderDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
@@ -95,6 +96,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
       ) {
         state.isToolbarSettingDialogOpen = isToolbarSettingDialogOpen;
+      },
+      IS_CHARACTER_ORDER_DIALOG_OPEN(
+        state,
+        { isCharacterOrderDialogOpen }: { isCharacterOrderDialogOpen: boolean }
+      ) {
+        state.isCharacterOrderDialogOpen = isCharacterOrderDialogOpen;
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
@@ -239,6 +246,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       ON_VUEX_READY() {
         window.electron.vuexReady();
+      },
+      async IS_CHARACTER_ORDER_DIALOG_OPEN(
+        { state, commit },
+        { isCharacterOrderDialogOpen }
+      ) {
+        if (state.isCharacterOrderDialogOpen === isCharacterOrderDialogOpen)
+          return;
+
+        if (isCharacterOrderDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
+
+        commit("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen,
+        });
       },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },

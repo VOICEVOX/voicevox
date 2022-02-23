@@ -181,6 +181,9 @@ export default defineComponent({
       store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
         isToolbarSettingDialogOpen: false,
       });
+      store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+        isCharacterOrderDialogOpen: false,
+      });
       store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
       });
@@ -300,7 +303,16 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "デフォルトスタイル・試聴",
+            label: "キャラクター並び替え・試聴",
+            onClick() {
+              store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+                isCharacterOrderDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "デフォルトスタイル変更",
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,

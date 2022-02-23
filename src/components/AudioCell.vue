@@ -17,7 +17,7 @@
       >
         <q-list>
           <q-item
-            v-for="(characterInfo, characterIndex) in characterInfos"
+            v-for="(characterInfo, characterIndex) in userOrderedCharacterInfos"
             :key="characterIndex"
             class="q-pa-none"
           >
@@ -173,6 +173,9 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const characterInfos = computed(() => store.state.characterInfos);
+    const userOrderedCharacterInfos = computed(
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    );
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -200,12 +203,14 @@ export default defineComponent({
     );
 
     const subMenuOpenFlags = ref(
-      [...Array(characterInfos.value?.length)].map(() => false)
+      [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
     );
 
     const reassignSubMenuOpen = debounce((idx: number) => {
       if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(characterInfos.value?.length)].map(() => false);
+      const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
+        () => false
+      );
       arr[idx] = true;
       subMenuOpenFlags.value = arr;
     }, 100);
@@ -390,6 +395,7 @@ export default defineComponent({
 
     return {
       characterInfos,
+      userOrderedCharacterInfos,
       audioItem,
       deleteButtonEnable,
       uiLocked,

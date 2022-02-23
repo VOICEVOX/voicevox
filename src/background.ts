@@ -179,6 +179,7 @@ const store = new Store<{
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
   experimentalSetting: ExperimentalSetting;
@@ -249,6 +250,13 @@ const store = new Store<{
         type: "string",
       },
       default: defaultToolbarButtonSetting,
+    },
+    userCharacterOrder: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: [],
     },
     defaultStyleIds: {
       type: "array",
@@ -902,6 +910,14 @@ ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
     store.set("presets.keys", newPresets.presetKeys);
   }
   return store.get("presets");
+});
+
+ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
+  return store.get("userCharacterOrder");
+});
+
+ipcMainHandle("SET_USER_CHARACTER_ORDER", (_, userCharacterOrder) => {
+  store.set("userCharacterOrder", userCharacterOrder);
 });
 
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {

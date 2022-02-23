@@ -135,6 +135,11 @@
   <setting-dialog v-model="isSettingDialogOpenComputed" />
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
+  <character-order-dialog
+    v-if="characterInfos"
+    :characterInfos="characterInfos"
+    v-model="isCharacterOrderDialogOpenComputed"
+  />
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
@@ -168,6 +173,7 @@ import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import { AudioItem } from "@/store/type";
@@ -192,6 +198,7 @@ export default defineComponent({
     HeaderBarCustomDialog,
     CharacterPortrait,
     DefaultStyleSelectDialog,
+    CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
   },
@@ -406,8 +413,14 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("START_WAITING_ENGINE");
       await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
+      // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
+      const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
+      isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
+
+      // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
       for (const info of characterInfos.value) {
@@ -487,11 +500,23 @@ export default defineComponent({
         }),
     });
 
-    // デフォルトスタイル選択
+    // キャラクター並び替え
     const characterInfos = computed(() => store.state.characterInfos);
+    const isCharacterOrderDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        store.state.isCharacterOrderDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen: val,
+        }),
+    });
+
+    // デフォルトスタイル選択
     const isDefaultStyleSelectDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
+        !store.state.isCharacterOrderDialogOpen &&
         store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
         store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
@@ -502,6 +527,7 @@ export default defineComponent({
     const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
+        !store.state.isCharacterOrderDialogOpen &&
         !store.state.isDefaultStyleSelectDialogOpen &&
         store.state.isAcceptRetrieveTelemetryDialogOpen,
       set: (val) =>
@@ -561,6 +587,7 @@ export default defineComponent({
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
       characterInfos,
+      isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
       isAcceptTermsDialogOpenComputed,
