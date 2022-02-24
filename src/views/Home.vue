@@ -408,13 +408,15 @@ export default defineComponent({
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
+      // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
       if (characterInfos.value == undefined) throw new Error();
       for (const info of characterInfos.value) {
-        isUnsetDefaultStyleIds ||= await store.dispatch(
-          "IS_UNSET_DEFAULT_STYLE_ID",
-          { speakerUuid: info.metas.speakerUuid }
-        );
+        isUnsetDefaultStyleIds ||=
+          info.metas.styles.length > 1 &&
+          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
+            speakerUuid: info.metas.speakerUuid,
+          }));
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
