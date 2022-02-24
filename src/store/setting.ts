@@ -44,7 +44,6 @@ export const settingStoreState: SettingStoreState = {
   experimentalSetting: {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
-    enableReorderCell: false,
   },
 };
 
