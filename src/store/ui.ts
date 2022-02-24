@@ -40,6 +40,7 @@ export const uiStoreState: UiStoreState = {
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
+  isDictionaryManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -103,6 +104,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }: { isDefaultStyleSelectDialogOpen: boolean }
       ) {
         state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
+      },
+      IS_DICTIONARY_MANAGE_DIALOG_OPEN(
+        state,
+        {
+          isDictionaryManageDialogOpen,
+        }: { isDictionaryManageDialogOpen: boolean }
+      ) {
+        state.isDictionaryManageDialogOpen = isDictionaryManageDialogOpen;
       },
       IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
         state,
@@ -263,6 +272,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen,
+        });
+      },
+      async IS_DICTIONARY_MANAGE_DIALOG_OPEN(
+        { state, commit },
+        { isDictionaryManageDialogOpen }
+      ) {
+        if (state.isDictionaryManageDialogOpen === isDictionaryManageDialogOpen)
+          return;
+
+        if (isDictionaryManageDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
+
+        commit("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+          isDictionaryManageDialogOpen,
         });
       },
       async IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
