@@ -184,6 +184,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
+  engineInfos: () => {
+    return ipcRendererInvoke("ENGINE_INFOS");
+  },
+
   restartEngine: () => {
     return ipcRendererInvoke("RESTART_ENGINE");
   },
