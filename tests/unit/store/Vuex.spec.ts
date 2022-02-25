@@ -19,6 +19,7 @@ describe("store/vuex.js test", () => {
       state: {
         engineState: "STARTING",
         defaultStyleIds: [],
+        userCharacterOrder: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
