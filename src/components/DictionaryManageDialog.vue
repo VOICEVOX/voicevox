@@ -72,6 +72,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
 
+    let engineInfo: EngineInfo | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -81,7 +82,7 @@ export default defineComponent({
 
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
       if (newValue) {
-        const engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
+        engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: index == 0`);
         loadingDict.value = true;
