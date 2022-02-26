@@ -200,6 +200,10 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): Promise<Blob | null>;
   };
 
+  GET_AUDIO_CACHE_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Promise<Blob | null>;
+  };
+
   SET_AUDIO_TEXT: {
     mutation: { audioKey: string; text: string };
   };
@@ -299,7 +303,11 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Blob | null;
+    action(payload: { audioKey: string }): Promise<Blob | null>;
+  };
+
+  GENERATE_AUDIO_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Blob | null;
   };
 
   CONNECT_AUDIO: {
@@ -330,6 +338,14 @@ type AudioStoreTypes = {
 
   PLAY_AUDIO: {
     action(payload: { audioKey: string }): boolean;
+  };
+
+  PLAY_AUDIO_BLOB: {
+    action(payload: {
+      audioBlob: Blob;
+      audioElem: HTMLAudioElement;
+      audioKey?: string;
+    }): boolean;
   };
 
   STOP_AUDIO: {

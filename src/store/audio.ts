@@ -667,8 +667,17 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
-    async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
+    async GET_AUDIO_CACHE(
+      { state, dispatch },
+      { audioKey }: { audioKey: string }
+    ) {
       const audioItem = state.audioItems[audioKey];
+      return dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", { audioItem });
+    },
+    async GET_AUDIO_CACHE_FROM_AUDIO_ITEM(
+      { state },
+      { audioItem }: { audioItem: AudioItem }
+    ) {
       const [id] = await generateUniqueIdAndQuery(state, audioItem);
 
       if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
@@ -909,15 +918,20 @@ export const audioStore: VoiceVoxStoreOptions<
           });
       }
     ),
-    GENERATE_AUDIO: createUILockAction(
-      async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
+    async GENERATE_AUDIO(
+      { dispatch, state },
+      { audioKey }: { audioKey: string }
+    ) {
+      const audioItem: AudioItem = JSON.parse(
+        JSON.stringify(state.audioItems[audioKey])
+      );
+      return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
+    },
+    GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
+      async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
         const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: index == 0`);
-
-        const audioItem: AudioItem = JSON.parse(
-          JSON.stringify(state.audioItems[audioKey])
-        );
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1246,9 +1260,7 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, commit, dispatch },
         { audioKey }: { audioKey: string }
       ) => {
-        const audioElem = audioElements[audioKey] as HTMLAudioElement & {
-          setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
-        };
+        const audioElem = audioElements[audioKey];
         audioElem.pause();
 
         // 音声用意
@@ -1267,7 +1279,6 @@ export const audioStore: VoiceVoxStoreOptions<
             throw new Error();
           }
         }
-        audioElem.src = URL.createObjectURL(blob);
         const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
           audioKey,
         });
@@ -1281,6 +1292,23 @@ export const audioStore: VoiceVoxStoreOptions<
           audioElem.currentTime = startTime + 10e-6;
         }
 
+        return dispatch("PLAY_AUDIO_BLOB", {
+          audioBlob: blob,
+          audioElem,
+          audioKey,
+        });
+      }
+    ),
+    PLAY_AUDIO_BLOB: createUILockAction(
+      async (
+        { state, commit },
+        {
+          audioBlob,
+          audioElem,
+          audioKey,
+        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
+      ) => {
+        audioElem.src = URL.createObjectURL(audioBlob);
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
           .catch((err) => {
@@ -1298,7 +1326,9 @@ export const audioStore: VoiceVoxStoreOptions<
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          }
         };
         audioElem.addEventListener("play", played);
 
@@ -1311,7 +1341,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }).finally(async () => {
           audioElem.removeEventListener("play", played);
           audioElem.removeEventListener("pause", paused);
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          }
         });
 
         audioElem.play();
