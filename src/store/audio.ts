@@ -28,7 +28,13 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import { buildProjectFileName, sanitizeFileName } from "./utility";
+import {
+  buildProjectFileName,
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+  sanitizeFileName,
+} from "./utility";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -1676,27 +1682,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
-      // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
-      //  * ひらがな(U+3041~U+3094)
-      //  * カタカナ(U+30A1~U+30F4)
-      //  * 全角長音(U+30FC)
-      //  * 読点(U+3001)
-      //  * クエスチョン(U+FF1F)
-      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
+      const kanaRegex = createKanaRegex(true);
       if (kanaRegex.test(newPronunciation)) {
         // ひらがなが混ざっている場合はカタカナに変換
-        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
-          return String.fromCharCode(s.charCodeAt(0) + 0x60);
-        });
+        const katakana = convertHiraToKana(newPronunciation);
         // 長音を適切な音に変換
-        const pureKatakana = katakana
-          .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
-          .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-          .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
-          .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-          .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
-          .replace(/(?<=[ン]ー*)ー/g, "ン")
-          .replace(/(?<=[ッ]ー*)ー/g, "ッ");
+        const pureKatakana = convertLongVowel(katakana);
 
         // アクセントを各句の末尾につける
         // 文中に「？、」「、」がある場合は、そこで句切りとみなす
