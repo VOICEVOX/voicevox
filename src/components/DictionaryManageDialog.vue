@@ -55,6 +55,7 @@
                   class="word-input"
                   v-model="surface"
                   dense
+                  :disable="uiLocked"
                 />
               </form>
             </div>
@@ -68,6 +69,7 @@
                   @blur="setYomi(yomi)"
                   dense
                   :error="!isOnlyHiraOrKana"
+                  :disable="uiLocked"
                 >
                   <template v-slot:error>
                     読みに使える文字はひらがなとカタカナのみです。
@@ -80,6 +82,25 @@
               語尾のアクセントを考慮するため、「は(ワ)」が自動で挿入されます。
             </div>
             <div class="row q-px-md" style="height: 130px">
+              <div class="play-button">
+                <q-btn
+                  v-if="!nowPlaying && !nowGenerating"
+                  fab
+                  color="primary-light"
+                  text-color="display-dark"
+                  icon="play_arrow"
+                  @click="play"
+                />
+                <q-btn
+                  v-else
+                  fab
+                  color="primary-light"
+                  text-color="display-dark"
+                  icon="stop"
+                  @click="stop"
+                  :disable="nowGenerating"
+                />
+              </div>
               <div
                 ref="accentPhraseTable"
                 class="accent-phrase-table overflow-hidden-y"
@@ -89,7 +110,7 @@
                   <audio-accent
                     :accent-phrase="accentPhrase"
                     :accent-phrase-index="0"
-                    :ui-locked="false"
+                    :ui-locked="uiLocked"
                     @changeAccent="changeAccent"
                   />
                   <template
@@ -126,7 +147,7 @@
 import { computed, defineComponent, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { toDispatchResponse } from "@/store/audio";
-import { AccentPhrase, UserDictWord } from "@/openapi";
+import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -134,7 +155,8 @@ import {
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
 import { EngineInfo } from "@/type/preload";
-import { QInput } from "quasar";
+import { QInput, useQuasar } from "quasar";
+import { AudioItem } from "@/store/type";
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -148,12 +170,17 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
+    const $q = useQuasar();
 
     let engineInfo: EngineInfo | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
+    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const nowGenerating = ref(false);
+    const nowPlaying = ref(false);
+
     const loadingDict = ref(false);
     const userDict = ref<{ [key: string]: UserDictWord }>({});
 
@@ -195,6 +222,16 @@ export default defineComponent({
     const setYomi = async (text: string) => {
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
+      // 文字列が変更されていない場合は、アクセントフレーズに変更を加えない
+      // 「ワ」が自動挿入されるので、それを考慮してsliceしている
+      if (
+        text ==
+        accentPhrase.value?.moras
+          .map((v) => v.text)
+          .join("")
+          .slice(0, -1)
+      )
+        return;
       if (isOnlyHiraOrKana.value && text.length) {
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
@@ -214,14 +251,77 @@ export default defineComponent({
     };
     window.onresize = computeCenteringAccentPhrase;
 
-    const changeAccent = (_: number, accent: number) => {
+    const changeAccent = async (_: number, accent: number) => {
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
+        accentPhrase.value = (
+          await store.dispatch("FETCH_MORA_DATA", {
+            accentPhrases: [accentPhrase.value],
+            styleId: 0,
+          })
+        )[0];
       }
+    };
+
+    const audioElem = new Audio();
+    audioElem.pause();
+
+    const play = async () => {
+      if (!accentPhrase.value) return;
+      nowGenerating.value = true;
+      const query: AudioQuery = {
+        accentPhrases: [accentPhrase.value],
+        speedScale: 1.0,
+        pitchScale: 0,
+        intonationScale: 1.0,
+        volumeScale: 1.0,
+        prePhonemeLength: 0.1,
+        postPhonemeLength: 0.1,
+        outputSamplingRate: store.state.savingSetting.outputSamplingRate,
+        outputStereo: store.state.savingSetting.outputStereo,
+      };
+
+      const audioItem: AudioItem = {
+        text: yomi.value,
+        styleId: 0,
+        query,
+      };
+
+      let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
+        audioItem,
+      });
+      if (!blob) {
+        blob = await store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+          audioItem,
+        });
+        if (!blob) {
+          nowGenerating.value = false;
+          $q.dialog({
+            title: "生成に失敗しました",
+            message: "エンジンの再起動をお試しください。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
+          });
+          return;
+        }
+      }
+      nowGenerating.value = false;
+      nowPlaying.value = true;
+      await store.dispatch("PLAY_AUDIO_BLOB", { audioElem, audioBlob: blob });
+      nowPlaying.value = false;
+    };
+    const stop = () => {
+      audioElem.pause();
     };
 
     return {
       dictionaryManageDialogOpenedComputed,
+      uiLocked,
+      nowGenerating,
+      nowPlaying,
       userDict,
       loadingDict,
       surfaceInput,
@@ -234,6 +334,8 @@ export default defineComponent({
       accentPhraseTable,
       centeringAccentPhrase,
       changeAccent,
+      play,
+      stop,
     };
   },
 });
@@ -297,6 +399,11 @@ export default defineComponent({
 .accent-desc {
   color: rgba(colors.$display-rgb, 0.5);
   font-size: 12px;
+}
+
+.play-button {
+  margin: auto 0;
+  padding-right: 16px;
 }
 
 .accent-phrase-table {
