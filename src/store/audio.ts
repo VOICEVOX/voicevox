@@ -903,15 +903,20 @@ export const audioStore: VoiceVoxStoreOptions<
           });
       }
     ),
-    GENERATE_AUDIO: createUILockAction(
-      async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
+    async GENERATE_AUDIO(
+      { dispatch, state },
+      { audioKey }: { audioKey: string }
+    ) {
+      const audioItem: AudioItem = JSON.parse(
+        JSON.stringify(state.audioItems[audioKey])
+      );
+      return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
+    },
+    GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
+      async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
         const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: index == 0`);
-
-        const audioItem: AudioItem = JSON.parse(
-          JSON.stringify(state.audioItems[audioKey])
-        );
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,

@@ -299,7 +299,11 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Blob | null;
+    action(payload: { audioKey: string }): Promise<Blob | null>;
+  };
+
+  GENERATE_AUDIO_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Blob | null;
   };
 
   CONNECT_AUDIO: {
