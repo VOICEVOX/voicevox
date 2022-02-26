@@ -340,6 +340,14 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): boolean;
   };
 
+  PLAY_AUDIO_BLOB: {
+    action(payload: {
+      audioBlob: Blob;
+      audioElem: HTMLAudioElement;
+      audioKey?: string;
+    }): boolean;
+  };
+
   STOP_AUDIO: {
     action(payload: { audioKey: string }): void;
   };

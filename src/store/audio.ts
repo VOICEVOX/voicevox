@@ -1273,7 +1273,6 @@ export const audioStore: VoiceVoxStoreOptions<
             throw new Error();
           }
         }
-        audioElem.src = URL.createObjectURL(blob);
         const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
           audioKey,
         });
@@ -1287,6 +1286,23 @@ export const audioStore: VoiceVoxStoreOptions<
           audioElem.currentTime = startTime + 10e-6;
         }
 
+        return dispatch("PLAY_AUDIO_BLOB", {
+          audioBlob: blob,
+          audioElem,
+          audioKey,
+        });
+      }
+    ),
+    PLAY_AUDIO_BLOB: createUILockAction(
+      async (
+        { state, commit },
+        {
+          audioBlob,
+          audioElem,
+          audioKey,
+        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
+      ) => {
+        audioElem.src = URL.createObjectURL(audioBlob);
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
           .catch((err) => {
@@ -1304,7 +1320,9 @@ export const audioStore: VoiceVoxStoreOptions<
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          }
         };
         audioElem.addEventListener("play", played);
 
@@ -1317,7 +1335,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }).finally(async () => {
           audioElem.removeEventListener("play", played);
           audioElem.removeEventListener("pause", paused);
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          }
         });
 
         audioElem.play();
