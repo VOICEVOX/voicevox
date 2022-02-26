@@ -497,7 +497,8 @@ export const audioStore: VoiceVoxStoreOptions<
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey: engineInfo.key,
         action: "speakersSpeakersGet",
-        payload: [],
+        // 連想配列が第一引数になければ失敗する
+        payload: [{}],
       })
         .then(toDispatchResponse("speakersSpeakersGet"))
         .catch((error) => {
