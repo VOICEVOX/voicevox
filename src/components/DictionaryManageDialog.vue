@@ -46,7 +46,76 @@
               </q-item>
             </q-list>
           </div>
-          <div class="col-8" />
+          <div class="col-8">
+            <div class="row q-pl-md q-mt-md">
+              <div class="text-h6">単語</div>
+              <form @submit.stop="yomiInput.focus()">
+                <q-input
+                  ref="surfaceInput"
+                  class="word-input"
+                  v-model="surface"
+                  dense
+                />
+              </form>
+            </div>
+            <div class="row q-pl-md q-pt-sm">
+              <div class="text-h6">読み</div>
+              <form @submit.stop="yomiInput.blur()">
+                <q-input
+                  ref="yomiInput"
+                  class="word-input"
+                  v-model="yomi"
+                  @blur="setYomi(yomi)"
+                  dense
+                  :error="!isOnlyHiraOrKana"
+                >
+                  <template v-slot:error>
+                    読みに使える文字はひらがなとカタカナのみです。
+                  </template>
+                </q-input>
+              </form>
+            </div>
+            <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
+            <div class="row q-pl-md accent-desc">
+              語尾のアクセントを考慮するため、「は(ワ)」が自動で挿入されます。
+            </div>
+            <div class="row q-px-md" style="height: 130px">
+              <div
+                ref="accentPhraseTable"
+                class="accent-phrase-table overflow-hidden-y"
+                :style="[centeringAccentPhrase && 'justify-content: center']"
+              >
+                <div v-if="accentPhrase" class="mora-table">
+                  <audio-accent
+                    :accent-phrase="accentPhrase"
+                    :accent-phrase-index="0"
+                    :ui-locked="false"
+                    @changeAccent="changeAccent"
+                  />
+                  <template
+                    v-for="(mora, moraIndex) in accentPhrase.moras"
+                    :key="moraIndex"
+                  >
+                    <div
+                      class="text-cell"
+                      :style="{
+                        'grid-column': `${moraIndex * 2 + 1} / span 1`,
+                      }"
+                    >
+                      {{ mora.text }}
+                    </div>
+                    <div
+                      v-if="moraIndex < accentPhrase.moras.length - 1"
+                      class="splitter-cell"
+                      :style="{
+                        'grid-column': `${moraIndex * 2 + 2} / span 1`,
+                      }"
+                    />
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
         </q-page>
       </q-page-container>
     </q-layout>
@@ -54,14 +123,22 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { toDispatchResponse } from "@/store/audio";
-import { UserDictWord } from "@/openapi";
+import { AccentPhrase, UserDictWord } from "@/openapi";
+import {
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+} from "@/store/utility";
+import AudioAccent from "@/components/AudioAccent.vue";
+import { EngineInfo } from "@/type/preload";
+import { QInput } from "quasar";
 
 export default defineComponent({
   name: "DictionaryManageDialog",
-
+  components: { AudioAccent },
   props: {
     modelValue: {
       type: Boolean,
@@ -97,10 +174,66 @@ export default defineComponent({
       }
     });
 
+    const surfaceInput = ref<QInput>();
+    const yomiInput = ref<QInput>();
+
+    const surface = ref("");
+    const yomi = ref("");
+    const kanaRegex = createKanaRegex();
+    const isOnlyHiraOrKana = ref(true);
+    const accentPhrase = ref<AccentPhrase | undefined>();
+    const accentPhraseTable = ref<HTMLElement>();
+    // スクロールしなければならないほど長いアクセント句はセンタリングしないようにする
+    // computedにすると、ダイアログを表示した際にしか動作しないので、refにして変更時に代入する
+    const centeringAccentPhrase = ref(true);
+    const computeCenteringAccentPhrase = () => {
+      centeringAccentPhrase.value =
+        !!accentPhraseTable.value &&
+        accentPhraseTable.value.scrollWidth ==
+          accentPhraseTable.value.offsetWidth;
+    };
+    const setYomi = async (text: string) => {
+      // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
+      isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
+      if (isOnlyHiraOrKana.value && text.length) {
+        text = convertHiraToKana(text);
+        text = convertLongVowel(text);
+        accentPhrase.value = (
+          await store.dispatch("FETCH_ACCENT_PHRASES", {
+            text: text + "ワ'",
+            styleId: 0,
+            isKana: true,
+          })
+        )[0];
+      } else {
+        accentPhrase.value = undefined;
+      }
+      yomi.value = text;
+      await nextTick();
+      computeCenteringAccentPhrase();
+    };
+    window.onresize = computeCenteringAccentPhrase;
+
+    const changeAccent = (_: number, accent: number) => {
+      if (accentPhrase.value) {
+        accentPhrase.value.accent = accent;
+      }
+    };
+
     return {
       dictionaryManageDialogOpenedComputed,
       userDict,
       loadingDict,
+      surfaceInput,
+      yomiInput,
+      surface,
+      yomi,
+      isOnlyHiraOrKana,
+      setYomi,
+      accentPhrase,
+      accentPhraseTable,
+      centeringAccentPhrase,
+      changeAccent,
     };
   },
 });
@@ -140,6 +273,60 @@ export default defineComponent({
     background: colors.$background-light;
     border-radius: 6px;
     padding: 14px;
+  }
+}
+
+.word-input {
+  padding-left: 10px;
+  width: calc(66vw - 80px);
+
+  :deep(.q-field__control) {
+    height: 2rem;
+  }
+
+  :deep(.q-placeholder) {
+    padding: 0;
+    font-size: 20px;
+  }
+
+  :deep(.q-field__after) {
+    height: 2rem;
+  }
+}
+
+.accent-desc {
+  color: rgba(colors.$display-rgb, 0.5);
+  font-size: 12px;
+}
+
+.accent-phrase-table {
+  flex-grow: 1;
+  align-self: stretch;
+
+  display: flex;
+  overflow-x: scroll;
+  width: calc(66vw - 110px);
+
+  .mora-table {
+    display: inline-grid;
+    align-self: stretch;
+    grid-template-rows: 1fr 60px 30px;
+
+    .text-cell {
+      padding: 0;
+      min-width: 30px;
+      max-width: 30px;
+      grid-row-start: 3;
+      text-align: center;
+      color: colors.$display;
+    }
+
+    .splitter-cell {
+      min-width: 10px;
+      max-width: 10px;
+      grid-row: 3 / span 1;
+      z-index: vars.$detail-view-splitter-cell-z-index;
+    }
   }
 }
 </style>
