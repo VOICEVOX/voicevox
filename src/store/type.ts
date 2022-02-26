@@ -200,6 +200,10 @@ type AudioStoreTypes = {
     action(payload: { audioKey: string }): Promise<Blob | null>;
   };
 
+  GET_AUDIO_CACHE_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Promise<Blob | null>;
+  };
+
   SET_AUDIO_TEXT: {
     mutation: { audioKey: string; text: string };
   };

@@ -661,8 +661,17 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
-    async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
+    async GET_AUDIO_CACHE(
+      { state, dispatch },
+      { audioKey }: { audioKey: string }
+    ) {
       const audioItem = state.audioItems[audioKey];
+      return dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", { audioItem });
+    },
+    async GET_AUDIO_CACHE_FROM_AUDIO_ITEM(
+      { state },
+      { audioItem }: { audioItem: AudioItem }
+    ) {
       const [id] = await generateUniqueIdAndQuery(state, audioItem);
 
       if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
