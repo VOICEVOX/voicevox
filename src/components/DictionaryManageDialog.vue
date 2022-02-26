@@ -8,7 +8,7 @@
     v-model="dictionaryManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
-      <q-page-container class="root">
+      <q-page-container>
         <q-header class="q-pa-sm">
           <q-toolbar>
             <q-toolbar-title class="text-display">辞書管理</q-toolbar-title>
