@@ -1254,9 +1254,7 @@ export const audioStore: VoiceVoxStoreOptions<
         { state, commit, dispatch },
         { audioKey }: { audioKey: string }
       ) => {
-        const audioElem = audioElements[audioKey] as HTMLAudioElement & {
-          setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
-        };
+        const audioElem = audioElements[audioKey];
         audioElem.pause();
 
         // 音声用意
