@@ -74,7 +74,6 @@ describe("store/vuex.js test", () => {
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
-          enableReorderCell: false,
         },
       },
       getters: {
@@ -164,6 +163,5 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
-    assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });
 });

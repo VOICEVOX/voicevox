@@ -317,15 +317,10 @@ const store = new Store<{
           type: "boolean",
           default: false,
         },
-        enableReorderCell: {
-          type: "boolean",
-          default: false,
-        },
       },
       default: {
         enablePreset: false,
         enableInterrogativeUpspeak: false,
-        enableReorderCell: false,
       },
     },
     acceptRetrieveTelemetry: {
