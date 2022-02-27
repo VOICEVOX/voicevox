@@ -331,6 +331,7 @@ export default defineComponent({
           accentPhraseTable.value.offsetWidth;
     };
     const convertHankakuToZenkaku = (text: string) => {
+      // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
       return text.replace(/[\u0021-\u007e]/g, (s) => {
         return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
       });
