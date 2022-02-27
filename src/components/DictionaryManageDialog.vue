@@ -354,6 +354,12 @@ export default defineComponent({
       resetSelect();
     };
 
+    const styleId = computed(() => {
+      if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
+      return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
+        .styleId;
+    });
+
     const kanaRegex = createKanaRegex();
     const isOnlyHiraOrKana = ref(true);
     const accentPhrase = ref<AccentPhrase | undefined>();
@@ -402,7 +408,7 @@ export default defineComponent({
         accentPhrase.value = (
           await store.dispatch("FETCH_ACCENT_PHRASES", {
             text: text + "ガ'",
-            styleId: 0,
+            styleId: styleId.value,
             isKana: true,
           })
         )[0];
@@ -427,7 +433,7 @@ export default defineComponent({
         accentPhrase.value = (
           await store.dispatch("FETCH_MORA_DATA", {
             accentPhrases: [accentPhrase.value],
-            styleId: 0,
+            styleId: styleId.value,
           })
         )[0];
       }
@@ -453,7 +459,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
-        styleId: 0,
+        styleId: styleId.value,
         query,
       };
 
