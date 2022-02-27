@@ -321,7 +321,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "辞書管理",
+            label: "読み方＆アクセント辞書",
             onClick() {
               store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
                 isDictionaryManageDialogOpen: true,

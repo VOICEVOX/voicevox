@@ -11,7 +11,9 @@
       <q-page-container>
         <q-header class="q-pa-sm">
           <q-toolbar>
-            <q-toolbar-title class="text-display">辞書管理</q-toolbar-title>
+            <q-toolbar-title class="text-display"
+              >読み方＆アクセント辞書</q-toolbar-title
+            >
             <q-space />
             <!-- close button -->
             <q-btn
@@ -31,7 +33,40 @@
             </div>
           </div>
           <div class="col-4 word-list-col">
-            <div class="text-h5 q-pa-sm">単語一覧</div>
+            <div v-if="wordEditing" class="word-list-disable-overlay" />
+            <div class="word-list-header">
+              <div class="word-list-title text-h5">単語一覧</div>
+              <div>
+                <q-btn
+                  outline
+                  text-color="warning"
+                  class="text-no-wrap text-bold"
+                  @click="deleteWord"
+                  :disable="uiLocked || !isDeletable"
+                  >削除</q-btn
+                >
+              </div>
+              <div>
+                <q-btn
+                  outline
+                  text-color="display"
+                  class="text-no-wrap text-bold"
+                  @click="wordEditing = true"
+                  :disable="uiLocked || !selectedId"
+                  >編集</q-btn
+                >
+              </div>
+              <div>
+                <q-btn
+                  outline
+                  text-color="display"
+                  class="text-no-wrap text-bold"
+                  @click="newWord"
+                  :disable="uiLocked"
+                  >追加</q-btn
+                >
+              </div>
+            </div>
             <q-list class="word-list">
               <q-item
                 v-for="(value, key) in userDict"
@@ -39,7 +74,7 @@
                 tag="label"
                 v-ripple
                 clickable
-                @click="discardOrNotDialog(() => selectWord(key))"
+                @click="selectWord(key)"
                 :active="selectedId === key"
                 active-class="active-word"
               >
@@ -51,18 +86,10 @@
                 </q-item-section>
               </q-item>
             </q-list>
-            <div class="q-ma-sm">
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold new-word-button"
-                @click="discardOrNotDialog(newWord)"
-                :disable="uiLocked"
-                >新規登録</q-btn
-              >
-            </div>
           </div>
-          <div class="col-8 no-wrap text-no-wrap">
+
+          <!-- 右側のpane -->
+          <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <q-input
@@ -94,7 +121,7 @@
             </div>
             <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
             <div class="row q-pl-md accent-desc">
-              語尾のアクセントを考慮するため、「は(ワ)」が自動で挿入されます。
+              語尾のアクセントを考慮するため、「が」が自動で挿入されます。
             </div>
             <div class="row q-px-md" style="height: 130px">
               <div class="play-button">
@@ -119,7 +146,9 @@
               <div
                 ref="accentPhraseTable"
                 class="accent-phrase-table overflow-hidden-y"
-                :style="[centeringAccentPhrase && 'justify-content: center']"
+                :style="{
+                  justifyContent: centeringAccentPhrase ? 'center' : undefined,
+                }"
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <audio-accent
@@ -135,7 +164,7 @@
                     <div
                       class="text-cell"
                       :style="{
-                        'grid-column': `${moraIndex * 2 + 1} / span 1`,
+                        gridColumn: `${moraIndex * 2 + 1} / span 1`,
                       }"
                     >
                       {{ mora.text }}
@@ -144,7 +173,7 @@
                       v-if="moraIndex < accentPhrase.moras.length - 1"
                       class="splitter-cell"
                       :style="{
-                        'grid-column': `${moraIndex * 2 + 2} / span 1`,
+                        gridColumn: `${moraIndex * 2 + 2} / span 1`,
                       }"
                     />
                   </template>
@@ -152,6 +181,7 @@
               </div>
             </div>
             <div class="row q-px-md save-delete-reset-buttons">
+              <q-space />
               <q-btn
                 v-show="!!selectedId"
                 outline
@@ -161,7 +191,6 @@
                 :disable="uiLocked || !isWordChanged"
                 >リセット</q-btn
               >
-              <q-space />
               <q-btn
                 outline
                 text-color="display"
@@ -172,11 +201,11 @@
               >
               <q-btn
                 outline
-                text-color="warning"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="deleteWord"
-                :disable="uiLocked || !isDeletable"
-                >削除</q-btn
+                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                :disable="uiLocked"
+                >キャンセル</q-btn
               >
             </div>
           </div>
@@ -285,8 +314,10 @@ export default defineComponent({
     };
     const closeDialogProcess = () => {
       dictionaryManageDialogOpenedComputed.value = false;
-      resetSelect();
+      cancel();
     };
+
+    const wordEditing = ref(false);
 
     const surfaceInput = ref<QInput>();
     const yomiInput = ref<QInput>();
@@ -314,8 +345,13 @@ export default defineComponent({
       setYomi(userDict.value[id].yomi, true);
     };
     const newWord = () => {
+      wordEditing.value = true;
       resetSelect();
       surfaceInput.value?.focus();
+    };
+    const cancel = () => {
+      wordEditing.value = false;
+      resetSelect();
     };
 
     const kanaRegex = createKanaRegex();
@@ -349,7 +385,7 @@ export default defineComponent({
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
       // ただし、読みが同じで違う単語が存在する場合が考えられるので、changeWordフラグを考慮する
-      // 「ワ」が自動挿入されるので、それを考慮してsliceしている
+      // 「ガ」が自動挿入されるので、それを考慮してsliceしている
       if (
         text ==
           accentPhrase.value?.moras
@@ -365,7 +401,7 @@ export default defineComponent({
         text = convertLongVowel(text);
         accentPhrase.value = (
           await store.dispatch("FETCH_ACCENT_PHRASES", {
-            text: text + "ワ'",
+            text: text + "ガ'",
             styleId: 0,
             isKana: true,
           })
@@ -452,7 +488,7 @@ export default defineComponent({
     };
 
     // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
-    // アクセントが自動追加される「ワ」に指定されている場合、
+    // アクセントが自動追加される「ガ」に指定されている場合、
     // 実際に登録するaccentの値は0となるので、そうなるように処理する
     const computeRegisteredAccent = () => {
       if (!accentPhrase.value) throw new Error();
@@ -461,7 +497,7 @@ export default defineComponent({
       return accent;
     };
     // computeの逆
-    // 辞書から得たaccentが0の場合に、自動で追加される「ワ」の位置にアクセントを表示させるように処理する
+    // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
     const computeDisplayAccent = () => {
       if (!accentPhrase.value || !selectedId.value) throw new Error();
       let accent = userDict.value[selectedId.value].accentType;
@@ -488,11 +524,7 @@ export default defineComponent({
         throw new Error(`No such engineInfo registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
       const accent = computeRegisteredAccent();
-      // selected idがあった場合でも、surfaceそのものに変更があれば、rewriteではなくaddする
-      if (
-        selectedId.value &&
-        userDict.value[selectedId.value].surface === surface.value
-      ) {
+      if (selectedId.value) {
         try {
           await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
             engineKey: engineInfo.key,
@@ -520,7 +552,7 @@ export default defineComponent({
         }
       } else {
         try {
-          selectedId.value = await store
+          await store
             .dispatch("INVOKE_ENGINE_CONNECTOR", {
               engineKey: engineInfo.key,
               action: "addUserDictWordUserDictWordPost",
@@ -547,6 +579,7 @@ export default defineComponent({
         }
       }
       await loadingDictProcess();
+      wordEditing.value = false;
     };
     const isDeletable = computed(() => !!selectedId.value);
     const deleteWord = () => {
@@ -590,7 +623,7 @@ export default defineComponent({
           });
           return;
         }
-        resetSelect();
+        selectedId.value = "";
         await loadingDictProcess();
       });
     };
@@ -646,6 +679,7 @@ export default defineComponent({
       userDict,
       closeDialogProcess,
       loadingDict,
+      wordEditing,
       surfaceInput,
       yomiInput,
       yomiFocusWhenEnter,
@@ -655,6 +689,7 @@ export default defineComponent({
       yomi,
       selectWord,
       newWord,
+      cancel,
       isOnlyHiraOrKana,
       setSurface,
       setYomi,
@@ -681,6 +716,19 @@ export default defineComponent({
 
 .word-list-col {
   border-right: solid 1px colors.$setting-item;
+  position: relative; // オーバーレイのため
+}
+
+.word-list-header {
+  margin: 1rem;
+
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  .word-list-title {
+    flex-grow: 1;
+  }
 }
 
 .word-list {
@@ -691,19 +739,14 @@ export default defineComponent({
       vars.$window-border-width + 46px + 52px}
   );
   width: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .active-word {
   background: rgba(colors.$primary-rgb, 0.4);
 }
 
-.new-word-button {
-  width: 100%;
-}
-
 .loading-dict {
-  background-color: rgba(colors.$display-dark-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -718,6 +761,14 @@ export default defineComponent({
     border-radius: 6px;
     padding: 14px;
   }
+}
+
+.word-list-disable-overlay {
+  background-color: rgba($color: #000000, $alpha: 0.4);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 10;
 }
 
 .word-input {

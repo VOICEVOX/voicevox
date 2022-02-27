@@ -516,7 +516,7 @@ export default defineComponent({
         }),
     });
 
-    // 辞書管理
+    // 読み方＆アクセント辞書
     const isDictionaryManageDialogOpenComputed = computed({
       get: () => store.state.isDictionaryManageDialogOpen,
       set: (val) =>

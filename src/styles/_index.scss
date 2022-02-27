@@ -68,6 +68,13 @@ img {
   background-color: colors.$background;
 }
 
+// 無効時の色
+.q-btn {
+  &.disabled {
+    opacity: 0.6 !important;
+  }
+}
+
 // ダイアログ
 .q-dialog,
 #q-loading {
