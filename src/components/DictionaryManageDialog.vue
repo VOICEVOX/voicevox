@@ -65,34 +65,32 @@
           <div class="col-8 no-wrap text-no-wrap">
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
-              <form @submit.stop="yomiInput.focus()">
-                <q-input
-                  ref="surfaceInput"
-                  class="word-input"
-                  v-model="surface"
-                  @blur="setSurface(surface)"
-                  dense
-                  :disable="uiLocked"
-                />
-              </form>
+              <q-input
+                ref="surfaceInput"
+                class="word-input"
+                v-model="surface"
+                @blur="setSurface(surface)"
+                @keydown="yomiFocusWhenEnter"
+                dense
+                :disable="uiLocked"
+              />
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
-              <form @submit.stop="yomiInput.blur()">
-                <q-input
-                  ref="yomiInput"
-                  class="word-input"
-                  v-model="yomi"
-                  @blur="setYomi(yomi)"
-                  dense
-                  :error="!isOnlyHiraOrKana"
-                  :disable="uiLocked"
-                >
-                  <template v-slot:error>
-                    読みに使える文字はひらがなとカタカナのみです。
-                  </template>
-                </q-input>
-              </form>
+              <q-input
+                ref="yomiInput"
+                class="word-input"
+                v-model="yomi"
+                @blur="setYomi(yomi)"
+                @keydown="setYomiWhenEnter"
+                dense
+                :error="!isOnlyHiraOrKana"
+                :disable="uiLocked"
+              >
+                <template v-slot:error>
+                  読みに使える文字はひらがなとカタカナのみです。
+                </template>
+              </q-input>
             </div>
             <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
             <div class="row q-pl-md accent-desc">
@@ -291,6 +289,20 @@ export default defineComponent({
 
     const surfaceInput = ref<QInput>();
     const yomiInput = ref<QInput>();
+    const yomiFocusWhenEnter = (event: KeyboardEvent) => {
+      // keyCodeは非推奨で、keyが推奨だが、
+      // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
+      if (event.keyCode === 13) {
+        yomiInput.value?.focus();
+      }
+    };
+    const setYomiWhenEnter = (event: KeyboardEvent) => {
+      // keyCodeは非推奨で、keyが推奨だが、
+      // key === "Enter"はIMEのEnterも拾ってしまうので、keyCodeを用いている
+      if (event.keyCode === 13) {
+        setYomi(yomi.value);
+      }
+    };
 
     const selectedId = ref("");
     const surface = ref("");
@@ -633,6 +645,8 @@ export default defineComponent({
       loadingDict,
       surfaceInput,
       yomiInput,
+      yomiFocusWhenEnter,
+      setYomiWhenEnter,
       selectedId,
       surface,
       yomi,
