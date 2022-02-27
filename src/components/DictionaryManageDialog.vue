@@ -235,7 +235,7 @@ export default defineComponent({
     const selectWord = (id: string) => {
       selectedId.value = id;
       surface.value = userDict.value[id].surface;
-      setYomi(userDict.value[id].yomi, userDict.value[id].accentType);
+      setYomi(userDict.value[id].yomi);
     };
 
     const kanaRegex = createKanaRegex();
@@ -251,7 +251,7 @@ export default defineComponent({
         accentPhraseTable.value.scrollWidth ==
           accentPhraseTable.value.offsetWidth;
     };
-    const setYomi = async (text: string, accent?: number) => {
+    const setYomi = async (text: string) => {
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 文字列が変更されていない場合は、アクセントフレーズに変更を加えない
@@ -273,10 +273,13 @@ export default defineComponent({
             styleId: 0,
             isKana: true,
           })
-        ).map((v) => {
-          if (accent !== undefined) v.accent = accent;
-          return v;
-        })[0];
+        )[0];
+        if (
+          selectedId.value &&
+          userDict.value[selectedId.value].yomi === text
+        ) {
+          accentPhrase.value.accent = computeDisplayAccent();
+        }
       } else {
         accentPhrase.value = undefined;
       }
@@ -359,6 +362,14 @@ export default defineComponent({
       if (!accentPhrase.value) throw new Error();
       let accent = accentPhrase.value.accent;
       accent = accent === accentPhrase.value.moras.length ? 0 : accent;
+      return accent;
+    };
+    // computeの逆
+    // 辞書から得たaccentが0の場合に、自動で追加される「ワ」の位置にアクセントを表示させるように処理する
+    const computeDisplayAccent = () => {
+      if (!accentPhrase.value || !selectedId.value) throw new Error();
+      let accent = userDict.value[selectedId.value].accentType;
+      accent = accent === 0 ? accentPhrase.value.moras.length : accent;
       return accent;
     };
 
