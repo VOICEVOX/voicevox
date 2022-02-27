@@ -152,6 +152,14 @@
                 :disable="uiLocked || !isWordChanged"
                 >保存</q-btn
               >
+              <q-btn
+                outline
+                text-color="warning"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="deleteWord"
+                :disable="uiLocked || isDeletable"
+                >削除</q-btn
+              >
             </div>
           </div>
         </q-page>
@@ -485,6 +493,52 @@ export default defineComponent({
       }
       await loadingDictProcess();
     };
+    const isDeletable = computed(() => !!selectedId.value);
+    const deleteWord = () => {
+      $q.dialog({
+        title: "登録された単語を削除しますか？",
+        message: "削除された単語は復旧できません。",
+        persistent: true,
+        focus: "cancel",
+        ok: {
+          label: "削除",
+          flat: true,
+          textColor: "warning",
+        },
+        cancel: {
+          label: "キャンセル",
+          flat: true,
+          textColor: "display",
+        },
+      }).onOk(async () => {
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+        try {
+          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
+            engineKey: engineInfo.key,
+            action: "deleteUserDictWordUserDictWordWordUuidDelete",
+            payload: [
+              {
+                wordUuid: selectedId.value,
+              },
+            ],
+          });
+        } catch {
+          $q.dialog({
+            title: "単語の削除に失敗しました",
+            message: "エンジンの再起動をお試しください。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
+          });
+          return;
+        }
+        resetSelect();
+        await loadingDictProcess();
+      });
+    };
     const discardOrNotDialog = (okCallback: () => void) => {
       if (isWordChanged.value) {
         $q.dialog({
@@ -533,7 +587,9 @@ export default defineComponent({
       play,
       stop,
       isWordChanged,
+      isDeletable,
       saveWord,
+      deleteWord,
       discardOrNotDialog,
     };
   },
