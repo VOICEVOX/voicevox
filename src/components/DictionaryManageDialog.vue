@@ -235,13 +235,29 @@ export default defineComponent({
         throw new Error(`No such engineInfo registered: index == 0`);
       loadingDict.value = true;
       try {
-        userDict.value = await store
+        const engineDict = await store
           .dispatch("INVOKE_ENGINE_CONNECTOR", {
             engineKey: engineInfo.key,
             action: "getUserDictWordsUserDictGet",
             payload: [],
           })
           .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+        // 50音順にソートするために、一旦arrayにする
+        const dictArray = Object.keys(engineDict).map((k) => {
+          return { key: k, ...engineDict[k] };
+        });
+        dictArray.sort((a, b) => {
+          if (a.yomi > b.yomi) {
+            return 1;
+          } else {
+            return -1;
+          }
+        });
+        const dictEntries: [string, UserDictWord][] = dictArray.map((v) => {
+          const { key, ...newV } = v;
+          return [key, newV];
+        });
+        userDict.value = Object.fromEntries(dictEntries);
       } catch {
         loadingDict.value = false;
         $q.dialog({
