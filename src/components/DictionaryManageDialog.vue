@@ -200,20 +200,23 @@ export default defineComponent({
     const loadingDict = ref(false);
     const userDict = ref<{ [key: string]: UserDictWord }>({});
 
+    const loadingDictProcess = async () => {
+      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+      loadingDict.value = true;
+      userDict.value = await store
+        .dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
+          action: "getUserDictWordsUserDictGet",
+          payload: [],
+        })
+        .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+      loadingDict.value = false;
+    };
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
       if (newValue) {
-        engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
-        if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
-        loadingDict.value = true;
-        userDict.value = await store
-          .dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "getUserDictWordsUserDictGet",
-            payload: [],
-          })
-          .then(toDispatchResponse("getUserDictWordsUserDictGet"));
-        loadingDict.value = false;
+        await loadingDictProcess();
       }
     });
     const closeDialogProcess = () => {
