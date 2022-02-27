@@ -51,6 +51,16 @@
                 </q-item-section>
               </q-item>
             </q-list>
+            <div class="q-ma-sm">
+              <q-btn
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold new-word-button"
+                @click="discardOrNotDialog(newWord)"
+                :disable="uiLocked"
+                >新規登録</q-btn
+              >
+            </div>
           </div>
           <div class="col-8 no-wrap text-no-wrap">
             <div class="row q-pl-md q-mt-md">
@@ -263,6 +273,10 @@ export default defineComponent({
       selectedId.value = id;
       surface.value = userDict.value[id].surface;
       setYomi(userDict.value[id].yomi, true);
+    };
+    const newWord = () => {
+      resetSelect();
+      surfaceInput.value?.focus();
     };
 
     const kanaRegex = createKanaRegex();
@@ -577,6 +591,7 @@ export default defineComponent({
       surface,
       yomi,
       selectWord,
+      newWord,
       isOnlyHiraOrKana,
       setSurface,
       setYomi,
@@ -605,11 +620,11 @@ export default defineComponent({
 }
 
 .word-list {
-  // menubar-height + header-height + window-border-width
-  // 46(title)
+  // menubar-height + header-height + window-border-width +
+  // 46(title) + 52(new word button)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px}
+      vars.$window-border-width + 46px + 52px}
   );
   width: 100%;
   overflow-y: scroll;
@@ -617,6 +632,10 @@ export default defineComponent({
 
 .active-word {
   background: rgba(colors.$primary-rgb, 0.4);
+}
+
+.new-word-button {
+  width: 100%;
 }
 
 .loading-dict {
