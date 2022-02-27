@@ -235,7 +235,7 @@ export default defineComponent({
     const selectWord = (id: string) => {
       selectedId.value = id;
       surface.value = userDict.value[id].surface;
-      setYomi(userDict.value[id].yomi);
+      setYomi(userDict.value[id].yomi, true);
     };
 
     const kanaRegex = createKanaRegex();
@@ -251,19 +251,22 @@ export default defineComponent({
         accentPhraseTable.value.scrollWidth ==
           accentPhraseTable.value.offsetWidth;
     };
-    const setYomi = async (text: string) => {
+    const setYomi = async (text: string, changeWord?: boolean) => {
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
-      // 文字列が変更されていない場合は、アクセントフレーズに変更を加えない
+      // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
+      // ただし、読みが同じで違う単語が存在する場合が考えられるので、changeWordフラグを考慮する
       // 「ワ」が自動挿入されるので、それを考慮してsliceしている
       if (
         text ==
-        accentPhrase.value?.moras
-          .map((v) => v.text)
-          .join("")
-          .slice(0, -1)
-      )
+          accentPhrase.value?.moras
+            .map((v) => v.text)
+            .join("")
+            .slice(0, -1) &&
+        !changeWord
+      ) {
         return;
+      }
       if (isOnlyHiraOrKana.value && text.length) {
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
