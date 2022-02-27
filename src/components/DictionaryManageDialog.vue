@@ -46,7 +46,7 @@
               </q-item>
             </q-list>
           </div>
-          <div class="col-8">
+          <div class="col-8 no-wrap text-no-wrap">
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <form @submit.stop="yomiInput.focus()">
@@ -412,7 +412,7 @@ export default defineComponent({
 
   display: flex;
   overflow-x: scroll;
-  width: calc(66vw - 110px);
+  width: calc(66vw - 140px);
 
   .mora-table {
     display: inline-grid;
