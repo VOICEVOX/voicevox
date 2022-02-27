@@ -65,17 +65,17 @@ async function generateUniqueIdAndQuery(
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
-  characterInfos?: CharacterInfo[]
+  userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
   {
     const uuid2StyleIds = new Map<string, number>();
-    for (const defaultStyleId of defaultStyleIds || []) {
+    for (const defaultStyleId of defaultStyleIds) {
       const speakerUuid = defaultStyleId.speakerUuid;
       const styleId = defaultStyleId.defaultStyleId;
       uuid2StyleIds.set(speakerUuid, styleId);
     }
-    for (const characterInfo of characterInfos || []) {
+    for (const characterInfo of userOrderedCharacterInfos) {
       const uuid = characterInfo.metas.speakerUuid;
       const styleId =
         uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
@@ -87,7 +87,7 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = 0;
+  let lastStyleId = userOrderedCharacterInfos[0].metas.styles[0].styleId;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splittedText);
     if (styleId !== undefined) {
@@ -174,6 +174,14 @@ export const audioStore: VoiceVoxStoreOptions<
       return state._activeAudioKey !== undefined
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;
+    },
+    USER_ORDERED_CHARACTER_INFOS: (state) => {
+      const characterInfos = state.characterInfos?.slice();
+      return characterInfos?.sort(
+        (a, b) =>
+          state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
+          state.userCharacterOrder.indexOf(b.metas.speakerUuid)
+      );
     },
   },
 
@@ -597,16 +605,17 @@ export const audioStore: VoiceVoxStoreOptions<
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
-      if (state.characterInfos == undefined)
+      if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
-      const characterInfos = state.characterInfos;
+      const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
       const styleId =
         payload.styleId ??
         state.defaultStyleIds[
           state.defaultStyleIds.findIndex(
-            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+            (x) =>
+              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
           )
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
@@ -1880,7 +1889,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async (
-        { state, commit, dispatch },
+        { state, commit, dispatch, getters },
         { filePath }: { filePath?: string }
       ) => {
         if (!filePath) {
@@ -1905,10 +1914,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             : undefined;
         }
 
+        if (!getters.USER_ORDERED_CHARACTER_INFOS)
+          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
         for (const { text, styleId } of parseTextFile(
           body,
           state.defaultStyleIds,
-          state.characterInfos
+          getters.USER_ORDERED_CHARACTER_INFOS
         )) {
           //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
           //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
