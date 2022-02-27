@@ -235,11 +235,14 @@ export default defineComponent({
         await loadingDictProcess();
       }
     });
-    const closeDialogProcess = () => {
-      dictionaryManageDialogOpenedComputed.value = false;
+    const resetSelect = () => {
       selectedId.value = "";
       surface.value = "";
       setYomi("");
+    };
+    const closeDialogProcess = () => {
+      dictionaryManageDialogOpenedComputed.value = false;
+      resetSelect();
     };
 
     const surfaceInput = ref<QInput>();
