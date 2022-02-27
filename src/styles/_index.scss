@@ -16,16 +16,16 @@ img {
 
 // スクロールバーのデザイン
 ::-webkit-scrollbar {
-  width: 15px;
-  height: 15px;
+  width: 12px;
+  height: 12px;
   background-color: rgba(colors.$primary-light-rgb, 0.2);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(colors.$primary-light-rgb, 0.5);
+  background-color: rgba(colors.$primary-light-rgb, 0.6);
   border-radius: 5px;
   &:hover {
-    background-color: rgba(colors.$primary-light-rgb, 0.6);
+    background-color: rgba(colors.$primary-light-rgb, 0.7);
   }
   &:active {
     background-color: rgba(colors.$primary-light-rgb, 0.8);
