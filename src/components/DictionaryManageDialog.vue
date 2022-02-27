@@ -205,13 +205,28 @@ export default defineComponent({
       if (!engineInfo)
         throw new Error(`No such engineInfo registered: index == 0`);
       loadingDict.value = true;
-      userDict.value = await store
-        .dispatch("INVOKE_ENGINE_CONNECTOR", {
-          engineKey: engineInfo.key,
-          action: "getUserDictWordsUserDictGet",
-          payload: [],
-        })
-        .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+      try {
+        userDict.value = await store
+          .dispatch("INVOKE_ENGINE_CONNECTOR", {
+            engineKey: engineInfo.key,
+            action: "getUserDictWordsUserDictGet",
+            payload: [],
+          })
+          .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+      } catch {
+        loadingDict.value = false;
+        $q.dialog({
+          title: "辞書の取得に失敗しました",
+          message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "display",
+          },
+        }).onOk(() => {
+          dictionaryManageDialogOpenedComputed.value = false;
+        });
+      }
       loadingDict.value = false;
     };
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
@@ -400,32 +415,58 @@ export default defineComponent({
         selectedId.value &&
         userDict.value[selectedId.value].surface === surface.value
       ) {
-        await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-          engineKey: engineInfo.key,
-          action: "rewriteUserDictWordUserDictWordWordUuidPut",
-          payload: [
-            {
-              wordUuid: selectedId.value,
-              surface: surface.value,
-              pronunciation: yomi.value,
-              accentType: accent,
-            },
-          ],
-        });
-      } else {
-        selectedId.value = await store
-          .dispatch("INVOKE_ENGINE_CONNECTOR", {
+        try {
+          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
             engineKey: engineInfo.key,
-            action: "addUserDictWordUserDictWordPost",
+            action: "rewriteUserDictWordUserDictWordWordUuidPut",
             payload: [
               {
+                wordUuid: selectedId.value,
                 surface: surface.value,
                 pronunciation: yomi.value,
                 accentType: accent,
               },
             ],
-          })
-          .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+          });
+        } catch {
+          $q.dialog({
+            title: "辞書の更新に失敗しました",
+            message: "エンジンの再起動をお試しください。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
+          });
+          return;
+        }
+      } else {
+        try {
+          selectedId.value = await store
+            .dispatch("INVOKE_ENGINE_CONNECTOR", {
+              engineKey: engineInfo.key,
+              action: "addUserDictWordUserDictWordPost",
+              payload: [
+                {
+                  surface: surface.value,
+                  pronunciation: yomi.value,
+                  accentType: accent,
+                },
+              ],
+            })
+            .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+        } catch {
+          $q.dialog({
+            title: "辞書の登録に失敗しました",
+            message: "エンジンの再起動をお試しください。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
+          });
+          return;
+        }
       }
       await loadingDictProcess();
     };
