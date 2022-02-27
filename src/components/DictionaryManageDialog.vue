@@ -60,6 +60,7 @@
                   ref="surfaceInput"
                   class="word-input"
                   v-model="surface"
+                  @blur="setSurface(surface)"
                   dense
                   :disable="uiLocked"
                 />
@@ -265,6 +266,17 @@ export default defineComponent({
         !!accentPhraseTable.value &&
         accentPhraseTable.value.scrollWidth ==
           accentPhraseTable.value.offsetWidth;
+    };
+    const convertHankakuToZenkaku = (text: string) => {
+      return text.replace(/[\u0021-\u007e]/g, (s) => {
+        return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+      });
+    };
+    const setSurface = (text: string) => {
+      // surfaceを全角化する
+      // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
+      // 入力後に自動で変換するようにする
+      surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
@@ -509,6 +521,7 @@ export default defineComponent({
       yomi,
       selectWord,
       isOnlyHiraOrKana,
+      setSurface,
       setYomi,
       accentPhrase,
       accentPhraseTable,
