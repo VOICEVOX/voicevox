@@ -312,7 +312,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "デフォルトスタイル・試聴",
+            label: "デフォルトスタイル",
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,

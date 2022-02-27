@@ -389,9 +389,6 @@ export default defineComponent({
       textfield.value.focus();
     };
 
-    // キャラクター選択
-    const isOpenedCharacterList = ref(false);
-
     return {
       userOrderedCharacterInfos,
       audioItem,
@@ -424,7 +421,6 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
-      isOpenedCharacterList,
     };
   },
 });
