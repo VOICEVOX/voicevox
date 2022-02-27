@@ -228,6 +228,7 @@ export default defineComponent({
     const userDict = ref<Record<string, UserDictWord>>({});
 
     const loadingDictProcess = async () => {
+      // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
       engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
       if (!engineInfo)
         throw new Error(`No such engineInfo registered: index == 0`);
@@ -324,6 +325,7 @@ export default defineComponent({
     // スクロールしなければならないほど長いアクセント句はセンタリングしないようにする
     // computedにすると、ダイアログを表示した際にしか動作しないので、refにして変更時に代入する
     const centeringAccentPhrase = ref(true);
+    // FIXME: CSSで完結させる
     const computeCenteringAccentPhrase = () => {
       centeringAccentPhrase.value =
         !!accentPhraseTable.value &&
