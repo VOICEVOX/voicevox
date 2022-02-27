@@ -131,7 +131,8 @@
                           round
                           outline
                           :icon="
-                            style.styleId === playing?.styleId &&
+                            playing != undefined &&
+                            style.styleId === playing.styleId &&
                             voiceSampleIndex === playing.index
                               ? 'stop'
                               : 'play_arrow'
@@ -141,7 +142,8 @@
                           @mouseenter="isHoverableStyleItem = false"
                           @mouseleave="isHoverableStyleItem = true"
                           @click.stop="
-                            style.styleId === playing?.styleId &&
+                            playing != undefined &&
+                            style.styleId === playing.styleId &&
                             voiceSampleIndex === playing.index
                               ? stop()
                               : play(style, voiceSampleIndex)
@@ -199,10 +201,17 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    // アップデートで増えたキャラ・スタイルがあれば、それらに対して起動時にデフォルトスタイル選択・試聴を問うための変数
+    // 複数スタイルあるキャラクター
+    const multiStyleCharacterInfos = computed(() => {
+      return props.characterInfos.filter(
+        (characterInfo) => characterInfo.metas.styles.length > 1
+      );
+    });
+
+    // アップデートで増えたスタイルがあれば、それらに対して起動時にデフォルトスタイル選択を問うための変数
     // その他の場合は、characterInfosと同じになる
     // FIXME: 現状はスタイルが増えてもデフォルトスタイルを問えないので、そこを改修しなければならない
-    const showCharacterInfos = ref(props.characterInfos);
+    const showCharacterInfos = ref(multiStyleCharacterInfos.value);
 
     const isFirstTime = ref(false);
     const selectedStyleIndexes = ref<(number | undefined)[]>([]);
@@ -214,7 +223,7 @@ export default defineComponent({
         if (!oldValue && newValue) {
           showCharacterInfos.value = [];
           selectedStyleIndexes.value = await Promise.all(
-            props.characterInfos.map(async (info) => {
+            multiStyleCharacterInfos.value.map(async (info) => {
               const styles = info.metas.styles;
               const isUnsetDefaultStyleId = await store.dispatch(
                 "IS_UNSET_DEFAULT_STYLE_ID",
@@ -237,7 +246,7 @@ export default defineComponent({
             })
           );
           if (!isFirstTime.value) {
-            showCharacterInfos.value = props.characterInfos;
+            showCharacterInfos.value = multiStyleCharacterInfos.value;
           } else {
             selectedStyleIndexes.value = showCharacterInfos.value.map(
               (info) => {
