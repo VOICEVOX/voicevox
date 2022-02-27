@@ -380,11 +380,14 @@ export default defineComponent({
       if (selectedId.value === "") {
         return surface.value && yomi.value && accentPhrase.value;
       }
-      const dictData = userDict.value[selectedId.value];
+      // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
+      const dict = userDict.value;
+      const dictData = dict[selectedId.value];
       return (
-        dictData.surface !== surface.value ||
-        dictData.yomi !== yomi.value ||
-        dictData.accentType !== computeRegisteredAccent()
+        dictData &&
+        (dictData.surface !== surface.value ||
+          dictData.yomi !== yomi.value ||
+          dictData.accentType !== computeRegisteredAccent())
       );
     });
     const saveWord = async () => {
