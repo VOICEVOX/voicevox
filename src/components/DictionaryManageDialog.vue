@@ -352,6 +352,16 @@ export default defineComponent({
       audioElem.pause();
     };
 
+    // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
+    // アクセントが自動追加される「ワ」に指定されている場合、
+    // 実際に登録するaccentの値は0となるので、そうなるように処理する
+    const computeRegisteredAccent = () => {
+      if (!accentPhrase.value) throw new Error();
+      let accent = accentPhrase.value.accent;
+      accent = accent === accentPhrase.value.moras.length ? 0 : accent;
+      return accent;
+    };
+
     const isWordChanged = computed(() => {
       if (selectedId.value === "") {
         return surface.value && yomi.value && accentPhrase.value;
@@ -360,26 +370,47 @@ export default defineComponent({
       return (
         dictData.surface !== surface.value ||
         dictData.yomi !== yomi.value ||
-        dictData.accentType !== accentPhrase.value?.accent
+        dictData.accentType !== computeRegisteredAccent()
       );
     });
     const saveWord = async () => {
       if (!engineInfo)
         throw new Error(`No such engineInfo registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
-      await store
-        .dispatch("INVOKE_ENGINE_CONNECTOR", {
+      const accent = computeRegisteredAccent();
+      // selected idがあった場合でも、surfaceそのものに変更があれば、rewriteではなくaddする
+      if (
+        selectedId.value &&
+        userDict.value[selectedId.value].surface === surface.value
+      ) {
+        await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
-          action: "addUserDictWordUserDictWordPost",
+          action: "rewriteUserDictWordUserDictWordWordUuidPut",
           payload: [
             {
+              wordUuid: selectedId.value,
               surface: surface.value,
               pronunciation: yomi.value,
-              accentType: accentPhrase.value.accent,
+              accentType: accent,
             },
           ],
-        })
-        .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+        });
+      } else {
+        await store
+          .dispatch("INVOKE_ENGINE_CONNECTOR", {
+            engineKey: engineInfo.key,
+            action: "addUserDictWordUserDictWordPost",
+            payload: [
+              {
+                surface: surface.value,
+                pronunciation: yomi.value,
+                accentType: accent,
+              },
+            ],
+          })
+          .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+      }
+      await loadingDictProcess();
     };
     const discardOrNotDialog = (okCallback: () => void) => {
       if (isWordChanged.value) {
