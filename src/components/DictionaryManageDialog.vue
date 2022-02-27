@@ -376,7 +376,7 @@ export default defineComponent({
             },
           ],
         })
-        .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+        .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
     };
     const discardOrNotDialog = (okCallback: () => void) => {
       if (isWordChanged.value) {
