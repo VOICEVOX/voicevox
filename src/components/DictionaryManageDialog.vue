@@ -413,7 +413,7 @@ export default defineComponent({
           ],
         });
       } else {
-        await store
+        selectedId.value = await store
           .dispatch("INVOKE_ENGINE_CONNECTOR", {
             engineKey: engineInfo.key,
             action: "addUserDictWordUserDictWordPost",
