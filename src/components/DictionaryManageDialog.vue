@@ -442,7 +442,7 @@ export default defineComponent({
           });
         } catch {
           $q.dialog({
-            title: "辞書の更新に失敗しました",
+            title: "単語の更新に失敗しました",
             message: "エンジンの再起動をお試しください。",
             ok: {
               label: "閉じる",
@@ -469,7 +469,7 @@ export default defineComponent({
             .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
         } catch {
           $q.dialog({
-            title: "辞書の登録に失敗しました",
+            title: "単語の登録に失敗しました",
             message: "エンジンの再起動をお試しください。",
             ok: {
               label: "閉じる",
