@@ -167,7 +167,7 @@
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="deleteWord"
-                :disable="uiLocked || isDeletable"
+                :disable="uiLocked || !isDeletable"
                 >削除</q-btn
               >
             </div>
