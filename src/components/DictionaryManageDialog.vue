@@ -38,9 +38,15 @@
                 :key="key"
                 tag="label"
                 v-ripple
+                clickable
+                @click="selectWord(key)"
+                :active="selectedId === key"
+                active-class="active-word"
               >
                 <q-item-section>
-                  <q-item-label>{{ value.surface }}</q-item-label>
+                  <q-item-label class="text-display">{{
+                    value.surface
+                  }}</q-item-label>
                   <q-item-label caption>{{ value.yomi }}</q-item-label>
                 </q-item-section>
               </q-item>
@@ -214,8 +220,15 @@ export default defineComponent({
     const surfaceInput = ref<QInput>();
     const yomiInput = ref<QInput>();
 
+    const selectedId = ref("");
     const surface = ref("");
     const yomi = ref("");
+    const selectWord = (id: string) => {
+      selectedId.value = id;
+      surface.value = userDict.value[id].surface;
+      setYomi(userDict.value[id].yomi, userDict.value[id].accentType);
+    };
+
     const kanaRegex = createKanaRegex();
     const isOnlyHiraOrKana = ref(true);
     const accentPhrase = ref<AccentPhrase | undefined>();
@@ -229,7 +242,7 @@ export default defineComponent({
         accentPhraseTable.value.scrollWidth ==
           accentPhraseTable.value.offsetWidth;
     };
-    const setYomi = async (text: string) => {
+    const setYomi = async (text: string, accent?: number) => {
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 文字列が変更されていない場合は、アクセントフレーズに変更を加えない
@@ -251,7 +264,10 @@ export default defineComponent({
             styleId: 0,
             isKana: true,
           })
-        )[0];
+        ).map((v) => {
+          if (accent !== undefined) v.accent = accent;
+          return v;
+        })[0];
       } else {
         accentPhrase.value = undefined;
       }
@@ -358,8 +374,10 @@ export default defineComponent({
       loadingDict,
       surfaceInput,
       yomiInput,
+      selectedId,
       surface,
       yomi,
+      selectWord,
       isOnlyHiraOrKana,
       setYomi,
       accentPhrase,
@@ -392,6 +410,10 @@ export default defineComponent({
   );
   width: 100%;
   overflow-y: scroll;
+}
+
+.active-word {
+  background: rgba(colors.$primary-rgb, 0.4);
 }
 
 .loading-dict {
