@@ -172,7 +172,6 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const characterInfos = computed(() => store.state.characterInfos);
     const userOrderedCharacterInfos = computed(
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
@@ -187,9 +186,9 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     const selectedCharacterInfo = computed(() =>
-      store.state.characterInfos !== undefined &&
+      userOrderedCharacterInfos.value !== undefined &&
       audioItem.value.styleId !== undefined
-        ? store.state.characterInfos.find((info) =>
+        ? userOrderedCharacterInfos.value.find((info) =>
             info.metas.styles.find(
               (style) => style.styleId === audioItem.value.styleId
             )
@@ -253,7 +252,7 @@ export default defineComponent({
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
-      const characterInfo = characterInfos.value?.find(
+      const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
       const defaultStyleId = store.state.defaultStyleIds.find(
@@ -394,7 +393,6 @@ export default defineComponent({
     const isOpenedCharacterList = ref(false);
 
     return {
-      characterInfos,
       userOrderedCharacterInfos,
       audioItem,
       deleteButtonEnable,
