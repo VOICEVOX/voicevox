@@ -319,6 +319,15 @@ export default defineComponent({
               });
             },
           },
+          {
+            type: "button",
+            label: "辞書管理",
+            onClick() {
+              store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+                isDictionaryManageDialogOpen: true,
+              });
+            },
+          },
           { type: "separator" },
           {
             type: "button",

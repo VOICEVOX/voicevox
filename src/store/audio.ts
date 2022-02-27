@@ -2300,7 +2300,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 };
 
 // FIXME: ProxyStoreのactionとVuexの組み合わせでReturnValueの型付けが中途半端になり、Promise<any>になってしまっている
-const toDispatchResponse =
+export const toDispatchResponse =
   <T extends keyof IEngineConnectorFactoryActions>(_: T) =>
   (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

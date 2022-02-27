@@ -851,6 +851,7 @@ export type UiStoreState = {
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
+  isDictionaryManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -921,6 +922,11 @@ type UiStoreTypes = {
   IS_ACCEPT_TERMS_DIALOG_OPEN: {
     mutation: { isAcceptTermsDialogOpen: boolean };
     action(payload: { isAcceptTermsDialogOpen: boolean }): void;
+  };
+
+  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
+    mutation: { isDictionaryManageDialogOpen: boolean };
+    action(payload: { isDictionaryManageDialogOpen: boolean }): void;
   };
 
   ON_VUEX_READY: {

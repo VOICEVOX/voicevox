@@ -38,6 +38,7 @@ describe("store/vuex.js test", () => {
         isToolbarSettingDialogOpen: false,
         isCharacterOrderDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
+        isDictionaryManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
@@ -140,6 +141,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isCharacterOrderDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
+    assert.equal(store.state.isDictionaryManageDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isAcceptTermsDialogOpen, false);
     assert.equal(store.state.isMaximized, false);

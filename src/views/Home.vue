@@ -135,6 +135,7 @@
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
+  <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
@@ -166,6 +167,7 @@ import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue"
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
+import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
@@ -191,6 +193,7 @@ export default defineComponent({
     CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
+    DictionaryManageDialog,
   },
 
   setup() {
@@ -513,6 +516,15 @@ export default defineComponent({
         }),
     });
 
+    // 辞書管理
+    const isDictionaryManageDialogOpenComputed = computed({
+      get: () => store.state.isDictionaryManageDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+          isDictionaryManageDialogOpen: val,
+        }),
+    });
+
     const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
@@ -577,6 +589,7 @@ export default defineComponent({
       characterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
+      isDictionaryManageDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
       isAcceptTermsDialogOpenComputed,
       dragEventCounter,
