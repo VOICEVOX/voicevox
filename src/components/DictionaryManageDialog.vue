@@ -19,7 +19,11 @@
               flat
               icon="close"
               color="display"
-              @click="dictionaryManageDialogOpenedComputed = false"
+              @click="
+                discardOrNotDialog(
+                  () => (dictionaryManageDialogOpenedComputed = false)
+                )
+              "
             />
           </q-toolbar>
         </q-header>
@@ -39,7 +43,7 @@
                 tag="label"
                 v-ripple
                 clickable
-                @click="selectWord(key)"
+                @click="discardOrNotDialog(() => selectWord(key))"
                 :active="selectedId === key"
                 active-class="active-word"
               >
@@ -148,7 +152,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="saveWord"
-                :disable="uiLocked || !savable"
+                :disable="uiLocked || !isWordChanged"
                 >保存</q-btn
               >
             </div>
@@ -343,9 +347,17 @@ export default defineComponent({
       audioElem.pause();
     };
 
-    const savable = computed(
-      () => surface.value && yomi.value && accentPhrase.value
-    );
+    const isWordChanged = computed(() => {
+      if (selectedId.value === "") {
+        return surface.value && yomi.value && accentPhrase.value;
+      }
+      const dictData = userDict.value[selectedId.value];
+      return (
+        dictData.surface !== surface.value ||
+        dictData.yomi !== yomi.value ||
+        dictData.accentType !== accentPhrase.value?.accent
+      );
+    });
     const saveWord = async () => {
       if (!engineInfo)
         throw new Error(`No such engineInfo registered: index == 0`);
@@ -363,6 +375,29 @@ export default defineComponent({
           ],
         })
         .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+    };
+    const discardOrNotDialog = (okCallback: () => void) => {
+      if (isWordChanged.value) {
+        $q.dialog({
+          title: "単語の追加・変更を破棄しますか？",
+          message:
+            "このまま続行すると、単語の追加・変更は破棄されてリセットされます。",
+          persistent: true,
+          focus: "cancel",
+          ok: {
+            label: "続行",
+            flat: true,
+            textColor: "display",
+          },
+          cancel: {
+            label: "キャンセル",
+            flat: true,
+            textColor: "display",
+          },
+        }).onOk(okCallback);
+      } else {
+        okCallback();
+      }
     };
 
     return {
@@ -386,8 +421,9 @@ export default defineComponent({
       changeAccent,
       play,
       stop,
-      savable,
+      isWordChanged,
       saveWord,
+      discardOrNotDialog,
     };
   },
 });
