@@ -19,11 +19,7 @@
               flat
               icon="close"
               color="display"
-              @click="
-                discardOrNotDialog(
-                  () => (dictionaryManageDialogOpenedComputed = false)
-                )
-              "
+              @click="discardOrNotDialog(closeDialogProcess)"
             />
           </q-toolbar>
         </q-header>
@@ -220,6 +216,12 @@ export default defineComponent({
         loadingDict.value = false;
       }
     });
+    const closeDialogProcess = () => {
+      dictionaryManageDialogOpenedComputed.value = false;
+      selectedId.value = "";
+      surface.value = "";
+      setYomi("");
+    };
 
     const surfaceInput = ref<QInput>();
     const yomiInput = ref<QInput>();
@@ -406,6 +408,7 @@ export default defineComponent({
       nowGenerating,
       nowPlaying,
       userDict,
+      closeDialogProcess,
       loadingDict,
       surfaceInput,
       yomiInput,
