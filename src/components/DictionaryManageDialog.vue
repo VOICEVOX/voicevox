@@ -136,6 +136,16 @@
                 </div>
               </div>
             </div>
+            <div class="row q-px-md save-and-delete-buttons">
+              <q-btn
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="saveWord"
+                :disable="uiLocked || !savable"
+                >保存</q-btn
+              >
+            </div>
           </div>
         </q-page>
       </q-page-container>
@@ -317,6 +327,28 @@ export default defineComponent({
       audioElem.pause();
     };
 
+    const savable = computed(
+      () => surface.value && yomi.value && accentPhrase.value
+    );
+    const saveWord = async () => {
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+      if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
+      await store
+        .dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
+          action: "addUserDictWordUserDictWordPost",
+          payload: [
+            {
+              surface: surface.value,
+              pronunciation: yomi.value,
+              accentType: accentPhrase.value.accent,
+            },
+          ],
+        })
+        .then(toDispatchResponse("getUserDictWordsUserDictGet"));
+    };
+
     return {
       dictionaryManageDialogOpenedComputed,
       uiLocked,
@@ -336,6 +368,8 @@ export default defineComponent({
       changeAccent,
       play,
       stop,
+      savable,
+      saveWord,
     };
   },
 });
@@ -435,5 +469,19 @@ export default defineComponent({
       z-index: vars.$detail-view-splitter-cell-z-index;
     }
   }
+}
+
+.save-and-delete-buttons {
+  // menubar-height + header-height + window-border-width
+  // 46(surface input) + 58(yomi input) + 38(accent title) + 18(accent desc) + 130(accent)
+  height: calc(
+    100vh - #{vars.$menubar-height + vars.$header-height +
+      vars.$window-border-width + 46px + 58px + 38px + 18px + 130px}
+  );
+  padding: 20px;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 </style>
