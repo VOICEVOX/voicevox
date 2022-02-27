@@ -227,7 +227,7 @@ export default defineComponent({
     const nowPlaying = ref(false);
 
     const loadingDict = ref(false);
-    const userDict = ref<{ [key: string]: UserDictWord }>({});
+    const userDict = ref<Record<string, UserDictWord>>({});
 
     const loadingDictProcess = async () => {
       engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
