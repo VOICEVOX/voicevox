@@ -153,7 +153,17 @@
                 </div>
               </div>
             </div>
-            <div class="row q-px-md save-and-delete-buttons">
+            <div class="row q-px-md save-delete-reset-buttons">
+              <q-btn
+                v-show="!!selectedId"
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="resetWord"
+                :disable="uiLocked || !isWordChanged"
+                >リセット</q-btn
+              >
+              <q-space />
               <q-btn
                 outline
                 text-color="display"
@@ -553,6 +563,26 @@ export default defineComponent({
         await loadingDictProcess();
       });
     };
+    const resetWord = () => {
+      $q.dialog({
+        title: "単語の変更をリセットしますか？",
+        message: "単語の変更は破棄されてリセットされます。",
+        persistent: true,
+        focus: "cancel",
+        ok: {
+          label: "リセット",
+          flat: true,
+          textColor: "display",
+        },
+        cancel: {
+          label: "キャンセル",
+          flat: true,
+          textColor: "display",
+        },
+      }).onOk(() => {
+        selectWord(selectedId.value);
+      });
+    };
     const discardOrNotDialog = (okCallback: () => void) => {
       if (isWordChanged.value) {
         $q.dialog({
@@ -605,6 +635,7 @@ export default defineComponent({
       isDeletable,
       saveWord,
       deleteWord,
+      resetWord,
       discardOrNotDialog,
     };
   },
@@ -715,7 +746,7 @@ export default defineComponent({
   }
 }
 
-.save-and-delete-buttons {
+.save-delete-reset-buttons {
   // menubar-height + header-height + window-border-width
   // 46(surface input) + 58(yomi input) + 38(accent title) + 18(accent desc) + 130(accent)
   height: calc(
@@ -726,6 +757,5 @@ export default defineComponent({
 
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
 }
 </style>
