@@ -66,7 +66,20 @@ const engineInfos: EngineInfo[] = (() => {
     return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return [];
+  // FIXME: electron builderでは、.envファイルが読み込まれないらしいのでフォールバック
+  // .envから情報を取得するようにするべき
+  // https://github.com/VOICEVOX/voicevox/issues/721
+  const isMac = process.platform === "darwin";
+  const isLinux = process.platform === "linux";
+  return [
+    {
+      key: "074fc39e-678b-4c13-8916-ffca8d505d1d",
+      executionEnabled: true,
+      executionFilePath: isMac || isLinux ? "./run" : "run.exe",
+      host: "http://127.0.0.1:50021",
+    },
+  ];
+  // return [];
 })();
 
 let win: BrowserWindow;
