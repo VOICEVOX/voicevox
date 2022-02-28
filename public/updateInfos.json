@@ -1,5 +1,37 @@
 [
   {
+    "version": "0.11.2",
+    "descriptions": ["エンジンが起動しない問題を修正", "スタイルの順番を修正"],
+    "contributors": ["aoirint"]
+  },
+  {
+    "version": "0.11.0",
+    "descriptions": [
+      "キャラクター「玄野武宏」「白上虎太郎」「青山龍星」「冥鳴ひまり」を追加",
+      "読み方＆アクセント辞書機能の追加",
+      "キャラクター並び替え機能の追加",
+      "ヘルプからアップデートの有無を確認可能に",
+      "利用規約の同意を促すダイアログを追加",
+      "UXの向上",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "gobosan",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "Lapis256",
+      "Oyaki122",
+      "PickledChair",
+      "Segu-g",
+      "takana-v",
+      "xuzijian629",
+      "y-chan",
+      "Yosshi999"
+    ]
+  },
+  {
     "version": "0.10.4",
     "descriptions": ["途中に疑問形があるとおかしくなる問題を修正"],
     "contributors": ["takana-v"]

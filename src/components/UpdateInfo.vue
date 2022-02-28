@@ -23,13 +23,12 @@ export default defineComponent({
   setup() {
     const store = useStore();
 
-    const infos = ref<UpdateInfo[]>();
-    store.dispatch("GET_UPDATE_INFOS").then((obj) => (infos.value = obj));
-
-    let isCheckingFailed = ref<boolean>(false);
+    const updateInfos = ref<UpdateInfo[]>();
+    store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
     let isCheckingFinished = ref<boolean>(false);
 
+    // 最新版があるか調べる
     const currentVersion = ref("");
     const latestVersion = ref("");
     window.electron
@@ -46,11 +45,8 @@ export default defineComponent({
           },
         })
           .then((response) => {
-            if (!response.ok) {
-              isCheckingFailed.value = true;
-            } else {
-              return response.json();
-            }
+            if (!response.ok) throw new Error("Network response was not ok.");
+            return response.json();
           })
           .then((json) => {
             const obj = json.find(
@@ -70,47 +66,26 @@ export default defineComponent({
           .catch((err) => {
             throw new Error(err);
           });
-      })
-      .catch(() => {
-        isCheckingFailed.value = true;
       });
-
-    const isCheckingFailedComputed = computed(() => {
-      return isCheckingFailed.value;
-    });
-
-    const isCheckingFinishedComputed = computed(() => {
-      return isCheckingFinished.value;
-    });
 
     const isUpdateAvailable = computed(() => {
       return isCheckingFinished.value && latestVersion.value !== "";
     });
 
     const html = computed(() => {
-      if (!infos.value) return "";
+      if (!updateInfos.value) return "";
 
       let html = "";
 
       if (isUpdateAvailable.value) {
-        html += `<h3>アップデートがあります！</h3>`;
-        html += `<h4>最新版のダウンロードページ</h4>`;
-        html += `<a href="https://voicevox.hiroshiba.jp/" target="_blank">https://voicevox.hiroshiba.jp/</a>`;
-      } else if (isCheckingFinishedComputed.value && !isUpdateAvailable.value) {
-        html += `<h3>お使いの VOICEBOX は最新です！</h3>`;
-      } else if (
-        !isCheckingFinishedComputed.value &&
-        !isCheckingFailedComputed.value
-      ) {
-        html += `<h3>アップデートを確認中です…</h3>`;
-      } else {
-        html += `<h3>アップデートの確認に失敗しました…</h3>`;
+        html += `<h3>最新バージョン ${latestVersion.value} が見つかりました</h3>`;
+        html += `<a href="https://voicevox.hiroshiba.jp/" target="_blank">ダウンロードページ</a>`;
       }
 
       html += `<hr />`;
       html += `<h3>アップデート履歴</h3>`;
 
-      for (const info of infos.value) {
+      for (const info of updateInfos.value) {
         const version: string = info.version;
         const descriptions: string[] = info.descriptions;
         const contributors: string[] = info.contributors;

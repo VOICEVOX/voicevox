@@ -59,16 +59,6 @@ if (isDevelopment) {
   );
 }
 
-const engineInfos: EngineInfo[] = (() => {
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
-
-  if (defaultEngineInfosEnv) {
-    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
-  }
-
-  return [];
-})();
-
 let win: BrowserWindow;
 
 // 多重起動防止
@@ -84,15 +74,27 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-// 設定
+// .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
+
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 const isMac = process.platform === "darwin";
+
+const engineInfos: EngineInfo[] = (() => {
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+
+  if (defaultEngineInfosEnv) {
+    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  }
+
+  return [];
+})();
+
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
