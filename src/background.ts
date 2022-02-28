@@ -74,7 +74,7 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-// .envから設定を読み込み
+// .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
