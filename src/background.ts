@@ -59,29 +59,6 @@ if (isDevelopment) {
   );
 }
 
-const engineInfos: EngineInfo[] = (() => {
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
-
-  if (defaultEngineInfosEnv) {
-    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
-  }
-
-  // FIXME: electron builderでは、.envファイルが読み込まれないらしいのでフォールバック
-  // .envから情報を取得するようにするべき
-  // https://github.com/VOICEVOX/voicevox/issues/721
-  const isMac = process.platform === "darwin";
-  const isLinux = process.platform === "linux";
-  return [
-    {
-      key: "074fc39e-678b-4c13-8916-ffca8d505d1d",
-      executionEnabled: true,
-      executionFilePath: isMac || isLinux ? "./run" : "run.exe",
-      host: "http://127.0.0.1:50021",
-    },
-  ];
-  // return [];
-})();
-
 let win: BrowserWindow;
 
 // 多重起動防止
@@ -101,11 +78,23 @@ process.on("unhandledRejection", (reason) => {
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
+
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 const isMac = process.platform === "darwin";
+
+const engineInfos: EngineInfo[] = (() => {
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+
+  if (defaultEngineInfosEnv) {
+    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  }
+
+  return [];
+})();
+
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
