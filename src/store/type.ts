@@ -127,6 +127,10 @@ type AudioStoreTypes = {
     mutation: { characterInfos: CharacterInfo[] };
   };
 
+  USER_ORDERED_CHARACTER_INFOS: {
+    getter: CharacterInfo[] | undefined;
+  };
+
   GENERATE_AUDIO_KEY: {
     action(): string;
   };
@@ -614,6 +618,7 @@ export type CommandActions = StoreType<CommandStoreTypes, "action">;
 
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
+  userCharacterOrder: string[];
 };
 
 type IndexStoreTypes = {
@@ -660,6 +665,19 @@ type IndexStoreTypes = {
   SET_DEFAULT_STYLE_IDS: {
     mutation: { defaultStyleIds: DefaultStyleId[] };
     action(payload: DefaultStyleId[]): void;
+  };
+
+  LOAD_USER_CHARACTER_ORDER: {
+    action(): Promise<void>;
+  };
+
+  SET_USER_CHARACTER_ORDER: {
+    mutation: { userCharacterOrder: string[] };
+    action(payload: string[]): void;
+  };
+
+  GET_NEW_CHARACTERS: {
+    action(): string[];
   };
 
   SHOW_WARNING_DIALOG: {
@@ -827,11 +845,13 @@ export type UiStoreState = {
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isCharacterOrderDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
+  isDictionaryManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -904,8 +924,18 @@ type UiStoreTypes = {
     action(payload: { isAcceptTermsDialogOpen: boolean }): void;
   };
 
+  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
+    mutation: { isDictionaryManageDialogOpen: boolean };
+    action(payload: { isDictionaryManageDialogOpen: boolean }): void;
+  };
+
   ON_VUEX_READY: {
     action(): void;
+  };
+
+  IS_CHARACTER_ORDER_DIALOG_OPEN: {
+    mutation: { isCharacterOrderDialogOpen: boolean };
+    action(payload: { isCharacterOrderDialogOpen: boolean }): void;
   };
 
   IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {

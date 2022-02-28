@@ -67,6 +67,8 @@ export interface Sandbox {
     presetItems: Record<string, Preset>;
     presetKeys: string[];
   }): Promise<PresetConfig>;
+  getUserCharacterOrder(): Promise<string[]>;
+  setUserCharacterOrder(userCharacterOrder: string[]): Promise<void>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(

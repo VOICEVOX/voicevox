@@ -177,13 +177,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+    addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
 
     /**
      * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
      * Add User Dict Word
      */
-    addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<void>;
+    addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string>;
 
     /**
      * クエリの初期値を得ます。ここで得られたクエリはそのまま音声合成に利用できます。各値の意味は`Schemas`を参照してください。
@@ -562,7 +562,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+    async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
         if (requestParameters.surface === null || requestParameters.surface === undefined) {
             throw new runtime.RequiredError('surface','Required parameter requestParameters.surface was null or undefined when calling addUserDictWordUserDictWordPost.');
         }
@@ -598,15 +598,16 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.TextApiResponse(response) as any;
     }
 
     /**
      * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
      * Add User Dict Word
      */
-    async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<void> {
-        await this.addUserDictWordUserDictWordPostRaw(requestParameters, initOverrides);
+    async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string> {
+        const response = await this.addUserDictWordUserDictWordPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**
