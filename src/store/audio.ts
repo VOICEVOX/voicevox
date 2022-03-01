@@ -1304,6 +1304,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
       ) => {
         audioElem.src = URL.createObjectURL(audioBlob);
+        // 途中再生用の処理
         if (audioKey) {
           const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
             audioKey,
