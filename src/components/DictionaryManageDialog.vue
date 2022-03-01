@@ -21,7 +21,7 @@
               flat
               icon="close"
               color="display"
-              @click="discardOrNotDialog(toDialogClosedState)"
+              @click="discardOrNotDialog(closeDialog)"
             />
           </q-toolbar>
         </q-header>
@@ -673,6 +673,9 @@ export default defineComponent({
     const cancel = () => {
       toInitialState();
     };
+    const closeDialog = () => {
+      toDialogClosedState();
+    };
 
     // ステートの移動
     // 初期状態
@@ -702,7 +705,6 @@ export default defineComponent({
       nowGenerating,
       nowPlaying,
       userDict,
-      toDialogClosedState,
       loadingDict,
       wordEditing,
       surfaceInput,
@@ -712,7 +714,6 @@ export default defineComponent({
       selectedId,
       surface,
       yomi,
-      toWordSelectedState,
       newWord,
       editWord,
       selectWord,
@@ -731,6 +732,7 @@ export default defineComponent({
       saveWord,
       deleteWord,
       resetWord,
+      closeDialog,
       discardOrNotDialog,
     };
   },
