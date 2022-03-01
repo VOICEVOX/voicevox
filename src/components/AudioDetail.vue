@@ -786,10 +786,10 @@ $pitch-label-height: 24px;
   .accent-phrase-table {
     flex-grow: 1;
     align-self: stretch;
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    padding-left: 5px;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    padding-left: 4px;
 
     display: flex;
     overflow-x: scroll;
