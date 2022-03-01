@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.11.3",
+    "descriptions": [
+      "再生位置を指定できない問題を修正",
+      "テキストを範囲選択できない問題を修正",
+      "辞書UIのバグを修正",
+      "辞書登録できない問題を修正"
+    ],
+    "contributors": ["Hiroshiba", "madosuki", "y-chan"]
+  },
+  {
     "version": "0.11.2",
     "descriptions": ["エンジンが起動しない問題を修正", "スタイルの順番を修正"],
     "contributors": ["aoirint"]
