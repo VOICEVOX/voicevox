@@ -21,7 +21,7 @@
               flat
               icon="close"
               color="display"
-              @click="discardOrNotDialog(closeDialogProcess)"
+              @click="discardOrNotDialog(toDialogClosedState)"
             />
           </q-toolbar>
         </q-header>
@@ -51,7 +51,7 @@
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold"
-                  @click="wordEditing = true"
+                  @click="editWord"
                   :disable="uiLocked || !selectedId"
                   >編集</q-btn
                 >
@@ -305,17 +305,9 @@ export default defineComponent({
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
       if (newValue) {
         await loadingDictProcess();
+        toInitialState();
       }
     });
-    const resetSelect = () => {
-      selectedId.value = "";
-      surface.value = "";
-      setYomi("");
-    };
-    const closeDialogProcess = () => {
-      dictionaryManageDialogOpenedComputed.value = false;
-      cancel();
-    };
 
     const wordEditing = ref(false);
 
@@ -339,20 +331,6 @@ export default defineComponent({
     const selectedId = ref("");
     const surface = ref("");
     const yomi = ref("");
-    const selectWord = (id: string) => {
-      selectedId.value = id;
-      surface.value = userDict.value[id].surface;
-      setYomi(userDict.value[id].yomi, true);
-    };
-    const newWord = () => {
-      wordEditing.value = true;
-      resetSelect();
-      surfaceInput.value?.focus();
-    };
-    const cancel = () => {
-      wordEditing.value = false;
-      resetSelect();
-    };
 
     const styleId = computed(() => {
       if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
@@ -511,6 +489,7 @@ export default defineComponent({
       return accent;
     };
 
+    // 操作（ステートの移動）
     const isWordChanged = computed(() => {
       if (selectedId.value === "") {
         return surface.value && yomi.value && accentPhrase.value;
@@ -585,7 +564,7 @@ export default defineComponent({
         }
       }
       await loadingDictProcess();
-      wordEditing.value = false;
+      toInitialState();
     };
     const isDeletable = computed(() => !!selectedId.value);
     const deleteWord = () => {
@@ -629,8 +608,8 @@ export default defineComponent({
           });
           return;
         }
-        selectedId.value = "";
         await loadingDictProcess();
+        toInitialState();
       });
     };
     const resetWord = () => {
@@ -650,7 +629,7 @@ export default defineComponent({
           textColor: "display",
         },
       }).onOk(() => {
-        selectWord(selectedId.value);
+        toWordEditingState();
       });
     };
     const discardOrNotDialog = (okCallback: () => void) => {
@@ -676,6 +655,46 @@ export default defineComponent({
         okCallback();
       }
     };
+    const newWord = () => {
+      selectedId.value = "";
+      surface.value = "";
+      setYomi("");
+      editWord();
+    };
+    const editWord = () => {
+      toWordEditingState();
+    };
+    const selectWord = (id: string) => {
+      selectedId.value = id;
+      surface.value = userDict.value[id].surface;
+      setYomi(userDict.value[id].yomi, true);
+      toWordSelectedState();
+    };
+    const cancel = () => {
+      toInitialState();
+    };
+
+    // ステートの移動
+    // 初期状態
+    const toInitialState = () => {
+      wordEditing.value = false;
+      selectedId.value = "";
+      surface.value = "";
+      setYomi("");
+    };
+    // 単語が選択されているだけの状態
+    const toWordSelectedState = () => {
+      wordEditing.value = false;
+    };
+    // 単語が編集されている状態
+    const toWordEditingState = () => {
+      wordEditing.value = true;
+      surfaceInput.value?.focus();
+    };
+    // ダイアログが閉じている状態
+    const toDialogClosedState = () => {
+      dictionaryManageDialogOpenedComputed.value = false;
+    };
 
     return {
       dictionaryManageDialogOpenedComputed,
@@ -683,7 +702,7 @@ export default defineComponent({
       nowGenerating,
       nowPlaying,
       userDict,
-      closeDialogProcess,
+      toDialogClosedState,
       loadingDict,
       wordEditing,
       surfaceInput,
@@ -693,8 +712,10 @@ export default defineComponent({
       selectedId,
       surface,
       yomi,
-      selectWord,
+      toWordSelectedState,
       newWord,
+      editWord,
+      selectWord,
       cancel,
       isOnlyHiraOrKana,
       setSurface,
