@@ -74,6 +74,8 @@
                         @update:modelValue="updateAudioKeys"
                         :itemKey="itemKey"
                         ghost-class="ghost"
+                        filter="input"
+                        :preventOnFilter="false"
                       >
                         <template v-slot:item="{ element }">
                           <audio-cell
