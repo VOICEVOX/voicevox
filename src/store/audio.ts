@@ -1266,10 +1266,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     PLAY_AUDIO: createUILockAction(
-      async (
-        { state, commit, dispatch },
-        { audioKey }: { audioKey: string }
-      ) => {
+      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];
         audioElem.pause();
 
@@ -1289,18 +1286,6 @@ export const audioStore: VoiceVoxStoreOptions<
             throw new Error();
           }
         }
-        const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
-          audioKey,
-        });
-        if (accentPhraseOffsets.length === 0) {
-          audioElem.currentTime = 0;
-        } else {
-          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-          if (startTime === undefined) throw Error("startTime === undefined");
-          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-          // 再生に影響のない程度かつ切り捨てられない値を加算する
-          audioElem.currentTime = startTime + 10e-6;
-        }
 
         return dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
@@ -1311,7 +1296,7 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     PLAY_AUDIO_BLOB: createUILockAction(
       async (
-        { state, commit },
+        { state, commit, dispatch },
         {
           audioBlob,
           audioElem,
@@ -1319,6 +1304,23 @@ export const audioStore: VoiceVoxStoreOptions<
         }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
       ) => {
         audioElem.src = URL.createObjectURL(audioBlob);
+        // 途中再生用の処理
+        if (audioKey) {
+          const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+            audioKey,
+          });
+          if (accentPhraseOffsets.length === 0) {
+            audioElem.currentTime = 0;
+          } else {
+            const startTime =
+              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+            if (startTime === undefined) throw Error("startTime === undefined");
+            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+            // 再生に影響のない程度かつ切り捨てられない値を加算する
+            audioElem.currentTime = startTime + 10e-6;
+          }
+        }
+
         audioElem
           .setSinkId(state.savingSetting.audioOutputDevice)
           .catch((err) => {
