@@ -456,15 +456,20 @@ export default defineComponent({
     const allEngineState = computed(() => {
       const engineStates = store.state.engineStates;
 
+      let lastEngineState: EngineState | undefined = undefined;
       for (const engineInfo of store.state.engineInfos) {
         const engineState: EngineState | undefined =
           engineStates[engineInfo.key];
-        if (engineState !== "STARTING") {
-          return engineState; // FIXME: 暫定的に1つのエンジンの状態を返す
+
+        // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
+        if (engineState === "STARTING") {
+          return engineState;
         }
+
+        lastEngineState = engineState;
       }
 
-      return "STARTING";
+      return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
     // ライセンス表示
