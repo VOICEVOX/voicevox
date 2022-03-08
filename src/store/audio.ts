@@ -140,7 +140,7 @@ const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
-  engineState: "STARTING",
+  engineStates: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -167,8 +167,16 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ACTIVE: (state) => (audioKey: string) => {
       return state._activeAudioKey === audioKey;
     },
-    IS_ENGINE_READY: (state) => {
-      return state.engineState === "READY";
+    IS_ALL_ENGINE_READY: (state) => {
+      for (const engineState of Object.values(state.engineStates)) {
+        if (engineState !== "READY") return false;
+      }
+
+      return true;
+    },
+    IS_ENGINE_READY: (state) => (engineKey) => {
+      const engineState = state.engineStates[engineKey];
+      return engineState === "READY";
     },
     ACTIVE_AUDIO_ELEM_CURRENT_TIME: (state) => {
       return state._activeAudioKey !== undefined
@@ -186,8 +194,8 @@ export const audioStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    SET_ENGINE_STATE(state, { engineState }: { engineState: EngineState }) {
-      state.engineState = engineState;
+    SET_ENGINE_STATE(state, { engineKey, engineState }: { engineKey: string, engineState: EngineState }) {
+      state.engineStates[engineKey] = engineState;
     },
     SET_CHARACTER_INFOS(
       state,
@@ -487,9 +495,10 @@ export const audioStore: VoiceVoxStoreOptions<
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
-        let engineState = state.engineState;
+        let engineState = state.engineStates[engineKey];
+
         for (let i = 0; i < 100; i++) {
-          engineState = state.engineState;
+          engineState = state.engineStates[engineKey];
           if (engineState === "FAILED_STARTING") {
             break;
           }
@@ -507,12 +516,12 @@ export const audioStore: VoiceVoxStoreOptions<
             continue;
           }
           engineState = "READY";
-          commit("SET_ENGINE_STATE", { engineState });
+          commit("SET_ENGINE_STATE", { engineKey, engineState });
           break;
         }
 
         if (engineState !== "READY") {
-          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
+          commit("SET_ENGINE_STATE", { engineKey, engineState: "FAILED_STARTING" });
         }
       }
     ),
@@ -632,7 +641,9 @@ export const audioStore: VoiceVoxStoreOptions<
           )
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
-      const query = getters.IS_ENGINE_READY
+
+      // TODO: 接続先のエンジンがREADYであることを判定する
+      const query = getters.IS_ALL_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
             styleId,
@@ -1419,31 +1430,33 @@ export const audioStore: VoiceVoxStoreOptions<
     OPEN_TEXT_EDIT_CONTEXT_MENU() {
       window.electron.openTextEditContextMenu();
     },
-    DETECTED_ENGINE_ERROR({ state, commit }) {
+    DETECTED_ENGINE_ERROR({ state, commit }, { engineKey }) {
       switch (state.engineState) {
         case "STARTING":
-          commit("SET_ENGINE_STATE", { engineState: "FAILED_STARTING" });
+          commit("SET_ENGINE_STATE", { engineKey, engineState: "FAILED_STARTING" });
           break;
         case "READY":
-          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineKey, engineState: "ERROR" });
           break;
         default:
-          commit("SET_ENGINE_STATE", { engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineKey, engineState: "ERROR" });
       }
     },
-    async RESTART_ENGINE_ALL({ dispatch, commit }) {
-      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
-      window.electron
-        .restartEngineAll()
-        .then(() => dispatch("START_WAITING_ENGINE_ALL"))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+    async RESTART_ENGINE_ALL({ state, dispatch }) {
+      const engineInfos = state.engineInfos;
+
+      for (const engineInfo of engineInfos) {
+        await dispatch("RESTART_ENGINE", {
+          engineKey: engineInfo.key,
+        });
+      }
     },
     async RESTART_ENGINE({ dispatch, commit }, { engineKey }) {
-      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
+      await commit("SET_ENGINE_STATE", { engineKey, engineState: "STARTING" });
       window.electron
         .restartEngine(engineKey)
         .then(() => dispatch("START_WAITING_ENGINE", { engineKey }))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+        .catch(() => dispatch("DETECTED_ENGINE_ERROR", { engineKey }));
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);

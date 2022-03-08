@@ -293,7 +293,7 @@ type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [];
+    args: [obj: { engineKey: string }];
     return: void;
   };
 

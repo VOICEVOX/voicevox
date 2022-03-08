@@ -446,7 +446,7 @@ async function runEngine(engineKey: string) {
     log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineKey });
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"

@@ -72,7 +72,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineState: EngineState;
+  engineStates: Record<string, EngineState>;
   characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -95,8 +95,12 @@ type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ENGINE_READY: {
+  IS_ALL_ENGINE_READY: {
     getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineKey: string): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
@@ -120,11 +124,11 @@ type AudioStoreTypes = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineState: EngineState };
+    mutation: { engineKey: string, engineState: EngineState };
   };
 
   LOAD_CHARACTER: {
