@@ -378,6 +378,8 @@ async function runEngine(engineKey: string) {
     return;
   }
 
+  log.info(`Starting ENGINE ${engineKey} process`);
+
   if (!(engineKey in engineProcessContainers)) {
     engineProcessContainers[engineKey] = {
       willQuitEngine: false,
@@ -407,8 +409,7 @@ async function runEngine(engineKey: string) {
   }
   const useGpu = store.get("useGpu");
 
-  log.info(`Starting ENGINE`);
-  log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
+  log.info(`ENGINE ${engineKey} mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -417,8 +418,8 @@ async function runEngine(engineKey: string) {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
-  log.info(`ENGINE path: ${enginePath}`);
-  log.info(`ENGINE args: ${JSON.stringify(args)}`);
+  log.info(`ENGINE ${engineKey} path: ${enginePath}`);
+  log.info(`ENGINE ${engineKey} args: ${JSON.stringify(args)}`);
 
   const engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
@@ -426,16 +427,16 @@ async function runEngine(engineKey: string) {
   engineProcessContainer.engineProcess = engineProcess;
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info(`ENGINE: ${data.toString("utf-8")}`);
+    log.info(`ENGINE ${engineKey} STDOUT: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error(`ENGINE: ${data.toString("utf-8")}`);
+    log.error(`ENGINE ${engineKey} STDERR: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE: process exited with code ${code}`);
+    log.info(`ENGINE ${engineKey} process terminated due to receipt of signal ${signal}`);
+    log.info(`ENGINE ${engineKey} process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
