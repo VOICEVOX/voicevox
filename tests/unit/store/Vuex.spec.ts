@@ -14,10 +14,12 @@ const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
 describe("store/vuex.js test", () => {
-  it("creaete store", () => {
+  it("create store", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
-        engineState: "STARTING",
+        engineStates: {
+          "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
+        },
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
