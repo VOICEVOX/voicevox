@@ -406,7 +406,7 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
-      await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_CHARACTER_ALL");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 

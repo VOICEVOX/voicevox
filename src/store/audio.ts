@@ -552,6 +552,13 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
+    LOAD_CHARACTER_ALL: createUILockAction(
+      async ({ state, dispatch }) => {
+        for (const engineInfo of state.engineInfos) {
+          await dispatch("LOAD_CHARACTER", { engineKey: engineInfo.key });
+        }
+      }
+    ),
     LOAD_CHARACTER: createUILockAction(
       async ({ state, commit, dispatch }, { engineKey }) => {
         const engineInfo = state.engineInfos.find(
