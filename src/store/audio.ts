@@ -168,10 +168,12 @@ export const audioStore: VoiceVoxStoreOptions<
       return state._activeAudioKey === audioKey;
     },
     IS_ALL_ENGINE_READY: (state) => {
-      for (const engineState of Object.values(state.engineStates)) {
-        if (engineState !== "READY") return false;
+      for (const engineInfo of state.engineInfos) {
+        const engineState = state.engineStates[engineInfo.key];
+        if (engineState !== "READY") {
+          return false;
+        }
       }
-
       return true;
     },
     IS_ENGINE_READY: (state) => (engineKey) => {
