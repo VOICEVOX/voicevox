@@ -1167,7 +1167,9 @@ app.on("before-quit", (event) => {
       app.quit(); // attempt to quit app again
     },
     onError: (engineKey, message) => {
-      console.error(`ENGINE ${engineKey}: Error during killing process: ${message}`);
+      console.error(
+        `ENGINE ${engineKey}: Error during killing process: ${message}`
+      );
     },
   });
 });
