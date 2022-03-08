@@ -348,10 +348,24 @@ const store = new Store<{
 });
 
 // engine
-let willQuitEngine = false;
-let engineProcess: ChildProcess;
-async function runEngine() {
-  const engineInfo = engineInfos[0]; // TODO: 複数エンジン対応
+type EngineProcessContainer = {
+  willQuitEngine: boolean;
+  engineProcess?: ChildProcess;
+}
+
+const engineProcessContainers: Record<string, EngineProcessContainer> = {};
+
+async function runEngineAll() {
+  log.info(`Starting ${engineInfos.length} engines...`);
+
+  for (const engineInfo of engineInfos) {
+    log.info(`ENGINE ${engineInfo.key}: Start launching`);
+    await runEngine(engineInfo.key);
+  }
+}
+
+async function runEngine(engineKey: string) {
+  const engineInfo = engineInfos.find((engineInfo) => engineInfo.key === engineKey)
   if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
 
   if (!engineInfo.executionEnabled) {
@@ -364,7 +378,14 @@ async function runEngine() {
     return;
   }
 
-  willQuitEngine = false;
+  if (!(engineKey in engineProcessContainers)) {
+    engineProcessContainers[engineKey] = {
+      willQuitEngine: false,
+    };
+  }
+
+  const engineProcessContainer = engineProcessContainers[engineKey];
+  engineProcessContainer.willQuitEngine = false;
 
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
@@ -399,9 +420,10 @@ async function runEngine() {
   log.info(`ENGINE path: ${enginePath}`);
   log.info(`ENGINE args: ${JSON.stringify(args)}`);
 
-  engineProcess = spawn(enginePath, args, {
+  const engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
+  engineProcessContainer.engineProcess = engineProcess;
 
   engineProcess.stdout?.on("data", (data) => {
     log.info(`ENGINE: ${data.toString("utf-8")}`);
@@ -415,7 +437,7 @@ async function runEngine() {
     log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
     log.info(`ENGINE: process exited with code ${code}`);
 
-    if (!willQuitEngine) {
+    if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
       dialog.showErrorBox(
         "音声合成エンジンエラー",
