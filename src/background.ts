@@ -546,45 +546,58 @@ function killEngine({
   }
 }
 
-async function restartEngine() {
+async function restartEngineAll() {
+  for (const engineInfo of engineInfos) {
+    await restartEngine(engineInfo.key);
+  }
+}
+
+async function restartEngine(engineKey: string) {
   await new Promise<void>((resolve, reject) => {
+    const engineProcessContainer: EngineProcessContainer | undefined =
+      engineProcessContainers[engineKey];
+    const engineProcess = engineProcessContainer?.engineProcess;
+
     log.info(
-      `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+      `ENGINE ${engineKey}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
     );
 
     // エンジンのプロセスがすでに終了している、またはkillされている場合
-    const engineExited = engineProcess.exitCode !== null;
-    const engineKilled = engineProcess.signalCode !== null;
+    const engineExited = engineProcess?.exitCode !== null;
+    const engineKilled = engineProcess?.signalCode !== null;
 
+    // engineProcess === undefinedの場合true
     if (engineExited || engineKilled) {
       log.info(
-        "ENGINE process is not started yet or already killed. Starting ENGINE..."
+        `ENGINE ${engineKey}: Process is not started yet or already killed. Starting process...`
       );
 
-      runEngine();
+      runEngine(engineKey);
       resolve();
       return;
     }
 
     // エンジンエラー時のエラーウィンドウ抑制用。
-    willQuitEngine = true;
+    engineProcessContainer.willQuitEngine = true;
 
     // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
     // closeイベントはexitイベントよりも後に発火します。
     const restartEngineOnProcessClosedCallback = () => {
-      log.info("ENGINE process killed. Restarting ENGINE...");
+      log.info(`ENGINE ${engineKey}: Process killed. Restarting process...`);
 
-      runEngine();
+      runEngine(engineKey);
       resolve();
     };
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-    log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
+    log.info(
+      `ENGINE ${engineKey}: Killing current process (PID=${engineProcess.pid})...`
+    );
     treeKill(engineProcess.pid, (error) => {
       // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
       if (error != null) {
-        log.error("Failed to kill ENGINE");
+        log.error(`ENGINE ${engineKey}: Failed to kill process`);
         log.error(error);
 
         // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
