@@ -356,7 +356,7 @@ type EngineProcessContainer = {
 const engineProcessContainers: Record<string, EngineProcessContainer> = {};
 
 async function runEngineAll() {
-  log.info(`Starting ${engineInfos.length} engines...`);
+  log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
     log.info(`ENGINE ${engineInfo.key}: Start launching`);
