@@ -175,7 +175,7 @@ export const audioStore: VoiceVoxStoreOptions<
           return false;
         }
       }
-      return true;
+      return true; // state.engineStatesが空のときはtrue
     },
     IS_ENGINE_READY: (state) => (engineKey) => {
       const engineState: EngineState | undefined =
