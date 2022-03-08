@@ -140,7 +140,7 @@ function buildFileName(state: State, audioKey: string) {
   return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
 }
 
-function getCharacterInfo(
+export function getCharacterInfo(
   state: State,
   engineId: string,
   styleId: number
@@ -150,7 +150,7 @@ function getCharacterInfo(
 
   // (engineId, styleId)で「スタイル付きキャラクター」は一意である
   return engineCharacterInfos.find((characterInfo) =>
-    characterInfo.metas.styles.find(
+    characterInfo.metas.styles.some(
       (characterStyle) => characterStyle.styleId === styleId
     )
   );

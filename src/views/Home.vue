@@ -174,7 +174,7 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import { CharacterInfo, HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -416,13 +416,19 @@ export default defineComponent({
 
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
-      if (characterInfos.value == undefined) throw new Error();
-      for (const info of characterInfos.value) {
-        isUnsetDefaultStyleIds ||=
-          info.metas.styles.length > 1 &&
-          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
-            speakerUuid: info.metas.speakerUuid,
-          }));
+
+      for (const engineInfo of engineInfos.value) {
+        const engineCharacterInfos: CharacterInfo[] | undefined =
+          characterInfos.value[engineInfo.key];
+        if (engineCharacterInfos === undefined) throw new Error();
+
+        for (const info of engineCharacterInfos) {
+          isUnsetDefaultStyleIds ||=
+            info.metas.styles.length > 1 &&
+            (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
+              speakerUuid: info.metas.speakerUuid,
+            }));
+        }
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
@@ -514,6 +520,7 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
+    const engineInfos = computed(() => store.state.engineInfos);
     const characterInfos = computed(() => store.state.characterInfos);
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
