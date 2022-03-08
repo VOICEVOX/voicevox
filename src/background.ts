@@ -538,10 +538,11 @@ function killEngine({
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
     } catch (error: unknown) {
+      log.error(`ENGINE ${engineKey}: Error during killing process`);
       onError?.(error);
     }
   } else {
-    log.info("ENGINE process already closed");
+    log.info(`ENGINE ${engineKey}: Process already closed`);
   }
 }
 
