@@ -103,12 +103,20 @@ type AudioStoreTypes = {
     getter: number | undefined;
   };
 
+  START_WAITING_ENGINE_ALL: {
+    action(): void;
+  };
+
   START_WAITING_ENGINE: {
+    action(payload: { engineKey: string }): void;
+  };
+
+  RESTART_ENGINE_ALL: {
     action(): void;
   };
 
   RESTART_ENGINE: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   DETECTED_ENGINE_ERROR: {

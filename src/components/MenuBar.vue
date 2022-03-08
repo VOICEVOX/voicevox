@@ -271,7 +271,7 @@ export default defineComponent({
             type: "button",
             label: "再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE");
+              store.dispatch("RESTART_ENGINE_ALL");
             },
           },
         ],

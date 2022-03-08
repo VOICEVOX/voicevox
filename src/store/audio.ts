@@ -468,11 +468,22 @@ export const audioStore: VoiceVoxStoreOptions<
   },
 
   actions: {
+    START_WAITING_ENGINE_ALL: createUILockAction(
+      async ({ state, dispatch }) => {
+        const engineInfos = state.engineInfos;
+
+        for (const engineInfo of engineInfos) {
+          await dispatch("START_WAITING_ENGINE", {
+            engineKey: engineInfo.key,
+          });
+        }
+      }
+    ),
     START_WAITING_ENGINE: createUILockAction(
-      async ({ state, commit, dispatch }) => {
-        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      async ({ state, commit, dispatch }, { engineKey }) => {
+        const engineInfo = state.engineInfos.find((engineInfo)=> engineInfo.key === engineKey);
         if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
+          throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {
@@ -1418,11 +1429,18 @@ export const audioStore: VoiceVoxStoreOptions<
           commit("SET_ENGINE_STATE", { engineState: "ERROR" });
       }
     },
-    async RESTART_ENGINE({ dispatch, commit }) {
+    async RESTART_ENGINE_ALL({ dispatch, commit }) {
       await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
       window.electron
-        .restartEngine()
-        .then(() => dispatch("START_WAITING_ENGINE"))
+        .restartEngineAll()
+        .then(() => dispatch("START_WAITING_ENGINE_ALL"))
+        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+    },
+    async RESTART_ENGINE({ dispatch, commit }, { engineKey }) {
+      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
+      window.electron
+        .restartEngine(engineKey)
+        .then(() => dispatch("START_WAITING_ENGINE", { engineKey }))
         .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {

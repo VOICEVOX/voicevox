@@ -57,7 +57,8 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(): Promise<void>;
+  restartEngineAll(): Promise<void>;
+  restartEngine(engineKey: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
