@@ -169,7 +169,8 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     IS_ALL_ENGINE_READY: (state) => {
       for (const engineInfo of state.engineInfos) {
-        const engineState = state.engineStates[engineInfo.key];
+        const engineState: EngineState | undefined =
+          state.engineStates[engineInfo.key];
         if (engineState !== "READY") {
           return false;
         }
@@ -177,7 +178,8 @@ export const audioStore: VoiceVoxStoreOptions<
       return true;
     },
     IS_ENGINE_READY: (state) => (engineKey) => {
-      const engineState = state.engineStates[engineKey];
+      const engineState: EngineState | undefined =
+        state.engineStates[engineKey];
       return engineState === "READY";
     },
     ACTIVE_AUDIO_ELEM_CURRENT_TIME: (state) => {
@@ -503,7 +505,8 @@ export const audioStore: VoiceVoxStoreOptions<
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
-        let engineState = state.engineStates[engineKey];
+        let engineState: EngineState | undefined =
+          state.engineStates[engineKey];
 
         for (let i = 0; i < 100; i++) {
           engineState = state.engineStates[engineKey];
