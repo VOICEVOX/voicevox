@@ -351,7 +351,7 @@ const store = new Store<{
 type EngineProcessContainer = {
   willQuitEngine: boolean;
   engineProcess?: ChildProcess;
-}
+};
 
 const engineProcessContainers: Record<string, EngineProcessContainer> = {};
 
@@ -365,20 +365,22 @@ async function runEngineAll() {
 }
 
 async function runEngine(engineKey: string) {
-  const engineInfo = engineInfos.find((engineInfo) => engineInfo.key === engineKey)
-  if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.key === engineKey
+  );
+  if (!engineInfo) throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
-    log.info("Skipped engineInfo execution: disabled");
+    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
     return;
   }
 
   if (!engineInfo.executionFilePath) {
-    log.info("Skipped engineInfo execution: empty executionFilePath");
+    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`);
     return;
   }
 
-  log.info(`Starting ENGINE ${engineKey} process`);
+  log.info(`ENGINE ${engineKey}: Starting process`);
 
   if (!(engineKey in engineProcessContainers)) {
     engineProcessContainers[engineKey] = {
@@ -435,8 +437,10 @@ async function runEngine(engineKey: string) {
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE ${engineKey} process terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE ${engineKey} process exited with code ${code}`);
+    log.info(
+      `ENGINE ${engineKey}: Process terminated due to receipt of signal ${signal}`
+    );
+    log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
