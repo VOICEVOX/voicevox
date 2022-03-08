@@ -506,7 +506,7 @@ function killEngine({
 }) {
   const engineProcessContainer = engineProcessContainers[engineKey];
   if (!engineProcessContainer) {
-    onError?.(`No such engineProcessContainer: ${engineKey}`);
+    onError?.(`No such engineProcessContainer: key == ${engineKey}`);
     return;
   }
 
