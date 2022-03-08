@@ -73,7 +73,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   engineStates: Record<string, EngineState>;
-  characterInfos?: CharacterInfo[];
+  characterInfos: Record<string, CharacterInfo[]>;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -131,12 +131,16 @@ type AudioStoreTypes = {
     mutation: { engineKey: string; engineState: EngineState };
   };
 
-  LOAD_CHARACTER: {
+  LOAD_CHARACTER_ALL: {
     action(): void;
   };
 
+  LOAD_CHARACTER: {
+    action(payload: { engineKey: string }): void;
+  };
+
   SET_CHARACTER_INFOS: {
-    mutation: { characterInfos: CharacterInfo[] };
+    mutation: { engineKey: string; characterInfos: CharacterInfo[] };
   };
 
   USER_ORDERED_CHARACTER_INFOS: {

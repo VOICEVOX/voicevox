@@ -188,12 +188,22 @@ export const audioStore: VoiceVoxStoreOptions<
         : undefined;
     },
     USER_ORDERED_CHARACTER_INFOS: (state) => {
-      const characterInfos = state.characterInfos?.slice();
-      return characterInfos?.sort(
-        (a, b) =>
-          state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
-          state.userCharacterOrder.indexOf(b.metas.speakerUuid)
-      );
+      let characterInfoList: CharacterInfo[] = [];
+      for (const engineInfo of state.engineInfos) {
+        const engineCharacterInfos: CharacterInfo[] | undefined =
+          state.characterInfos[engineInfo.key];
+        if (engineCharacterInfos === undefined) continue;
+
+        characterInfoList = characterInfoList.concat(engineCharacterInfos);
+      }
+
+      return characterInfoList.length !== 0
+        ? characterInfoList.sort(
+            (a, b) =>
+              state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
+              state.userCharacterOrder.indexOf(b.metas.speakerUuid)
+          )
+        : undefined;
     },
   },
 
@@ -209,9 +219,12 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_CHARACTER_INFOS(
       state,
-      { characterInfos }: { characterInfos: CharacterInfo[] }
+      {
+        engineKey,
+        characterInfos,
+      }: { engineKey: string; characterInfos: CharacterInfo[] }
     ) {
-      state.characterInfos = characterInfos;
+      state.characterInfos[engineKey] = characterInfos;
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -539,84 +552,91 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
-
-      const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
-        action: "speakersSpeakersGet",
-        // 連想配列が第一引数になければ失敗する
-        payload: [{}],
-      })
-        .then(toDispatchResponse("speakersSpeakersGet"))
-        .catch((error) => {
-          window.electron.logError(error, `Failed to get speakers.`);
-          throw error;
-        });
-      const base64ToUrl = function (base64: string, type: string) {
-        const buffer = Buffer.from(base64, "base64");
-        const iconBlob = new Blob([buffer.buffer], { type: type });
-        return URL.createObjectURL(iconBlob);
-      };
-      const getStyles = function (speaker: Speaker, speakerInfo: SpeakerInfo) {
-        const styles: StyleInfo[] = new Array(speaker.styles.length);
-        speaker.styles.forEach((style, i) => {
-          const styleInfo = speakerInfo.styleInfos.find(
-            (styleInfo) => style.id === styleInfo.id
-          );
-          if (!styleInfo)
-            throw new Error(
-              `Not found the style id "${style.id}" of "${speaker.name}". `
-            );
-          const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
-            return base64ToUrl(voiceSample, "audio/wav");
-          });
-          styles[i] = {
-            styleName: style.name,
-            styleId: style.id,
-            iconPath: base64ToUrl(styleInfo.icon, "image/png"),
-            voiceSamplePaths: voiceSamples,
-          };
-        });
-        return styles;
-      };
-      const getSpeakerInfo = async function (speaker: Speaker) {
-        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+    LOAD_CHARACTER: createUILockAction(
+      async ({ state, commit, dispatch }, { engineKey }) => {
+        const engineInfo = state.engineInfos.find(
+          (engineInfo) => engineInfo.key === engineKey
+        );
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: index == 0`);
 
-        const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
-          action: "speakerInfoSpeakerInfoGet",
-          payload: [{ speakerUuid: speaker.speakerUuid }],
+          action: "speakersSpeakersGet",
+          // 連想配列が第一引数になければ失敗する
+          payload: [{}],
         })
-          .then(toDispatchResponse("speakerInfoSpeakerInfoGet"))
+          .then(toDispatchResponse("speakersSpeakersGet"))
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
           });
-        const styles = getStyles(speaker, speakerInfo);
-        const characterInfo: CharacterInfo = {
-          portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
-          metas: {
-            speakerUuid: speaker.speakerUuid,
-            speakerName: speaker.name,
-            styles: styles,
-            policy: speakerInfo.policy,
-          },
+        const base64ToUrl = function (base64: string, type: string) {
+          const buffer = Buffer.from(base64, "base64");
+          const iconBlob = new Blob([buffer.buffer], { type: type });
+          return URL.createObjectURL(iconBlob);
         };
-        return characterInfo;
-      };
-      const characterInfos: CharacterInfo[] = await Promise.all(
-        speakers.map(async (speaker) => {
-          return await getSpeakerInfo(speaker);
-        })
-      );
+        const getStyles = function (
+          speaker: Speaker,
+          speakerInfo: SpeakerInfo
+        ) {
+          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          speaker.styles.forEach((style, i) => {
+            const styleInfo = speakerInfo.styleInfos.find(
+              (styleInfo) => style.id === styleInfo.id
+            );
+            if (!styleInfo)
+              throw new Error(
+                `Not found the style id "${style.id}" of "${speaker.name}". `
+              );
+            const voiceSamples = styleInfo.voiceSamples.map((voiceSample) => {
+              return base64ToUrl(voiceSample, "audio/wav");
+            });
+            styles[i] = {
+              styleName: style.name,
+              styleId: style.id,
+              iconPath: base64ToUrl(styleInfo.icon, "image/png"),
+              voiceSamplePaths: voiceSamples,
+            };
+          });
+          return styles;
+        };
+        const getSpeakerInfo = async function (speaker: Speaker) {
+          const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+          if (!engineInfo)
+            throw new Error(`No such engineInfo registered: index == 0`);
 
-      commit("SET_CHARACTER_INFOS", { characterInfos });
-    }),
+          const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+            engineKey: engineInfo.key,
+            action: "speakerInfoSpeakerInfoGet",
+            payload: [{ speakerUuid: speaker.speakerUuid }],
+          })
+            .then(toDispatchResponse("speakerInfoSpeakerInfoGet"))
+            .catch((error) => {
+              window.electron.logError(error, `Failed to get speakers.`);
+              throw error;
+            });
+          const styles = getStyles(speaker, speakerInfo);
+          const characterInfo: CharacterInfo = {
+            portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
+            metas: {
+              speakerUuid: speaker.speakerUuid,
+              speakerName: speaker.name,
+              styles: styles,
+              policy: speakerInfo.policy,
+            },
+          };
+          return characterInfo;
+        };
+        const characterInfos: CharacterInfo[] = await Promise.all(
+          speakers.map(async (speaker) => {
+            return await getSpeakerInfo(speaker);
+          })
+        );
+
+        commit("SET_CHARACTER_INFOS", { engineKey, characterInfos });
+      }
+    ),
     GENERATE_AUDIO_KEY() {
       const audioKey = uuidv4();
       audioElements[audioKey] = new Audio();
