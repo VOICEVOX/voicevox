@@ -481,7 +481,9 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }, { engineKey }) => {
-        const engineInfo = state.engineInfos.find((engineInfo)=> engineInfo.key === engineKey);
+        const engineInfo = state.engineInfos.find(
+          (engineInfo) => engineInfo.key === engineKey
+        );
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
