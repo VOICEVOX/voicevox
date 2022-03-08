@@ -51,6 +51,7 @@ async function generateUniqueIdAndQuery(
     JSON.stringify([
       audioItem.text,
       audioQuery,
+      audioItem.engineId,
       audioItem.styleId,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
@@ -103,22 +104,25 @@ function parseTextFile(
 function buildFileName(state: State, audioKey: string) {
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
-  let styleName: string | undefined = "";
-  const character = state.characterInfos?.find((info) => {
-    const result = info.metas.styles.findIndex(
-      (style) => style.styleId === audioItem.styleId
-    );
 
-    if (result > -1) {
-      styleName = info.metas.styles[result].styleName;
-    }
+  if (audioItem.engineId === undefined)
+    throw new Error("audioItem.engineId === undefined");
+  if (audioItem.styleId === undefined)
+    throw new Error("audioItem.styleId === undefined");
 
-    return result > -1;
-  });
+  const character = getCharacterInfo(
+    state,
+    audioItem.engineId,
+    audioItem.styleId
+  );
+  if (character === undefined) throw new Error("character === undefined");
 
-  if (character === undefined) {
-    throw new Error();
-  }
+  const style = character.metas.styles.find(
+    (style) => style.styleId === audioItem.styleId
+  );
+  if (style === undefined) throw new Error("style === undefined");
+
+  const styleName: string | undefined = style.styleName;
 
   const characterName = sanitizeFileName(character.metas.speakerName);
   let text = sanitizeFileName(audioItem.text);
@@ -127,7 +131,7 @@ function buildFileName(state: State, audioKey: string) {
   }
 
   const preFileName = (index + 1).toString().padStart(3, "0");
-  // デフォルトのスタイルだとstyleIdが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
+  // デフォルトのスタイルだとstyleNameが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
   if (styleName === undefined) {
     return preFileName + `_${characterName}_${text}.wav`;
   }
@@ -136,11 +140,28 @@ function buildFileName(state: State, audioKey: string) {
   return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
 }
 
+function getCharacterInfo(
+  state: State,
+  engineId: string,
+  styleId: number
+): CharacterInfo | undefined {
+  const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+  const engineCharacterInfos = state.characterInfos[engineKey];
+
+  // (engineId, styleId)で「スタイル付きキャラクター」は一意である
+  return engineCharacterInfos.find((characterInfo) =>
+    characterInfo.metas.styles.find(
+      (characterStyle) => characterStyle.styleId === styleId
+    )
+  );
+}
+
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   engineStates: {},
+  characterInfos: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -186,6 +207,9 @@ export const audioStore: VoiceVoxStoreOptions<
       return state._activeAudioKey !== undefined
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;
+    },
+    CHARACTER_INFO: (state) => (engineId, styleId) => {
+      return getCharacterInfo(state, engineId, styleId);
     },
     USER_ORDERED_CHARACTER_INFOS: (state) => {
       let characterInfoList: CharacterInfo[] = [];
@@ -552,13 +576,11 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER_ALL: createUILockAction(
-      async ({ state, dispatch }) => {
-        for (const engineInfo of state.engineInfos) {
-          await dispatch("LOAD_CHARACTER", { engineKey: engineInfo.key });
-        }
+    LOAD_CHARACTER_ALL: createUILockAction(async ({ state, dispatch }) => {
+      for (const engineInfo of state.engineInfos) {
+        await dispatch("LOAD_CHARACTER", { engineKey: engineInfo.key });
       }
-    ),
+    }),
     LOAD_CHARACTER: createUILockAction(
       async ({ state, commit, dispatch }, { engineKey }) => {
         const engineInfo = state.engineInfos.find(

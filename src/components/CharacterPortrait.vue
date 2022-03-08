@@ -16,15 +16,26 @@ export default defineComponent({
     const store = useStore();
 
     const characterInfo = computed(() => {
-      const characterInfos = store.state.characterInfos || [];
       const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
+
+      const engineId = audioItem?.engineId;
       const styleId = audioItem?.styleId;
 
+      if (engineId === undefined || styleId === undefined) return undefined;
+
+      const engineInfo = store.state.engineInfos.filter(
+        (engineInfo) => engineInfo.key === engineId
+      ); // FIXME: 暫定的にengineKeyをengineIdとして使う
+
+      const flattenCharacterInfos = store.state.engineInfos.flatMap(
+        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
+      );
+
       return styleId !== undefined
-        ? characterInfos.find((info) =>
+        ? flattenCharacterInfos.find((info) =>
             info.metas.styles.find((style) => style.styleId === styleId)
           )
         : undefined;

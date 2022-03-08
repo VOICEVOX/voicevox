@@ -31,6 +31,7 @@ import { QVueGlobals } from "quasar";
 
 export type AudioItem = {
   text: string;
+  engineId?: string;
   styleId?: number;
   query?: AudioQuery;
   presetKey?: string;
@@ -141,6 +142,10 @@ type AudioStoreTypes = {
 
   SET_CHARACTER_INFOS: {
     mutation: { engineKey: string; characterInfos: CharacterInfo[] };
+  };
+
+  CHARACTER_INFO: {
+    getter(engineId: string, styleId: number): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
