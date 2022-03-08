@@ -128,7 +128,7 @@ type AudioStoreTypes = {
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineKey: string, engineState: EngineState };
+    mutation: { engineKey: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER: {

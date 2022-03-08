@@ -194,7 +194,13 @@ export const audioStore: VoiceVoxStoreOptions<
   },
 
   mutations: {
-    SET_ENGINE_STATE(state, { engineKey, engineState }: { engineKey: string, engineState: EngineState }) {
+    SET_ENGINE_STATE(
+      state,
+      {
+        engineKey,
+        engineState,
+      }: { engineKey: string; engineState: EngineState }
+    ) {
       state.engineStates[engineKey] = engineState;
     },
     SET_CHARACTER_INFOS(
@@ -521,7 +527,10 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         if (engineState !== "READY") {
-          commit("SET_ENGINE_STATE", { engineKey, engineState: "FAILED_STARTING" });
+          commit("SET_ENGINE_STATE", {
+            engineKey,
+            engineState: "FAILED_STARTING",
+          });
         }
       }
     ),
@@ -1433,7 +1442,10 @@ export const audioStore: VoiceVoxStoreOptions<
     DETECTED_ENGINE_ERROR({ state, commit }, { engineKey }) {
       switch (state.engineState) {
         case "STARTING":
-          commit("SET_ENGINE_STATE", { engineKey, engineState: "FAILED_STARTING" });
+          commit("SET_ENGINE_STATE", {
+            engineKey,
+            engineState: "FAILED_STARTING",
+          });
           break;
         case "READY":
           commit("SET_ENGINE_STATE", { engineKey, engineState: "ERROR" });
