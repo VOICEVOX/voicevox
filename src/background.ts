@@ -368,7 +368,8 @@ async function runEngine(engineKey: string) {
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.key === engineKey
   );
-  if (!engineInfo) throw new Error(`No such engineInfo registered: key == ${engineKey}`);
+  if (!engineInfo)
+    throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
     log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
@@ -376,7 +377,9 @@ async function runEngine(engineKey: string) {
   }
 
   if (!engineInfo.executionFilePath) {
-    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`);
+    log.info(
+      `ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`
+    );
     return;
   }
 
@@ -452,39 +455,86 @@ async function runEngine(engineKey: string) {
   });
 }
 
+function killEngineAll({
+  onFirstKillStart,
+  onAllKilled,
+  onError,
+}: {
+  onFirstKillStart?: VoidFunction;
+  onAllKilled?: VoidFunction;
+  onError?: (engineKey: string, message: unknown) => void;
+}) {
+  let anyKillStart = false;
+
+  const numEngineProcess = Object.keys(engineProcessContainers).length;
+  let numEngineProcessKilled = 0;
+
+  for (const [engineKey] of Object.entries(engineProcessContainers)) {
+    killEngine({
+      engineKey,
+      onKillStart: () => {
+        if (!anyKillStart) {
+          anyKillStart = true;
+          onFirstKillStart?.();
+        }
+      },
+      onKilled: () => {
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        );
+
+        if (numEngineProcessKilled === numEngineProcess) {
+          onAllKilled?.();
+        }
+      },
+      onError: (message) => onError?.(engineKey, message),
+    });
+  }
+}
+
 function killEngine({
+  engineKey,
   onKillStart,
   onKilled,
   onError,
 }: {
+  engineKey: string;
   onKillStart?: VoidFunction;
   onKilled?: VoidFunction;
   onError?: (error: unknown) => void;
 }) {
+  const engineProcessContainer = engineProcessContainers[engineKey];
+  if (!engineProcessContainer) {
+    onError?.(`No such engineProcessContainer: ${engineKey}`);
+    return;
+  }
+
+  const engineProcess = engineProcessContainer.engineProcess;
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
-    log.info(`ENGINE process not started`);
+    log.info(`ENGINE ${engineKey}: Process not started`);
     return;
   }
 
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
-    log.info("ENGINE process closed");
+    log.info(`ENGINE ${engineKey}: Process closed`);
     onKilled?.();
   });
 
   log.info(
-    `ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+    `ENGINE ${engineKey}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
   );
 
   const engineNotExited = engineProcess.exitCode === null;
   const engineNotKilled = engineProcess.signalCode === null;
 
   if (engineNotExited && engineNotKilled) {
-    log.info(`Killing ENGINE process (PID=${engineProcess.pid})...`);
+    log.info(`ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`);
     onKillStart?.();
 
-    willQuitEngine = true;
+    engineProcessContainer.willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
     } catch (error: unknown) {
