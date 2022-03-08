@@ -6,15 +6,16 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
+        <!-- TODO: 複数エンジン対応 -->
         <div
-          v-if="!isCompletedInitialStartup || engineState === 'STARTING'"
+          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
           class="waiting-engine"
         >
           <div>
             <q-spinner color="primary" size="2.5rem" />
             <div class="q-mt-xs">
               {{
-                engineState === "STARTING"
+                allEngineState === "STARTING"
                   ? "エンジン起動中・・・"
                   : "データ準備中・・・"
               }}
@@ -170,7 +171,7 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
-import { AudioItem } from "@/store/type";
+import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
@@ -451,7 +452,20 @@ export default defineComponent({
     });
 
     // エンジン待機
-    const engineState = computed(() => store.state.engineState);
+    // TODO: 複数エンジン対応
+    const allEngineState = computed(() => {
+      const engineStates = store.state.engineStates;
+
+      for (const engineInfo of store.state.engineInfos) {
+        const engineState: EngineState | undefined =
+          engineStates[engineInfo.key];
+        if (engineState !== "STARTING") {
+          return engineState; // FIXME: 暫定的に1つのエンジンの状態を返す
+        }
+      }
+
+      return "STARTING";
+    });
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
@@ -583,7 +597,7 @@ export default defineComponent({
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
       isCompletedInitialStartup,
-      engineState,
+      allEngineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,

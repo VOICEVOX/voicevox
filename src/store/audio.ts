@@ -1442,7 +1442,10 @@ export const audioStore: VoiceVoxStoreOptions<
       window.electron.openTextEditContextMenu();
     },
     DETECTED_ENGINE_ERROR({ state, commit }, { engineKey }) {
-      switch (state.engineState) {
+      const engineState: EngineState | undefined =
+        state.engineStates[engineKey];
+
+      switch (engineState) {
         case "STARTING":
           commit("SET_ENGINE_STATE", {
             engineKey,
