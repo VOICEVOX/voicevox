@@ -1002,8 +1002,12 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle("RESTART_ENGINE", async () => {
-  await restartEngine();
+ipcMainHandle("RESTART_ENGINE_ALL", async () => {
+  await restartEngineAll();
+});
+
+ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
+  await restartEngine(engineKey);
 });
 
 ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
@@ -1150,20 +1154,20 @@ app.on("before-quit", (event) => {
     return;
   }
 
-  killEngine({
-    onKillStart: () => {
+  log.info("Checking ENGINE status before app quit");
+  killEngineAll({
+    onFirstKillStart: () => {
       // executed synchronously to cancel before-quit event
       log.info("Interrupt app quit to kill ENGINE");
       event.preventDefault();
     },
-    onKilled: () => {
-      // executed asynchronously to catch process closed event
-      log.info("ENGINE killed. Quitting app");
+    onAllKilled: () => {
+      // executed asynchronously to catch all process closed event
+      log.info("All ENGINE killed. Quitting app");
       app.quit(); // attempt to quit app again
     },
-    onError: (error: unknown) => {
-      log.error("Error during killing ENGINE process");
-      log.error(error);
+    onError: (engineKey, message) => {
+      console.error(`ENGINE ${engineKey}: Error during killing process: ${message}`);
     },
   });
 });
@@ -1191,7 +1195,7 @@ app.on("ready", async () => {
     }
   }
 
-  createWindow().then(() => runEngine());
+  createWindow().then(() => runEngineAll());
 });
 
 app.on("second-instance", () => {
