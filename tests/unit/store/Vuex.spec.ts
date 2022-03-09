@@ -18,6 +18,7 @@ describe("store/vuex.js test", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
         engineStates: {},
+        characterInfos: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
