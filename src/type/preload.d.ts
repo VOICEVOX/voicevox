@@ -96,6 +96,7 @@ export type AppInfos = {
 
 export type StyleInfo = {
   styleName?: string;
+  engineId: string;
   styleId: number;
   iconPath: string;
   voiceSamplePaths: string[];

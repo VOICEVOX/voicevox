@@ -118,7 +118,12 @@
                   </div>
                   <div class="voice-samples">
                     <q-btn
-                      v-for="voiceSampleIndex of [...Array(3).keys()]"
+                      v-for="voiceSampleIndex of [
+                        ...Array(
+                          selectedStyles[speakerUuid]?.voiceSamplePaths
+                            .length ?? 0
+                        ).keys(),
+                      ]"
                       :key="voiceSampleIndex"
                       round
                       outline
@@ -315,18 +320,21 @@ export default defineComponent({
     const isHoverableItem = ref(true);
 
     // 音声再生
-    const playing = ref<{ styleId: number; index: number }>();
+    const playing = ref<{ engineId: string; styleId: number; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
     audio.onended = () => stop();
 
-    const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
+    const play = (
+      { engineId, styleId, voiceSamplePaths }: StyleInfo,
+      index: number
+    ) => {
       if (audio.src !== "") stop();
 
       audio.src = voiceSamplePaths[index];
       audio.play();
-      playing.value = { styleId, index };
+      playing.value = { engineId, styleId, index };
     };
     const stop = () => {
       if (audio.src === "") return;
@@ -340,6 +348,7 @@ export default defineComponent({
     const togglePlayOrStop = (styleInfo: StyleInfo, index: number) => {
       if (
         playing.value === undefined ||
+        styleInfo.engineId !== playing.value.engineId ||
         styleInfo.styleId !== playing.value.styleId ||
         index !== playing.value.index
       ) {

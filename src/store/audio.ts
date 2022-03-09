@@ -598,6 +598,8 @@ export const audioStore: VoiceVoxStoreOptions<
             `No such engineInfo registered: engineKey == ${engineKey}`
           );
 
+        const engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
+
         const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
           action: "speakersSpeakersGet",
@@ -631,6 +633,7 @@ export const audioStore: VoiceVoxStoreOptions<
               return base64ToUrl(voiceSample, "audio/wav");
             });
             styles[i] = {
+              engineId,
               styleName: style.name,
               styleId: style.id,
               iconPath: base64ToUrl(styleInfo.icon, "image/png"),
@@ -1687,7 +1690,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         styleId,
       }: { audioKey: string; engineId: string; styleId: number }
     ) {
-      const engineKey = engineId; // FIXME: 暫定
+      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
 
       const query = state.audioItems[audioKey].query;
       try {
