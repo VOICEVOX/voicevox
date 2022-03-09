@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
+import { getCharacterInfo } from "@/store/audio";
 
 export default defineComponent({
   name: "CharacterPortrait",
@@ -26,15 +27,7 @@ export default defineComponent({
 
       if (engineId === undefined || styleId === undefined) return undefined;
 
-      const flattenCharacterInfos = store.state.engineInfos.flatMap(
-        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
-      );
-
-      return styleId !== undefined
-        ? flattenCharacterInfos.find((info) =>
-            info.metas.styles.find((style) => style.styleId === styleId)
-          )
-        : undefined;
+      return store.getters.CHARACTER_INFO(engineId, styleId);
     });
 
     const characterName = computed(() => {
