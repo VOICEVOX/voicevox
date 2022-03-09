@@ -162,6 +162,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
+                    engineKey: "074fc39e-678b-4c13-8916-ffca8d505d1d", // VOICEVOX ENGINE
                     styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
@@ -211,6 +212,15 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
+          if (baseVersionIsLow(appVersionList, [0, 11, 0])) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.engineId === undefined) {
+                audioItem.engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d"; // VOICEVOX ENGINE
+              }
+            }
+          }
+
           // Validation check
           const ajv = new Ajv();
           const validate = ajv.compile(projectSchema);
@@ -221,6 +231,15 @@ export const projectStore: VoiceVoxStoreOptions<
             throw new Error(
               projectFileErrorMsg +
                 " Every audioKey in audioKeys should be a key of audioItems"
+            );
+          }
+          if (
+            !obj.audioKeys.every(
+              (audioKey) => obj.audioItems[audioKey].engineId != undefined
+            )
+          ) {
+            throw new Error(
+              'Every audioItem should have a "engineId" attribute.'
             );
           }
           if (
@@ -375,6 +394,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
+    engineId: { type: "string" },
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },

@@ -540,7 +540,9 @@ export const audioStore: VoiceVoxStoreOptions<
           (engineInfo) => engineInfo.key === engineKey
         );
         if (!engineInfo)
-          throw new Error(`No such engineInfo registered: key == ${engineKey}`);
+          throw new Error(
+            `No such engineInfo registered: engineKey == ${engineKey}`
+          );
 
         let engineState: EngineState | undefined =
           state.engineStates[engineKey];
@@ -587,7 +589,9 @@ export const audioStore: VoiceVoxStoreOptions<
           (engineInfo) => engineInfo.key === engineKey
         );
         if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
+          throw new Error(
+            `No such engineInfo registered: engineKey == ${engineKey}`
+          );
 
         const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
@@ -631,10 +635,6 @@ export const audioStore: VoiceVoxStoreOptions<
           return styles;
         };
         const getSpeakerInfo = async function (speaker: Speaker) {
-          const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-          if (!engineInfo)
-            throw new Error(`No such engineInfo registered: index == 0`);
-
           const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
             engineKey: engineInfo.key,
             action: "speakerInfoSpeakerInfoGet",
@@ -680,6 +680,7 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: {
         text?: string;
+        engineKey?: string;
         styleId?: number;
         presetKey?: string;
         baseAudioItem?: AudioItem;
@@ -695,20 +696,45 @@ export const audioStore: VoiceVoxStoreOptions<
       const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
-      const styleId =
-        payload.styleId ??
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) =>
-              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+
+      let engineKey: string | undefined = undefined;
+      let styleId: number | undefined = undefined;
+
+      if (payload.engineKey !== undefined && payload.styleId !== undefined) {
+        engineKey = payload.engineKey;
+        styleId = payload.styleId;
+      } else {
+        const defaultCharacterInfo: CharacterInfo | undefined =
+          userOrderedCharacterInfos[0];
+        if (defaultCharacterInfo === undefined)
+          throw new Error(`No default characterInfo (no character loaded)`);
+
+        const defaultStyleId = state.defaultStyleIds.find(
+          (defaultStyleId) =>
+            defaultStyleId.speakerUuid ===
+            defaultCharacterInfo.metas.speakerUuid
+        ); // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+        if (defaultStyleId === undefined) throw new Error(`No defaultStyleId`);
+
+        const engineInfo = state.engineInfos.find((engineInfo) =>
+          (state.characterInfos[engineInfo.key] ?? []).some(
+            (characterInfo) =>
+              characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid
           )
-        ].defaultStyleId;
+        );
+        if (engineInfo === undefined)
+          throw new Error(`No engineInfo for defaultStyleId`);
+
+        engineKey = engineInfo.key;
+        styleId = defaultStyleId.defaultStyleId;
+      }
+
       const baseAudioItem = payload.baseAudioItem;
 
-      // TODO: 接続先のエンジンがREADYであることを判定する
       const query = getters.IS_ALL_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
+            engineKey,
             styleId,
           }).catch(() => undefined)
         : undefined;
@@ -793,17 +819,23 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, dispatch },
       {
         text,
+        engineKey,
         styleId,
         isKana,
       }: {
         text: string;
+        engineKey: string;
         styleId: number;
         isKana?: boolean;
       }
     ) {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      const engineInfo = state.engineInfos.find(
+        (engineInfo) => engineInfo.key === engineKey
+      );
       if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+        throw new Error(
+          `No such engineInfo registered: engineKey == ${engineKey}`
+        );
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey: engineInfo.key,
@@ -829,12 +861,17 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch, state },
       {
         accentPhrases,
+        engineKey,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineKey: string; styleId: number }
     ) {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      const engineInfo = state.engineInfos.find(
+        (engineInfo) => engineInfo.key === engineKey
+      );
       if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+        throw new Error(
+          `No such engineInfo registered: engineKey == ${engineKey}`
+        );
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey: engineInfo.key,
@@ -856,10 +893,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch },
       {
         accentPhrases,
+        engineKey,
         styleId,
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
+        engineKey: string;
         styleId: number;
         copyIndexes: number[];
       }
@@ -868,6 +907,7 @@ export const audioStore: VoiceVoxStoreOptions<
         "FETCH_MORA_DATA",
         {
           accentPhrases,
+          engineKey,
           styleId,
         }
       );
@@ -878,11 +918,19 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     FETCH_AUDIO_QUERY(
       { dispatch, state },
-      { text, styleId }: { text: string; styleId: number }
+      {
+        text,
+        engineKey,
+        styleId,
+      }: { text: string; engineKey: string; styleId: number }
     ) {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      const engineInfo = state.engineInfos.find(
+        (engineInfo) => engineInfo.key === engineKey
+      );
       if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+        throw new Error(
+          `No such engineInfo registered: engineKey == ${engineKey}`
+        );
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey: engineInfo.key,
@@ -992,7 +1040,7 @@ export const audioStore: VoiceVoxStoreOptions<
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
         if (!engineInfo)
           throw new Error(`No such engineInfo registered: index == 0`);
 
@@ -1026,9 +1074,15 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
       async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
-        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        const engineKey = audioItem.engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+
+        const engineInfo = state.engineInfos.find(
+          (engineInfo) => engineInfo.key === engineKey
+        );
         if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
+          throw new Error(
+            `No such engineInfo registered: engineKey == ${engineKey}`
+          );
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1570,8 +1624,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, commit, dispatch },
       { audioKey, text }: { audioKey: string; text: string }
     ) {
+      const engineId = state.audioItems[audioKey].engineId;
+      if (engineId == undefined) throw new Error("engineId != undefined");
+
+      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId != undefined");
+
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
       try {
         if (query !== undefined) {
@@ -1579,6 +1639,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             "FETCH_ACCENT_PHRASES",
             {
               text,
+              engineKey,
               styleId,
             }
           );
@@ -1591,6 +1652,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         } else {
           const newAudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text,
+            engineKey,
             styleId,
           });
           commit("COMMAND_CHANGE_AUDIO_TEXT", {
@@ -1611,7 +1673,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     async COMMAND_CHANGE_STYLE_ID(
       { state, dispatch, commit },
-      { audioKey, styleId }: { audioKey: string; styleId: number }
+      {
+        audioKey,
+        engineKey,
+        styleId,
+      }: { audioKey: string; engineKey: string; styleId: number }
     ) {
       const query = state.audioItems[audioKey].query;
       try {
@@ -1621,10 +1687,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             "FETCH_MORA_DATA",
             {
               accentPhrases,
+              engineKey,
               styleId,
             }
           );
           commit("COMMAND_CHANGE_STYLE_ID", {
+            engineKey,
             styleId,
             audioKey: audioKey,
             update: "AccentPhrases",
@@ -1634,9 +1702,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           const text = state.audioItems[audioKey].text;
           const query: AudioQuery = await dispatch("FETCH_AUDIO_QUERY", {
             text: text,
+            engineKey,
             styleId,
           });
           commit("COMMAND_CHANGE_STYLE_ID", {
+            engineKey,
             styleId,
             audioKey,
             update: "AudioQuery",
@@ -1645,6 +1715,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       } catch (error) {
         commit("COMMAND_CHANGE_STYLE_ID", {
+          engineKey,
           styleId,
           audioKey,
           update: "StyleId",
@@ -1672,12 +1743,21 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         newAccentPhrases[accentPhraseIndex].accent = accent;
 
         try {
+          const engineId = state.audioItems[audioKey].engineId;
+          if (engineId == undefined)
+            throw new Error("assert engineId != undefined");
+
+          const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+
           const styleId = state.audioItems[audioKey].styleId;
-          if (styleId == undefined) throw new Error("styleId != undefined");
+          if (styleId == undefined)
+            throw new Error("assert styleId != undefined");
+
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
             {
               accentPhrases: newAccentPhrases,
+              engineKey,
               styleId,
               copyIndexes: [accentPhraseIndex],
             }
@@ -1713,8 +1793,15 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const { audioKey, accentPhraseIndex } = payload;
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+
+      const engineId = state.audioItems[audioKey].engineId;
+      if (engineId == undefined) throw new Error("engineId != undefined");
+
+      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId != undefined");
+
       if (query === undefined) {
         throw Error(
           "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist."
@@ -1793,6 +1880,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           "FETCH_AND_COPY_MORA_DATA",
           {
             accentPhrases: newAccentPhrases,
+            engineKey,
             styleId,
             copyIndexes: changeIndexes,
           }
@@ -1823,6 +1911,11 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         popUntilPause: boolean;
       }
     ) {
+      const engineId = state.audioItems[audioKey].engineId;
+      if (engineId == undefined) throw new Error("engineId != undefined");
+
+      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId != undefined");
 
@@ -1846,6 +1939,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: pureKatakanaWithAccent,
+          engineKey,
           styleId,
           isKana: true,
         }).catch(
@@ -1853,6 +1947,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           () =>
             dispatch("FETCH_ACCENT_PHRASES", {
               text: newPronunciation,
+              engineKey,
               styleId,
               isKana: false,
             })
@@ -1860,6 +1955,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       } else {
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
           text: newPronunciation,
+          engineKey,
           styleId,
         });
       }
@@ -1895,6 +1991,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           "FETCH_AND_COPY_MORA_DATA",
           {
             accentPhrases: newAccentPhrases,
+            engineKey,
             styleId,
             copyIndexes,
           }
@@ -2151,7 +2248,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_CHANGE_STYLE_ID(
       draft,
-      payload: { styleId: number; audioKey: string } & (
+      payload: { engineKey: string; styleId: number; audioKey: string } & (
         | {
             update: "StyleId";
           }

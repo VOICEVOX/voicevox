@@ -177,7 +177,12 @@
 <script lang="ts">
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
+import {
+  CharacterInfo,
+  DefaultStyleId,
+  EngineInfo,
+  StyleInfo,
+} from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
@@ -187,8 +192,12 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
+    engineInfos: {
+      type: Object as PropType<EngineInfo[]>,
+      required: true,
+    },
     characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
+      type: Object as PropType<Record<string, CharacterInfo[]>>,
       required: true,
     },
   },
@@ -203,7 +212,11 @@ export default defineComponent({
 
     // 複数スタイルあるキャラクター
     const multiStyleCharacterInfos = computed(() => {
-      return props.characterInfos.filter(
+      const flattenCharacterInfos = props.engineInfos.flatMap(
+        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
+      );
+
+      return flattenCharacterInfos.filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       );
     });

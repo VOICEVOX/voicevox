@@ -263,7 +263,11 @@ type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_QUERY: {
-    action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
+    action(payload: {
+      text: string;
+      engineKey: string;
+      styleId: number;
+    }): Promise<AudioQuery>;
   };
 
   SET_AUDIO_STYLE_ID: {
@@ -277,6 +281,7 @@ type AudioStoreTypes = {
   FETCH_ACCENT_PHRASES: {
     action(payload: {
       text: string;
+      engineKey: string;
       styleId: number;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
@@ -307,6 +312,7 @@ type AudioStoreTypes = {
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineKey: string;
       styleId: number;
     }): Promise<AccentPhrase[]>;
   };
@@ -314,6 +320,7 @@ type AudioStoreTypes = {
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineKey: string;
       styleId: number;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
@@ -446,12 +453,16 @@ type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { styleId: number; audioKey: string } & (
+    mutation: { engineKey: string; styleId: number; audioKey: string } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: { audioKey: string; styleId: number }): void;
+    action(payload: {
+      audioKey: string;
+      engineKey: string;
+      styleId: number;
+    }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {

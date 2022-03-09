@@ -26,10 +26,6 @@ export default defineComponent({
 
       if (engineId === undefined || styleId === undefined) return undefined;
 
-      const engineInfo = store.state.engineInfos.filter(
-        (engineInfo) => engineInfo.key === engineId
-      ); // FIXME: 暫定的にengineKeyをengineIdとして使う
-
       const flattenCharacterInfos = store.state.engineInfos.flatMap(
         (engineInfo) => store.state.characterInfos[engineInfo.key] || []
       );

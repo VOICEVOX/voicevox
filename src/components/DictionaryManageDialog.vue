@@ -258,7 +258,7 @@ export default defineComponent({
 
     const loadingDictProcess = async () => {
       // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
-      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
+      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応, 暫定的に辞書機能は0番目のエンジンのみを使用する
       if (!engineInfo)
         throw new Error(`No such engineInfo registered: index == 0`);
       loadingDict.value = true;
@@ -381,11 +381,16 @@ export default defineComponent({
         return;
       }
       if (isOnlyHiraOrKana.value && text.length) {
+        const engineKey = engineInfo?.key;
+        if (engineKey === undefined)
+          throw new Error(`assert engineKey !== undefined`);
+
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
         accentPhrase.value = (
           await store.dispatch("FETCH_ACCENT_PHRASES", {
             text: text + "ガ'",
+            engineKey,
             styleId: styleId.value,
             isKana: true,
           })
@@ -407,10 +412,15 @@ export default defineComponent({
 
     const changeAccent = async (_: number, accent: number) => {
       if (accentPhrase.value) {
+        const engineKey = engineInfo?.key;
+        if (engineKey === undefined)
+          throw new Error(`assert engineKey !== undefined`);
+
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
           await store.dispatch("FETCH_MORA_DATA", {
             accentPhrases: [accentPhrase.value],
+            engineKey,
             styleId: styleId.value,
           })
         )[0];

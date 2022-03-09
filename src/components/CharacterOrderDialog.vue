@@ -193,7 +193,7 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, EngineInfo, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterOrderDialog",
@@ -206,8 +206,12 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
+    engineInfos: {
+      type: Object as PropType<EngineInfo[]>,
+      required: true,
+    },
     characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
+      type: Object as PropType<Record<string, CharacterInfo[]>>,
       required: true,
     },
   },
@@ -220,9 +224,15 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
+    const flattenCharacterInfos = computed(() => {
+      return props.engineInfos.flatMap(
+        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
+      );
+    });
+
     const characterInfosMap = computed(() => {
       const map: { [key: string]: CharacterInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
+      flattenCharacterInfos.value.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] = characterInfo;
       });
       return map;
@@ -238,7 +248,7 @@ export default defineComponent({
     // 選択中のスタイル
     const selectedStyleIndexes = ref(
       Object.fromEntries(
-        props.characterInfos.map((characterInfo) => [
+        flattenCharacterInfos.value.map((characterInfo) => [
           characterInfo.metas.speakerUuid,
           0,
         ])
@@ -246,7 +256,7 @@ export default defineComponent({
     );
     const selectedStyles = computed(() => {
       const map: { [key: string]: StyleInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
+      flattenCharacterInfos.value.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] =
           characterInfo.metas.styles[
             selectedStyleIndexes.value[characterInfo.metas.speakerUuid]
@@ -256,7 +266,9 @@ export default defineComponent({
     });
 
     // 選択中のキャラクター
-    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+    const selectedCharacter = ref(
+      flattenCharacterInfos.value[0].metas.speakerUuid
+    ); // FIXME: no character
     const selectCharacter = (speakerUuid: string) => {
       selectedCharacter.value = speakerUuid;
     };
@@ -275,7 +287,7 @@ export default defineComponent({
           // サンプルの順番、新しいキャラクターは上に
           sampleCharacterOrder.value = [
             ...newCharacters.value,
-            ...props.characterInfos
+            ...flattenCharacterInfos.value
               .filter(
                 (info) => !newCharacters.value.includes(info.metas.speakerUuid)
               )
@@ -290,7 +302,7 @@ export default defineComponent({
           );
 
           // 含まれていないキャラクターを足す
-          const notIncludesCharacterInfos = props.characterInfos.filter(
+          const notIncludesCharacterInfos = flattenCharacterInfos.value.filter(
             (characterInfo) =>
               !characterOrder.value.find(
                 (characterInfoInList) =>

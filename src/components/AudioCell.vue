@@ -245,9 +245,10 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (styleId: number) => {
+    const changeStyleId = (engineKey: string, styleId: number) => {
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
+        engineKey,
         styleId,
       });
     };

@@ -129,12 +129,14 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="characterInfos"
+    v-if="engineInfos && characterInfos"
+    :engineInfos="engineInfos"
     :characterInfos="characterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="characterInfos"
+    v-if="engineInfos && characterInfos"
+    :engineInfos="engineInfos"
     :characterInfos="characterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
