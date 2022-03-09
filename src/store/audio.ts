@@ -680,7 +680,7 @@ export const audioStore: VoiceVoxStoreOptions<
       { state, getters, dispatch },
       payload: {
         text?: string;
-        engineKey?: string;
+        engineId?: string;
         styleId?: number;
         presetKey?: string;
         baseAudioItem?: AudioItem;
@@ -697,11 +697,11 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      let engineKey: string | undefined = undefined;
+      let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
 
-      if (payload.engineKey !== undefined && payload.styleId !== undefined) {
-        engineKey = payload.engineKey;
+      if (payload.engineId !== undefined && payload.styleId !== undefined) {
+        engineId = payload.engineId;
         styleId = payload.styleId;
       } else {
         const defaultCharacterInfo: CharacterInfo | undefined =
@@ -725,9 +725,11 @@ export const audioStore: VoiceVoxStoreOptions<
         if (engineInfo === undefined)
           throw new Error(`No engineInfo for defaultStyleId`);
 
-        engineKey = engineInfo.key;
+        engineId = engineInfo.key; // FIXME: 暫定的にengineKey == engineIdとして使う
         styleId = defaultStyleId.defaultStyleId;
       }
+
+      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
 
       const baseAudioItem = payload.baseAudioItem;
 
@@ -741,6 +743,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const audioItem: AudioItem = {
         text,
+        engineId,
         styleId,
       };
       if (query != undefined) {
@@ -2117,7 +2120,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
         if (!getters.USER_ORDERED_CHARACTER_INFOS)
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
-        for (const { text, styleId } of parseTextFile(
+        for (const { text, engineId, styleId } of parseTextFile(
           body,
           state.defaultStyleIds,
           getters.USER_ORDERED_CHARACTER_INFOS
@@ -2127,6 +2130,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           audioItems.push(
             await dispatch("GENERATE_AUDIO_ITEM", {
               text,
+              engineId,
               styleId,
               baseAudioItem,
             })
@@ -2151,10 +2155,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         {
           prevAudioKey,
           texts,
+          engineId,
           styleId,
         }: {
           prevAudioKey: string;
           texts: string[];
+          engineId: string;
           styleId: number;
         }
       ) => {
@@ -2172,6 +2178,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
           const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
             text,
+            engineId,
             styleId,
             baseAudioItem,
             presetKey: basePresetKey,

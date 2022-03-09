@@ -330,9 +330,11 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
+      let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
+        engineId = store.state.audioItems[prevAudioKey].engineId;
         styleId = store.state.audioItems[prevAudioKey].styleId;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
@@ -346,6 +348,7 @@ export default defineComponent({
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+        engineId,
         styleId,
         presetKey,
         baseAudioItem,
@@ -419,10 +422,11 @@ export default defineComponent({
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
 
-      for (const engineInfo of engineInfos.value) {
+      for (const engineInfo of store.state.engineInfos) {
         const engineCharacterInfos: CharacterInfo[] | undefined =
-          characterInfos.value[engineInfo.key];
-        if (engineCharacterInfos === undefined) throw new Error();
+          store.state.characterInfos[engineInfo.key];
+        if (engineCharacterInfos === undefined)
+          throw new Error(`no characterInfos for engine ${engineInfo.key}`);
 
         for (const info of engineCharacterInfos) {
           isUnsetDefaultStyleIds ||=
@@ -616,6 +620,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
+      engineInfos,
       characterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,

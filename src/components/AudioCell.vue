@@ -299,10 +299,17 @@ export default defineComponent({
             await pushAudioText();
           }
 
+          const engineId = audioItem.value.engineId;
+          if (engineId == undefined)
+            throw new Error("assert engineId != undefined");
+
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined) throw new Error("styleId == undefined");
+          if (styleId == undefined)
+            throw new Error("assert styleId != undefined");
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            engineId,
             styleId,
             prevAudioKey,
           });

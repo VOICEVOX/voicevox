@@ -181,6 +181,7 @@ type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
+      engineId?: string;
       styleId?: number;
       presetKey?: string;
       baseAudioItem?: AudioItem;
@@ -591,6 +592,7 @@ type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
+      engineId: string;
       styleId: number;
     }): string[];
   };
