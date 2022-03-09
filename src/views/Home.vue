@@ -129,15 +129,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="engineInfos && characterInfos"
-    :engineInfos="engineInfos"
-    :characterInfos="characterInfos"
+    v-if="flattenCharacterInfos.length > 0"
+    :characterInfos="flattenCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="engineInfos && characterInfos"
-    :engineInfos="engineInfos"
-    :characterInfos="characterInfos"
+    v-if="flattenCharacterInfos.length > 0"
+    :characterInfos="flattenCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -526,8 +524,11 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const engineInfos = computed(() => store.state.engineInfos);
-    const characterInfos = computed(() => store.state.characterInfos);
+    const flattenCharacterInfos = computed(() =>
+      store.state.engineInfos.flatMap(
+        (engineInfo) => store.state.characterInfos[engineInfo.key] ?? []
+      )
+    );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
@@ -620,8 +621,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      engineInfos,
-      characterInfos,
+      flattenCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,

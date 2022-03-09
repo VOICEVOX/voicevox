@@ -1697,7 +1697,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           commit("COMMAND_CHANGE_STYLE_ID", {
             engineKey,
             styleId,
-            audioKey: audioKey,
+            audioKey,
             update: "AccentPhrases",
             accentPhrases: newAccentPhrases,
           });

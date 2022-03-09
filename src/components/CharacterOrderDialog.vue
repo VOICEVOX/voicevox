@@ -206,12 +206,8 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-    engineInfos: {
-      type: Object as PropType<EngineInfo[]>,
-      required: true,
-    },
     characterInfos: {
-      type: Object as PropType<Record<string, CharacterInfo[]>>,
+      type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
@@ -224,15 +220,11 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const flattenCharacterInfos = computed(() => {
-      return props.engineInfos.flatMap(
-        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
-      );
-    });
+    window.electron.logInfo(JSON.stringify(props.characterInfos));
 
     const characterInfosMap = computed(() => {
       const map: { [key: string]: CharacterInfo } = {};
-      flattenCharacterInfos.value.forEach((characterInfo) => {
+      props.characterInfos.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] = characterInfo;
       });
       return map;
@@ -248,7 +240,7 @@ export default defineComponent({
     // 選択中のスタイル
     const selectedStyleIndexes = ref(
       Object.fromEntries(
-        flattenCharacterInfos.value.map((characterInfo) => [
+        props.characterInfos.map((characterInfo) => [
           characterInfo.metas.speakerUuid,
           0,
         ])
@@ -256,7 +248,7 @@ export default defineComponent({
     );
     const selectedStyles = computed(() => {
       const map: { [key: string]: StyleInfo } = {};
-      flattenCharacterInfos.value.forEach((characterInfo) => {
+      props.characterInfos.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] =
           characterInfo.metas.styles[
             selectedStyleIndexes.value[characterInfo.metas.speakerUuid]
@@ -266,9 +258,7 @@ export default defineComponent({
     });
 
     // 選択中のキャラクター
-    const selectedCharacter = ref(
-      flattenCharacterInfos.value[0].metas.speakerUuid
-    ); // FIXME: no character
+    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid); // FIXME: no character
     const selectCharacter = (speakerUuid: string) => {
       selectedCharacter.value = speakerUuid;
     };
@@ -287,7 +277,7 @@ export default defineComponent({
           // サンプルの順番、新しいキャラクターは上に
           sampleCharacterOrder.value = [
             ...newCharacters.value,
-            ...flattenCharacterInfos.value
+            ...props.characterInfos
               .filter(
                 (info) => !newCharacters.value.includes(info.metas.speakerUuid)
               )
@@ -302,7 +292,7 @@ export default defineComponent({
           );
 
           // 含まれていないキャラクターを足す
-          const notIncludesCharacterInfos = flattenCharacterInfos.value.filter(
+          const notIncludesCharacterInfos = props.characterInfos.filter(
             (characterInfo) =>
               !characterOrder.value.find(
                 (characterInfoInList) =>

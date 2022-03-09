@@ -34,6 +34,7 @@
                 "
                 @click="
                   changeStyleId(
+                    characterInfo.metas.speakerUuid,
                     getDefaultStyle(characterInfo.metas.speakerUuid).styleId
                   )
                 "
@@ -89,7 +90,12 @@
                         v-close-popup
                         active-class="selected-character-item"
                         :active="style.styleId === selectedStyle.styleId"
-                        @click="changeStyleId(style.styleId)"
+                        @click="
+                          changeStyleId(
+                            characterInfo.metas.speakerUuid,
+                            style.styleId
+                          )
+                        "
                       >
                         <q-avatar rounded size="2rem" class="q-mr-md">
                           <q-img
@@ -245,7 +251,17 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (engineKey: string, styleId: number) => {
+    const changeStyleId = (speakerUuid: string, styleId: number) => {
+      const engineInfo = store.state.engineInfos.find((engineInfo) =>
+        (store.state.characterInfos[engineInfo.key] ?? []).some(
+          (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
+        )
+      );
+      if (engineInfo === undefined)
+        throw new Error(`No engineInfo for target character style`);
+
+      const engineKey = engineInfo.key;
+
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
         engineKey,

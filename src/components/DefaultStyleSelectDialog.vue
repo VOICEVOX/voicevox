@@ -192,12 +192,8 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
-    engineInfos: {
-      type: Object as PropType<EngineInfo[]>,
-      required: true,
-    },
     characterInfos: {
-      type: Object as PropType<Record<string, CharacterInfo[]>>,
+      type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
@@ -212,11 +208,7 @@ export default defineComponent({
 
     // 複数スタイルあるキャラクター
     const multiStyleCharacterInfos = computed(() => {
-      const flattenCharacterInfos = props.engineInfos.flatMap(
-        (engineInfo) => store.state.characterInfos[engineInfo.key] || []
-      );
-
-      return flattenCharacterInfos.filter(
+      return props.characterInfos.filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       );
     });
