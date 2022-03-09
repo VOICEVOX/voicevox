@@ -193,11 +193,11 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() =>
       userOrderedCharacterInfos.value !== undefined &&
+      audioItem.value.engineId !== undefined &&
       audioItem.value.styleId !== undefined
-        ? userOrderedCharacterInfos.value.find((info) =>
-            info.metas.styles.find(
-              (style) => style.styleId === audioItem.value.styleId
-            )
+        ? store.getters.CHARACTER_INFO(
+            audioItem.value.engineId,
+            audioItem.value.styleId
           )
         : undefined
     );
