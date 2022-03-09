@@ -177,12 +177,7 @@
 <script lang="ts">
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
-import {
-  CharacterInfo,
-  DefaultStyleId,
-  EngineInfo,
-  StyleInfo,
-} from "@/type/preload";
+import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",

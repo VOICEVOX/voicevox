@@ -65,7 +65,7 @@
                 ]"
                 @click="
                   selectCharacter(speakerUuid);
-                  togglePlayOrStop(selectedStyles[speakerUuid], 0);
+                  togglePlayOrStop(speakerUuid, selectedStyles[speakerUuid], 0);
                 "
               >
                 <div class="character-item-inner">
@@ -118,17 +118,14 @@
                   </div>
                   <div class="voice-samples">
                     <q-btn
-                      v-for="voiceSampleIndex of [
-                        ...Array(
-                          selectedStyles[speakerUuid]?.voiceSamplePaths
-                            .length ?? 0
-                        ).keys(),
-                      ]"
+                      v-for="voiceSampleIndex of [...Array(3).keys()]"
                       :key="voiceSampleIndex"
                       round
                       outline
                       :icon="
                         playing != undefined &&
+                        selectedStyles[speakerUuid] != undefined &&
+                        speakerUuid === playing.speakerUuid &&
                         selectedStyles[speakerUuid].styleId ===
                           playing.styleId &&
                         voiceSampleIndex === playing.index
@@ -142,6 +139,7 @@
                       @click.stop="
                         selectCharacter(speakerUuid);
                         togglePlayOrStop(
+                          speakerUuid,
                           selectedStyles[speakerUuid],
                           voiceSampleIndex
                         );
@@ -198,7 +196,7 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
-import { CharacterInfo, EngineInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterOrderDialog",
@@ -320,21 +318,23 @@ export default defineComponent({
     const isHoverableItem = ref(true);
 
     // 音声再生
-    const playing = ref<{ engineId: string; styleId: number; index: number }>();
+    const playing =
+      ref<{ speakerUuid: string; styleId: number; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
     audio.onended = () => stop();
 
     const play = (
-      { engineId, styleId, voiceSamplePaths }: StyleInfo,
+      speakerUuid: string,
+      { styleId, voiceSamplePaths }: StyleInfo,
       index: number
     ) => {
       if (audio.src !== "") stop();
 
       audio.src = voiceSamplePaths[index];
       audio.play();
-      playing.value = { engineId, styleId, index };
+      playing.value = { speakerUuid, styleId, index };
     };
     const stop = () => {
       if (audio.src === "") return;
@@ -345,14 +345,18 @@ export default defineComponent({
     };
 
     // 再生していたら停止、再生していなかったら再生
-    const togglePlayOrStop = (styleInfo: StyleInfo, index: number) => {
+    const togglePlayOrStop = (
+      speakerUuid: string,
+      styleInfo: StyleInfo,
+      index: number
+    ) => {
       if (
         playing.value === undefined ||
-        styleInfo.engineId !== playing.value.engineId ||
+        speakerUuid !== playing.value.speakerUuid ||
         styleInfo.styleId !== playing.value.styleId ||
         index !== playing.value.index
       ) {
-        play(styleInfo, index);
+        play(speakerUuid, styleInfo, index);
       } else {
         stop();
       }
@@ -369,7 +373,7 @@ export default defineComponent({
       // 音声を再生する。同じstyleIndexだったら停止する。
       const selectedStyleInfo =
         characterInfosMap.value[speakerUuid].metas.styles[styleIndex];
-      togglePlayOrStop(selectedStyleInfo, 0);
+      togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
     };
 
     // ドラッグ中かどうか

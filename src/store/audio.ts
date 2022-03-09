@@ -249,6 +249,7 @@ export const audioStore: VoiceVoxStoreOptions<
       }: { engineKey: string; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineKey] = characterInfos;
+      window.electron.logInfo(JSON.stringify(state.characterInfos[engineKey]));
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -598,8 +599,6 @@ export const audioStore: VoiceVoxStoreOptions<
             `No such engineInfo registered: engineKey == ${engineKey}`
           );
 
-        const engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
-
         const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
           action: "speakersSpeakersGet",
@@ -633,7 +632,6 @@ export const audioStore: VoiceVoxStoreOptions<
               return base64ToUrl(voiceSample, "audio/wav");
             });
             styles[i] = {
-              engineId,
               styleName: style.name,
               styleId: style.id,
               iconPath: base64ToUrl(styleInfo.icon, "image/png"),
