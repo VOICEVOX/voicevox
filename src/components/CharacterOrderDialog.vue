@@ -220,8 +220,6 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    window.electron.logInfo(JSON.stringify(props.characterInfos));
-
     const characterInfosMap = computed(() => {
       const map: { [key: string]: CharacterInfo } = {};
       props.characterInfos.forEach((characterInfo) => {

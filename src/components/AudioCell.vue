@@ -258,13 +258,16 @@ export default defineComponent({
         )
       );
       if (engineInfo === undefined)
-        throw new Error(`No engineInfo for target character style`);
+        throw new Error(
+          `No engineInfo for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+        );
 
       const engineKey = engineInfo.key;
+      const engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
 
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
-        engineKey,
+        engineId,
         styleId,
       });
     };

@@ -272,7 +272,7 @@ type AudioStoreTypes = {
   };
 
   SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; styleId: number };
+    mutation: { audioKey: string; engineId: string; styleId: number };
   };
 
   SET_ACCENT_PHRASES: {
@@ -454,14 +454,14 @@ type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineKey: string; styleId: number; audioKey: string } & (
+    mutation: { engineId: string; styleId: number; audioKey: string } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
     action(payload: {
       audioKey: string;
-      engineKey: string;
+      engineId: string;
       styleId: number;
     }): void;
   };

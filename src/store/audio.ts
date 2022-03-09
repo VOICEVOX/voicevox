@@ -435,8 +435,13 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     SET_AUDIO_STYLE_ID(
       state,
-      { audioKey, styleId }: { audioKey: string; styleId: number }
+      {
+        audioKey,
+        engineId,
+        styleId,
+      }: { audioKey: string; engineId: string; styleId: number }
     ) {
+      state.audioItems[audioKey].engineId = engineId;
       state.audioItems[audioKey].styleId = styleId;
     },
     SET_ACCENT_PHRASES(
@@ -1678,10 +1683,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, dispatch, commit },
       {
         audioKey,
-        engineKey,
+        engineId,
         styleId,
-      }: { audioKey: string; engineKey: string; styleId: number }
+      }: { audioKey: string; engineId: string; styleId: number }
     ) {
+      const engineKey = engineId; // FIXME: 暫定
+
       const query = state.audioItems[audioKey].query;
       try {
         if (query !== undefined) {
@@ -1695,7 +1702,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             }
           );
           commit("COMMAND_CHANGE_STYLE_ID", {
-            engineKey,
+            engineId,
             styleId,
             audioKey,
             update: "AccentPhrases",
@@ -1709,7 +1716,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             styleId,
           });
           commit("COMMAND_CHANGE_STYLE_ID", {
-            engineKey,
+            engineId,
             styleId,
             audioKey,
             update: "AudioQuery",
@@ -1718,7 +1725,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         }
       } catch (error) {
         commit("COMMAND_CHANGE_STYLE_ID", {
-          engineKey,
+          engineId,
           styleId,
           audioKey,
           update: "StyleId",
@@ -2255,7 +2262,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_CHANGE_STYLE_ID(
       draft,
-      payload: { engineKey: string; styleId: number; audioKey: string } & (
+      payload: { engineId: string; styleId: number; audioKey: string } & (
         | {
             update: "StyleId";
           }
@@ -2271,6 +2278,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       audioStore.mutations.SET_AUDIO_STYLE_ID(draft, {
         audioKey: payload.audioKey,
+        engineId: payload.engineId,
         styleId: payload.styleId,
       });
       if (payload.update == "AccentPhrases") {
