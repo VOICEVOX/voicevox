@@ -499,6 +499,10 @@ function killEngineAll({
         log.info(
           `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
         );
+
+        if (numEngineProcessKilled === numEngineProcess) {
+          onAllKilled?.();
+        }
       },
     });
   }
