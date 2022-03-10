@@ -1177,7 +1177,7 @@ app.on("before-quit", (event) => {
   killEngineAll({
     onFirstKillStart: () => {
       // executed synchronously to cancel before-quit event
-      log.info("Interrupt app quit to kill ENGINE");
+      log.info("Interrupt app quit to kill ENGINE processes");
       event.preventDefault();
     },
     onAllKilled: () => {
