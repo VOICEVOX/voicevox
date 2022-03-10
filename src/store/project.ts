@@ -212,7 +212,7 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (baseVersionIsLow(appVersionList, [0, 11, 0])) {
+          if (baseVersionIsLow(appVersionList, [0, 12, 0])) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.engineId === undefined) {
