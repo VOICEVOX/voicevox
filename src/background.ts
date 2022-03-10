@@ -1181,12 +1181,12 @@ app.on("before-quit", (event) => {
       event.preventDefault();
     },
     onAllKilled: () => {
-      // executed asynchronously to catch all process closed event
-      log.info("All ENGINE killed. Quitting app");
+      // executed asynchronously
+      log.info("All ENGINE process killed. Quitting app");
       app.quit(); // attempt to quit app again
     },
     onError: (engineKey, message) => {
-      console.error(
+      log.error(
         `ENGINE ${engineKey}: Error during killing process: ${message}`
       );
     },
