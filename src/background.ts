@@ -1189,7 +1189,7 @@ app.on("before-quit", (event) => {
   const { anyProcessKillStarted, processKillPromises } = killEngineAll();
 
   // すべてのエンジンプロセスが停止している
-  if (! anyProcessKillStarted) {
+  if (!anyProcessKillStarted) {
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1222,7 +1222,9 @@ app.on("before-quit", (event) => {
     }
 
     // アプリケーションの終了を再試行する
-    log.info("All ENGINE process kill operations done. Attempting to quit app again");
+    log.info(
+      "All ENGINE process kill operations done. Attempting to quit app again"
+    );
     app.quit();
   })();
 });
