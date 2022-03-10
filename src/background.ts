@@ -1200,7 +1200,7 @@ app.on("before-quit", (event) => {
   log.info("Interrupt app quit to kill ENGINE processes");
   event.preventDefault();
 
-  const numEngineProcess = processKillPromises.length;
+  const numEngineProcess = processKillPromises.length; // assert == engineProcessContainers.length
   let numEngineProcessKilled = 0;
 
   // 非同期的にすべてのエンジンプロセスをキル
