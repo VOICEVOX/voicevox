@@ -515,6 +515,8 @@ function killEngine({
   onKilled?: VoidFunction;
   onError?: (error: unknown) => void;
 }) {
+  // この関数では、結果を通知するためonKilledまたはonErrorを同期または非同期で必ず呼び出さなければならない
+
   const engineProcessContainer = engineProcessContainers[engineKey];
   if (!engineProcessContainer) {
     onError?.(`No such engineProcessContainer: key == ${engineKey}`);
