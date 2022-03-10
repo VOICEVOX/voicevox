@@ -499,10 +499,19 @@ export default defineComponent({
   width: 180px;
   height: 100%;
 
+  display: flex;
+  flex-direction: column;
+
   .character-order {
+    flex: 1;
+
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    height: 100%;
+
+    overflow-y: auto;
+
     .character-order-item {
       border-radius: 10px;
       border: 2px solid colors.$display-light;
