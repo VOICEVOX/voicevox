@@ -488,7 +488,18 @@ function killEngineAll({
           onAllKilled?.();
         }
       },
-      onError: (message) => onError?.(engineKey, message),
+      onError: (message) => {
+        onError?.(engineKey, message);
+
+        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなして次のエンジンプロセスをキルする
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${engineKey}: process kill errored, but assume to have been killed`
+        );
+        log.info(
+          `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        );
+      },
     });
   }
 }
@@ -514,6 +525,7 @@ function killEngine({
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
     log.info(`ENGINE ${engineKey}: Process not started`);
+    onKilled?.();
     return;
   }
 
@@ -543,6 +555,7 @@ function killEngine({
     }
   } else {
     log.info(`ENGINE ${engineKey}: Process already closed`);
+    onKilled?.();
   }
 }
 
