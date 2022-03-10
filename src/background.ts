@@ -34,6 +34,7 @@ import {
   AcceptTermsStatus,
   ToolbarSetting,
   ActivePointScrollMode,
+  EngineInfo,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -73,15 +74,27 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-// 設定
+// .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
 const envPath = path.join(appDirPath, ".env");
 dotenv.config({ path: envPath });
+
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 const isMac = process.platform === "darwin";
+
+const engineInfos: EngineInfo[] = (() => {
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+
+  if (defaultEngineInfosEnv) {
+    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  }
+
+  return [];
+})();
+
 const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
@@ -179,6 +192,7 @@ const store = new Store<{
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
   experimentalSetting: ExperimentalSetting;
@@ -250,6 +264,13 @@ const store = new Store<{
       },
       default: defaultToolbarButtonSetting,
     },
+    userCharacterOrder: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: [],
+    },
     defaultStyleIds: {
       type: "array",
       items: {
@@ -306,15 +327,10 @@ const store = new Store<{
           type: "boolean",
           default: false,
         },
-        enableReorderCell: {
-          type: "boolean",
-          default: false,
-        },
       },
       default: {
         enablePreset: false,
         enableInterrogativeUpspeak: false,
-        enableReorderCell: false,
       },
     },
     acceptRetrieveTelemetry: {
@@ -335,6 +351,19 @@ const store = new Store<{
 let willQuitEngine = false;
 let engineProcess: ChildProcess;
 async function runEngine() {
+  const engineInfo = engineInfos[0]; // TODO: 複数エンジン対応
+  if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
+
+  if (!engineInfo.executionEnabled) {
+    log.info("Skipped engineInfo execution: disabled");
+    return;
+  }
+
+  if (!engineInfo.executionFilePath) {
+    log.info("Skipped engineInfo execution: empty executionFilePath");
+    return;
+  }
+
   willQuitEngine = false;
 
   // 最初のエンジンモード
@@ -363,7 +392,7 @@ async function runEngine() {
   // エンジンプロセスの起動
   const enginePath = path.resolve(
     appDirPath,
-    process.env.ENGINE_PATH ?? "run.exe"
+    engineInfo.executionFilePath ?? "run.exe"
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
@@ -394,6 +423,49 @@ async function runEngine() {
       );
     }
   });
+}
+
+function killEngine({
+  onKillStart,
+  onKilled,
+  onError,
+}: {
+  onKillStart?: VoidFunction;
+  onKilled?: VoidFunction;
+  onError?: (error: unknown) => void;
+}) {
+  if (engineProcess == undefined) {
+    // nop if no process started (already killed or not started yet)
+    log.info(`ENGINE process not started`);
+    return;
+  }
+
+  // considering the case that ENGINE process killed after checking process status
+  engineProcess.once("close", () => {
+    log.info("ENGINE process closed");
+    onKilled?.();
+  });
+
+  log.info(
+    `ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+  );
+
+  const engineNotExited = engineProcess.exitCode === null;
+  const engineNotKilled = engineProcess.signalCode === null;
+
+  if (engineNotExited && engineNotKilled) {
+    log.info(`Killing ENGINE process (PID=${engineProcess.pid})...`);
+    onKillStart?.();
+
+    willQuitEngine = true;
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error: unknown) {
+      onError?.(error);
+    }
+  } else {
+    log.info("ENGINE process already closed");
+  }
 }
 
 async function restartEngine() {
@@ -617,8 +689,29 @@ async function createWindow() {
   });
 }
 
-if (!isDevelopment) {
-  Menu.setApplicationMenu(null);
+const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
+  {
+    label: "VOICEVOX",
+    submenu: [{ role: "quit" }],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "selectAll" },
+    ],
+  },
+];
+
+// For macOS, set the native menu to enable shortcut keys such as 'Cmd + V'.
+if (isMac) {
+  Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplateForMac));
+} else {
+  if (!isDevelopment) {
+    Menu.setApplicationMenu(null);
+  }
 }
 
 // プロセス間通信
@@ -809,6 +902,11 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
 
+ipcMainHandle("ENGINE_INFOS", () => {
+  // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
+  return engineInfos;
+});
+
 /**
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
@@ -883,6 +981,14 @@ ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
   return store.get("presets");
 });
 
+ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
+  return store.get("userCharacterOrder");
+});
+
+ipcMainHandle("SET_USER_CHARACTER_ORDER", (_, userCharacterOrder) => {
+  store.set("userCharacterOrder", userCharacterOrder);
+});
+
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   const defaultStyleIds = store.get("defaultStyleIds");
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
@@ -953,32 +1059,22 @@ app.on("before-quit", (event) => {
     return;
   }
 
-  // considering the case that ENGINE process killed after checking process status
-  engineProcess.once("close", () => {
-    log.info("ENGINE killed. Quitting app");
-    app.quit(); // attempt to quit app again
-  });
-
-  log.info(
-    `Quitting app (ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
-  );
-
-  const engineNotExited = engineProcess.exitCode === null;
-  const engineNotKilled = engineProcess.signalCode === null;
-
-  if (engineNotExited && engineNotKilled) {
-    log.info("Killing ENGINE before app quit");
-    event.preventDefault();
-
-    log.info(`Killing ENGINE (PID=${engineProcess.pid})...`);
-    willQuitEngine = true;
-    try {
-      engineProcess.pid != undefined && treeKill(engineProcess.pid);
-    } catch (error: unknown) {
-      log.error("engine kill error");
+  killEngine({
+    onKillStart: () => {
+      // executed synchronously to cancel before-quit event
+      log.info("Interrupt app quit to kill ENGINE");
+      event.preventDefault();
+    },
+    onKilled: () => {
+      // executed asynchronously to catch process closed event
+      log.info("ENGINE killed. Quitting app");
+      app.quit(); // attempt to quit app again
+    },
+    onError: (error: unknown) => {
+      log.error("Error during killing ENGINE process");
       log.error(error);
-    }
-  }
+    },
+  });
 });
 
 app.on("activate", () => {

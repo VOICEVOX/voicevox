@@ -184,6 +184,10 @@ const api: Sandbox = {
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
+  engineInfos: () => {
+    return ipcRendererInvoke("ENGINE_INFOS");
+  },
+
   restartEngine: () => {
     return ipcRendererInvoke("RESTART_ENGINE");
   },
@@ -210,6 +214,14 @@ const api: Sandbox = {
 
   toolbarSetting: (newData) => {
     return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
+  },
+
+  getUserCharacterOrder: async () => {
+    return await ipcRendererInvoke("GET_USER_CHARACTER_ORDER");
+  },
+
+  setUserCharacterOrder: async (userCharacterOrder) => {
+    await ipcRendererInvoke("SET_USER_CHARACTER_ORDER", userCharacterOrder);
   },
 
   isUnsetDefaultStyleId: async (speakerUuid: string) => {

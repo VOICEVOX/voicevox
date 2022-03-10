@@ -10,4 +10,6 @@ export * from './Speaker';
 export * from './SpeakerInfo';
 export * from './SpeakerStyle';
 export * from './StyleInfo';
+export * from './SupportedDevicesInfo';
+export * from './UserDictWord';
 export * from './ValidationError';

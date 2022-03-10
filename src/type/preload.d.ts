@@ -56,6 +56,7 @@ export interface Sandbox {
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
+  engineInfos(): Promise<EngineInfo[]>;
   restartEngine(): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -66,6 +67,8 @@ export interface Sandbox {
     presetItems: Record<string, Preset>;
     presetKeys: string[];
   }): Promise<PresetConfig>;
+  getUserCharacterOrder(): Promise<string[]>;
+  setUserCharacterOrder(userCharacterOrder: string[]): Promise<void>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultStyleIds(): Promise<DefaultStyleId[]>;
   setDefaultStyleIds(
@@ -150,6 +153,13 @@ export type DefaultStyleId = {
 export type HotkeySetting = {
   action: HotkeyAction;
   combination: HotkeyCombo;
+};
+
+export type EngineInfo = {
+  key: string;
+  host: string;
+  executionEnabled: boolean;
+  executionFilePath: string;
 };
 
 export type Preset = {
@@ -249,5 +259,4 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
-  enableReorderCell: boolean;
 };

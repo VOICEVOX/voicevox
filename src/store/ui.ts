@@ -9,7 +9,7 @@ import {
   UiStoreState,
   VoiceVoxStoreOptions,
 } from "./type";
-import { ActivePointScrollMode } from "@/type/preload";
+import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -37,9 +37,11 @@ export const uiStoreState: UiStoreState = {
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
+  isCharacterOrderDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
+  isDictionaryManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -96,6 +98,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ) {
         state.isToolbarSettingDialogOpen = isToolbarSettingDialogOpen;
       },
+      IS_CHARACTER_ORDER_DIALOG_OPEN(
+        state,
+        { isCharacterOrderDialogOpen }: { isCharacterOrderDialogOpen: boolean }
+      ) {
+        state.isCharacterOrderDialogOpen = isCharacterOrderDialogOpen;
+      },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
         {
@@ -103,6 +111,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }: { isDefaultStyleSelectDialogOpen: boolean }
       ) {
         state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
+      },
+      IS_DICTIONARY_MANAGE_DIALOG_OPEN(
+        state,
+        {
+          isDictionaryManageDialogOpen,
+        }: { isDictionaryManageDialogOpen: boolean }
+      ) {
+        state.isDictionaryManageDialogOpen = isDictionaryManageDialogOpen;
       },
       IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
         state,
@@ -116,6 +132,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       SET_USE_GPU(state, { useGpu }: { useGpu: boolean }) {
         state.useGpu = useGpu;
+      },
+      SET_ENGINE_INFOS(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
+        state.engineInfos = engineInfos;
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -240,6 +259,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       ON_VUEX_READY() {
         window.electron.vuexReady();
       },
+      async IS_CHARACTER_ORDER_DIALOG_OPEN(
+        { state, commit },
+        { isCharacterOrderDialogOpen }
+      ) {
+        if (state.isCharacterOrderDialogOpen === isCharacterOrderDialogOpen)
+          return;
+
+        if (isCharacterOrderDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
+
+        commit("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen,
+        });
+      },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         { state, commit },
         { isDefaultStyleSelectDialogOpen }
@@ -260,6 +298,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen,
+        });
+      },
+      async IS_DICTIONARY_MANAGE_DIALOG_OPEN(
+        { state, commit },
+        { isDictionaryManageDialogOpen }
+      ) {
+        if (state.isDictionaryManageDialogOpen === isDictionaryManageDialogOpen)
+          return;
+
+        if (isDictionaryManageDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
+
+        commit("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+          isDictionaryManageDialogOpen,
         });
       },
       async IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN(
@@ -300,6 +357,11 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.useGpu(useGpu),
+        });
+      },
+      async GET_ENGINE_INFOS({ commit }) {
+        commit("SET_ENGINE_INFOS", {
+          engineInfos: await window.electron.engineInfos(),
         });
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {
