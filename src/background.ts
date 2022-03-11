@@ -1173,17 +1173,24 @@ app.on("before-quit", (event) => {
     return;
   }
 
+  let anyKillStart = false;
+
   log.info("Checking ENGINE status before app quit");
   killEngineAll({
     onFirstKillStart: () => {
+      anyKillStart = true;
+
       // executed synchronously to cancel before-quit event
       log.info("Interrupt app quit to kill ENGINE processes");
       event.preventDefault();
     },
     onAllKilled: () => {
       // executed asynchronously
-      log.info("All ENGINE process killed. Quitting app");
-      app.quit(); // attempt to quit app again
+      if (anyKillStart) {
+        log.info("All ENGINE process killed. Quitting app");
+        app.quit(); // attempt to quit app again
+      }
+      // else: before-quit event is not cancelled
     },
     onError: (engineKey, message) => {
       log.error(
