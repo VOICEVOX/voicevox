@@ -7,6 +7,7 @@ import {
   ProjectMutations,
   VoiceVoxStoreOptions,
 } from "@/store/type";
+import semver from "semver";
 import { buildProjectFileName } from "./utility";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -108,18 +109,22 @@ export const projectStore: VoiceVoxStoreOptions<
                 " The appVersion of the project file should be string"
             );
           }
-          const appVersionList = versionTextParse(obj.appVersion);
-          const nowAppInfo = await window.electron.getAppInfos();
-          const nowAppVersionList = versionTextParse(nowAppInfo.version);
-          if (appVersionList == null || nowAppVersionList == null) {
+          const projectAppVersion: string = obj.appVersion;
+          if (!semver.valid(projectAppVersion)) {
             throw new Error(
               projectFileErrorMsg +
-                ' An invalid appVersion format. The appVersion should be in the format "%d.%d.%d'
+                ` The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`
             );
           }
 
+          const semverSatisfiesOptions: semver.Options = {
+            includePrerelease: true,
+          };
+
           // Migration
-          if (baseVersionIsLow(appVersionList, [0, 4, 0])) {
+          if (
+            semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
+          ) {
             for (const audioItemsKey in obj.audioItems) {
               if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
                 obj.audioItems[audioItemsKey].characterIndex =
@@ -138,7 +143,9 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (baseVersionIsLow(appVersionList, [0, 5, 0])) {
+          if (
+            semver.satisfies(projectAppVersion, "<0.5", semverSatisfiesOptions)
+          ) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.query != null) {
@@ -184,7 +191,9 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (baseVersionIsLow(appVersionList, [0, 7, 0])) {
+          if (
+            semver.satisfies(projectAppVersion, "<0.7", semverSatisfiesOptions)
+          ) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.characterIndex != null) {
@@ -201,7 +210,9 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
-          if (baseVersionIsLow(appVersionList, [0, 8, 0])) {
+          if (
+            semver.satisfies(projectAppVersion, "<0.8", semverSatisfiesOptions)
+          ) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.speaker !== null) {
@@ -401,31 +412,3 @@ interface ProjectType {
   audioKeys: string[];
   audioItems: Record<string, AudioItem>;
 }
-
-export type VersionType = [number, number, number];
-
-export const versionTextParse = (
-  appVersionText: string
-): VersionType | undefined => {
-  const textArray = appVersionText.split(".");
-  if (textArray.length !== 3) return undefined;
-  const appVersion = textArray.map(Number) as VersionType;
-  if (!appVersion.every((item) => Number.isInteger(item))) return undefined;
-  return appVersion;
-};
-
-export const baseVersionIsLow = (
-  base: VersionType,
-  target: VersionType
-): boolean => {
-  let result = false;
-  for (let i = 0; i < 3; i++) {
-    if (base[i] > target[i]) {
-      break;
-    } else if (base[i] < target[i]) {
-      result = true;
-      break;
-    }
-  }
-  return result;
-};

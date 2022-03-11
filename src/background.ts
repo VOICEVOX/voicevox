@@ -488,7 +488,22 @@ function killEngineAll({
           onAllKilled?.();
         }
       },
-      onError: (message) => onError?.(engineKey, message),
+      onError: (message) => {
+        onError?.(engineKey, message);
+
+        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなして次のエンジンプロセスをキルする
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${engineKey}: process kill errored, but assume to have been killed`
+        );
+        log.info(
+          `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        );
+
+        if (numEngineProcessKilled === numEngineProcess) {
+          onAllKilled?.();
+        }
+      },
     });
   }
 }
@@ -504,6 +519,8 @@ function killEngine({
   onKilled?: VoidFunction;
   onError?: (error: unknown) => void;
 }) {
+  // この関数では、呼び出し元に結果を通知するためonKilledまたはonErrorを同期または非同期で必ず呼び出さなければならない
+
   const engineProcessContainer = engineProcessContainers[engineKey];
   if (!engineProcessContainer) {
     onError?.(`No such engineProcessContainer: key == ${engineKey}`);
@@ -514,6 +531,7 @@ function killEngine({
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
     log.info(`ENGINE ${engineKey}: Process not started`);
+    onKilled?.();
     return;
   }
 
@@ -543,6 +561,7 @@ function killEngine({
     }
   } else {
     log.info(`ENGINE ${engineKey}: Process already closed`);
+    onKilled?.();
   }
 }
 
@@ -1154,20 +1173,27 @@ app.on("before-quit", (event) => {
     return;
   }
 
+  let anyKillStart = false;
+
   log.info("Checking ENGINE status before app quit");
   killEngineAll({
     onFirstKillStart: () => {
+      anyKillStart = true;
+
       // executed synchronously to cancel before-quit event
-      log.info("Interrupt app quit to kill ENGINE");
+      log.info("Interrupt app quit to kill ENGINE processes");
       event.preventDefault();
     },
     onAllKilled: () => {
-      // executed asynchronously to catch all process closed event
-      log.info("All ENGINE killed. Quitting app");
-      app.quit(); // attempt to quit app again
+      // executed asynchronously
+      if (anyKillStart) {
+        log.info("All ENGINE process killed. Quitting app");
+        app.quit(); // attempt to quit app again
+      }
+      // else: before-quit event is not cancelled
     },
     onError: (engineKey, message) => {
-      console.error(
+      log.error(
         `ENGINE ${engineKey}: Error during killing process: ${message}`
       );
     },
