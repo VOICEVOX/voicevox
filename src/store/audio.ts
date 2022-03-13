@@ -653,7 +653,7 @@ export const audioStore: VoiceVoxStoreOptions<
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
 
-      // TODO: 接続先のエンジンがREADYであることを判定する
+      // TODO: GENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加し、IS_ENGINE_READY(engineKey)で個別のエンジンが起動していることを判定するように変更する
       const query = getters.IS_ALL_ENGINE_READY
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
