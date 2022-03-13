@@ -239,7 +239,11 @@ export const audioStore: VoiceVoxStoreOptions<
         engineState,
       }: { engineKey: string; engineState: EngineState }
     ) {
-      state.engineStates[engineKey] = engineState;
+      const engineStates: Record<string, EngineState> = JSON.parse(
+        JSON.stringify(state.engineStates)
+      );
+      engineStates[engineKey] = engineState;
+      state.engineStates = engineStates;
     },
     SET_CHARACTER_INFOS(
       state,
@@ -248,8 +252,11 @@ export const audioStore: VoiceVoxStoreOptions<
         characterInfos,
       }: { engineKey: string; characterInfos: CharacterInfo[] }
     ) {
-      state.characterInfos[engineKey] = characterInfos;
-      window.electron.logInfo(JSON.stringify(state.characterInfos[engineKey]));
+      const allCharacterInfos: Record<string, CharacterInfo[]> = JSON.parse(
+        JSON.stringify(state.characterInfos)
+      );
+      allCharacterInfos[engineKey] = characterInfos;
+      state.characterInfos = allCharacterInfos;
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -586,6 +593,9 @@ export const audioStore: VoiceVoxStoreOptions<
     ),
     LOAD_CHARACTER_ALL: createUILockAction(async ({ state, dispatch }) => {
       for (const engineInfo of state.engineInfos) {
+        window.electron.logInfo(
+          `Load CharacterInfo from engine ${engineInfo.key}`
+        );
         await dispatch("LOAD_CHARACTER", { engineKey: engineInfo.key });
       }
     }),
