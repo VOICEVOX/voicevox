@@ -701,10 +701,12 @@ export const audioStore: VoiceVoxStoreOptions<
       const text = payload.text ?? "";
 
       let engineId: string | undefined = undefined;
+      let engineKey: string | undefined = undefined;
       let styleId: number | undefined = undefined;
 
       if (payload.engineId !== undefined && payload.styleId !== undefined) {
         engineId = payload.engineId;
+        engineKey = payload.engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
         styleId = payload.styleId;
       } else {
         const defaultCharacterInfo: CharacterInfo | undefined =
@@ -719,20 +721,29 @@ export const audioStore: VoiceVoxStoreOptions<
         ); // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
         if (defaultStyleId === undefined) throw new Error(`No defaultStyleId`);
 
-        const engineInfo = state.engineInfos.find((engineInfo) =>
+        // 最初に一致するspeakerUuidをもつengineInfoを使用する
+        // FIXME: 同一のengineIdを持つ複数のengineKeyが存在する場合の処理
+        const firstMatchEngineInfo = state.engineInfos.find((engineInfo) =>
           (state.characterInfos[engineInfo.key] ?? []).some(
             (characterInfo) =>
               characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid
           )
         );
-        if (engineInfo === undefined)
+        if (firstMatchEngineInfo === undefined)
           throw new Error(`No engineInfo for defaultStyleId`);
 
-        engineId = engineInfo.key; // FIXME: 暫定的にengineKey == engineIdとして使う
+        engineKey = firstMatchEngineInfo.key;
+        engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
         styleId = defaultStyleId.defaultStyleId;
       }
 
-      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey != undefined`);
+
+      if (engineId === undefined)
+        throw new Error(`assert engineId != undefined`);
+
+      if (styleId === undefined) throw new Error(`assert styleId != undefined`);
 
       const baseAudioItem = payload.baseAudioItem;
 
