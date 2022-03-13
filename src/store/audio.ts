@@ -643,6 +643,8 @@ export const audioStore: VoiceVoxStoreOptions<
       const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
+
+      const engineKey = state.engineInfos[0].key; // FIXME: 複数エンジン対応: 暫定的に0番目のみ想定。GENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加するように変更
       const styleId =
         payload.styleId ??
         state.defaultStyleIds[
@@ -653,8 +655,7 @@ export const audioStore: VoiceVoxStoreOptions<
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
 
-      // TODO: GENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加し、IS_ENGINE_READY(engineKey)で個別のエンジンが起動していることを判定するように変更する
-      const query = getters.IS_ALL_ENGINE_READY
+      const query = getters.IS_ENGINE_READY(engineKey)
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
             styleId,
