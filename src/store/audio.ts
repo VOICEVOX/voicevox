@@ -644,7 +644,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      const engineKey = state.engineInfos[0].key; // FIXME: 複数エンジン対応: 暫定的に0番目のみ想定。GENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加するように変更
+      const engineKey = state.engineInfos[0].key; // TODO: 複数エンジン対応: 暫定的に0番目のみ想定。GENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加するように変更
       const styleId =
         payload.styleId ??
         state.defaultStyleIds[
