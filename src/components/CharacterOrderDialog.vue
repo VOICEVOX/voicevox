@@ -228,6 +228,9 @@ export default defineComponent({
       props.characterInfos.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] = characterInfo;
       });
+      window.electron.logInfo(
+        `Computed characterInfosMap: ${Object.keys(map)}`
+      );
       return map;
     });
 
@@ -350,6 +353,10 @@ export default defineComponent({
       styleInfo: StyleInfo,
       index: number
     ) => {
+      window.electron.logInfo(speakerUuid);
+      window.electron.logInfo(index);
+      window.electron.logInfo(JSON.stringify(styleInfo));
+
       if (
         playing.value === undefined ||
         speakerUuid !== playing.value.speakerUuid ||

@@ -524,11 +524,15 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const flattenCharacterInfos = computed(() =>
-      store.state.engineInfos.flatMap(
-        (engineInfo) => store.state.characterInfos[engineInfo.key] ?? []
-      )
-    );
+    const flattenCharacterInfos = computed(() => {
+      const engineInfos = store.state.engineInfos;
+      const characterInfos = store.state.characterInfos;
+      const a = engineInfos.flatMap(
+        (engineInfo) => characterInfos[engineInfo.key] ?? []
+      );
+      window.electron.logInfo(`Computing flattenCharacterInfos ${a.length}`);
+      return a;
+    });
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
