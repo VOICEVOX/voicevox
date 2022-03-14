@@ -252,7 +252,7 @@ export default defineComponent({
     });
 
     // 選択中のキャラクター
-    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid); // FIXME: no character
+    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
     const selectCharacter = (speakerUuid: string) => {
       selectedCharacter.value = speakerUuid;
     };
