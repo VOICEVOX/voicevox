@@ -71,7 +71,9 @@
                 <div class="character-item-inner">
                   <img
                     :src="
-                      characterInfosMap[speakerUuid].metas.styles[0].iconPath
+                      characterInfosMap[speakerUuid].metas.styles[
+                        selectedStyleIndexes.value[speakerUuid] ?? 0
+                      ].iconPath
                     "
                     class="style-icon"
                   />
