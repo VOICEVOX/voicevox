@@ -132,6 +132,8 @@
                           outline
                           :icon="
                             playing != undefined &&
+                            characterInfo.metas.speakerUuid ===
+                              playing.speakerUuid &&
                             style.styleId === playing.styleId &&
                             voiceSampleIndex === playing.index
                               ? 'stop'
@@ -143,6 +145,8 @@
                           @mouseleave="isHoverableStyleItem = true"
                           @click.stop="
                             playing != undefined &&
+                            characterInfo.metas.speakerUuid ===
+                              playing.speakerUuid &&
                             style.styleId === playing.styleId &&
                             voiceSampleIndex === playing.index
                               ? stop()
@@ -266,15 +270,16 @@ export default defineComponent({
       selectedStyleIndexes.value[characterIndex] = styleIndex;
 
       // 音声を再生する。同じstyleIndexだったら停止する。
-      const selectedStyleInfo =
-        showCharacterInfos.value[characterIndex].metas.styles[styleIndex];
+      const selectedCharacter = showCharacterInfos.value[characterIndex];
+      const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
       if (
         playing.value !== undefined &&
+        playing.value.speakerUuid === selectedCharacter.metas.speakerUuid &&
         playing.value.styleId === selectedStyleInfo.styleId
       ) {
         stop();
       } else {
-        play(selectedStyleInfo, 0);
+        play(selectedCharacter.metas.speakerUuid, selectedStyleInfo, 0);
       }
     };
 
@@ -282,7 +287,8 @@ export default defineComponent({
 
     const isHoverableStyleItem = ref(true);
 
-    const playing = ref<{ styleId: number; index: number }>();
+    const playing =
+      ref<{ speakerUuid: string; styleId: number; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
@@ -293,12 +299,16 @@ export default defineComponent({
       return selectedStyleIndex !== undefined;
     });
 
-    const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
+    const play = (
+      speakerUuid: string,
+      { styleId, voiceSamplePaths }: StyleInfo,
+      index: number
+    ) => {
       if (audio.src !== "") stop();
 
       audio.src = voiceSamplePaths[index];
       audio.play();
-      playing.value = { styleId, index };
+      playing.value = { speakerUuid, styleId, index };
     };
     const stop = () => {
       if (audio.src === "") return;
