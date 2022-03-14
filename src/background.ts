@@ -369,7 +369,7 @@ async function runEngine(engineKey: string) {
     (engineInfo) => engineInfo.key === engineKey
   );
   if (!engineInfo)
-    throw new Error(`No such engineInfo registered: key == ${engineKey}`);
+    throw new Error(`No such engineInfo registered: engineKey == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
     log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
