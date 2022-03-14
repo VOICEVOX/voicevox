@@ -93,7 +93,7 @@
 
             <div class="row q-pl-md q-mt-md">
             <div class="text-h5">単語登録</div>
-            <div class="row q-pl-md accent-desc">単語は全角と半角は区別しません。</div>
+            <div class="row q-pl-md">単語は全角と半角は区別しません。</div>
               <div class="text-h6">単語</div>
               <q-input
                 ref="surfaceInput"
