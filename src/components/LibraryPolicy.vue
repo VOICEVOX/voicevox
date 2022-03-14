@@ -45,7 +45,11 @@ export default defineComponent({
     const store = useStore();
     const md = useMarkdownIt();
 
-    const characterInfos = computed(() => store.state.characterInfos);
+    const flattenCharacterInfos = computed(() =>
+      store.state.engineInfos.flatMap(
+        (engineInfo) => store.state.characterInfos[engineInfo.key] ?? []
+      )
+    );
 
     const convertMarkdown = (text: string) => {
       return md.render(text);
@@ -62,7 +66,7 @@ export default defineComponent({
     };
 
     return {
-      characterInfos,
+      characterInfos: flattenCharacterInfos,
       convertMarkdown,
       selectCharacterInfIndex,
       detailIndex,
