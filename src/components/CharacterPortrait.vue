@@ -8,7 +8,6 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { getCharacterInfo } from "@/store/audio";
 
 export default defineComponent({
   name: "CharacterPortrait",
