@@ -65,7 +65,7 @@
                 ]"
                 @click="
                   selectCharacter(speakerUuid);
-                  togglePlayOrStop(selectedStyles[speakerUuid], 0);
+                  togglePlayOrStop(speakerUuid, selectedStyles[speakerUuid], 0);
                 "
               >
                 <div class="character-item-inner">
@@ -124,6 +124,8 @@
                       outline
                       :icon="
                         playing != undefined &&
+                        selectedStyles[speakerUuid] != undefined &&
+                        speakerUuid === playing.speakerUuid &&
                         selectedStyles[speakerUuid].styleId ===
                           playing.styleId &&
                         voiceSampleIndex === playing.index
@@ -137,6 +139,7 @@
                       @click.stop="
                         selectCharacter(speakerUuid);
                         togglePlayOrStop(
+                          speakerUuid,
                           selectedStyles[speakerUuid],
                           voiceSampleIndex
                         );
@@ -236,21 +239,14 @@ export default defineComponent({
     const sampleCharacterOrder = ref<string[]>([]);
 
     // 選択中のスタイル
-    const selectedStyleIndexes = ref(
-      Object.fromEntries(
-        props.characterInfos.map((characterInfo) => [
-          characterInfo.metas.speakerUuid,
-          0,
-        ])
-      )
-    );
+    const selectedStyleIndexes = ref<Record<string, number>>({});
     const selectedStyles = computed(() => {
       const map: { [key: string]: StyleInfo } = {};
       props.characterInfos.forEach((characterInfo) => {
+        const selectedStyleIndex: number | undefined =
+          selectedStyleIndexes.value[characterInfo.metas.speakerUuid];
         map[characterInfo.metas.speakerUuid] =
-          characterInfo.metas.styles[
-            selectedStyleIndexes.value[characterInfo.metas.speakerUuid]
-          ];
+          characterInfo.metas.styles[selectedStyleIndex ?? 0];
       });
       return map;
     });
@@ -315,18 +311,23 @@ export default defineComponent({
     const isHoverableItem = ref(true);
 
     // 音声再生
-    const playing = ref<{ styleId: number; index: number }>();
+    const playing =
+      ref<{ speakerUuid: string; styleId: number; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
     audio.onended = () => stop();
 
-    const play = ({ styleId, voiceSamplePaths }: StyleInfo, index: number) => {
+    const play = (
+      speakerUuid: string,
+      { styleId, voiceSamplePaths }: StyleInfo,
+      index: number
+    ) => {
       if (audio.src !== "") stop();
 
       audio.src = voiceSamplePaths[index];
       audio.play();
-      playing.value = { styleId, index };
+      playing.value = { speakerUuid, styleId, index };
     };
     const stop = () => {
       if (audio.src === "") return;
@@ -337,13 +338,18 @@ export default defineComponent({
     };
 
     // 再生していたら停止、再生していなかったら再生
-    const togglePlayOrStop = (styleInfo: StyleInfo, index: number) => {
+    const togglePlayOrStop = (
+      speakerUuid: string,
+      styleInfo: StyleInfo,
+      index: number
+    ) => {
       if (
         playing.value === undefined ||
+        speakerUuid !== playing.value.speakerUuid ||
         styleInfo.styleId !== playing.value.styleId ||
         index !== playing.value.index
       ) {
-        play(styleInfo, index);
+        play(speakerUuid, styleInfo, index);
       } else {
         stop();
       }
@@ -353,14 +359,17 @@ export default defineComponent({
     const rollStyleIndex = (speakerUuid: string, diff: number) => {
       // 0 <= index <= length に収める
       const length = characterInfosMap.value[speakerUuid].metas.styles.length;
-      let styleIndex = selectedStyleIndexes.value[speakerUuid] + diff;
+      const selectedStyleIndex: number | undefined =
+        selectedStyleIndexes.value[speakerUuid];
+
+      let styleIndex = (selectedStyleIndex ?? 0) + diff;
       styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
       selectedStyleIndexes.value[speakerUuid] = styleIndex;
 
       // 音声を再生する。同じstyleIndexだったら停止する。
       const selectedStyleInfo =
         characterInfosMap.value[speakerUuid].metas.styles[styleIndex];
-      togglePlayOrStop(selectedStyleInfo, 0);
+      togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
     };
 
     // ドラッグ中かどうか
