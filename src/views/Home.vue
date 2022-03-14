@@ -527,11 +527,9 @@ export default defineComponent({
     const flattenCharacterInfos = computed(() => {
       const engineInfos = store.state.engineInfos;
       const characterInfos = store.state.characterInfos;
-      const a = engineInfos.flatMap(
+      return engineInfos.flatMap(
         (engineInfo) => characterInfos[engineInfo.key] ?? []
       );
-      window.electron.logInfo(`Computing flattenCharacterInfos ${a.length}`);
-      return a;
     });
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>

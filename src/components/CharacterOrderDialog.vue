@@ -228,9 +228,6 @@ export default defineComponent({
       props.characterInfos.forEach((characterInfo) => {
         map[characterInfo.metas.speakerUuid] = characterInfo;
       });
-      window.electron.logInfo(
-        `Computed characterInfosMap: ${Object.keys(map)}`
-      );
       return map;
     });
 
@@ -242,21 +239,14 @@ export default defineComponent({
     const sampleCharacterOrder = ref<string[]>([]);
 
     // 選択中のスタイル
-    const selectedStyleIndexes = ref(
-      Object.fromEntries(
-        props.characterInfos.map((characterInfo) => [
-          characterInfo.metas.speakerUuid,
-          0,
-        ])
-      )
-    );
+    const selectedStyleIndexes = ref<Record<string, number>>({});
     const selectedStyles = computed(() => {
       const map: { [key: string]: StyleInfo } = {};
       props.characterInfos.forEach((characterInfo) => {
+        const selectedStyleIndex: number | undefined =
+          selectedStyleIndexes.value[characterInfo.metas.speakerUuid];
         map[characterInfo.metas.speakerUuid] =
-          characterInfo.metas.styles[
-            selectedStyleIndexes.value[characterInfo.metas.speakerUuid]
-          ];
+          characterInfo.metas.styles[selectedStyleIndex ?? 0];
       });
       return map;
     });
@@ -353,10 +343,6 @@ export default defineComponent({
       styleInfo: StyleInfo,
       index: number
     ) => {
-      window.electron.logInfo(speakerUuid);
-      window.electron.logInfo(index);
-      window.electron.logInfo(JSON.stringify(styleInfo));
-
       if (
         playing.value === undefined ||
         speakerUuid !== playing.value.speakerUuid ||
@@ -373,7 +359,10 @@ export default defineComponent({
     const rollStyleIndex = (speakerUuid: string, diff: number) => {
       // 0 <= index <= length に収める
       const length = characterInfosMap.value[speakerUuid].metas.styles.length;
-      let styleIndex = selectedStyleIndexes.value[speakerUuid] + diff;
+      const selectedStyleIndex: number | undefined =
+        selectedStyleIndexes.value[speakerUuid];
+
+      let styleIndex = (selectedStyleIndex ?? 0) + diff;
       styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
       selectedStyleIndexes.value[speakerUuid] = styleIndex;
 
