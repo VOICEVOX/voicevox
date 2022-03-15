@@ -90,6 +90,7 @@
 
           <!-- 右側のpane -->
           <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
+          ※単語は全角と半角は区別しません。
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <q-input
@@ -118,9 +119,6 @@
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
               </q-input>
-            </div>
-            <div class="row q-pl-md accent-desc">
-              ※単語は全角と半角は区別しません。
             </div>
             <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
             <div class="row q-pl-md accent-desc">
