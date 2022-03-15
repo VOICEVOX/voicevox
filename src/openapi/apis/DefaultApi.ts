@@ -42,6 +42,9 @@ import {
     UserDictWord,
     UserDictWordFromJSON,
     UserDictWordToJSON,
+    WordTypes,
+    WordTypesFromJSON,
+    WordTypesToJSON,
 } from '../models';
 
 export interface AccentPhrasesAccentPhrasesPostRequest {
@@ -55,6 +58,8 @@ export interface AddUserDictWordUserDictWordPostRequest {
     surface: string;
     pronunciation: string;
     accentType: number;
+    wordType?: WordTypes;
+    priority?: number;
 }
 
 export interface AudioQueryAudioQueryPostRequest {
@@ -72,6 +77,7 @@ export interface AudioQueryFromPresetAudioQueryFromPresetPostRequest {
 export interface CancellableSynthesisCancellableSynthesisPostRequest {
     speaker: number;
     audioQuery: AudioQuery;
+    coreVersion?: string;
 }
 
 export interface ConnectWavesConnectWavesPostRequest {
@@ -80,6 +86,33 @@ export interface ConnectWavesConnectWavesPostRequest {
 
 export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
     wordUuid: string;
+}
+
+export interface GuidedAccentPhraseGuidedAccentPhrasePostRequest {
+    text: string;
+    speaker: number;
+    isKana: boolean;
+    audioFile: Blob;
+    normalize: boolean;
+    coreVersion?: string;
+}
+
+export interface GuidedSynthesisGuidedSynthesisPostRequest {
+    kana: string;
+    speakerId: number;
+    normalize: boolean;
+    audioFile: Blob;
+    stereo: boolean;
+    sampleRate: number;
+    volumeScale: number;
+    pitchScale: number;
+    speedScale: number;
+    coreVersion?: string;
+}
+
+export interface ImportUserDictWordsImportUserDictPostRequest {
+    override: boolean;
+    requestBody: { [key: string]: UserDictWord; };
 }
 
 export interface MoraDataMoraDataPostRequest {
@@ -111,6 +144,8 @@ export interface RewriteUserDictWordUserDictWordWordUuidPutRequest {
     surface: string;
     pronunciation: string;
     accentType: number;
+    wordType?: WordTypes;
+    priority?: number;
 }
 
 export interface SpeakerInfoSpeakerInfoGetRequest {
@@ -168,11 +203,13 @@ export interface DefaultApiInterface {
     accentPhrasesAccentPhrasesPost(requestParameters: AccentPhrasesAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
 
     /**
-     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
+     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * @summary Add User Dict Word
      * @param {string} surface 
      * @param {string} pronunciation 
      * @param {number} accentType 
+     * @param {WordTypes} [wordType] 
+     * @param {number} [priority] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
@@ -180,7 +217,7 @@ export interface DefaultApiInterface {
     addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>>;
 
     /**
-     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
+     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
     addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string>;
@@ -226,6 +263,7 @@ export interface DefaultApiInterface {
      * @summary 音声合成する（キャンセル可能）
      * @param {number} speaker 
      * @param {AudioQuery} audioQuery 
+     * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
@@ -314,6 +352,69 @@ export interface DefaultApiInterface {
     getUserDictWordsUserDictGet(initOverrides?: RequestInit): Promise<{ [key: string]: UserDictWord; }>;
 
     /**
+     * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
+     * @summary Create Accent Phrase from External Audio
+     * @param {string} text 
+     * @param {number} speaker 
+     * @param {boolean} isKana 
+     * @param {Blob} audioFile 
+     * @param {boolean} normalize 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+
+    /**
+     * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
+     * Create Accent Phrase from External Audio
+     */
+    guidedAccentPhraseGuidedAccentPhrasePost(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+
+    /**
+     * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
+     * @summary Audio synthesis guided by external audio and phonemes
+     * @param {string} kana 
+     * @param {number} speakerId 
+     * @param {boolean} normalize 
+     * @param {Blob} audioFile 
+     * @param {boolean} stereo 
+     * @param {number} sampleRate 
+     * @param {number} volumeScale 
+     * @param {number} pitchScale 
+     * @param {number} speedScale 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>>;
+
+    /**
+     * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
+     * Audio synthesis guided by external audio and phonemes
+     */
+    guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<any>;
+
+    /**
+     * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
+     * @summary Import User Dict Words
+     * @param {boolean} override 
+     * @param {{ [key: string]: UserDictWord; }} requestBody 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
+
+    /**
+     * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
+     * Import User Dict Words
+     */
+    importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<void>;
+
+    /**
      * 
      * @summary アクセント句から音高・音素長を得る
      * @param {number} speaker 
@@ -382,12 +483,14 @@ export interface DefaultApiInterface {
     multiSynthesisMultiSynthesisPost(requestParameters: MultiSynthesisMultiSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob>;
 
     /**
-     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID
+     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * @summary Rewrite User Dict Word
      * @param {string} wordUuid 
      * @param {string} surface 
      * @param {string} pronunciation 
      * @param {number} accentType 
+     * @param {WordTypes} [wordType] 
+     * @param {number} [priority] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
@@ -395,7 +498,7 @@ export interface DefaultApiInterface {
     rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>>;
 
     /**
-     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID
+     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
     rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<void>;
@@ -559,7 +662,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
+     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
     async addUserDictWordUserDictWordPostRaw(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<string>> {
@@ -589,6 +692,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             queryParameters['accent_type'] = requestParameters.accentType;
         }
 
+        if (requestParameters.wordType !== undefined) {
+            queryParameters['word_type'] = requestParameters.wordType;
+        }
+
+        if (requestParameters.priority !== undefined) {
+            queryParameters['priority'] = requestParameters.priority;
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
@@ -602,7 +713,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す）
+     * ユーザ辞書に言葉を追加します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Add User Dict Word
      */
     async addUserDictWordUserDictWordPost(requestParameters: AddUserDictWordUserDictWordPostRequest, initOverrides?: RequestInit): Promise<string> {
@@ -722,6 +833,10 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         if (requestParameters.speaker !== undefined) {
             queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -893,6 +1008,258 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     async getUserDictWordsUserDictGet(initOverrides?: RequestInit): Promise<{ [key: string]: UserDictWord; }> {
         const response = await this.getUserDictWordsUserDictGetRaw(initOverrides);
         return await response.value();
+    }
+
+    /**
+     * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
+     * Create Accent Phrase from External Audio
+     */
+    async guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
+        if (requestParameters.text === null || requestParameters.text === undefined) {
+            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        }
+
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        }
+
+        if (requestParameters.isKana === null || requestParameters.isKana === undefined) {
+            throw new runtime.RequiredError('isKana','Required parameter requestParameters.isKana was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        }
+
+        if (requestParameters.audioFile === null || requestParameters.audioFile === undefined) {
+            throw new runtime.RequiredError('audioFile','Required parameter requestParameters.audioFile was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        }
+
+        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
+            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters.text !== undefined) {
+            formParams.append('text', requestParameters.text as any);
+        }
+
+        if (requestParameters.speaker !== undefined) {
+            formParams.append('speaker', requestParameters.speaker as any);
+        }
+
+        if (requestParameters.isKana !== undefined) {
+            formParams.append('is_kana', requestParameters.isKana as any);
+        }
+
+        if (requestParameters.audioFile !== undefined) {
+            formParams.append('audio_file', requestParameters.audioFile as any);
+        }
+
+        if (requestParameters.normalize !== undefined) {
+            formParams.append('normalize', requestParameters.normalize as any);
+        }
+
+        const response = await this.request({
+            path: `/guided_accent_phrase`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
+    }
+
+    /**
+     * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
+     * Create Accent Phrase from External Audio
+     */
+    async guidedAccentPhraseGuidedAccentPhrasePost(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+        const response = await this.guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
+     * Audio synthesis guided by external audio and phonemes
+     */
+    async guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters.kana === null || requestParameters.kana === undefined) {
+            throw new runtime.RequiredError('kana','Required parameter requestParameters.kana was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.speakerId === null || requestParameters.speakerId === undefined) {
+            throw new runtime.RequiredError('speakerId','Required parameter requestParameters.speakerId was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
+            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.audioFile === null || requestParameters.audioFile === undefined) {
+            throw new runtime.RequiredError('audioFile','Required parameter requestParameters.audioFile was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.stereo === null || requestParameters.stereo === undefined) {
+            throw new runtime.RequiredError('stereo','Required parameter requestParameters.stereo was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.sampleRate === null || requestParameters.sampleRate === undefined) {
+            throw new runtime.RequiredError('sampleRate','Required parameter requestParameters.sampleRate was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.volumeScale === null || requestParameters.volumeScale === undefined) {
+            throw new runtime.RequiredError('volumeScale','Required parameter requestParameters.volumeScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.pitchScale === null || requestParameters.pitchScale === undefined) {
+            throw new runtime.RequiredError('pitchScale','Required parameter requestParameters.pitchScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.speedScale === null || requestParameters.speedScale === undefined) {
+            throw new runtime.RequiredError('speedScale','Required parameter requestParameters.speedScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters.kana !== undefined) {
+            formParams.append('kana', requestParameters.kana as any);
+        }
+
+        if (requestParameters.speakerId !== undefined) {
+            formParams.append('speaker_id', requestParameters.speakerId as any);
+        }
+
+        if (requestParameters.normalize !== undefined) {
+            formParams.append('normalize', requestParameters.normalize as any);
+        }
+
+        if (requestParameters.audioFile !== undefined) {
+            formParams.append('audio_file', requestParameters.audioFile as any);
+        }
+
+        if (requestParameters.stereo !== undefined) {
+            formParams.append('stereo', requestParameters.stereo as any);
+        }
+
+        if (requestParameters.sampleRate !== undefined) {
+            formParams.append('sample_rate', requestParameters.sampleRate as any);
+        }
+
+        if (requestParameters.volumeScale !== undefined) {
+            formParams.append('volume_scale', requestParameters.volumeScale as any);
+        }
+
+        if (requestParameters.pitchScale !== undefined) {
+            formParams.append('pitch_scale', requestParameters.pitchScale as any);
+        }
+
+        if (requestParameters.speedScale !== undefined) {
+            formParams.append('speed_scale', requestParameters.speedScale as any);
+        }
+
+        const response = await this.request({
+            path: `/guided_synthesis`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        }, initOverrides);
+
+        return new runtime.TextApiResponse(response) as any;
+    }
+
+    /**
+     * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
+     * Audio synthesis guided by external audio and phonemes
+     */
+    async guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<any> {
+        const response = await this.guidedSynthesisGuidedSynthesisPostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
+     * Import User Dict Words
+     */
+    async importUserDictWordsImportUserDictPostRaw(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
+        if (requestParameters.override === null || requestParameters.override === undefined) {
+            throw new runtime.RequiredError('override','Required parameter requestParameters.override was null or undefined when calling importUserDictWordsImportUserDictPost.');
+        }
+
+        if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
+            throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling importUserDictWordsImportUserDictPost.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.override !== undefined) {
+            queryParameters['override'] = requestParameters.override;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/import_user_dict`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: requestParameters.requestBody,
+        }, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
+     * Import User Dict Words
+     */
+    async importUserDictWordsImportUserDictPost(requestParameters: ImportUserDictWordsImportUserDictPostRequest, initOverrides?: RequestInit): Promise<void> {
+        await this.importUserDictWordsImportUserDictPostRaw(requestParameters, initOverrides);
     }
 
     /**
@@ -1076,7 +1443,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID
+     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
     async rewriteUserDictWordUserDictWordWordUuidPutRaw(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<void>> {
@@ -1110,6 +1477,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             queryParameters['accent_type'] = requestParameters.accentType;
         }
 
+        if (requestParameters.wordType !== undefined) {
+            queryParameters['word_type'] = requestParameters.wordType;
+        }
+
+        if (requestParameters.priority !== undefined) {
+            queryParameters['priority'] = requestParameters.priority;
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
@@ -1123,7 +1498,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID
+     * ユーザ辞書に登録されている言葉を更新します。  Parameters ---------- surface : str     言葉の表層形 pronunciation: str     言葉の発音（カタカナ） accent_type: int     アクセント型（音が下がる場所を指す） word_uuid: str     更新する言葉のUUID word_type: str, optional     固有名詞、普通名詞、動詞、形容詞、語尾のいずれか priority: int, optional     単語の優先度（0から10までの整数）     数字が大きいほど優先度が高くなる     1から9までの値を指定することを推奨
      * Rewrite User Dict Word
      */
     async rewriteUserDictWordUserDictWordWordUuidPut(requestParameters: RewriteUserDictWordUserDictWordWordUuidPutRequest, initOverrides?: RequestInit): Promise<void> {

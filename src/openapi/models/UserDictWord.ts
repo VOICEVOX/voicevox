@@ -33,6 +33,12 @@ export interface UserDictWord {
     cost: number;
     /**
      * 
+     * @type {number}
+     * @memberof UserDictWord
+     */
+    contextId?: number;
+    /**
+     * 
      * @type {string}
      * @memberof UserDictWord
      */
@@ -117,6 +123,7 @@ export function UserDictWordFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'surface': json['surface'],
         'cost': json['cost'],
+        'contextId': !exists(json, 'context_id') ? undefined : json['context_id'],
         'partOfSpeech': json['part_of_speech'],
         'partOfSpeechDetail1': json['part_of_speech_detail_1'],
         'partOfSpeechDetail2': json['part_of_speech_detail_2'],
@@ -143,6 +150,7 @@ export function UserDictWordToJSON(value?: UserDictWord | null): any {
         
         'surface': value.surface,
         'cost': value.cost,
+        'context_id': value.contextId,
         'part_of_speech': value.partOfSpeech,
         'part_of_speech_detail_1': value.partOfSpeechDetail1,
         'part_of_speech_detail_2': value.partOfSpeechDetail2,

@@ -13,3 +13,4 @@ export * from './StyleInfo';
 export * from './SupportedDevicesInfo';
 export * from './UserDictWord';
 export * from './ValidationError';
+export * from './WordTypes';

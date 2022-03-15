@@ -14,5 +14,6 @@ models/StyleInfo.ts
 models/SupportedDevicesInfo.ts
 models/UserDictWord.ts
 models/ValidationError.ts
+models/WordTypes.ts
 models/index.ts
 runtime.ts

@@ -31,6 +31,12 @@ export interface SupportedDevicesInfo {
      * @memberof SupportedDevicesInfo
      */
     cuda: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof SupportedDevicesInfo
+     */
+    dml: boolean;
 }
 
 export function SupportedDevicesInfoFromJSON(json: any): SupportedDevicesInfo {
@@ -45,6 +51,7 @@ export function SupportedDevicesInfoFromJSONTyped(json: any, ignoreDiscriminator
         
         'cpu': json['cpu'],
         'cuda': json['cuda'],
+        'dml': json['dml'],
     };
 }
 
@@ -59,6 +66,7 @@ export function SupportedDevicesInfoToJSON(value?: SupportedDevicesInfo | null):
         
         'cpu': value.cpu,
         'cuda': value.cuda,
+        'dml': value.dml,
     };
 }
 
