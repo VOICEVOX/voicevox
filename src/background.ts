@@ -327,10 +327,15 @@ const store = new Store<{
           type: "boolean",
           default: false,
         },
+        enableGuided: {
+          type: "boolean",
+          default: false,
+        },
       },
       default: {
         enablePreset: false,
         enableInterrogativeUpspeak: false,
+        enableGuided: false,
       },
     },
     acceptRetrieveTelemetry: {

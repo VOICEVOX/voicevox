@@ -415,6 +415,26 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>Guided Synthesis</div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableGuided"
+                  @update:model-value="
+                    changeExperimentalSetting('enableGuided', $event)
+                  "
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    Synthesis referencing an external audio source
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>

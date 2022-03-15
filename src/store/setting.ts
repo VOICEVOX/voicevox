@@ -44,6 +44,7 @@ export const settingStoreState: SettingStoreState = {
   experimentalSetting: {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
+    enableGuided: false,
   },
 };
 

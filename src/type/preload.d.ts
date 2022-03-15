@@ -259,4 +259,5 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+  enableGuided: boolean;
 };

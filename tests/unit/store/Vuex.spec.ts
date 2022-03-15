@@ -77,6 +77,7 @@ describe("store/vuex.js test", () => {
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
+          enableGuided: false,
         },
       },
       getters: {
@@ -168,5 +169,6 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.equal(store.state.experimentalSetting.enableGuided, false);
   });
 });
