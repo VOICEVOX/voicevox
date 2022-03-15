@@ -90,7 +90,7 @@
 
           <!-- 右側のpane -->
           <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
-          <div class="row q-pl-md q-mt-md accent-desc">
+          <div class="row q-pl-md accent-desc">
             全角表示となりますが単語は全角と半角は区別しません。
             </div>
             <div class="row q-pl-md q-mt-md">
