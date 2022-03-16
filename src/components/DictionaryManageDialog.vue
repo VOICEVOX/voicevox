@@ -102,7 +102,7 @@
                 dense
                 :disable="uiLocked"
               />
-              <div class="text-h6">全角表示となりますが単語は全角と半角は区別しません。</div>
+              全角表示となりますが単語は全角と半角は区別しません。
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
