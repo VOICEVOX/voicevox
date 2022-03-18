@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "0.0.0",
+  "version": "999.999.999",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
@@ -39,6 +39,7 @@
     "lodash.debounce": "4.0.8",
     "markdown-it": "12.0.4",
     "quasar": "2.3.4",
+    "semver": "7.3.5",
     "source-map-support": "0.5.19",
     "systeminformation": "5.8.0",
     "tree-kill": "1.2.2",
@@ -57,6 +58,7 @@
     "@types/markdown-it": "12.2.0",
     "@types/mocha": "5.2.7",
     "@types/mousetrap": "1.6.8",
+    "@types/semver": "7.3.9",
     "@types/uuid": "8.3.0",
     "@typescript-eslint/eslint-plugin": "4.24.0",
     "@typescript-eslint/parser": "4.24.0",

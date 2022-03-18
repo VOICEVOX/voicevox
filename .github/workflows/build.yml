@@ -14,8 +14,8 @@ env:
   VOICEVOX_ENGINE_VERSION: 0.11.4
   VOICEVOX_RESOURCE_VERSION: 0.11.4
   VOICEVOX_EDITOR_VERSION:
-    |- # releaseのときはタグが、それ以外は0.0.0がバージョン名に
-    ${{ github.event.release.tag_name != '' && github.event.release.tag_name || '0.0.0' }}
+    |- # releaseのときはタグが、それ以外は999.999.999がバージョン名に
+    ${{ github.event.release.tag_name != '' && github.event.release.tag_name || '999.999.999' }}
 
 jobs:
   build-noengine-prepackage:
@@ -94,7 +94,7 @@ jobs:
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-          "${{ matrix.sed_name }}" -i 's/"version": "0.0.0"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
+          "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
       #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
@@ -572,7 +572,7 @@ jobs:
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
-          "${{ matrix.sed_name }}" -i 's/"version": "0.0.0"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
+          "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
         uses: actions/download-artifact@v2
