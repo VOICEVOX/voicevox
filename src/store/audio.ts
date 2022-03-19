@@ -68,26 +68,28 @@ function parseTextFile(
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
-  {
-    const uuid2StyleIds = new Map<string, number>();
-    for (const defaultStyleId of defaultStyleIds) {
-      const speakerUuid = defaultStyleId.speakerUuid;
-      const styleId = defaultStyleId.defaultStyleId;
-      uuid2StyleIds.set(speakerUuid, styleId);
-    }
-    for (const characterInfo of userOrderedCharacterInfos) {
-      const uuid = characterInfo.metas.speakerUuid;
-      const styleId =
-        uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
-      const speakerName = characterInfo.metas.speakerName;
-      characters.set(speakerName, styleId);
-    }
+  const uuid2StyleIds = new Map<string, number>();
+  for (const defaultStyleId of defaultStyleIds) {
+    const speakerUuid = defaultStyleId.speakerUuid;
+    const styleId = defaultStyleId.defaultStyleId;
+    uuid2StyleIds.set(speakerUuid, styleId);
+  }
+  for (const characterInfo of userOrderedCharacterInfos) {
+    const uuid = characterInfo.metas.speakerUuid;
+    const styleId = uuid2StyleIds.get(uuid);
+    const speakerName = characterInfo.metas.speakerName;
+    if (styleId == undefined)
+      throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
+    characters.set(speakerName, styleId);
   }
   if (!characters.size) return [];
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = userOrderedCharacterInfos[0].metas.styles[0].styleId;
+  let lastStyleId = uuid2StyleIds.get(
+    userOrderedCharacterInfos[0].metas.speakerUuid
+  );
+  if (lastStyleId == undefined) throw new Error(`lastStyleId is undefined.`);
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splittedText);
     if (styleId !== undefined) {
