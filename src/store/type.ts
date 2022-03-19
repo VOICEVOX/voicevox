@@ -1080,7 +1080,7 @@ type DictionaryStoreTypes = {
       accentType: number;
     }): Promise<void>;
   };
-  REWIRTE_WORD: {
+  REWRITE_WORD: {
     action(payload: {
       wordUuid: string;
       surface: string;

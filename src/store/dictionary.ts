@@ -66,7 +66,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       }).then(toDispatchResponse("addUserDictWordUserDictWordPost"));
     },
 
-    REWIRTE_WORD: async (
+    REWRITE_WORD: async (
       { state, dispatch },
       { wordUuid, surface, pronunciation, accentType }
     ) => {

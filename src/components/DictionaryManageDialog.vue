@@ -479,7 +479,7 @@ export default defineComponent({
       const accent = computeRegisteredAccent();
       if (selectedId.value) {
         try {
-          await store.dispatch("REWIRTE_WORD", {
+          await store.dispatch("REWRITE_WORD", {
             wordUuid: selectedId.value,
             surface: surface.value,
             pronunciation: yomi.value,
