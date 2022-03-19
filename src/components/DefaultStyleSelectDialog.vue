@@ -269,7 +269,7 @@ export default defineComponent({
     const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
       selectedStyleIndexes.value[characterIndex] = styleIndex;
 
-      // 音声を再生する。同じstyleIndexだったら停止する。
+      // 音声を再生する。同じ話者/styleIndexだったら停止する。
       const selectedCharacter = showCharacterInfos.value[characterIndex];
       const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
       if (
