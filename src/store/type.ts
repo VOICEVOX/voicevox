@@ -1064,8 +1064,8 @@ export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
 export type PresetActions = StoreType<PresetStoreTypes, "action">;
 
 /*
-  Dictionary Store Types
-*/
+ * Dictionary Store Types
+ */
 
 export type DictionaryStoreState = Record<string, unknown>;
 
