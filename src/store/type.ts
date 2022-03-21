@@ -25,6 +25,7 @@ import {
   Preset,
   ActivePointScrollMode,
   EngineInfo,
+  GuidedInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -34,6 +35,7 @@ export type AudioItem = {
   styleId?: number;
   query?: AudioQuery;
   presetKey?: string;
+  guidedInfo?: GuidedInfo;
 };
 
 export type AudioState = {
@@ -277,6 +279,26 @@ type AudioStoreTypes = {
       data: number;
       type: MoraDataType;
     };
+  };
+
+  SET_AUDIO_GUIDED_INFO: {
+    mutation: {
+      audioKey: string;
+      guidedInfo: GuidedInfo;
+    };
+    action(payload: { audioKey: string; guidedInfo: GuidedInfo }): void;
+  };
+
+  FLUSH_GUIDED: {
+    action(payload: { audioKey: string }): boolean;
+  };
+
+  GUIDED_SYNTHESIS: {
+    action(payload: { audioKey: string }): void;
+  };
+
+  GUIDED_ACCENT_PHRASE: {
+    action(payload: { audioKey: string }): Promise<AccentPhrase[] | void>;
   };
 
   APPLY_AUDIO_PRESET: {

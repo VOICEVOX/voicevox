@@ -96,6 +96,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showOpenAudioDialog: ({ title }) => {
+    return ipcRendererInvoke("SHOW_OPEN_AUDIO_DIALOG", { title });
+  },
+
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
@@ -277,6 +281,10 @@ const api: Sandbox = {
 
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
+  },
+
+  externalAudio: (path, blob) => {
+    return ipcRenderer.invoke("EXTERNAL_AUDIO", { path, blob });
   },
 };
 

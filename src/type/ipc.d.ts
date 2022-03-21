@@ -59,6 +59,10 @@ type IpcIHData = {
     return?: string;
   };
 
+  SHOW_OPEN_AUDIO_DIALOG: {
+    args: [obj: { title: string; properties: string[] }];
+  };
+
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
@@ -270,6 +274,11 @@ type IpcIHData = {
   ON_VUEX_READY: {
     args: [];
     return: void;
+  };
+
+  EXTERNAL_AUDIO: {
+    args: [obj: { path: string; blob?: Blob }];
+    return: Uint8Array | void;
   };
 };
 

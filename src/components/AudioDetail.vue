@@ -211,6 +211,98 @@
           </template>
         </div>
       </div>
+      <div class="side" v-if="enableGuided">
+        <div class="detail-selector">
+          <q-tabs vertical @update:model-value="() => {}" dense>
+            <q-tab
+              icon="timeline"
+              :disable="uiLocked"
+              @click="setGuidedInfo('enabled', !guidedInfo.enabled)"
+              :class="getGuidedStyle(guidedInfo.enabled)"
+            >
+              <q-tooltip
+                :delay="500"
+                anchor="center left"
+                self="center right"
+                transition-show="jump-left"
+                transition-hide="jump-right"
+              >
+                Toggle guided view
+              </q-tooltip>
+            </q-tab>
+            <span v-if="guidedInfo.enabled">
+              <q-tab
+                icon="source"
+                :disable="uiLocked"
+                @click="isGuidedDialogOpen = true"
+                class="bg-background text-display"
+              >
+                <q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                >
+                  Audio Source
+                </q-tooltip>
+              </q-tab>
+              <q-tab
+                icon="autorenew"
+                :disable="uiLocked"
+                @click="flushGuided"
+                class="bg-background text-display"
+              >
+                <q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                >
+                  Flush
+                </q-tooltip>
+              </q-tab>
+              <q-tab
+                icon="compress"
+                :disable="uiLocked"
+                @click="setGuidedInfo('normalize', !guidedInfo?.normalize)"
+                :class="getGuidedStyle(guidedInfo.normalize)"
+              >
+                <q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                >
+                  Normalize
+                </q-tooltip>
+              </q-tab>
+              <q-tab
+                icon="layers"
+                :disable="uiLocked"
+                @click="setGuidedInfo('precise', !guidedInfo?.precise)"
+                :class="getGuidedStyle(guidedInfo.precise)"
+              >
+                <q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                >
+                  Precise Mode
+                </q-tooltip>
+              </q-tab>
+            </span>
+          </q-tabs>
+        </div>
+      </div>
+      <guided-source-dialog
+        v-model="isGuidedDialogOpen"
+        :activeAudioKey="activeAudioKey"
+      />
     </div>
   </div>
 </template>
@@ -231,12 +323,18 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
+import GuidedSourceDialog from "./GuidedSourceDialog.vue";
+import {
+  GuidedInfo,
+  HotkeyAction,
+  HotkeyReturnType,
+  MoraDataType,
+} from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter },
+  components: { AudioAccent, AudioParameter, GuidedSourceDialog },
 
   name: "AudioDetail",
 
@@ -292,6 +390,80 @@ export default defineComponent({
     const selectedDetail = ref<DetailTypes>("accent");
     const selectDetail = (index: number) => {
       selectedDetail.value = index === 0 ? "accent" : "pitch";
+    };
+
+    // experiemental setting
+    const enableGuided = computed(
+      () => store.state.experimentalSetting.enableGuided
+    );
+
+    // guided
+    const guidedInfo = computed(() => {
+      if (audioItem.value.guidedInfo === undefined) {
+        setGuidedInfo("enabled", false);
+      }
+      return audioItem.value.guidedInfo;
+    });
+
+    const isGuidedDialogOpen = ref(false);
+
+    const setGuidedInfo = (key: keyof GuidedInfo, data: boolean | string) => {
+      if (guidedInfo.value === undefined) {
+        let newGuidedInfo: GuidedInfo = {
+          enabled: false,
+          audioPath: "",
+          normalize: false,
+          precise: false,
+        };
+        store.dispatch("SET_AUDIO_GUIDED_INFO", {
+          audioKey: props.activeAudioKey,
+          guidedInfo: { ...newGuidedInfo, [key]: data },
+        });
+      } else {
+        store.dispatch("SET_AUDIO_GUIDED_INFO", {
+          audioKey: props.activeAudioKey,
+          guidedInfo: { ...guidedInfo.value, [key]: data },
+        });
+      }
+    };
+
+    const getGuidedStyle = (condition: boolean) => {
+      if (condition) return "bg-primary text-display";
+      else return "bg-background text-display";
+    };
+
+    const flushGuided = () => {
+      if (guidedInfo.value === undefined) {
+        // show a dialog for not defining it
+        setGuidedInfo("enabled", false);
+      } else {
+        const exists = store.dispatch("CHECK_FILE_EXISTS", {
+          file: guidedInfo.value.audioPath,
+        });
+        exists.then((value) => {
+          if (value)
+            store.dispatch("FLUSH_GUIDED", { audioKey: props.activeAudioKey });
+          else
+            $q.dialog({
+              title: "File doesn't exist",
+              message: "The configured external audio file doesn't exist",
+              ok: {
+                label: "Open audio source dialog",
+                flat: true,
+                textColor: "display-dark",
+                backgroundColor: "primary-light",
+              },
+              cancel: {
+                label: "Cancel",
+                flat: true,
+                textColor: "display",
+                backgroundColor: "primary-light",
+              },
+            }).onOk(() => {
+              isGuidedDialogOpen.value = true;
+            });
+        });
+      }
     };
 
     // accent phrase
@@ -743,6 +915,12 @@ export default defineComponent({
       shiftKeyFlag,
       handleChangeVoicing,
       audioDetail,
+      enableGuided,
+      guidedInfo,
+      setGuidedInfo,
+      getGuidedStyle,
+      flushGuided,
+      isGuidedDialogOpen,
     };
   },
 });

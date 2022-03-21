@@ -381,6 +381,16 @@ const audioQuerySchema = {
   },
 } as const;
 
+const guidedInfoSchema = {
+  properties: {
+    enabled: { type: "boolean" },
+    audioPath: { type: "string" },
+    normalize: { type: "boolean" },
+    precise: { type: "boolean" },
+  },
+  optionalProperties: {},
+} as const;
+
 const audioItemSchema = {
   properties: {
     text: { type: "string" },
@@ -389,6 +399,7 @@ const audioItemSchema = {
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },
+    guidedInfo: guidedInfoSchema,
   },
 } as const;
 

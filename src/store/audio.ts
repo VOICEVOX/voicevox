@@ -1,4 +1,10 @@
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import {
+  AudioQuery,
+  AccentPhrase,
+  Speaker,
+  SpeakerInfo,
+  AccentPhraseToJSON,
+} from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -23,6 +29,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  GuidedInfo,
   MoraDataType,
   StyleInfo,
 } from "@/type/preload";
@@ -464,6 +471,12 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
       }
+    },
+    SET_AUDIO_GUIDED_INFO(
+      state,
+      { audioKey, guidedInfo }: { audioKey: string; guidedInfo: GuidedInfo }
+    ) {
+      state.audioItems[audioKey].guidedInfo = guidedInfo;
     },
   },
 
@@ -1427,6 +1440,147 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
+    },
+    SET_AUDIO_GUIDED_INFO(
+      { commit },
+      { audioKey, guidedInfo }: { audioKey: string; guidedInfo: GuidedInfo }
+    ) {
+      commit("SET_AUDIO_GUIDED_INFO", { audioKey, guidedInfo });
+    },
+    FLUSH_GUIDED: createUILockAction(
+      async (
+        { state, commit, dispatch },
+        { audioKey }: { audioKey: string }
+      ) => {
+        const audioItem = state.audioItems[audioKey];
+        if (
+          audioItem.guidedInfo === undefined ||
+          !audioItem.guidedInfo.enabled
+        ) {
+          return false;
+        } else if (audioItem.guidedInfo.precise) {
+          // call guided synthesis
+          commit("SET_AUDIO_NOW_GENERATING", {
+            audioKey,
+            nowGenerating: true,
+          });
+          dispatch("GUIDED_SYNTHESIS", { audioKey });
+          commit("SET_AUDIO_NOW_GENERATING", {
+            audioKey,
+            nowGenerating: false,
+          });
+          return false;
+        } else {
+          // call guided accent phrase
+        }
+        return false;
+      }
+    ),
+    async GUIDED_SYNTHESIS(
+      { state, dispatch },
+      { audioKey }: { audioKey: string }
+    ) {
+      const audioItem: AudioItem = state.audioItems[audioKey];
+      const engineInfo = state.engineInfos[0];
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
+      const [id, audioQuery] = await generateUniqueIdAndQuery(state, audioItem);
+
+      const speaker = audioItem.styleId;
+      const kana = audioItem.query?.kana;
+      const guidedInfo = audioItem.guidedInfo;
+
+      if (
+        audioQuery === undefined ||
+        speaker === undefined ||
+        kana === undefined ||
+        guidedInfo === undefined
+      )
+        return;
+
+      const externalAudio = await window.electron.externalAudio(
+        guidedInfo.audioPath
+      );
+
+      if (externalAudio === undefined) return;
+
+      console.log(kana);
+
+      // console.log(
+      //   kana,
+      //   speaker,
+      //   guidedInfo,
+      //   audioQuery.volumeScale,
+      //   audioQuery.pitchScale,
+      //   audioQuery.speedScale,
+      //   state.savingSetting.outputStereo,
+      //   state.savingSetting.outputSamplingRate,
+      //   externalAudio
+      // );
+
+      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
+        action: "guidedSynthesisGuidedSynthesisPost",
+        payload: [
+          {
+            kana: kana,
+            speakerId: speaker,
+            normalize: guidedInfo.normalize,
+            audioFile: new Blob([externalAudio], { type: "audio/wav" }),
+            stereo: state.savingSetting.outputStereo,
+            sampleRate: state.savingSetting.outputSamplingRate,
+            volumeScale: audioQuery.volumeScale,
+            pitchScale: audioQuery.pitchScale,
+            speedScale: audioQuery.speedScale,
+          },
+        ],
+      })
+        .then(toDispatchResponse("guidedSynthesisGuidedSynthesisPost"))
+        .then(async (blob) => {
+          // TODO: handle the HTTP Error below, which is failed forced alignment
+          audioBlobCache[id] = blob;
+        });
+    },
+    async GUIDED_ACCENT_PHRASE(
+      { state, dispatch },
+      { audioKey }: { audioKey: string }
+    ) {
+      const audioItem: AudioItem = state.audioItems[audioKey];
+      const engineInfo = state.engineInfos[0];
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
+      const speaker = audioItem.styleId;
+      const kana = audioItem.query?.kana;
+      const guidedInfo = audioItem.guidedInfo;
+
+      if (
+        speaker === undefined ||
+        kana === undefined ||
+        guidedInfo === undefined
+      )
+        return;
+
+      const externalAudio = await window.electron.externalAudio(
+        guidedInfo.audioPath
+      );
+
+      if (externalAudio === undefined) return;
+
+      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
+        action: "guidedAccentPhraseGuidedAccentPhrasePost",
+        payload: [
+          {
+            text: kana,
+            speaker: speaker,
+            isKana: true,
+            audioFile: new Blob([externalAudio], { type: "audio/wav" }),
+            normalize: guidedInfo.normalize,
+          },
+        ],
+      });
     },
   },
 };

@@ -885,6 +885,18 @@ ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
+ipcMainHandle("SHOW_OPEN_AUDIO_DIALOG", async (_, { title }) => {
+  const result = await dialog.showOpenDialog(win, {
+    title,
+    properties: ["openFile"],
+    filters: [{ name: "Wave File", extensions: ["wav"] }],
+  });
+  if (result.canceled) {
+    return undefined;
+  }
+  return result.filePaths[0];
+});
+
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
@@ -1151,6 +1163,18 @@ ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
 
 ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
+});
+
+ipcMainHandle("EXTERNAL_AUDIO", (_, { path, blob }) => {
+  console.log(path);
+  if (blob === undefined) {
+    if (fs.existsSync(path)) {
+      return fs.readFileSync(path);
+    }
+  } else {
+    fs.writeFileSync(path, Buffer.from(new Uint8Array(blob)));
+  }
+  return null;
 });
 
 // app callback

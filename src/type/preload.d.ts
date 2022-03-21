@@ -17,6 +17,7 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showOpenAudioDialog(obj: { title: string }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
@@ -86,6 +87,7 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
+  externalAudio(path: string, blob?: Blob): Promise<Uint8Array | void>;
 }
 
 export type AppInfos = {
@@ -260,4 +262,11 @@ export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
   enableGuided: boolean;
+};
+
+export type GuidedInfo = {
+  enabled: boolean;
+  audioPath: string;
+  normalize: boolean;
+  precise: boolean;
 };
