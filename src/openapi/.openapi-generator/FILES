@@ -3,6 +3,7 @@ apis/index.ts
 index.ts
 models/AccentPhrase.ts
 models/AudioQuery.ts
+models/GuidedInfo.ts
 models/HTTPValidationError.ts
 models/Mora.ts
 models/ParseKanaBadRequest.ts

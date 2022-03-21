@@ -88,25 +88,15 @@ export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
     wordUuid: string;
 }
 
-export interface GuidedAccentPhraseGuidedAccentPhrasePostRequest {
-    text: string;
+export interface GuidedAccentPhrasesGuidedAccentPhrasesPostRequest {
     speaker: number;
-    isKana: boolean;
-    audioFile: Blob;
-    normalize: boolean;
+    audioQuery: AudioQuery;
     coreVersion?: string;
 }
 
 export interface GuidedSynthesisGuidedSynthesisPostRequest {
-    kana: string;
-    speakerId: number;
-    normalize: boolean;
-    audioFile: Blob;
-    stereo: boolean;
-    sampleRate: number;
-    volumeScale: number;
-    pitchScale: number;
-    speedScale: number;
+    speaker: number;
+    audioQuery: AudioQuery;
     coreVersion?: string;
 }
 
@@ -354,36 +344,26 @@ export interface DefaultApiInterface {
     /**
      * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
      * @summary Create Accent Phrase from External Audio
-     * @param {string} text 
      * @param {number} speaker 
-     * @param {boolean} isKana 
-     * @param {Blob} audioFile 
-     * @param {boolean} normalize 
+     * @param {AudioQuery} audioQuery 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
+    guidedAccentPhrasesGuidedAccentPhrasesPostRaw(requestParameters: GuidedAccentPhrasesGuidedAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
      * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
      * Create Accent Phrase from External Audio
      */
-    guidedAccentPhraseGuidedAccentPhrasePost(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
+    guidedAccentPhrasesGuidedAccentPhrasesPost(requestParameters: GuidedAccentPhrasesGuidedAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>>;
 
     /**
      * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
      * @summary Audio synthesis guided by external audio and phonemes
-     * @param {string} kana 
-     * @param {number} speakerId 
-     * @param {boolean} normalize 
-     * @param {Blob} audioFile 
-     * @param {boolean} stereo 
-     * @param {number} sampleRate 
-     * @param {number} volumeScale 
-     * @param {number} pitchScale 
-     * @param {number} speedScale 
+     * @param {number} speaker 
+     * @param {AudioQuery} audioQuery 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1014,28 +994,20 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
      * Create Accent Phrase from External Audio
      */
-    async guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
-        if (requestParameters.text === null || requestParameters.text === undefined) {
-            throw new runtime.RequiredError('text','Required parameter requestParameters.text was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
-        }
-
+    async guidedAccentPhrasesGuidedAccentPhrasesPostRaw(requestParameters: GuidedAccentPhrasesGuidedAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
-            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
         }
 
-        if (requestParameters.isKana === null || requestParameters.isKana === undefined) {
-            throw new runtime.RequiredError('isKana','Required parameter requestParameters.isKana was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
-        }
-
-        if (requestParameters.audioFile === null || requestParameters.audioFile === undefined) {
-            throw new runtime.RequiredError('audioFile','Required parameter requestParameters.audioFile was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
-        }
-
-        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
-            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedAccentPhraseGuidedAccentPhrasePost.');
+        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
 
         if (requestParameters.coreVersion !== undefined) {
             queryParameters['core_version'] = requestParameters.coreVersion;
@@ -1043,48 +1015,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const consumes: runtime.Consume[] = [
-            { contentType: 'multipart/form-data' },
-        ];
-        // @ts-ignore: canConsumeForm may be unused
-        const canConsumeForm = runtime.canConsumeForm(consumes);
-
-        let formParams: { append(param: string, value: any): any };
-        let useForm = false;
-        // use FormData to transmit files using content-type "multipart/form-data"
-        useForm = canConsumeForm;
-        if (useForm) {
-            formParams = new FormData();
-        } else {
-            formParams = new URLSearchParams();
-        }
-
-        if (requestParameters.text !== undefined) {
-            formParams.append('text', requestParameters.text as any);
-        }
-
-        if (requestParameters.speaker !== undefined) {
-            formParams.append('speaker', requestParameters.speaker as any);
-        }
-
-        if (requestParameters.isKana !== undefined) {
-            formParams.append('is_kana', requestParameters.isKana as any);
-        }
-
-        if (requestParameters.audioFile !== undefined) {
-            formParams.append('audio_file', requestParameters.audioFile as any);
-        }
-
-        if (requestParameters.normalize !== undefined) {
-            formParams.append('normalize', requestParameters.normalize as any);
-        }
+        headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
-            path: `/guided_accent_phrase`,
+            path: `/guided_accent_phrases`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: formParams,
+            body: AudioQueryToJSON(requestParameters.audioQuery),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccentPhraseFromJSON));
@@ -1094,8 +1032,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
      * Create Accent Phrase from External Audio
      */
-    async guidedAccentPhraseGuidedAccentPhrasePost(requestParameters: GuidedAccentPhraseGuidedAccentPhrasePostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
-        const response = await this.guidedAccentPhraseGuidedAccentPhrasePostRaw(requestParameters, initOverrides);
+    async guidedAccentPhrasesGuidedAccentPhrasesPost(requestParameters: GuidedAccentPhrasesGuidedAccentPhrasesPostRequest, initOverrides?: RequestInit): Promise<Array<AccentPhrase>> {
+        const response = await this.guidedAccentPhrasesGuidedAccentPhrasesPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -1104,43 +1042,19 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Audio synthesis guided by external audio and phonemes
      */
     async guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>> {
-        if (requestParameters.kana === null || requestParameters.kana === undefined) {
-            throw new runtime.RequiredError('kana','Required parameter requestParameters.kana was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
         }
 
-        if (requestParameters.speakerId === null || requestParameters.speakerId === undefined) {
-            throw new runtime.RequiredError('speakerId','Required parameter requestParameters.speakerId was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
-            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.audioFile === null || requestParameters.audioFile === undefined) {
-            throw new runtime.RequiredError('audioFile','Required parameter requestParameters.audioFile was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.stereo === null || requestParameters.stereo === undefined) {
-            throw new runtime.RequiredError('stereo','Required parameter requestParameters.stereo was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.sampleRate === null || requestParameters.sampleRate === undefined) {
-            throw new runtime.RequiredError('sampleRate','Required parameter requestParameters.sampleRate was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.volumeScale === null || requestParameters.volumeScale === undefined) {
-            throw new runtime.RequiredError('volumeScale','Required parameter requestParameters.volumeScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.pitchScale === null || requestParameters.pitchScale === undefined) {
-            throw new runtime.RequiredError('pitchScale','Required parameter requestParameters.pitchScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
-        }
-
-        if (requestParameters.speedScale === null || requestParameters.speedScale === undefined) {
-            throw new runtime.RequiredError('speedScale','Required parameter requestParameters.speedScale was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
+            throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
 
         if (requestParameters.coreVersion !== undefined) {
             queryParameters['core_version'] = requestParameters.coreVersion;
@@ -1148,64 +1062,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        const consumes: runtime.Consume[] = [
-            { contentType: 'multipart/form-data' },
-        ];
-        // @ts-ignore: canConsumeForm may be unused
-        const canConsumeForm = runtime.canConsumeForm(consumes);
-
-        let formParams: { append(param: string, value: any): any };
-        let useForm = false;
-        // use FormData to transmit files using content-type "multipart/form-data"
-        useForm = canConsumeForm;
-        if (useForm) {
-            formParams = new FormData();
-        } else {
-            formParams = new URLSearchParams();
-        }
-
-        if (requestParameters.kana !== undefined) {
-            formParams.append('kana', requestParameters.kana as any);
-        }
-
-        if (requestParameters.speakerId !== undefined) {
-            formParams.append('speaker_id', requestParameters.speakerId as any);
-        }
-
-        if (requestParameters.normalize !== undefined) {
-            formParams.append('normalize', requestParameters.normalize as any);
-        }
-
-        if (requestParameters.audioFile !== undefined) {
-            formParams.append('audio_file', requestParameters.audioFile as any);
-        }
-
-        if (requestParameters.stereo !== undefined) {
-            formParams.append('stereo', requestParameters.stereo as any);
-        }
-
-        if (requestParameters.sampleRate !== undefined) {
-            formParams.append('sample_rate', requestParameters.sampleRate as any);
-        }
-
-        if (requestParameters.volumeScale !== undefined) {
-            formParams.append('volume_scale', requestParameters.volumeScale as any);
-        }
-
-        if (requestParameters.pitchScale !== undefined) {
-            formParams.append('pitch_scale', requestParameters.pitchScale as any);
-        }
-
-        if (requestParameters.speedScale !== undefined) {
-            formParams.append('speed_scale', requestParameters.speedScale as any);
-        }
+        headerParameters['Content-Type'] = 'application/json';
 
         const response = await this.request({
             path: `/guided_synthesis`,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: formParams,
+            body: AudioQueryToJSON(requestParameters.audioQuery),
         }, initOverrides);
 
         return new runtime.TextApiResponse(response) as any;
