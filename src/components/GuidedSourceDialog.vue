@@ -76,23 +76,25 @@ export default defineComponent({
     const store = useStore();
 
     const guidedInfo = computed(
-      () => store.state.audioItems[props.activeAudioKey].guidedInfo
+      () => store.state.audioItems[props.activeAudioKey].query?.guidedInfo
     );
 
     const audioElem = new Audio();
 
     const preview = () => {
-      if (guidedInfo.value !== undefined && guidedInfo.value.audioPath !== "") {
+      if (
+        guidedInfo.value !== null &&
+        guidedInfo.value !== undefined &&
+        guidedInfo.value.audioPath !== ""
+      ) {
         window.electron
           .externalAudio(guidedInfo.value.audioPath)
           .then((array) => {
-            console.log(array);
             if (array)
               store.dispatch("PLAY_AUDIO_BLOB", {
                 audioBlob: new Blob([array], { type: "audio/wav" }),
                 audioElem: audioElem,
               });
-            console.log("?");
           });
       }
     };
@@ -101,12 +103,11 @@ export default defineComponent({
       const path = await window.electron.showOpenAudioDialog({
         title: "Select Audio Source",
       });
-      if (path && guidedInfo.value !== undefined) {
+      if (path && guidedInfo.value !== undefined && guidedInfo.value !== null) {
         store.dispatch("SET_AUDIO_GUIDED_INFO", {
           audioKey: props.activeAudioKey,
           guidedInfo: { ...guidedInfo.value, audioPath: path },
         });
-        console.log(path);
       }
     };
 

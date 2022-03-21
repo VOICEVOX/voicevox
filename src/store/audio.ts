@@ -1,10 +1,4 @@
-import {
-  AudioQuery,
-  AccentPhrase,
-  Speaker,
-  SpeakerInfo,
-  AccentPhraseToJSON,
-} from "@/openapi";
+import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -476,7 +470,8 @@ export const audioStore: VoiceVoxStoreOptions<
       state,
       { audioKey, guidedInfo }: { audioKey: string; guidedInfo: GuidedInfo }
     ) {
-      state.audioItems[audioKey].guidedInfo = guidedInfo;
+      const query = state.audioItems[audioKey].query;
+      if (query !== undefined) query.guidedInfo = guidedInfo;
     },
   },
 
@@ -1454,11 +1449,12 @@ export const audioStore: VoiceVoxStoreOptions<
       ) => {
         const audioItem = state.audioItems[audioKey];
         if (
-          audioItem.guidedInfo === undefined ||
-          !audioItem.guidedInfo.enabled
-        ) {
+          audioItem.query?.guidedInfo === null ||
+          audioItem.query?.guidedInfo === undefined ||
+          !audioItem.query?.guidedInfo.enabled
+        )
           return false;
-        } else if (audioItem.guidedInfo.precise) {
+        else if (audioItem.query?.guidedInfo.precise) {
           // call guided synthesis
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
@@ -1471,7 +1467,21 @@ export const audioStore: VoiceVoxStoreOptions<
           });
           return false;
         } else {
-          // call guided accent phrase
+          dispatch("GUIDED_ACCENT_PHRASE", { audioKey: audioKey }).then(
+            (accentPhrases) => {
+              if (accentPhrases) {
+                commit("COMMAND_CHANGE_AUDIO_TEXT", {
+                  audioKey,
+                  text: audioItem.text,
+                  update: "AccentPhrases",
+                  accentPhrases,
+                });
+                return true;
+              } else {
+                return false;
+              }
+            }
+          );
         }
         return false;
       }
@@ -1488,59 +1498,25 @@ export const audioStore: VoiceVoxStoreOptions<
       const [id, audioQuery] = await generateUniqueIdAndQuery(state, audioItem);
 
       const speaker = audioItem.styleId;
-      const kana = audioItem.query?.kana;
-      const guidedInfo = audioItem.guidedInfo;
 
-      if (
-        audioQuery === undefined ||
-        speaker === undefined ||
-        kana === undefined ||
-        guidedInfo === undefined
-      )
-        return;
-
-      const externalAudio = await window.electron.externalAudio(
-        guidedInfo.audioPath
-      );
-
-      if (externalAudio === undefined) return;
-
-      console.log(kana);
-
-      // console.log(
-      //   kana,
-      //   speaker,
-      //   guidedInfo,
-      //   audioQuery.volumeScale,
-      //   audioQuery.pitchScale,
-      //   audioQuery.speedScale,
-      //   state.savingSetting.outputStereo,
-      //   state.savingSetting.outputSamplingRate,
-      //   externalAudio
-      // );
-
-      return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
-        action: "guidedSynthesisGuidedSynthesisPost",
-        payload: [
-          {
-            kana: kana,
-            speakerId: speaker,
-            normalize: guidedInfo.normalize,
-            audioFile: new Blob([externalAudio], { type: "audio/wav" }),
-            stereo: state.savingSetting.outputStereo,
-            sampleRate: state.savingSetting.outputSamplingRate,
-            volumeScale: audioQuery.volumeScale,
-            pitchScale: audioQuery.pitchScale,
-            speedScale: audioQuery.speedScale,
-          },
-        ],
-      })
-        .then(toDispatchResponse("guidedSynthesisGuidedSynthesisPost"))
-        .then(async (blob) => {
-          // TODO: handle the HTTP Error below, which is failed forced alignment
-          audioBlobCache[id] = blob;
-        });
+      if (audioQuery !== undefined && speaker !== undefined) {
+        console.log(audioQuery);
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
+          action: "guidedSynthesisGuidedSynthesisPost",
+          payload: [
+            {
+              audioQuery,
+              speaker,
+            },
+          ],
+        })
+          .then(toDispatchResponse("guidedSynthesisGuidedSynthesisPost"))
+          .then(async (blob) => {
+            // TODO: handle the HTTP Error below, which is failed forced alignment
+            audioBlobCache[id] = blob;
+          });
+      }
     },
     async GUIDED_ACCENT_PHRASE(
       { state, dispatch },
@@ -1552,35 +1528,19 @@ export const audioStore: VoiceVoxStoreOptions<
         throw new Error(`No such engineInfo registered: index == 0`);
 
       const speaker = audioItem.styleId;
-      const kana = audioItem.query?.kana;
-      const guidedInfo = audioItem.guidedInfo;
+      const audioQuery = state.audioItems[audioKey].query;
 
-      if (
-        speaker === undefined ||
-        kana === undefined ||
-        guidedInfo === undefined
-      )
-        return;
-
-      const externalAudio = await window.electron.externalAudio(
-        guidedInfo.audioPath
-      );
-
-      if (externalAudio === undefined) return;
-
-      return dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
-        action: "guidedAccentPhraseGuidedAccentPhrasePost",
-        payload: [
-          {
-            text: kana,
-            speaker: speaker,
-            isKana: true,
-            audioFile: new Blob([externalAudio], { type: "audio/wav" }),
-            normalize: guidedInfo.normalize,
-          },
-        ],
-      });
+      if (speaker !== undefined && audioQuery !== undefined)
+        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
+          action: "guidedAccentPhrasesGuidedAccentPhrasesPost",
+          payload: [
+            {
+              speaker,
+              audioQuery,
+            },
+          ],
+        });
     },
   },
 };

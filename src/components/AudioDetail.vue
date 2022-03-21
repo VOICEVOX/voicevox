@@ -89,7 +89,7 @@
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.consonantLength"
-                :uiLocked="uiLocked"
+                :uiLocked="uiLocked || guidedInfo.precise"
                 :min="minMoraLength"
                 :max="maxMoraLength"
                 :step="0.001"
@@ -104,7 +104,7 @@
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.vowelLength"
-                :uiLocked="uiLocked"
+                :uiLocked="uiLocked || guidedInfo.precise"
                 :min="minMoraLength"
                 :max="maxMoraLength"
                 :step="0.001"
@@ -128,7 +128,7 @@
               :moraIndex="accentPhrase.moras.length"
               :accentPhraseIndex="accentPhraseIndex"
               :value="accentPhrase.pauseMora.vowelLength"
-              :uiLocked="uiLocked"
+              :uiLocked="uiLocked || guidedInfo.precise"
               :min="0"
               :max="1.0"
               :step="0.01"
@@ -155,7 +155,9 @@
             >
               {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
-                v-if="selectedDetail == 'accent' && !uiLocked"
+                v-if="
+                  selectedDetail == 'accent' && !uiLocked && guidedInfo.precise
+                "
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
                 auto-save
                 transition-show="none"
@@ -399,16 +401,16 @@ export default defineComponent({
 
     // guided
     const guidedInfo = computed(() => {
-      if (audioItem.value.guidedInfo === undefined) {
+      if (audioItem.value.query?.guidedInfo === undefined) {
         setGuidedInfo("enabled", false);
       }
-      return audioItem.value.guidedInfo;
+      return audioItem.value.query?.guidedInfo;
     });
 
     const isGuidedDialogOpen = ref(false);
 
     const setGuidedInfo = (key: keyof GuidedInfo, data: boolean | string) => {
-      if (guidedInfo.value === undefined) {
+      if (guidedInfo.value === undefined || guidedInfo.value === null) {
         let newGuidedInfo: GuidedInfo = {
           enabled: false,
           audioPath: "",
@@ -436,7 +438,7 @@ export default defineComponent({
       if (guidedInfo.value === undefined) {
         // show a dialog for not defining it
         setGuidedInfo("enabled", false);
-      } else {
+      } else if (guidedInfo.value !== null) {
         const exists = store.dispatch("CHECK_FILE_EXISTS", {
           file: guidedInfo.value.audioPath,
         });
