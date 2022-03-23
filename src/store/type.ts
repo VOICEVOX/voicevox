@@ -1042,6 +1042,9 @@ type PresetStoreTypes = {
   GET_PRESET_CONFIG: {
     action(): void;
   };
+  SAVE_PRESET_ORDER: {
+    action(payload: { presetKeys: string[] }): void;
+  };
   SAVE_PRESET_CONFIG: {
     action(payload: {
       presetItems: Record<string, Preset>;
