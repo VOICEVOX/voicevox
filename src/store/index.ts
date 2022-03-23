@@ -14,11 +14,17 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { commandStoreState, commandStore } from "./command";
-import { audioStoreState, audioStore, audioCommandStore } from "./audio";
+import {
+  audioStoreState,
+  audioStore,
+  audioCommandStore,
+  audioCommandStoreState,
+} from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
+import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { DefaultStyleId } from "@/type/preload";
 
@@ -30,6 +36,7 @@ export const storeKey: InjectionKey<
 
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
+  userCharacterOrder: [],
 };
 
 export const indexStore: VoiceVoxStoreOptions<
@@ -64,6 +71,9 @@ export const indexStore: VoiceVoxStoreOptions<
           audioItem.styleId = defaultStyleId;
         }
       }
+    },
+    SET_USER_CHARACTER_ORDER(state, { userCharacterOrder }) {
+      state.userCharacterOrder = userCharacterOrder;
     },
   },
   actions: {
@@ -103,25 +113,51 @@ export const indexStore: VoiceVoxStoreOptions<
     LOG_INFO(_, ...params: unknown[]) {
       window.electron.logInfo(...params);
     },
+    async LOAD_USER_CHARACTER_ORDER({ commit }) {
+      const userCharacterOrder = await window.electron.getUserCharacterOrder();
+      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+    },
+    async SET_USER_CHARACTER_ORDER({ commit }, userCharacterOrder) {
+      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+      await window.electron.setUserCharacterOrder(userCharacterOrder);
+    },
+    GET_NEW_CHARACTERS({ state }) {
+      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+
+      // キャラクター表示順序に含まれていなければ新規キャラとみなす
+      const allSpeakerUuid = state.characterInfos.map(
+        (characterInfo) => characterInfo.metas.speakerUuid
+      );
+      const newSpeakerUuid = allSpeakerUuid.filter(
+        (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
+      );
+      return newSpeakerUuid;
+    },
     async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
-      const storeDefaultStyleIds = await window.electron.getDefaultStyleIds();
-      if (storeDefaultStyleIds.length === 0) {
-        const characterInfos = await state.characterInfos;
-        if (characterInfos == undefined)
-          throw new Error("state.characterInfos == undefined");
-        const defaultStyleIds = characterInfos.map<DefaultStyleId>((info) => ({
+      let defaultStyleIds = await window.electron.getDefaultStyleIds();
+
+      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+
+      // デフォルトスタイルが設定されていない場合は0をセットする
+      // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
+      const unsetCharacterInfos = state.characterInfos.filter(
+        (characterInfo) =>
+          !defaultStyleIds.some(
+            (styleId) => styleId.speakerUuid == characterInfo.metas.speakerUuid
+          )
+      );
+      defaultStyleIds = [
+        ...defaultStyleIds,
+        ...unsetCharacterInfos.map<DefaultStyleId>((info) => ({
           speakerUuid: info.metas.speakerUuid,
           defaultStyleId: info.metas.styles[0].styleId,
-        }));
-        commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
-      } else {
-        commit("SET_DEFAULT_STYLE_IDS", {
-          defaultStyleIds: storeDefaultStyleIds,
-        });
-      }
+        })),
+      ];
+
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
     },
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
@@ -142,7 +178,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
 
-      Promise.all(promises).then(() => {
+      await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
       });
     },
@@ -156,9 +192,10 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...commandStoreState,
     ...projectStoreState,
     ...settingStoreState,
-    ...audioCommandStore,
+    ...audioCommandStoreState,
     ...indexStoreState,
     ...presetStoreState,
+    ...dictionaryStoreState,
     ...proxyStoreState,
   },
 
@@ -169,6 +206,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...projectStore.getters,
     ...settingStore.getters,
     ...presetStore.getters,
+    ...dictionaryStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
     ...proxyStore.getters,
@@ -182,6 +220,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
     ...presetStore.mutations,
+    ...dictionaryStore.mutations,
     ...indexStore.mutations,
     ...proxyStore.mutations,
   },
@@ -194,6 +233,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.actions,
     ...audioCommandStore.actions,
     ...presetStore.actions,
+    ...dictionaryStore.actions,
     ...indexStore.actions,
     ...proxyStore.actions,
   },

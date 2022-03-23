@@ -1,3 +1,5 @@
+import { EngineInfo } from "@/type/preload";
+
 /**
  * invoke, handle
  */
@@ -159,6 +161,11 @@ type IpcIHData = {
     return: void;
   };
 
+  ENGINE_INFOS: {
+    args: [];
+    return: EngineInfo[];
+  };
+
   RESTART_ENGINE: {
     args: [];
     return: void;
@@ -199,6 +206,16 @@ type IpcIHData = {
   TOOLBAR_SETTING: {
     args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
     return: import("@/type/preload").ToolbarSetting;
+  };
+
+  GET_USER_CHARACTER_ORDER: {
+    args: [];
+    return: string[];
+  };
+
+  SET_USER_CHARACTER_ORDER: {
+    args: [string[]];
+    return: void;
   };
 
   IS_UNSET_DEFAULT_STYLE_ID: {

@@ -433,26 +433,6 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>テキスト欄の並び替え</div>
-                <q-space />
-                <q-toggle
-                  :model-value="experimentalSetting.enableReorderCell"
-                  @update:model-value="
-                    changeExperimentalSetting('enableReorderCell', $event)
-                  "
-                >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    テキスト欄をドラッグ＆ドロップで並び替える．
-                  </q-tooltip>
-                </q-toggle>
-              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>

@@ -25,6 +25,9 @@
       :disable="previewSlider.qSliderProps.disable.value"
       :model-value="previewSlider.qSliderProps.modelValue.value"
       @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @click.stop="
+        undefined; // クリックでアクセント句が選択されないように
+      "
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
       @pan="previewSlider.qSliderProps.onPan"

@@ -10,6 +10,7 @@ import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
+import { dictionaryStore } from "@/store/dictionary";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -19,6 +20,7 @@ describe("store/vuex.js test", () => {
       state: {
         engineState: "STARTING",
         defaultStyleIds: [],
+        userCharacterOrder: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
@@ -36,7 +38,9 @@ describe("store/vuex.js test", () => {
         isUpdateCheckDialogOpen: false,
         isHotkeySettingDialogOpen: false,
         isToolbarSettingDialogOpen: false,
+        isCharacterOrderDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
+        isDictionaryManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
@@ -65,11 +69,17 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineHost: "http://127.0.0.1",
+        engineInfos: [
+          {
+            key: "88022f86-c823-436e-85a3-500c629749c4",
+            executionEnabled: false,
+            executionFilePath: "",
+            host: "http://127.0.0.1",
+          },
+        ],
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
-          enableReorderCell: false,
         },
       },
       getters: {
@@ -82,6 +92,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.getters,
         ...presetStore.getters,
         ...proxyStore.getters,
+        ...dictionaryStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -93,6 +104,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.mutations,
         ...presetStore.mutations,
         ...proxyStore.mutations,
+        ...dictionaryStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -104,6 +116,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.actions,
         ...presetStore.actions,
         ...proxyStore.actions,
+        ...dictionaryStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
@@ -134,7 +147,9 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isUpdateCheckDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
+    assert.equal(store.state.isCharacterOrderDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
+    assert.equal(store.state.isDictionaryManageDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isAcceptTermsDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
@@ -161,6 +176,5 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
-    assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });
 });

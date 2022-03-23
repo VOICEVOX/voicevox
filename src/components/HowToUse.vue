@@ -34,5 +34,6 @@ export default defineComponent({
 .markdown :deep(img) {
   border: 1px solid #333;
   vertical-align: middle;
+  margin-bottom: 1rem;
 }
 </style>
