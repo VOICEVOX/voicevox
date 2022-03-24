@@ -19,11 +19,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
   mutations: {},
   actions: {
     LOAD_USER_DICT: async ({ state, dispatch }) => {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (!engineKey)
+        throw new Error(`No such engine registered: index == 0`);
       const engineDict = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "getUserDictWordsUserDictGet",
         payload: [],
       }).then(toDispatchResponse("getUserDictWordsUserDictGet"));
@@ -50,11 +50,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       { state, dispatch },
       { surface, pronunciation, accentType }
     ) => {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (!engineKey)
+        throw new Error(`No such engine registered: index == 0`);
       await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "addUserDictWordUserDictWordPost",
         payload: [
           {
@@ -70,11 +70,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       { state, dispatch },
       { wordUuid, surface, pronunciation, accentType }
     ) => {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (!engineKey)
+        throw new Error(`No such engine registered: index == 0`);
       await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "rewriteUserDictWordUserDictWordWordUuidPut",
         payload: [
           {
@@ -88,11 +88,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
     },
 
     DELETE_WORD: async ({ state, dispatch }, { wordUuid }) => {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (!engineKey)
+        throw new Error(`No such engine registered: index == 0`);
       await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "deleteUserDictWordUserDictWordWordUuidDelete",
         payload: [
           {
