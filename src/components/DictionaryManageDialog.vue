@@ -244,7 +244,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    let engineInfo: EngineInfo | undefined;
+    let engineKey: string | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -258,14 +258,13 @@ export default defineComponent({
 
     const loadingDictProcess = async () => {
       // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
-      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      engineKey = store.state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
       loadingDict.value = true;
       try {
         const engineDict = await store
           .dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
+            engineKey,
             action: "getUserDictWordsUserDictGet",
             payload: [],
           })
@@ -505,14 +504,13 @@ export default defineComponent({
       );
     });
     const saveWord = async () => {
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
       const accent = computeRegisteredAccent();
       if (selectedId.value) {
         try {
           await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
+            engineKey,
             action: "rewriteUserDictWordUserDictWordWordUuidPut",
             payload: [
               {
@@ -539,7 +537,7 @@ export default defineComponent({
         try {
           await store
             .dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engineInfo.key,
+              engineKey,
               action: "addUserDictWordUserDictWordPost",
               payload: [
                 {
@@ -584,11 +582,11 @@ export default defineComponent({
           textColor: "display",
         },
       }).onOk(async () => {
-        if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
+        if (!engineKey)
+          throw new Error(`No such engine registered: index == 0`);
         try {
           await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
+            engineKey,
             action: "deleteUserDictWordUserDictWordWordUuidDelete",
             payload: [
               {

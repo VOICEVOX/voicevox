@@ -452,14 +452,13 @@ export default defineComponent({
     });
 
     // エンジン待機
-    // TODO: 複数エンジン対応, 個別のエンジンの状態をUIで確認できるようにする
+    // TODO: 個別のエンジンの状態をUIで確認できるようにする
     const allEngineState = computed(() => {
       const engineStates = store.state.engineStates;
 
       let lastEngineState: EngineState | undefined = undefined;
-      for (const engineInfo of store.state.engineInfos) {
-        const engineState: EngineState | undefined =
-          engineStates[engineInfo.key];
+      for (const engineKey of store.state.engineKeys) {
+        const engineState: EngineState | undefined = engineStates[engineKey];
 
         // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
         if (engineState === "STARTING") {

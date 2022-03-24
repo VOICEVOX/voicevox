@@ -66,14 +66,15 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineInfos: [
-          {
+        engineKeys: ["88022f86-c823-436e-85a3-500c629749c4"],
+        engineInfos: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
             key: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
           },
-        ],
+        },
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
@@ -163,6 +164,9 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
     assert.equal(store.state.acceptTerms, "Unconfirmed");
+    assert.isArray(store.state.engineKeys);
+    assert.isObject(store.state.engineInfos);
+    assert.hasAllKeys(store.state.engineInfos, store.state.engineKeys);
     assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(
       store.state.experimentalSetting.enableInterrogativeUpspeak,

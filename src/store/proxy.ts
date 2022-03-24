@@ -2,6 +2,7 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import { EngineInfo } from "@/type/preload";
 import {
   ProxyActions,
   ProxyGetters,
@@ -25,9 +26,7 @@ const proxyStoreCreator = (
     actions: {
       INVOKE_ENGINE_CONNECTOR({ state }, payload) {
         const engineKey = payload.engineKey;
-        const engineInfo = state.engineInfos.find(
-          (engineInfo) => engineInfo.key === engineKey
-        );
+        const engineInfo: EngineInfo | undefined = state.engineInfos[engineKey];
         if (!engineInfo)
           throw new Error(
             `No such engineInfo registered: engineKey == ${engineKey}`

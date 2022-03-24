@@ -134,7 +134,10 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.useGpu = useGpu;
       },
       SET_ENGINE_INFOS(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-        state.engineInfos = engineInfos;
+        state.engineKeys = engineInfos.map((engineInfo) => engineInfo.key);
+        state.engineInfos = Object.fromEntries(
+          engineInfos.map((engineInfo) => [engineInfo.key, engineInfo])
+        );
       },
       SET_INHERIT_AUDIOINFO(
         state,
