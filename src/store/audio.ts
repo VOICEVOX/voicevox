@@ -177,6 +177,9 @@ export const audioStore: VoiceVoxStoreOptions<
     IS_ENGINE_READY: (state) => (engineKey) => {
       const engineState: EngineState | undefined =
         state.engineStates[engineKey];
+      if (engineState === undefined)
+        throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+
       return engineState === "READY";
     },
     ACTIVE_AUDIO_ELEM_CURRENT_TIME: (state) => {
@@ -489,7 +492,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
         for (const engineKey of engineKeys) {
           await dispatch("START_WAITING_ENGINE", {
-            engineKey: engineKey,
+            engineKey,
           });
         }
       }
@@ -498,9 +501,14 @@ export const audioStore: VoiceVoxStoreOptions<
       async ({ state, commit, dispatch }, { engineKey }) => {
         let engineState: EngineState | undefined =
           state.engineStates[engineKey];
+        if (engineState === undefined)
+          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
 
         for (let i = 0; i < 100; i++) {
-          engineState = state.engineStates[engineKey];
+          engineState = state.engineStates[engineKey]; // FIXME: explicit undefined
+          if (engineState === undefined)
+            throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+
           if (engineState === "FAILED_STARTING") {
             break;
           }
@@ -1431,6 +1439,8 @@ export const audioStore: VoiceVoxStoreOptions<
     DETECTED_ENGINE_ERROR({ state, commit }, { engineKey }) {
       const engineState: EngineState | undefined =
         state.engineStates[engineKey];
+      if (engineState === undefined)
+        throw new Error(`No such engineState set: engineKey == ${engineKey}`);
 
       switch (engineState) {
         case "STARTING":

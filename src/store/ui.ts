@@ -138,6 +138,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.engineInfos = Object.fromEntries(
           engineInfos.map((engineInfo) => [engineInfo.key, engineInfo])
         );
+        state.engineStates = Object.fromEntries(
+          engineInfos.map((engineInfo) => [engineInfo.key, "STARTING"])
+        );
       },
       SET_INHERIT_AUDIOINFO(
         state,

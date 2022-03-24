@@ -18,7 +18,9 @@ describe("store/vuex.js test", () => {
   it("create store", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
-        engineStates: {},
+        engineStates: {
+          "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
+        },
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -123,7 +125,7 @@ describe("store/vuex.js test", () => {
     assert.exists(store);
     assert.isObject(store);
     assert.isObject(store.state);
-    assert.isEmpty(store.state.engineStates);
+    assert.hasAllKeys(store.state.engineStates, store.state.engineKeys);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
