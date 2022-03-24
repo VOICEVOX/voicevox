@@ -6,7 +6,7 @@ import {
   StoreOptions,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery } from "@/openapi";
+import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -1077,6 +1077,40 @@ export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
 export type PresetActions = StoreType<PresetStoreTypes, "action">;
 
 /*
+ * Dictionary Store Types
+ */
+
+export type DictionaryStoreState = Record<string, unknown>;
+
+type DictionaryStoreTypes = {
+  LOAD_USER_DICT: {
+    action(): Promise<Record<string, UserDictWord>>;
+  };
+  ADD_WORD: {
+    action(payload: {
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  REWRITE_WORD: {
+    action(payload: {
+      wordUuid: string;
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  DELETE_WORD: {
+    action(payload: { wordUuid: string }): Promise<void>;
+  };
+};
+
+export type DictionaryGetters = StoreType<DictionaryStoreTypes, "getter">;
+export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
+export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
+
+/*
  * Setting Store Types
  */
 
@@ -1121,6 +1155,7 @@ export type State = AudioStoreState &
   SettingStoreState &
   UiStoreState &
   PresetStoreState &
+  DictionaryStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -1131,6 +1166,7 @@ type AllStoreTypes = AudioStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
+  DictionaryStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;

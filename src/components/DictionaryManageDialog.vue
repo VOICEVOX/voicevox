@@ -218,7 +218,6 @@
 <script lang="ts">
 import { computed, defineComponent, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { toDispatchResponse } from "@/store/audio";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -226,7 +225,6 @@ import {
   createKanaRegex,
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
-import { EngineInfo } from "@/type/preload";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
 
@@ -244,7 +242,6 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    let engineKey: string | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -257,36 +254,10 @@ export default defineComponent({
     const userDict = ref<Record<string, UserDictWord>>({});
 
     const loadingDictProcess = async () => {
-      // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
-      engineKey = store.state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
       loadingDict.value = true;
       try {
-        const engineDict = await store
-          .dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey,
-            action: "getUserDictWordsUserDictGet",
-            payload: [],
-          })
-          .then(toDispatchResponse("getUserDictWordsUserDictGet"));
-        // 50音順にソートするために、一旦arrayにする
-        const dictArray = Object.keys(engineDict).map((k) => {
-          return { key: k, ...engineDict[k] };
-        });
-        dictArray.sort((a, b) => {
-          if (a.yomi > b.yomi) {
-            return 1;
-          } else {
-            return -1;
-          }
-        });
-        const dictEntries: [string, UserDictWord][] = dictArray.map((v) => {
-          const { key, ...newV } = v;
-          return [key, newV];
-        });
-        userDict.value = Object.fromEntries(dictEntries);
+        userDict.value = await store.dispatch("LOAD_USER_DICT");
       } catch {
-        loadingDict.value = false;
         $q.dialog({
           title: "辞書の取得に失敗しました",
           message: "エンジンの再起動をお試しください。",
@@ -504,22 +475,15 @@ export default defineComponent({
       );
     });
     const saveWord = async () => {
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
       const accent = computeRegisteredAccent();
       if (selectedId.value) {
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey,
-            action: "rewriteUserDictWordUserDictWordWordUuidPut",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-                surface: surface.value,
-                pronunciation: yomi.value,
-                accentType: accent,
-              },
-            ],
+          await store.dispatch("REWRITE_WORD", {
+            wordUuid: selectedId.value,
+            surface: surface.value,
+            pronunciation: yomi.value,
+            accentType: accent,
           });
         } catch {
           $q.dialog({
@@ -535,19 +499,11 @@ export default defineComponent({
         }
       } else {
         try {
-          await store
-            .dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey,
-              action: "addUserDictWordUserDictWordPost",
-              payload: [
-                {
-                  surface: surface.value,
-                  pronunciation: yomi.value,
-                  accentType: accent,
-                },
-              ],
-            })
-            .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+          await store.dispatch("ADD_WORD", {
+            surface: surface.value,
+            pronunciation: yomi.value,
+            accentType: accent,
+          });
         } catch {
           $q.dialog({
             title: "単語の登録に失敗しました",
@@ -582,17 +538,9 @@ export default defineComponent({
           textColor: "display",
         },
       }).onOk(async () => {
-        if (!engineKey)
-          throw new Error(`No such engine registered: index == 0`);
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey,
-            action: "deleteUserDictWordUserDictWordWordUuidDelete",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-              },
-            ],
+          await store.dispatch("DELETE_WORD", {
+            wordUuid: selectedId.value,
           });
         } catch {
           $q.dialog({
