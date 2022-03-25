@@ -507,7 +507,9 @@ export const audioStore: VoiceVoxStoreOptions<
         for (let i = 0; i < 100; i++) {
           engineState = state.engineStates[engineKey]; // FIXME: explicit undefined
           if (engineState === undefined)
-            throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+            throw new Error(
+              `No such engineState set: engineKey == ${engineKey}`
+            );
 
           if (engineState === "FAILED_STARTING") {
             break;
