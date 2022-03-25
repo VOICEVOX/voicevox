@@ -126,6 +126,9 @@ describe("store/vuex.js test", () => {
     assert.isObject(store);
     assert.isObject(store.state);
     assert.hasAllKeys(store.state.engineStates, store.state.engineKeys);
+    store.state.engineKeys.forEach((engineKey) =>
+      assert.equal(store.state.engineStates[engineKey], "STARTING")
+    );
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
