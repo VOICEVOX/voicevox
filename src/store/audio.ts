@@ -541,8 +541,9 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
-      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey,
@@ -643,8 +644,9 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加する予定
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加する予定
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       const styleId =
         payload.styleId ??
@@ -751,8 +753,9 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
-      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey,
@@ -781,8 +784,9 @@ export const audioStore: VoiceVoxStoreOptions<
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
-      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey,
@@ -828,8 +832,9 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
-      const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (!engineKey) throw new Error(`No such engine registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey,
@@ -939,8 +944,8 @@ export const audioStore: VoiceVoxStoreOptions<
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-        if (!engineKey)
+        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+        if (engineKey === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
@@ -973,8 +978,8 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
       async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
-        const engineKey = state.engineKeys[0]; // TODO: 複数エンジン対応
-        if (!engineKey)
+        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+        if (engineKey === undefined)
           throw new Error(`No such engineKey registered: index == 0`);
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(

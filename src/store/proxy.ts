@@ -27,7 +27,7 @@ const proxyStoreCreator = (
       INVOKE_ENGINE_CONNECTOR({ state }, payload) {
         const engineKey = payload.engineKey;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineKey];
-        if (!engineInfo)
+        if (engineInfo === undefined)
           throw new Error(
             `No such engineInfo registered: engineKey == ${engineKey}`
           );
