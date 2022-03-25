@@ -457,6 +457,8 @@ export default defineComponent({
       const engineStates = store.state.engineStates;
 
       let lastEngineState: EngineState | undefined = undefined;
+
+      // 登録されているすべてのエンジンについて状態を確認する
       for (const engineKey of store.state.engineKeys) {
         const engineState: EngineState | undefined = engineStates[engineKey];
         if (engineState === undefined)
