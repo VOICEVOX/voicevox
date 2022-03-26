@@ -802,15 +802,15 @@ $pitch-label-height: 24px;
       div {
         padding: 0px;
         &.text-cell {
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 20px;
+          max-width: 20px;
           grid-row-start: 3;
           text-align: center;
           color: colors.$display;
         }
         &.text-cell-hovered {
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 20px;
+          max-width: 20px;
           grid-row-start: 3;
           text-align: center;
           color: colors.$display;
@@ -818,8 +818,8 @@ $pitch-label-height: 24px;
           cursor: pointer;
         }
         &.splitter-cell {
-          min-width: 10px;
-          max-width: 10px;
+          min-width: 20px;
+          max-width: 20px;
           grid-row: 3 / span 1;
           z-index: vars.$detail-view-splitter-cell-z-index;
         }
@@ -833,14 +833,14 @@ $pitch-label-height: 24px;
           grid-row: 1 / span 3;
         }
         &.splitter-cell-be-split-pause {
-          min-width: 10px;
-          max-width: 10px;
+          min-width: 20px;
+          max-width: 20px;
         }
         &.accent-cell {
           grid-row: 2 / span 1;
           div {
-            min-width: 30px + 10px;
-            max-width: 30px + 10px;
+            min-width: 20px + 20px;
+            max-width: 20px + 20px;
             display: inline-block;
             cursor: pointer;
           }
