@@ -242,6 +242,8 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
+    const engineKey = store.state.engineKeys[0]; // TODO: 複数エンジン対応
+
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
