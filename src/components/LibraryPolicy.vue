@@ -46,8 +46,8 @@ export default defineComponent({
     const md = useMarkdownIt();
 
     const flattenCharacterInfos = computed(() =>
-      store.state.engineInfos.flatMap(
-        (engineInfo) => store.state.characterInfos[engineInfo.key] ?? []
+      store.state.engineKeys.flatMap(
+        (engineKey) => store.state.characterInfos[engineKey] ?? []
       )
     );
 

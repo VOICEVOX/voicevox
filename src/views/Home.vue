@@ -420,11 +420,11 @@ export default defineComponent({
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
 
-      for (const engineInfo of store.state.engineInfos) {
+      for (const engineKey of store.state.engineKeys) {
         const engineCharacterInfos: CharacterInfo[] | undefined =
-          store.state.characterInfos[engineInfo.key];
+          store.state.characterInfos[engineKey];
         if (engineCharacterInfos === undefined)
-          throw new Error(`no characterInfos for engine ${engineInfo.key}`);
+          throw new Error(`no characterInfos for engine ${engineKey}`);
 
         for (const info of engineCharacterInfos) {
           isUnsetDefaultStyleIds ||=
@@ -528,11 +528,9 @@ export default defineComponent({
 
     // キャラクター並び替え
     const flattenCharacterInfos = computed(() => {
-      const engineInfos = store.state.engineInfos;
+      const engineKeys = store.state.engineKeys;
       const characterInfos = store.state.characterInfos;
-      return engineInfos.flatMap(
-        (engineInfo) => characterInfos[engineInfo.key] ?? []
-      );
+      return engineKeys.flatMap((engineKey) => characterInfos[engineKey] ?? []);
     });
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>

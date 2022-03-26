@@ -252,17 +252,16 @@ export default defineComponent({
     };
 
     const changeStyleId = (speakerUuid: string, styleId: number) => {
-      const engineInfo = store.state.engineInfos.find((engineInfo) =>
-        (store.state.characterInfos[engineInfo.key] ?? []).some(
+      const engineKey = store.state.engineKeys.find((engineKey) =>
+        (store.state.characterInfos[engineKey] ?? []).some(
           (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
         )
       );
-      if (engineInfo === undefined)
+      if (engineKey === undefined)
         throw new Error(
-          `No engineInfo for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+          `No engineKey for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
 
-      const engineKey = engineInfo.key;
       const engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
 
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
