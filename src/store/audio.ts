@@ -213,9 +213,9 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     USER_ORDERED_CHARACTER_INFOS: (state) => {
       let characterInfoList: CharacterInfo[] = [];
-      for (const engineInfo of state.engineInfos) {
+      for (const engineKey of state.engineKeys) {
         const engineCharacterInfos: CharacterInfo[] | undefined =
-          state.characterInfos[engineInfo.key];
+          state.characterInfos[engineKey];
         if (engineCharacterInfos === undefined) continue;
 
         characterInfoList = characterInfoList.concat(engineCharacterInfos);
