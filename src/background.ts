@@ -229,6 +229,7 @@ const store = new Store<{
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
+        splitTextWhenPaste: { type: "boolean", default: true },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -240,6 +241,7 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
+        splitTextWhenPaste: true,
       },
     },
     // To future developers: if you are to modify the store schema with array type,

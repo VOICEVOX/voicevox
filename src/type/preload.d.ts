@@ -143,6 +143,7 @@ export type SavingSetting = {
   outputStereo: boolean;
   outputSamplingRate: number;
   audioOutputDevice: string;
+  splitTextWhenPaste: boolean;
 };
 
 export type DefaultStyleId = {
