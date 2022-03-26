@@ -284,12 +284,6 @@ export default defineComponent({
     // コピペしたときに句点と改行で区切る
     const pasteOnAudioCell = async (event: ClipboardEvent) => {
       if (event.clipboardData && isEnableSplitText.value !== "OFF") {
-        /*
-        const texts = event.clipboardData
-          .getData("text/plain")
-          .replaceAll("。", "。\n\r")
-          .split(/[\n\r]/);
-        */
         let texts: string[] = [];
         const clipBoardData = event.clipboardData.getData("text/plain");
         switch (isEnableSplitText.value) {
