@@ -278,7 +278,11 @@
                   toggle-color="primary"
                   toggle-text-color="display"
                   :options="[
-                    { label: '両方', value: 'BOTH', slot: 'splitTextBoth' },
+                    {
+                      label: '句点と改行',
+                      value: 'BOTH',
+                      slot: 'splitTextBoth',
+                    },
                     {
                       label: '改行',
                       value: 'NEW_LINE',
