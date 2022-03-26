@@ -126,7 +126,6 @@
                       outline
                       :icon="
                         playing != undefined &&
-                        selectedStyles[speakerUuid] != undefined &&
                         speakerUuid === playing.speakerUuid &&
                         selectedStyles[speakerUuid].styleId ===
                           playing.styleId &&
