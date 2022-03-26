@@ -264,7 +264,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>テキストを貼り付けた時の分割の挙動を変えます</div>
+                <div>テキストを貼り付け時に行われる分割の挙動を変えます</div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -278,11 +278,49 @@
                   toggle-color="primary"
                   toggle-text-color="display"
                   :options="[
-                    { label: '両方', value: 'BOTH' },
-                    { label: '改行', value: 'NEW_LINE' },
-                    { label: 'オフ', value: 'OFF' },
+                    { label: '両方', value: 'BOTH', slot: 'splitTextBoth' },
+                    {
+                      label: '改行',
+                      value: 'NEW_LINE',
+                      slot: 'splitTextNewLine',
+                    },
+                    { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
                   ]"
-                />
+                >
+                  <template v-slot:splitTextBoth>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      句点と改行を基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextNewLine>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      改行のみを基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextOFF>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      分割を行いません。
+                    </q-tooltip>
+                  </template>
+                </q-btn-toggle>
               </q-card-actions>
             </q-card>
             <!-- Experimental Card -->
