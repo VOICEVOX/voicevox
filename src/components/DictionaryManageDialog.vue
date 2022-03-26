@@ -246,17 +246,26 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const nowGenerating = ref(false);
     const nowPlaying = ref(false);
 
     const loadingDict = ref(false);
     const userDict = ref<Record<string, UserDictWord>>({});
 
+    const createUILockAction = function <T>(action: Promise<T>) {
+      uiLocked.value = true;
+      return action.finally(() => {
+        uiLocked.value = false;
+      });
+    };
+
     const loadingDictProcess = async () => {
       loadingDict.value = true;
       try {
-        userDict.value = await store.dispatch("LOAD_USER_DICT");
+        userDict.value = await createUILockAction(
+          store.dispatch("LOAD_USER_DICT")
+        );
       } catch {
         $q.dialog({
           title: "辞書の取得に失敗しました",
@@ -354,11 +363,13 @@ export default defineComponent({
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
         accentPhrase.value = (
-          await store.dispatch("FETCH_ACCENT_PHRASES", {
-            text: text + "ガ'",
-            styleId: styleId.value,
-            isKana: true,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_ACCENT_PHRASES", {
+              text: text + "ガ'",
+              styleId: styleId.value,
+              isKana: true,
+            })
+          )
         )[0];
         if (
           selectedId.value &&
@@ -379,10 +390,12 @@ export default defineComponent({
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
-          await store.dispatch("FETCH_MORA_DATA", {
-            accentPhrases: [accentPhrase.value],
-            styleId: styleId.value,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_MORA_DATA", {
+              accentPhrases: [accentPhrase.value],
+              styleId: styleId.value,
+            })
+          )
         )[0];
       }
     };
@@ -415,9 +428,11 @@ export default defineComponent({
         audioItem,
       });
       if (!blob) {
-        blob = await store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        });
+        blob = await createUILockAction(
+          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+            audioItem,
+          })
+        );
         if (!blob) {
           nowGenerating.value = false;
           $q.dialog({
@@ -499,11 +514,13 @@ export default defineComponent({
         }
       } else {
         try {
-          await store.dispatch("ADD_WORD", {
-            surface: surface.value,
-            pronunciation: yomi.value,
-            accentType: accent,
-          });
+          await createUILockAction(
+            store.dispatch("ADD_WORD", {
+              surface: surface.value,
+              pronunciation: yomi.value,
+              accentType: accent,
+            })
+          );
         } catch {
           $q.dialog({
             title: "単語の登録に失敗しました",
@@ -539,9 +556,11 @@ export default defineComponent({
         },
       }).onOk(async () => {
         try {
-          await store.dispatch("DELETE_WORD", {
-            wordUuid: selectedId.value,
-          });
+          await createUILockAction(
+            store.dispatch("DELETE_WORD", {
+              wordUuid: selectedId.value,
+            })
+          );
         } catch {
           $q.dialog({
             title: "単語の削除に失敗しました",
