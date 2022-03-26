@@ -263,27 +263,26 @@
                   </q-tooltip>
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
-                <div>
-                  テキストを貼り付けた時に句点と改行を基に分割を行います
-                </div>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>テキストを貼り付けた時の分割の挙動を変えます</div>
                 <q-space />
-                <q-toggle
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
                   :model-value="savingSetting.splitTextWhenPaste"
                   @update:model-value="
                     handleSavingSettingChange('splitTextWhenPaste', $event)
                   "
-                >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    テキストを貼り付けた時に句点と改行を基に分割を行います
-                  </q-tooltip>
-                </q-toggle>
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  :options="[
+                    { label: '両方', value: 'BOTH' },
+                    { label: '改行', value: 'NEW_LINE' },
+                    { label: 'オフ', value: 'OFF' },
+                  ]"
+                />
               </q-card-actions>
             </q-card>
             <!-- Experimental Card -->

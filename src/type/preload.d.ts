@@ -133,6 +133,8 @@ export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
+export type SplitTextWhenPasteType = "BOTH" | "NEW_LINE" | "OFF";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
@@ -143,7 +145,7 @@ export type SavingSetting = {
   outputStereo: boolean;
   outputSamplingRate: number;
   audioOutputDevice: string;
-  splitTextWhenPaste: boolean;
+  splitTextWhenPaste: SplitTextWhenPasteType;
 };
 
 export type DefaultStyleId = {
