@@ -218,7 +218,6 @@
 <script lang="ts">
 import { computed, defineComponent, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { toDispatchResponse } from "@/store/audio";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -226,7 +225,6 @@ import {
   createKanaRegex,
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
-import { EngineInfo } from "@/type/preload";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
 
@@ -244,50 +242,31 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    let engineInfo: EngineInfo | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const nowGenerating = ref(false);
     const nowPlaying = ref(false);
 
     const loadingDict = ref(false);
     const userDict = ref<Record<string, UserDictWord>>({});
 
+    const createUILockAction = function <T>(action: Promise<T>) {
+      uiLocked.value = true;
+      return action.finally(() => {
+        uiLocked.value = false;
+      });
+    };
+
     const loadingDictProcess = async () => {
-      // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
-      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応, 暫定的に辞書機能は0番目のエンジンのみを使用する
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
       loadingDict.value = true;
       try {
-        const engineDict = await store
-          .dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "getUserDictWordsUserDictGet",
-            payload: [],
-          })
-          .then(toDispatchResponse("getUserDictWordsUserDictGet"));
-        // 50音順にソートするために、一旦arrayにする
-        const dictArray = Object.keys(engineDict).map((k) => {
-          return { key: k, ...engineDict[k] };
-        });
-        dictArray.sort((a, b) => {
-          if (a.yomi > b.yomi) {
-            return 1;
-          } else {
-            return -1;
-          }
-        });
-        const dictEntries: [string, UserDictWord][] = dictArray.map((v) => {
-          const { key, ...newV } = v;
-          return [key, newV];
-        });
-        userDict.value = Object.fromEntries(dictEntries);
+        userDict.value = await createUILockAction(
+          store.dispatch("LOAD_USER_DICT")
+        );
       } catch {
-        loadingDict.value = false;
         $q.dialog({
           title: "辞書の取得に失敗しました",
           message: "エンジンの再起動をお試しください。",
@@ -381,19 +360,17 @@ export default defineComponent({
         return;
       }
       if (isOnlyHiraOrKana.value && text.length) {
-        const engineKey = engineInfo?.key;
-        if (engineKey === undefined)
-          throw new Error(`assert engineKey !== undefined`);
-
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
         accentPhrase.value = (
-          await store.dispatch("FETCH_ACCENT_PHRASES", {
-            text: text + "ガ'",
-            engineKey,
-            styleId: styleId.value,
-            isKana: true,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_ACCENT_PHRASES", {
+              text: text + "ガ'",
+              engineKey,
+              styleId: styleId.value,
+              isKana: true,
+            })
+          )
         )[0];
         if (
           selectedId.value &&
@@ -412,17 +389,15 @@ export default defineComponent({
 
     const changeAccent = async (_: number, accent: number) => {
       if (accentPhrase.value) {
-        const engineKey = engineInfo?.key;
-        if (engineKey === undefined)
-          throw new Error(`assert engineKey !== undefined`);
-
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
-          await store.dispatch("FETCH_MORA_DATA", {
-            accentPhrases: [accentPhrase.value],
-            engineKey,
-            styleId: styleId.value,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_MORA_DATA", {
+              accentPhrases: [accentPhrase.value],
+              engineKey,
+              styleId: styleId.value,
+            })
+          )
         )[0];
       }
     };
@@ -447,6 +422,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
+        engineId: engineKey, // FIXME: 暫定的にengineKey == engineIdとして使う
         styleId: styleId.value,
         query,
       };
@@ -455,9 +431,11 @@ export default defineComponent({
         audioItem,
       });
       if (!blob) {
-        blob = await store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        });
+        blob = await createUILockAction(
+          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+            audioItem,
+          })
+        );
         if (!blob) {
           nowGenerating.value = false;
           $q.dialog({
@@ -515,23 +493,15 @@ export default defineComponent({
       );
     });
     const saveWord = async () => {
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
       const accent = computeRegisteredAccent();
       if (selectedId.value) {
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "rewriteUserDictWordUserDictWordWordUuidPut",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-                surface: surface.value,
-                pronunciation: yomi.value,
-                accentType: accent,
-              },
-            ],
+          await store.dispatch("REWRITE_WORD", {
+            wordUuid: selectedId.value,
+            surface: surface.value,
+            pronunciation: yomi.value,
+            accentType: accent,
           });
         } catch {
           $q.dialog({
@@ -547,19 +517,13 @@ export default defineComponent({
         }
       } else {
         try {
-          await store
-            .dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engineInfo.key,
-              action: "addUserDictWordUserDictWordPost",
-              payload: [
-                {
-                  surface: surface.value,
-                  pronunciation: yomi.value,
-                  accentType: accent,
-                },
-              ],
+          await createUILockAction(
+            store.dispatch("ADD_WORD", {
+              surface: surface.value,
+              pronunciation: yomi.value,
+              accentType: accent,
             })
-            .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+          );
         } catch {
           $q.dialog({
             title: "単語の登録に失敗しました",
@@ -594,18 +558,12 @@ export default defineComponent({
           textColor: "display",
         },
       }).onOk(async () => {
-        if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "deleteUserDictWordUserDictWordWordUuidDelete",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-              },
-            ],
-          });
+          await createUILockAction(
+            store.dispatch("DELETE_WORD", {
+              wordUuid: selectedId.value,
+            })
+          );
         } catch {
           $q.dialog({
             title: "単語の削除に失敗しました",
