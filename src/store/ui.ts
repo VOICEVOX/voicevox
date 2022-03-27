@@ -69,7 +69,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.uiLockCount++;
       },
       UNLOCK_UI(state) {
-        state.uiLockCount--;
+        if (state.uiLockCount !== 0) {
+          state.uiLockCount--;
+        }
       },
       LOCK_MENUBAR(state) {
         state.dialogLockCount++;
