@@ -58,11 +58,20 @@
           </template>
           <template v-slot:before>
             <q-btn
+              v-if="!previewing"
               flat
               round
               icon="play_arrow"
               class="bg-primary text-display"
-              @click="preview"
+              @click="startPreview"
+            />
+            <q-btn
+              v-else
+              flat
+              round
+              icon="stop"
+              class="bg-primary text-display"
+              @click="stopPreview"
             />
           </template>
           <template v-slot:hint>
@@ -101,7 +110,13 @@ export default defineComponent({
 
     const audioElem = new Audio();
 
-    const preview = () => {
+    audioElem.addEventListener("ended", () => {
+      previewing.value = false;
+    });
+
+    const previewing = ref(false);
+
+    const startPreview = () => {
       if (
         guidedInfo.value !== null &&
         guidedInfo.value !== undefined &&
@@ -110,13 +125,21 @@ export default defineComponent({
         window.electron
           .readFile({ filePath: guidedInfo.value.audioPath })
           .then((array) => {
-            if (array)
+            if (array) {
               store.dispatch("PLAY_AUDIO_BLOB", {
                 audioBlob: new Blob([array], { type: "audio/wav" }),
                 audioElem: audioElem,
               });
+              previewing.value = true;
+            }
           });
       }
+    };
+
+    const stopPreview = () => {
+      previewing.value = false;
+      audioElem.pause();
+      audioElem.currentTime = 0;
     };
 
     const selectAudioSource = async () => {
@@ -154,30 +177,29 @@ export default defineComponent({
       .catch((err) => console.log("Uh oh... unable to get stream...", err));
 
     const startRecording = () => {
+      stopPreview();
       recorder.start().then(() => {
         recording.value = true;
       });
     };
 
     const stopRecording = () => {
-      recorder.stop().then(async ({ blob, buffer }) => {
+      recorder.stop().then(({ blob, buffer }) => {
         const date = new Date();
         window.electron
           .showAudioSaveDialog({
             title: "Save Recording",
-            defaultPath: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.wav`,
+            defaultPath: `Recording-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.wav`,
           })
-          .then((path) => {
+          .then(async (path) => {
             if (
               path &&
               guidedInfo.value !== undefined &&
               guidedInfo.value !== null
             ) {
-              blob.arrayBuffer().then((buf) => {
-                window.electron.writeFile({
-                  filePath: path,
-                  buffer: buf,
-                });
+              window.electron.writeFile({
+                filePath: path,
+                buffer: await blob.arrayBuffer(),
               });
               store.dispatch("SET_AUDIO_GUIDED_INFO", {
                 audioKey: props.activeAudioKey,
@@ -195,7 +217,9 @@ export default defineComponent({
 
     return {
       updateOpenDialog,
-      preview,
+      previewing,
+      startPreview,
+      stopPreview,
       guidedInfo,
       selectAudioSource,
       status,
