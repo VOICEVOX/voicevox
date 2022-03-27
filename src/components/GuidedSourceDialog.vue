@@ -31,9 +31,28 @@
                 Choose an audio source
               </q-tooltip>
             </q-btn>
-            <q-btn round flat icon="radio_button_unchecked" color="warning">
+            <q-btn
+              v-if="!recording"
+              round
+              flat
+              icon="radio_button_unchecked"
+              color="warning"
+              @click="startRecording"
+            >
               <q-tooltip :delay="500" anchor="bottom left">
                 Record from microphone
+              </q-tooltip>
+            </q-btn>
+            <q-btn
+              v-else
+              round
+              flat
+              icon="stop"
+              color="display"
+              @click="stopRecording"
+            >
+              <q-tooltip :delay="500" anchor="bottom left">
+                Finish Recording
               </q-tooltip>
             </q-btn>
           </template>
@@ -47,7 +66,7 @@
             />
           </template>
           <template v-slot:hint>
-            <div class="text-primary">{{ status }}</div>
+            <div>{{ status }}</div>
           </template>
         </q-input>
       </q-card-actions>
@@ -56,8 +75,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, Ref } from "vue";
+import { defineComponent, computed, ComputedRef, ref } from "vue";
 import { useStore } from "@/store";
+import Recorder from "recorder-js";
 
 export default defineComponent({
   name: "GuidedSourceDialog",
@@ -88,7 +108,7 @@ export default defineComponent({
         guidedInfo.value.audioPath !== ""
       ) {
         window.electron
-          .externalAudio(guidedInfo.value.audioPath)
+          .readFile({ filePath: guidedInfo.value.audioPath })
           .then((array) => {
             if (array)
               store.dispatch("PLAY_AUDIO_BLOB", {
@@ -111,9 +131,67 @@ export default defineComponent({
       }
     };
 
-    type statusType = "Ready" | "Recording" | "Recording Finished";
+    type statusType = "Ready" | "Recording" | "File not specified";
 
-    const status: Ref<statusType> = ref("Ready");
+    const recording = ref(false);
+
+    const status: ComputedRef<statusType> = computed(() => {
+      if (recording.value) {
+        return "Recording";
+      } else if (guidedInfo.value?.audioPath == "") {
+        return "File not specified";
+      } else {
+        return "Ready";
+      }
+    });
+    const audioContext = new window.AudioContext();
+
+    const recorder = new Recorder(audioContext);
+
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => recorder.init(stream))
+      .catch((err) => console.log("Uh oh... unable to get stream...", err));
+
+    const startRecording = () => {
+      recorder.start().then(() => {
+        recording.value = true;
+      });
+    };
+
+    const stopRecording = () => {
+      recorder.stop().then(async ({ blob, buffer }) => {
+        const date = new Date();
+        window.electron
+          .showAudioSaveDialog({
+            title: "Save Recording",
+            defaultPath: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.wav`,
+          })
+          .then((path) => {
+            if (
+              path &&
+              guidedInfo.value !== undefined &&
+              guidedInfo.value !== null
+            ) {
+              blob.arrayBuffer().then((buf) => {
+                window.electron.writeFile({
+                  filePath: path,
+                  buffer: buf,
+                });
+              });
+              store.dispatch("SET_AUDIO_GUIDED_INFO", {
+                audioKey: props.activeAudioKey,
+                guidedInfo: { ...guidedInfo.value, audioPath: path },
+              });
+            }
+          });
+        recording.value = false;
+        store.dispatch("PLAY_AUDIO_BLOB", {
+          audioBlob: blob,
+          audioElem: audioElem,
+        });
+      });
+    };
 
     return {
       updateOpenDialog,
@@ -121,6 +199,9 @@ export default defineComponent({
       guidedInfo,
       selectAudioSource,
       status,
+      recording,
+      startRecording,
+      stopRecording,
     };
   },
 });
