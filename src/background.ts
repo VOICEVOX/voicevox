@@ -172,6 +172,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     action: "テキスト読み込む",
     combination: "",
   },
+  {
+    action: "イントネーションをリセット",
+    combination: !isMac ? "Ctrl G" : "Meta G",
+  },
 ];
 
 const defaultToolbarButtonSetting: ToolbarSetting = [

@@ -283,6 +283,16 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "イントネーションをリセット",
+        () => {
+          if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
+            store.dispatch("COMMAND_RESET_MORA_FROM_ACCENT_PHRASE", {
+              audioKey: store.getters.ACTIVE_AUDIO_KEY,
+            });
+          }
+        },
+      ],
     ]);
     // このコンポーネントは遅延評価なので手動でバインディングを行う
     setHotkeyFunctions(hotkeyMap, true);
