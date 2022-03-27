@@ -87,7 +87,6 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  externalAudio(path: string, blob?: Blob): Promise<Uint8Array | void>;
 }
 
 export type AppInfos = {

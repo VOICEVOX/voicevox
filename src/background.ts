@@ -1165,18 +1165,6 @@ ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
 });
 
-ipcMainHandle("EXTERNAL_AUDIO", (_, { path, blob }) => {
-  console.log(path);
-  if (blob === undefined) {
-    if (fs.existsSync(path)) {
-      return fs.readFileSync(path);
-    }
-  } else {
-    fs.writeFileSync(path, Buffer.from(new Uint8Array(blob)));
-  }
-  return null;
-});
-
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く

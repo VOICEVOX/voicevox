@@ -282,10 +282,6 @@ const api: Sandbox = {
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
-
-  externalAudio: (path, blob) => {
-    return ipcRenderer.invoke("EXTERNAL_AUDIO", { path, blob });
-  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
