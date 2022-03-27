@@ -462,6 +462,10 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_RESET_MORA_FROM_ACCENT_PHRASE: {
+    action(payload: { audioKey: string }): void;
+  };
+
   COMMAND_SET_AUDIO_MORA_DATA: {
     mutation: {
       audioKey: string;
