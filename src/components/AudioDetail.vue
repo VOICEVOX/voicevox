@@ -89,7 +89,7 @@
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.consonantLength"
-                :uiLocked="uiLocked || guidedInfo.precise"
+                :uiLocked="uiLocked"
                 :min="minMoraLength"
                 :max="maxMoraLength"
                 :step="0.001"
@@ -104,7 +104,7 @@
                 :moraIndex="moraIndex"
                 :accentPhraseIndex="accentPhraseIndex"
                 :value="mora.vowelLength"
-                :uiLocked="uiLocked || guidedInfo.precise"
+                :uiLocked="uiLocked"
                 :min="minMoraLength"
                 :max="maxMoraLength"
                 :step="0.001"
@@ -128,7 +128,7 @@
               :moraIndex="accentPhrase.moras.length"
               :accentPhraseIndex="accentPhraseIndex"
               :value="accentPhrase.pauseMora.vowelLength"
-              :uiLocked="uiLocked || guidedInfo.precise"
+              :uiLocked="uiLocked"
               :min="0"
               :max="1.0"
               :step="0.01"
@@ -155,9 +155,7 @@
             >
               {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
               <q-popup-edit
-                v-if="
-                  selectedDetail == 'accent' && !uiLocked && guidedInfo.precise
-                "
+                v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
                 auto-save
                 transition-show="none"
@@ -399,34 +397,32 @@ export default defineComponent({
       () => store.state.experimentalSetting.enableGuided
     );
 
-    // guided
     const guidedInfo = computed(() => {
+      const audioItem = store.state.audioItems[props.activeAudioKey];
       if (
-        audioItem.value.query?.guidedInfo === undefined ||
-        audioItem.value.query.guidedInfo === null
+        audioItem.query?.guidedInfo === undefined ||
+        audioItem.query.guidedInfo === null
       ) {
-        setGuidedInfo("enabled", false);
-        return {
+        const newGuidedInfo: GuidedInfo = {
           enabled: false,
           audioPath: "",
           normalize: false,
           precise: false,
         };
-      } else return audioItem.value.query.guidedInfo;
+        store.dispatch("SET_AUDIO_GUIDED_INFO", {
+          audioKey: props.activeAudioKey,
+          guidedInfo: newGuidedInfo,
+        });
+        return newGuidedInfo;
+      } else return audioItem.query.guidedInfo;
     });
 
     const isGuidedDialogOpen = ref(false);
 
     const setGuidedInfo = (key: keyof GuidedInfo, data: boolean | string) => {
-      let newGuidedInfo: GuidedInfo = {
-        enabled: false,
-        audioPath: "",
-        normalize: false,
-        precise: false,
-      };
       store.dispatch("SET_AUDIO_GUIDED_INFO", {
         audioKey: props.activeAudioKey,
-        guidedInfo: { ...newGuidedInfo, [key]: data },
+        guidedInfo: { ...guidedInfo.value, [key]: data },
       });
     };
 
