@@ -432,31 +432,58 @@ export default defineComponent({
     };
 
     const flushGuided = () => {
-      const exists = store.dispatch("CHECK_FILE_EXISTS", {
-        file: guidedInfo.value.audioPath,
-      });
-      exists.then((value) => {
-        if (value)
-          store.dispatch("FLUSH_GUIDED", { audioKey: props.activeAudioKey });
-        else
-          $q.dialog({
-            title: "File doesn't exist",
-            message: "The configured external audio file doesn't exist",
-            ok: {
-              label: "Open audio source dialog",
-              flat: true,
-              textColor: "display-dark",
-              backgroundColor: "primary-light",
-            },
-            cancel: {
-              label: "Cancel",
-              flat: true,
-              textColor: "display",
-              backgroundColor: "primary-light",
-            },
-          }).onOk(() => {
-            isGuidedDialogOpen.value = true;
-          });
+      if (guidedInfo.value.audioPath == "") {
+        showGuidedErrorDialog(
+          "File not specified",
+          "You haven't specified an audio source."
+        );
+      } else {
+        const exists = store.dispatch("CHECK_FILE_EXISTS", {
+          file: guidedInfo.value.audioPath,
+        });
+        exists.then((value) => {
+          if (value) {
+            const res = store.dispatch("FLUSH_GUIDED", {
+              audioKey: props.activeAudioKey,
+            });
+            res.then((value) => {
+              if (!value) {
+                showGuidedErrorDialog(
+                  "Failed in Forced Alignment",
+                  "Julius fails to force align the audio source and text.<br/>\
+                  Please try replacing the audio source or checking your text.<br/>\
+                  Don't worry, it is how fragile it is for now :)"
+                );
+              }
+            });
+          } else
+            showGuidedErrorDialog(
+              "File doesn't exist",
+              "The specified file path doesn't exist."
+            );
+        });
+      }
+    };
+
+    const showGuidedErrorDialog = (title: string, msg: string) => {
+      $q.dialog({
+        title: title,
+        message: msg,
+        html: true,
+        ok: {
+          label: "Open audio source dialog",
+          flat: true,
+          textColor: "display-dark",
+          backgroundColor: "primary-light",
+        },
+        cancel: {
+          label: "Cancel",
+          flat: true,
+          textColor: "display",
+          backgroundColor: "primary-light",
+        },
+      }).onOk(() => {
+        isGuidedDialogOpen.value = true;
       });
     };
 

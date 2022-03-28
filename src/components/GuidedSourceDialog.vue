@@ -125,9 +125,9 @@ export default defineComponent({
       } else return audioItem.query.guidedInfo;
     });
 
-    const audioElem = new Audio();
+    const audioElem = ref(new Audio());
 
-    audioElem.addEventListener("ended", () => {
+    audioElem.value.addEventListener("ended", () => {
       previewing.value = false;
     });
 
@@ -141,7 +141,7 @@ export default defineComponent({
             if (array) {
               store.dispatch("PLAY_AUDIO_BLOB", {
                 audioBlob: new Blob([array], { type: "audio/wav" }),
-                audioElem: audioElem,
+                audioElem: audioElem.value,
               });
               previewing.value = true;
             }
@@ -151,8 +151,8 @@ export default defineComponent({
 
     const stopPreview = () => {
       previewing.value = false;
-      audioElem.pause();
-      audioElem.currentTime = 0;
+      audioElem.value.pause();
+      audioElem.value.currentTime = 0;
     };
 
     const selectAudioSource = async () => {
@@ -181,24 +181,24 @@ export default defineComponent({
     });
     const audioContext = new window.AudioContext();
 
-    const recorder = new Recorder(audioContext);
+    const recorder = ref(new Recorder(audioContext));
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
-      .then((stream) => recorder.init(stream))
+      .then((stream) => recorder.value.init(stream))
       .catch((err) =>
         console.log("How could Chromium not support recording?", err)
       );
 
     const startRecording = () => {
       stopPreview();
-      recorder.start().then(() => {
+      recorder.value.start().then(() => {
         recording.value = true;
       });
     };
 
     const stopRecording = () => {
-      recorder.stop().then(({ blob, buffer }) => {
+      recorder.value.stop().then(({ blob, buffer }) => {
         const date = new Date();
         window.electron
           .showAudioSaveDialog({
@@ -220,7 +220,7 @@ export default defineComponent({
         recording.value = false;
         store.dispatch("PLAY_AUDIO_BLOB", {
           audioBlob: blob,
-          audioElem: audioElem,
+          audioElem: audioElem.value,
         });
       });
     };
