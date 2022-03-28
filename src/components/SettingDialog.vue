@@ -280,8 +280,8 @@
                   :options="[
                     {
                       label: '句点と改行',
-                      value: 'BOTH',
-                      slot: 'splitTextBoth',
+                      value: 'PERIOD_AND_NEW_LINE',
+                      slot: 'splitTextPeriodAndNewLine',
                     },
                     {
                       label: '改行',
@@ -291,7 +291,7 @@
                     { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
                   ]"
                 >
-                  <template v-slot:splitTextBoth>
+                  <template v-slot:splitTextPeriodAndNewLine>
                     <q-tooltip
                       :delay="500"
                       anchor="center left"

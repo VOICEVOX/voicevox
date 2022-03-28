@@ -32,7 +32,7 @@ export const settingStoreState: SettingStoreState = {
     outputStereo: false,
     outputSamplingRate: 24000,
     audioOutputDevice: "default",
-    splitTextWhenPaste: "BOTH",
+    splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   },
   hotkeySettings: [],
   toolbarSetting: [],

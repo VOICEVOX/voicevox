@@ -231,8 +231,8 @@ const store = new Store<{
         audioOutputDevice: { type: "string", default: "default" },
         splitTextWhenPaste: {
           type: "string",
-          enum: ["BOTH", "NEW_LINE", "OFF"],
-          default: "BOTH",
+          enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
+          default: "PERIOD_AND_NEW_LINE",
         },
       },
       default: {
@@ -245,7 +245,7 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
-        splitTextWhenPaste: "BOTH",
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
     },
     // To future developers: if you are to modify the store schema with array type,

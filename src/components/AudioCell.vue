@@ -287,7 +287,7 @@ export default defineComponent({
         let texts: string[] = [];
         const clipBoardData = event.clipboardData.getData("text/plain");
         switch (isEnableSplitText.value) {
-          case "BOTH":
+          case "PERIOD_AND_NEW_LINE":
             texts = clipBoardData.replaceAll("。", "。\n\r").split(/[\n\r]/);
             break;
           case "NEW_LINE":

@@ -133,7 +133,7 @@ export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
-export type SplitTextWhenPasteType = "BOTH" | "NEW_LINE" | "OFF";
+export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type SavingSetting = {
   exportLab: boolean;
