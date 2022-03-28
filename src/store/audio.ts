@@ -1501,7 +1501,6 @@ export const audioStore: VoiceVoxStoreOptions<
       const speaker = audioItem.styleId;
 
       if (audioQuery !== undefined && speaker !== undefined) {
-        console.log(audioQuery);
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
           action: "guidedSynthesisGuidedSynthesisPost",

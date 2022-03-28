@@ -187,7 +187,7 @@ export default defineComponent({
       .getUserMedia({ audio: true })
       .then((stream) => recorder.init(stream))
       .catch((err) =>
-        console.log("Your browser doesn't support recording", err)
+        console.log("How could Chromium not support recording?", err)
       );
 
     const startRecording = () => {
