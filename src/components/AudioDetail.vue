@@ -67,7 +67,7 @@
                 :uiLocked="uiLocked"
                 :min="minPitch"
                 :max="maxPitch"
-                :disable="mora.pitch == 0.0"
+                :disable="mora.pitch == 0.0 || guidedInfo.precise"
                 :type="'pitch'"
                 :clip="false"
                 :shiftKeyFlag="shiftKeyFlag"
@@ -92,6 +92,7 @@
                 :uiLocked="uiLocked"
                 :min="minMoraLength"
                 :max="maxMoraLength"
+                :disable="guidedInfo.precise"
                 :step="0.001"
                 :type="'consonant'"
                 :clip="true"
@@ -107,6 +108,7 @@
                 :uiLocked="uiLocked"
                 :min="minMoraLength"
                 :max="maxMoraLength"
+                :disable="guidedInfo.precise"
                 :step="0.001"
                 :type="'vowel'"
                 :clip="mora.consonant ? true : false"
@@ -131,6 +133,7 @@
               :uiLocked="uiLocked"
               :min="0"
               :max="1.0"
+              :disable="guidedInfo.precise"
               :step="0.01"
               :type="'pause'"
               :shiftKeyFlag="shiftKeyFlag"
@@ -648,7 +651,8 @@ export default defineComponent({
       if (
         activePoint.value === undefined ||
         !audioDetail.value ||
-        accentPhraseElems.length === 0
+        accentPhraseElems.length === 0 ||
+        guidedInfo.value.precise
       )
         return;
       const elem = accentPhraseElems[activePoint.value];
@@ -685,7 +689,7 @@ export default defineComponent({
     // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
     let focusInterval: ReturnType<typeof setInterval> | undefined;
     watch(nowPlaying, async (newState) => {
-      if (newState) {
+      if (newState && !guidedInfo.value.precise) {
         const accentPhraseOffsets = await store.dispatch(
           "GET_AUDIO_PLAY_OFFSETS",
           {
