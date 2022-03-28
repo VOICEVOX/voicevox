@@ -1461,15 +1461,31 @@ export const audioStore: VoiceVoxStoreOptions<
             audioKey,
             nowGenerating: true,
           });
-          const blob = await dispatch("GUIDED_SYNTHESIS", { audioKey });
+          const blob = await dispatch("GUIDED_SYNTHESIS", { audioKey }).catch(
+            (err) => {
+              window.electron.logError(err);
+            }
+          );
           if (!blob) {
+            commit("SET_AUDIO_NOW_GENERATING", {
+              audioKey,
+              nowGenerating: false,
+            });
             return false;
+          } else {
+            const audioElem = audioElements[audioKey];
+            audioElem.pause();
+            dispatch("PLAY_AUDIO_BLOB", {
+              audioBlob: blob,
+              audioElem: audioElem,
+              audioKey: audioKey,
+            });
+            commit("SET_AUDIO_NOW_GENERATING", {
+              audioKey,
+              nowGenerating: false,
+            });
+            return true;
           }
-          commit("SET_AUDIO_NOW_GENERATING", {
-            audioKey,
-            nowGenerating: false,
-          });
-          return true;
         } else {
           const accentPhrases = await dispatch("GUIDED_ACCENT_PHRASE", {
             audioKey: audioKey,
@@ -1516,7 +1532,6 @@ export const audioStore: VoiceVoxStoreOptions<
         })
           .then(toDispatchResponse("guidedSynthesisGuidedSynthesisPost"))
           .then(async (blob) => {
-            // TODO: handle the HTTP Error below, which is failed forced alignment
             audioBlobCache[id] = blob;
             return blob;
           });

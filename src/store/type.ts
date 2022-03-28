@@ -289,7 +289,7 @@ type AudioStoreTypes = {
   };
 
   FLUSH_GUIDED: {
-    action(payload: { audioKey: string }): boolean | void;
+    action(payload: { audioKey: string }): boolean;
   };
 
   GUIDED_SYNTHESIS: {
