@@ -657,6 +657,7 @@ export const audioStore: VoiceVoxStoreOptions<
         audioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
+        audioItem.query.guidedInfo = baseAudioItem.query.guidedInfo;
       }
       return audioItem;
     },
