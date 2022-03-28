@@ -2,10 +2,7 @@
   <q-dialog :model-value="openDialog" @update:model-value="updateOpenDialog">
     <q-card class="setting-card q-pa-md dialog-card">
       <q-card-section>
-        <div class="text-h5">
-          Guided: Manage Audio Source
-          <q-btn round unelevated icon="settings" />
-        </div>
+        <div class="text-h5">Guided: Manage Audio Source</div>
       </q-card-section>
       <q-card-actions class="q-px-md q-py-sm">
         <q-input
