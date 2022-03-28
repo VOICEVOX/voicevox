@@ -87,6 +87,7 @@
 import { defineComponent, computed, ComputedRef, ref } from "vue";
 import { useStore } from "@/store";
 import Recorder from "recorder-js";
+import { GuidedInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "GuidedSourceDialog",
@@ -104,9 +105,25 @@ export default defineComponent({
 
     const store = useStore();
 
-    const guidedInfo = computed(
-      () => store.state.audioItems[props.activeAudioKey].query?.guidedInfo
-    );
+    const guidedInfo = computed(() => {
+      const audioItem = store.state.audioItems[props.activeAudioKey];
+      if (
+        audioItem.query?.guidedInfo === undefined ||
+        audioItem.query.guidedInfo === null
+      ) {
+        const newGuidedInfo: GuidedInfo = {
+          enabled: false,
+          audioPath: "",
+          normalize: false,
+          precise: false,
+        };
+        store.dispatch("SET_AUDIO_GUIDED_INFO", {
+          audioKey: props.activeAudioKey,
+          guidedInfo: newGuidedInfo,
+        });
+        return newGuidedInfo;
+      } else return audioItem.query.guidedInfo;
+    });
 
     const audioElem = new Audio();
 
@@ -117,11 +134,7 @@ export default defineComponent({
     const previewing = ref(false);
 
     const startPreview = () => {
-      if (
-        guidedInfo.value !== null &&
-        guidedInfo.value !== undefined &&
-        guidedInfo.value.audioPath !== ""
-      ) {
+      if (guidedInfo.value.audioPath !== "") {
         window.electron
           .readFile({ filePath: guidedInfo.value.audioPath })
           .then((array) => {
@@ -146,12 +159,11 @@ export default defineComponent({
       const path = await window.electron.showOpenAudioDialog({
         title: "Select Audio Source",
       });
-      if (path && guidedInfo.value !== undefined && guidedInfo.value !== null) {
+      if (path)
         store.dispatch("SET_AUDIO_GUIDED_INFO", {
           audioKey: props.activeAudioKey,
           guidedInfo: { ...guidedInfo.value, audioPath: path },
         });
-      }
     };
 
     type statusType = "Ready" | "Recording" | "File not specified";
@@ -174,7 +186,9 @@ export default defineComponent({
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => recorder.init(stream))
-      .catch((err) => console.log("Uh oh... unable to get stream...", err));
+      .catch((err) =>
+        console.log("Your browser doesn't support recording", err)
+      );
 
     const startRecording = () => {
       stopPreview();
@@ -192,11 +206,7 @@ export default defineComponent({
             defaultPath: `Recording-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.wav`,
           })
           .then(async (path) => {
-            if (
-              path &&
-              guidedInfo.value !== undefined &&
-              guidedInfo.value !== null
-            ) {
+            if (path) {
               window.electron.writeFile({
                 filePath: path,
                 buffer: await blob.arrayBuffer(),

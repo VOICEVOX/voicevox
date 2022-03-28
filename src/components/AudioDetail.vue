@@ -401,32 +401,33 @@ export default defineComponent({
 
     // guided
     const guidedInfo = computed(() => {
-      if (audioItem.value.query?.guidedInfo === undefined) {
+      if (
+        audioItem.value.query?.guidedInfo === undefined ||
+        audioItem.value.query.guidedInfo === null
+      ) {
         setGuidedInfo("enabled", false);
-      }
-      return audioItem.value.query?.guidedInfo;
-    });
-
-    const isGuidedDialogOpen = ref(false);
-
-    const setGuidedInfo = (key: keyof GuidedInfo, data: boolean | string) => {
-      if (guidedInfo.value === undefined || guidedInfo.value === null) {
-        let newGuidedInfo: GuidedInfo = {
+        return {
           enabled: false,
           audioPath: "",
           normalize: false,
           precise: false,
         };
-        store.dispatch("SET_AUDIO_GUIDED_INFO", {
-          audioKey: props.activeAudioKey,
-          guidedInfo: { ...newGuidedInfo, [key]: data },
-        });
-      } else {
-        store.dispatch("SET_AUDIO_GUIDED_INFO", {
-          audioKey: props.activeAudioKey,
-          guidedInfo: { ...guidedInfo.value, [key]: data },
-        });
-      }
+      } else return audioItem.value.query.guidedInfo;
+    });
+
+    const isGuidedDialogOpen = ref(false);
+
+    const setGuidedInfo = (key: keyof GuidedInfo, data: boolean | string) => {
+      let newGuidedInfo: GuidedInfo = {
+        enabled: false,
+        audioPath: "",
+        normalize: false,
+        precise: false,
+      };
+      store.dispatch("SET_AUDIO_GUIDED_INFO", {
+        audioKey: props.activeAudioKey,
+        guidedInfo: { ...newGuidedInfo, [key]: data },
+      });
     };
 
     const getGuidedStyle = (condition: boolean) => {
@@ -435,37 +436,32 @@ export default defineComponent({
     };
 
     const flushGuided = () => {
-      if (guidedInfo.value === undefined) {
-        // show a dialog for not defining it
-        setGuidedInfo("enabled", false);
-      } else if (guidedInfo.value !== null) {
-        const exists = store.dispatch("CHECK_FILE_EXISTS", {
-          file: guidedInfo.value.audioPath,
-        });
-        exists.then((value) => {
-          if (value)
-            store.dispatch("FLUSH_GUIDED", { audioKey: props.activeAudioKey });
-          else
-            $q.dialog({
-              title: "File doesn't exist",
-              message: "The configured external audio file doesn't exist",
-              ok: {
-                label: "Open audio source dialog",
-                flat: true,
-                textColor: "display-dark",
-                backgroundColor: "primary-light",
-              },
-              cancel: {
-                label: "Cancel",
-                flat: true,
-                textColor: "display",
-                backgroundColor: "primary-light",
-              },
-            }).onOk(() => {
-              isGuidedDialogOpen.value = true;
-            });
-        });
-      }
+      const exists = store.dispatch("CHECK_FILE_EXISTS", {
+        file: guidedInfo.value.audioPath,
+      });
+      exists.then((value) => {
+        if (value)
+          store.dispatch("FLUSH_GUIDED", { audioKey: props.activeAudioKey });
+        else
+          $q.dialog({
+            title: "File doesn't exist",
+            message: "The configured external audio file doesn't exist",
+            ok: {
+              label: "Open audio source dialog",
+              flat: true,
+              textColor: "display-dark",
+              backgroundColor: "primary-light",
+            },
+            cancel: {
+              label: "Cancel",
+              flat: true,
+              textColor: "display",
+              backgroundColor: "primary-light",
+            },
+          }).onOk(() => {
+            isGuidedDialogOpen.value = true;
+          });
+      });
     };
 
     // accent phrase
