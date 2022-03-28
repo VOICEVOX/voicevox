@@ -369,13 +369,13 @@ export interface DefaultApiInterface {
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>>;
+    guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>>;
 
     /**
      * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
      * Audio synthesis guided by external audio and phonemes
      */
-    guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<any>;
+    guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob>;
 
     /**
      * 他のユーザー辞書をインポートします。  Parameters ---------- import_dict_data: Dict[str, UserDictWord]     インポートするユーザー辞書のデータ override: bool     重複したエントリがあった場合、上書きするかどうか
@@ -1041,7 +1041,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
      * Audio synthesis guided by external audio and phonemes
      */
-    async guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<any>> {
+    async guidedSynthesisGuidedSynthesisPostRaw(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Blob>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
         }
@@ -1072,14 +1072,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             body: AudioQueryToJSON(requestParameters.audioQuery),
         }, initOverrides);
 
-        return new runtime.TextApiResponse(response) as any;
+        return new runtime.BlobApiResponse(response);
     }
 
     /**
      * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
      * Audio synthesis guided by external audio and phonemes
      */
-    async guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<any> {
+    async guidedSynthesisGuidedSynthesisPost(requestParameters: GuidedSynthesisGuidedSynthesisPostRequest, initOverrides?: RequestInit): Promise<Blob> {
         const response = await this.guidedSynthesisGuidedSynthesisPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
