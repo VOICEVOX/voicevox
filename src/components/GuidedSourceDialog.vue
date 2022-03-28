@@ -26,6 +26,7 @@
               color="primary"
               icon="folder_open"
               @click="selectAudioSource"
+              :disable="recording"
             >
               <q-tooltip :delay="500" anchor="bottom left">
                 Choose an audio source
@@ -100,8 +101,10 @@ export default defineComponent({
   emits: ["update:openDialog"],
 
   setup(props, context) {
-    const updateOpenDialog = (isOpen: boolean) =>
+    const updateOpenDialog = (isOpen: boolean) => {
       context.emit("update:openDialog", isOpen);
+      stopPreview();
+    };
 
     const store = useStore();
 
