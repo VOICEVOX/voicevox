@@ -362,6 +362,16 @@ const accentPhraseSchema = {
   },
 } as const;
 
+const guidedInfoSchema = {
+  properties: {
+    enabled: { type: "boolean" },
+    audioPath: { type: "string" },
+    normalize: { type: "boolean" },
+    precise: { type: "boolean" },
+  },
+  optionalProperties: {},
+} as const;
+
 const audioQuerySchema = {
   properties: {
     accentPhrases: {
@@ -378,17 +388,8 @@ const audioQuerySchema = {
   },
   optionalProperties: {
     kana: { type: "string" },
+    guidedInfo: guidedInfoSchema,
   },
-} as const;
-
-const guidedInfoSchema = {
-  properties: {
-    enabled: { type: "boolean" },
-    audioPath: { type: "string" },
-    normalize: { type: "boolean" },
-    precise: { type: "boolean" },
-  },
-  optionalProperties: {},
 } as const;
 
 const audioItemSchema = {
@@ -399,7 +400,6 @@ const audioItemSchema = {
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },
-    guidedInfo: guidedInfoSchema,
   },
 } as const;
 
