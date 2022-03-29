@@ -278,13 +278,22 @@ export default defineComponent({
       store.dispatch("STOP_AUDIO", { audioKey: props.audioKey });
     };
 
+    const isEnableSplitText = computed(
+      () => store.state.savingSetting.splitTextWhenPaste
+    );
     // コピペしたときに句点と改行で区切る
     const pasteOnAudioCell = async (event: ClipboardEvent) => {
-      if (event.clipboardData) {
-        const texts = event.clipboardData
-          .getData("text/plain")
-          .replaceAll("。", "。\n\r")
-          .split(/[\n\r]/);
+      if (event.clipboardData && isEnableSplitText.value !== "OFF") {
+        let texts: string[] = [];
+        const clipBoardData = event.clipboardData.getData("text/plain");
+        switch (isEnableSplitText.value) {
+          case "PERIOD_AND_NEW_LINE":
+            texts = clipBoardData.replaceAll("。", "。\n\r").split(/[\n\r]/);
+            break;
+          case "NEW_LINE":
+            texts = clipBoardData.split(/[\n\r]/);
+            break;
+        }
 
         if (texts.length > 1) {
           event.preventDefault();
