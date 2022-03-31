@@ -1808,10 +1808,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
       }
     },
-    async COMMAND_RESET_MORA_FROM_ACCENT_PHRASE(
-      { state, dispatch, commit },
-      { audioKey }
-    ) {
+    async COMMAND_RESET_MORA_PITCH({ state, dispatch, commit }, { audioKey }) {
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId == undefined");
 

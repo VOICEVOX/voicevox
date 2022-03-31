@@ -462,7 +462,7 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_RESET_MORA_FROM_ACCENT_PHRASE: {
+  COMMAND_RESET_MORA_PITCH: {
     action(payload: { audioKey: string }): void;
   };
 
