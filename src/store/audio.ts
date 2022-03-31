@@ -789,6 +789,27 @@ export const audioStore: VoiceVoxStoreOptions<
       }
       return accentPhrases;
     },
+    FETCH_MORA_PITCH({ dispatch, state }, { accentPhrases, styleId }) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
+      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
+        action: "moraPitchMoraPitchPost",
+        payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
+      })
+        .then(toDispatchResponse("moraPitchMoraPitchPost"))
+        .catch((error) => {
+          window.electron.logError(
+            error,
+            `Failed to fetch MoraPitch for the accentPhrases "${JSON.stringify(
+              accentPhrases
+            )}".`
+          );
+          throw error;
+        });
+    },
     FETCH_AUDIO_QUERY(
       { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
@@ -1816,7 +1837,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (query == undefined) throw new Error("query == undefined");
 
       try {
-        const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+        const newAccentPhases = await dispatch("FETCH_MORA_PITCH", {
           accentPhrases: query.accentPhrases,
           styleId,
         });
