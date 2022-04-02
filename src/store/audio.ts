@@ -1808,7 +1808,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
       }
     },
-    async COMMAND_RESET_MORA_PITCH({ state, dispatch, commit }, { audioKey }) {
+    async COMMAND_RESET_MORA_PITCH_AND_LENGTH(
+      { state, dispatch, commit },
+      { audioKey }
+    ) {
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId == undefined");
 

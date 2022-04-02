@@ -287,7 +287,7 @@ export default defineComponent({
         "イントネーションをリセット",
         () => {
           if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-            store.dispatch("COMMAND_RESET_MORA_PITCH", {
+            store.dispatch("COMMAND_RESET_MORA_PITCH_AND_LENGTH", {
               audioKey: store.getters.ACTIVE_AUDIO_KEY,
             });
           }

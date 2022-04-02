@@ -462,7 +462,7 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_RESET_MORA_PITCH: {
+  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
     action(payload: { audioKey: string }): void;
   };
 
