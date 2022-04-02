@@ -290,13 +290,6 @@ type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
-  FETCH_MORA_PITCH: {
-    action(payload: {
-      accentPhrases: AccentPhrase[];
-      styleId: number;
-    }): Promise<AccentPhrase[]>;
-  };
-
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
