@@ -174,6 +174,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "イントネーションをリセット",
+    combination: "",
+  },
+  {
+    action: "選択中のアクセント句のイントネーションをリセット",
     combination: "R",
   },
 ];

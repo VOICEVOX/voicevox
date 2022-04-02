@@ -293,6 +293,21 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "選択中のアクセント句のイントネーションをリセット",
+        () => {
+          if (
+            !uiLocked.value &&
+            store.getters.ACTIVE_AUDIO_KEY &&
+            store.state.audioPlayStartPoint !== undefined
+          ) {
+            store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+              audioKey: store.getters.ACTIVE_AUDIO_KEY,
+              accentPhraseIndex: store.state.audioPlayStartPoint,
+            });
+          }
+        },
+      ],
     ]);
     // このコンポーネントは遅延評価なので手動でバインディングを行う
     setHotkeyFunctions(hotkeyMap, true);
