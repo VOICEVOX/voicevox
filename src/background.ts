@@ -174,7 +174,7 @@ const defaultHotkeySettings: HotkeySetting[] = [
   },
   {
     action: "イントネーションをリセット",
-    combination: !isMac ? "Ctrl G" : "Meta G",
+    combination: "R",
   },
 ];
 
