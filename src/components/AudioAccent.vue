@@ -34,7 +34,7 @@
       'grid-column': `1 / span ${accentPhrase.moras.length * 2 - 1}`,
     }"
   >
-    <svg :viewBox="`0 0 ${accentLineViewWidth} 50`">
+    <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
       <polyline :points="accentLine" />
     </svg>
   </div>
@@ -96,22 +96,9 @@ export default defineComponent({
       const accent = previewAccentSlider.state.currentValue.value ?? 0;
       return [...Array(props.accentPhrase.moras.length).keys()].map(
         (index) =>
-          `${
-            index * 40 +
-            15 +
-            (index + 1 == props.accentPhrase.moras.length &&
-            props.accentPhrase.isInterrogative
-              ? 9
-              : 0)
-          } ${index + 1 == accent || (index != 0 && index < accent) ? 5 : 45}`
-      );
-    });
-
-    const accentLineViewWidth = computed(() => {
-      return (
-        props.accentPhrase.moras.length * 40 -
-        10 +
-        (props.accentPhrase.isInterrogative ? 18 : 0)
+          `${index * 40 + 15} ${
+            index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+          }`
       );
     });
 
@@ -119,7 +106,6 @@ export default defineComponent({
       previewAccentSlider,
       changeAccent,
       accentLine,
-      accentLineViewWidth,
     };
   },
 });

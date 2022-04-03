@@ -142,13 +142,7 @@
             :key="moraIndex"
           >
             <div
-              :class="
-                getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex) +
-                (accentPhrase.isInterrogative &&
-                moraIndex === accentPhrase.moras.length - 1
-                  ? ' interrogative'
-                  : '')
-              "
+              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
@@ -821,10 +815,6 @@ $pitch-label-height: 24px;
           grid-row-start: 3;
           text-align: center;
           color: colors.$display;
-          &.interrogative {
-            min-width: 48px;
-            max-width: 48px;
-          }
         }
         &.text-cell-hovered {
           min-width: 30px;
@@ -834,10 +824,6 @@ $pitch-label-height: 24px;
           color: colors.$display;
           font-weight: bold;
           cursor: pointer;
-          &.interrogative {
-            min-width: 48px;
-            max-width: 48px;
-          }
         }
         &.splitter-cell {
           min-width: 10px;
