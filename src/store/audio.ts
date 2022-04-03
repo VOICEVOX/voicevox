@@ -470,8 +470,8 @@ export const audioStore: VoiceVoxStoreOptions<
       state,
       { audioKey, guidedInfo }: { audioKey: string; guidedInfo: GuidedInfo }
     ) {
-      const query = state.audioItems[audioKey].query;
-      if (query !== undefined) query.guidedInfo = guidedInfo;
+      const item = state.audioItems[audioKey];
+      if (item !== undefined) item.guidedInfo = guidedInfo;
     },
   },
 
@@ -657,7 +657,7 @@ export const audioStore: VoiceVoxStoreOptions<
         audioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
-        audioItem.query.guidedInfo = baseAudioItem.query.guidedInfo;
+        audioItem.guidedInfo = baseAudioItem.guidedInfo;
       }
       return audioItem;
     },
@@ -1449,13 +1449,9 @@ export const audioStore: VoiceVoxStoreOptions<
         { audioKey }: { audioKey: string }
       ) => {
         const audioItem = state.audioItems[audioKey];
-        if (
-          audioItem.query?.guidedInfo === null ||
-          audioItem.query?.guidedInfo === undefined ||
-          !audioItem.query?.guidedInfo.enabled
-        )
+        if (audioItem.guidedInfo === undefined || !audioItem.guidedInfo.enabled)
           return false;
-        else if (audioItem.query?.guidedInfo.precise) {
+        else if (audioItem.guidedInfo.precise) {
           // call guided synthesis
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
@@ -1518,8 +1514,15 @@ export const audioStore: VoiceVoxStoreOptions<
       const [id, audioQuery] = await generateUniqueIdAndQuery(state, audioItem);
 
       const speaker = audioItem.styleId;
+      const normalize = audioItem.guidedInfo?.normalize;
+      const audioPath = audioItem.guidedInfo?.audioPath;
 
-      if (audioQuery !== undefined && speaker !== undefined) {
+      if (
+        audioQuery !== undefined &&
+        speaker !== undefined &&
+        normalize !== undefined &&
+        audioPath !== undefined
+      ) {
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
           action: "guidedSynthesisGuidedSynthesisPost",
@@ -1527,6 +1530,8 @@ export const audioStore: VoiceVoxStoreOptions<
             {
               audioQuery,
               speaker,
+              normalize,
+              audioPath,
             },
           ],
         })
@@ -1548,8 +1553,15 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const speaker = audioItem.styleId;
       const audioQuery = state.audioItems[audioKey].query;
+      const normalize = audioItem.guidedInfo?.normalize;
+      const audioPath = audioItem.guidedInfo?.audioPath;
 
-      if (speaker !== undefined && audioQuery !== undefined)
+      if (
+        audioQuery !== undefined &&
+        speaker !== undefined &&
+        normalize !== undefined &&
+        audioPath !== undefined
+      )
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
           engineKey: engineInfo.key,
           action: "guidedAccentPhrasesGuidedAccentPhrasesPost",
@@ -1557,6 +1569,8 @@ export const audioStore: VoiceVoxStoreOptions<
             {
               speaker,
               audioQuery,
+              normalize,
+              audioPath,
             },
           ],
         });

@@ -107,10 +107,7 @@ export default defineComponent({
 
     const guidedInfo = computed(() => {
       const audioItem = store.state.audioItems[props.activeAudioKey];
-      if (
-        audioItem.query?.guidedInfo === undefined ||
-        audioItem.query.guidedInfo === null
-      ) {
+      if (audioItem.guidedInfo === undefined) {
         const newGuidedInfo: GuidedInfo = {
           enabled: false,
           audioPath: "",
@@ -122,7 +119,7 @@ export default defineComponent({
           guidedInfo: newGuidedInfo,
         });
         return newGuidedInfo;
-      } else return audioItem.query.guidedInfo;
+      } else return audioItem.guidedInfo;
     });
 
     const audioElem = ref(new Audio());

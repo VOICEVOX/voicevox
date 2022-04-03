@@ -35,6 +35,7 @@ export type AudioItem = {
   styleId?: number;
   query?: AudioQuery;
   presetKey?: string;
+  guidedInfo?: GuidedInfo;
 };
 
 export type AudioState = {

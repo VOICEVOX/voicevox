@@ -388,7 +388,6 @@ const audioQuerySchema = {
   },
   optionalProperties: {
     kana: { type: "string" },
-    guidedInfo: guidedInfoSchema,
   },
 } as const;
 
@@ -400,6 +399,7 @@ const audioItemSchema = {
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },
+    guidedInfo: guidedInfoSchema,
   },
 } as const;
 
