@@ -7,11 +7,7 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn
-      flat
-      class="q-pa-none character-button item-handle"
-      :disable="uiLocked"
-    >
+    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
       <q-menu
@@ -21,7 +17,7 @@
       >
         <q-list>
           <q-item
-            v-for="(characterInfo, characterIndex) in characterInfos"
+            v-for="(characterInfo, characterIndex) in userOrderedCharacterInfos"
             :key="characterIndex"
             class="q-pa-none"
           >
@@ -176,7 +172,9 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const characterInfos = computed(() => store.state.characterInfos);
+    const userOrderedCharacterInfos = computed(
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    );
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -188,9 +186,9 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
     const selectedCharacterInfo = computed(() =>
-      store.state.characterInfos !== undefined &&
+      userOrderedCharacterInfos.value !== undefined &&
       audioItem.value.styleId !== undefined
-        ? store.state.characterInfos.find((info) =>
+        ? userOrderedCharacterInfos.value.find((info) =>
             info.metas.styles.find(
               (style) => style.styleId === audioItem.value.styleId
             )
@@ -204,12 +202,14 @@ export default defineComponent({
     );
 
     const subMenuOpenFlags = ref(
-      [...Array(characterInfos.value?.length)].map(() => false)
+      [...Array(userOrderedCharacterInfos.value?.length)].map(() => false)
     );
 
     const reassignSubMenuOpen = debounce((idx: number) => {
       if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(characterInfos.value?.length)].map(() => false);
+      const arr = [...Array(userOrderedCharacterInfos.value?.length)].map(
+        () => false
+      );
       arr[idx] = true;
       subMenuOpenFlags.value = arr;
     }, 100);
@@ -252,7 +252,7 @@ export default defineComponent({
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
-      const characterInfo = characterInfos.value?.find(
+      const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
       const defaultStyleId = store.state.defaultStyleIds.find(
@@ -389,11 +389,8 @@ export default defineComponent({
       textfield.value.focus();
     };
 
-    // キャラクター選択
-    const isOpenedCharacterList = ref(false);
-
     return {
-      characterInfos,
+      userOrderedCharacterInfos,
       audioItem,
       deleteButtonEnable,
       uiLocked,
@@ -424,7 +421,6 @@ export default defineComponent({
       textfield,
       focusTextField,
       blurCell,
-      isOpenedCharacterList,
     };
   },
 });
@@ -435,7 +431,14 @@ export default defineComponent({
 
 .audio-cell {
   display: flex;
-  margin: 1rem 1rem;
+  padding: 0.4rem 0.5rem;
+  margin: 0.2rem 0.5rem;
+  &:first-child {
+    margin-top: 0.6rem;
+  }
+  &:last-child {
+    margin-bottom: 0.6rem;
+  }
   gap: 0px 1rem;
   .active-arrow {
     left: -5px;

@@ -22,7 +22,8 @@
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
         "VOICEVOX" +
-        (currentVersion ? " - Ver. " + currentVersion : "")
+        (currentVersion ? " - Ver. " + currentVersion + " - " : "") +
+        (useGpu ? "GPU" : "CPU")
       }}
     </div>
     <q-space />
@@ -91,6 +92,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
+    const useGpu = store.state.useGpu;
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 
@@ -180,6 +182,9 @@ export default defineComponent({
       });
       store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
         isToolbarSettingDialogOpen: false,
+      });
+      store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+        isCharacterOrderDialogOpen: false,
       });
       store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
@@ -300,10 +305,28 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "デフォルトスタイル・試聴",
+            label: "キャラクター並び替え・試聴",
+            onClick() {
+              store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+                isCharacterOrderDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "デフォルトスタイル",
             onClick() {
               store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "読み方＆アクセント辞書",
+            onClick() {
+              store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+                isDictionaryManageDialogOpen: true,
               });
             },
           },
@@ -377,6 +400,7 @@ export default defineComponent({
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
+      useGpu,
     };
   },
 });

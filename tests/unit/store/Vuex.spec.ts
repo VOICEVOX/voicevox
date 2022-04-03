@@ -19,6 +19,7 @@ describe("store/vuex.js test", () => {
       state: {
         engineState: "STARTING",
         defaultStyleIds: [],
+        userCharacterOrder: [],
         audioItems: {},
         audioKeys: [],
         audioStates: {},
@@ -35,7 +36,9 @@ describe("store/vuex.js test", () => {
         isSettingDialogOpen: false,
         isHotkeySettingDialogOpen: false,
         isToolbarSettingDialogOpen: false,
+        isCharacterOrderDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
+        isDictionaryManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
@@ -63,11 +66,17 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineHost: "http://127.0.0.1",
+        engineInfos: [
+          {
+            key: "88022f86-c823-436e-85a3-500c629749c4",
+            executionEnabled: false,
+            executionFilePath: "",
+            host: "http://127.0.0.1",
+          },
+        ],
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
-          enableReorderCell: false,
         },
       },
       getters: {
@@ -130,7 +139,9 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
+    assert.equal(store.state.isCharacterOrderDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
+    assert.equal(store.state.isDictionaryManageDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);
     assert.equal(store.state.isAcceptTermsDialogOpen, false);
     assert.equal(store.state.isMaximized, false);
@@ -157,6 +168,5 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
-    assert.equal(store.state.experimentalSetting.enableReorderCell, false);
   });
 });

@@ -148,7 +148,10 @@
               }"
               @mouseover="handleHoverText(true, accentPhraseIndex, moraIndex)"
               @mouseleave="handleHoverText(false, accentPhraseIndex, moraIndex)"
-              @click="handleChangeVoicing(mora, accentPhraseIndex, moraIndex)"
+              @click.stop="
+                uiLocked ||
+                  handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
+              "
             >
               {{
                 getHoveredText(mora, accentPhraseIndex, moraIndex) +
@@ -184,7 +187,7 @@
                 accentPhraseIndex < accentPhrases.length - 1 ||
                 moraIndex < accentPhrase.moras.length - 1
               "
-              @click="
+              @click.stop="
                 uiLocked ||
                   toggleAccentPhraseSplit(accentPhraseIndex, false, moraIndex)
               "
@@ -202,7 +205,7 @@
           <template v-if="accentPhrase.pauseMora">
             <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
             <div
-              @click="
+              @click.stop="
                 uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
               "
               class="
@@ -691,22 +694,20 @@ export default defineComponent({
       accentPhraseIndex: number,
       moraIndex: number
     ) => {
-      if (!uiLocked.value) {
-        if (
-          selectedDetail.value == "pitch" &&
-          unvoicableVowels.indexOf(mora.vowel) > -1
-        ) {
-          let data = 0;
-          if (mora.pitch == 0) {
-            if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
-              // 元々無声だった場合、適当な値を代入
-              data = 5.5;
-            } else {
-              data = lastPitches.value[accentPhraseIndex][moraIndex];
-            }
+      if (
+        selectedDetail.value == "pitch" &&
+        unvoicableVowels.indexOf(mora.vowel) > -1
+      ) {
+        let data = 0;
+        if (mora.pitch == 0) {
+          if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
+            // 元々無声だった場合、適当な値を代入
+            data = 5.5;
+          } else {
+            data = lastPitches.value[accentPhraseIndex][moraIndex];
           }
-          changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
         }
+        changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
       }
     };
 
@@ -794,10 +795,10 @@ $pitch-label-height: 24px;
   .accent-phrase-table {
     flex-grow: 1;
     align-self: stretch;
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    padding-left: 5px;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    padding-left: 4px;
 
     display: flex;
     overflow-x: scroll;

@@ -24,6 +24,7 @@ import {
   UpdateInfo,
   Preset,
   ActivePointScrollMode,
+  EngineInfo,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -126,6 +127,10 @@ type AudioStoreTypes = {
     mutation: { characterInfos: CharacterInfo[] };
   };
 
+  USER_ORDERED_CHARACTER_INFOS: {
+    getter: CharacterInfo[] | undefined;
+  };
+
   GENERATE_AUDIO_KEY: {
     action(): string;
   };
@@ -197,6 +202,10 @@ type AudioStoreTypes = {
 
   GET_AUDIO_CACHE: {
     action(payload: { audioKey: string }): Promise<Blob | null>;
+  };
+
+  GET_AUDIO_CACHE_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Promise<Blob | null>;
   };
 
   SET_AUDIO_TEXT: {
@@ -298,7 +307,11 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Blob | null;
+    action(payload: { audioKey: string }): Promise<Blob | null>;
+  };
+
+  GENERATE_AUDIO_FROM_AUDIO_ITEM: {
+    action(payload: { audioItem: AudioItem }): Blob | null;
   };
 
   CONNECT_AUDIO: {
@@ -329,6 +342,14 @@ type AudioStoreTypes = {
 
   PLAY_AUDIO: {
     action(payload: { audioKey: string }): boolean;
+  };
+
+  PLAY_AUDIO_BLOB: {
+    action(payload: {
+      audioBlob: Blob;
+      audioElem: HTMLAudioElement;
+      audioKey?: string;
+    }): boolean;
   };
 
   STOP_AUDIO: {
@@ -597,6 +618,7 @@ export type CommandActions = StoreType<CommandStoreTypes, "action">;
 
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
+  userCharacterOrder: string[];
 };
 
 type IndexStoreTypes = {
@@ -643,6 +665,19 @@ type IndexStoreTypes = {
   SET_DEFAULT_STYLE_IDS: {
     mutation: { defaultStyleIds: DefaultStyleId[] };
     action(payload: DefaultStyleId[]): void;
+  };
+
+  LOAD_USER_CHARACTER_ORDER: {
+    action(): Promise<void>;
+  };
+
+  SET_USER_CHARACTER_ORDER: {
+    mutation: { userCharacterOrder: string[] };
+    action(payload: string[]): void;
+  };
+
+  GET_NEW_CHARACTERS: {
+    action(): string[];
   };
 
   SHOW_WARNING_DIALOG: {
@@ -720,7 +755,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineHost: string;
+  engineInfos: EngineInfo[];
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -810,11 +845,13 @@ export type UiStoreState = {
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
+  isCharacterOrderDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
+  isDictionaryManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -887,8 +924,18 @@ type UiStoreTypes = {
     action(payload: { isAcceptTermsDialogOpen: boolean }): void;
   };
 
+  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
+    mutation: { isDictionaryManageDialogOpen: boolean };
+    action(payload: { isDictionaryManageDialogOpen: boolean }): void;
+  };
+
   ON_VUEX_READY: {
     action(): void;
+  };
+
+  IS_CHARACTER_ORDER_DIALOG_OPEN: {
+    mutation: { isCharacterOrderDialogOpen: boolean };
+    action(payload: { isCharacterOrderDialogOpen: boolean }): void;
   };
 
   IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
@@ -904,6 +951,12 @@ type UiStoreTypes = {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
   };
+
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
 
   GET_INHERIT_AUDIOINFO: {
     action(): void;
@@ -1023,6 +1076,7 @@ export type IEngineConnectorFactoryActions = ReturnType<
 type IEngineConnectorFactoryActionsMapper<K> =
   K extends keyof IEngineConnectorFactoryActions
     ? (payload: {
+        engineKey: string;
         action: K;
         payload: Parameters<IEngineConnectorFactoryActions[K]>;
       }) => ReturnType<IEngineConnectorFactoryActions[K]>

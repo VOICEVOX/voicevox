@@ -6,6 +6,10 @@
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
+※Windows：Windows 10・Windows 11
+※Mac：macOS Catalina以降
+※Linux：Ubuntu 18.04・Ubuntu 20.04
+
 #### GPU 版
 
 Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
@@ -46,6 +50,10 @@ Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
 #### Mac 版
 
 `/Applications/VOICEVOX` もしくは `/Users/(ユーザー名)/Applications/VOICEVOX`
+
+### Q. アップデート方法を教えてください。
+
+ホームページから最新版を再インストールすることでアップデートできます。
 
 ## 使い方に関する質問
 

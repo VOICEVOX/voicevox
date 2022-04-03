@@ -28,7 +28,13 @@ import {
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
-import { buildProjectFileName, sanitizeFileName } from "./utility";
+import {
+  buildProjectFileName,
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+  sanitizeFileName,
+} from "./utility";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -59,17 +65,17 @@ async function generateUniqueIdAndQuery(
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
-  characterInfos?: CharacterInfo[]
+  userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
   {
     const uuid2StyleIds = new Map<string, number>();
-    for (const defaultStyleId of defaultStyleIds || []) {
+    for (const defaultStyleId of defaultStyleIds) {
       const speakerUuid = defaultStyleId.speakerUuid;
       const styleId = defaultStyleId.defaultStyleId;
       uuid2StyleIds.set(speakerUuid, styleId);
     }
-    for (const characterInfo of characterInfos || []) {
+    for (const characterInfo of userOrderedCharacterInfos) {
       const uuid = characterInfo.metas.speakerUuid;
       const styleId =
         uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
@@ -81,7 +87,7 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = 0;
+  let lastStyleId = userOrderedCharacterInfos[0].metas.styles[0].styleId;
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splittedText);
     if (styleId !== undefined) {
@@ -168,6 +174,14 @@ export const audioStore: VoiceVoxStoreOptions<
       return state._activeAudioKey !== undefined
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;
+    },
+    USER_ORDERED_CHARACTER_INFOS: (state) => {
+      const characterInfos = state.characterInfos?.slice();
+      return characterInfos?.sort(
+        (a, b) =>
+          state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
+          state.userCharacterOrder.indexOf(b.metas.speakerUuid)
+      );
     },
   },
 
@@ -456,6 +470,10 @@ export const audioStore: VoiceVoxStoreOptions<
   actions: {
     START_WAITING_ENGINE: createUILockAction(
       async ({ state, commit, dispatch }) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         let engineState = state.engineState;
         for (let i = 0; i < 100; i++) {
           engineState = state.engineState;
@@ -465,12 +483,14 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INVOKE_ENGINE_CONNECTOR", {
+              engineKey: engineInfo.key,
               action: "versionVersionGet",
               payload: [],
             }).then(toDispatchResponse("versionVersionGet"));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
-            window.electron.logInfo("waiting engine...");
+
+            window.electron.logInfo(`Waiting engine ${engineInfo.key}`);
             continue;
           }
           engineState = "READY";
@@ -483,10 +503,16 @@ export const audioStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    LOAD_CHARACTER: createUILockAction(async ({ commit, dispatch }) => {
+    LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "speakersSpeakersGet",
-        payload: [],
+        // 連想配列が第一引数になければ失敗する
+        payload: [{}],
       })
         .then(toDispatchResponse("speakersSpeakersGet"))
         .catch((error) => {
@@ -521,7 +547,12 @@ export const audioStore: VoiceVoxStoreOptions<
         return styles;
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "speakerInfoSpeakerInfoGet",
           payload: [{ speakerUuid: speaker.speakerUuid }],
         })
@@ -574,16 +605,17 @@ export const audioStore: VoiceVoxStoreOptions<
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
-      if (state.characterInfos == undefined)
+      if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
-      const characterInfos = state.characterInfos;
+      const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
       const styleId =
         payload.styleId ??
         state.defaultStyleIds[
           state.defaultStyleIds.findIndex(
-            (x) => x.speakerUuid === characterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+            (x) =>
+              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
           )
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
@@ -645,8 +677,17 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       commit("SET_AUDIO_PLAY_START_POINT", { startPoint });
     },
-    async GET_AUDIO_CACHE({ state }, { audioKey }: { audioKey: string }) {
+    async GET_AUDIO_CACHE(
+      { state, dispatch },
+      { audioKey }: { audioKey: string }
+    ) {
       const audioItem = state.audioItems[audioKey];
+      return dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", { audioItem });
+    },
+    async GET_AUDIO_CACHE_FROM_AUDIO_ITEM(
+      { state },
+      { audioItem }: { audioItem: AudioItem }
+    ) {
       const [id] = await generateUniqueIdAndQuery(state, audioItem);
 
       if (Object.prototype.hasOwnProperty.call(audioBlobCache, id)) {
@@ -662,7 +703,7 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_QUERY", payload);
     },
     FETCH_ACCENT_PHRASES(
-      { dispatch },
+      { state, dispatch },
       {
         text,
         styleId,
@@ -673,7 +714,12 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "accentPhrasesAccentPhrasesPost",
         payload: [
           {
@@ -693,13 +739,18 @@ export const audioStore: VoiceVoxStoreOptions<
         });
     },
     FETCH_MORA_DATA(
-      { dispatch },
+      { dispatch, state },
       {
         accentPhrases,
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "moraDataMoraDataPost",
         payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
@@ -739,10 +790,15 @@ export const audioStore: VoiceVoxStoreOptions<
       return accentPhrases;
     },
     FETCH_AUDIO_QUERY(
-      { dispatch },
+      { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
       return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
         action: "audioQueryAudioQueryPost",
         payload: [
           {
@@ -845,8 +901,16 @@ export const audioStore: VoiceVoxStoreOptions<
       return offsets;
     },
     CONNECT_AUDIO: createUILockAction(
-      async ({ dispatch }, { encodedBlobs }: { encodedBlobs: string[] }) => {
+      async (
+        { dispatch, state },
+        { encodedBlobs }: { encodedBlobs: string[] }
+      ) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
+
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "connectWavesConnectWavesPost",
           payload: [
             {
@@ -864,11 +928,20 @@ export const audioStore: VoiceVoxStoreOptions<
           });
       }
     ),
-    GENERATE_AUDIO: createUILockAction(
-      async ({ dispatch, state }, { audioKey }: { audioKey: string }) => {
-        const audioItem: AudioItem = JSON.parse(
-          JSON.stringify(state.audioItems[audioKey])
-        );
+    async GENERATE_AUDIO(
+      { dispatch, state },
+      { audioKey }: { audioKey: string }
+    ) {
+      const audioItem: AudioItem = JSON.parse(
+        JSON.stringify(state.audioItems[audioKey])
+      );
+      return dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", { audioItem });
+    },
+    GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
+      async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
+        const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+        if (!engineInfo)
+          throw new Error(`No such engineInfo registered: index == 0`);
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -880,6 +953,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INVOKE_ENGINE_CONNECTOR", {
+          engineKey: engineInfo.key,
           action: "synthesisSynthesisPost",
           payload: [
             {
@@ -1192,13 +1266,8 @@ export const audioStore: VoiceVoxStoreOptions<
       }
     ),
     PLAY_AUDIO: createUILockAction(
-      async (
-        { state, commit, dispatch },
-        { audioKey }: { audioKey: string }
-      ) => {
-        const audioElem = audioElements[audioKey] as HTMLAudioElement & {
-          setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
-        };
+      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
+        const audioElem = audioElements[audioKey];
         audioElem.pause();
 
         // 音声用意
@@ -1217,18 +1286,39 @@ export const audioStore: VoiceVoxStoreOptions<
             throw new Error();
           }
         }
-        audioElem.src = URL.createObjectURL(blob);
-        const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+
+        return dispatch("PLAY_AUDIO_BLOB", {
+          audioBlob: blob,
+          audioElem,
           audioKey,
         });
-        if (accentPhraseOffsets.length === 0) {
-          audioElem.currentTime = 0;
-        } else {
-          const startTime = accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
-          if (startTime === undefined) throw Error("startTime === undefined");
-          // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
-          // 再生に影響のない程度かつ切り捨てられない値を加算する
-          audioElem.currentTime = startTime + 10e-6;
+      }
+    ),
+    PLAY_AUDIO_BLOB: createUILockAction(
+      async (
+        { state, commit, dispatch },
+        {
+          audioBlob,
+          audioElem,
+          audioKey,
+        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
+      ) => {
+        audioElem.src = URL.createObjectURL(audioBlob);
+        // 途中再生用の処理
+        if (audioKey) {
+          const accentPhraseOffsets = await dispatch("GET_AUDIO_PLAY_OFFSETS", {
+            audioKey,
+          });
+          if (accentPhraseOffsets.length === 0) {
+            audioElem.currentTime = 0;
+          } else {
+            const startTime =
+              accentPhraseOffsets[state.audioPlayStartPoint ?? 0];
+            if (startTime === undefined) throw Error("startTime === undefined");
+            // 小さい値が切り捨てられることでフォーカスされるアクセントフレーズが一瞬元に戻るので、
+            // 再生に影響のない程度かつ切り捨てられない値を加算する
+            audioElem.currentTime = startTime + 10e-6;
+          }
         }
 
         audioElem
@@ -1248,7 +1338,9 @@ export const audioStore: VoiceVoxStoreOptions<
 
         // 再生終了時にresolveされるPromiseを返す
         const played = async () => {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          }
         };
         audioElem.addEventListener("play", played);
 
@@ -1261,7 +1353,9 @@ export const audioStore: VoiceVoxStoreOptions<
         }).finally(async () => {
           audioElem.removeEventListener("play", played);
           audioElem.removeEventListener("pause", paused);
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          if (audioKey) {
+            commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          }
         });
 
         audioElem.play();
@@ -1636,28 +1730,24 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
-      // ひらがな(U+3041~U+3094)とカタカナ(U+30A1~U+30F4)と全角長音(U+30FC)のみで構成される場合、
-      // 「読み仮名」としてこれを処理する
-      const kanaRegex = /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
+      const kanaRegex = createKanaRegex(true);
       if (kanaRegex.test(newPronunciation)) {
         // ひらがなが混ざっている場合はカタカナに変換
-        const katakana = newPronunciation.replace(/[\u3041-\u3094]/g, (s) => {
-          return String.fromCharCode(s.charCodeAt(0) + 0x60);
-        });
+        const katakana = convertHiraToKana(newPronunciation);
         // 長音を適切な音に変換
-        const pureKatakana = katakana
-          .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
-          .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-          .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
-          .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-          .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
-          .replace(/(?<=[ン]ー*)ー/g, "ン")
-          .replace(/(?<=[ッ]ー*)ー/g, "ッ");
+        const pureKatakana = convertLongVowel(katakana);
 
-        // アクセントを末尾につけaccent phraseの生成をリクエスト
+        // アクセントを各句の末尾につける
+        // 文中に「？、」「、」がある場合は、そこで句切りとみなす
+        const pureKatakanaWithAccent = pureKatakana.replace(
+          /(？、|、|(?<=[^？、])$|？$)/g,
+          "'$1"
+        );
+
+        // accent phraseの生成をリクエスト
         // 判別できない読み仮名が混じっていた場合400エラーが帰るのでfallback
         newAccentPhrasesSegment = await dispatch("FETCH_ACCENT_PHRASES", {
-          text: pureKatakana + "'",
+          text: pureKatakanaWithAccent,
           styleId,
           isKana: true,
         }).catch(
@@ -1805,7 +1895,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
     COMMAND_IMPORT_FROM_FILE: createUILockAction(
       async (
-        { state, commit, dispatch },
+        { state, commit, dispatch, getters },
         { filePath }: { filePath?: string }
       ) => {
         if (!filePath) {
@@ -1830,10 +1920,12 @@ export const audioCommandStore: VoiceVoxStoreOptions<
             : undefined;
         }
 
+        if (!getters.USER_ORDERED_CHARACTER_INFOS)
+          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
         for (const { text, styleId } of parseTextFile(
           body,
           state.defaultStyleIds,
-          state.characterInfos
+          getters.USER_ORDERED_CHARACTER_INFOS
         )) {
           //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
           //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
@@ -2214,7 +2306,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 };
 
 // FIXME: ProxyStoreのactionとVuexの組み合わせでReturnValueの型付けが中途半端になり、Promise<any>になってしまっている
-const toDispatchResponse =
+export const toDispatchResponse =
   <T extends keyof IEngineConnectorFactoryActions>(_: T) =>
   (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
