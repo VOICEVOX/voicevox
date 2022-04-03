@@ -79,6 +79,7 @@ export default defineComponent({
       >,
       required: true,
     },
+    disable: { type: Boolean, default: false },
   },
 
   setup(props) {
@@ -88,7 +89,7 @@ export default defineComponent({
     const previewAccentSlider = previewSliderHelper({
       onChange: changeAccent,
       modelValue: () => props.accentPhrase.accent,
-      disable: () => props.uiLocked,
+      disable: () => props.uiLocked || props.disable,
       disableScroll: () => props.shiftKeyFlag,
       max: () => props.accentPhrase.moras.length,
       min: () => 1,

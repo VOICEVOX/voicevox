@@ -49,6 +49,7 @@
               :accentPhrase="accentPhrase"
               :uiLocked="uiLocked"
               :shiftKeyFlag="shiftKeyFlag"
+              :disable="guidedInfo.precise"
               @changeAccent="changeAccent"
             />
           </template>
