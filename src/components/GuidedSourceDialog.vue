@@ -193,7 +193,7 @@ export default defineComponent({
       .then((stream) => recorder.value.init(stream))
       .catch((err) => {
         console.log(
-          "Error occured in initializing recording:",
+          "Error occurred in initializing recording:",
           err,
           "\nThis could be caused by missing recording device on hardware"
         );

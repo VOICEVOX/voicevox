@@ -1769,7 +1769,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         JSON.stringify(query.accentPhrases)
       );
       const changeIndexes = [accentPhraseIndex];
-      // toggleAccentPhrase to newAccentPhrases and recored changeIndexes
+      // toggleAccentPhrase to newAccentPhrases and record changeIndexes
       {
         const mergeAccent = (
           accentPhrases: AccentPhrase[],
