@@ -29,18 +29,24 @@
                 Choose an audio source
               </q-tooltip>
             </q-btn>
-            <q-btn
-              v-if="!recording"
-              round
-              flat
-              icon="radio_button_unchecked"
-              color="warning"
-              @click="startRecording"
-            >
+            <div v-if="!recording">
+              <q-btn
+                round
+                flat
+                icon="radio_button_unchecked"
+                color="warning"
+                :disable="!recordingSupported"
+                @click="startRecording"
+              >
+              </q-btn>
               <q-tooltip :delay="500" anchor="bottom left">
-                Record from microphone
+                {{
+                  recordingSupported
+                    ? "Record from microphone"
+                    : "Recording device not found"
+                }}
               </q-tooltip>
-            </q-btn>
+            </div>
             <q-btn
               v-else
               round
@@ -180,12 +186,19 @@ export default defineComponent({
 
     const recorder = ref(new Recorder(audioContext));
 
+    const recordingSupported = ref(true);
+
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => recorder.value.init(stream))
-      .catch((err) =>
-        console.log("How could Chromium not support recording?", err)
-      );
+      .catch((err) => {
+        console.log(
+          "Error occured in initializing recording:",
+          err,
+          "\nThis could be caused by missing recording device on hardware"
+        );
+        recordingSupported.value = false;
+      });
 
     const startRecording = () => {
       stopPreview();
@@ -233,6 +246,7 @@ export default defineComponent({
       recording,
       startRecording,
       stopRecording,
+      recordingSupported,
     };
   },
 });
