@@ -1808,6 +1808,33 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
       }
     },
+    async COMMAND_RESET_MORA_PITCH_AND_LENGTH(
+      { state, dispatch, commit },
+      { audioKey }
+    ) {
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId == undefined");
+
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      try {
+        const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+          accentPhrases: query.accentPhrases,
+          styleId,
+        });
+
+        commit("COMMAND_CHANGE_ACCENT", {
+          audioKey,
+          accentPhrases: newAccentPhases,
+        });
+      } catch (error) {
+        commit("COMMAND_CHANGE_ACCENT", {
+          audioKey,
+          accentPhrases: query.accentPhrases,
+        });
+      }
+    },
     COMMAND_SET_AUDIO_MORA_DATA(
       { commit },
       payload: {

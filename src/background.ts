@@ -172,6 +172,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     action: "テキスト読み込む",
     combination: "",
   },
+  {
+    action: "イントネーションをリセット",
+    combination: "R",
+  },
 ];
 
 const defaultToolbarButtonSetting: ToolbarSetting = [
