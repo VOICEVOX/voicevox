@@ -90,12 +90,16 @@ export interface DeleteUserDictWordUserDictWordWordUuidDeleteRequest {
 
 export interface GuidedAccentPhrasesGuidedAccentPhrasesPostRequest {
     speaker: number;
+    audioPath: string;
+    normalize: boolean;
     audioQuery: AudioQuery;
     coreVersion?: string;
 }
 
 export interface GuidedSynthesisGuidedSynthesisPostRequest {
     speaker: number;
+    audioPath: string;
+    normalize: boolean;
     audioQuery: AudioQuery;
     coreVersion?: string;
 }
@@ -345,6 +349,8 @@ export interface DefaultApiInterface {
      * Extracts f0 and aligned phonemes, calculates average f0 for every phoneme. Returns a list of AccentPhrase. **This API works in the resolution of phonemes.**
      * @summary Create Accent Phrase from External Audio
      * @param {number} speaker 
+     * @param {string} audioPath 
+     * @param {boolean} normalize 
      * @param {AudioQuery} audioQuery 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -363,6 +369,8 @@ export interface DefaultApiInterface {
      * Extracts and passes the f0 and aligned phonemes to engine. Returns the synthesized audio. **This API works in the resolution of frame.**
      * @summary Audio synthesis guided by external audio and phonemes
      * @param {number} speaker 
+     * @param {string} audioPath 
+     * @param {boolean} normalize 
      * @param {AudioQuery} audioQuery 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -999,6 +1007,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
         }
 
+        if (requestParameters.audioPath === null || requestParameters.audioPath === undefined) {
+            throw new runtime.RequiredError('audioPath','Required parameter requestParameters.audioPath was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
+        }
+
+        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
+            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
+        }
+
         if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
             throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling guidedAccentPhrasesGuidedAccentPhrasesPost.');
         }
@@ -1007,6 +1023,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         if (requestParameters.speaker !== undefined) {
             queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.audioPath !== undefined) {
+            queryParameters['audio_path'] = requestParameters.audioPath;
+        }
+
+        if (requestParameters.normalize !== undefined) {
+            queryParameters['normalize'] = requestParameters.normalize;
         }
 
         if (requestParameters.coreVersion !== undefined) {
@@ -1046,6 +1070,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
         }
 
+        if (requestParameters.audioPath === null || requestParameters.audioPath === undefined) {
+            throw new runtime.RequiredError('audioPath','Required parameter requestParameters.audioPath was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
+        if (requestParameters.normalize === null || requestParameters.normalize === undefined) {
+            throw new runtime.RequiredError('normalize','Required parameter requestParameters.normalize was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
+        }
+
         if (requestParameters.audioQuery === null || requestParameters.audioQuery === undefined) {
             throw new runtime.RequiredError('audioQuery','Required parameter requestParameters.audioQuery was null or undefined when calling guidedSynthesisGuidedSynthesisPost.');
         }
@@ -1054,6 +1086,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         if (requestParameters.speaker !== undefined) {
             queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.audioPath !== undefined) {
+            queryParameters['audio_path'] = requestParameters.audioPath;
+        }
+
+        if (requestParameters.normalize !== undefined) {
+            queryParameters['normalize'] = requestParameters.normalize;
         }
 
         if (requestParameters.coreVersion !== undefined) {

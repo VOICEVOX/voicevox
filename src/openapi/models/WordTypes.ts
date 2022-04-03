@@ -18,11 +18,11 @@
  * @enum {string}
  */
 export enum WordTypes {
-     '固有名詞',
-     '普通名詞',
-     '動詞',
-     '形容詞',
-     '語尾'
+    '固有名詞',
+    '普通名詞',
+    '動詞',
+    '形容詞',
+    '語尾'
 }
 
 export function WordTypesFromJSON(json: any): WordTypes {

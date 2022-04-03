@@ -2,7 +2,6 @@
 /* eslint-disable */
 export * from './AccentPhrase';
 export * from './AudioQuery';
-export * from './GuidedInfo';
 export * from './HTTPValidationError';
 export * from './Mora';
 export * from './ParseKanaBadRequest';

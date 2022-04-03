@@ -18,10 +18,6 @@ import {
     AccentPhraseFromJSON,
     AccentPhraseFromJSONTyped,
     AccentPhraseToJSON,
-    GuidedInfo,
-    GuidedInfoFromJSON,
-    GuidedInfoFromJSONTyped,
-    GuidedInfoToJSON,
 } from './';
 
 /**
@@ -90,12 +86,6 @@ export interface AudioQuery {
      * @memberof AudioQuery
      */
     kana?: string;
-    /**
-     * 
-     * @type {GuidedInfo}
-     * @memberof AudioQuery
-     */
-    guidedInfo?: GuidedInfo | null;
 }
 
 export function AudioQueryFromJSON(json: any): AudioQuery {
@@ -118,7 +108,6 @@ export function AudioQueryFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'outputSamplingRate': json['outputSamplingRate'],
         'outputStereo': json['outputStereo'],
         'kana': !exists(json, 'kana') ? undefined : json['kana'],
-        'guidedInfo': !exists(json, 'guidedInfo') ? undefined : GuidedInfoFromJSON(json['guidedInfo']),
     };
 }
 
@@ -141,7 +130,6 @@ export function AudioQueryToJSON(value?: AudioQuery | null): any {
         'outputSamplingRate': value.outputSamplingRate,
         'outputStereo': value.outputStereo,
         'kana': value.kana,
-        'guidedInfo': GuidedInfoToJSON(value.guidedInfo),
     };
 }
 
