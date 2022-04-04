@@ -279,6 +279,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>labファイルを書き出し</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      リップシンク用のlabファイルを書き出します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -288,15 +306,6 @@
                     handleSavingSettingChange('exportLab', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを書き出します
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
