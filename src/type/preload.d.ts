@@ -198,7 +198,8 @@ export type HotkeyAction =
   | "プロジェクトを名前を付けて保存"
   | "プロジェクトを上書き保存"
   | "プロジェクト読み込み"
-  | "テキスト読み込む";
+  | "テキスト読み込む"
+  | "イントネーションをリセット";
 
 export type HotkeyCombo = string;
 
