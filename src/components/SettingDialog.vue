@@ -67,20 +67,29 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>パラメータの引き継ぎ</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="inheritAudioInfoMode"
                   @update:model-value="changeinheritAudioInfo($event)"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
@@ -807,6 +816,10 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
+
+.help-hover-icon {
+  margin-left: 6px;
+}
 
 .hotkey-table {
   width: 100%;
