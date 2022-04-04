@@ -379,6 +379,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声をステレオ化</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      音声データをモノラルからステレオに変換してから再生・保存を行います
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -388,15 +406,6 @@
                     handleSavingSettingChange('outputStereo', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    音声データをモノラルからステレオに変換してから再生・保存を行います
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
