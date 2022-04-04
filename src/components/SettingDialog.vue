@@ -491,6 +491,24 @@
               </q-card-actions> -->
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>プリセット機能</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      プリセット機能を有効にする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enablePreset"
@@ -498,15 +516,6 @@
                     changeExperimentalSetting('enablePreset', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    プリセット機能を有効にする
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
