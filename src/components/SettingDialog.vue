@@ -156,6 +156,25 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>書き出し先を固定</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                      v-if="!savingSetting.fixedExportEnabled"
+                    >
+                      音声ファイルを設定したフォルダに書き出す
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-input
                   dense
@@ -197,16 +216,6 @@
                     handleSavingSettingChange('fixedExportEnabled', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    v-if="!savingSetting.fixedExportEnabled"
-                  >
-                    音声ファイルを設定したフォルダに書き出す
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
 
