@@ -520,6 +520,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>疑問文を自動調整</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      疑問文のとき語尾の音高を自動的に上げる
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enableInterrogativeUpspeak"
@@ -530,15 +548,6 @@
                     )
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    疑問文のとき語尾の音高を自動的に上げる
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
             </q-card>
