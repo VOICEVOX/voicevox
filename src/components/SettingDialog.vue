@@ -473,6 +473,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>再生デバイス</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      音声の再生デバイスを変更し再生を行います
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-select
                   dense
@@ -481,15 +499,6 @@
                   :options="availableAudioOutputDevices"
                   class="col-7"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    音声の再生デバイスを変更し再生を行います
-                  </q-tooltip>
                 </q-select>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
