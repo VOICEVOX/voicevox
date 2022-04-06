@@ -34,6 +34,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>エンジンモード</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      GPUモードの利用には NVIDIA&trade; GPU が必要です
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -48,15 +66,6 @@
                     { label: 'GPU', value: 'switchGPU' },
                   ]"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    GPUモードの利用には NVIDIA&trade; GPU が必要です
-                  </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
