@@ -94,6 +94,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>再生位置を追従</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生位置を追従し、自動でスクロールするモードを選ぶことができます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <div class="scroll-mode-toggle">
                   <q-radio
