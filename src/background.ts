@@ -39,6 +39,7 @@ import {
 
 import log from "electron-log";
 import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -737,9 +738,16 @@ let willQuit = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
+  const mainWindowState = windowStateKeeper({
+    defaultWidth: 800,
+    defaultHeight: 600,
+  });
+
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     frame: false,
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 6, y: 4 },
@@ -752,6 +760,8 @@ async function createWindow() {
     },
     icon: path.join(__static, "icon.png"),
   });
+
+  mainWindowState.manage(win);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
