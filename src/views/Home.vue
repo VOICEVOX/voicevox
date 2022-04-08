@@ -31,7 +31,8 @@
           class="full-width"
           before-class="overflow-hidden"
           :disable="!shouldShowPanes"
-          v-model="audioDetailPaneHeight"
+          :model-value="audioDetailPaneHeight"
+          @update:model-value="updateAudioDetailPane"
         >
           <template #before>
             <q-splitter
@@ -40,7 +41,8 @@
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
               :disable="!shouldShowPanes"
-              v-model="portraitPaneWidth"
+              :model-value="portraitPaneWidth"
+              @update:model-value="updatePortraitPane"
             >
               <template #before>
                 <character-portrait />
@@ -54,7 +56,8 @@
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
-                  v-model="audioInfoPaneWidth"
+                  :model-value="audioInfoPaneWidth"
+                  @update:model-value="updateAudioInfoPane"
                 >
                   <template #before>
                     <div
@@ -303,6 +306,36 @@ export default defineComponent({
       }
     };
 
+    const updatePortraitPane = async (width: number) => {
+      portraitPaneWidth.value = width;
+
+      const position = await window.electron.getSplitterPosition();
+      window.electron.setSplitterPosition({
+        ...position,
+        portraitPainWidth: width,
+      });
+    };
+
+    const updateAudioInfoPane = async (width: number) => {
+      audioInfoPaneWidth.value = width;
+
+      const position = await window.electron.getSplitterPosition();
+      window.electron.setSplitterPosition({
+        ...position,
+        audioInfoPainWidth: width,
+      });
+    };
+
+    const updateAudioDetailPane = async (height: number) => {
+      audioDetailPaneHeight.value = height;
+
+      const position = await window.electron.getSplitterPosition();
+      window.electron.setSplitterPosition({
+        ...position,
+        audioDetailPainHeight: height,
+      });
+    };
+
     // component
     let audioCellRefs: Record<string, typeof AudioCell> = {};
     const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
@@ -359,18 +392,31 @@ export default defineComponent({
     const shouldShowPanes = computed<boolean>(
       () => store.getters.SHOULD_SHOW_PANES
     );
-    watch(shouldShowPanes, (val, old) => {
+    watch(shouldShowPanes, async (val, old) => {
       if (val === old) return;
 
       if (val) {
-        portraitPaneWidth.value = DEFAULT_PORTRAIT_PANE_WIDTH;
-        audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+        const splitterPosition = await window.electron.getSplitterPosition();
+        const clamp = (value: number, min: number, max: number) =>
+          Math.max(Math.min(value, max), min);
+
+        portraitPaneWidth.value =
+          splitterPosition.portraitPainWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH;
+        audioInfoPaneWidth.value =
+          splitterPosition.audioInfoPainWidth ?? MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
-        audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         changeAudioDetailPaneMaxHeight(
           resizeObserverRef.value?.$el.parentElement.clientHeight
+        );
+        const defaultAudioDetailPainHeight =
+          splitterPosition.audioDetailPainHeight ??
+          MIN_AUDIO_DETAIL_PANE_HEIGHT;
+        audioDetailPaneHeight.value = clamp(
+          defaultAudioDetailPainHeight,
+          audioDetailPaneMinHeight.value,
+          audioDetailPaneMaxHeight.value
         );
       } else {
         portraitPaneWidth.value = 0;
@@ -582,6 +628,9 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
+      updatePortraitPane,
+      updateAudioInfoPane,
+      updateAudioDetailPane,
       isCompletedInitialStartup,
       engineState,
       isHelpDialogOpenComputed,

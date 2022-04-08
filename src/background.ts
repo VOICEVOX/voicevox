@@ -35,6 +35,7 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
+  SplitterPosition,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -207,6 +208,7 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  splitterPosition: SplitterPosition;
 }>({
   schema: {
     useGpu: {
@@ -357,6 +359,15 @@ const store = new Store<{
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
+    },
+    splitterPosition: {
+      type: "object",
+      properties: {
+        portraitPainWidth: { type: "number" },
+        audioInfoPainWidth: { type: "number" },
+        audioDetailPainHeight: { type: "number" },
+      },
+      default: {},
     },
   },
   migrations: {},
@@ -1170,6 +1181,14 @@ ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
 
 ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
+});
+
+ipcMainHandle("GET_SPLITTER_POSITION", () => {
+  return store.get("splitterPosition");
+});
+
+ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
+  store.set("splitterPosition", splitterPosition);
 });
 
 // app callback

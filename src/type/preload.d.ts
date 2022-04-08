@@ -82,6 +82,8 @@ export interface Sandbox {
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
+  getSplitterPosition(): Promise<SplitterPosition>;
+  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -264,4 +266,10 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+};
+
+export type SplitterPosition = {
+  portraitPainWidth: number | undefined;
+  audioInfoPainWidth: number | undefined;
+  audioDetailPainHeight: number | undefined;
 };
