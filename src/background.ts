@@ -772,8 +772,6 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  mainWindowState.manage(win);
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
       (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/home"
@@ -832,6 +830,8 @@ async function createWindow() {
       }
     }
   });
+
+  mainWindowState.manage(win);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
