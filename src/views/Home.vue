@@ -176,7 +176,11 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import { AudioItem } from "@/store/type";
 import { QResizeObserver } from "quasar";
 import path from "path";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import {
+  HotkeyAction,
+  HotkeyReturnType,
+  SplitterPosition,
+} from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -306,34 +310,30 @@ export default defineComponent({
       }
     };
 
-    const updatePortraitPane = async (width: number) => {
-      portraitPaneWidth.value = width;
-
+    const updateSplitterPosition = async (
+      propertyName: keyof SplitterPosition,
+      newValue: number
+    ) => {
       const position = await window.electron.getSplitterPosition();
       window.electron.setSplitterPosition({
         ...position,
-        portraitPainWidth: width,
+        [propertyName]: newValue,
       });
+    };
+
+    const updatePortraitPane = async (width: number) => {
+      portraitPaneWidth.value = width;
+      await updateSplitterPosition("portraitPainWidth", width);
     };
 
     const updateAudioInfoPane = async (width: number) => {
       audioInfoPaneWidth.value = width;
-
-      const position = await window.electron.getSplitterPosition();
-      window.electron.setSplitterPosition({
-        ...position,
-        audioInfoPainWidth: width,
-      });
+      await updateSplitterPosition("audioInfoPainWidth", width);
     };
 
     const updateAudioDetailPane = async (height: number) => {
       audioDetailPaneHeight.value = height;
-
-      const position = await window.electron.getSplitterPosition();
-      window.electron.setSplitterPosition({
-        ...position,
-        audioDetailPainHeight: height,
-      });
+      await updateSplitterPosition("audioDetailPainHeight", height);
     };
 
     // component
