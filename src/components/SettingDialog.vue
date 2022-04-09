@@ -942,7 +942,6 @@ export default defineComponent({
       }
     };
 
-    store.dispatch("INIT_SPLIT_TEXT_WHEN_PASTE");
     const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
     const changeSplitTextWhenPaste = async (
       splitTextWhenPaste: SplitTextWhenPasteType
