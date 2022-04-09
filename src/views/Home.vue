@@ -400,21 +400,29 @@ export default defineComponent({
         const clamp = (value: number, min: number, max: number) =>
           Math.max(Math.min(value, max), min);
 
-        portraitPaneWidth.value =
-          splitterPosition.portraitPainWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH;
-        audioInfoPaneWidth.value =
-          splitterPosition.audioInfoPainWidth ?? MIN_AUDIO_INFO_PANE_WIDTH;
+        // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
+        portraitPaneWidth.value = clamp(
+          splitterPosition.portraitPainWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
+          MIN_PORTRAIT_PANE_WIDTH,
+          MAX_PORTRAIT_PANE_WIDTH
+        );
+
+        audioInfoPaneWidth.value = clamp(
+          splitterPosition.audioInfoPainWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+          MIN_AUDIO_INFO_PANE_WIDTH,
+          MAX_AUDIO_INFO_PANE_WIDTH
+        );
         audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
+
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         changeAudioDetailPaneMaxHeight(
           resizeObserverRef.value?.$el.parentElement.clientHeight
         );
-        const defaultAudioDetailPainHeight =
-          splitterPosition.audioDetailPainHeight ??
-          MIN_AUDIO_DETAIL_PANE_HEIGHT;
+
         audioDetailPaneHeight.value = clamp(
-          defaultAudioDetailPainHeight,
+          splitterPosition.audioDetailPainHeight ??
+            MIN_AUDIO_DETAIL_PANE_HEIGHT,
           audioDetailPaneMinHeight.value,
           audioDetailPaneMaxHeight.value
         );
