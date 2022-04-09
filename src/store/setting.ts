@@ -32,7 +32,6 @@ export const settingStoreState: SettingStoreState = {
     outputStereo: false,
     outputSamplingRate: 24000,
     audioOutputDevice: "default",
-    splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   },
   hotkeySettings: [],
   toolbarSetting: [],
@@ -46,6 +45,7 @@ export const settingStoreState: SettingStoreState = {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
   },
+  splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -101,6 +101,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_ACCEPT_TERMS(state, { acceptTerms }) {
       state.acceptTerms = acceptTerms;
+    },
+    SET_SPLIT_TEXT_WHEN_PASTE(state, { splitTextWhenPaste }) {
+      state.splitTextWhenPaste = splitTextWhenPaste;
     },
   },
   actions: {
@@ -236,6 +239,9 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
       window.electron.setExperimentalSetting(experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+    },
+    SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
+      commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
   },
 };

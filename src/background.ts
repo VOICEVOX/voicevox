@@ -35,6 +35,7 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -206,6 +207,7 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
 }>({
   schema: {
     useGpu: {
@@ -237,11 +239,6 @@ const store = new Store<{
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
-        splitTextWhenPaste: {
-          type: "string",
-          enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
-          default: "PERIOD_AND_NEW_LINE",
-        },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -356,6 +353,11 @@ const store = new Store<{
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
+    },
+    splitTextWhenPaste: {
+      type: "string",
+      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
+      default: "PERIOD_AND_NEW_LINE",
     },
   },
   migrations: {},
