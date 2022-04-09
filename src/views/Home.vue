@@ -315,7 +315,7 @@ export default defineComponent({
       newValue: number
     ) => {
       const position = await window.electron.getSplitterPosition();
-      window.electron.setSplitterPosition({
+      await window.electron.setSplitterPosition({
         ...position,
         [propertyName]: newValue,
       });
