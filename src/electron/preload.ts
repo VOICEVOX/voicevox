@@ -278,6 +278,16 @@ const api: Sandbox = {
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
+
+  getSplitTextWhenPaste: async () => {
+    return await ipcRendererInvoke("GET_SPLIT_TEXT_WHEN_PASTE");
+  },
+  setSplitTextWhenPaste: async (splitTextWhenPaste) => {
+    return await ipcRendererInvoke(
+      "SET_SPLIT_TEXT_WHEN_PASTE",
+      splitTextWhenPaste
+    );
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

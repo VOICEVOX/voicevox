@@ -240,7 +240,13 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setExperimentalSetting(experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
+    INIT_SPLIT_TEXT_WHEN_PASTE({ dispatch }) {
+      window.electron.getSplitTextWhenPaste().then((v) => {
+        dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste: v });
+      });
+    },
     SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
+      window.electron.setSplitTextWhenPaste(splitTextWhenPaste);
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
   },

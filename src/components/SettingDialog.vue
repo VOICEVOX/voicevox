@@ -942,11 +942,17 @@ export default defineComponent({
       }
     };
 
+    store.dispatch("INIT_SPLIT_TEXT_WHEN_PASTE");
     const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
     const changeSplitTextWhenPaste = async (
       splitTextWhenPaste: SplitTextWhenPasteType
     ) => {
-      store.commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+      if (
+        splitTextWhenPaste === (await window.electron.getSplitTextWhenPaste())
+      )
+        return;
+
+      store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     };
 
     return {

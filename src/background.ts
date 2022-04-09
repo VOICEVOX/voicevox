@@ -1164,6 +1164,14 @@ ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
 });
 
+ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
+  return store.get("splitTextWhenPaste");
+});
+
+ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
+  store.set("splitTextWhenPaste", splitTextWhenPaste);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く

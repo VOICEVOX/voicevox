@@ -838,6 +838,9 @@ type SettingStoreTypes = {
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
   };
 
+  INIT_SPLIT_TEXT_WHEN_PASTE: {
+    action(): void;
+  };
   SET_SPLIT_TEXT_WHEN_PASTE: {
     mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
     action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
