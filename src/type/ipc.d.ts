@@ -269,7 +269,7 @@ type IpcIHData = {
 
   SET_SPLITTER_POSITION: {
     args: [splitterPosition: import("@/type/preload").SplitterPosition];
-    return: import("@/type/preload").SplitterPosition;
+    return: void;
   };
 
   THEME: {
