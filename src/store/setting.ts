@@ -46,6 +46,11 @@ export const settingStoreState: SettingStoreState = {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
   },
+  splitterPosition: {
+    audioDetailPainHeight: undefined,
+    audioInfoPainWidth: undefined,
+    portraitPainWidth: undefined,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -101,6 +106,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_ACCEPT_TERMS(state, { acceptTerms }) {
       state.acceptTerms = acceptTerms;
+    },
+    SET_SPLITTER_POSITION(state, { splitterPosition }) {
+      state.splitterPosition = splitterPosition;
     },
   },
   actions: {
@@ -236,6 +244,15 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
       window.electron.setExperimentalSetting(experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+    },
+    GET_SPLITTER_POSITION({ dispatch }) {
+      window.electron.getSplitterPosition().then((splitterPosition) => {
+        dispatch("SET_SPLITTER_POSITION", { splitterPosition });
+      });
+    },
+    SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
+      window.electron.setSplitterPosition(splitterPosition);
+      commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
   },
 };

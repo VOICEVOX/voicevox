@@ -310,14 +310,20 @@ export default defineComponent({
       }
     };
 
+    const splitterPosition = computed<SplitterPosition>(
+      () => store.state.splitterPosition
+    );
+
     const updateSplitterPosition = async (
       propertyName: keyof SplitterPosition,
       newValue: number
     ) => {
-      const position = await window.electron.getSplitterPosition();
-      await window.electron.setSplitterPosition({
-        ...position,
+      const newSplitterPosition = {
+        ...splitterPosition.value,
         [propertyName]: newValue,
+      };
+      store.dispatch("SET_SPLITTER_POSITION", {
+        splitterPosition: newSplitterPosition,
       });
     };
 
@@ -392,23 +398,24 @@ export default defineComponent({
     const shouldShowPanes = computed<boolean>(
       () => store.getters.SHOULD_SHOW_PANES
     );
-    watch(shouldShowPanes, async (val, old) => {
+    watch(shouldShowPanes, (val, old) => {
       if (val === old) return;
 
       if (val) {
-        const splitterPosition = await window.electron.getSplitterPosition();
         const clamp = (value: number, min: number, max: number) =>
           Math.max(Math.min(value, max), min);
 
         // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
         portraitPaneWidth.value = clamp(
-          splitterPosition.portraitPainWidth ?? DEFAULT_PORTRAIT_PANE_WIDTH,
+          splitterPosition.value.portraitPainWidth ??
+            DEFAULT_PORTRAIT_PANE_WIDTH,
           MIN_PORTRAIT_PANE_WIDTH,
           MAX_PORTRAIT_PANE_WIDTH
         );
 
         audioInfoPaneWidth.value = clamp(
-          splitterPosition.audioInfoPainWidth ?? MIN_AUDIO_INFO_PANE_WIDTH,
+          splitterPosition.value.audioInfoPainWidth ??
+            MIN_AUDIO_INFO_PANE_WIDTH,
           MIN_AUDIO_INFO_PANE_WIDTH,
           MAX_AUDIO_INFO_PANE_WIDTH
         );
@@ -421,7 +428,7 @@ export default defineComponent({
         );
 
         audioDetailPaneHeight.value = clamp(
-          splitterPosition.audioDetailPainHeight ??
+          splitterPosition.value.audioDetailPainHeight ??
             MIN_AUDIO_DETAIL_PANE_HEIGHT,
           audioDetailPaneMinHeight.value,
           audioDetailPaneMaxHeight.value
