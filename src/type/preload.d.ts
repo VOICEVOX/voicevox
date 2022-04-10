@@ -269,7 +269,7 @@ export type ExperimentalSetting = {
 };
 
 export type SplitterPosition = {
-  portraitPainWidth: number | undefined;
-  audioInfoPainWidth: number | undefined;
-  audioDetailPainHeight: number | undefined;
+  portraitPaneWidth: number | undefined;
+  audioInfoPaneWidth: number | undefined;
+  audioDetailPaneHeight: number | undefined;
 };

@@ -47,9 +47,9 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
   },
   splitterPosition: {
-    audioDetailPainHeight: undefined,
-    audioInfoPainWidth: undefined,
-    portraitPainWidth: undefined,
+    audioDetailPaneHeight: undefined,
+    audioInfoPaneWidth: undefined,
+    portraitPaneWidth: undefined,
   },
 };
 

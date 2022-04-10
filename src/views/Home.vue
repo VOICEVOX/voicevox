@@ -329,17 +329,17 @@ export default defineComponent({
 
     const updatePortraitPane = async (width: number) => {
       portraitPaneWidth.value = width;
-      await updateSplitterPosition("portraitPainWidth", width);
+      await updateSplitterPosition("portraitPaneWidth", width);
     };
 
     const updateAudioInfoPane = async (width: number) => {
       audioInfoPaneWidth.value = width;
-      await updateSplitterPosition("audioInfoPainWidth", width);
+      await updateSplitterPosition("audioInfoPaneWidth", width);
     };
 
     const updateAudioDetailPane = async (height: number) => {
       audioDetailPaneHeight.value = height;
-      await updateSplitterPosition("audioDetailPainHeight", height);
+      await updateSplitterPosition("audioDetailPaneHeight", height);
     };
 
     // component
@@ -407,14 +407,14 @@ export default defineComponent({
 
         // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
         portraitPaneWidth.value = clamp(
-          splitterPosition.value.portraitPainWidth ??
+          splitterPosition.value.portraitPaneWidth ??
             DEFAULT_PORTRAIT_PANE_WIDTH,
           MIN_PORTRAIT_PANE_WIDTH,
           MAX_PORTRAIT_PANE_WIDTH
         );
 
         audioInfoPaneWidth.value = clamp(
-          splitterPosition.value.audioInfoPainWidth ??
+          splitterPosition.value.audioInfoPaneWidth ??
             MIN_AUDIO_INFO_PANE_WIDTH,
           MIN_AUDIO_INFO_PANE_WIDTH,
           MAX_AUDIO_INFO_PANE_WIDTH
@@ -428,7 +428,7 @@ export default defineComponent({
         );
 
         audioDetailPaneHeight.value = clamp(
-          splitterPosition.value.audioDetailPainHeight ??
+          splitterPosition.value.audioDetailPaneHeight ??
             MIN_AUDIO_DETAIL_PANE_HEIGHT,
           audioDetailPaneMinHeight.value,
           audioDetailPaneMaxHeight.value

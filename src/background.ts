@@ -363,9 +363,9 @@ const store = new Store<{
     splitterPosition: {
       type: "object",
       properties: {
-        portraitPainWidth: { type: "number" },
-        audioInfoPainWidth: { type: "number" },
-        audioDetailPainHeight: { type: "number" },
+        portraitPaneWidth: { type: "number" },
+        audioInfoPaneWidth: { type: "number" },
+        audioDetailPaneHeight: { type: "number" },
       },
       default: {},
     },
