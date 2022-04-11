@@ -278,7 +278,6 @@ export default defineComponent({
       store.dispatch("STOP_AUDIO", { audioKey: props.audioKey });
     };
 
-    store.dispatch("INIT_SPLIT_TEXT_WHEN_PASTE");
     const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
     // コピペしたときに句点と改行で区切る
     const pasteOnAudioCell = async (event: ClipboardEvent) => {
