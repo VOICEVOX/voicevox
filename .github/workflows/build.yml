@@ -32,6 +32,7 @@ jobs:
           - linux-noengine-cpu-prepackage
           - windows-noengine-prepackage
           - windows-noengine-cpu-prepackage
+          - windows-noengine-directml-prepackage
           - macos-noengine-cpu-prepackage
         include:
           # Linux NVIDIA GPU
@@ -61,6 +62,13 @@ jobs:
           - artifact_name: windows-noengine-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox-cpu
+            nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
+            sed_name: sed
+            os: windows-2019
+          # Windows DirectML
+          - artifact_name: windows-noengine-directml-prepackage
+            artifact_path: dist_electron/win-unpacked
+            package_name: voicevox-directml
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
@@ -274,6 +282,7 @@ jobs:
           - linux-cpu-prepackage
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
+          - windows-directml-prepackage
           - macos-cpu-prepackage
         include:
           # Linux NVIDIA GPU
@@ -301,6 +310,12 @@ jobs:
             noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
             compressed_artifact_name: voicevox-windows-cpu
+            app_asar_dir: prepackage/resources
+          # Windows DirectML
+          - artifact_name: windows-directml-prepackage
+            noengine_artifact_name: windows-noengine-directml-prepackage
+            voicevox_engine_asset_name: windows-directml
+            compressed_artifact_name: voicevox-windows-directml
             app_asar_dir: prepackage/resources
           # macOS CPU
           - artifact_name: macos-cpu-prepackage
@@ -504,6 +519,7 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-directml-nsis-web
           - macos-cpu-dmg
         include:
           # Linux NVIDIA GPU
@@ -533,6 +549,13 @@ jobs:
           - artifact_name: windows-cpu-nsis-web
             engine_artifact_name: windows-cpu-prepackage
             package_name: voicevox-cpu
+            nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
+            sed_name: sed
+            os: windows-2019
+          # Windows DirectML
+          - artifact_name: windows-directml-nsis-web
+            engine_artifact_name: windows-directml-prepackage
+            package_name: voicevox-directml
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
@@ -732,8 +755,10 @@ jobs:
           - linux-cpu-prepackage-targz
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-directml-nsis-web
           - windows-nvidia-prepackage-zip
           - windows-cpu-prepackage-zip
+          - windows-directml-prepackage-zip
           - macos-cpu-dmg
           - macos-cpu-prepackage-zip
         include:
