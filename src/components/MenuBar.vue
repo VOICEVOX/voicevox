@@ -244,7 +244,7 @@ export default defineComponent({
           },
           {
             type: "button",
-            label: "テキスト書き出し",
+            label: "テキストを繋げて書き出し",
             onClick: () => {
               exportTextFile();
             },
