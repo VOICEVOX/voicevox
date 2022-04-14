@@ -69,7 +69,7 @@ jobs:
           - artifact_name: windows-noengine-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox-directml
-            nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
+            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
@@ -556,7 +556,7 @@ jobs:
           - artifact_name: windows-directml-nsis-web
             engine_artifact_name: windows-directml-prepackage
             package_name: voicevox-directml
-            nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
+            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
