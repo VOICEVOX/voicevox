@@ -1267,6 +1267,96 @@ export const audioStore: VoiceVoxStoreOptions<
         return { result: "SUCCESS", path: filePath };
       }
     ),
+    EXPORT_TEXT_FILE: createUILockAction(
+      async (
+        { state, dispatch, getters },
+        { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
+      ): Promise<SaveResultObject> => {
+        const defaultFileName = buildProjectFileName(state, "txt");
+        if (state.savingSetting.fixedExportEnabled) {
+          filePath = path.join(
+            state.savingSetting.fixedExportDir,
+            defaultFileName
+          );
+        } else {
+          filePath ??= await window.electron.showTextSaveDialog({
+            title: "文章を全て繋げてテキストファイルに保存",
+            defaultPath: defaultFileName,
+          });
+        }
+
+        if (!filePath) {
+          return { result: "CANCELED", path: "" };
+        }
+
+        if (state.savingSetting.avoidOverwrite) {
+          let tail = 1;
+          const name = filePath.slice(0, filePath.length - 4);
+          while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+            filePath = name + "[" + tail.toString() + "]" + ".wav";
+            tail += 1;
+          }
+        }
+
+        const characters = new Map<number, string>();
+        const uuid2StyleIds = new Map<string, number>();
+        for (const defaultStyleId of state.defaultStyleIds) {
+          const speakerUuid = defaultStyleId.speakerUuid;
+          const styleId = defaultStyleId.defaultStyleId;
+          uuid2StyleIds.set(speakerUuid, styleId);
+        }
+
+        if (!getters.USER_ORDERED_CHARACTER_INFOS)
+          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+
+        for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
+          const uuid = characterInfo.metas.speakerUuid;
+          const styleId = uuid2StyleIds.get(uuid);
+          if (styleId == undefined)
+            throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
+
+          const speakerName = characterInfo.metas.speakerName;
+          characters.set(styleId, speakerName);
+        }
+
+        const texts: string[] = [];
+        for (const audioKey of state.audioKeys) {
+          const styleId = state.audioItems[audioKey].styleId;
+          const speakerName = styleId ? characters.get(styleId) + "," : "";
+
+          texts.push(speakerName + state.audioItems[audioKey].text);
+        }
+
+        const textBlob = ((): Blob => {
+          const text = texts.join("\n");
+          if (!encoding || encoding === "UTF-8") {
+            const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+            return new Blob([bom, text], {
+              type: "text/plain;charset=UTF-8",
+            });
+          }
+          const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+            to: "SJIS",
+            type: "arraybuffer",
+          });
+          return new Blob([new Uint8Array(sjisArray)], {
+            type: "text/plain;charset=Shift_JIS",
+          });
+        })();
+
+        try {
+          window.electron.writeFile({
+            filePath: filePath,
+            buffer: await textBlob.arrayBuffer(),
+          });
+        } catch (e) {
+          window.electron.logError(e);
+          return { result: "WRITE_ERROR", path: filePath };
+        }
+
+        return { result: "SUCCESS", path: filePath };
+      }
+    ),
     PLAY_AUDIO: createUILockAction(
       async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
         const audioElem = audioElements[audioKey];

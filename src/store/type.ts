@@ -342,6 +342,13 @@ type AudioStoreTypes = {
     }): SaveResultObject | undefined;
   };
 
+  EXPORT_TEXT_FILE: {
+    action(payload: {
+      filePath?: string;
+      encoding?: EncodingType;
+    }): SaveResultObject | undefined;
+  };
+
   PLAY_AUDIO: {
     action(payload: { audioKey: string }): boolean;
   };

@@ -917,6 +917,16 @@ ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
+ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+  const result = await dialog.showSaveDialog(win, {
+    title,
+    defaultPath,
+    filters: [{ name: "Text File", extensions: ["txt"] }],
+    properties: ["createDirectory"],
+  });
+  return result.filePath;
+});
+
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,

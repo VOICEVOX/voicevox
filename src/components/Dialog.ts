@@ -138,3 +138,45 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     },
   });
 }
+
+export async function exportTextFileWithDialog({
+  quasarDialog,
+  dispatch,
+  filePath,
+  encoding,
+}: {
+  quasarDialog: QuasarDialog;
+  dispatch: Dispatch<AllActions>;
+  filePath?: string;
+  encoding?: EncodingType;
+}): Promise<void> {
+  const result = await dispatch("EXPORT_TEXT_FILE", {
+    filePath,
+    encoding,
+  });
+
+  if (
+    result === undefined ||
+    result.result === "SUCCESS" ||
+    result.result === "CANCELED"
+  )
+    return;
+
+  let msg = "";
+  switch (result.result) {
+    case "WRITE_ERROR":
+      msg =
+        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      break;
+  }
+
+  quasarDialog({
+    title: "テキストの書き出しに失敗しました。",
+    message: msg,
+    ok: {
+      label: "閉じる",
+      flat: true,
+      textColor: "secondary",
+    },
+  });
+}
