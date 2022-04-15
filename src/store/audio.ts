@@ -109,6 +109,12 @@ type ReplaceTag =
   | "rawStyleName"
   | "text";
 type Replacer = { [P in ReplaceTag]?: string };
+type VariablesForFileName = {
+  index: number;
+  characterName: string;
+  styleName: string | undefined;
+  text: string;
+};
 
 const replaceTagMap: Map<ReplaceTag, string> = new Map([
   ["index", "連番"],
@@ -118,8 +124,16 @@ const replaceTagMap: Map<ReplaceTag, string> = new Map([
   ["rawStyleName", "スタイル"],
 ]);
 
+const DEFAULT_TEMPLATE = "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
+  index: 1,
+  characterName: "四国めたん",
+  text: "おはようこんにちはこんばんは",
+  styleName: "ノーマル",
+};
+
 function replaceTag(template: string, replacer: Replacer): string {
-  let result = template;
+  let result = `${template}`;
 
   replaceTagMap.forEach((target, key) => {
     const replacedText = replacer[key] ?? "";
@@ -129,12 +143,39 @@ function replaceTag(template: string, replacer: Replacer): string {
   return result;
 }
 
-function buildFileName(state: State, audioKey: string) {
-  let fileNamePattern = state.savingSetting.fileNamePattern;
-  if (fileNamePattern.length === 0) {
-    // ファイル名指定のオプションが初期値ならデフォルト値を使う
-    fileNamePattern = "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+export function buildFileNameFromRawData(
+  fileNamePattern = DEFAULT_TEMPLATE,
+  vars: VariablesForFileName = DEFAULT_FILE_NAME_VARIABLES
+): string {
+  let pattern = fileNamePattern;
+  if (pattern.length === 0) {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_TEMPLATE;
   }
+
+  let text = sanitizeFileName(vars.text);
+  if (text.length > 10) {
+    text = text.substring(0, 9) + "…";
+  }
+
+  const characterName = sanitizeFileName(vars.characterName);
+
+  const index = (vars.index + 1).toString().padStart(3, "0");
+
+  // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
+  const styleName = sanitizeFileName(vars.styleName ?? "");
+
+  return replaceTag(pattern, {
+    index,
+    characterName,
+    rawStyleName: styleName,
+    styleName: styleName.length !== 0 ? `（${styleName}）` : "",
+    text,
+  });
+}
+
+function buildFileName(state: State, audioKey: string) {
+  const fileNamePattern = state.savingSetting.fileNamePattern;
 
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
@@ -156,23 +197,11 @@ function buildFileName(state: State, audioKey: string) {
     throw new Error();
   }
 
-  const characterName = sanitizeFileName(character.metas.speakerName);
-  let text = sanitizeFileName(audioItem.text);
-  if (text.length > 10) {
-    text = text.substring(0, 9) + "…";
-  }
-
-  const preFileName = (index + 1).toString().padStart(3, "0");
-  // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
-  const sanitizedStyleName = sanitizeFileName(styleName ?? "");
-
-  return replaceTag(fileNamePattern, {
-    index: preFileName,
-    characterName,
-    rawStyleName: sanitizedStyleName,
-    styleName:
-      sanitizedStyleName.length !== 0 ? `（${sanitizedStyleName}）` : "",
-    text,
+  return buildFileNameFromRawData(fileNamePattern, {
+    characterName: character.metas.speakerName,
+    index,
+    styleName,
+    text: audioItem.text,
   });
 }
 
