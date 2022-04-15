@@ -102,10 +102,44 @@ function parseTextFile(
   return audioItems;
 }
 
+type ReplaceTag =
+  | "index"
+  | "characterName"
+  | "styleName"
+  | "rawStyleName"
+  | "text";
+type Replacer = { [P in ReplaceTag]?: string };
+
+const replaceTagMap: Map<ReplaceTag, string> = new Map([
+  ["index", "連番"],
+  ["characterName", "キャラ"],
+  ["styleName", "（スタイル）"],
+  ["text", "テキスト"],
+  ["rawStyleName", "スタイル"],
+]);
+
+function replaceTag(template: string, replacer: Replacer): string {
+  let result = template;
+
+  replaceTagMap.forEach((target, key) => {
+    const replacedText = replacer[key] ?? "";
+    result = result.replaceAll(`$${target}$`, replacedText);
+  });
+
+  return result;
+}
+
 function buildFileName(state: State, audioKey: string) {
+  let fileNamePattern = state.savingSetting.fileNamePattern;
+  if (fileNamePattern.length === 0) {
+    // ファイル名指定のオプションが初期値ならデフォルト値を使う
+    fileNamePattern = "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+  }
+
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
+
   const character = state.characterInfos?.find((info) => {
     const result = info.metas.styles.findIndex(
       (style) => style.styleId === audioItem.styleId
@@ -129,13 +163,17 @@ function buildFileName(state: State, audioKey: string) {
   }
 
   const preFileName = (index + 1).toString().padStart(3, "0");
-  // デフォルトのスタイルだとstyleIdが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
-  if (styleName === undefined) {
-    return preFileName + `_${characterName}_${text}.wav`;
-  }
+  // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
+  const sanitizedStyleName = sanitizeFileName(styleName ?? "");
 
-  const sanitizedStyleName = sanitizeFileName(styleName);
-  return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
+  return replaceTag(fileNamePattern, {
+    index: preFileName,
+    characterName,
+    rawStyleName: sanitizedStyleName,
+    styleName:
+      sanitizedStyleName.length !== 0 ? `（${sanitizedStyleName}）` : "",
+    text,
+  });
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -1010,6 +1048,7 @@ export const audioStore: VoiceVoxStoreOptions<
           let tail = 1;
           const name = filePath.slice(0, filePath.length - 4);
           while (await dispatch("CHECK_FILE_EXISTS", { file: filePath })) {
+            console.log({ checked: filePath });
             filePath = name + "[" + tail.toString() + "]" + ".wav";
             tail += 1;
           }
