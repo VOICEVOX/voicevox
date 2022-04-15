@@ -581,17 +581,18 @@ jobs:
         run: |
           brew install gnu-sed
 
-      # NOTE: If the CPU/GPU builds have the same package name,
+      # NOTE: If the CPU/DirectML/GPU builds have the same package name,
       #       the NSIS installers and the 7z files have duplicate names.
       #       For Linux, If they have the same product name,
       #       the AppImages have duplicate names.
       #       Files with the same name cannot be uploaded to a single GitHub Release,
-      #       so different package/product names should be used for CPU/GPU builds.
+      #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          # DirectML: "name": "voicevox" => "name": "voicevox-directml"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
