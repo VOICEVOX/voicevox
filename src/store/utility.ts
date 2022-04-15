@@ -45,6 +45,78 @@ export function buildProjectFileName(state: State, extension?: string): string {
     : defaultFileNameStem;
 }
 
+type ReplaceTag =
+  | "index"
+  | "characterName"
+  | "styleName"
+  | "rawStyleName"
+  | "text";
+type Replacer = { [P in ReplaceTag]?: string };
+type VariablesForFileName = {
+  index: number;
+  characterName: string;
+  styleName: string | undefined;
+  text: string;
+};
+
+const replaceTagMap: Map<ReplaceTag, string> = new Map([
+  ["index", "連番"],
+  ["characterName", "キャラ"],
+  ["styleName", "（スタイル）"],
+  ["text", "テキスト"],
+  ["rawStyleName", "スタイル"],
+]);
+
+const DEFAULT_TEMPLATE = "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
+  index: 0,
+  characterName: "四国めたん",
+  text: "おはようこんにちはこんばんは",
+  styleName: "ノーマル",
+};
+
+function replaceTag(template: string, replacer: Replacer): string {
+  let result = `${template}`;
+
+  replaceTagMap.forEach((target, key) => {
+    const replacedText = replacer[key] ?? "";
+    result = result.replaceAll(`$${target}$`, replacedText);
+  });
+
+  return result;
+}
+
+export function buildFileNameFromRawData(
+  fileNamePattern = DEFAULT_TEMPLATE,
+  vars: VariablesForFileName = DEFAULT_FILE_NAME_VARIABLES
+): string {
+  let pattern = fileNamePattern;
+  if (pattern.length === 0) {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_TEMPLATE;
+  }
+
+  let text = sanitizeFileName(vars.text);
+  if (text.length > 10) {
+    text = text.substring(0, 9) + "…";
+  }
+
+  const characterName = sanitizeFileName(vars.characterName);
+
+  const index = (vars.index + 1).toString().padStart(3, "0");
+
+  // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
+  const styleName = sanitizeFileName(vars.styleName ?? "");
+
+  return replaceTag(pattern, {
+    index,
+    characterName,
+    rawStyleName: styleName,
+    styleName: styleName.length !== 0 ? `（${styleName}）` : "",
+    text,
+  });
+}
+
 export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   const tag2NameObj: Record<ToolbarButtonTagType, string> = {
     PLAY_CONTINUOUSLY: "連続再生",
