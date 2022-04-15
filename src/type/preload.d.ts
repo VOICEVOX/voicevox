@@ -142,6 +142,7 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
+  fileNamePattern: string;
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
