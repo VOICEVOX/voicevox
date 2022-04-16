@@ -342,6 +342,41 @@
                 </q-toggle>
               </q-card-actions>
 
+              <file-name-pattern-dialog
+                v-model:open-dialog="showsFilePatternEditDialog"
+              />
+
+              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+                <div>ファイル名パターン</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      書き出すファイル名のパターンを指定する
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-btn
+                  label="ファイル名パターンを編集する"
+                  unelevated
+                  color="background-light"
+                  text-color="display-dark"
+                  class="text-no-wrap text-bold q-mr-sm"
+                  @click="showsFilePatternEditDialog = true"
+                />
+              </q-card-actions>
+
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>上書き防止</div>
                 <div>
@@ -679,9 +714,14 @@ import {
   ActivePointScrollMode,
   SplitTextWhenPasteType,
 } from "@/type/preload";
+import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
 export default defineComponent({
   name: "SettingDialog",
+
+  components: {
+    FileNamePatternDialog,
+  },
 
   props: {
     modelValue: {
@@ -953,6 +993,8 @@ export default defineComponent({
       store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     };
 
+    const showsFilePatternEditDialog = ref(false);
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -974,6 +1016,7 @@ export default defineComponent({
       acceptRetrieveTelemetryComputed,
       splitTextWhenPaste,
       changeSplitTextWhenPaste,
+      showsFilePatternEditDialog,
     };
   },
 });

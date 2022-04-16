@@ -59,7 +59,7 @@ type VariablesForFileName = {
   text: string;
 };
 
-const replaceTagMap: Map<ReplaceTag, string> = new Map([
+export const replaceTagMap: Map<ReplaceTag, string> = new Map([
   ["index", "連番"],
   ["characterName", "キャラ"],
   ["styleName", "（スタイル）"],
@@ -67,7 +67,8 @@ const replaceTagMap: Map<ReplaceTag, string> = new Map([
   ["rawStyleName", "スタイル"],
 ]);
 
-const DEFAULT_TEMPLATE = "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+export const DEFAULT_FILE_NAME_TEMPLATE =
+  "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
 const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
   index: 0,
   characterName: "四国めたん",
@@ -87,13 +88,13 @@ function replaceTag(template: string, replacer: Replacer): string {
 }
 
 export function buildFileNameFromRawData(
-  fileNamePattern = DEFAULT_TEMPLATE,
+  fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
   vars: VariablesForFileName = DEFAULT_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern.length === 0) {
     // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
-    pattern = DEFAULT_TEMPLATE;
+    pattern = DEFAULT_FILE_NAME_TEMPLATE;
   }
 
   let text = sanitizeFileName(vars.text);
