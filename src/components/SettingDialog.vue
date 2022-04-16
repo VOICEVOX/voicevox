@@ -293,7 +293,6 @@
                       self="center right"
                       transition-show="jump-left"
                       transition-hide="jump-right"
-                      v-if="!savingSetting.fixedExportEnabled"
                     >
                       音声ファイルを設定したフォルダに書き出す
                     </q-tooltip>
