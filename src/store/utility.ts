@@ -75,7 +75,7 @@ export const DEFAULT_FILE_NAME_TEMPLATE =
 const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
   index: 0,
   characterName: "四国めたん",
-  text: "おはようこんにちはこんばんは",
+  text: "テキストテキストテキスト",
   styleName: "ノーマル",
   date: currentDateString(),
 };
