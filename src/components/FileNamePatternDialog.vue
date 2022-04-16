@@ -18,8 +18,8 @@
               label="ファイル名パターン"
               suffix=".wav"
               :maxlength="maxLength"
-              :error="isInvalidPattern"
-              :error-message="`ファイル名に使用できない文字が含まれています：「${invalidChar}」`"
+              :error="hasError"
+              :error-message="errorMessage"
               v-model="currentFileNamePattern"
               ref="patternInput"
             >
@@ -67,7 +67,7 @@
             color="background-light"
             text-color="display-dark"
             class="text-no-wrap text-bold q-mr-sm col-2"
-            :disable="isInvalidPattern || currentFileNamePattern.length === 0"
+            :disable="hasError"
             @click="submit"
           />
         </div>
@@ -110,11 +110,17 @@ export default defineComponent({
     const sanitizedPattern = computed(() =>
       sanitizeFileName(currentFileNamePattern.value)
     );
-    const isInvalidPattern = computed(
+    const includesInvalidChar = computed(
       () => currentFileNamePattern.value !== sanitizedPattern.value
     );
+    const notIncludesIndexTag = computed(
+      () =>
+        !currentFileNamePattern.value.includes(
+          replaceTagMap.get("index") as string
+        )
+    );
     const invalidChar = computed(() => {
-      if (!isInvalidPattern.value) return "";
+      if (!includesInvalidChar.value) return "";
 
       const a = currentFileNamePattern.value;
       const b = sanitizedPattern.value;
@@ -129,6 +135,23 @@ export default defineComponent({
 
       return diffAt;
     });
+    const errorMessage = computed(() => {
+      if (currentFileNamePattern.value.length === 0) {
+        return "何か入力してください";
+      }
+
+      const result: string[] = [];
+      if (invalidChar.value !== "") {
+        result.push(
+          `使用できない文字が含まれています：「${invalidChar.value}」`
+        );
+      }
+      if (notIncludesIndexTag.value) {
+        result.push(`$${replaceTagMap.get("index")}$は必須です`);
+      }
+      return result.join(", ");
+    });
+    const hasError = computed(() => errorMessage.value !== "");
     const exampleFileName = computed(() =>
       buildFileNameFromRawData(currentFileNamePattern.value + ".wav")
     );
@@ -146,9 +169,10 @@ export default defineComponent({
       currentFileNamePattern.value = removeExtension(
         DEFAULT_FILE_NAME_TEMPLATE
       );
+      patternInput.value?.focus();
     };
 
-    const tags = computed(() => [...replaceTagMap.values()]);
+    const tags = [...replaceTagMap.values()];
 
     const insertTagToCurrentPosition = (tag: string) => {
       const elem = patternInput.value?.getNativeElement() as HTMLInputElement;
@@ -169,6 +193,7 @@ export default defineComponent({
         setTimeout(() => {
           elem.selectionStart = from + tag.length;
           elem.selectionEnd = from + tag.length;
+          elem.focus();
         }, 50);
       }
     };
@@ -194,8 +219,8 @@ export default defineComponent({
       initializeInput,
       savingSetting,
       currentFileNamePattern,
-      isInvalidPattern,
-      invalidChar,
+      errorMessage,
+      hasError,
       exampleFileName,
     };
   },
