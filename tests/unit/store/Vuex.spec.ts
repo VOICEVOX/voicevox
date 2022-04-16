@@ -80,6 +80,11 @@ describe("store/vuex.js test", () => {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
         },
+        splitterPosition: {
+          audioDetailPaneHeight: 200,
+          audioInfoPaneWidth: 20,
+          portraitPaneWidth: 50,
+        },
       },
       getters: {
         ...uiStore.getters,
@@ -173,5 +178,12 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.propertyVal(
+      store.state.splitterPosition,
+      "audioDetailPaneHeight",
+      200
+    );
+    assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
+    assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
   });
 });
