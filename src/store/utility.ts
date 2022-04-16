@@ -50,13 +50,15 @@ type ReplaceTag =
   | "characterName"
   | "styleName"
   | "rawStyleName"
-  | "text";
+  | "text"
+  | "date";
 type Replacer = { [P in ReplaceTag]?: string };
 type VariablesForFileName = {
   index: number;
   characterName: string;
   styleName: string | undefined;
   text: string;
+  date: string;
 };
 
 export const replaceTagMap: Map<ReplaceTag, string> = new Map([
@@ -65,6 +67,7 @@ export const replaceTagMap: Map<ReplaceTag, string> = new Map([
   ["styleName", "（スタイル）"],
   ["text", "テキスト"],
   ["rawStyleName", "スタイル"],
+  ["date", "日付"],
 ]);
 
 export const DEFAULT_FILE_NAME_TEMPLATE =
@@ -74,7 +77,13 @@ const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
   characterName: "四国めたん",
   text: "おはようこんにちはこんばんは",
   styleName: "ノーマル",
+  date: currentDateString(),
 };
+
+export function currentDateString(): string {
+  const date = new Date();
+  return `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
+}
 
 function replaceTag(template: string, replacer: Replacer): string {
   let result = `${template}`;
@@ -109,12 +118,15 @@ export function buildFileNameFromRawData(
   // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
   const styleName = sanitizeFileName(vars.styleName ?? "");
 
+  const date = currentDateString();
+
   return replaceTag(pattern, {
     index,
     characterName,
     rawStyleName: styleName,
     styleName: styleName.length !== 0 ? `（${styleName}）` : "",
     text,
+    date,
   });
 }
 

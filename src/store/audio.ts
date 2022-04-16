@@ -34,6 +34,7 @@ import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
+  currentDateString,
 } from "./utility";
 
 async function generateUniqueIdAndQuery(
@@ -130,6 +131,7 @@ function buildFileName(state: State, audioKey: string) {
     index,
     styleName,
     text: audioItem.text,
+    date: currentDateString(),
   });
 }
 
