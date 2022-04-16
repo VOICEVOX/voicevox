@@ -26,7 +26,6 @@ import {
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
-  SplitterPosition,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -770,7 +769,6 @@ export type SettingStoreState = {
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
 };
 
 type SettingStoreTypes = {
@@ -846,15 +844,6 @@ type SettingStoreTypes = {
   SET_SPLIT_TEXT_WHEN_PASTE: {
     mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
     action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
-  };
-
-  GET_SPLITTER_POSITION: {
-    action(): void;
-  };
-
-  SET_SPLITTER_POSITION: {
-    mutation: { splitterPosition: SplitterPosition };
-    action(payload: { splitterPosition: SplitterPosition }): void;
   };
 };
 

@@ -263,14 +263,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
   },
 
-  getSplitterPosition: async () => {
-    return await ipcRendererInvoke("GET_SPLITTER_POSITION");
-  },
-
-  setSplitterPosition: async (splitterPosition) => {
-    return await ipcRendererInvoke("SET_SPLITTER_POSITION", splitterPosition);
-  },
-
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },

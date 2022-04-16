@@ -262,16 +262,6 @@ type IpcIHData = {
     return: void;
   };
 
-  GET_SPLITTER_POSITION: {
-    args: [];
-    return: import("@/type/preload").SplitterPosition;
-  };
-
-  SET_SPLITTER_POSITION: {
-    args: [splitterPosition: import("@/type/preload").SplitterPosition];
-    return: void;
-  };
-
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
