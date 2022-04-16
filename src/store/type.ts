@@ -25,6 +25,7 @@ import {
   Preset,
   ActivePointScrollMode,
   EngineInfo,
+  SplitterPosition,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -767,6 +768,7 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
+  splitterPosition: SplitterPosition;
 };
 
 type SettingStoreTypes = {
@@ -834,6 +836,15 @@ type SettingStoreTypes = {
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
+  };
+
+  GET_SPLITTER_POSITION: {
+    action(): void;
+  };
+
+  SET_SPLITTER_POSITION: {
+    mutation: { splitterPosition: SplitterPosition };
+    action(payload: { splitterPosition: SplitterPosition }): void;
   };
 };
 
