@@ -135,47 +135,6 @@ function buildFileName(state: State, audioKey: string) {
   });
 }
 
-/**
- * 出力予定のファイル名のリストを受け取り、
- * audioKeyとファイル名の対応関係に変換して返す。
- * 重複するファイル名は末尾に数値を付与してファイル名が重複しないように処理する。
- *
- * @param dirPath 出力ディレクトリのパス
- * @param builtFileNameMap { key: ファイル名、value: audioKeyの配列 }が格納されたObject
- * @returns (key: audioKey, value: 重複解決済みのファイル名) のMap
- */
-async function resolveDuplicatedFilename(
-  dirPath: string,
-  builtFileNameMap: Record<string, string[]>
-): Promise<Map<string, string>> {
-  const result: Map<string, string> = new Map();
-
-  for (const [filename, audioKeys] of Object.entries(builtFileNameMap)) {
-    let tail = 1;
-    const alreadyResolvedFilePath = new Set();
-
-    for (const audioKey of audioKeys) {
-      let filePath = path.join(dirPath, filename);
-
-      const name = filePath.slice(0, filePath.length - 4);
-      while (
-        (await window.electron.checkFileExists(filePath)) ||
-        alreadyResolvedFilePath.has(filePath)
-      ) {
-        filePath = name + "[" + tail.toString() + "]" + ".wav";
-        tail += 1;
-      }
-
-      alreadyResolvedFilePath.add(filePath);
-
-      const fileName = path.basename(filePath);
-      result.set(audioKey, fileName);
-    }
-  }
-
-  return result;
-}
-
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
@@ -1028,8 +987,7 @@ export const audioStore: VoiceVoxStoreOptions<
           encoding?: EncodingType;
         }
       ): Promise<SaveResultObject> => {
-        // filePathが外から与えられた場合は既にパスが決定しているので再度生成しない
-        if (state.savingSetting.fixedExportEnabled && filePath === undefined) {
+        if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
             buildFileName(state, audioKey)
@@ -1141,27 +1099,11 @@ export const audioStore: VoiceVoxStoreOptions<
         }
         if (dirPath) {
           const _dirPath = dirPath;
-
-          // 連続出力ではすべての出力が1つのファイルに上書きされて嬉しい人はいないと思うので、
-          // 重複防止設定のON/OFFに関わらず重複を防止する
-          const builtFileNameMap: Record<string, string[]> = {};
-          state.audioKeys.forEach((audioKey) => {
-            const builtName = buildFileName(state, audioKey);
-            const value = builtFileNameMap[builtName] ?? [];
-            builtFileNameMap[builtName] = [...value, audioKey];
-          });
-
-          const audioKeyToFileNameMap = await resolveDuplicatedFilename(
-            _dirPath,
-            builtFileNameMap
-          );
-
           const promises = state.audioKeys.map((audioKey) => {
-            // audioKeysからMapを作成しており必ず対応する値が存在するのでキャスト
-            const fileName = audioKeyToFileNameMap.get(audioKey) as string;
+            const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
-              filePath: path.join(_dirPath, fileName),
+              filePath: path.join(_dirPath, name),
               encoding,
             });
           });
