@@ -346,7 +346,7 @@
                 v-model:open-dialog="showsFilePatternEditDialog"
               />
 
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>ファイル名パターン</div>
                 <div>
                   <q-icon
@@ -367,12 +367,15 @@
                   </q-icon>
                 </div>
                 <q-space />
+                <div class="q-px-sm text-ellipsis">
+                  {{ savingSetting.fileNamePattern }}
+                </div>
                 <q-btn
-                  label="ファイル名パターンを編集する"
+                  label="編集"
                   unelevated
                   color="background-light"
                   text-color="display-dark"
-                  class="text-no-wrap text-bold q-mr-sm"
+                  class="text-no-wrap q-mr-sm"
                   @click="showsFilePatternEditDialog = true"
                 />
               </q-card-actions>
@@ -1051,6 +1054,12 @@ export default defineComponent({
 
 .scroll-mode-button-selected {
   background: colors.$primary;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scroll-mode-button:hover {

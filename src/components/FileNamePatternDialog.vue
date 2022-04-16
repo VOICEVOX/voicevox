@@ -9,8 +9,8 @@
         <div class="text-h6">出力ファイル名パターン</div>
       </q-card-section>
       <q-card-actions class="setting-card q-px-md q-py-sm">
-        <div>
-          <div>
+        <div class="row full-width justify-between">
+          <div class="col">
             <q-input
               dense
               outlined
@@ -22,49 +22,54 @@
               :error-message="`ファイル名に使用できない文字が含まれています：「${invalidChar}」`"
               v-model="currentFileNamePattern"
               ref="patternInput"
-            />
+            >
+              <template v-slot:after>
+                <q-btn
+                  label="デフォルトにリセット"
+                  unelevated
+                  color="background-light"
+                  text-color="display-dark"
+                  class="text-no-wrap q-mr-sm"
+                  @click="resetToDefault"
+                />
+              </template>
+            </q-input>
           </div>
-          <div class="text-body2">出力例）{{ exampleFileName }}</div>
+        </div>
+        <div class="text-body2 text-ellipsis">
+          出力例）{{ exampleFileName }}
+        </div>
+
+        <div class="row full-width q-my-md">
           <q-btn
-            label="デフォルトにリセット"
+            v-for="tag in tags"
+            :key="tag"
+            :label="`$${tag}$`"
             unelevated
             color="background-light"
             text-color="display-dark"
-            class="text-no-wrap text-bold q-mr-sm"
-            @click="resetToDefault"
+            class="text-no-wrap q-mr-sm"
+            @click="insertTagToCurrentPosition(`$${tag}$`)"
           />
-          <div>
-            <q-btn
-              v-for="tag in tags"
-              :key="tag"
-              :label="`$${tag}$`"
-              unelevated
-              color="background-light"
-              text-color="display-dark"
-              class="text-no-wrap text-bold q-mr-sm"
-              @click="insertTagToCurrentPosition(`$${tag}$`)"
-            />
-          </div>
-          <div>
-            <q-space />
-            <q-btn
-              label="キャンセル"
-              unelevated
-              color="background-light"
-              text-color="display-dark"
-              class="text-no-wrap text-bold q-mr-sm"
-              @click="updateOpenDialog(false)"
-            />
-            <q-btn
-              label="確定"
-              unelevated
-              color="background-light"
-              text-color="display-dark"
-              class="text-no-wrap text-bold q-mr-sm"
-              :disable="isInvalidPattern"
-              @click="submit"
-            />
-          </div>
+        </div>
+        <div class="row full-width justify-end">
+          <q-btn
+            label="キャンセル"
+            unelevated
+            color="background-light"
+            text-color="display-dark"
+            class="text-no-wrap text-bold q-mr-sm col-2"
+            @click="updateOpenDialog(false)"
+          />
+          <q-btn
+            label="確定"
+            unelevated
+            color="background-light"
+            text-color="display-dark"
+            class="text-no-wrap text-bold q-mr-sm col-2"
+            :disable="isInvalidPattern || currentFileNamePattern.length === 0"
+            @click="submit"
+          />
         </div>
       </q-card-actions>
     </q-card>
@@ -204,6 +209,12 @@ export default defineComponent({
   width: 100%;
   min-width: 475px;
   background: colors.$setting-item;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dialog-card {
