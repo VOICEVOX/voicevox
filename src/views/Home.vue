@@ -408,7 +408,6 @@ export default defineComponent({
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
-      await store.dispatch("INIT_SPLIT_TEXT_WHEN_PASTE");
 
       // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
