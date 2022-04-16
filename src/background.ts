@@ -35,11 +35,8 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
-<<<<<<< HEAD
   SplitTextWhenPasteType,
-=======
   SplitterPosition,
->>>>>>> 5a37c37dfabb23e441989d2c0a43df8ecfbd721d
 } from "./type/preload";
 
 import log from "electron-log";
@@ -212,11 +209,8 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
-<<<<<<< HEAD
   splitTextWhenPaste: SplitTextWhenPasteType;
-=======
   splitterPosition: SplitterPosition;
->>>>>>> 5a37c37dfabb23e441989d2c0a43df8ecfbd721d
 }>({
   schema: {
     useGpu: {
@@ -363,12 +357,11 @@ const store = new Store<{
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
     },
-<<<<<<< HEAD
     splitTextWhenPaste: {
       type: "string",
       enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
       default: "PERIOD_AND_NEW_LINE",
-=======
+    },
     splitterPosition: {
       type: "object",
       properties: {
@@ -377,7 +370,6 @@ const store = new Store<{
         audioDetailPaneHeight: { type: "number" },
       },
       default: {},
->>>>>>> 5a37c37dfabb23e441989d2c0a43df8ecfbd721d
     },
   },
   migrations: {},
@@ -1193,21 +1185,20 @@ ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
 });
 
-<<<<<<< HEAD
 ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
   return store.get("splitTextWhenPaste");
 });
 
 ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
   store.set("splitTextWhenPaste", splitTextWhenPaste);
-=======
+});
+
 ipcMainHandle("GET_SPLITTER_POSITION", () => {
   return store.get("splitterPosition");
 });
 
 ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
   store.set("splitterPosition", splitterPosition);
->>>>>>> 5a37c37dfabb23e441989d2c0a43df8ecfbd721d
 });
 
 // app callback
