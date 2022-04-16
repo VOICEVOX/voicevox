@@ -36,10 +36,12 @@ import {
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
+  SplitterPosition,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -208,6 +210,7 @@ const store = new Store<{
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
   splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
 }>({
   schema: {
     useGpu: {
@@ -358,6 +361,15 @@ const store = new Store<{
       type: "string",
       enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
       default: "PERIOD_AND_NEW_LINE",
+    },
+    splitterPosition: {
+      type: "object",
+      properties: {
+        portraitPaneWidth: { type: "number" },
+        audioInfoPaneWidth: { type: "number" },
+        audioDetailPaneHeight: { type: "number" },
+      },
+      default: {},
     },
   },
   migrations: {},
@@ -739,9 +751,16 @@ let willQuit = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
+  const mainWindowState = windowStateKeeper({
+    defaultWidth: 800,
+    defaultHeight: 600,
+  });
+
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     frame: false,
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 6, y: 4 },
@@ -813,6 +832,8 @@ async function createWindow() {
       }
     }
   });
+
+  mainWindowState.manage(win);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -1164,12 +1185,21 @@ ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
 });
 
+<<<<<<< HEAD
 ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
   return store.get("splitTextWhenPaste");
 });
 
 ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
   store.set("splitTextWhenPaste", splitTextWhenPaste);
+=======
+ipcMainHandle("GET_SPLITTER_POSITION", () => {
+  return store.get("splitterPosition");
+});
+
+ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
+  store.set("splitterPosition", splitterPosition);
+>>>>>>> 5a37c37dfabb23e441989d2c0a43df8ecfbd721d
 });
 
 // app callback

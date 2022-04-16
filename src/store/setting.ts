@@ -46,6 +46,11 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
+  splitterPosition: {
+    audioDetailPaneHeight: undefined,
+    audioInfoPaneWidth: undefined,
+    portraitPaneWidth: undefined,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -104,6 +109,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_SPLIT_TEXT_WHEN_PASTE(state, { splitTextWhenPaste }) {
       state.splitTextWhenPaste = splitTextWhenPaste;
+    },
+    SET_SPLITTER_POSITION(state, { splitterPosition }) {
+      state.splitterPosition = splitterPosition;
     },
   },
   actions: {
@@ -248,6 +256,15 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
       window.electron.setSplitTextWhenPaste(splitTextWhenPaste);
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+    },
+    GET_SPLITTER_POSITION({ dispatch }) {
+      window.electron.getSplitterPosition().then((splitterPosition) => {
+        dispatch("SET_SPLITTER_POSITION", { splitterPosition });
+      });
+    },
+    SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
+      window.electron.setSplitterPosition(splitterPosition);
+      commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
   },
 };
