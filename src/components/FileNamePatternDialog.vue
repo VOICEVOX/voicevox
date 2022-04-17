@@ -37,9 +37,8 @@
           </div>
         </div>
         <div class="text-body2 text-ellipsis">
-          出力例）{{ exampleFileName }}
+          出力例）{{ previewFileName }}
         </div>
-
         <div class="row full-width q-my-md">
           <q-btn
             v-for="tagString in tagStrings"
@@ -101,27 +100,29 @@ export default defineComponent({
       context.emit("update:openDialog", isOpen);
 
     const store = useStore();
-
     const patternInput = ref<QInput>();
+    const maxLength = 128;
+    const tagStrings = Object.values(replaceTagIdToTagString);
 
     const savingSetting = computed(() => store.state.savingSetting);
 
     const currentFileNamePattern = ref(savingSetting.value.fileNamePattern);
-    const sanitizedPattern = computed(() =>
+    const sanitizedFileNamePattern = computed(() =>
       sanitizeFileName(currentFileNamePattern.value)
     );
-    const includesInvalidChar = computed(
-      () => currentFileNamePattern.value !== sanitizedPattern.value
+
+    const hasInvalidChar = computed(
+      () => currentFileNamePattern.value !== sanitizedFileNamePattern.value
     );
-    const notIncludesIndexTag = computed(
+    const hasNotIndexTagString = computed(
       () =>
         !currentFileNamePattern.value.includes(replaceTagIdToTagString["index"])
     );
     const invalidChar = computed(() => {
-      if (!includesInvalidChar.value) return "";
+      if (!hasInvalidChar.value) return "";
 
       const a = currentFileNamePattern.value;
-      const b = sanitizedPattern.value;
+      const b = sanitizedFileNamePattern.value;
 
       let diffAt = "";
       for (let i = 0; i < a.length; i++) {
@@ -144,16 +145,16 @@ export default defineComponent({
           `使用できない文字が含まれています：「${invalidChar.value}」`
         );
       }
-      if (notIncludesIndexTag.value) {
+      if (hasNotIndexTagString.value) {
         result.push(`$${replaceTagIdToTagString["index"]}$は必須です`);
       }
       return result.join(", ");
     });
     const hasError = computed(() => errorMessage.value !== "");
-    const exampleFileName = computed(() =>
+
+    const previewFileName = computed(() =>
       buildFileNameFromRawData(currentFileNamePattern.value + ".wav")
     );
-    const maxLength = 128;
 
     const removeExtension = (str: string) => {
       return str.replace(/\.wav$/, "");
@@ -169,8 +170,6 @@ export default defineComponent({
       );
       patternInput.value?.focus();
     };
-
-    const tagStrings = Object.values(replaceTagIdToTagString);
 
     const insertTagToCurrentPosition = (tag: string) => {
       const elem = patternInput.value?.getNativeElement() as HTMLInputElement;
@@ -219,7 +218,7 @@ export default defineComponent({
       currentFileNamePattern,
       errorMessage,
       hasError,
-      exampleFileName,
+      previewFileName,
     };
   },
 });
