@@ -42,14 +42,14 @@
 
         <div class="row full-width q-my-md">
           <q-btn
-            v-for="tag in tags"
-            :key="tag"
-            :label="`$${tag}$`"
+            v-for="tagString in tagStrings"
+            :key="tagString"
+            :label="`$${tagString}$`"
             unelevated
             color="background-light"
             text-color="display-dark"
             class="text-no-wrap q-mr-sm"
-            @click="insertTagToCurrentPosition(`$${tag}$`)"
+            @click="insertTagToCurrentPosition(`$${tagString}$`)"
           />
         </div>
         <div class="row full-width justify-end">
@@ -83,7 +83,7 @@ import { useStore } from "@/store";
 import {
   buildFileNameFromRawData,
   DEFAULT_FILE_NAME_TEMPLATE,
-  replaceTagMap,
+  replaceTagIdToTagString,
   sanitizeFileName,
 } from "@/store/utility";
 
@@ -115,9 +115,7 @@ export default defineComponent({
     );
     const notIncludesIndexTag = computed(
       () =>
-        !currentFileNamePattern.value.includes(
-          replaceTagMap.get("index") as string
-        )
+        !currentFileNamePattern.value.includes(replaceTagIdToTagString["index"])
     );
     const invalidChar = computed(() => {
       if (!includesInvalidChar.value) return "";
@@ -147,7 +145,7 @@ export default defineComponent({
         );
       }
       if (notIncludesIndexTag.value) {
-        result.push(`$${replaceTagMap.get("index")}$は必須です`);
+        result.push(`$${replaceTagIdToTagString["index"]}$は必須です`);
       }
       return result.join(", ");
     });
@@ -172,7 +170,7 @@ export default defineComponent({
       patternInput.value?.focus();
     };
 
-    const tags = [...replaceTagMap.values()];
+    const tagStrings = Object.values(replaceTagIdToTagString);
 
     const insertTagToCurrentPosition = (tag: string) => {
       const elem = patternInput.value?.getNativeElement() as HTMLInputElement;
@@ -210,7 +208,7 @@ export default defineComponent({
 
     return {
       patternInput,
-      tags,
+      tagStrings,
       maxLength,
       updateOpenDialog,
       resetToDefault,

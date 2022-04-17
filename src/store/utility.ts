@@ -45,14 +45,15 @@ export function buildProjectFileName(state: State, extension?: string): string {
     : defaultFileNameStem;
 }
 
-type ReplaceTag =
+type ReplaceTagId =
   | "index"
   | "characterName"
   | "styleName"
   | "rawStyleName"
   | "text"
   | "date";
-type Replacer = { [P in ReplaceTag]?: string };
+type Replacer = { [P in ReplaceTagId]?: string };
+type ReplaceTagString = string;
 type VariablesForFileName = {
   index: number;
   characterName: string;
@@ -61,14 +62,21 @@ type VariablesForFileName = {
   date: string;
 };
 
-export const replaceTagMap: Map<ReplaceTag, string> = new Map([
-  ["index", "連番"],
-  ["characterName", "キャラ"],
-  ["styleName", "（スタイル）"],
-  ["text", "テキスト"],
-  ["rawStyleName", "スタイル"],
-  ["date", "日付"],
-]);
+export const replaceTagIdToTagString: {
+  [key in ReplaceTagId]: ReplaceTagString;
+} = {
+  index: "連番",
+  characterName: "キャラ",
+  styleName: "（スタイル）",
+  text: "テキスト",
+  rawStyleName: "スタイル",
+  date: "日付",
+};
+const replaceTagStringToTagId: { [key in ReplaceTagString]: ReplaceTagId } =
+  Object.entries(replaceTagIdToTagString).reduce(
+    (prev, [k, v]) => ({ ...prev, [v]: k }),
+    {}
+  );
 
 export const DEFAULT_FILE_NAME_TEMPLATE =
   "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
@@ -86,11 +94,12 @@ export function currentDateString(): string {
 }
 
 function replaceTag(template: string, replacer: Replacer): string {
-  let result = `${template}`;
-
-  replaceTagMap.forEach((target, key) => {
-    const replacedText = replacer[key] ?? "";
-    result = result.replaceAll(`$${target}$`, replacedText);
+  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+    const replaceTagId = replaceTagStringToTagId[p1];
+    if (replaceTagId === undefined) {
+      return match;
+    }
+    return replacer[replaceTagId] ?? "";
   });
 
   return result;
@@ -101,7 +110,7 @@ export function buildFileNameFromRawData(
   vars: VariablesForFileName = DEFAULT_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
-  if (pattern.length === 0) {
+  if (pattern === "") {
     // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
     pattern = DEFAULT_FILE_NAME_TEMPLATE;
   }
