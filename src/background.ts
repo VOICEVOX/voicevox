@@ -35,6 +35,7 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
   SplitterPosition,
 } from "./type/preload";
 
@@ -208,6 +209,7 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
 }>({
   schema: {
@@ -240,11 +242,6 @@ const store = new Store<{
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: { type: "number", default: 24000 },
         audioOutputDevice: { type: "string", default: "default" },
-        splitTextWhenPaste: {
-          type: "string",
-          enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
-          default: "PERIOD_AND_NEW_LINE",
-        },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -359,6 +356,11 @@ const store = new Store<{
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
+    },
+    splitTextWhenPaste: {
+      type: "string",
+      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
+      default: "PERIOD_AND_NEW_LINE",
     },
     splitterPosition: {
       type: "object",
@@ -1181,6 +1183,14 @@ ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
 
 ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
+});
+
+ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
+  return store.get("splitTextWhenPaste");
+});
+
+ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
+  store.set("splitTextWhenPaste", splitTextWhenPaste);
 });
 
 ipcMainHandle("GET_SPLITTER_POSITION", () => {

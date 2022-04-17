@@ -1,4 +1,4 @@
-import { EngineInfo } from "@/type/preload";
+import { EngineInfo, SplitTextWhenPasteType } from "@/type/preload";
 
 /**
  * invoke, handle
@@ -279,6 +279,15 @@ type IpcIHData = {
 
   ON_VUEX_READY: {
     args: [];
+    return: void;
+  };
+
+  GET_SPLIT_TEXT_WHEN_PASTE: {
+    args: [];
+    return: SplitTextWhenPasteType;
+  };
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    args: [splitTextWhenPaste: SplitTextWhenPasteType];
     return: void;
   };
 };

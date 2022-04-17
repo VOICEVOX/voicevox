@@ -155,6 +155,85 @@
                   </q-radio>
                 </div>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>分割の挙動</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキストを貼り付け時に行われる分割の挙動を変えます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  :model-value="splitTextWhenPaste"
+                  @update:model-value="changeSplitTextWhenPaste($event)"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  :options="[
+                    {
+                      label: '句点と改行',
+                      value: 'PERIOD_AND_NEW_LINE',
+                      slot: 'splitTextPeriodAndNewLine',
+                    },
+                    {
+                      label: '改行',
+                      value: 'NEW_LINE',
+                      slot: 'splitTextNewLine',
+                    },
+                    { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
+                  ]"
+                >
+                  <template v-slot:splitTextPeriodAndNewLine>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      句点と改行を基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextNewLine>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      改行のみを基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextOFF>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      分割を行いません。
+                    </q-tooltip>
+                  </template>
+                </q-btn-toggle>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -352,87 +431,6 @@
                   "
                 >
                 </q-toggle>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>分割の挙動</div>
-                <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      テキストを貼り付け時に行われる分割の挙動を変えます
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-btn-toggle
-                  padding="xs md"
-                  unelevated
-                  :model-value="savingSetting.splitTextWhenPaste"
-                  @update:model-value="
-                    handleSavingSettingChange('splitTextWhenPaste', $event)
-                  "
-                  color="white"
-                  text-color="black"
-                  toggle-color="primary"
-                  toggle-text-color="display"
-                  :options="[
-                    {
-                      label: '句点と改行',
-                      value: 'PERIOD_AND_NEW_LINE',
-                      slot: 'splitTextPeriodAndNewLine',
-                    },
-                    {
-                      label: '改行',
-                      value: 'NEW_LINE',
-                      slot: 'splitTextNewLine',
-                    },
-                    { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
-                  ]"
-                >
-                  <template v-slot:splitTextPeriodAndNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      句点と改行を基にテキストを分割します。
-                    </q-tooltip>
-                  </template>
-                  <template v-slot:splitTextNewLine>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      改行のみを基にテキストを分割します。
-                    </q-tooltip>
-                  </template>
-                  <template v-slot:splitTextOFF>
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      分割を行いません。
-                    </q-tooltip>
-                  </template>
-                </q-btn-toggle>
               </q-card-actions>
             </q-card>
             <!-- Experimental Card -->
@@ -680,6 +678,7 @@ import {
   SavingSetting,
   ExperimentalSetting,
   ActivePointScrollMode,
+  SplitTextWhenPasteType,
 } from "@/type/preload";
 
 export default defineComponent({
@@ -943,6 +942,18 @@ export default defineComponent({
       }
     };
 
+    const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
+    const changeSplitTextWhenPaste = async (
+      splitTextWhenPaste: SplitTextWhenPasteType
+    ) => {
+      if (
+        splitTextWhenPaste === (await window.electron.getSplitTextWhenPaste())
+      )
+        return;
+
+      store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+    };
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -962,6 +973,8 @@ export default defineComponent({
       currentThemeComputed,
       availableThemeNameComputed,
       acceptRetrieveTelemetryComputed,
+      splitTextWhenPaste,
+      changeSplitTextWhenPaste,
     };
   },
 });
