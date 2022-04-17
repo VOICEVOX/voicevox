@@ -148,6 +148,9 @@ export default defineComponent({
           `使用できない文字が含まれています：「${invalidChar.value}」`
         );
       }
+      if (previewFileName.value.includes("$")) {
+        result.push(`不正なタグが存在するか、$が単体で含まれています`);
+      }
       if (hasNotIndexTagString.value) {
         result.push(`$${replaceTagIdToTagString["index"]}$は必須です`);
       }
