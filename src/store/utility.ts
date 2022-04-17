@@ -53,7 +53,6 @@ type ReplaceTagId =
   | "text"
   | "date";
 type Replacer = { [P in ReplaceTagId]?: string };
-type ReplaceTagString = string;
 type VariablesForFileName = {
   index: number;
   characterName: string;
@@ -63,7 +62,7 @@ type VariablesForFileName = {
 };
 
 export const replaceTagIdToTagString: {
-  [key in ReplaceTagId]: ReplaceTagString;
+  [key in ReplaceTagId]: string;
 } = {
   index: "連番",
   characterName: "キャラ",
@@ -72,7 +71,7 @@ export const replaceTagIdToTagString: {
   rawStyleName: "スタイル",
   date: "日付",
 };
-const replaceTagStringToTagId: { [key in ReplaceTagString]: ReplaceTagId } =
+const replaceTagStringToTagId: { [tagString: string]: ReplaceTagId } =
   Object.entries(replaceTagIdToTagString).reduce(
     (prev, [k, v]) => ({ ...prev, [v]: k }),
     {}
