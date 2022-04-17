@@ -347,7 +347,7 @@
               />
 
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>ファイル名パターン</div>
+                <div>書き出しファイル名パターン</div>
                 <div>
                   <q-icon
                     name="help_outline"
@@ -362,7 +362,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      書き出すファイル名のパターンを指定する
+                      書き出すファイル名のパターンをカスタマイズする
                     </q-tooltip>
                   </q-icon>
                 </div>

@@ -6,7 +6,10 @@
   >
     <q-card class="q-pa-md dialog-card">
       <q-card-section>
-        <div class="text-h6">出力ファイル名パターン</div>
+        <div class="text-h5">書き出しファイル名パターン</div>
+        <div class="text-body2 text-grey-8">
+          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
+        </div>
       </q-card-section>
       <q-card-actions class="setting-card q-px-md q-py-sm">
         <div class="row full-width justify-between">
