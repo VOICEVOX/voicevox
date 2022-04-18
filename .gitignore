@@ -38,6 +38,3 @@ electron-builder.yml
 
 # generated licenses.json
 /*licenses.json
-
-# pnpm lock file
-pnpm-lock.yaml
