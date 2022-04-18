@@ -37,6 +37,7 @@ specifiers:
   electron-devtools-installer: 3.2.0
   electron-log: 4.4.1
   electron-store: 8.0.0
+  electron-window-state: 5.0.3
   encoding-japanese: 1.0.30
   eslint: 6.8.0
   eslint-plugin-prettier: 3.4.0
@@ -75,6 +76,7 @@ dependencies:
   dayjs: 1.10.7
   electron-log: 4.4.1
   electron-store: 8.0.0
+  electron-window-state: 5.0.3
   encoding-japanese: 1.0.30
   immer: 9.0.2
   lodash.debounce: 4.0.8
@@ -5326,6 +5328,14 @@ packages:
     resolution: {integrity: sha512-c/uKWR1Z/W30Wy/sx3dkZoj4BijbXX85QKWu9jJfjho3LBAXNEGAEW3oWiGb+dotA6C6BzCTxL2/aLes7jlUeg==}
     dev: true
 
+  /electron-window-state/5.0.3:
+    resolution: {integrity: sha512-1mNTwCfkolXl3kMf50yW3vE2lZj0y92P/HYWFBrb+v2S/pCka5mdwN3cagKm458A7NjndSwijynXgcLWRodsVg==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      jsonfile: 4.0.0
+      mkdirp: 0.5.6
+    dev: false
+
   /electron/16.0.6:
     resolution: {integrity: sha512-Xs9dYLYhcJf3wXn8m2gDqFTb1L862KEhMxOx9swfFBHj6NoUPPtUgw/RyPQ0tXN1XPxG9vnBkoI0BdcKwrLKuQ==}
     engines: {node: '>= 8.6'}
@@ -6686,7 +6696,6 @@ packages:
 
   /graceful-fs/4.2.9:
     resolution: {integrity: sha512-NtNxqUcXgpW2iMrfqSfR73Glt39K+BLwWsPs94yR63v45T0Wbej7eRmL5cWfwEgqXnmjQp3zaJTshdRW/qC2ZQ==}
-    dev: true
 
   /graceful-readlink/1.0.1:
     resolution: {integrity: sha1-TK+tdrxi8C+gObL5Tpo906ORpyU=}
@@ -7944,7 +7953,6 @@ packages:
     resolution: {integrity: sha1-h3Gq4HmbZAdrdmQPygWPnBDjPss=}
     optionalDependencies:
       graceful-fs: 4.2.9
-    dev: true
 
   /jsonfile/6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -8261,7 +8269,7 @@ packages:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
     dependencies:
-      chalk: 4.1.1
+      chalk: 4.1.2
       is-unicode-supported: 0.1.0
     dev: true
 
@@ -8596,7 +8604,6 @@ packages:
 
   /minimist/1.2.6:
     resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
-    dev: true
 
   /minipass-collect/1.0.2:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
@@ -8679,7 +8686,6 @@ packages:
     hasBin: true
     dependencies:
       minimist: 1.2.6
-    dev: true
 
   /mkdirp/1.0.4:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
