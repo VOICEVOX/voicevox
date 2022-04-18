@@ -10,6 +10,7 @@ import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
+import { dictionaryStore } from "@/store/dictionary";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -78,6 +79,12 @@ describe("store/vuex.js test", () => {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
         },
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
+        splitterPosition: {
+          audioDetailPaneHeight: 200,
+          audioInfoPaneWidth: 20,
+          portraitPaneWidth: 50,
+        },
       },
       getters: {
         ...uiStore.getters,
@@ -89,6 +96,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.getters,
         ...presetStore.getters,
         ...proxyStore.getters,
+        ...dictionaryStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -100,6 +108,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.mutations,
         ...presetStore.mutations,
         ...proxyStore.mutations,
+        ...dictionaryStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -111,6 +120,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.actions,
         ...presetStore.actions,
         ...proxyStore.actions,
+        ...dictionaryStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
@@ -168,5 +178,12 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.propertyVal(
+      store.state.splitterPosition,
+      "audioDetailPaneHeight",
+      200
+    );
+    assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
+    assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
   });
 });

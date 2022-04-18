@@ -69,7 +69,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.uiLockCount++;
       },
       UNLOCK_UI(state) {
-        state.uiLockCount--;
+        if (state.uiLockCount !== 0) {
+          state.uiLockCount--;
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn("UNLOCK_UI is called when state.uiLockCount == 0");
+        }
       },
       LOCK_MENUBAR(state) {
         state.dialogLockCount++;

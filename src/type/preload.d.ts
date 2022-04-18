@@ -82,10 +82,14 @@ export interface Sandbox {
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
+  getSplitterPosition(): Promise<SplitterPosition>;
+  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
+  getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
+  setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
 }
 
 export type AppInfos = {
@@ -132,6 +136,8 @@ export type AcceptRetrieveTelemetryStatus =
 export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
+
+export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type SavingSetting = {
   exportLab: boolean;
@@ -195,7 +201,9 @@ export type HotkeyAction =
   | "プロジェクトを名前を付けて保存"
   | "プロジェクトを上書き保存"
   | "プロジェクト読み込み"
-  | "テキスト読み込む";
+  | "テキスト読み込む"
+  | "イントネーションをリセット"
+  | "選択中のアクセント句のイントネーションをリセット";
 
 export type HotkeyCombo = string;
 
@@ -259,4 +267,10 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+};
+
+export type SplitterPosition = {
+  portraitPaneWidth: number | undefined;
+  audioInfoPaneWidth: number | undefined;
+  audioDetailPaneHeight: number | undefined;
 };

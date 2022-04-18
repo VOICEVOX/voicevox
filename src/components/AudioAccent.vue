@@ -37,7 +37,7 @@
       'grid-column': `1 / span ${accentPhrase.moras.length * 2 - 1}`,
     }"
   >
-    <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 10} 50`">
+    <svg :viewBox="`0 0 ${accentPhrase.moras.length * 40 - 20} 50`">
       <polyline :points="accentLine" />
     </svg>
   </div>
@@ -53,8 +53,8 @@
       ]"
       :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
     >
-      <svg width="29" height="50" viewBox="0 0 29 50">
-        <line x1="14" y1="0" x2="14" y2="50" stroke-width="1" />
+      <svg width="19" height="50" viewBox="0 0 19 50">
+        <line x1="9" y1="0" x2="9" y2="50" stroke-width="1" />
       </svg>
     </div>
   </template>
@@ -99,7 +99,7 @@ export default defineComponent({
       const accent = previewAccentSlider.state.currentValue.value ?? 0;
       return [...Array(props.accentPhrase.moras.length).keys()].map(
         (index) =>
-          `${index * 40 + 15} ${
+          `${index * 40 + 10} ${
             index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
           }`
       );
@@ -132,8 +132,7 @@ div {
       right: 0;
       bottom: 0;
       > div {
-        padding-left: 10px;
-        padding-right: 5px;
+        padding-left: 5px;
       }
     }
   }

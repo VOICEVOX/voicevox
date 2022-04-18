@@ -35,10 +35,13 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
+  SplitterPosition,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -172,6 +175,14 @@ const defaultHotkeySettings: HotkeySetting[] = [
     action: "テキスト読み込む",
     combination: "",
   },
+  {
+    action: "イントネーションをリセット",
+    combination: !isMac ? "Ctrl G" : "Meta G",
+  },
+  {
+    action: "選択中のアクセント句のイントネーションをリセット",
+    combination: "R",
+  },
 ];
 
 const defaultToolbarButtonSetting: ToolbarSetting = [
@@ -198,6 +209,8 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
 }>({
   schema: {
     useGpu: {
@@ -240,6 +253,7 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -342,6 +356,20 @@ const store = new Store<{
       type: "string",
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
+    },
+    splitTextWhenPaste: {
+      type: "string",
+      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
+      default: "PERIOD_AND_NEW_LINE",
+    },
+    splitterPosition: {
+      type: "object",
+      properties: {
+        portraitPaneWidth: { type: "number" },
+        audioInfoPaneWidth: { type: "number" },
+        audioDetailPaneHeight: { type: "number" },
+      },
+      default: {},
     },
   },
   migrations: {},
@@ -723,9 +751,16 @@ let willQuit = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
+  const mainWindowState = windowStateKeeper({
+    defaultWidth: 800,
+    defaultHeight: 600,
+  });
+
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     frame: false,
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 6, y: 4 },
@@ -797,6 +832,8 @@ async function createWindow() {
       }
     }
   });
+
+  mainWindowState.manage(win);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -1146,6 +1183,22 @@ ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
 
 ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
+});
+
+ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
+  return store.get("splitTextWhenPaste");
+});
+
+ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
+  store.set("splitTextWhenPaste", splitTextWhenPaste);
+});
+
+ipcMainHandle("GET_SPLITTER_POSITION", () => {
+  return store.get("splitterPosition");
+});
+
+ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
+  store.set("splitterPosition", splitterPosition);
 });
 
 // app callback
