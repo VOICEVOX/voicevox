@@ -69,26 +69,28 @@ function parseTextFile(
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
   const characters = new Map<string, number>();
-  {
-    const uuid2StyleIds = new Map<string, number>();
-    for (const defaultStyleId of defaultStyleIds) {
-      const speakerUuid = defaultStyleId.speakerUuid;
-      const styleId = defaultStyleId.defaultStyleId;
-      uuid2StyleIds.set(speakerUuid, styleId);
-    }
-    for (const characterInfo of userOrderedCharacterInfos) {
-      const uuid = characterInfo.metas.speakerUuid;
-      const styleId =
-        uuid2StyleIds.get(uuid) ?? characterInfo.metas.styles[0].styleId;
-      const speakerName = characterInfo.metas.speakerName;
-      characters.set(speakerName, styleId);
-    }
+  const uuid2StyleIds = new Map<string, number>();
+  for (const defaultStyleId of defaultStyleIds) {
+    const speakerUuid = defaultStyleId.speakerUuid;
+    const styleId = defaultStyleId.defaultStyleId;
+    uuid2StyleIds.set(speakerUuid, styleId);
+  }
+  for (const characterInfo of userOrderedCharacterInfos) {
+    const uuid = characterInfo.metas.speakerUuid;
+    const styleId = uuid2StyleIds.get(uuid);
+    const speakerName = characterInfo.metas.speakerName;
+    if (styleId == undefined)
+      throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
+    characters.set(speakerName, styleId);
   }
   if (!characters.size) return [];
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = userOrderedCharacterInfos[0].metas.styles[0].styleId;
+  let lastStyleId = uuid2StyleIds.get(
+    userOrderedCharacterInfos[0].metas.speakerUuid
+  );
+  if (lastStyleId == undefined) throw new Error(`lastStyleId is undefined.`);
   for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splittedText);
     if (styleId !== undefined) {
@@ -1954,6 +1956,47 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           accentPhrases: newAccentPhrases,
         });
       }
+    },
+    async COMMAND_RESET_MORA_PITCH_AND_LENGTH(
+      { state, dispatch, commit },
+      { audioKey }
+    ) {
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId == undefined");
+
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
+        accentPhrases: query.accentPhrases,
+        styleId,
+      });
+
+      commit("COMMAND_CHANGE_ACCENT", {
+        audioKey,
+        accentPhrases: newAccentPhases,
+      });
+    },
+    async COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH(
+      { state, dispatch, commit },
+      { audioKey, accentPhraseIndex }
+    ) {
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId == undefined");
+
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
+        accentPhrases: [...query.accentPhrases],
+        styleId,
+        copyIndexes: [accentPhraseIndex],
+      });
+
+      commit("COMMAND_CHANGE_ACCENT", {
+        audioKey,
+        accentPhrases: newAccentPhases,
+      });
     },
     COMMAND_SET_AUDIO_MORA_DATA(
       { commit },

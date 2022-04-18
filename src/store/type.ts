@@ -6,7 +6,7 @@ import {
   StoreOptions,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery } from "@/openapi";
+import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -26,6 +26,8 @@ import {
   ActivePointScrollMode,
   EngineInfo,
   GuidedInfo,
+  SplitTextWhenPasteType,
+  SplitterPosition,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -484,6 +486,14 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKey: string; accentPhraseIndex: number }): void;
+  };
+
   COMMAND_SET_AUDIO_MORA_DATA: {
     mutation: {
       audioKey: string;
@@ -781,6 +791,8 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
 };
 
 type SettingStoreTypes = {
@@ -848,6 +860,23 @@ type SettingStoreTypes = {
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
+  };
+
+  INIT_SPLIT_TEXT_WHEN_PASTE: {
+    action(): void;
+  };
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
+    action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
+  };
+
+  GET_SPLITTER_POSITION: {
+    action(): void;
+  };
+
+  SET_SPLITTER_POSITION: {
+    mutation: { splitterPosition: SplitterPosition };
+    action(payload: { splitterPosition: SplitterPosition }): void;
   };
 };
 
@@ -1086,6 +1115,40 @@ export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
 export type PresetActions = StoreType<PresetStoreTypes, "action">;
 
 /*
+ * Dictionary Store Types
+ */
+
+export type DictionaryStoreState = Record<string, unknown>;
+
+type DictionaryStoreTypes = {
+  LOAD_USER_DICT: {
+    action(): Promise<Record<string, UserDictWord>>;
+  };
+  ADD_WORD: {
+    action(payload: {
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  REWRITE_WORD: {
+    action(payload: {
+      wordUuid: string;
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  DELETE_WORD: {
+    action(payload: { wordUuid: string }): Promise<void>;
+  };
+};
+
+export type DictionaryGetters = StoreType<DictionaryStoreTypes, "getter">;
+export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
+export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
+
+/*
  * Setting Store Types
  */
 
@@ -1130,6 +1193,7 @@ export type State = AudioStoreState &
   SettingStoreState &
   UiStoreState &
   PresetStoreState &
+  DictionaryStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -1140,6 +1204,7 @@ type AllStoreTypes = AudioStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
+  DictionaryStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
