@@ -25,6 +25,7 @@ import {
   Preset,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
   SplitterPosition,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -768,6 +769,7 @@ export type SettingStoreState = {
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
+  splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
 };
 
@@ -836,6 +838,14 @@ type SettingStoreTypes = {
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
+  };
+
+  INIT_SPLIT_TEXT_WHEN_PASTE: {
+    action(): void;
+  };
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
+    action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
   };
 
   GET_SPLITTER_POSITION: {

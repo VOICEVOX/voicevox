@@ -54,7 +54,6 @@ describe("store/vuex.js test", () => {
           outputStereo: false,
           outputSamplingRate: 24000,
           audioOutputDevice: "default",
-          splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         },
         themeSetting: {
           currentTheme: "Default",
@@ -80,6 +79,7 @@ describe("store/vuex.js test", () => {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
         },
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
           audioDetailPaneHeight: 200,
           audioInfoPaneWidth: 20,

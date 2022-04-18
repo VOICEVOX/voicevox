@@ -32,7 +32,6 @@ export const settingStoreState: SettingStoreState = {
     outputStereo: false,
     outputSamplingRate: 24000,
     audioOutputDevice: "default",
-    splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   },
   hotkeySettings: [],
   toolbarSetting: [],
@@ -46,6 +45,7 @@ export const settingStoreState: SettingStoreState = {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
   },
+  splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
     audioDetailPaneHeight: undefined,
     audioInfoPaneWidth: undefined,
@@ -106,6 +106,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_ACCEPT_TERMS(state, { acceptTerms }) {
       state.acceptTerms = acceptTerms;
+    },
+    SET_SPLIT_TEXT_WHEN_PASTE(state, { splitTextWhenPaste }) {
+      state.splitTextWhenPaste = splitTextWhenPaste;
     },
     SET_SPLITTER_POSITION(state, { splitterPosition }) {
       state.splitterPosition = splitterPosition;
@@ -244,6 +247,15 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
       window.electron.setExperimentalSetting(experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+    },
+    INIT_SPLIT_TEXT_WHEN_PASTE({ dispatch }) {
+      window.electron.getSplitTextWhenPaste().then((v) => {
+        dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste: v });
+      });
+    },
+    SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
+      window.electron.setSplitTextWhenPaste(splitTextWhenPaste);
+      commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
     GET_SPLITTER_POSITION({ dispatch }) {
       window.electron.getSplitterPosition().then((splitterPosition) => {

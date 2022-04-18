@@ -88,6 +88,8 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
+  getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
+  setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
 }
 
 export type AppInfos = {
@@ -147,7 +149,6 @@ export type SavingSetting = {
   outputStereo: boolean;
   outputSamplingRate: number;
   audioOutputDevice: string;
-  splitTextWhenPaste: SplitTextWhenPasteType;
 };
 
 export type DefaultStyleId = {
