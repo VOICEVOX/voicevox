@@ -289,10 +289,13 @@ type IpcIHData = {
   EXTERNAL_AUDIO: {
     args: [obj: { path: string; blob?: Blob }];
     return: Uint8Array | void;
+  };
+
   GET_SPLIT_TEXT_WHEN_PASTE: {
     args: [];
     return: SplitTextWhenPasteType;
   };
+
   SET_SPLIT_TEXT_WHEN_PASTE: {
     args: [splitTextWhenPaste: SplitTextWhenPasteType];
     return: void;
