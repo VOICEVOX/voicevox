@@ -48,9 +48,8 @@ export function buildProjectFileName(state: State, extension?: string): string {
 export const replaceTagIdToTagString = {
   index: "連番",
   characterName: "キャラ",
-  styleName: "（スタイル）",
+  styleName: "スタイル",
   text: "テキスト",
-  rawStyleName: "スタイル",
   date: "日付",
 };
 const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
@@ -58,7 +57,7 @@ const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
 export const DEFAULT_FILE_NAME_TEMPLATE =
-  "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
+  "$連番$_$キャラ$（$スタイル$）_$テキスト$.wav";
 const DEFAULT_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
@@ -110,16 +109,14 @@ export function buildFileNameFromRawData(
 
   const index = (vars.index + 1).toString().padStart(3, "0");
 
-  // デフォルトのスタイルだとstyleIdが定義されていないのでstyleNameがundefinedになるケースが存在する
-  const styleName = sanitizeFileName(vars.styleName ?? "");
+  const styleName = sanitizeFileName(vars.styleName);
 
   const date = currentDateString();
 
   return replaceTag(pattern, {
     index,
     characterName,
-    rawStyleName: styleName,
-    styleName: styleName.length !== 0 ? `（${styleName}）` : "",
+    styleName: styleName,
     text,
     date,
   });
