@@ -45,25 +45,7 @@ export function buildProjectFileName(state: State, extension?: string): string {
     : defaultFileNameStem;
 }
 
-type ReplaceTagId =
-  | "index"
-  | "characterName"
-  | "styleName"
-  | "rawStyleName"
-  | "text"
-  | "date";
-type Replacer = { [P in ReplaceTagId]?: string };
-type VariablesForFileName = {
-  index: number;
-  characterName: string;
-  styleName: string | undefined;
-  text: string;
-  date: string;
-};
-
-export const replaceTagIdToTagString: {
-  [key in ReplaceTagId]: string;
-} = {
+export const replaceTagIdToTagString = {
   index: "連番",
   characterName: "キャラ",
   styleName: "（スタイル）",
@@ -71,15 +53,13 @@ export const replaceTagIdToTagString: {
   rawStyleName: "スタイル",
   date: "日付",
 };
-const replaceTagStringToTagId: { [tagString: string]: ReplaceTagId } =
-  Object.entries(replaceTagIdToTagString).reduce(
-    (prev, [k, v]) => ({ ...prev, [v]: k }),
-    {}
-  );
+const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+  replaceTagIdToTagString
+).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
 export const DEFAULT_FILE_NAME_TEMPLATE =
   "$連番$_$キャラ$$（スタイル）$_$テキスト$.wav";
-const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
+const DEFAULT_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
@@ -96,7 +76,10 @@ export function currentDateString(): string {
   return `${year}${month}${date}`;
 }
 
-function replaceTag(template: string, replacer: Replacer): string {
+function replaceTag(
+  template: string,
+  replacer: { [key: string]: string }
+): string {
   const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
     const replaceTagId = replaceTagStringToTagId[p1];
     if (replaceTagId === undefined) {
@@ -110,7 +93,7 @@ function replaceTag(template: string, replacer: Replacer): string {
 
 export function buildFileNameFromRawData(
   fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
-  vars: VariablesForFileName = DEFAULT_FILE_NAME_VARIABLES
+  vars = DEFAULT_FILE_NAME_VARIABLES
 ): string {
   let pattern = fileNamePattern;
   if (pattern === "") {
