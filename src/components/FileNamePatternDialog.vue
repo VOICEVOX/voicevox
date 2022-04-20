@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import { useStore } from "@/store";
 import {
@@ -192,12 +192,11 @@ export default defineComponent({
         currentFileNamePattern.value = newText;
 
         // キャレットの位置を挿入した後の位置にずらす
-        // QInputの内容が更新されてから動かすために50ms待つ
-        setTimeout(() => {
+        nextTick(() => {
           elem.selectionStart = from + tag.length;
           elem.selectionEnd = from + tag.length;
           elem.focus();
-        }, 50);
+        });
       }
     };
 
