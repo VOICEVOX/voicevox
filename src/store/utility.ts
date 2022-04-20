@@ -88,8 +88,12 @@ const DEFAULT_FILE_NAME_VARIABLES: VariablesForFileName = {
 };
 
 export function currentDateString(): string {
-  const date = new Date();
-  return `${date.getFullYear()}${date.getMonth()}${date.getDate()}`;
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth().toString().padStart(2, "0");
+  const date = currentDate.getDate().toString().padStart(2, "0");
+
+  return `${year}${month}${date}`;
 }
 
 function replaceTag(template: string, replacer: Replacer): string {
