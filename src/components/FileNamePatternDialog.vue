@@ -169,6 +169,12 @@ export default defineComponent({
     const initializeInput = () => {
       const pattern = savingSetting.value.fileNamePattern;
       currentFileNamePattern.value = removeExtension(pattern);
+
+      if (currentFileNamePattern.value.length === 0) {
+        currentFileNamePattern.value = removeExtension(
+          DEFAULT_FILE_NAME_TEMPLATE
+        );
+      }
     };
     const resetToDefault = () => {
       currentFileNamePattern.value = removeExtension(
