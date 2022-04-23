@@ -826,19 +826,16 @@ $pitch-label-height: 24px;
 
       div {
         padding: 0px;
-        &.text-cell {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row-start: 3;
-          text-align: center;
-          color: colors.$display;
-        }
+        &.text-cell,
         &.text-cell-hovered {
           min-width: 20px;
           max-width: 20px;
           grid-row-start: 3;
           text-align: center;
+          white-space: nowrap;
           color: colors.$display;
+        }
+        &.text-cell-hovered {
           font-weight: bold;
           cursor: pointer;
         }
@@ -872,8 +869,8 @@ $pitch-label-height: 24px;
         }
         &.pitch-cell {
           grid-row: 1 / span 2;
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 20px;
+          max-width: 20px;
           display: inline-block;
           position: relative;
         }
