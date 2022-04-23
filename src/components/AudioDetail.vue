@@ -142,7 +142,14 @@
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
+              :class="[
+                getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex),
+                {
+                  'text-cell-interrogative':
+                    accentPhrase.isInterrogative &&
+                    moraIndex === accentPhrase.moras.length - 1,
+                },
+              ]"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
@@ -191,6 +198,7 @@
                   'splitter-cell-be-split':
                     moraIndex == accentPhrase.moras.length - 1,
                   'splitter-cell-be-split-pause': accentPhrase.pauseMora,
+                  'splitter-cell-interrogative': accentPhrase.isInterrogative,
                 },
               ]"
               :style="{ 'grid-column': `${moraIndex * 2 + 2} / span 1` }"
@@ -557,6 +565,9 @@ export default defineComponent({
         accentPhrase.moras.forEach((mora) => {
           textString += mora.text;
         });
+        if (accentPhrase.isInterrogative) {
+          textString += "？";
+        }
         if (accentPhrase.pauseMora) {
           textString += "、";
         }
@@ -842,6 +853,10 @@ $pitch-label-height: 24px;
           font-weight: bold;
           cursor: pointer;
         }
+        &.text-cell-interrogative::after {
+          content: "?";
+          position: absolute;
+        }
         &.splitter-cell {
           min-width: 20px;
           max-width: 20px;
@@ -856,6 +871,9 @@ $pitch-label-height: 24px;
           min-width: 40px;
           max-width: 40px;
           grid-row: 1 / span 3;
+          &.splitter-cell-interrogative {
+            margin-left: 10px;
+          }
         }
         &.splitter-cell-be-split-pause {
           min-width: 20px;
