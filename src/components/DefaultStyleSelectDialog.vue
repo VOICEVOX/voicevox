@@ -54,22 +54,22 @@
 
             <q-btn
               v-if="pageIndex + 1 < showCharacterInfos.length"
+              v-show="canNext"
               unelevated
               label="次へ"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
-              :disable="!canNext"
               @click="nextPage"
             />
             <q-btn
               v-else
+              v-show="canNext"
               unelevated
               label="完了"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
-              :disable="!canNext"
               @click="closeDialog"
             />
           </div>
