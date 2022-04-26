@@ -139,7 +139,7 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   });
 }
 
-export async function exportTextFileWithDialog({
+export async function connectAndExportTextWithDialog({
   quasarDialog,
   dispatch,
   filePath,
@@ -150,7 +150,7 @@ export async function exportTextFileWithDialog({
   filePath?: string;
   encoding?: EncodingType;
 }): Promise<void> {
-  const result = await dispatch("EXPORT_TEXT_FILE", {
+  const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
     filePath,
     encoding,
   });

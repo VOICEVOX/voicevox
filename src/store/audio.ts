@@ -1267,7 +1267,7 @@ export const audioStore: VoiceVoxStoreOptions<
         return { result: "SUCCESS", path: filePath };
       }
     ),
-    EXPORT_TEXT_FILE: createUILockAction(
+    CONNECT_AND_EXPORT_TEXT: createUILockAction(
       async (
         { state, dispatch, getters },
         { filePath, encoding }: { filePath?: string; encoding?: EncodingType }

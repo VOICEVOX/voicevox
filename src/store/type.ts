@@ -342,7 +342,7 @@ type AudioStoreTypes = {
     }): SaveResultObject | undefined;
   };
 
-  EXPORT_TEXT_FILE: {
+  CONNECT_AND_EXPORT_TEXT: {
     action(payload: {
       filePath?: string;
       encoding?: EncodingType;

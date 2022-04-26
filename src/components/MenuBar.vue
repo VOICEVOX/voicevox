@@ -43,7 +43,7 @@ import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-  exportTextFileWithDialog,
+  connectAndExportTextWithDialog,
 } from "@/components/Dialog";
 
 type MenuItemBase<T extends string> = {
@@ -148,9 +148,9 @@ export default defineComponent({
       });
     };
 
-    const exportTextFile = async () => {
+    const connectAndExportText = async () => {
       if (!uiLocked.value) {
-        await exportTextFileWithDialog({
+        await connectAndExportTextWithDialog({
           quasarDialog: $q.dialog,
           dispatch: store.dispatch,
           encoding: store.state.savingSetting.fileEncoding,
@@ -246,7 +246,7 @@ export default defineComponent({
             type: "button",
             label: "テキストを繋げて書き出し",
             onClick: () => {
-              exportTextFile();
+              connectAndExportText();
             },
           },
           {
