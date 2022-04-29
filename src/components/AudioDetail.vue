@@ -838,8 +838,7 @@ $pitch-label-height: 24px;
 
       div {
         padding: 0px;
-        &.text-cell,
-        &.text-cell-hovered {
+        &.text-cell {
           min-width: 20px;
           max-width: 20px;
           grid-row-start: 3;
