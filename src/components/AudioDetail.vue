@@ -851,6 +851,7 @@ $pitch-label-height: 24px;
           .text-cell-inner {
             position: absolute;
             transform: translateX(-50%);
+            z-index: 10;
           }
         }
         &.text-cell-hovered {
