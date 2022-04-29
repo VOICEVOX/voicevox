@@ -142,7 +142,14 @@
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
+              class="text-cell"
+              :class="{
+                'text-cell-hovered': isHovered(
+                  mora.vowel,
+                  accentPhraseIndex,
+                  moraIndex
+                ),
+              }"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
@@ -658,7 +665,7 @@ export default defineComponent({
 
     const unvoicableVowels = ["U", "I", "i", "u"];
 
-    const getHoveredClass = (
+    const isHovered = (
       vowel: string,
       accentPhraseIndex: number,
       moraIndex: number
@@ -679,8 +686,7 @@ export default defineComponent({
           }
         }
       }
-      if (isHover) return "text-cell-hovered";
-      else return "text-cell";
+      return isHover;
     };
 
     const getHoveredText = (
@@ -769,7 +775,7 @@ export default defineComponent({
       handleChangePronounce,
       handleHoverText,
       handleLengthHoverText,
-      getHoveredClass,
+      isHovered,
       getHoveredText,
       shiftKeyFlag,
       handleChangeVoicing,
