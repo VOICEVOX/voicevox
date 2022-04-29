@@ -153,7 +153,9 @@
                   handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
               "
             >
-              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+              <span class="text-cell-inner">
+                {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+              </span>
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -197,7 +199,11 @@
             />
           </template>
           <template v-if="accentPhrase.pauseMora">
-            <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
+            <div class="text-cell">
+              <span class="text-cell-inner">
+                {{ accentPhrase.pauseMora.text }}
+              </span>
+            </div>
             <div
               @click.stop="
                 uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
@@ -834,6 +840,12 @@ $pitch-label-height: 24px;
           text-align: center;
           white-space: nowrap;
           color: colors.$display;
+          position: relative;
+
+          .text-cell-inner {
+            position: absolute;
+            transform: translateX(-50%);
+          }
         }
         &.text-cell-hovered {
           font-weight: bold;
