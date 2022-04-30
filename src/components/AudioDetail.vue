@@ -308,6 +308,31 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "選択中のアクセント句に対して読点を付け外しする",
+        () => {
+          let accentPhraseIndex = store.state.audioPlayStartPoint;
+          if (
+            !uiLocked.value &&
+            store.getters.ACTIVE_AUDIO_KEY !== undefined &&
+            accentPhraseIndex !== undefined &&
+            accentPhrases.value !== undefined
+          ) {
+            // 現在の発音を読み込む
+            let accentPhrase = accentPhrases.value[accentPhraseIndex];
+            let pronunciation = "";
+            accentPhrase.moras.forEach((mora) => {
+              pronunciation += mora.text;
+            });
+            // 読点があるなら外し、ないなら付ける
+            let newPronunciation = accentPhrase.pauseMora
+              ? pronunciation
+              : pronunciation + "、";
+            // 読み仮名変更の関数で更新
+            handleChangePronounce(newPronunciation, accentPhraseIndex);
+          }
+        },
+      ],
     ]);
     // このコンポーネントは遅延評価なので手動でバインディングを行う
     setHotkeyFunctions(hotkeyMap, true);
