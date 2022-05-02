@@ -79,8 +79,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
-const envPath = path.join(appDirPath, ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ override: true });
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
