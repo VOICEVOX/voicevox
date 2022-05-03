@@ -1301,18 +1301,19 @@ export const audioStore: VoiceVoxStoreOptions<
         const characters = new Map<number, string>();
 
         if (!getters.USER_ORDERED_CHARACTER_INFOS)
-          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");              
+          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
-          for(const style of characterInfo.metas.styles) {
-            characters.set(style.styleId, characterInfo.metas.speakerName)
+          for (const style of characterInfo.metas.styles) {
+            characters.set(style.styleId, characterInfo.metas.speakerName);
           }
         }
 
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].styleId;
-          const speakerName = styleId !== undefined ? characters.get(styleId) + "," : "";
+          const speakerName =
+            styleId !== undefined ? characters.get(styleId) + "," : "";
 
           texts.push(speakerName + state.audioItems[audioKey].text);
         }
