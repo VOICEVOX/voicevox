@@ -1322,7 +1322,7 @@ export const audioStore: VoiceVoxStoreOptions<
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].styleId;
-          const speakerName = styleId ? characters.get(styleId) + "," : "";
+          const speakerName = styleId !== undefined ? characters.get(styleId) + "," : "";
 
           texts.push(speakerName + state.audioItems[audioKey].text);
         }
