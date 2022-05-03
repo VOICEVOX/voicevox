@@ -1299,24 +1299,14 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         const characters = new Map<number, string>();
-        const uuid2StyleIds = new Map<string, number>();
-        for (const defaultStyleId of state.defaultStyleIds) {
-          const speakerUuid = defaultStyleId.speakerUuid;
-          const styleId = defaultStyleId.defaultStyleId;
-          uuid2StyleIds.set(speakerUuid, styleId);
-        }
 
         if (!getters.USER_ORDERED_CHARACTER_INFOS)
-          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+          throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");              
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
-          const uuid = characterInfo.metas.speakerUuid;
-          const styleId = uuid2StyleIds.get(uuid);
-          if (styleId == undefined)
-            throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
-
-          const speakerName = characterInfo.metas.speakerName;
-          characters.set(styleId, speakerName);
+          for(const style of characterInfo.metas.styles) {
+            characters.set(style.styleId, characterInfo.metas.speakerName)
+          }
         }
 
         const texts: string[] = [];
