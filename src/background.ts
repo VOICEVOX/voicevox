@@ -35,10 +35,13 @@ import {
   ToolbarSetting,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
+  SplitterPosition,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -76,8 +79,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
-const envPath = path.join(appDirPath, ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ override: true });
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -172,6 +174,14 @@ const defaultHotkeySettings: HotkeySetting[] = [
     action: "テキスト読み込む",
     combination: "",
   },
+  {
+    action: "イントネーションをリセット",
+    combination: !isMac ? "Ctrl G" : "Meta G",
+  },
+  {
+    action: "選択中のアクセント句のイントネーションをリセット",
+    combination: "R",
+  },
 ];
 
 const defaultToolbarButtonSetting: ToolbarSetting = [
@@ -198,6 +208,8 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
 }>({
   schema: {
     useGpu: {
@@ -240,6 +252,7 @@ const store = new Store<{
         outputStereo: false,
         outputSamplingRate: 24000,
         audioOutputDevice: "default",
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
     },
     // To future developers: if you are to modify the store schema with array type,
@@ -343,28 +356,70 @@ const store = new Store<{
       enum: ["Unconfirmed", "Accepted", "Rejected"],
       default: "Unconfirmed",
     },
+    splitTextWhenPaste: {
+      type: "string",
+      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
+      default: "PERIOD_AND_NEW_LINE",
+    },
+    splitterPosition: {
+      type: "object",
+      properties: {
+        portraitPaneWidth: { type: "number" },
+        audioInfoPaneWidth: { type: "number" },
+        audioDetailPaneHeight: { type: "number" },
+      },
+      default: {},
+    },
   },
   migrations: {},
 });
 
 // engine
-let willQuitEngine = false;
-let engineProcess: ChildProcess;
-async function runEngine() {
-  const engineInfo = engineInfos[0]; // TODO: 複数エンジン対応
-  if (!engineInfo) throw new Error(`No such engineInfo registered: index == 0`);
+type EngineProcessContainer = {
+  willQuitEngine: boolean;
+  engineProcess?: ChildProcess;
+};
+
+const engineProcessContainers: Record<string, EngineProcessContainer> = {};
+
+async function runEngineAll() {
+  log.info(`Starting ${engineInfos.length} engine/s...`);
+
+  for (const engineInfo of engineInfos) {
+    log.info(`ENGINE ${engineInfo.key}: Start launching`);
+    await runEngine(engineInfo.key);
+  }
+}
+
+async function runEngine(engineKey: string) {
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.key === engineKey
+  );
+  if (!engineInfo)
+    throw new Error(`No such engineInfo registered: key == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
-    log.info("Skipped engineInfo execution: disabled");
+    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
     return;
   }
 
   if (!engineInfo.executionFilePath) {
-    log.info("Skipped engineInfo execution: empty executionFilePath");
+    log.info(
+      `ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`
+    );
     return;
   }
 
-  willQuitEngine = false;
+  log.info(`ENGINE ${engineKey}: Starting process`);
+
+  if (!(engineKey in engineProcessContainers)) {
+    engineProcessContainers[engineKey] = {
+      willQuitEngine: false,
+    };
+  }
+
+  const engineProcessContainer = engineProcessContainers[engineKey];
+  engineProcessContainer.willQuitEngine = false;
 
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
@@ -386,8 +441,7 @@ async function runEngine() {
   }
   const useGpu = store.get("useGpu");
 
-  log.info(`Starting ENGINE`);
-  log.info(`ENGINE mode: ${useGpu ? "GPU" : "CPU"}`);
+  log.info(`ENGINE ${engineKey} mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -396,26 +450,29 @@ async function runEngine() {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
-  log.info(`ENGINE path: ${enginePath}`);
-  log.info(`ENGINE args: ${JSON.stringify(args)}`);
+  log.info(`ENGINE ${engineKey} path: ${enginePath}`);
+  log.info(`ENGINE ${engineKey} args: ${JSON.stringify(args)}`);
 
-  engineProcess = spawn(enginePath, args, {
+  const engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
   });
+  engineProcessContainer.engineProcess = engineProcess;
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info(`ENGINE: ${data.toString("utf-8")}`);
+    log.info(`ENGINE ${engineKey} STDOUT: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error(`ENGINE: ${data.toString("utf-8")}`);
+    log.error(`ENGINE ${engineKey} STDERR: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
-    log.info(`ENGINE: process terminated due to receipt of signal ${signal}`);
-    log.info(`ENGINE: process exited with code ${code}`);
+    log.info(
+      `ENGINE ${engineKey}: Process terminated due to receipt of signal ${signal}`
+    );
+    log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
 
-    if (!willQuitEngine) {
+    if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR");
       dialog.showErrorBox(
         "音声合成エンジンエラー",
@@ -425,88 +482,168 @@ async function runEngine() {
   });
 }
 
+function killEngineAll({
+  onFirstKillStart,
+  onAllKilled,
+  onError,
+}: {
+  onFirstKillStart?: VoidFunction;
+  onAllKilled?: VoidFunction;
+  onError?: (engineKey: string, message: unknown) => void;
+}) {
+  let anyKillStart = false;
+
+  const numEngineProcess = Object.keys(engineProcessContainers).length;
+  let numEngineProcessKilled = 0;
+
+  for (const [engineKey] of Object.entries(engineProcessContainers)) {
+    killEngine({
+      engineKey,
+      onKillStart: () => {
+        if (!anyKillStart) {
+          anyKillStart = true;
+          onFirstKillStart?.();
+        }
+      },
+      onKilled: () => {
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        );
+
+        if (numEngineProcessKilled === numEngineProcess) {
+          onAllKilled?.();
+        }
+      },
+      onError: (message) => {
+        onError?.(engineKey, message);
+
+        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなして次のエンジンプロセスをキルする
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${engineKey}: process kill errored, but assume to have been killed`
+        );
+        log.info(
+          `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        );
+
+        if (numEngineProcessKilled === numEngineProcess) {
+          onAllKilled?.();
+        }
+      },
+    });
+  }
+}
+
 function killEngine({
+  engineKey,
   onKillStart,
   onKilled,
   onError,
 }: {
+  engineKey: string;
   onKillStart?: VoidFunction;
   onKilled?: VoidFunction;
   onError?: (error: unknown) => void;
 }) {
+  // この関数では、呼び出し元に結果を通知するためonKilledまたはonErrorを同期または非同期で必ず呼び出さなければならない
+
+  const engineProcessContainer = engineProcessContainers[engineKey];
+  if (!engineProcessContainer) {
+    onError?.(`No such engineProcessContainer: key == ${engineKey}`);
+    return;
+  }
+
+  const engineProcess = engineProcessContainer.engineProcess;
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
-    log.info(`ENGINE process not started`);
+    log.info(`ENGINE ${engineKey}: Process not started`);
+    onKilled?.();
     return;
   }
 
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
-    log.info("ENGINE process closed");
+    log.info(`ENGINE ${engineKey}: Process closed`);
     onKilled?.();
   });
 
   log.info(
-    `ENGINE last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+    `ENGINE ${engineKey}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
   );
 
   const engineNotExited = engineProcess.exitCode === null;
   const engineNotKilled = engineProcess.signalCode === null;
 
   if (engineNotExited && engineNotKilled) {
-    log.info(`Killing ENGINE process (PID=${engineProcess.pid})...`);
+    log.info(`ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`);
     onKillStart?.();
 
-    willQuitEngine = true;
+    engineProcessContainer.willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
     } catch (error: unknown) {
+      log.error(`ENGINE ${engineKey}: Error during killing process`);
       onError?.(error);
     }
   } else {
-    log.info("ENGINE process already closed");
+    log.info(`ENGINE ${engineKey}: Process already closed`);
+    onKilled?.();
   }
 }
 
-async function restartEngine() {
+async function restartEngineAll() {
+  for (const engineInfo of engineInfos) {
+    await restartEngine(engineInfo.key);
+  }
+}
+
+async function restartEngine(engineKey: string) {
   await new Promise<void>((resolve, reject) => {
+    const engineProcessContainer: EngineProcessContainer | undefined =
+      engineProcessContainers[engineKey];
+    const engineProcess = engineProcessContainer?.engineProcess;
+
     log.info(
-      `Restarting ENGINE (last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode})`
+      `ENGINE ${engineKey}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
     );
 
     // エンジンのプロセスがすでに終了している、またはkillされている場合
-    const engineExited = engineProcess.exitCode !== null;
-    const engineKilled = engineProcess.signalCode !== null;
+    const engineExited = engineProcess?.exitCode !== null;
+    const engineKilled = engineProcess?.signalCode !== null;
 
+    // engineProcess === undefinedの場合true
     if (engineExited || engineKilled) {
       log.info(
-        "ENGINE process is not started yet or already killed. Starting ENGINE..."
+        `ENGINE ${engineKey}: Process is not started yet or already killed. Starting process...`
       );
 
-      runEngine();
+      runEngine(engineKey);
       resolve();
       return;
     }
 
     // エンジンエラー時のエラーウィンドウ抑制用。
-    willQuitEngine = true;
+    engineProcessContainer.willQuitEngine = true;
 
     // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
     // closeイベントはexitイベントよりも後に発火します。
     const restartEngineOnProcessClosedCallback = () => {
-      log.info("ENGINE process killed. Restarting ENGINE...");
+      log.info(`ENGINE ${engineKey}: Process killed. Restarting process...`);
 
-      runEngine();
+      runEngine(engineKey);
       resolve();
     };
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-    log.info(`Killing current ENGINE process (PID=${engineProcess.pid})...`);
+    log.info(
+      `ENGINE ${engineKey}: Killing current process (PID=${engineProcess.pid})...`
+    );
     treeKill(engineProcess.pid, (error) => {
       // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
       if (error != null) {
-        log.error("Failed to kill ENGINE");
+        log.error(`ENGINE ${engineKey}: Failed to kill process`);
         log.error(error);
 
         // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
@@ -613,9 +750,16 @@ let willQuit = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
+  const mainWindowState = windowStateKeeper({
+    defaultWidth: 800,
+    defaultHeight: 600,
+  });
+
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     frame: false,
     titleBarStyle: "hidden",
     trafficLightPosition: { x: 6, y: 4 },
@@ -687,6 +831,8 @@ async function createWindow() {
       }
     }
   });
+
+  mainWindowState.manage(win);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -911,8 +1057,12 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle("RESTART_ENGINE", async () => {
-  await restartEngine();
+ipcMainHandle("RESTART_ENGINE_ALL", async () => {
+  await restartEngineAll();
+});
+
+ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
+  await restartEngine(engineKey);
 });
 
 ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
@@ -1034,6 +1184,22 @@ ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
   store.set("experimentalSetting", experimentalSetting);
 });
 
+ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
+  return store.get("splitTextWhenPaste");
+});
+
+ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
+  store.set("splitTextWhenPaste", splitTextWhenPaste);
+});
+
+ipcMainHandle("GET_SPLITTER_POSITION", () => {
+  return store.get("splitterPosition");
+});
+
+ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
+  store.set("splitterPosition", splitterPosition);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -1059,20 +1225,29 @@ app.on("before-quit", (event) => {
     return;
   }
 
-  killEngine({
-    onKillStart: () => {
+  let anyKillStart = false;
+
+  log.info("Checking ENGINE status before app quit");
+  killEngineAll({
+    onFirstKillStart: () => {
+      anyKillStart = true;
+
       // executed synchronously to cancel before-quit event
-      log.info("Interrupt app quit to kill ENGINE");
+      log.info("Interrupt app quit to kill ENGINE processes");
       event.preventDefault();
     },
-    onKilled: () => {
-      // executed asynchronously to catch process closed event
-      log.info("ENGINE killed. Quitting app");
-      app.quit(); // attempt to quit app again
+    onAllKilled: () => {
+      // executed asynchronously
+      if (anyKillStart) {
+        log.info("All ENGINE process killed. Quitting app");
+        app.quit(); // attempt to quit app again
+      }
+      // else: before-quit event is not cancelled
     },
-    onError: (error: unknown) => {
-      log.error("Error during killing ENGINE process");
-      log.error(error);
+    onError: (engineKey, message) => {
+      log.error(
+        `ENGINE ${engineKey}: Error during killing process: ${message}`
+      );
     },
   });
 });
@@ -1100,7 +1275,7 @@ app.on("ready", async () => {
     }
   }
 
-  createWindow().then(() => runEngine());
+  createWindow().then(() => runEngineAll());
 });
 
 app.on("second-instance", () => {

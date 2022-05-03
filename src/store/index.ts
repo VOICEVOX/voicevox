@@ -24,6 +24,7 @@ import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
+import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { DefaultStyleId } from "@/type/preload";
 
@@ -176,6 +177,8 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
       promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
+      promises.push(dispatch("INIT_SPLIT_TEXT_WHEN_PASTE"));
+      promises.push(dispatch("GET_SPLITTER_POSITION"));
 
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
@@ -194,6 +197,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStoreState,
     ...indexStoreState,
     ...presetStoreState,
+    ...dictionaryStoreState,
     ...proxyStoreState,
   },
 
@@ -204,6 +208,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...projectStore.getters,
     ...settingStore.getters,
     ...presetStore.getters,
+    ...dictionaryStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
     ...proxyStore.getters,
@@ -217,6 +222,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
     ...presetStore.mutations,
+    ...dictionaryStore.mutations,
     ...indexStore.mutations,
     ...proxyStore.mutations,
   },
@@ -229,6 +235,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.actions,
     ...audioCommandStore.actions,
     ...presetStore.actions,
+    ...dictionaryStore.actions,
     ...indexStore.actions,
     ...proxyStore.actions,
   },

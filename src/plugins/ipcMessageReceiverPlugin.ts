@@ -1,7 +1,7 @@
 import { Plugin } from "vue";
 import { Store } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
-import { debounce } from "lodash";
+import { debounce } from "quasar";
 
 export const ipcMessageReceiver: Plugin = {
   install: (
