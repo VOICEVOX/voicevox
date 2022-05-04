@@ -79,6 +79,12 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
+
+// NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
+//       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
+//       Linux・macOS ではそのディレクトリはカレントディレクトリとはならないため、.env ファイルの
+//       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
+//       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
   dotenv.config({ override: true });
 } else {
