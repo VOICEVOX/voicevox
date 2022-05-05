@@ -96,6 +96,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showTextSaveDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
+  },
+
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },

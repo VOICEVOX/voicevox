@@ -79,8 +79,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
-const envPath = path.join(appDirPath, ".env");
-dotenv.config({ path: envPath });
+dotenv.config({ override: true });
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -912,6 +911,16 @@ ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "Wave File", extensions: ["wav"] }],
+    properties: ["createDirectory"],
+  });
+  return result.filePath;
+});
+
+ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+  const result = await dialog.showSaveDialog(win, {
+    title,
+    defaultPath,
+    filters: [{ name: "Text File", extensions: ["txt"] }],
     properties: ["createDirectory"],
   });
   return result.filePath;
