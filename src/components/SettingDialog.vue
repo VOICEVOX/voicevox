@@ -825,7 +825,9 @@ export default defineComponent({
 
       const change = async () => {
         await store.dispatch("SET_USE_GPU", { useGpu });
-        store.dispatch("RESTART_ENGINE");
+        store.dispatch("RESTART_ENGINE", {
+          engineKey: store.state.engineInfos[0].key,
+        }); // TODO: 複数エンジン対応
 
         $q.dialog({
           title: "エンジンの起動モードを変更しました",
@@ -894,7 +896,9 @@ export default defineComponent({
     };
 
     const restartEngineProcess = () => {
-      store.dispatch("RESTART_ENGINE");
+      store.dispatch("RESTART_ENGINE", {
+        engineKey: store.state.engineInfos[0].key,
+      }); // TODO: 複数エンジン対応
     };
 
     const savingSetting = computed(() => store.state.savingSetting);

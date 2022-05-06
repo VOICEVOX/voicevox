@@ -110,7 +110,7 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   DETECTED_ENGINE_ERROR: {
