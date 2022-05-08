@@ -192,8 +192,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("ENGINE_INFOS");
   },
 
-  restartEngine: () => {
-    return ipcRendererInvoke("RESTART_ENGINE");
+  restartEngine: (engineKey) => {
+    return ipcRendererInvoke("RESTART_ENGINE", { engineKey: engineKey });
   },
 
   savingSetting: (newData) => {

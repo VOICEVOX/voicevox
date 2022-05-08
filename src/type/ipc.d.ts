@@ -157,7 +157,7 @@ type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [];
+    args: [obj: { engineKey: string }];
     return: void;
   };
 
