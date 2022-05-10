@@ -233,6 +233,10 @@ const store = new Store<{
           enum: ["UTF-8", "Shift_JIS"],
           default: "UTF-8",
         },
+        fileNamePattern: {
+          type: "string",
+          default: "",
+        },
         fixedExportEnabled: { type: "boolean", default: false },
         avoidOverwrite: { type: "boolean", default: false },
         fixedExportDir: { type: "string", default: "" },
@@ -244,6 +248,7 @@ const store = new Store<{
       },
       default: {
         fileEncoding: "UTF-8",
+        fileNamePattern: "",
         fixedExportEnabled: false,
         avoidOverwrite: false,
         fixedExportDir: "",

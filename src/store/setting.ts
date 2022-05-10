@@ -24,6 +24,7 @@ const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 export const settingStoreState: SettingStoreState = {
   savingSetting: {
     fileEncoding: "UTF-8",
+    fileNamePattern: "",
     fixedExportEnabled: false,
     fixedExportDir: "",
     avoidOverwrite: false,

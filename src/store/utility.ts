@@ -45,6 +45,83 @@ export function buildProjectFileName(state: State, extension?: string): string {
     : defaultFileNameStem;
 }
 
+export const replaceTagIdToTagString = {
+  index: "連番",
+  characterName: "キャラ",
+  styleName: "スタイル",
+  text: "テキスト",
+  date: "日付",
+};
+const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+  replaceTagIdToTagString
+).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
+
+export const DEFAULT_FILE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$テキスト$.wav";
+const DEFAULT_FILE_NAME_VARIABLES = {
+  index: 0,
+  characterName: "四国めたん",
+  text: "テキストテキストテキスト",
+  styleName: "ノーマル",
+  date: currentDateString(),
+};
+
+export function currentDateString(): string {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth().toString().padStart(2, "0");
+  const date = currentDate.getDate().toString().padStart(2, "0");
+
+  return `${year}${month}${date}`;
+}
+
+function replaceTag(
+  template: string,
+  replacer: { [key: string]: string }
+): string {
+  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+    const replaceTagId = replaceTagStringToTagId[p1];
+    if (replaceTagId === undefined) {
+      return match;
+    }
+    return replacer[replaceTagId] ?? "";
+  });
+
+  return result;
+}
+
+export function buildFileNameFromRawData(
+  fileNamePattern = DEFAULT_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_FILE_NAME_VARIABLES
+): string {
+  let pattern = fileNamePattern;
+  if (pattern === "") {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_FILE_NAME_TEMPLATE;
+  }
+
+  let text = sanitizeFileName(vars.text);
+  if (text.length > 10) {
+    text = text.substring(0, 9) + "…";
+  }
+
+  const characterName = sanitizeFileName(vars.characterName);
+
+  const index = (vars.index + 1).toString().padStart(3, "0");
+
+  const styleName = sanitizeFileName(vars.styleName);
+
+  const date = currentDateString();
+
+  return replaceTag(pattern, {
+    index,
+    characterName,
+    styleName: styleName,
+    text,
+    date,
+  });
+}
+
 export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   const tag2NameObj: Record<ToolbarButtonTagType, string> = {
     PLAY_CONTINUOUSLY: "連続再生",

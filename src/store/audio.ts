@@ -29,11 +29,12 @@ import {
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
 import {
+  buildFileNameFromRawData,
   buildProjectFileName,
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
-  sanitizeFileName,
+  currentDateString,
 } from "./utility";
 
 async function generateUniqueIdAndQuery(
@@ -103,9 +104,12 @@ function parseTextFile(
 }
 
 function buildFileName(state: State, audioKey: string) {
+  const fileNamePattern = state.savingSetting.fileNamePattern;
+
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
   let styleName: string | undefined = "";
+
   const character = state.characterInfos?.find((info) => {
     const result = info.metas.styles.findIndex(
       (style) => style.styleId === audioItem.styleId
@@ -122,20 +126,13 @@ function buildFileName(state: State, audioKey: string) {
     throw new Error();
   }
 
-  const characterName = sanitizeFileName(character.metas.speakerName);
-  let text = sanitizeFileName(audioItem.text);
-  if (text.length > 10) {
-    text = text.substring(0, 9) + "…";
-  }
-
-  const preFileName = (index + 1).toString().padStart(3, "0");
-  // デフォルトのスタイルだとstyleIdが定義されていないのでundefinedになる。なのでファイル名に入れてしまうことを回避する目的で分岐させています。
-  if (styleName === undefined) {
-    return preFileName + `_${characterName}_${text}.wav`;
-  }
-
-  const sanitizedStyleName = sanitizeFileName(styleName);
-  return preFileName + `_${characterName}（${sanitizedStyleName}）_${text}.wav`;
+  return buildFileNameFromRawData(fileNamePattern, {
+    characterName: character.metas.speakerName,
+    index,
+    styleName,
+    text: audioItem.text,
+    date: currentDateString(),
+  });
 }
 
 const audioBlobCache: Record<string, Blob> = {};
