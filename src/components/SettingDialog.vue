@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="setting-dialog"
+    class="setting-dialog transparent-backdrop"
     v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
@@ -293,7 +292,6 @@
                       self="center right"
                       transition-show="jump-left"
                       transition-hide="jump-right"
-                      v-if="!savingSetting.fixedExportEnabled"
                     >
                       音声ファイルを設定したフォルダに書き出す
                     </q-tooltip>
@@ -341,6 +339,44 @@
                   "
                 >
                 </q-toggle>
+              </q-card-actions>
+
+              <file-name-pattern-dialog
+                v-model:open-dialog="showsFilePatternEditDialog"
+              />
+
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>書き出しファイル名パターン</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      書き出すファイル名のパターンをカスタマイズする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <div class="q-px-sm text-ellipsis">
+                  {{ savingSetting.fileNamePattern }}
+                </div>
+                <q-btn
+                  label="編集"
+                  unelevated
+                  color="background-light"
+                  text-color="display-dark"
+                  class="text-no-wrap q-mr-sm"
+                  @click="showsFilePatternEditDialog = true"
+                />
               </q-card-actions>
 
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
@@ -680,9 +716,14 @@ import {
   ActivePointScrollMode,
   SplitTextWhenPasteType,
 } from "@/type/preload";
+import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
 export default defineComponent({
   name: "SettingDialog",
+
+  components: {
+    FileNamePatternDialog,
+  },
 
   props: {
     modelValue: {
@@ -958,6 +999,8 @@ export default defineComponent({
       store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     };
 
+    const showsFilePatternEditDialog = ref(false);
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -979,6 +1022,7 @@ export default defineComponent({
       acceptRetrieveTelemetryComputed,
       splitTextWhenPaste,
       changeSplitTextWhenPaste,
+      showsFilePatternEditDialog,
     };
   },
 });
@@ -1013,6 +1057,12 @@ export default defineComponent({
 
 .scroll-mode-button-selected {
   background: colors.$primary;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scroll-mode-button:hover {

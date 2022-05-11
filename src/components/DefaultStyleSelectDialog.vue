@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="default-style-select-dialog"
+    class="default-style-select-dialog transparent-backdrop"
     v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">

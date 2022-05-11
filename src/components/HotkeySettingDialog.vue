@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="hotkey-setting-dialog"
+    class="hotkey-setting-dialog transparent-backdrop"
     v-model="hotkeySettingDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
