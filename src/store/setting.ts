@@ -18,6 +18,7 @@ import {
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import { Dark, setCssVar, colors } from "quasar";
+import { createUILockAction } from "./ui";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -267,6 +268,71 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setSplitterPosition(splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
+
+    /**
+     * CPU/GPUモードを切り替えようとする。
+     * GPUモードでエンジン起動に失敗した場合はCPUモードに戻す。
+     */
+    CHANGE_USE_GPU: createUILockAction(
+      async ({ state, dispatch }, { useGpu }) => {
+        if (state.useGpu === useGpu) return;
+
+        const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
+
+        // 対応するGPUがない場合に変更を続行するか問う
+        if (useGpu && !isAvailableGPUMode) {
+          await window.electron.showWarningDialog;
+
+          const shouldInterruptChange = await new Promise<boolean>(
+            (resolve) => {
+              $q.dialog({
+                title: "対応するGPUデバイスが見つかりません",
+                message:
+                  "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
+                  "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+                html: true,
+                persistent: true,
+                focus: "cancel",
+                style: {
+                  width: "90vw",
+                  maxWidth: "90vw",
+                },
+                ok: {
+                  label: "変更する",
+                  flat: true,
+                  textColor: "display",
+                },
+                cancel: {
+                  label: "変更しない",
+                  flat: true,
+                  textColor: "display",
+                },
+              })
+                .onOk(() => resolve(true))
+                .onCancel(() => resolve(false));
+            }
+          );
+          if (shouldInterruptChange) {
+            return;
+          }
+        }
+
+        // TODO: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
+        await store.dispatch("SET_USE_GPU", { useGpu });
+        const success = store.dispatch("RESTART_ENGINE", {
+          engineKey: store.state.engineInfos[0].key,
+        }); // TODO: 複数エンジン対応
+
+        $q.dialog({
+          title: "エンジンの起動モードを変更しました",
+          message: "変更を適用するためにエンジンを再起動します。",
+          ok: {
+            flat: true,
+            textColor: "display",
+          },
+        });
+      }
+    ),
   },
 };
 
