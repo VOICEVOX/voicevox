@@ -281,56 +281,37 @@ export const settingStore: VoiceVoxStoreOptions<
 
         // 対応するGPUがない場合に変更を続行するか問う
         if (useGpu && !isAvailableGPUMode) {
-          await window.electron.showWarningDialog;
-
-          const shouldInterruptChange = await new Promise<boolean>(
-            (resolve) => {
-              $q.dialog({
-                title: "対応するGPUデバイスが見つかりません",
-                message:
-                  "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-                  "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-                html: true,
-                persistent: true,
-                focus: "cancel",
-                style: {
-                  width: "90vw",
-                  maxWidth: "90vw",
-                },
-                ok: {
-                  label: "変更する",
-                  flat: true,
-                  textColor: "display",
-                },
-                cancel: {
-                  label: "変更しない",
-                  flat: true,
-                  textColor: "display",
-                },
-              })
-                .onOk(() => resolve(true))
-                .onCancel(() => resolve(false));
-            }
-          );
-          if (shouldInterruptChange) {
+          const result = await window.electron.showQuestionDialog({
+            type: "warning",
+            title: "対応するGPUデバイスが見つかりません",
+            message:
+              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
+              "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+            buttons: ["変更する", "変更しない"],
+            cancelId: 1,
+          });
+          if (result == 1) {
             return;
           }
         }
 
-        // TODO: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
-        await store.dispatch("SET_USE_GPU", { useGpu });
-        const success = store.dispatch("RESTART_ENGINE", {
-          engineKey: store.state.engineInfos[0].key,
+        await dispatch("SET_USE_GPU", { useGpu });
+        const success = await dispatch("RESTART_ENGINE", {
+          engineKey: state.engineInfos[0].key,
         }); // TODO: 複数エンジン対応
 
-        $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにエンジンを再起動します。",
-          ok: {
-            flat: true,
-            textColor: "display",
-          },
-        });
+        // GPUモードに変更できなかった場合はCPUモードに戻す
+        // TODO: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
+        if (!success && useGpu) {
+          await dispatch("SET_USE_GPU", { useGpu: false });
+          await window.electron.showMessageDialog({
+            type: "error",
+            title: "GPUモードに変更できませんでした",
+            message:
+              "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
+          });
+          return;
+        }
       }
     ),
   },

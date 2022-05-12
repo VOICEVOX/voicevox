@@ -864,69 +864,17 @@ export default defineComponent({
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
-      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch("ASYNC_UI_LOCK", {
-          callback: async () => {
-            $q.loading.show({
-              spinnerColor: "primary",
-              spinnerSize: 50,
-              boxClass: "bg-background text-display",
-              message: "起動モードを変更中です",
-            });
-            resolve(await window.electron.isAvailableGPUMode());
-            $q.loading.hide();
-          },
-        });
+      $q.loading.show({
+        spinnerColor: "primary",
+        spinnerSize: 50,
+        boxClass: "bg-background text-display",
+        message: "起動モードを変更中です",
       });
 
-      // 対応するGPUがない場合に変更を続行するか問う
-      if (useGpu && !isAvailableGPUMode) {
-        const shouldInterruptChange = await new Promise<boolean>((resolve) => {
-          $q.dialog({
-            title: "対応するGPUデバイスが見つかりません",
-            message:
-              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-              "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-            html: true,
-            persistent: true,
-            focus: "cancel",
-            style: {
-              width: "90vw",
-              maxWidth: "90vw",
-            },
-            ok: {
-              label: "変更する",
-              flat: true,
-              textColor: "display",
-            },
-            cancel: {
-              label: "変更しない",
-              flat: true,
-              textColor: "display",
-            },
-          })
-            .onOk(() => resolve(true))
-            .onCancel(() => resolve(false));
-        });
-        if (shouldInterruptChange) {
-          return;
-        }
-      }
+      await store.dispatch("CHANGE_USE_GPU", { useGpu });
+      なんかしらんけど勝手にawait抜けちゃう;
 
-      // TODO: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
-      await store.dispatch("SET_USE_GPU", { useGpu });
-      const success = store.dispatch("RESTART_ENGINE", {
-        engineKey: store.state.engineInfos[0].key,
-      }); // TODO: 複数エンジン対応
-
-      $q.dialog({
-        title: "エンジンの起動モードを変更しました",
-        message: "変更を適用するためにエンジンを再起動します。",
-        ok: {
-          flat: true,
-          textColor: "display",
-        },
-      });
+      $q.loading.hide();
     };
 
     const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
