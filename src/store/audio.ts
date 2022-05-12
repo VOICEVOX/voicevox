@@ -87,11 +87,8 @@ function parseTextFile(
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
-      if (style.styleName === undefined) {
-        continue;
-      }
       characters.set(
-        `${characterInfo.metas.speakerName}(${style.styleName})`,
+        `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
         style.styleId
       );
     }
@@ -1315,14 +1312,12 @@ export const audioStore: VoiceVoxStoreOptions<
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
           for (const style of characterInfo.metas.styles) {
-            if (style.styleName === undefined) {
-              continue;
-            } else {
-              characters.set(
-                style.styleId,
-                `${characterInfo.metas.speakerName}(${style.styleName})`
-              );
-            }
+            characters.set(
+              style.styleId,
+              `${characterInfo.metas.speakerName}(${
+                style.styleName || "ノーマル"
+              })`
+            );
           }
         }
 
