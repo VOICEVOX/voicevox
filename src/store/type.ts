@@ -697,13 +697,6 @@ type IndexStoreTypes = {
     action(): string[];
   };
 
-  SHOW_WARNING_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-    }): Promise<Electron.MessageBoxReturnValue>;
-  };
-
   LOG_ERROR: {
     action(...payload: unknown[]): void;
   };

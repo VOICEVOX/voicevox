@@ -27,20 +27,18 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showInfoDialog(obj: {
+  showMessageDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  showQuestionDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
     buttons: string[];
     cancelId?: number;
   }): Promise<number>;
-  showWarningDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showErrorDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;

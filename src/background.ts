@@ -978,12 +978,20 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   return result.filePaths;
 });
 
+ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
+  return dialog.showMessageBox(win, {
+    type,
+    title,
+    message,
+  });
+});
+
 ipcMainHandle(
-  "SHOW_INFO_DIALOG",
-  (_, { title, message, buttons, cancelId }) => {
+  "SHOW_QUESTION_DIALOG",
+  (_, { type, title, message, buttons, cancelId }) => {
     return dialog
       .showMessageBox(win, {
-        type: "info",
+        type,
         buttons,
         title,
         message,
