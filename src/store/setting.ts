@@ -301,15 +301,15 @@ export const settingStore: VoiceVoxStoreOptions<
         }); // TODO: 複数エンジン対応
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
-        // TODO: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
+        // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!success && useGpu) {
-          await dispatch("SET_USE_GPU", { useGpu: false });
           await window.electron.showMessageDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
             message:
               "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
           });
+          await dispatch("CHANGE_USE_GPU", { useGpu: false });
           return;
         }
       }

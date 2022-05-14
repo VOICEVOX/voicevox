@@ -1499,13 +1499,13 @@ export const audioStore: VoiceVoxStoreOptions<
           commit("SET_ENGINE_STATE", { engineState: "ERROR" });
       }
     },
-    async RESTART_ENGINE({ dispatch, commit }, { engineKey }) {
+    async RESTART_ENGINE({ dispatch, commit, state }, { engineKey }) {
       commit("SET_ENGINE_STATE", { engineState: "STARTING" });
       const success = await window.electron
         .restartEngine(engineKey)
         .then(async () => {
           await dispatch("START_WAITING_ENGINE");
-          return true;
+          return state.engineState === "READY";
         })
         .catch(async () => {
           await dispatch("DETECTED_ENGINE_ERROR");

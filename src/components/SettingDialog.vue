@@ -872,7 +872,6 @@ export default defineComponent({
       });
 
       await store.dispatch("CHANGE_USE_GPU", { useGpu });
-      なんかしらんけど勝手にawait抜けちゃう;
 
       $q.loading.hide();
     };
