@@ -53,11 +53,13 @@ export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 export type SaveResult =
   | "SUCCESS"
   | "WRITE_ERROR"
-  | "PERMISSION_ERROR"
-  | "NO_SPACE_LEFT_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
-export type SaveResultObject = { result: SaveResult; path: string | undefined };
+export type SaveResultObject = {
+  result: SaveResult;
+  path: string | undefined;
+  errorMessage?: string | undefined;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never

@@ -145,6 +145,19 @@ function buildFileName(state: State, audioKey: string) {
   });
 }
 
+function generateWriteErrorMessage(e: Error) {
+  const message = e.message.toUpperCase();
+  if (message.indexOf("ENOSPC") !== -1) {
+    return "空き容量が足りません。";
+  }
+
+  if (message.indexOf("EACCES") !== -1) {
+    return "権限などの問題で書き込めません。";
+  }
+
+  return `何らかの理由で失敗しました。\n${e.message}`;
+}
+
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<string, HTMLAudioElement> = {};
 
@@ -1038,23 +1051,22 @@ export const audioStore: VoiceVoxStoreOptions<
         } catch (e) {
           window.electron.logError(e);
           if (e instanceof Error) {
-            const message = e.message.toUpperCase();
-            if (message.indexOf("ENOSPC") !== -1) {
-              return { result: "NO_SPACE_LEFT_ERROR", path: filePath };
-            }
-
-            if (message.indexOf("EACCES") !== -1) {
-              return { result: "PERMISSION_ERROR", path: filePath };
-            }
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(e),
+            };
           }
-
-          return { result: "WRITE_ERROR", path: filePath };
         }
 
         if (state.savingSetting.exportLab) {
           const labString = await dispatch("GENERATE_LAB", { audioKey });
           if (labString === undefined)
-            return { result: "WRITE_ERROR", path: filePath };
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: "labの生成に失敗しました。",
+            };
 
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
           const labBlob = new Blob([bom, labString], {
@@ -1069,7 +1081,13 @@ export const audioStore: VoiceVoxStoreOptions<
           } catch (e) {
             window.electron.logError(e);
 
-            return { result: "WRITE_ERROR", path: filePath };
+            if (e instanceof Error) {
+              return {
+                result: "WRITE_ERROR",
+                path: filePath,
+                errorMessage: generateWriteErrorMessage(e),
+              };
+            }
           }
         }
 
@@ -1098,7 +1116,13 @@ export const audioStore: VoiceVoxStoreOptions<
           } catch (e) {
             window.electron.logError(e);
 
-            return { result: "WRITE_ERROR", path: filePath };
+            if (e instanceof Error) {
+              return {
+                result: "WRITE_ERROR",
+                path: filePath,
+                errorMessage: generateWriteErrorMessage(e),
+              };
+            }
           }
         }
 
