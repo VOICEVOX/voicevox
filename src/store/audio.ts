@@ -75,6 +75,7 @@ function parseTextFile(
     const styleId = defaultStyleId.defaultStyleId;
     uuid2StyleIds.set(speakerUuid, styleId);
   }
+  // setup default characters
   for (const characterInfo of userOrderedCharacterInfos) {
     const uuid = characterInfo.metas.speakerUuid;
     const styleId = uuid2StyleIds.get(uuid);
@@ -82,6 +83,15 @@ function parseTextFile(
     if (styleId == undefined)
       throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
     characters.set(speakerName, styleId);
+  }
+  // setup characters with style name
+  for (const characterInfo of userOrderedCharacterInfos) {
+    for (const style of characterInfo.metas.styles) {
+      characters.set(
+        `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
+        style.styleId
+      );
+    }
   }
   if (!characters.size) return [];
 
@@ -1302,7 +1312,12 @@ export const audioStore: VoiceVoxStoreOptions<
 
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
           for (const style of characterInfo.metas.styles) {
-            characters.set(style.styleId, characterInfo.metas.speakerName);
+            characters.set(
+              style.styleId,
+              `${characterInfo.metas.speakerName}(${
+                style.styleName || "ノーマル"
+              })`
+            );
           }
         }
 
