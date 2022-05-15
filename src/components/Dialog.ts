@@ -27,9 +27,14 @@ export async function generateAndSaveOneAudioWithDialog({
   if (result.result === "SUCCESS" || result.result === "CANCELED") return;
   let msg = "";
   switch (result.result) {
+    case "PERMISSION_ERROR":
+      msg = "指定されたフォルダーへの書き込み権限が無いため失敗しました。";
+      break;
+    case "NO_SPACE_LEFT_ERROR":
+      msg = "空き容量が足りないため失敗しました。";
+      break;
     case "WRITE_ERROR":
-      msg =
-        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
       break;
     case "ENGINE_ERROR":
       msg =
@@ -63,6 +68,8 @@ export async function generateAndSaveAllAudioWithDialog({
     encoding,
   });
   const successArray: Array<string | undefined> = [];
+  const permissionErrorArray: Array<string | undefined> = [];
+  const noSpaceLeftErrorArray: Array<string | undefined> = [];
   const writeErrorArray: Array<string | undefined> = [];
   const engineErrorArray: Array<string | undefined> = [];
   if (result) {
@@ -70,6 +77,12 @@ export async function generateAndSaveAllAudioWithDialog({
       switch (item.result) {
         case "SUCCESS":
           successArray.push(item.path);
+          break;
+        case "PERMISSION_ERROR":
+          permissionErrorArray.push(item.path);
+          break;
+        case "NO_SPACE_LEFT_ERROR":
+          noSpaceLeftErrorArray.push(item.path);
           break;
         case "WRITE_ERROR":
           writeErrorArray.push(item.path);
@@ -86,6 +99,8 @@ export async function generateAndSaveAllAudioWithDialog({
       component: SaveAllResultDialog,
       componentProps: {
         successArray: successArray,
+        permissionErrorArray: permissionErrorArray,
+        noSpaceLeftErrorArray: noSpaceLeftErrorArray,
         writeErrorArray: writeErrorArray,
         engineErrorArray: engineErrorArray,
       },
@@ -118,9 +133,14 @@ export async function generateAndConnectAndSaveAudioWithDialog({
 
   let msg = "";
   switch (result.result) {
+    case "PERMISSION_ERROR":
+      msg = "指定されたフォルダーへの書き込み権限が無いため失敗しました。";
+      break;
+    case "NO_SPACE_LEFT_ERROR":
+      msg = "空き容量が足りないため失敗しました。";
+      break;
     case "WRITE_ERROR":
-      msg =
-        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
       break;
     case "ENGINE_ERROR":
       msg =

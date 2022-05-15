@@ -12,8 +12,29 @@
       </q-header>
       <q-page-container>
         <q-page>
+          <q-list separator v-if="permissionErrorArray.length > 0">
+            <div class="error">失敗（書き込み権限ありませんでした）:</div>
+            <q-item v-for="(value, index) in permissionErrorArray" :key="index">
+              <q-item-section>
+                <q-item-label>{{ value }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-list separator v-if="noSpaceLeftErrorArray.length > 0">
+            <div class="error">失敗（空き容量が足りませんでした）:</div>
+            <q-item
+              v-for="(value, index) in noSpaceLeftErrorArray"
+              :key="index"
+            >
+              <q-item-section>
+                <q-item-label>{{ value }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
           <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">失敗（書き込みエラー）:</div>
+            <div class="error">
+              失敗（想定外の書き込みエラー。ログを参照してください。）:
+            </div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
@@ -56,6 +77,8 @@ export default defineComponent({
   name: "SaveAllResultDialog",
   props: {
     successArray: Array,
+    permissionErrorArray: Array,
+    noSpaceLeftErrorArray: Array,
     writeErrorArray: Array,
     engineErrorArray: Array,
   },

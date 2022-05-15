@@ -1037,6 +1037,16 @@ export const audioStore: VoiceVoxStoreOptions<
           });
         } catch (e) {
           window.electron.logError(e);
+          if (e instanceof Error) {
+            const message = e.message.toUpperCase();
+            if (message.indexOf("ENOSPC") !== -1) {
+              return { result: "NO_SPACE_LEFT_ERROR", path: filePath };
+            }
+
+            if (message.indexOf("EACCES") !== -1) {
+              return { result: "PERMISSION_ERROR", path: filePath };
+            }
+          }
 
           return { result: "WRITE_ERROR", path: filePath };
         }
