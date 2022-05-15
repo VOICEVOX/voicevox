@@ -59,8 +59,6 @@ export default defineComponent({
   name: "SaveAllResultDialog",
   props: {
     successArray: Array,
-    permissionErrorArray: Array,
-    noSpaceLeftErrorArray: Array,
     writeErrorArray: Array,
     engineErrorArray: Array,
   },
