@@ -1,5 +1,9 @@
 import { Encoding as EncodingType } from "@/type/preload";
-import { AllActions, SaveResultObject } from "@/store/type";
+import {
+  AllActions,
+  SaveResultObject,
+  WriteErrorTypeForSaveAllResultDialog,
+} from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
 import { Dispatch } from "@/store/vuex";
@@ -68,16 +72,28 @@ export async function generateAndSaveAllAudioWithDialog({
   const successArray: Array<string | undefined> = [];
   const permissionErrorArray: Array<string | undefined> = [];
   const noSpaceLeftErrorArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<string | undefined> = [];
+  const writeErrorArray: Array<
+    WriteErrorTypeForSaveAllResultDialog | undefined
+  > = [];
   const engineErrorArray: Array<string | undefined> = [];
   if (result) {
     for (const item of result) {
+      let msg = "";
+      if (item.errorMessage) {
+        msg = item.errorMessage;
+      }
+
+      let path = "";
+      if (item.path) {
+        path = item.path;
+      }
+
       switch (item.result) {
         case "SUCCESS":
           successArray.push(item.path);
           break;
         case "WRITE_ERROR":
-          writeErrorArray.push(item.path);
+          writeErrorArray.push({ path: path, message: msg });
           break;
         case "ENGINE_ERROR":
           engineErrorArray.push(item.path);

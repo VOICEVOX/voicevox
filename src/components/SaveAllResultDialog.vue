@@ -13,12 +13,13 @@
       <q-page-container>
         <q-page>
           <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">
-              失敗（想定外の書き込みエラー。ログを参照してください。）:
-            </div>
+            <div class="error">失敗（書き込みエラー）:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
+                <q-item-label>対象：{{ value.path }}</q-item-label>
+                <q-item-label
+                  >エラーメッセージ：{{ value.message }}</q-item-label
+                >
               </q-item-section>
             </q-item>
           </q-list>

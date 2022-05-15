@@ -60,6 +60,10 @@ export type SaveResultObject = {
   path: string | undefined;
   errorMessage?: string | undefined;
 };
+export type WriteErrorTypeForSaveAllResultDialog = {
+  path: string;
+  message: string;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
