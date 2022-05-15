@@ -94,7 +94,12 @@ export async function generateAndSaveAllAudioWithDialog({
     }
   }
 
-  if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
+  if (
+    permissionErrorArray.length > 0 ||
+    noSpaceLeftErrorArray.length > 0 ||
+    writeErrorArray.length > 0 ||
+    engineErrorArray.length > 0
+  ) {
     quasarDialog({
       component: SaveAllResultDialog,
       componentProps: {

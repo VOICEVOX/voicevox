@@ -13,7 +13,7 @@
       <q-page-container>
         <q-page>
           <q-list separator v-if="permissionErrorArray.length > 0">
-            <div class="error">失敗（書き込み権限ありませんでした）:</div>
+            <div class="error">失敗（書き込み権限がありませんでした）:</div>
             <q-item v-for="(value, index) in permissionErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
