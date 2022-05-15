@@ -17,9 +17,7 @@
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
                 <q-item-label>対象：{{ value.path }}</q-item-label>
-                <q-item-label
-                  >エラーメッセージ：{{ value.message }}</q-item-label
-                >
+                <q-item-label>詳細：{{ value.message }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
