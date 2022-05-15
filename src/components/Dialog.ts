@@ -70,11 +70,7 @@ export async function generateAndSaveAllAudioWithDialog({
     encoding,
   });
   const successArray: Array<string | undefined> = [];
-  const permissionErrorArray: Array<string | undefined> = [];
-  const noSpaceLeftErrorArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<
-    WriteErrorTypeForSaveAllResultDialog | undefined
-  > = [];
+  const writeErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
   const engineErrorArray: Array<string | undefined> = [];
   if (result) {
     for (const item of result) {
@@ -102,18 +98,11 @@ export async function generateAndSaveAllAudioWithDialog({
     }
   }
 
-  if (
-    permissionErrorArray.length > 0 ||
-    noSpaceLeftErrorArray.length > 0 ||
-    writeErrorArray.length > 0 ||
-    engineErrorArray.length > 0
-  ) {
+  if (writeErrorArray.length > 0 || engineErrorArray.length > 0) {
     quasarDialog({
       component: SaveAllResultDialog,
       componentProps: {
         successArray: successArray,
-        permissionErrorArray: permissionErrorArray,
-        noSpaceLeftErrorArray: noSpaceLeftErrorArray,
         writeErrorArray: writeErrorArray,
         engineErrorArray: engineErrorArray,
       },
