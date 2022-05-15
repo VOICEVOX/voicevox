@@ -16,7 +16,7 @@
             <div class="error">失敗（書き込みエラー）:</div>
             <q-item v-for="(value, index) in writeErrorArray" :key="index">
               <q-item-section>
-                <q-item-label>対象：{{ value.path }}</q-item-label>
+                <q-item-label>{{ value.path }}</q-item-label>
                 <q-item-label>詳細：{{ value.message }}</q-item-label>
               </q-item-section>
             </q-item>

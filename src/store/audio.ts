@@ -152,7 +152,7 @@ function generateWriteErrorMessage(e: Error) {
   }
 
   if (message.indexOf("EACCES") !== -1) {
-    return "権限の問題で書き込めません。";
+    return "権限の問題で書き込めませんでした。";
   }
 
   return `何らかの理由で失敗しました。\n${e.message}`;
