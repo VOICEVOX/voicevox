@@ -86,13 +86,13 @@ export async function generateAndSaveAllAudioWithDialog({
 
       switch (item.result) {
         case "SUCCESS":
-          successArray.push(item.path);
+          successArray.push(path);
           break;
         case "WRITE_ERROR":
           writeErrorArray.push({ path: path, message: msg });
           break;
         case "ENGINE_ERROR":
-          engineErrorArray.push(item.path);
+          engineErrorArray.push(path);
           break;
       }
     }

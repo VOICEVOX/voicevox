@@ -58,7 +58,7 @@ export type SaveResult =
 export type SaveResultObject = {
   result: SaveResult;
   path: string | undefined;
-  errorMessage?: string | undefined;
+  errorMessage?: string;
 };
 export type WriteErrorTypeForSaveAllResultDialog = {
   path: string;
