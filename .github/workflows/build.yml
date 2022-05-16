@@ -11,7 +11,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.12.3-preview
+  VOICEVOX_ENGINE_VERSION: 0.12.4-preview
   VOICEVOX_RESOURCE_VERSION: 0.11.4
   VOICEVOX_EDITOR_VERSION:
     |- # releaseのときはタグが、それ以外は999.999.999がバージョン名に
