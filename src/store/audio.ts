@@ -147,15 +147,16 @@ function buildFileName(state: State, audioKey: string) {
 
 function generateWriteErrorMessage(e: Error) {
   const message = e.message.toUpperCase();
-  if (message.indexOf("ENOSPC") !== -1) {
+
+  if (message.startsWith("ENOSPC")) {
     return "空き容量が足りません。";
   }
 
-  if (message.indexOf("EACCES") !== -1) {
+  if (message.startsWith("EACCES")) {
     return "権限の問題で書き込めませんでした。";
   }
 
-  return `何らかの理由で失敗しました。\n${e.message}`;
+  return `何らかの理由で失敗しました。${e.message}`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
