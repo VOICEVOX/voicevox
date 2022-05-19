@@ -42,7 +42,10 @@ export interface Sandbox {
     message: string;
   }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
-  writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
+  writeFile(obj: {
+    filePath: string;
+    buffer: ArrayBuffer;
+  }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
@@ -278,4 +281,24 @@ export type SplitterPosition = {
   portraitPaneWidth: number | undefined;
   audioInfoPaneWidth: number | undefined;
   audioDetailPaneHeight: number | undefined;
+};
+
+// workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
+export class SystemError extends Error {
+  code?: string | undefined;
+  constructor(message: string, code?: string | undefined) {
+    super(message);
+
+    this.name = new.target.name;
+    this.code = code;
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, SystemError);
+    }
+  }
+}
+
+export type WriteFileErrorResult = {
+  code: string | undefined;
+  message: string;
 };
