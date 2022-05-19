@@ -324,25 +324,15 @@ export default defineComponent({
       [
         "選択中のアクセント句に対して読点を付け外しする",
         () => {
-          let accentPhraseIndex = store.state.audioPlayStartPoint;
           if (
             !uiLocked.value &&
-            store.getters.ACTIVE_AUDIO_KEY !== undefined &&
-            accentPhraseIndex !== undefined &&
-            accentPhrases.value !== undefined
+            store.getters.ACTIVE_AUDIO_KEY &&
+            store.state.audioPlayStartPoint !== undefined
           ) {
-            // 現在の発音を読み込む
-            let accentPhrase = accentPhrases.value[accentPhraseIndex];
-            let pronunciation = "";
-            accentPhrase.moras.forEach((mora) => {
-              pronunciation += mora.text;
+            store.dispatch("COMMAND_TOGGLE_PAUSE_MORA", {
+              audioKey: store.getters.ACTIVE_AUDIO_KEY,
+              accentPhraseIndex: store.state.audioPlayStartPoint,
             });
-            // 読点があるなら外し、ないなら付ける
-            let newPronunciation = accentPhrase.pauseMora
-              ? pronunciation
-              : pronunciation + "、";
-            // 読み仮名変更の関数で更新
-            handleChangePronounce(newPronunciation, accentPhraseIndex);
           }
         },
       ],
