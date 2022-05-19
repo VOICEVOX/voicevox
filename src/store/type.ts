@@ -110,7 +110,7 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   DETECTED_ENGINE_ERROR: {
@@ -336,6 +336,13 @@ type AudioStoreTypes = {
   };
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
+    action(payload: {
+      filePath?: string;
+      encoding?: EncodingType;
+    }): SaveResultObject | undefined;
+  };
+
+  CONNECT_AND_EXPORT_TEXT: {
     action(payload: {
       filePath?: string;
       encoding?: EncodingType;

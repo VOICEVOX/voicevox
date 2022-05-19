@@ -17,6 +17,10 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showTextSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
@@ -57,7 +61,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(): Promise<void>;
+  restartEngine(engineKey: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
@@ -142,6 +146,7 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
+  fileNamePattern: string;
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;

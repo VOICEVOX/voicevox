@@ -142,7 +142,14 @@
             :key="moraIndex"
           >
             <div
-              :class="getHoveredClass(mora.vowel, accentPhraseIndex, moraIndex)"
+              class="text-cell"
+              :class="{
+                'text-cell-hovered': isHovered(
+                  mora.vowel,
+                  accentPhraseIndex,
+                  moraIndex
+                ),
+              }"
               :style="{
                 'grid-column': `${moraIndex * 2 + 1} / span 1`,
               }"
@@ -153,7 +160,9 @@
                   handleChangeVoicing(mora, accentPhraseIndex, moraIndex)
               "
             >
-              {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+              <span class="text-cell-inner">
+                {{ getHoveredText(mora, accentPhraseIndex, moraIndex) }}
+              </span>
               <q-popup-edit
                 v-if="selectedDetail == 'accent' && !uiLocked"
                 :model-value="pronunciationByPhrase[accentPhraseIndex]"
@@ -197,7 +206,11 @@
             />
           </template>
           <template v-if="accentPhrase.pauseMora">
-            <div class="text-cell">{{ accentPhrase.pauseMora.text }}</div>
+            <div class="text-cell">
+              <span class="text-cell-inner">
+                {{ accentPhrase.pauseMora.text }}
+              </span>
+            </div>
             <div
               @click.stop="
                 uiLocked || toggleAccentPhraseSplit(accentPhraseIndex, true)
@@ -677,7 +690,7 @@ export default defineComponent({
 
     const unvoicableVowels = ["U", "I", "i", "u"];
 
-    const getHoveredClass = (
+    const isHovered = (
       vowel: string,
       accentPhraseIndex: number,
       moraIndex: number
@@ -698,8 +711,7 @@ export default defineComponent({
           }
         }
       }
-      if (isHover) return "text-cell-hovered";
-      else return "text-cell";
+      return isHover;
     };
 
     const getHoveredText = (
@@ -788,7 +800,7 @@ export default defineComponent({
       handleChangePronounce,
       handleHoverText,
       handleLengthHoverText,
-      getHoveredClass,
+      isHovered,
       getHoveredText,
       shiftKeyFlag,
       handleChangeVoicing,
@@ -856,14 +868,17 @@ $pitch-label-height: 24px;
           max-width: 20px;
           grid-row-start: 3;
           text-align: center;
+          white-space: nowrap;
           color: colors.$display;
+          position: relative;
+
+          .text-cell-inner {
+            position: absolute;
+            transform: translateX(-50%);
+            z-index: 10;
+          }
         }
         &.text-cell-hovered {
-          min-width: 20px;
-          max-width: 20px;
-          grid-row-start: 3;
-          text-align: center;
-          color: colors.$display;
           font-weight: bold;
           cursor: pointer;
         }
@@ -897,8 +912,8 @@ $pitch-label-height: 24px;
         }
         &.pitch-cell {
           grid-row: 1 / span 2;
-          min-width: 30px;
-          max-width: 30px;
+          min-width: 20px;
+          max-width: 20px;
           display: inline-block;
           position: relative;
         }

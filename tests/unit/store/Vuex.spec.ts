@@ -46,6 +46,7 @@ describe("store/vuex.js test", () => {
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
+          fileNamePattern: "",
           fixedExportEnabled: false,
           fixedExportDir: "",
           avoidOverwrite: false,
@@ -161,6 +162,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
+    assert.propertyVal(store.state.savingSetting, "fileNamePattern", "");
     assert.equal(store.state.isPinned, false);
     assert.isObject(store.state.presetItems);
     assert.isEmpty(store.state.presetItems);
