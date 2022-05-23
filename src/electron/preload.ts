@@ -139,6 +139,7 @@ const api: Sandbox = {
 
   writeFile: ({ filePath, buffer }) => {
     try {
+      // throwだと`.code`の情報が消えるのでreturn
       fs.writeFileSync(filePath, new DataView(buffer));
     } catch (e) {
       const a = e as SystemError;
