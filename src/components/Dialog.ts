@@ -1,5 +1,9 @@
 import { Encoding as EncodingType } from "@/type/preload";
-import { AllActions, SaveResultObject } from "@/store/type";
+import {
+  AllActions,
+  SaveResultObject,
+  WriteErrorTypeForSaveAllResultDialog,
+} from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
 import { Dispatch } from "@/store/vuex";
@@ -28,8 +32,11 @@ export async function generateAndSaveOneAudioWithDialog({
   let msg = "";
   switch (result.result) {
     case "WRITE_ERROR":
-      msg =
-        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      if (result.errorMessage) {
+        msg = result.errorMessage;
+      } else {
+        msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
+      }
       break;
     case "ENGINE_ERROR":
       msg =
@@ -63,19 +70,29 @@ export async function generateAndSaveAllAudioWithDialog({
     encoding,
   });
   const successArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<string | undefined> = [];
+  const writeErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
   const engineErrorArray: Array<string | undefined> = [];
   if (result) {
     for (const item of result) {
+      let msg = "";
+      if (item.errorMessage) {
+        msg = item.errorMessage;
+      }
+
+      let path = "";
+      if (item.path) {
+        path = item.path;
+      }
+
       switch (item.result) {
         case "SUCCESS":
-          successArray.push(item.path);
+          successArray.push(path);
           break;
         case "WRITE_ERROR":
-          writeErrorArray.push(item.path);
+          writeErrorArray.push({ path: path, message: msg });
           break;
         case "ENGINE_ERROR":
-          engineErrorArray.push(item.path);
+          engineErrorArray.push(path);
           break;
       }
     }
@@ -119,8 +136,11 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   let msg = "";
   switch (result.result) {
     case "WRITE_ERROR":
-      msg =
-        "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。";
+      if (result.errorMessage) {
+        msg = result.errorMessage;
+      } else {
+        msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
+      }
       break;
     case "ENGINE_ERROR":
       msg =

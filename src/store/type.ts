@@ -55,7 +55,15 @@ export type SaveResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
-export type SaveResultObject = { result: SaveResult; path: string | undefined };
+export type SaveResultObject = {
+  result: SaveResult;
+  path: string | undefined;
+  errorMessage?: string;
+};
+export type WriteErrorTypeForSaveAllResultDialog = {
+  path: string;
+  message: string;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never

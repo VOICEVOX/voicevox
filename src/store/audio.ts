@@ -25,6 +25,7 @@ import {
   Encoding as EncodingType,
   MoraDataType,
   StyleInfo,
+  WriteFileErrorResult,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
@@ -143,6 +144,22 @@ function buildFileName(state: State, audioKey: string) {
     text: audioItem.text,
     date: currentDateString(),
   });
+}
+
+function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
+  if (writeFileErrorResult.code) {
+    const code = writeFileErrorResult.code.toUpperCase();
+
+    if (code.startsWith("ENOSPC")) {
+      return "空き容量が足りません。";
+    }
+
+    if (code.startsWith("EACCES")) {
+      return "ファイルにアクセスする許可がありません。";
+    }
+  }
+
+  return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -1030,36 +1047,44 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
-        try {
-          window.electron.writeFile({
-            filePath,
-            buffer: await blob.arrayBuffer(),
-          });
-        } catch (e) {
-          window.electron.logError(e);
-
-          return { result: "WRITE_ERROR", path: filePath };
+        let writeFileResult = window.electron.writeFile({
+          filePath,
+          buffer: await blob.arrayBuffer(),
+        }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
+        if (writeFileResult) {
+          window.electron.logError(new Error(writeFileResult.message));
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(writeFileResult),
+          };
         }
 
         if (state.savingSetting.exportLab) {
           const labString = await dispatch("GENERATE_LAB", { audioKey });
           if (labString === undefined)
-            return { result: "WRITE_ERROR", path: filePath };
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: "labの生成に失敗しました。",
+            };
 
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
           const labBlob = new Blob([bom, labString], {
             type: "text/plain;charset=UTF-8",
           });
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return { result: "WRITE_ERROR", path: filePath };
+          writeFileResult = window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".lab"),
+            buffer: await labBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(writeFileResult),
+            };
           }
         }
 
@@ -1080,15 +1105,17 @@ export const audioStore: VoiceVoxStoreOptions<
             });
           })();
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return { result: "WRITE_ERROR", path: filePath };
+          writeFileResult = window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(writeFileResult),
+            };
           }
         }
 

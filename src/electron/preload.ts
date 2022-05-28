@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 
 import { Sandbox } from "@/type/preload";
+import { SystemError } from "@/store/type";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,
@@ -137,7 +138,15 @@ const api: Sandbox = {
   },
 
   writeFile: ({ filePath, buffer }) => {
-    fs.writeFileSync(filePath, new DataView(buffer));
+    try {
+      // throwだと`.code`の情報が消えるのでreturn
+      fs.writeFileSync(filePath, new DataView(buffer));
+    } catch (e) {
+      const a = e as SystemError;
+      return { code: a.code, message: a.message };
+    }
+
+    return undefined;
   },
 
   readFile: ({ filePath }) => {
