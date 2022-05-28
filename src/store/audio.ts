@@ -155,7 +155,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
     }
 
     if (code.startsWith("EACCES")) {
-      return "権限の問題で書き込めませんでした。";
+      return "ファイルにアクセスする許可がありません。";
     }
   }
 
