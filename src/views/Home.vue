@@ -174,7 +174,7 @@ import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryD
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import { AudioItem } from "@/store/type";
-import { QResizeObserver } from "quasar";
+import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
   HotkeyAction,
@@ -207,6 +207,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
@@ -613,10 +614,15 @@ export default defineComponent({
           store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
           break;
         default:
-          store.dispatch("SHOW_WARNING_DIALOG", {
+          $q.dialog({
             title: "対応していないファイルです",
             message:
               "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
           });
       }
     };

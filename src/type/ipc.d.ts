@@ -79,9 +79,21 @@ type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_INFO_DIALOG: {
+  SHOW_MESSAGE_DIALOG: {
     args: [
       obj: {
+        type: "none" | "info" | "error" | "question" | "warning";
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
+  SHOW_QUESTION_DIALOG: {
+    args: [
+      obj: {
+        type: "none" | "info" | "error" | "question" | "warning";
         title: string;
         message: string;
         buttons: string[];
@@ -89,16 +101,6 @@ type IpcIHData = {
       }
     ];
     return: number;
-  };
-
-  SHOW_WARNING_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
-  };
-
-  SHOW_ERROR_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
