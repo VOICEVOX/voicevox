@@ -118,7 +118,7 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineKey: string }): Promise<boolean>;
   };
 
   DETECTED_ENGINE_ERROR: {
@@ -143,6 +143,10 @@ type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
+  };
+
+  SETUP_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -863,6 +867,10 @@ type SettingStoreTypes = {
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  CHANGE_USE_GPU: {
+    action(payload: { useGpu: boolean }): void;
   };
 };
 

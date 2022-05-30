@@ -612,6 +612,36 @@ export const audioStore: VoiceVoxStoreOptions<
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
+    /**
+     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     * 初期化済みだった場合は何もしない。
+     */
+    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
+      // FIXME: なぜかbooleanではなくstringが返ってくる。
+      // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
+      const isInitialized: string = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
+        action: "isInitializedSpeakerIsInitializedSpeakerGet",
+        payload: [{ speaker: styleId }],
+      });
+      if (isInitialized !== "true" && isInitialized !== "false")
+        throw new Error(`Failed to get isInitialized.`);
+
+      if (isInitialized === "false") {
+        await dispatch("ASYNC_UI_LOCK", {
+          callback: () =>
+            dispatch("INVOKE_ENGINE_CONNECTOR", {
+              engineKey: engineInfo.key,
+              action: "initializeSpeakerInitializeSpeakerPost",
+              payload: [{ speaker: styleId }],
+            }),
+        });
+      }
+    },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
         commit("REMOVE_AUDIO_ITEM", { audioKey });
@@ -1541,12 +1571,19 @@ export const audioStore: VoiceVoxStoreOptions<
           commit("SET_ENGINE_STATE", { engineState: "ERROR" });
       }
     },
-    async RESTART_ENGINE({ dispatch, commit }, { engineKey }) {
-      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
-      window.electron
+    async RESTART_ENGINE({ dispatch, commit, state }, { engineKey }) {
+      commit("SET_ENGINE_STATE", { engineState: "STARTING" });
+      const success = await window.electron
         .restartEngine(engineKey)
-        .then(() => dispatch("START_WAITING_ENGINE"))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+        .then(async () => {
+          await dispatch("START_WAITING_ENGINE");
+          return state.engineState === "READY";
+        })
+        .catch(async () => {
+          await dispatch("DETECTED_ENGINE_ERROR");
+          return false;
+        });
+      return success;
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
@@ -1636,6 +1673,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const query = state.audioItems[audioKey].query;
       try {
+        await dispatch("SETUP_ENGINE_SPEAKER", { styleId });
+
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;
           const newAccentPhrases: AccentPhrase[] = await dispatch(
