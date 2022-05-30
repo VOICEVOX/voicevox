@@ -7,12 +7,12 @@
 Windows／Mac／Linux 搭載の PC に対応しています。
 
 ※Windows：Windows 10・Windows 11
-※Mac：macOS Catalina以降
+※Mac：macOS Catalina 以降
 ※Linux：Ubuntu 18.04・Ubuntu 20.04
 
 #### GPU 版
 
-Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
+GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
