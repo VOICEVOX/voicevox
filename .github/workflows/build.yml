@@ -176,7 +176,6 @@ jobs:
       - name: Replace Character Info
         shell: bash
         run: |
-          rm -r public/characters
           cp -r resource/character_info public/characters
           cd public/characters
           # Explore characters directory.
