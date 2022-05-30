@@ -439,7 +439,7 @@ async function runEngine(engineKey: string) {
 
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
-    const hasGpu = await hasSupportedGpu();
+    const hasGpu = await hasSupportedGpu(process.platform);
     store.set("useGpu", hasGpu);
 
     dialog.showMessageBox(win, {
@@ -1057,7 +1057,7 @@ ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
-  return hasSupportedGpu();
+  return hasSupportedGpu(process.platform);
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
