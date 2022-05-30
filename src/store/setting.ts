@@ -285,7 +285,7 @@ export const settingStore: VoiceVoxStoreOptions<
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
-              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
+              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
             buttons: ["変更する", "変更しない"],
             cancelId: 1,
