@@ -145,6 +145,10 @@ type AudioStoreTypes = {
     action(): string;
   };
 
+  SETUP_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): void;
+  };
+
   SET_ACTIVE_AUDIO_KEY: {
     mutation: { audioKey?: string };
     action(payload: { audioKey?: string }): void;
