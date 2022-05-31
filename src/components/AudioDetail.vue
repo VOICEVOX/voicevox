@@ -321,6 +321,21 @@ export default defineComponent({
           }
         },
       ],
+      [
+        "選択中のアクセント句に対して読点を付け外しする",
+        () => {
+          if (
+            !uiLocked.value &&
+            store.getters.ACTIVE_AUDIO_KEY &&
+            store.state.audioPlayStartPoint !== undefined
+          ) {
+            store.dispatch("COMMAND_TOGGLE_PAUSE_MORA", {
+              audioKey: store.getters.ACTIVE_AUDIO_KEY,
+              accentPhraseIndex: store.state.audioPlayStartPoint,
+            });
+          }
+        },
+      ],
     ]);
     // このコンポーネントは遅延評価なので手動でバインディングを行う
     setHotkeyFunctions(hotkeyMap, true);

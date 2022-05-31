@@ -193,6 +193,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     action: "選択中のアクセント句のイントネーションをリセット",
     combination: "R",
   },
+  {
+    action: "選択中のアクセント句に対して読点を付け外しする",
+    combination: ",",
+  },
 ];
 
 const defaultToolbarButtonSetting: ToolbarSetting = [

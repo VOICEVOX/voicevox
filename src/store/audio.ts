@@ -1970,6 +1970,55 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         });
       }
     },
+    async COMMAND_TOGGLE_PAUSE_MORA(
+      { state, commit, dispatch },
+      {
+        audioKey,
+        accentPhraseIndex,
+      }: {
+        audioKey: string;
+        accentPhraseIndex: number;
+      }
+    ) {
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+
+      const styleId = state.audioItems[audioKey].styleId;
+      if (styleId == undefined) throw new Error("styleId == undefined");
+
+      // 文末に対しては付加しない
+      if (accentPhraseIndex >= query.accentPhrases.length - 1) {
+        return;
+      }
+
+      // 対象の accentPhrase の pauseMora だけを書き換える
+      const accentPhrases = [...query.accentPhrases];
+      const accentPhrase = { ...accentPhrases[accentPhraseIndex] };
+      if (accentPhrase.pauseMora) {
+        accentPhrase.pauseMora = undefined;
+      } else {
+        // FETCH_MORA_DATA で適切な vowelLength を取得する
+        accentPhrase.pauseMora = {
+          text: "、",
+          vowel: "pau",
+          vowelLength: 0.3,
+          pitch: 0,
+        };
+        accentPhrases[accentPhraseIndex] = accentPhrase;
+        const resultAccentPhrases = await dispatch("FETCH_MORA_DATA", {
+          accentPhrases,
+          styleId,
+        });
+        accentPhrase.pauseMora =
+          resultAccentPhrases[accentPhraseIndex].pauseMora;
+      }
+      // pauseMora を書き換えた accentPhrases で置き換える
+      accentPhrases[accentPhraseIndex] = accentPhrase;
+      commit("SET_ACCENT_PHRASES", {
+        audioKey,
+        accentPhrases,
+      });
+    },
     async COMMAND_RESET_MORA_PITCH_AND_LENGTH(
       { state, dispatch, commit },
       { audioKey }

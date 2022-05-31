@@ -483,6 +483,10 @@ type AudioCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_TOGGLE_PAUSE_MORA: {
+    action(payload: { audioKey: string; accentPhraseIndex: number }): void;
+  };
+
   COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
     action(payload: { audioKey: string }): void;
   };
