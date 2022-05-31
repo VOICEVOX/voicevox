@@ -51,11 +51,11 @@ jobs:
             linux_executable_name: voicevox
             sed_name: sed
             os: ubuntu-18.04
-          # Windows CUDA
+          # Windows NVIDIA GPU
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox
-            nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
+            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # Windows CPU
@@ -69,7 +69,7 @@ jobs:
           - artifact_name: windows-noengine-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             package_name: voicevox-directml
-            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
+            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
