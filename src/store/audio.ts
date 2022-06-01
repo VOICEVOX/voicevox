@@ -25,6 +25,7 @@ import {
   Encoding as EncodingType,
   MoraDataType,
   StyleInfo,
+  WriteFileErrorResult,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
 import { PromiseType } from "./vuex";
@@ -143,6 +144,22 @@ function buildFileName(state: State, audioKey: string) {
     text: audioItem.text,
     date: currentDateString(),
   });
+}
+
+function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
+  if (writeFileErrorResult.code) {
+    const code = writeFileErrorResult.code.toUpperCase();
+
+    if (code.startsWith("ENOSPC")) {
+      return "空き容量が足りません。";
+    }
+
+    if (code.startsWith("EACCES")) {
+      return "ファイルにアクセスする許可がありません。";
+    }
+  }
+
+  return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -595,6 +612,36 @@ export const audioStore: VoiceVoxStoreOptions<
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
+    /**
+     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     * 初期化済みだった場合は何もしない。
+     */
+    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
+      if (!engineInfo)
+        throw new Error(`No such engineInfo registered: index == 0`);
+
+      // FIXME: なぜかbooleanではなくstringが返ってくる。
+      // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
+      const isInitialized: string = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        engineKey: engineInfo.key,
+        action: "isInitializedSpeakerIsInitializedSpeakerGet",
+        payload: [{ speaker: styleId }],
+      });
+      if (isInitialized !== "true" && isInitialized !== "false")
+        throw new Error(`Failed to get isInitialized.`);
+
+      if (isInitialized === "false") {
+        await dispatch("ASYNC_UI_LOCK", {
+          callback: () =>
+            dispatch("INVOKE_ENGINE_CONNECTOR", {
+              engineKey: engineInfo.key,
+              action: "initializeSpeakerInitializeSpeakerPost",
+              payload: [{ speaker: styleId }],
+            }),
+        });
+      }
+    },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
         commit("REMOVE_AUDIO_ITEM", { audioKey });
@@ -1030,36 +1077,44 @@ export const audioStore: VoiceVoxStoreOptions<
           }
         }
 
-        try {
-          window.electron.writeFile({
-            filePath,
-            buffer: await blob.arrayBuffer(),
-          });
-        } catch (e) {
-          window.electron.logError(e);
-
-          return { result: "WRITE_ERROR", path: filePath };
+        let writeFileResult = window.electron.writeFile({
+          filePath,
+          buffer: await blob.arrayBuffer(),
+        }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
+        if (writeFileResult) {
+          window.electron.logError(new Error(writeFileResult.message));
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(writeFileResult),
+          };
         }
 
         if (state.savingSetting.exportLab) {
           const labString = await dispatch("GENERATE_LAB", { audioKey });
           if (labString === undefined)
-            return { result: "WRITE_ERROR", path: filePath };
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: "labの生成に失敗しました。",
+            };
 
           const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
           const labBlob = new Blob([bom, labString], {
             type: "text/plain;charset=UTF-8",
           });
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".lab"),
-              buffer: await labBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return { result: "WRITE_ERROR", path: filePath };
+          writeFileResult = window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".lab"),
+            buffer: await labBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(writeFileResult),
+            };
           }
         }
 
@@ -1080,15 +1135,17 @@ export const audioStore: VoiceVoxStoreOptions<
             });
           })();
 
-          try {
-            window.electron.writeFile({
-              filePath: filePath.replace(/\.wav$/, ".txt"),
-              buffer: await textBlob.arrayBuffer(),
-            });
-          } catch (e) {
-            window.electron.logError(e);
-
-            return { result: "WRITE_ERROR", path: filePath };
+          writeFileResult = window.electron.writeFile({
+            filePath: filePath.replace(/\.wav$/, ".txt"),
+            buffer: await textBlob.arrayBuffer(),
+          });
+          if (writeFileResult) {
+            window.electron.logError(new Error(writeFileResult.message));
+            return {
+              result: "WRITE_ERROR",
+              path: filePath,
+              errorMessage: generateWriteErrorMessage(writeFileResult),
+            };
           }
         }
 
@@ -1424,7 +1481,8 @@ export const audioStore: VoiceVoxStoreOptions<
               audioElem.removeEventListener("canplay", stop);
             };
             audioElem.addEventListener("canplay", stop);
-            window.electron.showErrorDialog({
+            window.electron.showMessageDialog({
+              type: "error",
               title: "エラー",
               message: "再生デバイスが見つかりません",
             });
@@ -1513,12 +1571,19 @@ export const audioStore: VoiceVoxStoreOptions<
           commit("SET_ENGINE_STATE", { engineState: "ERROR" });
       }
     },
-    async RESTART_ENGINE({ dispatch, commit }, { engineKey }) {
-      await commit("SET_ENGINE_STATE", { engineState: "STARTING" });
-      window.electron
+    async RESTART_ENGINE({ dispatch, commit, state }, { engineKey }) {
+      commit("SET_ENGINE_STATE", { engineState: "STARTING" });
+      const success = await window.electron
         .restartEngine(engineKey)
-        .then(() => dispatch("START_WAITING_ENGINE"))
-        .catch(() => dispatch("DETECTED_ENGINE_ERROR"));
+        .then(async () => {
+          await dispatch("START_WAITING_ENGINE");
+          return state.engineState === "READY";
+        })
+        .catch(async () => {
+          await dispatch("DETECTED_ENGINE_ERROR");
+          return false;
+        });
+      return success;
     },
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
@@ -1608,6 +1673,8 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const query = state.audioItems[audioKey].query;
       try {
+        await dispatch("SETUP_ENGINE_SPEAKER", { styleId });
+
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;
           const newAccentPhrases: AccentPhrase[] = await dispatch(

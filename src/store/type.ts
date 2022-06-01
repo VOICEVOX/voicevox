@@ -55,7 +55,15 @@ export type SaveResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
-export type SaveResultObject = { result: SaveResult; path: string | undefined };
+export type SaveResultObject = {
+  result: SaveResult;
+  path: string | undefined;
+  errorMessage?: string;
+};
+export type WriteErrorTypeForSaveAllResultDialog = {
+  path: string;
+  message: string;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -110,7 +118,7 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineKey: string }): Promise<boolean>;
   };
 
   DETECTED_ENGINE_ERROR: {
@@ -135,6 +143,10 @@ type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
+  };
+
+  SETUP_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -697,13 +709,6 @@ type IndexStoreTypes = {
     action(): string[];
   };
 
-  SHOW_WARNING_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-    }): Promise<Electron.MessageBoxReturnValue>;
-  };
-
   LOG_ERROR: {
     action(...payload: unknown[]): void;
   };
@@ -862,6 +867,10 @@ type SettingStoreTypes = {
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  CHANGE_USE_GPU: {
+    action(payload: { useGpu: boolean }): void;
   };
 };
 
@@ -1077,6 +1086,9 @@ type PresetStoreTypes = {
   };
   GET_PRESET_CONFIG: {
     action(): void;
+  };
+  SAVE_PRESET_ORDER: {
+    action(payload: { presetKeys: string[] }): void;
   };
   SAVE_PRESET_CONFIG: {
     action(payload: {

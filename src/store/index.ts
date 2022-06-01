@@ -101,12 +101,6 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_Q_AND_A_TEXT() {
       return await window.electron.getQAndAText();
     },
-    async SHOW_WARNING_DIALOG(
-      _,
-      { title, message }: { title: string; message: string }
-    ) {
-      return await window.electron.showWarningDialog({ title, message });
-    },
     LOG_ERROR(_, ...params: unknown[]) {
       window.electron.logError(...params);
     },
