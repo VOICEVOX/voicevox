@@ -1,5 +1,37 @@
 [
   {
+    "version": "0.12.1",
+    "descriptions": ["GPU版で不具合が起こる問題を修正"],
+    "contributors": []
+  },
+  {
+    "version": "0.12.0",
+    "descriptions": [
+      "テキスト貼り付け時の挙動選択機能",
+      "イントネーションリセット機能",
+      "ウィンドウの位置と仕切りの位置の保存",
+      "テキストを繋げて書き出し",
+      "書き出されるファイルの名前のカスタマイズ",
+      "スタイル名を指定されたテキストを読み込めるように",
+      "アクセント句の結合・分割ボタンを拡大",
+      "起動を高速化",
+      "DirectML版追加"
+    ],
+    "contributors": [
+      "gobosan",
+      "Hiroshiba",
+      "MagicalLiebe",
+      "Oyaki122",
+      "Patchethium",
+      "PickledChair",
+      "qwerty2501",
+      "Segu-g",
+      "shigobu",
+      "takana-v",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.11.4",
     "descriptions": [
       "キャラクター「九州そら」を追加",
