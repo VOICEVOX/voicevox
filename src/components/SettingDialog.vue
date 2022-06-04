@@ -155,7 +155,7 @@
                 </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>分割の挙動</div>
+                <div>テキスト分割の挙動</div>
                 <div>
                   <q-icon
                     name="help_outline"
