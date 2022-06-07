@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.12.2",
+    "descriptions": ["GPU版でイントネーションが不自然になる問題を修正"],
+    "contributors": []
+  },
+  {
     "version": "0.12.1",
     "descriptions": ["GPU版で不具合が起こる問題を修正"],
     "contributors": []
