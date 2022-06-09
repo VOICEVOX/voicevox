@@ -92,6 +92,11 @@ img {
   }
 }
 
+.transparent-backdrop > .q-dialog__backdrop {
+  background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
+}
+
+// Markdown
 .markdown-body {
   color: colors.$markdown-color;
   background: colors.$markdown-background;

@@ -101,12 +101,6 @@ export const indexStore: VoiceVoxStoreOptions<
     async GET_Q_AND_A_TEXT() {
       return await window.electron.getQAndAText();
     },
-    async SHOW_WARNING_DIALOG(
-      _,
-      { title, message }: { title: string; message: string }
-    ) {
-      return await window.electron.showWarningDialog({ title, message });
-    },
     LOG_ERROR(_, ...params: unknown[]) {
       window.electron.logError(...params);
     },
@@ -177,6 +171,8 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
       promises.push(dispatch("GET_ACCEPT_TERMS"));
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
+      promises.push(dispatch("INIT_SPLIT_TEXT_WHEN_PASTE"));
+      promises.push(dispatch("GET_SPLITTER_POSITION"));
 
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");

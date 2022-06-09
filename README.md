@@ -19,7 +19,8 @@ npm ci
 ## 実行
 
 `.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`があるパスを指定します。
-とりあえず [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
+[製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
+Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
 ```bash
 npm run electron:serve

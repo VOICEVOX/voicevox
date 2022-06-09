@@ -71,7 +71,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.uiLockCount++;
       },
       UNLOCK_UI(state) {
-        state.uiLockCount--;
+        if (state.uiLockCount !== 0) {
+          state.uiLockCount--;
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn("UNLOCK_UI is called when state.uiLockCount == 0");
+        }
       },
       LOCK_MENUBAR(state) {
         state.dialogLockCount++;
@@ -463,7 +468,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
         if (getters.IS_EDITED) {
-          const result: number = await window.electron.showInfoDialog({
+          const result: number = await window.electron.showQuestionDialog({
+            type: "info",
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +

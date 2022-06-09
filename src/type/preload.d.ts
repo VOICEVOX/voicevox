@@ -17,28 +17,33 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showTextSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showInfoDialog(obj: {
+  showMessageDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  showQuestionDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
     buttons: string[];
     cancelId?: number;
   }): Promise<number>;
-  showWarningDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showErrorDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
-  writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
+  writeFile(obj: {
+    filePath: string;
+    buffer: ArrayBuffer;
+  }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
@@ -59,7 +64,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(): Promise<void>;
+  restartEngine(engineKey: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
@@ -84,10 +89,14 @@ export interface Sandbox {
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getExperimentalSetting(): Promise<ExperimentalSetting>;
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
+  getSplitterPosition(): Promise<SplitterPosition>;
+  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
+  getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
+  setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
 }
 
 export type AppInfos = {
@@ -135,9 +144,12 @@ export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
+export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
+  fileNamePattern: string;
   fixedExportEnabled: boolean;
   fixedExportDir: string;
   avoidOverwrite: boolean;
@@ -197,7 +209,9 @@ export type HotkeyAction =
   | "プロジェクトを名前を付けて保存"
   | "プロジェクトを上書き保存"
   | "プロジェクト読み込み"
-  | "テキスト読み込む";
+  | "テキスト読み込む"
+  | "全体のイントネーションをリセット"
+  | "選択中のアクセント句のイントネーションをリセット";
 
 export type HotkeyCombo = string;
 
@@ -261,4 +275,30 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+};
+
+export type SplitterPosition = {
+  portraitPaneWidth: number | undefined;
+  audioInfoPaneWidth: number | undefined;
+  audioDetailPaneHeight: number | undefined;
+};
+
+// workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
+export class SystemError extends Error {
+  code?: string | undefined;
+  constructor(message: string, code?: string | undefined) {
+    super(message);
+
+    this.name = new.target.name;
+    this.code = code;
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, SystemError);
+    }
+  }
+}
+
+export type WriteFileErrorResult = {
+  code: string | undefined;
+  message: string;
 };

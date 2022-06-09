@@ -1,4 +1,4 @@
-import { EngineInfo } from "@/type/preload";
+import { EngineInfo, SplitTextWhenPasteType } from "@/type/preload";
 
 /**
  * invoke, handle
@@ -79,9 +79,21 @@ type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_INFO_DIALOG: {
+  SHOW_MESSAGE_DIALOG: {
     args: [
       obj: {
+        type: "none" | "info" | "error" | "question" | "warning";
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
+  SHOW_QUESTION_DIALOG: {
+    args: [
+      obj: {
+        type: "none" | "info" | "error" | "question" | "warning";
         title: string;
         message: string;
         buttons: string[];
@@ -89,16 +101,6 @@ type IpcIHData = {
       }
     ];
     return: number;
-  };
-
-  SHOW_WARNING_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
-  };
-
-  SHOW_ERROR_DIALOG: {
-    args: [obj: { title: string; message: string }];
-    return: Electron.MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
@@ -167,7 +169,7 @@ type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [];
+    args: [obj: { engineKey: string }];
     return: void;
   };
 
@@ -272,6 +274,16 @@ type IpcIHData = {
     return: void;
   };
 
+  GET_SPLITTER_POSITION: {
+    args: [];
+    return: import("@/type/preload").SplitterPosition;
+  };
+
+  SET_SPLITTER_POSITION: {
+    args: [splitterPosition: import("@/type/preload").SplitterPosition];
+    return: void;
+  };
+
   THEME: {
     args: [obj: { newData?: string }];
     return: import("@/type/preload").ThemeSetting | void;
@@ -279,6 +291,15 @@ type IpcIHData = {
 
   ON_VUEX_READY: {
     args: [];
+    return: void;
+  };
+
+  GET_SPLIT_TEXT_WHEN_PASTE: {
+    args: [];
+    return: SplitTextWhenPasteType;
+  };
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    args: [splitTextWhenPaste: SplitTextWhenPasteType];
     return: void;
   };
 };

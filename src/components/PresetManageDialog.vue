@@ -7,18 +7,26 @@
       <q-card-actions class="q-px-md q-py-sm">
         <div class="full-width row wrap justify-between">
           <q-list bordered separator class="col-sm-grow">
-            <q-item v-for="item in presetList" :key="item.name">
-              <q-item-section>{{ item.name }}</q-item-section>
-              <q-space />
-              <q-item-section avatar>
-                <q-btn
-                  icon="delete"
-                  flat
-                  color="grey-9"
-                  @click="deletePreset(item.key)"
-                ></q-btn>
-              </q-item-section>
-            </q-item>
+            <draggable
+              :modelValue="previewPresetList"
+              @update:modelValue="reorderPreset"
+              item-key="key"
+            >
+              <template v-slot:item="{ element: item }">
+                <q-item>
+                  <q-item-section>{{ item.name }}</q-item-section>
+                  <q-space />
+                  <q-item-section avatar>
+                    <q-btn
+                      icon="delete"
+                      flat
+                      color="grey-9"
+                      @click="deletePreset(item.key)"
+                    ></q-btn>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </draggable>
             <q-item v-if="presetList.length === 0">
               <q-item-section class="text-grey-8">
                 プリセットがありません
@@ -32,12 +40,18 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
+import draggable from "vuedraggable";
+
+import { Preset } from "@/type/preload";
 
 export default defineComponent({
   name: "PresetManageDialog",
+  components: {
+    draggable,
+  },
 
   props: {
     openDialog: Boolean,
@@ -64,6 +78,31 @@ export default defineComponent({
         }))
     );
 
+    const isPreview = ref(false);
+    const previewPresetKeys = ref(store.state.presetKeys);
+
+    const previewPresetList = computed(() =>
+      isPreview.value
+        ? previewPresetKeys.value
+            .filter((key) => presetItems.value[key] != undefined)
+            .map((key) => ({
+              key,
+              ...presetItems.value[key],
+            }))
+        : presetList.value
+    );
+
+    const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
+      const newPresetKeys = featurePresetList.map((item) => item.key);
+      previewPresetKeys.value = newPresetKeys;
+      isPreview.value = true;
+      store
+        .dispatch("SAVE_PRESET_ORDER", {
+          presetKeys: newPresetKeys,
+        })
+        .finally(() => (isPreview.value = false));
+    };
+
     const deletePreset = (key: string) => {
       $q.dialog({
         title: "プリセット削除の確認",
@@ -79,7 +118,9 @@ export default defineComponent({
     return {
       updateOpenDialog,
       presetList,
+      previewPresetList,
       deletePreset,
+      reorderPreset,
     };
   },
 });
