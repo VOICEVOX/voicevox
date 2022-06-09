@@ -249,10 +249,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           commit("LOCK_UI");
           commit("LOCK_MENUBAR");
 
-          const result: number = await window.electron.showInfoDialog({
+          const result: number = await window.electron.showQuestionDialog({
+            type: "info",
             title: "アップデートチェック",
             message: "アップデートチェックを行います。\nよろしいですか？",
             buttons: ["はい", "いいえ"],
+            cancelId: 1,
           });
           commit("UNLOCK_UI");
           commit("UNLOCK_MENUBAR");
