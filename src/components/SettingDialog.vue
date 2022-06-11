@@ -573,6 +573,24 @@
                 >
                 </q-select>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-grey-3">
+                <div>自動アップデートチェック</div>
+                <q-space />
+                <q-toggle
+                  :model-value="isAutoUpdateCheck"
+                  @update:model-value="changeIsAutoUpdateCheck($event)"
+                >
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    起動時にアップデートチェックを行います
+                  </q-tooltip>
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -779,6 +797,8 @@ export default defineComponent({
 
     const experimentalSetting = computed(() => store.state.experimentalSetting);
 
+    const isAutoUpdateCheck = computed(() => store.state.isAutoUpdateCheck);
+
     const currentThemeNameComputed = computed({
       get: () => store.state.themeSetting.currentTheme,
       set: (currentTheme: string) => {
@@ -890,6 +910,11 @@ export default defineComponent({
       });
     };
 
+    const changeIsAutoUpdateCheck = async (isAutoUpdateCheck: boolean) => {
+      if (store.state.isAutoUpdateCheck === isAutoUpdateCheck) return;
+      store.dispatch("SET_IS_AUTO_UPDATE_CHECK", { isAutoUpdateCheck });
+    };
+
     const restartEngineProcess = () => {
       store.dispatch("RESTART_ENGINE", {
         engineKey: store.state.engineInfos[0].key,
@@ -966,6 +991,8 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
+      isAutoUpdateCheck,
+      changeIsAutoUpdateCheck,
       restartEngineProcess,
       savingSetting,
       handleSavingSettingChange,

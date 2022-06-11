@@ -891,6 +891,7 @@ export type UiStoreState = {
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
+  isUpdateCheckDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
@@ -899,6 +900,7 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
+  isAutoUpdateCheck: boolean;
   isFullscreen: boolean;
 };
 
@@ -947,6 +949,11 @@ type UiStoreTypes = {
   IS_SETTING_DIALOG_OPEN: {
     mutation: { isSettingDialogOpen: boolean };
     action(payload: { isSettingDialogOpen: boolean }): void;
+  };
+
+  IS_UPDATE_CHECK_DIALOG_OPEN: {
+    mutation: { isUpdateCheckDialogOpen: boolean };
+    action(payload: { isUpdateCheckDialogOpen: boolean }): void;
   };
 
   IS_HOTKEY_SETTING_DIALOG_OPEN: {
@@ -1019,6 +1026,11 @@ type UiStoreTypes = {
   SET_ACTIVE_POINT_SCROLL_MODE: {
     mutation: { activePointScrollMode: ActivePointScrollMode };
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
+  };
+
+  SET_IS_AUTO_UPDATE_CHECK: {
+    mutation: { isAutoUpdateCheck: boolean };
+    action(payload: { isAutoUpdateCheck: boolean }): void;
   };
 
   DETECT_UNMAXIMIZED: {

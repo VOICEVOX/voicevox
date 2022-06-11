@@ -39,6 +39,7 @@ import {
   SplitterPosition,
 } from "./type/preload";
 
+import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
@@ -61,6 +62,9 @@ if (isDevelopment) {
     path.join(app.getPath("appData"), `${app.getName()}-dev`)
   );
 }
+
+autoUpdater.logger = log;
+autoUpdater.autoDownload = false;
 
 let win: BrowserWindow;
 
@@ -219,6 +223,7 @@ const store = new Store<{
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
+  isAutoUpdateCheck: boolean;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
 }>({
@@ -347,6 +352,10 @@ const store = new Store<{
     currentTheme: {
       type: "string",
       default: "Default",
+    },
+    isAutoUpdateCheck: {
+      type: "boolean",
+      default: false,
     },
     experimentalSetting: {
       type: "object",
@@ -1056,6 +1065,22 @@ ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
   return store.get("activePointScrollMode", "OFF");
 });
 
+ipcMainHandle("IS_AUTO_UPDATE_CHECK", (_, { newValue }) => {
+  if (newValue !== undefined) {
+    store.set("isAutoUpdateCheck", newValue);
+  }
+
+  return store.get("isAutoUpdateCheck", false);
+});
+
+ipcMainHandle("UPDATE_CHECK", async () => {
+  try {
+    await autoUpdater.checkForUpdatesAndNotify();
+  } catch (err: unknown) {
+    return;
+  }
+});
+
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
@@ -1310,6 +1335,10 @@ app.on("ready", async () => {
   }
 
   createWindow().then(() => runEngineAll());
+  const isAutoUpdateCheck = store.get("isAutoUpdateCheck");
+  if (isAutoUpdateCheck) {
+    await autoUpdater.checkForUpdatesAndNotify();
+  }
 });
 
 app.on("second-instance", () => {
@@ -1333,3 +1362,36 @@ if (isDevelopment) {
     });
   }
 }
+
+//-------------------------------------------
+// 自動アップデート関連のイベント処理
+//-------------------------------------------
+// アップデートをチェック開始
+autoUpdater.on("checking-for-update", () => {
+  log.info(process.pid, "checking-for-update...");
+});
+// アップデートが見つかった
+autoUpdater.on("update-available", () => {
+  log.info(process.pid, "Update available.");
+  const dialogOpts = {
+    type: "info",
+    buttons: ["はい", "いいえ"],
+    message: "アップデート",
+    detail: "新しいバージョンをがありました。公式サイトを開きますか？",
+  };
+  // ダイアログを表示しすぐに再起動するか確認
+  dialog.showMessageBox(win, dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) {
+      shell.openExternal("https://voicevox.hiroshiba.jp/");
+      log.info(process.pid, "Open Official Site.");
+    }
+  });
+});
+// アップデートがなかった（最新版だった）
+autoUpdater.on("update-not-available", () => {
+  log.info(process.pid, "Update not available.");
+});
+// エラーが発生
+autoUpdater.on("error", (err) => {
+  log.error(process.pid, err);
+});

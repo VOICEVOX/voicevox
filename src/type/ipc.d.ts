@@ -123,6 +123,16 @@ type IpcIHData = {
     return: import("@/type/preload").ActivePointScrollMode;
   };
 
+  IS_AUTO_UPDATE_CHECK: {
+    args: [obj: { newValue?: boolean }];
+    return: boolean;
+  };
+
+  UPDATE_CHECK: {
+    args: [];
+    return: void;
+  };
+
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;

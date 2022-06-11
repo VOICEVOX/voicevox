@@ -35,6 +35,7 @@ describe("store/vuex.js test", () => {
         activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
         isSettingDialogOpen: false,
+        isUpdateCheckDialogOpen: false,
         isHotkeySettingDialogOpen: false,
         isToolbarSettingDialogOpen: false,
         isCharacterOrderDialogOpen: false,
@@ -44,6 +45,7 @@ describe("store/vuex.js test", () => {
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
         savedLastCommandUnixMillisec: null,
+        isAutoUpdateCheck: false,
         savingSetting: {
           fileEncoding: "UTF-8",
           fileNamePattern: "",
@@ -147,8 +149,10 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.activePointScrollMode, "OFF");
+    assert.equal(store.state.isAutoUpdateCheck, false);
     assert.equal(store.state.isHelpDialogOpen, false);
     assert.equal(store.state.isSettingDialogOpen, false);
+    assert.equal(store.state.isUpdateCheckDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isCharacterOrderDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);

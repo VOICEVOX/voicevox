@@ -166,6 +166,14 @@ const api: Sandbox = {
     return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
   },
 
+  isAutoUpdateCheck: (newValue) => {
+    return ipcRendererInvoke("IS_AUTO_UPDATE_CHECK", { newValue });
+  },
+
+  updateCheck: () => {
+    return ipcRendererInvoke("UPDATE_CHECK");
+  },
+
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },

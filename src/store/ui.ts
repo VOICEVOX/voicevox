@@ -35,6 +35,7 @@ export const uiStoreState: UiStoreState = {
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
   isSettingDialogOpen: false,
+  isUpdateCheckDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
   isCharacterOrderDialogOpen: false,
@@ -45,6 +46,7 @@ export const uiStoreState: UiStoreState = {
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
+  isAutoUpdateCheck: false,
 };
 
 export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
@@ -93,6 +95,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
       ) {
         state.isSettingDialogOpen = isSettingDialogOpen;
+      },
+      IS_UPDATE_CHECK_DIALOG_OPEN(
+        state,
+        { isUpdateCheckDialogOpen }: { isUpdateCheckDialogOpen: boolean }
+      ) {
+        state.isUpdateCheckDialogOpen = isUpdateCheckDialogOpen;
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(state, { isHotkeySettingDialogOpen }) {
         state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
@@ -154,6 +162,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }: { activePointScrollMode: ActivePointScrollMode }
       ) {
         state.activePointScrollMode = activePointScrollMode;
+      },
+      SET_IS_AUTO_UPDATE_CHECK(
+        state,
+        { isAutoUpdateCheck }: { isAutoUpdateCheck: boolean }
+      ) {
+        state.isAutoUpdateCheck = isAutoUpdateCheck;
       },
       DETECT_UNMAXIMIZED(state) {
         state.isMaximized = false;
@@ -224,6 +238,31 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }
 
         commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
+      },
+      async IS_UPDATE_CHECK_DIALOG_OPEN(
+        { state, commit },
+        { isUpdateCheckDialogOpen }: { isUpdateCheckDialogOpen: boolean }
+      ) {
+        if (state.isUpdateCheckDialogOpen === isUpdateCheckDialogOpen) return;
+
+        if (isUpdateCheckDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+
+          const result: number = await window.electron.showQuestionDialog({
+            type: "info",
+            title: "アップデートチェック",
+            message: "アップデートチェックを行います。\nよろしいですか？",
+            buttons: ["はい", "いいえ"],
+            cancelId: 1,
+          });
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+          if (result == 1) {
+            return;
+          }
+          window.electron.updateCheck();
+        }
       },
       IS_HOTKEY_SETTING_DIALOG_OPEN(
         { state, commit },
@@ -381,6 +420,16 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         commit("SET_INHERIT_AUDIOINFO", {
           inheritAudioInfo: await window.electron.inheritAudioInfo(
             inheritAudioInfo
+          ),
+        });
+      },
+      async SET_IS_AUTO_UPDATE_CHECK(
+        { commit },
+        { isAutoUpdateCheck }: { isAutoUpdateCheck: boolean }
+      ) {
+        commit("SET_IS_AUTO_UPDATE_CHECK", {
+          isAutoUpdateCheck: await window.electron.isAutoUpdateCheck(
+            isAutoUpdateCheck
           ),
         });
       },

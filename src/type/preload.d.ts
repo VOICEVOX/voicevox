@@ -51,6 +51,8 @@ export interface Sandbox {
   activePointScrollMode(
     newValue?: ActivePointScrollMode
   ): Promise<ActivePointScrollMode>;
+  isAutoUpdateCheck(newValue?: boolean): Promise<boolean>;
+  updateCheck(): void;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
