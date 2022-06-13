@@ -11,8 +11,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.11.4
-  VOICEVOX_RESOURCE_VERSION: 0.11.4
+  VOICEVOX_ENGINE_VERSION: 0.12.2
+  VOICEVOX_RESOURCE_VERSION: 0.12.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseのときはタグが、それ以外は999.999.999がバージョン名に
     ${{ github.event.release.tag_name != '' && github.event.release.tag_name || '999.999.999' }}
@@ -32,6 +32,7 @@ jobs:
           - linux-noengine-cpu-prepackage
           - windows-noengine-prepackage
           - windows-noengine-cpu-prepackage
+          - windows-noengine-directml-prepackage
           - macos-noengine-cpu-prepackage
         include:
           # Linux NVIDIA GPU
@@ -64,6 +65,13 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
+          # Windows DirectML
+          - artifact_name: windows-noengine-directml-prepackage
+            artifact_path: dist_electron/win-unpacked
+            package_name: voicevox-directml
+            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
+            sed_name: sed
+            os: windows-2019
           # macOS CPU
           - artifact_name: macos-noengine-cpu-prepackage
             artifact_path: dist_electron/mac
@@ -91,6 +99,7 @@ jobs:
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          # DirectML: "name": "voicevox" => "name": "voicevox-directml"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
@@ -167,7 +176,6 @@ jobs:
       - name: Replace Character Info
         shell: bash
         run: |
-          rm -r public/characters
           cp -r resource/character_info public/characters
           cd public/characters
           # Explore characters directory.
@@ -274,6 +282,7 @@ jobs:
           - linux-cpu-prepackage
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
+          - windows-directml-prepackage
           - macos-cpu-prepackage
         include:
           # Linux NVIDIA GPU
@@ -301,6 +310,12 @@ jobs:
             noengine_artifact_name: windows-noengine-cpu-prepackage
             voicevox_engine_asset_name: windows-cpu
             compressed_artifact_name: voicevox-windows-cpu
+            app_asar_dir: prepackage/resources
+          # Windows DirectML
+          - artifact_name: windows-directml-prepackage
+            noengine_artifact_name: windows-noengine-directml-prepackage
+            voicevox_engine_asset_name: windows-directml
+            compressed_artifact_name: voicevox-windows-directml
             app_asar_dir: prepackage/resources
           # macOS CPU
           - artifact_name: macos-cpu-prepackage
@@ -504,6 +519,7 @@ jobs:
           - linux-cpu-appimage
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-directml-nsis-web
           - macos-cpu-dmg
         include:
           # Linux NVIDIA GPU
@@ -536,6 +552,13 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
+          # Windows DirectML
+          - artifact_name: windows-directml-nsis-web
+            engine_artifact_name: windows-directml-prepackage
+            package_name: voicevox-directml
+            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
+            sed_name: sed
+            os: windows-2019
           # macOS CPU
           - artifact_name: macos-cpu-dmg
             engine_artifact_name: macos-cpu-prepackage
@@ -558,17 +581,18 @@ jobs:
         run: |
           brew install gnu-sed
 
-      # NOTE: If the CPU/GPU builds have the same package name,
+      # NOTE: If the CPU/DirectML/GPU builds have the same package name,
       #       the NSIS installers and the 7z files have duplicate names.
       #       For Linux, If they have the same product name,
       #       the AppImages have duplicate names.
       #       Files with the same name cannot be uploaded to a single GitHub Release,
-      #       so different package/product names should be used for CPU/GPU builds.
+      #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         shell: bash
         run: |
           # GPU: "name": "voicevox" => "name": "voicevox"
           # CPU: "name": "voicevox" => "name": "voicevox-cpu"
+          # DirectML: "name": "voicevox" => "name": "voicevox-directml"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
@@ -732,8 +756,10 @@ jobs:
           - linux-cpu-prepackage-targz
           - windows-nvidia-nsis-web
           - windows-cpu-nsis-web
+          - windows-directml-nsis-web
           - windows-nvidia-prepackage-zip
           - windows-cpu-prepackage-zip
+          - windows-directml-prepackage-zip
           - macos-cpu-dmg
           - macos-cpu-prepackage-zip
         include:

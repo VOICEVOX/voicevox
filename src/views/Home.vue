@@ -32,7 +32,8 @@
           class="full-width"
           before-class="overflow-hidden"
           :disable="!shouldShowPanes"
-          v-model="audioDetailPaneHeight"
+          :model-value="audioDetailPaneHeight"
+          @update:model-value="updateAudioDetailPane"
         >
           <template #before>
             <q-splitter
@@ -41,7 +42,8 @@
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
               :disable="!shouldShowPanes"
-              v-model="portraitPaneWidth"
+              :model-value="portraitPaneWidth"
+              @update:model-value="updatePortraitPane"
             >
               <template #before>
                 <character-portrait />
@@ -55,7 +57,8 @@
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
-                  v-model="audioInfoPaneWidth"
+                  :model-value="audioInfoPaneWidth"
+                  @update:model-value="updateAudioInfoPane"
                 >
                   <template #before>
                     <div
@@ -172,9 +175,13 @@ import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryD
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
-import { QResizeObserver } from "quasar";
+import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
+import {
+  HotkeyAction,
+  HotkeyReturnType,
+  SplitterPosition,
+} from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
@@ -201,6 +208,7 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
+    const $q = useQuasar();
 
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
@@ -304,6 +312,38 @@ export default defineComponent({
       }
     };
 
+    const splitterPosition = computed<SplitterPosition>(
+      () => store.state.splitterPosition
+    );
+
+    const updateSplitterPosition = async (
+      propertyName: keyof SplitterPosition,
+      newValue: number
+    ) => {
+      const newSplitterPosition = {
+        ...splitterPosition.value,
+        [propertyName]: newValue,
+      };
+      store.dispatch("SET_SPLITTER_POSITION", {
+        splitterPosition: newSplitterPosition,
+      });
+    };
+
+    const updatePortraitPane = async (width: number) => {
+      portraitPaneWidth.value = width;
+      await updateSplitterPosition("portraitPaneWidth", width);
+    };
+
+    const updateAudioInfoPane = async (width: number) => {
+      audioInfoPaneWidth.value = width;
+      await updateSplitterPosition("audioInfoPaneWidth", width);
+    };
+
+    const updateAudioDetailPane = async (height: number) => {
+      audioDetailPaneHeight.value = height;
+      await updateSplitterPosition("audioDetailPaneHeight", height);
+    };
+
     // component
     let audioCellRefs: Record<string, typeof AudioCell> = {};
     const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
@@ -364,14 +404,36 @@ export default defineComponent({
       if (val === old) return;
 
       if (val) {
-        portraitPaneWidth.value = DEFAULT_PORTRAIT_PANE_WIDTH;
-        audioInfoPaneWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
+        const clamp = (value: number, min: number, max: number) =>
+          Math.max(Math.min(value, max), min);
+
+        // 設定ファイルを書き換えれば異常な値が入り得るのですべてclampしておく
+        portraitPaneWidth.value = clamp(
+          splitterPosition.value.portraitPaneWidth ??
+            DEFAULT_PORTRAIT_PANE_WIDTH,
+          MIN_PORTRAIT_PANE_WIDTH,
+          MAX_PORTRAIT_PANE_WIDTH
+        );
+
+        audioInfoPaneWidth.value = clamp(
+          splitterPosition.value.audioInfoPaneWidth ??
+            MIN_AUDIO_INFO_PANE_WIDTH,
+          MIN_AUDIO_INFO_PANE_WIDTH,
+          MAX_AUDIO_INFO_PANE_WIDTH
+        );
         audioInfoPaneMinWidth.value = MIN_AUDIO_INFO_PANE_WIDTH;
         audioInfoPaneMaxWidth.value = MAX_AUDIO_INFO_PANE_WIDTH;
-        audioDetailPaneHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
+
         audioDetailPaneMinHeight.value = MIN_AUDIO_DETAIL_PANE_HEIGHT;
         changeAudioDetailPaneMaxHeight(
           resizeObserverRef.value?.$el.parentElement.clientHeight
+        );
+
+        audioDetailPaneHeight.value = clamp(
+          splitterPosition.value.audioDetailPaneHeight ??
+            MIN_AUDIO_DETAIL_PANE_HEIGHT,
+          audioDetailPaneMinHeight.value,
+          audioDetailPaneMaxHeight.value
         );
       } else {
         portraitPaneWidth.value = 0;
@@ -574,10 +636,15 @@ export default defineComponent({
           store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
           break;
         default:
-          store.dispatch("SHOW_WARNING_DIALOG", {
+          $q.dialog({
             title: "対応していないファイルです",
             message:
               "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
           });
       }
     };
@@ -604,6 +671,9 @@ export default defineComponent({
       audioDetailPaneHeight,
       audioDetailPaneMinHeight,
       audioDetailPaneMaxHeight,
+      updatePortraitPane,
+      updateAudioInfoPane,
+      updateAudioDetailPane,
       isCompletedInitialStartup,
       allEngineState,
       isHelpDialogOpenComputed,

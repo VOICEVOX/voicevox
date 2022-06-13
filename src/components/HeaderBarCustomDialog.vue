@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="header-bar-custom-dialog"
+    class="header-bar-custom-dialog transparent-backdrop"
     v-model="headerBarCustomDialogOpenComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">

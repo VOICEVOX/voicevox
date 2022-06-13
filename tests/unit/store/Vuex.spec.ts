@@ -48,6 +48,7 @@ describe("store/vuex.js test", () => {
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
+          fileNamePattern: "",
           fixedExportEnabled: false,
           fixedExportDir: "",
           avoidOverwrite: false,
@@ -81,6 +82,12 @@ describe("store/vuex.js test", () => {
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
+        },
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
+        splitterPosition: {
+          audioDetailPaneHeight: 200,
+          audioInfoPaneWidth: 20,
+          portraitPaneWidth: 50,
         },
       },
       getters: {
@@ -161,6 +168,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
+    assert.propertyVal(store.state.savingSetting, "fileNamePattern", "");
     assert.equal(store.state.isPinned, false);
     assert.isObject(store.state.presetItems);
     assert.isEmpty(store.state.presetItems);
@@ -181,5 +189,12 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.propertyVal(
+      store.state.splitterPosition,
+      "audioDetailPaneHeight",
+      200
+    );
+    assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
+    assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
   });
 });
