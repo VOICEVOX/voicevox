@@ -194,6 +194,14 @@ export const audioStore: VoiceVoxStoreOptions<
       return state._activeAudioKey === audioKey;
     },
     IS_ALL_ENGINE_READY: (state, getters) => {
+      // NOTE: 1つもエンジンが登録されていない場合、準備完了していないことにする
+      // レンダラープロセスがメインプロセスからエンジンリストを取得完了する前にレンダリングが行われるため、
+      // IS_ALL_ENGINE_READYがエンジンリスト未初期化の状態で呼び出される可能性がある
+      // この場合の意図しない挙動を抑制するためfalseを返す
+      if (state.engineKeys.length === 0) {
+        return false;
+      }
+
       for (const engineKey of state.engineKeys) {
         const isReady = getters.IS_ENGINE_READY(engineKey);
         if (!isReady) return false;
