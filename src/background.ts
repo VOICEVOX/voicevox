@@ -412,7 +412,7 @@ async function runEngine(engineKey: string) {
     (engineInfo) => engineInfo.key === engineKey
   );
   if (!engineInfo)
-    throw new Error(`No such engineInfo registered: key == ${engineKey}`);
+    throw new Error(`No such engineInfo registered: engineKey == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
     log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
@@ -489,7 +489,7 @@ async function runEngine(engineKey: string) {
     log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineKey });
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"

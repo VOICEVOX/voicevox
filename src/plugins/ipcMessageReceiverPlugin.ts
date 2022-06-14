@@ -22,8 +22,10 @@ export const ipcMessageReceiver: Plugin = {
       options.store.dispatch("DETECT_UNMAXIMIZED")
     );
 
-    window.electron.onReceivedIPCMsg("DETECTED_ENGINE_ERROR", () =>
-      options.store.dispatch("DETECTED_ENGINE_ERROR")
+    window.electron.onReceivedIPCMsg(
+      "DETECTED_ENGINE_ERROR",
+      (_, { engineKey }) =>
+        options.store.dispatch("DETECTED_ENGINE_ERROR", { engineKey })
     );
 
     window.electron.onReceivedIPCMsg("DETECT_PINNED", () => {

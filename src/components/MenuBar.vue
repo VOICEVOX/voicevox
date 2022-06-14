@@ -292,9 +292,7 @@ export default defineComponent({
             type: "button",
             label: "再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE", {
-                engineKey: store.state.engineInfos[0].key,
-              }); // TODO: 複数エンジン対応
+              store.dispatch("RESTART_ENGINE_ALL");
             },
           },
         ],

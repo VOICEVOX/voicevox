@@ -15,10 +15,12 @@ const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
 describe("store/vuex.js test", () => {
-  it("creaete store", () => {
+  it("create store", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
-        engineState: "STARTING",
+        engineStates: {
+          "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
+        },
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -68,14 +70,15 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineInfos: [
-          {
+        engineKeys: ["88022f86-c823-436e-85a3-500c629749c4"],
+        engineInfos: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
             key: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
           },
-        ],
+        },
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
@@ -129,7 +132,10 @@ describe("store/vuex.js test", () => {
     assert.exists(store);
     assert.isObject(store);
     assert.isObject(store.state);
-    assert.equal(store.state.engineState, "STARTING");
+    assert.hasAllKeys(store.state.engineStates, store.state.engineKeys);
+    store.state.engineKeys.forEach((engineKey) =>
+      assert.equal(store.state.engineStates[engineKey], "STARTING")
+    );
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
@@ -175,6 +181,9 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
     assert.equal(store.state.acceptTerms, "Unconfirmed");
+    assert.isArray(store.state.engineKeys);
+    assert.isObject(store.state.engineInfos);
+    assert.hasAllKeys(store.state.engineInfos, store.state.engineKeys);
     assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(
       store.state.experimentalSetting.enableInterrogativeUpspeak,
