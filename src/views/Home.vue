@@ -6,15 +6,16 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
+        <!-- TODO: 複数エンジン対応 -->
         <div
-          v-if="!isCompletedInitialStartup || engineState === 'STARTING'"
+          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
           class="waiting-engine"
         >
           <div>
             <q-spinner color="primary" size="2.5rem" />
             <div class="q-mt-xs">
               {{
-                engineState === "STARTING"
+                allEngineState === "STARTING"
                   ? "エンジン起動中・・・"
                   : "データ準備中・・・"
               }}
@@ -173,7 +174,7 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
-import { AudioItem } from "@/store/type";
+import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
@@ -466,7 +467,7 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      await store.dispatch("START_WAITING_ENGINE");
+      await store.dispatch("START_WAITING_ENGINE_ALL");
       await store.dispatch("LOAD_CHARACTER");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
@@ -513,7 +514,28 @@ export default defineComponent({
     });
 
     // エンジン待機
-    const engineState = computed(() => store.state.engineState);
+    // TODO: 個別のエンジンの状態をUIで確認できるようにする
+    const allEngineState = computed(() => {
+      const engineStates = store.state.engineStates;
+
+      let lastEngineState: EngineState | undefined = undefined;
+
+      // 登録されているすべてのエンジンについて状態を確認する
+      for (const engineKey of store.state.engineKeys) {
+        const engineState: EngineState | undefined = engineStates[engineKey];
+        if (engineState === undefined)
+          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+
+        // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
+        if (engineState === "STARTING") {
+          return engineState;
+        }
+
+        lastEngineState = engineState;
+      }
+
+      return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
+    });
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
@@ -653,7 +675,7 @@ export default defineComponent({
       updateAudioInfoPane,
       updateAudioDetailPane,
       isCompletedInitialStartup,
-      engineState,
+      allEngineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,

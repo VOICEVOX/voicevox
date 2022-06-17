@@ -890,10 +890,8 @@ export default defineComponent({
       });
     };
 
-    const restartEngineProcess = () => {
-      store.dispatch("RESTART_ENGINE", {
-        engineKey: store.state.engineInfos[0].key,
-      }); // TODO: 複数エンジン対応
+    const restartAllEngineProcess = () => {
+      store.dispatch("RESTART_ENGINE_ALL");
     };
 
     const savingSetting = computed(() => store.state.savingSetting);
@@ -966,7 +964,7 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
-      restartEngineProcess,
+      restartAllEngineProcess,
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,
