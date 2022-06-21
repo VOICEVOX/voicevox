@@ -275,25 +275,19 @@ export default defineComponent({
       [
         "ｱｸｾﾝﾄ欄を表示",
         () => {
-          if (!uiLocked.value) {
-            selectedDetail.value = "accent";
-          }
+          selectedDetail.value = "accent";
         },
       ],
       [
         "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
         () => {
-          if (!uiLocked.value) {
-            selectedDetail.value = "pitch";
-          }
+          selectedDetail.value = "pitch";
         },
       ],
       [
         "長さ欄を表示",
         () => {
-          if (!uiLocked.value) {
-            selectedDetail.value = "length";
-          }
+          selectedDetail.value = "length";
         },
       ],
       [
