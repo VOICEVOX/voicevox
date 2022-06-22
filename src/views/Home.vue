@@ -184,6 +184,7 @@ import {
   SplitterPosition,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { getFlattenCharacterInfos } from "@/store/audio";
 
 export default defineComponent({
   name: "Home",
@@ -590,11 +591,9 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const flattenCharacterInfos = computed(() => {
-      const engineKeys = store.state.engineKeys;
-      const characterInfos = store.state.characterInfos;
-      return engineKeys.flatMap((engineKey) => characterInfos[engineKey] ?? []);
-    });
+    const flattenCharacterInfos = computed(() =>
+      getFlattenCharacterInfos(store.state)
+    );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&

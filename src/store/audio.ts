@@ -181,6 +181,19 @@ export function getEngineKeyByEngineId(state: State, engineId: string): string {
   return engineId;
 }
 
+export function getFlattenCharacterInfos(state: State): CharacterInfo[] {
+  const flattenCharacterInfos = state.engineKeys.flatMap(
+    (engineKey) => state.characterInfos[engineKey] ?? []
+  );
+
+  // まだキャラクター情報が読み出されていないときは、例外を投げる
+  // if (flattenCharacterInfos.length === 0)
+  //   throw new Error("CharacterInfos not fetched yet");
+
+  // まだキャラクター情報が読み出されていないときは、空リストを返す
+  return flattenCharacterInfos;
+}
+
 export function getCharacterInfo(
   state: State,
   engineId: string,

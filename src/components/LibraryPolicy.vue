@@ -39,6 +39,7 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { getFlattenCharacterInfos } from "@/store/audio";
 
 export default defineComponent({
   setup() {
@@ -46,9 +47,7 @@ export default defineComponent({
     const md = useMarkdownIt();
 
     const flattenCharacterInfos = computed(() =>
-      store.state.engineKeys.flatMap(
-        (engineKey) => store.state.characterInfos[engineKey] ?? []
-      )
+      getFlattenCharacterInfos(store.state)
     );
 
     const convertMarkdown = (text: string) => {

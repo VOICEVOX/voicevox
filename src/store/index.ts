@@ -20,6 +20,7 @@ import {
   audioCommandStore,
   audioCommandStoreState,
   getCharacterInfo,
+  getFlattenCharacterInfos,
 } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -123,9 +124,7 @@ export const indexStore: VoiceVoxStoreOptions<
       await window.electron.setUserCharacterOrder(userCharacterOrder);
     },
     GET_NEW_CHARACTERS({ state }) {
-      const flattenCharacterInfos = state.engineKeys.flatMap(
-        (engineKey) => state.characterInfos[engineKey] ?? []
-      );
+      const flattenCharacterInfos = getFlattenCharacterInfos(state);
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
       const allSpeakerUuid = flattenCharacterInfos.map(
@@ -142,9 +141,7 @@ export const indexStore: VoiceVoxStoreOptions<
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
       let defaultStyleIds = await window.electron.getDefaultStyleIds();
 
-      const flattenCharacterInfos = state.engineKeys.flatMap(
-        (engineKey) => state.characterInfos[engineKey] ?? []
-      );
+      const flattenCharacterInfos = getFlattenCharacterInfos(state);
 
       // デフォルトスタイルが設定されていない場合は0をセットする
       // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
