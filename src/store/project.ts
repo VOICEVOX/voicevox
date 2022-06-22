@@ -225,7 +225,7 @@ export const projectStore: VoiceVoxStoreOptions<
           }
 
           if (
-            semver.satisfies(projectAppVersion, "<0.12", semverSatisfiesOptions)
+            semver.satisfies(projectAppVersion, "<0.13", semverSatisfiesOptions)
           ) {
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
