@@ -790,11 +790,20 @@ export const audioStore: VoiceVoxStoreOptions<
       let engineKey: string | undefined = undefined;
       let styleId: number | undefined = undefined;
 
+      if (
+        (payload.engineId !== undefined && payload.styleId === undefined) ||
+        (payload.engineId === undefined && payload.styleId !== undefined)
+      )
+        throw new Error(
+          "(engineId, styleId) must be (defined, defined) or (undefined, undefined)"
+        );
+
       if (payload.engineId !== undefined && payload.styleId !== undefined) {
         engineId = payload.engineId;
         engineKey = getEngineKeyByEngineId(state, engineId);
         styleId = payload.styleId;
       } else {
+        // select default style if (engineId, styleId) === (undefined, undefined)
         const defaultCharacterInfo: CharacterInfo | undefined =
           userOrderedCharacterInfos[0];
         if (defaultCharacterInfo === undefined)
