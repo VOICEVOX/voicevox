@@ -488,7 +488,7 @@ export default defineComponent({
         const engineCharacterInfos: CharacterInfo[] | undefined =
           store.state.characterInfos[engineKey];
         if (engineCharacterInfos === undefined)
-          throw new Error(`no characterInfos for engine ${engineKey}`);
+          throw new Error(`CharacterInfos not loaded for engine ${engineKey}`);
 
         for (const info of engineCharacterInfos) {
           isUnsetDefaultStyleIds ||=
