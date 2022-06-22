@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="setting-dialog"
+    class="setting-dialog transparent-backdrop"
     v-model="settingDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
@@ -34,6 +33,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>エンジンモード</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      GPUモードの利用には NVIDIA&trade; GPU が必要です
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -48,15 +65,6 @@
                     { label: 'GPU', value: 'switchGPU' },
                   ]"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    GPUモードの利用には NVIDIA&trade; GPU が必要です
-                  </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
@@ -67,24 +75,51 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>パラメータの引き継ぎ</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="inheritAudioInfoMode"
                   @update:model-value="changeinheritAudioInfo($event)"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>再生位置を追従</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生位置を追従し、自動でスクロールするモードを選ぶことができます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <div class="scroll-mode-toggle">
                   <q-radio
@@ -119,6 +154,85 @@
                   </q-radio>
                 </div>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>テキスト分割の挙動</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキストを貼り付け時に行われる分割の挙動を変えます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  :model-value="splitTextWhenPaste"
+                  @update:model-value="changeSplitTextWhenPaste($event)"
+                  color="white"
+                  text-color="black"
+                  toggle-color="primary"
+                  toggle-text-color="display"
+                  :options="[
+                    {
+                      label: '句点と改行',
+                      value: 'PERIOD_AND_NEW_LINE',
+                      slot: 'splitTextPeriodAndNewLine',
+                    },
+                    {
+                      label: '改行',
+                      value: 'NEW_LINE',
+                      slot: 'splitTextNewLine',
+                    },
+                    { label: 'オフ', value: 'OFF', slot: 'splitTextOFF' },
+                  ]"
+                >
+                  <template v-slot:splitTextPeriodAndNewLine>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      句点と改行を基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextNewLine>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      改行のみを基にテキストを分割します。
+                    </q-tooltip>
+                  </template>
+                  <template v-slot:splitTextOFF>
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      分割を行いません。
+                    </q-tooltip>
+                  </template>
+                </q-btn-toggle>
+              </q-card-actions>
             </q-card>
             <!-- Saving Card -->
             <q-card flat class="setting-card">
@@ -127,6 +241,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>文字コード</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      文字コードを選ぶことができます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-btn-toggle
                   padding="xs md"
@@ -147,6 +279,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>書き出し先を固定</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      音声ファイルを設定したフォルダに書き出す
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-input
                   dense
@@ -188,21 +338,67 @@
                     handleSavingSettingChange('fixedExportEnabled', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    v-if="!savingSetting.fixedExportEnabled"
-                  >
-                    音声ファイルを設定したフォルダに書き出す
-                  </q-tooltip>
                 </q-toggle>
+              </q-card-actions>
+
+              <file-name-pattern-dialog
+                v-model:open-dialog="showsFilePatternEditDialog"
+              />
+
+              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+                <div>書き出しファイル名パターン</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      書き出すファイル名のパターンをカスタマイズする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <div class="q-px-sm text-ellipsis">
+                  {{ savingSetting.fileNamePattern }}
+                </div>
+                <q-btn
+                  label="編集"
+                  unelevated
+                  color="background-light"
+                  text-color="display-dark"
+                  class="text-no-wrap q-mr-sm"
+                  @click="showsFilePatternEditDialog = true"
+                />
               </q-card-actions>
 
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>上書き防止</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      上書きせずにファイルを連番で保存します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.avoidOverwrite"
@@ -210,19 +406,28 @@
                     handleSavingSettingChange('avoidOverwrite', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    上書きせずにファイルを連番で保存します
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキストをtxtファイルとして書き出します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.exportText"
@@ -230,19 +435,28 @@
                     handleSavingSettingChange('exportText', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    テキストをtxtファイルとして書き出します
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>labファイルを書き出し</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      リップシンク用のlabファイルを書き出します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -252,15 +466,6 @@
                     handleSavingSettingChange('exportLab', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    リップシンク用のlabファイルを書き出します
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
             </q-card>
@@ -271,6 +476,24 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声をステレオ化</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      音声データをモノラルからステレオに変換してから再生・保存を行います
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
@@ -280,19 +503,28 @@
                     handleSavingSettingChange('outputStereo', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    音声データをモノラルからステレオに変換してから再生・保存を行います
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>再生デバイス</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      音声の再生デバイスを変更し再生を行います
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-select
                   dense
@@ -301,19 +533,28 @@
                   :options="availableAudioOutputDevices"
                   class="col-7"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    音声の再生デバイスを変更し再生を行います
-                  </q-tooltip>
                 </q-select>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-grey-3">
                 <div>音声のサンプリングレート</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-select
                   borderless
@@ -330,15 +571,6 @@
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
-                  </q-tooltip>
                 </q-select>
               </q-card-actions>
             </q-card>
@@ -374,6 +606,24 @@
               </q-card-actions> -->
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>プリセット機能</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      プリセット機能を有効にする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enablePreset"
@@ -381,19 +631,28 @@
                     changeExperimentalSetting('enablePreset', $event)
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    プリセット機能を有効にする
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>疑問文を自動調整</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      疑問文のとき語尾の音高を自動的に上げる
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enableInterrogativeUpspeak"
@@ -404,15 +663,6 @@
                     )
                   "
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    疑問文のとき語尾の音高を自動的に上げる
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
             </q-card>
@@ -422,21 +672,30 @@
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>ソフトウェア利用状況のデータ収集を許可する</div>
+                <div>
+                  <q-icon
+                    name="help_outline"
+                    color="grey-8"
+                    size="sm"
+                    class="help-hover-icon"
+                  >
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-toggle
                   name="enabled"
                   align="left"
                   v-model="acceptRetrieveTelemetryComputed"
                 >
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    各UIの利用率などのデータを送信してVOICEVOXの改善に役立てます。テキストデータ・音声データは送信しません。
-                  </q-tooltip>
                 </q-toggle>
               </q-card-actions>
             </q-card>
@@ -455,10 +714,16 @@ import {
   SavingSetting,
   ExperimentalSetting,
   ActivePointScrollMode,
+  SplitTextWhenPasteType,
 } from "@/type/preload";
+import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
 export default defineComponent({
   name: "SettingDialog",
+
+  components: {
+    FileNamePatternDialog,
+  },
 
   props: {
     modelValue: {
@@ -599,60 +864,16 @@ export default defineComponent({
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
-      const change = async () => {
-        await store.dispatch("SET_USE_GPU", { useGpu });
-        store.dispatch("RESTART_ENGINE_ALL");
-
-        $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにエンジンを再起動します。",
-          ok: {
-            flat: true,
-            textColor: "display",
-          },
-        });
-      };
-
-      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch("ASYNC_UI_LOCK", {
-          callback: async () => {
-            $q.loading.show({
-              spinnerColor: "primary",
-              spinnerSize: 50,
-              boxClass: "bg-background text-display",
-              message: "起動モードを変更中です",
-            });
-            resolve(await window.electron.isAvailableGPUMode());
-            $q.loading.hide();
-          },
-        });
+      $q.loading.show({
+        spinnerColor: "primary",
+        spinnerSize: 50,
+        boxClass: "bg-background text-display",
+        message: "起動モードを変更中です",
       });
 
-      if (useGpu && !isAvailableGPUMode) {
-        $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          html: true,
-          persistent: true,
-          focus: "cancel",
-          style: {
-            width: "90vw",
-            maxWidth: "90vw",
-          },
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(change);
-      } else change();
+      await store.dispatch("CHANGE_USE_GPU", { useGpu });
+
+      $q.loading.hide();
     };
 
     const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
@@ -718,6 +939,20 @@ export default defineComponent({
       }
     };
 
+    const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
+    const changeSplitTextWhenPaste = async (
+      splitTextWhenPaste: SplitTextWhenPasteType
+    ) => {
+      if (
+        splitTextWhenPaste === (await window.electron.getSplitTextWhenPaste())
+      )
+        return;
+
+      store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+    };
+
+    const showsFilePatternEditDialog = ref(false);
+
     return {
       settingDialogOpenedComputed,
       engineMode,
@@ -737,6 +972,9 @@ export default defineComponent({
       currentThemeComputed,
       availableThemeNameComputed,
       acceptRetrieveTelemetryComputed,
+      splitTextWhenPaste,
+      changeSplitTextWhenPaste,
+      showsFilePatternEditDialog,
     };
   },
 });
@@ -744,6 +982,10 @@ export default defineComponent({
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
+
+.help-hover-icon {
+  margin-left: 6px;
+}
 
 .hotkey-table {
   width: 100%;
@@ -767,6 +1009,12 @@ export default defineComponent({
 
 .scroll-mode-button-selected {
   background: colors.$primary;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scroll-mode-button:hover {

@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="default-style-select-dialog"
+    class="default-style-select-dialog transparent-backdrop"
     v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
@@ -54,22 +53,22 @@
 
             <q-btn
               v-if="pageIndex + 1 < showCharacterInfos.length"
+              v-show="canNext"
               unelevated
               label="次へ"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
-              :disable="!canNext"
               @click="nextPage"
             />
             <q-btn
               v-else
+              v-show="canNext"
               unelevated
               label="完了"
               color="background-light"
               text-color="display-dark"
               class="text-no-wrap"
-              :disable="!canNext"
               @click="closeDialog"
             />
           </div>
@@ -269,7 +268,7 @@ export default defineComponent({
     const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
       selectedStyleIndexes.value[characterIndex] = styleIndex;
 
-      // 音声を再生する。同じstyleIndexだったら停止する。
+      // 音声を再生する。同じ話者/styleIndexだったら停止する。
       const selectedCharacter = showCharacterInfos.value[characterIndex];
       const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
       if (

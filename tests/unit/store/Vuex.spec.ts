@@ -10,6 +10,7 @@ import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
+import { dictionaryStore } from "@/store/dictionary";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -17,7 +18,9 @@ describe("store/vuex.js test", () => {
   it("create store", () => {
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
-        engineStates: {},
+        engineStates: {
+          "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
+        },
         characterInfos: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
@@ -46,6 +49,7 @@ describe("store/vuex.js test", () => {
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
+          fileNamePattern: "",
           fixedExportEnabled: false,
           fixedExportDir: "",
           avoidOverwrite: false,
@@ -67,17 +71,24 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineInfos: [
-          {
+        engineKeys: ["88022f86-c823-436e-85a3-500c629749c4"],
+        engineInfos: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
             key: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
           },
-        ],
+        },
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
+        },
+        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
+        splitterPosition: {
+          audioDetailPaneHeight: 200,
+          audioInfoPaneWidth: 20,
+          portraitPaneWidth: 50,
         },
       },
       getters: {
@@ -90,6 +101,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.getters,
         ...presetStore.getters,
         ...proxyStore.getters,
+        ...dictionaryStore.getters,
       },
       mutations: {
         ...uiStore.mutations,
@@ -101,6 +113,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.mutations,
         ...presetStore.mutations,
         ...proxyStore.mutations,
+        ...dictionaryStore.mutations,
       },
       actions: {
         ...uiStore.actions,
@@ -112,6 +125,7 @@ describe("store/vuex.js test", () => {
         ...indexStore.actions,
         ...presetStore.actions,
         ...proxyStore.actions,
+        ...dictionaryStore.actions,
       },
       plugins: isDevelopment ? [createLogger()] : undefined,
       strict: process.env.NODE_ENV !== "production",
@@ -119,7 +133,10 @@ describe("store/vuex.js test", () => {
     assert.exists(store);
     assert.isObject(store);
     assert.isObject(store.state);
-    assert.isEmpty(store.state.engineStates);
+    assert.hasAllKeys(store.state.engineStates, store.state.engineKeys);
+    store.state.engineKeys.forEach((engineKey) =>
+      assert.equal(store.state.engineStates[engineKey], "STARTING")
+    );
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
@@ -152,6 +169,7 @@ describe("store/vuex.js test", () => {
     assert.propertyVal(store.state.savingSetting, "fixedExportDir", "");
     assert.propertyVal(store.state.savingSetting, "avoidOverwrite", false);
     assert.propertyVal(store.state.savingSetting, "exportLab", false);
+    assert.propertyVal(store.state.savingSetting, "fileNamePattern", "");
     assert.equal(store.state.isPinned, false);
     assert.isObject(store.state.presetItems);
     assert.isEmpty(store.state.presetItems);
@@ -164,10 +182,20 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
     assert.equal(store.state.acceptTerms, "Unconfirmed");
+    assert.isArray(store.state.engineKeys);
+    assert.isObject(store.state.engineInfos);
+    assert.hasAllKeys(store.state.engineInfos, store.state.engineKeys);
     assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
+    assert.propertyVal(
+      store.state.splitterPosition,
+      "audioDetailPaneHeight",
+      200
+    );
+    assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
+    assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
   });
 });

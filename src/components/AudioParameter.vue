@@ -141,8 +141,8 @@ div {
   .q-slider {
     height: calc(100% - #{$value-label-height + 12px});
     margin-top: $value-label-height + 12px;
-    min-width: 30px;
-    max-width: 30px;
+    min-width: 20px;
+    max-width: 20px;
     :deep(.q-slider__track-container--v) {
       margin-left: -1.5px;
       width: 3px;

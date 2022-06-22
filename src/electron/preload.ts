@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 
 import { Sandbox } from "@/type/preload";
+import { SystemError } from "@/store/type";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,
@@ -96,6 +97,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showTextSaveDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
+  },
+
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
@@ -111,8 +116,13 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons, cancelId }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+  showMessageDialog: ({ type, title, message }) => {
+    return ipcRendererInvoke("SHOW_MESSAGE_DIALOG", { type, title, message });
+  },
+
+  showQuestionDialog: ({ type, title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_QUESTION_DIALOG", {
+      type,
       title,
       message,
       buttons,
@@ -120,20 +130,20 @@ const api: Sandbox = {
     });
   },
 
-  showWarningDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_WARNING_DIALOG", { title, message });
-  },
-
-  showErrorDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_ERROR_DIALOG", { title, message });
-  },
-
   showImportFileDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", { title });
   },
 
   writeFile: ({ filePath, buffer }) => {
-    fs.writeFileSync(filePath, new DataView(buffer));
+    try {
+      // throwだと`.code`の情報が消えるのでreturn
+      fs.writeFileSync(filePath, new DataView(buffer));
+    } catch (e) {
+      const a = e as SystemError;
+      return { code: a.code, message: a.message };
+    }
+
+    return undefined;
   },
 
   readFile: ({ filePath }) => {
@@ -267,6 +277,14 @@ const api: Sandbox = {
     return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
   },
 
+  getSplitterPosition: async () => {
+    return await ipcRendererInvoke("GET_SPLITTER_POSITION");
+  },
+
+  setSplitterPosition: async (splitterPosition) => {
+    return await ipcRendererInvoke("SET_SPLITTER_POSITION", splitterPosition);
+  },
+
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },
@@ -281,6 +299,16 @@ const api: Sandbox = {
 
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
+  },
+
+  getSplitTextWhenPaste: async () => {
+    return await ipcRendererInvoke("GET_SPLIT_TEXT_WHEN_PASTE");
+  },
+  setSplitTextWhenPaste: async (splitTextWhenPaste) => {
+    return await ipcRendererInvoke(
+      "SET_SPLIT_TEXT_WHEN_PASTE",
+      splitTextWhenPaste
+    );
   },
 };
 

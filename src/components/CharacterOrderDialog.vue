@@ -1,9 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
+    class="transparent-backdrop"
     v-model="modelValueComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
@@ -71,7 +71,9 @@
                 <div class="character-item-inner">
                   <img
                     :src="
-                      characterInfosMap[speakerUuid].metas.styles[0].iconPath
+                      characterInfosMap[speakerUuid].metas.styles[
+                        selectedStyleIndexes[speakerUuid] ?? 0
+                      ].iconPath
                     "
                     class="style-icon"
                   />
@@ -124,7 +126,6 @@
                       outline
                       :icon="
                         playing != undefined &&
-                        selectedStyles[speakerUuid] != undefined &&
                         speakerUuid === playing.speakerUuid &&
                         selectedStyles[speakerUuid].styleId ===
                           playing.styleId &&
@@ -508,10 +509,19 @@ export default defineComponent({
   width: 180px;
   height: 100%;
 
+  display: flex;
+  flex-direction: column;
+
   .character-order {
+    flex: 1;
+
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    height: 100%;
+
+    overflow-y: auto;
+
     .character-order-item {
       border-radius: 10px;
       border: 2px solid colors.$display-light;

@@ -51,7 +51,8 @@ export const projectStore: VoiceVoxStoreOptions<
     CREATE_NEW_PROJECT: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
-          const result: number = await window.electron.showInfoDialog({
+          const result: number = await window.electron.showQuestionDialog({
+            type: "info",
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +
@@ -266,7 +267,8 @@ export const projectStore: VoiceVoxStoreOptions<
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
-            const result: number = await window.electron.showInfoDialog({
+            const result: number = await window.electron.showQuestionDialog({
+              type: "info",
               title: "警告",
               message:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
@@ -302,7 +304,8 @@ export const projectStore: VoiceVoxStoreOptions<
               return "ファイルフォーマットが正しくありません。";
             return err.message;
           })();
-          await window.electron.showErrorDialog({
+          await window.electron.showMessageDialog({
+            type: "error",
             title: "エラー",
             message,
           });

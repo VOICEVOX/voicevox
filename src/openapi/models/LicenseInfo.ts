@@ -13,63 +13,56 @@
  */
 
 import { exists, mapValues } from '../runtime';
-import {
-    SpeakerStyle,
-    SpeakerStyleFromJSON,
-    SpeakerStyleFromJSONTyped,
-    SpeakerStyleToJSON,
-} from './';
-
 /**
- * スピーカー情報
+ * 依存ライブラリのライセンス情報
  * @export
- * @interface Speaker
+ * @interface LicenseInfo
  */
-export interface Speaker {
+export interface LicenseInfo {
     /**
      * 
      * @type {string}
-     * @memberof Speaker
+     * @memberof LicenseInfo
      */
     name: string;
     /**
      * 
      * @type {string}
-     * @memberof Speaker
+     * @memberof LicenseInfo
      */
-    speakerUuid: string;
-    /**
-     * 
-     * @type {Array<SpeakerStyle>}
-     * @memberof Speaker
-     */
-    styles: Array<SpeakerStyle>;
+    version?: string;
     /**
      * 
      * @type {string}
-     * @memberof Speaker
+     * @memberof LicenseInfo
      */
-    version?: string;
+    license?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof LicenseInfo
+     */
+    text: string;
 }
 
-export function SpeakerFromJSON(json: any): Speaker {
-    return SpeakerFromJSONTyped(json, false);
+export function LicenseInfoFromJSON(json: any): LicenseInfo {
+    return LicenseInfoFromJSONTyped(json, false);
 }
 
-export function SpeakerFromJSONTyped(json: any, ignoreDiscriminator: boolean): Speaker {
+export function LicenseInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean): LicenseInfo {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'name': json['name'],
-        'speakerUuid': json['speaker_uuid'],
-        'styles': ((json['styles'] as Array<any>).map(SpeakerStyleFromJSON)),
         'version': !exists(json, 'version') ? undefined : json['version'],
+        'license': !exists(json, 'license') ? undefined : json['license'],
+        'text': json['text'],
     };
 }
 
-export function SpeakerToJSON(value?: Speaker | null): any {
+export function LicenseInfoToJSON(value?: LicenseInfo | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -79,9 +72,9 @@ export function SpeakerToJSON(value?: Speaker | null): any {
     return {
         
         'name': value.name,
-        'speaker_uuid': value.speakerUuid,
-        'styles': ((value.styles as Array<any>).map(SpeakerStyleToJSON)),
         'version': value.version,
+        'license': value.license,
+        'text': value.text,
     };
 }
 
