@@ -140,7 +140,8 @@ function buildFileName(state: State, audioKey: string) {
   if (style === undefined) throw new Error("assert style !== undefined");
 
   const styleName: string | undefined = style.styleName;
-  if (styleName === undefined) throw new Error("assert style !== undefined");
+  if (styleName === undefined)
+    throw new Error("assert styleName !== undefined");
 
   return buildFileNameFromRawData(fileNamePattern, {
     characterName: character.metas.speakerName,
