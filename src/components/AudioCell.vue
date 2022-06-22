@@ -260,7 +260,7 @@ export default defineComponent({
       );
       if (engineKey === undefined)
         throw new Error(
-          `No engineInfo for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+          `No engineKey for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
 
       const engineId = getEngineIdByEngineKey(store.state, engineKey);

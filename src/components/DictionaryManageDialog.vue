@@ -226,6 +226,7 @@ import {
 import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
+import { getEngineIdByEngineKey } from "@/store/audio";
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -415,6 +416,12 @@ export default defineComponent({
     audioElem.pause();
 
     const play = async () => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
+      const engineId = getEngineIdByEngineKey(store.state, engineKey);
+
       if (!accentPhrase.value) return;
       nowGenerating.value = true;
       const query: AudioQuery = {
@@ -431,6 +438,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
+        engineId,
         styleId: styleId.value,
         query,
       };

@@ -525,7 +525,7 @@ export default defineComponent({
     });
 
     // エンジン待機
-    // TODO: 複数エンジン対応, 個別のエンジンの状態をUIで確認できるようにする
+    // TODO: 個別のエンジンの状態をUIで確認できるようにする
     const allEngineState = computed(() => {
       const engineStates = store.state.engineStates;
 
