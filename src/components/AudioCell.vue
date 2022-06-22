@@ -326,12 +326,12 @@ export default defineComponent({
           }
 
           const engineId = audioItem.value.engineId;
-          if (engineId == undefined)
-            throw new Error("assert engineId != undefined");
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
 
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined)
-            throw new Error("assert styleId != undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
 
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
