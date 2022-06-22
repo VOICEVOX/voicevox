@@ -170,7 +170,7 @@ type AudioStoreTypes = {
   };
 
   SETUP_ENGINE_SPEAKER: {
-    action(payload: { styleId: number }): void;
+    action(payload: { engineKey: string; styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {

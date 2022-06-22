@@ -55,11 +55,11 @@ export const indexStore: VoiceVoxStoreOptions<
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          if (audioItem.engineId == undefined)
-            throw new Error("assert audioItem.engineId != undefined");
+          if (audioItem.engineId === undefined)
+            throw new Error("assert audioItem.engineId !== undefined");
 
-          if (audioItem.styleId == undefined)
-            throw new Error("assert audioItem.styleId != undefined");
+          if (audioItem.styleId === undefined)
+            throw new Error("assert audioItem.styleId !== undefined");
 
           const characterInfo = getCharacterInfo(
             state,
@@ -67,8 +67,8 @@ export const indexStore: VoiceVoxStoreOptions<
             audioItem.styleId
           );
 
-          if (characterInfo == undefined)
-            throw new Error("assert characterInfo != undefined");
+          if (characterInfo === undefined)
+            throw new Error("assert characterInfo !== undefined");
 
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(

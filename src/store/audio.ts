@@ -724,15 +724,11 @@ export const audioStore: VoiceVoxStoreOptions<
      * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      * 初期化済みだった場合は何もしない。
      */
-    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
-
+    async SETUP_ENGINE_SPEAKER({ dispatch }, { engineKey, styleId }) {
       // FIXME: なぜかbooleanではなくstringが返ってくる。
       // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
       const isInitialized: string = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "isInitializedSpeakerIsInitializedSpeakerGet",
         payload: [{ speaker: styleId }],
       });
@@ -743,7 +739,7 @@ export const audioStore: VoiceVoxStoreOptions<
         await dispatch("ASYNC_UI_LOCK", {
           callback: () =>
             dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engineInfo.key,
+              engineKey,
               action: "initializeSpeakerInitializeSpeakerPost",
               payload: [{ speaker: styleId }],
             }),
@@ -1861,7 +1857,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
       const query = state.audioItems[audioKey].query;
       try {
-        await dispatch("SETUP_ENGINE_SPEAKER", { styleId });
+        await dispatch("SETUP_ENGINE_SPEAKER", { engineKey, styleId });
 
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;
@@ -1977,12 +1973,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
 
       const engineId = state.audioItems[audioKey].engineId;
-      if (engineId == undefined) throw new Error("engineId != undefined");
+      if (engineId === undefined)
+        throw new Error("assert engineId !== undefined");
 
       const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
-      if (styleId == undefined) throw new Error("styleId != undefined");
+      if (styleId === undefined)
+        throw new Error("assert styleId !== undefined");
 
       if (query === undefined) {
         throw Error(
@@ -2094,12 +2092,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       }
     ) {
       const engineId = state.audioItems[audioKey].engineId;
-      if (engineId == undefined) throw new Error("engineId != undefined");
+      if (engineId === undefined)
+        throw new Error("assert engineId !== undefined");
 
       const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
-      if (styleId == undefined) throw new Error("styleId != undefined");
+      if (styleId === undefined)
+        throw new Error("assert styleId !== undefined");
 
       let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
