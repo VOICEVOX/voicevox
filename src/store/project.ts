@@ -256,6 +256,7 @@ export const projectStore: VoiceVoxStoreOptions<
               'Every audioItem should have a "engineId" attribute.'
             );
           }
+          // FIXME: assert engineId is registered
           if (
             !obj.audioKeys.every(
               (audioKey) => obj.audioItems[audioKey].styleId != undefined
