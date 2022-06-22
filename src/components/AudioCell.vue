@@ -166,6 +166,7 @@ import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { QInput, debounce } from "quasar";
+import { getEngineIdByEngineKey } from "@/store/audio";
 
 export default defineComponent({
   name: "AudioCell",
@@ -252,18 +253,17 @@ export default defineComponent({
     };
 
     const changeStyleId = (speakerUuid: string, styleId: number) => {
-      const engineInfo = store.state.engineInfos.find((engineInfo) =>
-        (store.state.characterInfos[engineInfo.key] ?? []).some(
+      const engineKey = store.state.engineKeys.find((_engineKey) =>
+        (store.state.characterInfos[_engineKey] ?? []).some(
           (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
         )
       );
-      if (engineInfo === undefined)
+      if (engineKey === undefined)
         throw new Error(
           `No engineInfo for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
 
-      const engineKey = engineInfo.key;
-      const engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
+      const engineId = getEngineIdByEngineKey(store.state, engineKey);
 
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,

@@ -241,9 +241,7 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const engineKey = store.state.engineKeys[0]; // TODO: 複数エンジン対応
-    if (engineKey === undefined)
-      throw new Error(`assert engineKey !== undefined`);
+    const engineKeyComputed = computed(() => store.state.engineKeys[0]); // TODO: 複数エンジン対応
 
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
@@ -347,6 +345,10 @@ export default defineComponent({
       surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
@@ -391,6 +393,10 @@ export default defineComponent({
     window.onresize = computeCenteringAccentPhrase;
 
     const changeAccent = async (_: number, accent: number) => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (

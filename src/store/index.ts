@@ -123,8 +123,8 @@ export const indexStore: VoiceVoxStoreOptions<
       await window.electron.setUserCharacterOrder(userCharacterOrder);
     },
     GET_NEW_CHARACTERS({ state }) {
-      const flattenCharacterInfos = state.engineInfos.flatMap(
-        (engineInfo) => state.characterInfos[engineInfo.key] ?? []
+      const flattenCharacterInfos = state.engineKeys.flatMap(
+        (engineKey) => state.characterInfos[engineKey] ?? []
       );
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
@@ -142,8 +142,8 @@ export const indexStore: VoiceVoxStoreOptions<
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
       let defaultStyleIds = await window.electron.getDefaultStyleIds();
 
-      const flattenCharacterInfos = state.engineInfos.flatMap(
-        (engineInfo) => state.characterInfos[engineInfo.key] ?? []
+      const flattenCharacterInfos = state.engineKeys.flatMap(
+        (engineKey) => state.characterInfos[engineKey] ?? []
       );
 
       // デフォルトスタイルが設定されていない場合は0をセットする

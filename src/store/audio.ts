@@ -122,23 +122,25 @@ function buildFileName(state: State, audioKey: string) {
   const audioItem = state.audioItems[audioKey];
 
   if (audioItem.engineId === undefined)
-    throw new Error("audioItem.engineId === undefined");
+    throw new Error("asssrt audioItem.engineId !== undefined");
   if (audioItem.styleId === undefined)
-    throw new Error("audioItem.styleId === undefined");
+    throw new Error("assert audioItem.styleId !== undefined");
 
   const character = getCharacterInfo(
     state,
     audioItem.engineId,
     audioItem.styleId
   );
-  if (character === undefined) throw new Error("character === undefined");
+  if (character === undefined)
+    throw new Error("assert character !== undefined");
 
   const style = character.metas.styles.find(
     (style) => style.styleId === audioItem.styleId
   );
-  if (style === undefined) throw new Error("style === undefined");
+  if (style === undefined) throw new Error("assert style !== undefined");
 
   const styleName: string | undefined = style.styleName;
+  if (styleName === undefined) throw new Error("assert style !== undefined");
 
   return buildFileNameFromRawData(fileNamePattern, {
     characterName: character.metas.speakerName,
@@ -165,12 +167,25 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
   return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
 }
 
+// FIXME: 暫定的にengineKey == engineIdとして使う
+export function getEngineIdByEngineKey(
+  state: State,
+  engineKey: string
+): string {
+  return engineKey;
+}
+
+// FIXME: 暫定的にengineKey == engineIdとして使う
+export function getEngineKeyByEngineId(state: State, engineId: string): string {
+  return engineId;
+}
+
 export function getCharacterInfo(
   state: State,
   engineId: string,
   styleId: number
 ): CharacterInfo | undefined {
-  const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+  const engineKey = getEngineKeyByEngineId(state, engineId);
   const engineCharacterInfos = state.characterInfos[engineKey];
 
   // (engineId, styleId)で「スタイル付きキャラクター」は一意である
@@ -186,6 +201,7 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   engineStates: {},
+  characterInfos: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -245,9 +261,9 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     USER_ORDERED_CHARACTER_INFOS: (state) => {
       let characterInfoList: CharacterInfo[] = [];
-      for (const engineInfo of state.engineInfos) {
+      for (const engineKey of state.engineKeys) {
         const engineCharacterInfos: CharacterInfo[] | undefined =
-          state.characterInfos[engineInfo.key];
+          state.characterInfos[engineKey];
         if (engineCharacterInfos === undefined) continue;
 
         characterInfoList = characterInfoList.concat(engineCharacterInfos);
@@ -766,7 +782,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       if (payload.engineId !== undefined && payload.styleId !== undefined) {
         engineId = payload.engineId;
-        engineKey = payload.engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+        engineKey = getEngineKeyByEngineId(state, engineId);
         styleId = payload.styleId;
       } else {
         const defaultCharacterInfo: CharacterInfo | undefined =
@@ -783,17 +799,17 @@ export const audioStore: VoiceVoxStoreOptions<
 
         // 最初に一致するspeakerUuidをもつengineInfoを使用する
         // FIXME: 同一のengineIdを持つ複数のengineKeyが存在する場合の処理
-        const firstMatchEngineInfo = state.engineInfos.find((engineInfo) =>
-          (state.characterInfos[engineInfo.key] ?? []).some(
+        const firstMatchEngineKey = state.engineKeys.find((engineKey) =>
+          (state.characterInfos[engineKey] ?? []).some(
             (characterInfo) =>
               characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid
           )
         );
-        if (firstMatchEngineInfo === undefined)
-          throw new Error(`No engineInfo for defaultStyleId`);
+        if (firstMatchEngineKey === undefined)
+          throw new Error(`No engineKey for defaultStyleId`);
 
-        engineKey = firstMatchEngineInfo.key;
-        engineId = engineKey; // FIXME: 暫定的にengineKey == engineIdとして使う
+        engineKey = firstMatchEngineKey;
+        engineId = getEngineIdByEngineKey(state, engineKey);
         styleId = defaultStyleId.defaultStyleId;
       }
 
@@ -1127,9 +1143,11 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
       async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
-        const engineKey = audioItem.engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
-        if (engineKey === undefined)
-          throw new Error(`engineKey is not defined for audioItem`);
+        const engineId = audioItem.engineId;
+        if (engineId === undefined)
+          throw new Error(`engineId is not defined for audioItem`);
+
+        const engineKey = getEngineKeyByEngineId(state, engineId);
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1783,12 +1801,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { audioKey, text }: { audioKey: string; text: string }
     ) {
       const engineId = state.audioItems[audioKey].engineId;
-      if (engineId == undefined) throw new Error("engineId != undefined");
+      if (engineId === undefined)
+        throw new Error("assert engineId !== undefined");
 
-      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+      const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
-      if (styleId == undefined) throw new Error("styleId != undefined");
+      if (styleId === undefined)
+        throw new Error("assert styleId !== undefined");
 
       const query: AudioQuery | undefined = state.audioItems[audioKey].query;
       try {
@@ -1837,7 +1857,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         styleId,
       }: { audioKey: string; engineId: string; styleId: number }
     ) {
-      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+      const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const query = state.audioItems[audioKey].query;
       try {
@@ -1906,14 +1926,14 @@ export const audioCommandStore: VoiceVoxStoreOptions<
 
         try {
           const engineId = state.audioItems[audioKey].engineId;
-          if (engineId == undefined)
-            throw new Error("assert engineId != undefined");
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
 
-          const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+          const engineKey = getEngineKeyByEngineId(state, engineId);
 
           const styleId = state.audioItems[audioKey].styleId;
-          if (styleId == undefined)
-            throw new Error("assert styleId != undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
 
           const resultAccentPhrases: AccentPhrase[] = await dispatch(
             "FETCH_AND_COPY_MORA_DATA",
@@ -1959,7 +1979,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const engineId = state.audioItems[audioKey].engineId;
       if (engineId == undefined) throw new Error("engineId != undefined");
 
-      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+      const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId != undefined");
@@ -2076,7 +2096,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const engineId = state.audioItems[audioKey].engineId;
       if (engineId == undefined) throw new Error("engineId != undefined");
 
-      const engineKey = engineId; // FIXME: 暫定的にengineKey == engineIdとして使う
+      const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId != undefined");
@@ -2173,14 +2193,22 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, dispatch, commit },
       { audioKey }
     ) {
+      const engineId = state.audioItems[audioKey].engineId;
+      if (engineId === undefined)
+        throw new Error("assert engineId !== undefined");
+
       const styleId = state.audioItems[audioKey].styleId;
-      if (styleId == undefined) throw new Error("styleId == undefined");
+      if (styleId === undefined)
+        throw new Error("assert styleId !== undefined");
 
       const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
+      if (query === undefined) throw new Error("assert query !== undefined");
+
+      const engineKey = getEngineKeyByEngineId(state, engineId);
 
       const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
         accentPhrases: query.accentPhrases,
+        engineKey,
         styleId,
       });
 
@@ -2193,14 +2221,20 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       { state, dispatch, commit },
       { audioKey, accentPhraseIndex }
     ) {
+      const engineId = state.audioItems[audioKey].engineId;
+      if (engineId == undefined) throw new Error("engineId == undefined");
+
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId == undefined) throw new Error("styleId == undefined");
 
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
 
+      const engineKey = getEngineKeyByEngineId(state, engineId);
+
       const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
         accentPhrases: [...query.accentPhrases],
+        engineKey,
         styleId,
         copyIndexes: [accentPhraseIndex],
       });
