@@ -263,10 +263,16 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       loadingDict.value = true;
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT")
+          store.dispatch("LOAD_USER_DICT", {
+            engineKey,
+          })
         );
       } catch {
         $q.dialog({

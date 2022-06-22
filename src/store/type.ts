@@ -1157,7 +1157,9 @@ export type DictionaryStoreState = Record<string, unknown>;
 
 type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
-    action(): Promise<Record<string, UserDictWord>>;
+    action(payload: {
+      engineKey: string;
+    }): Promise<Record<string, UserDictWord>>;
   };
   ADD_WORD: {
     action(payload: {
