@@ -211,7 +211,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
