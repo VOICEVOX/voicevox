@@ -801,16 +801,18 @@ export default defineComponent({
 
     .text-cell {
       padding: 0;
-      min-width: 30px;
-      max-width: 30px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row-start: 3;
       text-align: center;
+      white-space: nowrap;
       color: colors.$display;
+      position: relative;
     }
 
     .splitter-cell {
-      min-width: 10px;
-      max-width: 10px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row: 3 / span 1;
       z-index: vars.$detail-view-splitter-cell-z-index;
     }
