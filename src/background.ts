@@ -1255,6 +1255,7 @@ app.on("before-quit", (event) => {
               // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
             }
 
+            // TODO: 各エンジンプロセスキルの成功をUIに通知する
             numEngineProcessKilled++;
             log.info(
               `ENGINE ${engineKey}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
