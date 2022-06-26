@@ -498,70 +498,33 @@ async function runEngine(engineKey: string) {
   });
 }
 
-type KillEngineProcessResult = {
-  engineKey: string;
-  succeeded: boolean;
-  error?: unknown;
-};
-
-type KillEngineProcessReturnVal = {
-  processKillStarted: boolean;
-  processKillPromise: Promise<KillEngineProcessResult>;
-};
-
-type KillEngineProcessAllReturnVal = {
-  anyProcessKillStarted: boolean;
-  processKillPromises: Promise<KillEngineProcessResult>[];
-};
-
-function killEngineAll(): KillEngineProcessAllReturnVal {
-  let anyProcessKillStarted = false;
-
-  const processKillPromises: Promise<KillEngineProcessResult>[] = [];
-
-  for (const [engineKey] of Object.entries(engineProcessContainers)) {
-    const { processKillStarted, processKillPromise } = killEngine(engineKey);
-
-    anyProcessKillStarted = anyProcessKillStarted || processKillStarted;
-    processKillPromises.push(processKillPromise);
-  }
-
-  return {
-    anyProcessKillStarted,
-    processKillPromises,
-  };
+// Promise<void> | undefined
+// Promise.resolve: エンジンプロセスのキルに成功した（非同期）
+// Promise.reject: エンジンプロセスのキルに失敗した（非同期）
+// undefined: エンジンプロセスのキルが開始されなかった＝エンジンプロセスがすでに停止している（同期）
+function killEngineAll(): Record<string, Promise<void> | undefined> {
+  return Object.fromEntries(
+    Object.keys(engineProcessContainers).map((engineKey) => [
+      engineKey,
+      killEngine(engineKey),
+    ])
+  );
 }
 
-function killEngine(engineKey: string): KillEngineProcessReturnVal {
+function killEngine(engineKey: string): Promise<void> | undefined {
   const engineProcessContainer = engineProcessContainers[engineKey];
   if (!engineProcessContainer) {
     log.error(`No such engineProcessContainer: key == ${engineKey}`);
 
-    return {
-      processKillStarted: false,
-      processKillPromise: new Promise((resolve) =>
-        resolve({
-          engineKey,
-          succeeded: true,
-        })
-      ),
-    };
+    return undefined;
   }
 
   const engineProcess = engineProcessContainer.engineProcess;
-  if (engineProcess == undefined) {
+  if (engineProcess === undefined) {
     // nop if no process started (already killed or not started yet)
     log.info(`ENGINE ${engineKey}: Process not started`);
 
-    return {
-      processKillStarted: false,
-      processKillPromise: new Promise((resolve) =>
-        resolve({
-          engineKey,
-          succeeded: true,
-        })
-      ),
-    };
+    return undefined;
   }
 
   const engineNotExited = engineProcess.exitCode === null;
@@ -575,48 +538,28 @@ function killEngine(engineKey: string): KillEngineProcessReturnVal {
   if (!isAlive) {
     log.info(`ENGINE ${engineKey}: Process already closed`);
 
-    return {
-      processKillStarted: false,
-      processKillPromise: new Promise((resolve) =>
-        resolve({
-          engineKey,
-          succeeded: true,
-        })
-      ),
-    };
+    return new Promise<void>((resolve) => resolve());
   }
 
-  return {
-    processKillStarted: true,
-    processKillPromise: new Promise((resolve) => {
-      log.info(
-        `ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`
-      );
+  return new Promise<void>((resolve, reject) => {
+    log.info(`ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`);
 
-      // エラーダイアログを抑制
-      engineProcessContainer.willQuitEngine = true;
+    // エラーダイアログを抑制
+    engineProcessContainer.willQuitEngine = true;
 
-      // プロセス終了時のイベントハンドラ
-      engineProcess.once("close", () => {
-        log.info(`ENGINE ${engineKey}: Process closed`);
-        resolve({
-          engineKey,
-          succeeded: true,
-        });
-      });
+    // プロセス終了時のイベントハンドラ
+    engineProcess.once("close", () => {
+      log.info(`ENGINE ${engineKey}: Process closed`);
+      resolve();
+    });
 
-      try {
-        engineProcess.pid != undefined && treeKill(engineProcess.pid);
-      } catch (error: unknown) {
-        log.error(`ENGINE ${engineKey}: Error during killing process`);
-        resolve({
-          engineKey,
-          succeeded: false,
-          error,
-        });
-      }
-    }),
-  };
+    try {
+      engineProcess.pid != undefined && treeKill(engineProcess.pid);
+    } catch (error: unknown) {
+      log.error(`ENGINE ${engineKey}: Error during killing process`);
+      reject(error);
+    }
+  });
 }
 
 async function restartEngineAll() {
@@ -1272,10 +1215,17 @@ app.on("before-quit", (event) => {
 
   log.info("Checking ENGINE status before app quit");
 
-  const { anyProcessKillStarted, processKillPromises } = killEngineAll();
+  const allPromises = killEngineAll();
+  const allPromiseEntries = Object.entries(allPromises);
+  const killingPromiseEntries = allPromiseEntries.filter(
+    ([, promise]) => promise !== undefined
+  );
+  const killingPromises = Object.fromEntries(killingPromiseEntries);
+
+  const numEngineProcess = Object.entries(killingPromises).length; // assert == engineProcessContainers.length
 
   // すべてのエンジンプロセスが停止している
-  if (!anyProcessKillStarted) {
+  if (numEngineProcess === 0) {
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1286,15 +1236,14 @@ app.on("before-quit", (event) => {
   log.info("Interrupt app quit to kill ENGINE processes");
   event.preventDefault();
 
-  const numEngineProcess = processKillPromises.length; // assert == engineProcessContainers.length
   let numEngineProcessKilled = 0;
 
   // 非同期的にすべてのエンジンプロセスをキル
   (async () => {
-    for (const processKillPromise of processKillPromises) {
-      const { engineKey, succeeded, error } = await processKillPromise;
-
-      if (!succeeded) {
+    for (const [engineKey, promise] of Object.entries(killingPromises)) {
+      try {
+        await promise;
+      } catch (error: unknown) {
         log.error(
           `ENGINE ${engineKey}: Error during killing process: ${error}`
         );
