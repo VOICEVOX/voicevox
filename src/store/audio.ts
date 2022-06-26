@@ -177,7 +177,11 @@ export function getEngineIdByEngineKey(
 }
 
 // FIXME: 暫定的にengineKey == engineIdとして使う
-export function getEngineKeyByEngineId(state: State, engineId: string): string {
+// TODO: ブランドを表すengineIdから設定項目を表すengineKeyを引くロジック
+export function getDefaultEngineKeyByEngineId(
+  state: State,
+  engineId: string
+): string {
   return engineId;
 }
 
@@ -199,7 +203,7 @@ export function getCharacterInfo(
   engineId: string,
   styleId: number
 ): CharacterInfo | undefined {
-  const engineKey = getEngineKeyByEngineId(state, engineId);
+  const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
   const engineCharacterInfos = state.characterInfos[engineKey];
 
   // (engineId, styleId)で「スタイル付きキャラクター」は一意である
@@ -800,7 +804,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       if (payload.engineId !== undefined && payload.styleId !== undefined) {
         engineId = payload.engineId;
-        engineKey = getEngineKeyByEngineId(state, engineId);
+        engineKey = getDefaultEngineKeyByEngineId(state, engineId);
         styleId = payload.styleId;
       } else {
         // select default style if (engineId, styleId) === (undefined, undefined)
@@ -1166,7 +1170,7 @@ export const audioStore: VoiceVoxStoreOptions<
         if (engineId === undefined)
           throw new Error(`engineId is not defined for audioItem`);
 
-        const engineKey = getEngineKeyByEngineId(state, engineId);
+        const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1823,7 +1827,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (engineId === undefined)
         throw new Error("assert engineId !== undefined");
 
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId === undefined)
@@ -1876,7 +1880,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         styleId,
       }: { audioKey: string; engineId: string; styleId: number }
     ) {
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const query = state.audioItems[audioKey].query;
       try {
@@ -1948,7 +1952,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
           if (engineId === undefined)
             throw new Error("assert engineId !== undefined");
 
-          const engineKey = getEngineKeyByEngineId(state, engineId);
+          const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
           const styleId = state.audioItems[audioKey].styleId;
           if (styleId === undefined)
@@ -1999,7 +2003,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (engineId === undefined)
         throw new Error("assert engineId !== undefined");
 
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId === undefined)
@@ -2118,7 +2122,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (engineId === undefined)
         throw new Error("assert engineId !== undefined");
 
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const styleId = state.audioItems[audioKey].styleId;
       if (styleId === undefined)
@@ -2227,7 +2231,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const query = state.audioItems[audioKey].query;
       if (query === undefined) throw new Error("assert query !== undefined");
 
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const newAccentPhases = await dispatch("FETCH_MORA_DATA", {
         accentPhrases: query.accentPhrases,
@@ -2253,7 +2257,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
 
-      const engineKey = getEngineKeyByEngineId(state, engineId);
+      const engineKey = getDefaultEngineKeyByEngineId(state, engineId);
 
       const newAccentPhases = await dispatch("FETCH_AND_COPY_MORA_DATA", {
         accentPhrases: [...query.accentPhrases],
