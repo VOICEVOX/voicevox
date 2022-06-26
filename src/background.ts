@@ -1216,11 +1216,9 @@ app.on("before-quit", (event) => {
   log.info("Checking ENGINE status before app quit");
 
   const allPromises = killEngineAll();
-  const allPromiseEntries = Object.entries(allPromises);
-  const killingPromiseEntries = allPromiseEntries.filter(
-    ([, promise]) => promise !== undefined
+  const killingPromises = Object.fromEntries(
+    Object.entries(allPromises).filter(([, promise]) => promise !== undefined)
   );
-  const killingPromises = Object.fromEntries(killingPromiseEntries);
 
   const numEngineProcess = Object.entries(killingPromises).length; // assert == engineProcessContainers.length
 
