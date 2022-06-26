@@ -49,6 +49,15 @@ export const presetStore: VoiceVoxStoreOptions<
       });
     },
 
+    SAVE_PRESET_ORDER(
+      { state, dispatch },
+      { presetKeys }: { presetKeys: string[] }
+    ) {
+      return dispatch("SAVE_PRESET_CONFIG", {
+        presetItems: state.presetItems,
+        presetKeys,
+      });
+    },
     SAVE_PRESET_CONFIG: async (
       context,
       {

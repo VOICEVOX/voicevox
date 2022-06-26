@@ -1,10 +1,9 @@
 <template>
   <q-dialog
     maximized
-    seamless
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="setting-dialog"
+    class="setting-dialog transparent-backdrop"
     v-model="dictionaryManageDialogOpenedComputed"
   >
     <q-layout container view="hHh Lpr fFf" class="bg-background">
@@ -34,33 +33,29 @@
           </div>
           <div class="col-4 word-list-col">
             <div v-if="wordEditing" class="word-list-disable-overlay" />
-            <div class="word-list-header">
-              <div class="word-list-title text-h5">単語一覧</div>
-              <div>
+            <div class="word-list-header text-no-wrap">
+              <div class="row word-list-title text-h5">単語一覧</div>
+              <div class="row no-wrap">
                 <q-btn
                   outline
                   text-color="warning"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
                   >削除</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="editWord"
                   :disable="uiLocked || !selectedId"
                   >編集</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="newWord"
                   :disable="uiLocked"
                   >追加</q-btn
@@ -89,7 +84,10 @@
           </div>
 
           <!-- 右側のpane -->
-          <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
+          <div
+            v-if="wordEditing"
+            class="col-8 no-wrap text-no-wrap word-editor"
+          >
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <q-input
@@ -146,9 +144,6 @@
               <div
                 ref="accentPhraseTable"
                 class="accent-phrase-table overflow-hidden-y"
-                :style="{
-                  justifyContent: centeringAccentPhrase ? 'center' : undefined,
-                }"
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <audio-accent
@@ -216,9 +211,8 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { toDispatchResponse } from "@/store/audio";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -226,7 +220,6 @@ import {
   createKanaRegex,
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
-import { EngineInfo } from "@/type/preload";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
 
@@ -244,50 +237,31 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    let engineInfo: EngineInfo | undefined;
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
+    const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const nowGenerating = ref(false);
     const nowPlaying = ref(false);
 
     const loadingDict = ref(false);
     const userDict = ref<Record<string, UserDictWord>>({});
 
+    const createUILockAction = function <T>(action: Promise<T>) {
+      uiLocked.value = true;
+      return action.finally(() => {
+        uiLocked.value = false;
+      });
+    };
+
     const loadingDictProcess = async () => {
-      // FIXME: エンジン周りに蜜結合なので、他のユーザー辞書操作系も含めてvuexに移動させる。
-      engineInfo = store.state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
       loadingDict.value = true;
       try {
-        const engineDict = await store
-          .dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "getUserDictWordsUserDictGet",
-            payload: [],
-          })
-          .then(toDispatchResponse("getUserDictWordsUserDictGet"));
-        // 50音順にソートするために、一旦arrayにする
-        const dictArray = Object.keys(engineDict).map((k) => {
-          return { key: k, ...engineDict[k] };
-        });
-        dictArray.sort((a, b) => {
-          if (a.yomi > b.yomi) {
-            return 1;
-          } else {
-            return -1;
-          }
-        });
-        const dictEntries: [string, UserDictWord][] = dictArray.map((v) => {
-          const { key, ...newV } = v;
-          return [key, newV];
-        });
-        userDict.value = Object.fromEntries(dictEntries);
+        userDict.value = await createUILockAction(
+          store.dispatch("LOAD_USER_DICT")
+        );
       } catch {
-        loadingDict.value = false;
         $q.dialog({
           title: "辞書の取得に失敗しました",
           message: "エンジンの再起動をお試しください。",
@@ -342,16 +316,7 @@ export default defineComponent({
     const isOnlyHiraOrKana = ref(true);
     const accentPhrase = ref<AccentPhrase | undefined>();
     const accentPhraseTable = ref<HTMLElement>();
-    // スクロールしなければならないほど長いアクセント句はセンタリングしないようにする
-    // computedにすると、ダイアログを表示した際にしか動作しないので、refにして変更時に代入する
-    const centeringAccentPhrase = ref(true);
-    // FIXME: CSSで完結させる
-    const computeCenteringAccentPhrase = () => {
-      centeringAccentPhrase.value =
-        !!accentPhraseTable.value &&
-        accentPhraseTable.value.scrollWidth ==
-          accentPhraseTable.value.offsetWidth;
-    };
+
     const convertHankakuToZenkaku = (text: string) => {
       // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
       return text.replace(/[\u0021-\u007e]/g, (s) => {
@@ -384,11 +349,13 @@ export default defineComponent({
         text = convertHiraToKana(text);
         text = convertLongVowel(text);
         accentPhrase.value = (
-          await store.dispatch("FETCH_ACCENT_PHRASES", {
-            text: text + "ガ'",
-            styleId: styleId.value,
-            isKana: true,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_ACCENT_PHRASES", {
+              text: text + "ガ'",
+              styleId: styleId.value,
+              isKana: true,
+            })
+          )
         )[0];
         if (
           selectedId.value &&
@@ -400,19 +367,18 @@ export default defineComponent({
         accentPhrase.value = undefined;
       }
       yomi.value = text;
-      await nextTick();
-      computeCenteringAccentPhrase();
     };
-    window.onresize = computeCenteringAccentPhrase;
 
     const changeAccent = async (_: number, accent: number) => {
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
-          await store.dispatch("FETCH_MORA_DATA", {
-            accentPhrases: [accentPhrase.value],
-            styleId: styleId.value,
-          })
+          await createUILockAction(
+            store.dispatch("FETCH_MORA_DATA", {
+              accentPhrases: [accentPhrase.value],
+              styleId: styleId.value,
+            })
+          )
         )[0];
       }
     };
@@ -445,9 +411,11 @@ export default defineComponent({
         audioItem,
       });
       if (!blob) {
-        blob = await store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-          audioItem,
-        });
+        blob = await createUILockAction(
+          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+            audioItem,
+          })
+        );
         if (!blob) {
           nowGenerating.value = false;
           $q.dialog({
@@ -505,23 +473,15 @@ export default defineComponent({
       );
     });
     const saveWord = async () => {
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
       if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
       const accent = computeRegisteredAccent();
       if (selectedId.value) {
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "rewriteUserDictWordUserDictWordWordUuidPut",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-                surface: surface.value,
-                pronunciation: yomi.value,
-                accentType: accent,
-              },
-            ],
+          await store.dispatch("REWRITE_WORD", {
+            wordUuid: selectedId.value,
+            surface: surface.value,
+            pronunciation: yomi.value,
+            accentType: accent,
           });
         } catch {
           $q.dialog({
@@ -537,19 +497,13 @@ export default defineComponent({
         }
       } else {
         try {
-          await store
-            .dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engineInfo.key,
-              action: "addUserDictWordUserDictWordPost",
-              payload: [
-                {
-                  surface: surface.value,
-                  pronunciation: yomi.value,
-                  accentType: accent,
-                },
-              ],
+          await createUILockAction(
+            store.dispatch("ADD_WORD", {
+              surface: surface.value,
+              pronunciation: yomi.value,
+              accentType: accent,
             })
-            .then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+          );
         } catch {
           $q.dialog({
             title: "単語の登録に失敗しました",
@@ -584,18 +538,12 @@ export default defineComponent({
           textColor: "display",
         },
       }).onOk(async () => {
-        if (!engineInfo)
-          throw new Error(`No such engineInfo registered: index == 0`);
         try {
-          await store.dispatch("INVOKE_ENGINE_CONNECTOR", {
-            engineKey: engineInfo.key,
-            action: "deleteUserDictWordUserDictWordWordUuidDelete",
-            payload: [
-              {
-                wordUuid: selectedId.value,
-              },
-            ],
-          });
+          await createUILockAction(
+            store.dispatch("DELETE_WORD", {
+              wordUuid: selectedId.value,
+            })
+          );
         } catch {
           $q.dialog({
             title: "単語の削除に失敗しました",
@@ -723,7 +671,6 @@ export default defineComponent({
       setYomi,
       accentPhrase,
       accentPhraseTable,
-      centeringAccentPhrase,
       changeAccent,
       play,
       stop,
@@ -746,12 +693,12 @@ export default defineComponent({
 .word-list-col {
   border-right: solid 1px colors.$setting-item;
   position: relative; // オーバーレイのため
+  overflow-x: hidden;
 }
 
 .word-list-header {
   margin: 1rem;
 
-  display: flex;
   gap: 0.5rem;
   align-items: center;
   justify-content: space-between;
@@ -762,10 +709,10 @@ export default defineComponent({
 
 .word-list {
   // menubar-height + header-height + window-border-width +
-  // 46(title) + 52(new word button)
+  // 82(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 52px}
+      vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
   overflow-y: auto;
@@ -798,6 +745,16 @@ export default defineComponent({
   height: 100%;
   position: absolute;
   z-index: 10;
+}
+
+.word-editor {
+  display: flex;
+  flex-flow: column;
+  height: calc(
+    100vh - #{vars.$menubar-height + vars.$header-height +
+      vars.$window-border-width}
+  ) !important;
+  overflow: auto;
 }
 
 .word-input {
@@ -833,6 +790,7 @@ export default defineComponent({
   align-self: stretch;
 
   display: flex;
+  height: 130px;
   overflow-x: scroll;
   width: calc(66vw - 140px);
 
@@ -843,16 +801,18 @@ export default defineComponent({
 
     .text-cell {
       padding: 0;
-      min-width: 30px;
-      max-width: 30px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row-start: 3;
       text-align: center;
+      white-space: nowrap;
       color: colors.$display;
+      position: relative;
     }
 
     .splitter-cell {
-      min-width: 10px;
-      max-width: 10px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row: 3 / span 1;
       z-index: vars.$detail-view-splitter-cell-z-index;
     }
@@ -860,12 +820,6 @@ export default defineComponent({
 }
 
 .save-delete-reset-buttons {
-  // menubar-height + header-height + window-border-width
-  // 46(surface input) + 58(yomi input) + 38(accent title) + 18(accent desc) + 130(accent)
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 58px + 38px + 18px + 130px}
-  );
   padding: 20px;
 
   display: flex;

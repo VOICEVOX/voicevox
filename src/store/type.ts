@@ -6,7 +6,7 @@ import {
   StoreOptions,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery } from "@/openapi";
+import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -25,6 +25,8 @@ import {
   Preset,
   ActivePointScrollMode,
   EngineInfo,
+  SplitTextWhenPasteType,
+  SplitterPosition,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -53,7 +55,15 @@ export type SaveResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
-export type SaveResultObject = { result: SaveResult; path: string | undefined };
+export type SaveResultObject = {
+  result: SaveResult;
+  path: string | undefined;
+  errorMessage?: string;
+};
+export type WriteErrorTypeForSaveAllResultDialog = {
+  path: string;
+  message: string;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -72,7 +82,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineState: EngineState;
+  engineStates: Record<string, EngineState>;
   characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -95,28 +105,43 @@ type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ENGINE_READY: {
+  IS_ALL_ENGINE_READY: {
     getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineKey: string): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
   };
 
-  START_WAITING_ENGINE: {
+  START_WAITING_ENGINE_ALL: {
     action(): void;
+  };
+
+  START_WAITING_ENGINE: {
+    action(payload: { engineKey: string }): void;
+  };
+
+  // NOTE: 複数のEngineKeyを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 個別にエンジンの状態を確認できるようにする？
+  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
+  RESTART_ENGINE_ALL: {
+    action(): Promise<boolean>;
   };
 
   RESTART_ENGINE: {
-    action(): void;
+    action(payload: { engineKey: string }): Promise<boolean>;
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineState: EngineState };
+    mutation: { engineKey: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER: {
@@ -133,6 +158,10 @@ type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
+  };
+
+  SETUP_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -340,6 +369,13 @@ type AudioStoreTypes = {
     }): SaveResultObject | undefined;
   };
 
+  CONNECT_AND_EXPORT_TEXT: {
+    action(payload: {
+      filePath?: string;
+      encoding?: EncodingType;
+    }): SaveResultObject | undefined;
+  };
+
   PLAY_AUDIO: {
     action(payload: { audioKey: string }): boolean;
   };
@@ -460,6 +496,14 @@ type AudioCommandStoreTypes = {
       accentPhraseIndex: number;
       popUntilPause: boolean;
     }): void;
+  };
+
+  COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKey: string }): void;
+  };
+
+  COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
+    action(payload: { audioKey: string; accentPhraseIndex: number }): void;
   };
 
   COMMAND_SET_AUDIO_MORA_DATA: {
@@ -680,13 +724,6 @@ type IndexStoreTypes = {
     action(): string[];
   };
 
-  SHOW_WARNING_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-    }): Promise<Electron.MessageBoxReturnValue>;
-  };
-
   LOG_ERROR: {
     action(...payload: unknown[]): void;
   };
@@ -755,10 +792,13 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineInfos: EngineInfo[];
+  engineKeys: string[];
+  engineInfos: Record<string, EngineInfo>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
 };
 
 type SettingStoreTypes = {
@@ -826,6 +866,27 @@ type SettingStoreTypes = {
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
+  };
+
+  INIT_SPLIT_TEXT_WHEN_PASTE: {
+    action(): void;
+  };
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
+    action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
+  };
+
+  GET_SPLITTER_POSITION: {
+    action(): void;
+  };
+
+  SET_SPLITTER_POSITION: {
+    mutation: { splitterPosition: SplitterPosition };
+    action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  CHANGE_USE_GPU: {
+    action(payload: { useGpu: boolean }): void;
   };
 };
 
@@ -1042,6 +1103,9 @@ type PresetStoreTypes = {
   GET_PRESET_CONFIG: {
     action(): void;
   };
+  SAVE_PRESET_ORDER: {
+    action(payload: { presetKeys: string[] }): void;
+  };
   SAVE_PRESET_CONFIG: {
     action(payload: {
       presetItems: Record<string, Preset>;
@@ -1062,6 +1126,40 @@ type PresetStoreTypes = {
 export type PresetGetters = StoreType<PresetStoreTypes, "getter">;
 export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
 export type PresetActions = StoreType<PresetStoreTypes, "action">;
+
+/*
+ * Dictionary Store Types
+ */
+
+export type DictionaryStoreState = Record<string, unknown>;
+
+type DictionaryStoreTypes = {
+  LOAD_USER_DICT: {
+    action(): Promise<Record<string, UserDictWord>>;
+  };
+  ADD_WORD: {
+    action(payload: {
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  REWRITE_WORD: {
+    action(payload: {
+      wordUuid: string;
+      surface: string;
+      pronunciation: string;
+      accentType: number;
+    }): Promise<void>;
+  };
+  DELETE_WORD: {
+    action(payload: { wordUuid: string }): Promise<void>;
+  };
+};
+
+export type DictionaryGetters = StoreType<DictionaryStoreTypes, "getter">;
+export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
+export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
 
 /*
  * Setting Store Types
@@ -1108,6 +1206,7 @@ export type State = AudioStoreState &
   SettingStoreState &
   UiStoreState &
   PresetStoreState &
+  DictionaryStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -1118,6 +1217,7 @@ type AllStoreTypes = AudioStoreTypes &
   SettingStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
+  DictionaryStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;

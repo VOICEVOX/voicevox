@@ -22,7 +22,8 @@
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
         "VOICEVOX" +
-        (currentVersion ? " - Ver. " + currentVersion : "")
+        (currentVersion ? " - Ver. " + currentVersion + " - " : "") +
+        (useGpu ? "GPU" : "CPU")
       }}
     </div>
     <q-space />
@@ -42,6 +43,7 @@ import {
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveAllAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
+  connectAndExportTextWithDialog,
 } from "@/components/Dialog";
 
 type MenuItemBase<T extends string> = {
@@ -91,6 +93,7 @@ export default defineComponent({
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
+    const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 
@@ -143,6 +146,16 @@ export default defineComponent({
         quasarDialog: $q.dialog,
         dispatch: store.dispatch,
       });
+    };
+
+    const connectAndExportText = async () => {
+      if (!uiLocked.value) {
+        await connectAndExportTextWithDialog({
+          quasarDialog: $q.dialog,
+          dispatch: store.dispatch,
+          encoding: store.state.savingSetting.fileEncoding,
+        });
+      }
     };
 
     const importTextFile = () => {
@@ -205,11 +218,6 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "新規プロジェクト",
-            onClick: createNewProject,
-          },
-          {
-            type: "button",
             label: "音声書き出し",
             onClick: () => {
               generateAndSaveAllAudio();
@@ -229,6 +237,14 @@ export default defineComponent({
               generateAndConnectAndSaveAllAudio();
             },
           },
+          { type: "separator" },
+          {
+            type: "button",
+            label: "テキストを繋げて書き出し",
+            onClick: () => {
+              connectAndExportText();
+            },
+          },
           {
             type: "button",
             label: "テキスト読み込み",
@@ -237,6 +253,11 @@ export default defineComponent({
             },
           },
           { type: "separator" },
+          {
+            type: "button",
+            label: "新規プロジェクト",
+            onClick: createNewProject,
+          },
           {
             type: "button",
             label: "プロジェクトを上書き保存",
@@ -271,7 +292,7 @@ export default defineComponent({
             type: "button",
             label: "再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE");
+              store.dispatch("RESTART_ENGINE_ALL");
             },
           },
         ],
@@ -398,6 +419,7 @@ export default defineComponent({
       subMenuOpenFlags,
       reassignSubMenuOpen,
       menudata,
+      useGpu,
     };
   },
 });
