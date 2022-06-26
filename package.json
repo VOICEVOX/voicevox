@@ -76,7 +76,7 @@
     "@vue/test-utils": "2.0.0-rc.6",
     "chai": "4.3.4",
     "chai-as-promised": "7.1.1",
-    "electron": "16.0.6",
+    "electron": "19.0.6",
     "electron-devtools-installer": "3.2.0",
     "eslint": "6.8.0",
     "eslint-plugin-prettier": "3.4.0",
