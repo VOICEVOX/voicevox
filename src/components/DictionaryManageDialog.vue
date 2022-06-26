@@ -222,6 +222,7 @@ import {
 import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
+import { getEngineIdByEngineKey } from "@/store/audio";
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -236,6 +237,8 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const $q = useQuasar();
+
+    const engineKeyComputed = computed(() => store.state.engineKeys[0]); // TODO: 複数エンジン対応
 
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
@@ -256,10 +259,16 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       loadingDict.value = true;
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT")
+          store.dispatch("LOAD_USER_DICT", {
+            engineKey,
+          })
         );
       } catch {
         $q.dialog({
@@ -330,6 +339,10 @@ export default defineComponent({
       surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
@@ -352,6 +365,7 @@ export default defineComponent({
           await createUILockAction(
             store.dispatch("FETCH_ACCENT_PHRASES", {
               text: text + "ガ'",
+              engineKey,
               styleId: styleId.value,
               isKana: true,
             })
@@ -370,12 +384,17 @@ export default defineComponent({
     };
 
     const changeAccent = async (_: number, accent: number) => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
           await createUILockAction(
             store.dispatch("FETCH_MORA_DATA", {
               accentPhrases: [accentPhrase.value],
+              engineKey,
               styleId: styleId.value,
             })
           )
@@ -387,6 +406,12 @@ export default defineComponent({
     audioElem.pause();
 
     const play = async () => {
+      const engineKey = engineKeyComputed.value;
+      if (engineKey === undefined)
+        throw new Error(`assert engineKey !== undefined`);
+
+      const engineId = getEngineIdByEngineKey(store.state, engineKey);
+
       if (!accentPhrase.value) return;
       nowGenerating.value = true;
       const query: AudioQuery = {
@@ -403,6 +428,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
+        engineId,
         styleId: styleId.value,
         query,
       };

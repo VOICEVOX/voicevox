@@ -34,6 +34,7 @@
                 "
                 @click="
                   changeStyleId(
+                    characterInfo.metas.speakerUuid,
                     getDefaultStyle(characterInfo.metas.speakerUuid).styleId
                   )
                 "
@@ -89,7 +90,12 @@
                         v-close-popup
                         active-class="selected-character-item"
                         :active="style.styleId === selectedStyle.styleId"
-                        @click="changeStyleId(style.styleId)"
+                        @click="
+                          changeStyleId(
+                            characterInfo.metas.speakerUuid,
+                            style.styleId
+                          )
+                        "
                       >
                         <q-avatar rounded size="2rem" class="q-mr-md">
                           <q-img
@@ -160,6 +166,7 @@ import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { QInput, debounce } from "quasar";
+import { getEngineIdByEngineKey } from "@/store/audio";
 
 export default defineComponent({
   name: "AudioCell",
@@ -187,11 +194,11 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() =>
       userOrderedCharacterInfos.value !== undefined &&
+      audioItem.value.engineId !== undefined &&
       audioItem.value.styleId !== undefined
-        ? userOrderedCharacterInfos.value.find((info) =>
-            info.metas.styles.find(
-              (style) => style.styleId === audioItem.value.styleId
-            )
+        ? store.getters.CHARACTER_INFO(
+            audioItem.value.engineId,
+            audioItem.value.styleId
           )
         : undefined
     );
@@ -245,9 +252,22 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (styleId: number) => {
+    const changeStyleId = (speakerUuid: string, styleId: number) => {
+      const engineKey = store.state.engineKeys.find((_engineKey) =>
+        (store.state.characterInfos[_engineKey] ?? []).some(
+          (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
+        )
+      );
+      if (engineKey === undefined)
+        throw new Error(
+          `No engineKey for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+        );
+
+      const engineId = getEngineIdByEngineKey(store.state, engineKey);
+
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
+        engineId,
         styleId,
       });
     };
@@ -305,10 +325,17 @@ export default defineComponent({
             await pushAudioText();
           }
 
+          const engineId = audioItem.value.engineId;
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
+
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined) throw new Error("styleId == undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            engineId,
             styleId,
             prevAudioKey,
           });

@@ -18,10 +18,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
-    LOAD_USER_DICT: async ({ state, dispatch }) => {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
-        throw new Error(`No such engine registered: index == 0`);
+    LOAD_USER_DICT: async ({ dispatch }, { engineKey }) => {
       const engineDict = await dispatch("INVOKE_ENGINE_CONNECTOR", {
         engineKey,
         action: "getUserDictWordsUserDictGet",

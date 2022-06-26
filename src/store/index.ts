@@ -19,6 +19,8 @@ import {
   audioStore,
   audioCommandStore,
   audioCommandStoreState,
+  getCharacterInfo,
+  getFlattenCharacterInfos,
 } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -54,14 +56,20 @@ export const indexStore: VoiceVoxStoreOptions<
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          const characterInfo = state.characterInfos?.find(
-            (info) =>
-              info.metas.styles.find(
-                (style) => style.styleId == audioItem.styleId
-              ) != undefined
+          if (audioItem.engineId === undefined)
+            throw new Error("assert audioItem.engineId !== undefined");
+
+          if (audioItem.styleId === undefined)
+            throw new Error("assert audioItem.styleId !== undefined");
+
+          const characterInfo = getCharacterInfo(
+            state,
+            audioItem.engineId,
+            audioItem.styleId
           );
-          if (characterInfo == undefined)
-            throw new Error("characterInfo == undefined");
+
+          if (characterInfo === undefined)
+            throw new Error("assert characterInfo !== undefined");
 
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
@@ -116,10 +124,10 @@ export const indexStore: VoiceVoxStoreOptions<
       await window.electron.setUserCharacterOrder(userCharacterOrder);
     },
     GET_NEW_CHARACTERS({ state }) {
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+      const flattenCharacterInfos = getFlattenCharacterInfos(state);
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
-      const allSpeakerUuid = state.characterInfos.map(
+      const allSpeakerUuid = flattenCharacterInfos.map(
         (characterInfo) => characterInfo.metas.speakerUuid
       );
       const newSpeakerUuid = allSpeakerUuid.filter(
@@ -133,11 +141,11 @@ export const indexStore: VoiceVoxStoreOptions<
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
       let defaultStyleIds = await window.electron.getDefaultStyleIds();
 
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+      const flattenCharacterInfos = getFlattenCharacterInfos(state);
 
       // デフォルトスタイルが設定されていない場合は0をセットする
       // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
-      const unsetCharacterInfos = state.characterInfos.filter(
+      const unsetCharacterInfos = flattenCharacterInfos.filter(
         (characterInfo) =>
           !defaultStyleIds.some(
             (styleId) => styleId.speakerUuid == characterInfo.metas.speakerUuid
