@@ -13,6 +13,7 @@
           snap
           dense
           color="primary-light"
+          trackSize="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
