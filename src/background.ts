@@ -1216,14 +1216,14 @@ app.on("before-quit", (event) => {
   log.info("Checking ENGINE status before app quit");
 
   const allPromises = killEngineAll();
-  const killingPromises = Object.fromEntries(
+  const killingProcessPromises = Object.fromEntries(
     Object.entries(allPromises).filter(([, promise]) => promise !== undefined)
   );
 
-  const numEngineProcess = Object.entries(killingPromises).length; // assert == engineProcessContainers.length
+  const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // すべてのエンジンプロセスが停止している
-  if (numEngineProcess === 0) {
+  if (numLivingEngineProcess === 0) {
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1238,7 +1238,7 @@ app.on("before-quit", (event) => {
 
   // 非同期的にすべてのエンジンプロセスをキル
   (async () => {
-    for (const [engineKey, promise] of Object.entries(killingPromises)) {
+    for (const [engineKey, promise] of Object.entries(killingProcessPromises)) {
       try {
         await promise;
       } catch (error: unknown) {
@@ -1250,7 +1250,7 @@ app.on("before-quit", (event) => {
 
       numEngineProcessKilled++;
       log.info(
-        `ENGINE ${engineKey}: Process killed. ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
+        `ENGINE ${engineKey}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
       );
     }
 
