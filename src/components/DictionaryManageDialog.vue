@@ -33,33 +33,29 @@
           </div>
           <div class="col-4 word-list-col">
             <div v-if="wordEditing" class="word-list-disable-overlay" />
-            <div class="word-list-header">
-              <div class="word-list-title text-h5">単語一覧</div>
-              <div>
+            <div class="word-list-header text-no-wrap">
+              <div class="row word-list-title text-h5">単語一覧</div>
+              <div class="row no-wrap">
                 <q-btn
                   outline
                   text-color="warning"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
                   >削除</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="editWord"
                   :disable="uiLocked || !selectedId"
                   >編集</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="newWord"
                   :disable="uiLocked"
                   >追加</q-btn
@@ -88,7 +84,10 @@
           </div>
 
           <!-- 右側のpane -->
-          <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
+          <div
+            v-if="wordEditing"
+            class="col-8 no-wrap text-no-wrap word-editor"
+          >
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <q-input
@@ -145,9 +144,6 @@
               <div
                 ref="accentPhraseTable"
                 class="accent-phrase-table overflow-hidden-y"
-                :style="{
-                  justifyContent: centeringAccentPhrase ? 'center' : undefined,
-                }"
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <audio-accent
@@ -215,7 +211,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
@@ -329,16 +325,7 @@ export default defineComponent({
     const isOnlyHiraOrKana = ref(true);
     const accentPhrase = ref<AccentPhrase | undefined>();
     const accentPhraseTable = ref<HTMLElement>();
-    // スクロールしなければならないほど長いアクセント句はセンタリングしないようにする
-    // computedにすると、ダイアログを表示した際にしか動作しないので、refにして変更時に代入する
-    const centeringAccentPhrase = ref(true);
-    // FIXME: CSSで完結させる
-    const computeCenteringAccentPhrase = () => {
-      centeringAccentPhrase.value =
-        !!accentPhraseTable.value &&
-        accentPhraseTable.value.scrollWidth ==
-          accentPhraseTable.value.offsetWidth;
-    };
+
     const convertHankakuToZenkaku = (text: string) => {
       // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
       return text.replace(/[\u0021-\u007e]/g, (s) => {
@@ -394,10 +381,7 @@ export default defineComponent({
         accentPhrase.value = undefined;
       }
       yomi.value = text;
-      await nextTick();
-      computeCenteringAccentPhrase();
     };
-    window.onresize = computeCenteringAccentPhrase;
 
     const changeAccent = async (_: number, accent: number) => {
       const engineKey = engineKeyComputed.value;
@@ -713,7 +697,6 @@ export default defineComponent({
       setYomi,
       accentPhrase,
       accentPhraseTable,
-      centeringAccentPhrase,
       changeAccent,
       play,
       stop,
@@ -736,12 +719,12 @@ export default defineComponent({
 .word-list-col {
   border-right: solid 1px colors.$setting-item;
   position: relative; // オーバーレイのため
+  overflow-x: hidden;
 }
 
 .word-list-header {
   margin: 1rem;
 
-  display: flex;
   gap: 0.5rem;
   align-items: center;
   justify-content: space-between;
@@ -752,10 +735,10 @@ export default defineComponent({
 
 .word-list {
   // menubar-height + header-height + window-border-width +
-  // 46(title) + 52(new word button)
+  // 82(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 52px}
+      vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
   overflow-y: auto;
@@ -788,6 +771,16 @@ export default defineComponent({
   height: 100%;
   position: absolute;
   z-index: 10;
+}
+
+.word-editor {
+  display: flex;
+  flex-flow: column;
+  height: calc(
+    100vh - #{vars.$menubar-height + vars.$header-height +
+      vars.$window-border-width}
+  ) !important;
+  overflow: auto;
 }
 
 .word-input {
@@ -823,6 +816,7 @@ export default defineComponent({
   align-self: stretch;
 
   display: flex;
+  height: 130px;
   overflow-x: scroll;
   width: calc(66vw - 140px);
 
@@ -833,16 +827,18 @@ export default defineComponent({
 
     .text-cell {
       padding: 0;
-      min-width: 30px;
-      max-width: 30px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row-start: 3;
       text-align: center;
+      white-space: nowrap;
       color: colors.$display;
+      position: relative;
     }
 
     .splitter-cell {
-      min-width: 10px;
-      max-width: 10px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row: 3 / span 1;
       z-index: vars.$detail-view-splitter-cell-z-index;
     }
@@ -850,12 +846,6 @@ export default defineComponent({
 }
 
 .save-delete-reset-buttons {
-  // menubar-height + header-height + window-border-width
-  // 46(surface input) + 58(yomi input) + 38(accent title) + 18(accent desc) + 130(accent)
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 58px + 38px + 18px + 130px}
-  );
   padding: 20px;
 
   display: flex;
