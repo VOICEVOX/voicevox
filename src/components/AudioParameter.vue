@@ -144,8 +144,8 @@ div {
     min-width: 20px;
     max-width: 20px;
     :deep(.q-slider__track-container--v) {
-      margin-left: -1.5px;
-      width: 3px;
+      margin-left: -2px;
+      width: 4px;
     }
   }
   .value-label {
