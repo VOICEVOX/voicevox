@@ -26,6 +26,7 @@
               text-color="display-dark"
               icon="stop"
               @click="stop"
+              :disable="nowGenerating"
             ></q-btn>
           </template>
         </div>
