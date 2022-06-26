@@ -498,19 +498,23 @@ async function runEngine(engineKey: string) {
   });
 }
 
+function killEngineAll(): Record<string, Promise<void>> {
+  const killingProcessPromises: Record<string, Promise<void>> = {};
+
+  for (const engineKey of Object.keys(engineProcessContainers)) {
+    const promise = killEngine(engineKey);
+    if (promise === undefined) continue;
+
+    killingProcessPromises[engineKey] = promise;
+  }
+
+  return killingProcessPromises;
+}
+
 // Promise<void> | undefined
 // Promise.resolve: エンジンプロセスのキルに成功した（非同期）
 // Promise.reject: エンジンプロセスのキルに失敗した（非同期）
 // undefined: エンジンプロセスのキルが開始されなかった＝エンジンプロセスがすでに停止している（同期）
-function killEngineAll(): Record<string, Promise<void> | undefined> {
-  return Object.fromEntries(
-    Object.keys(engineProcessContainers).map((engineKey) => [
-      engineKey,
-      killEngine(engineKey),
-    ])
-  );
-}
-
 function killEngine(engineKey: string): Promise<void> | undefined {
   const engineProcessContainer = engineProcessContainers[engineKey];
   if (!engineProcessContainer) {
@@ -1215,11 +1219,7 @@ app.on("before-quit", (event) => {
 
   log.info("Checking ENGINE status before app quit");
 
-  const allPromises = killEngineAll();
-  const killingProcessPromises = Object.fromEntries(
-    Object.entries(allPromises).filter(([, promise]) => promise !== undefined)
-  );
-
+  const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // すべてのエンジンプロセスが停止している
