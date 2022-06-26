@@ -538,7 +538,7 @@ function killEngine(engineKey: string): Promise<void> | undefined {
   if (!isAlive) {
     log.info(`ENGINE ${engineKey}: Process already closed`);
 
-    return new Promise<void>((resolve) => resolve());
+    return undefined;
   }
 
   return new Promise<void>((resolve, reject) => {
