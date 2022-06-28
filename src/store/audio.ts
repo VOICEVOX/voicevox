@@ -658,14 +658,14 @@ export const audioStore: VoiceVoxStoreOptions<
      * 初期化済みだった場合は何もしない。
      */
     async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
-      const engineInfo = state.engineInfos[0]; // TODO: 複数エンジン対応
-      if (!engineInfo)
-        throw new Error(`No such engineInfo registered: index == 0`);
+      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加する予定
+      if (engineKey === undefined)
+        throw new Error(`No such engine registered: index == 0`);
 
       // FIXME: なぜかbooleanではなくstringが返ってくる。
       // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
       const isInitialized: string = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey: engineInfo.key,
+        engineKey,
         action: "isInitializedSpeakerIsInitializedSpeakerGet",
         payload: [{ speaker: styleId }],
       });
@@ -676,7 +676,7 @@ export const audioStore: VoiceVoxStoreOptions<
         await dispatch("ASYNC_UI_LOCK", {
           callback: () =>
             dispatch("INVOKE_ENGINE_CONNECTOR", {
-              engineKey: engineInfo.key,
+              engineKey,
               action: "initializeSpeakerInitializeSpeakerPost",
               payload: [{ speaker: styleId }],
             }),
