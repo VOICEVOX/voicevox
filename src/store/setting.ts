@@ -296,10 +296,12 @@ export const settingStore: VoiceVoxStoreOptions<
           }
         }
 
+        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+        if (engineKey === undefined)
+          throw new Error(`No such engine registered: index == 0`);
+
         await dispatch("SET_USE_GPU", { useGpu });
-        const success = await dispatch("RESTART_ENGINE", {
-          engineKey: state.engineInfos[0].key,
-        }); // TODO: 複数エンジン対応
+        const success = await dispatch("RESTART_ENGINE", { engineKey });
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
