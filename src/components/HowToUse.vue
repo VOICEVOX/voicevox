@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, nextTick } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 export default defineComponent({
@@ -14,10 +14,7 @@ export default defineComponent({
     const howToUse = ref("");
     const md = useMarkdownIt();
     onMounted(async () => {
-      await nextTick(async () => {
-        howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
-        // howToUse.value = md.render("");
-      });
+      howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
     });
     return {
       howToUse,
