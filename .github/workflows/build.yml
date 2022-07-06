@@ -30,7 +30,7 @@ env:
 
 jobs:
   build-noengine-prepackage:
-    environment: ${{ github.event.inputs.code_signing && 'code_signing' }} # コード署名用のenvironment
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
