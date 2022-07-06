@@ -268,7 +268,7 @@ jobs:
       # build electronでコード署名するには環境変数を指定が必要だけど、
       # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing
         shell: bash
         run: |
           # 複数行の文字列を環境変数に代入
@@ -289,7 +289,7 @@ jobs:
         run: npm run electron:build_pnever -- --dir
 
       - name: Reset Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing
         shell: bash
         run: |
           echo 'CSC_LINK=' >> $GITHUB_ENV
