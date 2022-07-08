@@ -26,7 +26,7 @@ env:
   VOICEVOX_RESOURCE_VERSION: 0.12.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
-    ${{ github.event.release.tag_name || github.event.inputs.version || 'latest' }}
+    ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
   build-noengine-prepackage:
