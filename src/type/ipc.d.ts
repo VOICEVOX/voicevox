@@ -76,6 +76,11 @@ export type IpcIHData = {
     return?: string;
   };
 
+  SHOW_TEXT_SAVE_DIALOG: {
+    args: [obj: { title: string; defaultPath?: string }];
+    return?: string;
+  };
+
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
@@ -118,6 +123,26 @@ export type IpcIHData = {
       }
     ];
     return: number;
+  };
+
+  SHOW_WARNING_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
   };
 
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
@@ -173,6 +198,11 @@ export type IpcIHData = {
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
+  };
+
+  RESTART_ENGINE_ALL: {
+    args: [];
+    return: void;
   };
 
   RESTART_ENGINE: {
