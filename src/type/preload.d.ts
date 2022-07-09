@@ -91,7 +91,7 @@ export interface Sandbox {
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getSplitterPosition(): Promise<SplitterPosition>;
   setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
-  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
