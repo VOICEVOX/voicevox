@@ -7,8 +7,7 @@ import {
 import fs from "fs";
 import path from "path";
 
-import { Sandbox } from "@/type/preload";
-import { SystemError } from "@/store/type";
+import { Sandbox, SystemError } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
