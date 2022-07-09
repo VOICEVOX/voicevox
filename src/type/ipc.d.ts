@@ -3,7 +3,7 @@ import { EngineInfo, SplitTextWhenPasteType } from "@/type/preload";
 /**
  * invoke, handle
  */
-type IpcIHData = {
+export type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
     return: import("@/type/preload").AppInfos;
@@ -297,7 +297,7 @@ type IpcIHData = {
 /**
  * send, on
  */
-type IpcSOData = {
+export type IpcSOData = {
   LOAD_PROJECT_FILE: {
     args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;

@@ -9,6 +9,7 @@ import path from "path";
 
 import { Sandbox } from "@/type/preload";
 import { SystemError } from "@/store/type";
+import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,

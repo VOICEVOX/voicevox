@@ -1,4 +1,5 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcSOData } from "./ipc";
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
