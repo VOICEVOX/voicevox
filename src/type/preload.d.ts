@@ -16,6 +16,7 @@ export interface StoreType {
   acceptTerms: AcceptTermsStatus;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
 }
 
 export interface Sandbox {
@@ -303,6 +304,10 @@ export type SplitterPosition = {
   portraitPaneWidth: number | undefined;
   audioInfoPaneWidth: number | undefined;
   audioDetailPaneHeight: number | undefined;
+};
+
+export type ConfirmedTips = {
+  tweakableSliderByScroll: boolean;
 };
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。

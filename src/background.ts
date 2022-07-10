@@ -371,6 +371,15 @@ const store = new Store<StoreType>({
       },
       default: {},
     },
+    confirmedTips: {
+      type: "object",
+      properties: {
+        tweakableSliderByScroll: { type: "boolean", default: "false" },
+      },
+      default: {
+        tweakableSliderByScroll: false,
+      },
+    },
   },
   migrations: {},
 });
