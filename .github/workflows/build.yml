@@ -886,6 +886,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.7z.*
 
@@ -896,6 +897,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.7z.*
 
@@ -905,6 +907,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.exe
 
@@ -915,6 +918,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.dmg
 
@@ -925,6 +929,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.tar.gz
 
@@ -935,5 +940,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.zip
