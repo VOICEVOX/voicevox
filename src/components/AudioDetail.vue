@@ -34,7 +34,7 @@
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
         <div
-          v-if="selectedDetail === 'pitch' && !sliderTipsConfirmed"
+          v-if="selectedDetail === 'pitch' && !sliderTipConfirmed"
           class="pitch-help-banner"
         >
           <q-banner
@@ -55,7 +55,7 @@
                 color="primary"
                 text-color="display"
                 label="OK"
-                @click="sliderTipsConfirmed = true"
+                @click="sliderTipConfirmed = true"
               />
             </template>
           </q-banner>
@@ -762,7 +762,7 @@ export default defineComponent({
       }
     };
 
-    const sliderTipsConfirmed = tipConfirmed("tweakableSliderByScroll");
+    const sliderTipConfirmed = tipConfirmed("tweakableSliderByScroll");
 
     onMounted(() => {
       window.addEventListener("keyup", keyEventListter);
@@ -805,7 +805,7 @@ export default defineComponent({
       shiftKeyFlag,
       handleChangeVoicing,
       audioDetail,
-      sliderTipsConfirmed,
+      sliderTipConfirmed,
     };
   },
 });
