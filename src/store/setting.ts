@@ -284,6 +284,11 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
     },
+    CONFIRM_TIP({ state, dispatch }, { key, value }) {
+      dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: { ...state.confirmedTips, [key]: value ?? true },
+      });
+    },
 
     /**
      * CPU/GPUモードを切り替えようとする。

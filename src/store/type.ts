@@ -896,6 +896,10 @@ type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  CONFIRM_TIP: {
+    action(payload: { key: keyof ConfirmedTips; value?: boolean }): void;
+  };
+
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
   };

@@ -34,6 +34,28 @@
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
         <div
+          v-if="selectedDetail === 'pitch' && !sliderTipsConfirmed"
+          class="pitch-help-banner"
+        >
+          <q-banner class="bg-grey-8 text-white" dense rounded inline-actions>
+            <template v-slot:avatar>
+              <q-icon name="info" color="white" />
+            </template>
+            マウスホイールを使って<br />
+            スライダーを微調整できます。<br /><br />
+            ホイール: ±0.1<br />
+            Ctrl + ホイール: ±0.01
+            <template v-slot:action>
+              <q-btn
+                flat
+                color="white"
+                label="OK"
+                @click="sliderTipsConfirmed = true"
+              />
+            </template>
+          </q-banner>
+        </div>
+        <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           class="mora-table"
@@ -248,6 +270,7 @@ import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
+import { tipConfirmed } from "@/helpers/tipConfirmed";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter },
@@ -734,6 +757,8 @@ export default defineComponent({
       }
     };
 
+    const sliderTipsConfirmed = tipConfirmed("tweakableSliderByScroll");
+
     onMounted(() => {
       window.addEventListener("keyup", keyEventListter);
       document.addEventListener("keydown", keyEventListter);
@@ -775,6 +800,7 @@ export default defineComponent({
       shiftKeyFlag,
       handleChangeVoicing,
       audioDetail,
+      sliderTipsConfirmed,
     };
   },
 });
@@ -785,6 +811,13 @@ export default defineComponent({
 @use '@/styles/colors' as colors;
 
 $pitch-label-height: 24px;
+
+.pitch-help-banner {
+  z-index: 1;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
 
 .root > div {
   display: flex;
