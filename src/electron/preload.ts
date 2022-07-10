@@ -7,7 +7,7 @@ import {
 import fs from "fs";
 import path from "path";
 
-import { Sandbox } from "@/type/preload";
+import { Sandbox, StoreType } from "@/type/preload";
 import { SystemError } from "@/store/type";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -309,6 +309,21 @@ const api: Sandbox = {
       "SET_SPLIT_TEXT_WHEN_PASTE",
       splitTextWhenPaste
     );
+  },
+
+  getSetting: async (key) => {
+    return (await ipcRendererInvoke(
+      "GET_SETTING",
+      key
+    )) as StoreType[typeof key];
+  },
+
+  setSetting: async (key, newValue) => {
+    return (await ipcRendererInvoke(
+      "SET_SETTING",
+      key,
+      newValue
+    )) as typeof newValue;
   },
 };
 

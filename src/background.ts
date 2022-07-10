@@ -37,6 +37,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  StoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -205,23 +206,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<{
-  useGpu: boolean;
-  inheritAudioInfo: boolean;
-  activePointScrollMode: ActivePointScrollMode;
-  savingSetting: SavingSetting;
-  presets: PresetConfig;
-  hotkeySettings: HotkeySetting[];
-  toolbarSetting: ToolbarSetting;
-  userCharacterOrder: string[];
-  defaultStyleIds: DefaultStyleId[];
-  currentTheme: string;
-  experimentalSetting: ExperimentalSetting;
-  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  acceptTerms: AcceptTermsStatus;
-  splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
-}>({
+const store = new Store<StoreType>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -1232,6 +1217,15 @@ ipcMainHandle("GET_SPLITTER_POSITION", () => {
 
 ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
   store.set("splitterPosition", splitterPosition);
+});
+
+ipcMainHandle("GET_SETTING", (_, key) => {
+  return store.get(key);
+});
+
+ipcMainHandle("SET_SETTING", (_, key, newValue) => {
+  store.set(key, newValue);
+  return store.get(key);
 });
 
 // app callback

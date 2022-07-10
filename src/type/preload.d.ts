@@ -1,5 +1,23 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
 
+export interface StoreType {
+  useGpu: boolean;
+  inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
+  savingSetting: SavingSetting;
+  presets: PresetConfig;
+  hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
+  defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
+}
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getHowToUseText(): Promise<string>;
@@ -96,6 +114,11 @@ export interface Sandbox {
   vuexReady(): void;
   getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
   setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
+  getSetting<Key extends keyof StoreType>(key: Key): Promise<StoreType[Key]>;
+  setSetting<Key extends keyof StoreType>(
+    key: Key,
+    newValue: StoreType[Key]
+  ): Promise<StoreType[Key]>;
 }
 
 export type AppInfos = {

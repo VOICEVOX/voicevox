@@ -292,6 +292,16 @@ type IpcIHData = {
     args: [splitTextWhenPaste: SplitTextWhenPasteType];
     return: void;
   };
+
+  GET_SETTING: {
+    args: [key: keyof import("@/type/preload").StoreType];
+    return: unknown;
+  };
+
+  SET_SETTING: {
+    args: [key: keyof import("@/type/preload").StoreType];
+    return: unknown;
+  };
 };
 
 /**
