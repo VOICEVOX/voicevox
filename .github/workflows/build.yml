@@ -30,7 +30,7 @@ env:
 
 jobs:
   build-noengine-prepackage:
-    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -261,7 +261,7 @@ jobs:
       # build electronでコード署名するには環境変数を指定が必要だけど、
       # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
-        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           # 複数行の文字列を環境変数に代入
@@ -282,7 +282,7 @@ jobs:
         run: npm run electron:build_pnever -- --dir
 
       - name: Reset Code Signing Envs
-        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           echo 'CSC_LINK=' >> $GITHUB_ENV
@@ -538,7 +538,7 @@ jobs:
   build-distributable:
     if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
     needs: [build-engine-prepackage]
-    environment: ${{ github.event.inputs.code_signing && 'code_signing' }} # コード署名用のenvironment
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -713,7 +713,7 @@ jobs:
       # build electronでコード署名するには環境変数を指定が必要だけど、
       # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing
+        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           # 複数行の文字列を環境変数に代入
@@ -741,7 +741,7 @@ jobs:
         run: npm run electron:build_pnever -- --prepackaged "prepackage/VOICEVOX.app"
 
       - name: Reset Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing
+        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           echo 'CSC_LINK=' >> $GITHUB_ENV
