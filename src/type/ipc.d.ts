@@ -294,12 +294,12 @@ type IpcIHData = {
   };
 
   GET_SETTING: {
-    args: [key: keyof import("@/type/preload").StoreType];
+    args: [key: keyof import("@/type/preload").ElectronStoreType];
     return: unknown;
   };
 
   SET_SETTING: {
-    args: [key: keyof import("@/type/preload").StoreType];
+    args: [key: keyof import("@/type/preload").ElectronStoreType];
     return: unknown;
   };
 };

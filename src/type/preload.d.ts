@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
 
-export interface StoreType {
+export interface ElectronStoreType {
   useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
@@ -115,11 +115,13 @@ export interface Sandbox {
   vuexReady(): void;
   getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
   setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
-  getSetting<Key extends keyof StoreType>(key: Key): Promise<StoreType[Key]>;
-  setSetting<Key extends keyof StoreType>(
+  getSetting<Key extends keyof ElectronStoreType>(
+    key: Key
+  ): Promise<ElectronStoreType[Key]>;
+  setSetting<Key extends keyof ElectronStoreType>(
     key: Key,
-    newValue: StoreType[Key]
-  ): Promise<StoreType[Key]>;
+    newValue: ElectronStoreType[Key]
+  ): Promise<ElectronStoreType[Key]>;
 }
 
 export type AppInfos = {

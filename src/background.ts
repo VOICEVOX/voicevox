@@ -37,7 +37,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
-  StoreType,
+  ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -206,7 +206,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<StoreType>({
+const store = new Store<ElectronStoreType>({
   schema: {
     useGpu: {
       type: "boolean",
