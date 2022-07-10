@@ -37,9 +37,14 @@
           v-if="selectedDetail === 'pitch' && !sliderTipsConfirmed"
           class="pitch-help-banner"
         >
-          <q-banner class="bg-grey-8 text-white" dense rounded inline-actions>
+          <q-banner
+            class="bg-display-light text-display"
+            dense
+            rounded
+            inline-actions
+          >
             <template v-slot:avatar>
-              <q-icon name="info" color="white" />
+              <q-icon name="info" color="primary" />
             </template>
             マウスホイールを使って<br />
             スライダーを微調整できます。<br /><br />
@@ -47,8 +52,8 @@
             Ctrl + ホイール: ±0.01
             <template v-slot:action>
               <q-btn
-                flat
-                color="white"
+                color="primary"
+                text-color="display"
                 label="OK"
                 @click="sliderTipsConfirmed = true"
               />
