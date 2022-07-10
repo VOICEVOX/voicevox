@@ -374,7 +374,7 @@ const store = new Store<ElectronStoreType>({
     confirmedTips: {
       type: "object",
       properties: {
-        tweakableSliderByScroll: { type: "boolean", default: "false" },
+        tweakableSliderByScroll: { type: "boolean", default: false },
       },
       default: {
         tweakableSliderByScroll: false,
