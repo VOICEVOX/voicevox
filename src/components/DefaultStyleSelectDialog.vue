@@ -149,7 +149,11 @@
                             style.styleId === playing.styleId &&
                             voiceSampleIndex === playing.index
                               ? stop()
-                              : play(style, voiceSampleIndex)
+                              : play(
+                                  characterInfo.metas.speakerUuid,
+                                  style,
+                                  voiceSampleIndex
+                                )
                           "
                         />
                         <q-radio

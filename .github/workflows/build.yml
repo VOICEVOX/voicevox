@@ -8,17 +8,29 @@ on:
     types:
       - created
   workflow_dispatch:
+    inputs:
+      version:
+        description: "バージョン情報（A.BB.C / A.BB.C-preview.D）"
+        required: true
+      prerelease:
+        description: "プレリリースかどうか"
+        type: boolean
+        default: true
+      code_signing:
+        description: "コード署名する"
+        type: boolean
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.12.2
-  VOICEVOX_RESOURCE_VERSION: 0.12.1
+  VOICEVOX_ENGINE_VERSION: 0.12.3
+  VOICEVOX_RESOURCE_VERSION: 0.12.3
   VOICEVOX_EDITOR_VERSION:
-    |- # releaseのときはタグが、それ以外は999.999.999がバージョン名に
-    ${{ github.event.release.tag_name != '' && github.event.release.tag_name || '999.999.999' }}
+    |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
+    ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
   build-noengine-prepackage:
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -246,6 +258,19 @@ jobs:
         run: |
           df -h
 
+      # build electronでコード署名するには環境変数を指定が必要だけど、
+      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
+      - name: Define Code Signing Envs
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
+        shell: bash
+        run: |
+          # 複数行の文字列を環境変数に代入
+          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
+          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+
       # Build result will be exported to ${{ matrix.artifact_path }}
       - name: Build Electron
         shell: bash
@@ -255,6 +280,13 @@ jobs:
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: npm run electron:build_pnever -- --dir
+
+      - name: Reset Code Signing Envs
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
+        shell: bash
+        run: |
+          echo 'CSC_LINK=' >> $GITHUB_ENV
+          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
 
       - name: Upload NoEngine Prepackage
         uses: actions/upload-artifact@v2
@@ -504,8 +536,9 @@ jobs:
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
 
   build-distributable:
-    if: github.event.release.tag_name != '' # If release
+    if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
     needs: [build-engine-prepackage]
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment
     env:
       CYPRESS_CACHE_FOLDER: ~/.npm/cypress_cache
       ELECTRON_CACHE: .cache/electron
@@ -677,6 +710,19 @@ jobs:
         run: |
           df -h
 
+      # build electronでコード署名するには環境変数を指定が必要だけど、
+      # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
+      - name: Define Code Signing Envs
+        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
+        shell: bash
+        run: |
+          # 複数行の文字列を環境変数に代入
+          echo 'CSC_LINK<<EOF' >> $GITHUB_ENV
+          echo "${{ secrets.CERT_BASE64 }}" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+          echo 'CSC_KEY_PASSWORD=${{ secrets.CERT_PASSWORD }}' >> $GITHUB_ENV
+
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
         if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage') # windows and linux
@@ -693,6 +739,13 @@ jobs:
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: npm run electron:build_pnever -- --prepackaged "prepackage/VOICEVOX.app"
+
+      - name: Reset Code Signing Envs
+        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
+        shell: bash
+        run: |
+          echo 'CSC_LINK=' >> $GITHUB_ENV
+          echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
 
       - name: Show disk space (debug info)
         shell: bash
@@ -743,7 +796,7 @@ jobs:
             nsis-web-artifact/*
 
   upload-distributable-to-release:
-    if: github.event.release.tag_name != '' # If release
+    if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
     needs: [build-distributable]
     strategy:
       fail-fast: false
@@ -832,7 +885,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.7z.*
 
@@ -842,7 +896,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.7z.*
 
@@ -851,7 +906,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.exe
 
@@ -861,7 +917,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.dmg
 
@@ -871,7 +928,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.tar.gz
 
@@ -881,6 +939,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }} # == github.event.release.tag_name
+          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          prerelease: ${{ github.event.inputs.prerelease }}
           file_glob: true
           file: artifact/*.zip
