@@ -56,6 +56,7 @@ export const settingStoreState: SettingStoreState = {
   },
   confirmedTips: {
     tweakableSliderByScroll: false,
+    test: false,
   },
 };
 
