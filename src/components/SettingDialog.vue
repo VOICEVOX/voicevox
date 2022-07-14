@@ -26,7 +26,6 @@
         </q-header>
         <q-page ref="scroller" class="scroller">
           <div class="q-pa-md row items-start q-gutter-md">
-            <tip tip-key="test"> うわああああああああああああああ </tip>
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -718,14 +717,12 @@ import {
   SplitTextWhenPasteType,
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
-import Tip from "./Tip.vue";
 
 export default defineComponent({
   name: "SettingDialog",
 
   components: {
     FileNamePatternDialog,
-    Tip,
   },
 
   props: {

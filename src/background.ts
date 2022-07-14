@@ -375,11 +375,9 @@ const store = new Store<ElectronStoreType>({
       type: "object",
       properties: {
         tweakableSliderByScroll: { type: "boolean", default: false },
-        test: { type: "boolean", default: false },
       },
       default: {
         tweakableSliderByScroll: false,
-        test: false,
       },
     },
   },
