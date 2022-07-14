@@ -33,33 +33,18 @@
       </div>
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
-        <div
-          v-if="selectedDetail === 'pitch' && !sliderTipConfirmed"
-          class="pitch-help-banner"
+        <tip
+          tip-key="tweakableSliderByScroll"
+          v-if="selectedDetail === 'pitch'"
+          class="tip-tweakable-slider-by-scroll"
         >
-          <q-banner
-            class="bg-display-light text-display"
-            dense
-            rounded
-            inline-actions
-          >
-            <template v-slot:avatar>
-              <q-icon name="info" color="primary" />
-            </template>
+          <p>
             マウスホイールを使って<br />
-            スライダーを微調整できます。<br /><br />
-            ホイール: ±0.1<br />
-            Ctrl + ホイール: ±0.01
-            <template v-slot:action>
-              <q-btn
-                color="primary"
-                text-color="display"
-                label="OK"
-                @click="sliderTipConfirmed = true"
-              />
-            </template>
-          </q-banner>
-        </div>
+            スライダーを微調整できます。
+          </p>
+          ホイール: ±0.1<br />
+          Ctrl + ホイール: ±0.01
+        </tip>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -270,15 +255,15 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import Tip from "./Tip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
-import { tipConfirmed } from "@/helpers/tipConfirmed";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter },
+  components: { AudioAccent, AudioParameter, Tip },
 
   name: "AudioDetail",
 
@@ -762,8 +747,6 @@ export default defineComponent({
       }
     };
 
-    const sliderTipConfirmed = tipConfirmed("tweakableSliderByScroll");
-
     onMounted(() => {
       window.addEventListener("keyup", keyEventListter);
       document.addEventListener("keydown", keyEventListter);
@@ -805,7 +788,6 @@ export default defineComponent({
       shiftKeyFlag,
       handleChangeVoicing,
       audioDetail,
-      sliderTipConfirmed,
     };
   },
 });
@@ -817,7 +799,7 @@ export default defineComponent({
 
 $pitch-label-height: 24px;
 
-.pitch-help-banner {
+.tip-tweakable-slider-by-scroll {
   z-index: 1;
   position: absolute;
   right: 4px;
