@@ -9,6 +9,12 @@ export const tipConfirmed = (
 
   return computed({
     get: () => store.state.confirmedTips[key],
-    set: (value) => store.dispatch("CONFIRM_TIP", { key, value }),
+    set: (value) =>
+      store.dispatch("SET_CONFIRMED_TIPS", {
+        confirmedTips: {
+          ...store.state.confirmedTips,
+          [key]: value,
+        },
+      }),
   });
 };
