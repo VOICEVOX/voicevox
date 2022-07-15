@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!exposedTipConfirmed">
+  <div v-if="!tipConfirmed">
     <q-banner
       class="bg-display-light text-display"
       dense
@@ -15,7 +15,7 @@
           color="primary"
           text-color="display"
           label="OK"
-          @click="exposedTipConfirmed = true"
+          @click="tipConfirmed = true"
         />
       </template>
     </q-banner>
@@ -23,9 +23,9 @@
 </template>
 
 <script lang="ts">
-import { PropType, defineComponent } from "vue";
-import { tipConfirmed } from "@/helpers/tipConfirmed";
+import { PropType, defineComponent, computed } from "vue";
 import { ConfirmedTips } from "@/type/preload";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "Tip",
@@ -35,10 +35,21 @@ export default defineComponent({
   },
 
   setup(props) {
-    const exposedTipConfirmed = tipConfirmed(props.tipKey);
+    const store = useStore();
+
+    const tipConfirmed = computed({
+      get: () => store.state.confirmedTips[props.tipKey],
+      set: (value) =>
+        store.dispatch("SET_CONFIRMED_TIPS", {
+          confirmedTips: {
+            ...store.state.confirmedTips,
+            [props.tipKey]: value,
+          },
+        }),
+    });
 
     return {
-      exposedTipConfirmed,
+      tipConfirmed,
     };
   },
 });
