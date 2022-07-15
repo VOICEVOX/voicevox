@@ -488,6 +488,7 @@ export default defineComponent({
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
+      // 最初のAudioCellを作成
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -497,6 +498,12 @@ export default defineComponent({
       });
       focusCell({ audioKey: newAudioKey });
 
+      // 最初の話者を初期化
+      if (audioItem.styleId != undefined) {
+        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+      }
+
+      // ショートカットキーの設定
       document.addEventListener("keydown", disableDefaultUndoRedo);
 
       hotkeyActionsNative.forEach((item) => {
