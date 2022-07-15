@@ -1,12 +1,29 @@
-import { EngineInfo, SplitTextWhenPasteType } from "@/type/preload";
+import {
+  AcceptRetrieveTelemetryStatus,
+  AcceptTermsStatus,
+  ActivePointScrollMode,
+  AppInfos,
+  DefaultStyleId,
+  EngineInfo,
+  ExperimentalSetting,
+  HotkeySetting,
+  Preset,
+  PresetConfig,
+  SavingSetting,
+  SplitterPosition,
+  SplitTextWhenPasteType,
+  ThemeSetting,
+  ToolbarSetting,
+  UpdateInfo,
+} from "@/type/preload";
 
 /**
  * invoke, handle
  */
-type IpcIHData = {
+export type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
-    return: import("@/type/preload").AppInfos;
+    return: AppInfos;
   };
 
   GET_TEMP_DIR: {
@@ -31,7 +48,7 @@ type IpcIHData = {
 
   GET_UPDATE_INFOS: {
     args: [];
-    return: import("@/type/preload").UpdateInfo[];
+    return: UpdateInfo[];
   };
 
   GET_OSS_COMMUNITY_INFOS: {
@@ -55,6 +72,11 @@ type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
+    args: [obj: { title: string; defaultPath?: string }];
+    return?: string;
+  };
+
+  SHOW_TEXT_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
@@ -103,6 +125,26 @@ type IpcIHData = {
     return: number;
   };
 
+  SHOW_WARNING_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     args: [];
     return: void;
@@ -119,8 +161,8 @@ type IpcIHData = {
   };
 
   ACTIVE_POINT_SCROLL_MODE: {
-    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
-    return: import("@/type/preload").ActivePointScrollMode;
+    args: [obj: { newValue?: ActivePointScrollMode }];
+    return: ActivePointScrollMode;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -158,14 +200,19 @@ type IpcIHData = {
     return: EngineInfo[];
   };
 
+  RESTART_ENGINE_ALL: {
+    args: [];
+    return: void;
+  };
+
   RESTART_ENGINE: {
     args: [obj: { engineKey: string }];
     return: void;
   };
 
   SAVING_SETTING: {
-    args: [obj: { newData?: import("@/type/preload").SavingSetting }];
-    return: import("@/type/preload").SavingSetting;
+    args: [obj: { newData?: SavingSetting }];
+    return: SavingSetting;
   };
 
   CHECK_FILE_EXISTS: {
@@ -182,22 +229,22 @@ type IpcIHData = {
     args: [
       obj: {
         newPresets?: {
-          presetItems: Record<string, import("@/type/preload").Preset>;
+          presetItems: Record<string, Preset>;
           presetKeys: string[];
         };
       }
     ];
-    return: import("@/type/preload").PresetConfig;
+    return: PresetConfig;
   };
 
   HOTKEY_SETTINGS: {
-    args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
-    return: import("@/type/preload").HotkeySetting[];
+    args: [obj: { newData?: HotkeySetting }];
+    return: HotkeySetting[];
   };
 
   TOOLBAR_SETTING: {
-    args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
-    return: import("@/type/preload").ToolbarSetting;
+    args: [obj: { newData?: ToolbarSetting }];
+    return: ToolbarSetting;
   };
 
   GET_USER_CHARACTER_ORDER: {
@@ -217,7 +264,7 @@ type IpcIHData = {
 
   GET_DEFAULT_STYLE_IDS: {
     args: [];
-    return: import("@/type/preload").DefaultStyleId[];
+    return: DefaultStyleId[];
   };
 
   SET_DEFAULT_STYLE_IDS: {
@@ -227,32 +274,30 @@ type IpcIHData = {
 
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
-    return: import("@/type/preload").HotkeySetting[];
+    return: HotkeySetting[];
   };
 
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
-    return: import("@/type/preload").ToolbarSetting;
+    return: ToolbarSetting;
   };
 
   GET_ACCEPT_RETRIEVE_TELEMETRY: {
     args: [];
-    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
+    return: AcceptRetrieveTelemetryStatus;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [
-      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
-    ];
+    args: [acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus];
     return: void;
   };
   GET_ACCEPT_TERMS: {
     args: [];
-    return: import("@/type/preload").AcceptTermsStatus;
+    return: AcceptTermsStatus;
   };
 
   SET_ACCEPT_TERMS: {
-    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
+    args: [acceptTerms: AcceptTermsStatus];
     return: void;
   };
   GET_EXPERIMENTAL_SETTING: {
@@ -266,17 +311,17 @@ type IpcIHData = {
 
   GET_SPLITTER_POSITION: {
     args: [];
-    return: import("@/type/preload").SplitterPosition;
+    return: SplitterPosition;
   };
 
   SET_SPLITTER_POSITION: {
-    args: [splitterPosition: import("@/type/preload").SplitterPosition];
+    args: [splitterPosition: SplitterPosition];
     return: void;
   };
 
   THEME: {
     args: [obj: { newData?: string }];
-    return: import("@/type/preload").ThemeSetting | void;
+    return: ThemeSetting | void;
   };
 
   ON_VUEX_READY: {
@@ -311,7 +356,7 @@ type IpcIHData = {
 /**
  * send, on
  */
-type IpcSOData = {
+export type IpcSOData = {
   LOAD_PROJECT_FILE: {
     args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;
