@@ -226,16 +226,6 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
-  GET_ACCEPT_TERMS: {
-    args: [];
-    return: AcceptTermsStatus;
-  };
-
-  SET_ACCEPT_TERMS: {
-    args: [acceptTerms: AcceptTermsStatus];
-    return: void;
-  };
-
   GET_SPLITTER_POSITION: {
     args: [];
     return: SplitterPosition;

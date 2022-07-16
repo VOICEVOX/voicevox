@@ -1126,14 +1126,6 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_ACCEPT_TERMS", () => {
-  return store.get("acceptTems");
-});
-
-ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
-  store.set("acceptTems", acceptTerms);
-});
-
 ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
   return store.get("splitTextWhenPaste");
 });

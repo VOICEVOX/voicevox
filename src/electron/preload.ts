@@ -210,14 +210,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
 
-  getAcceptTerms: async () => {
-    return await ipcRendererInvoke("GET_ACCEPT_TERMS");
-  },
-
-  setAcceptTerms: async (acceptTerms) => {
-    return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
-  },
-
   getSplitterPosition: async () => {
     return await ipcRendererInvoke("GET_SPLITTER_POSITION");
   },

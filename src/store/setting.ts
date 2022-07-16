@@ -240,7 +240,7 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     GET_ACCEPT_TERMS({ dispatch }) {
       window.electron
-        .getAcceptTerms()
+        .getSetting("acceptTerms")
         .then((acceptTerms) => dispatch("SET_ACCEPT_TERMS", { acceptTerms }));
     },
     SET_ACCEPT_TERMS({ commit }, { acceptTerms }) {
@@ -248,7 +248,7 @@ export const settingStore: VoiceVoxStoreOptions<
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.electron.setAcceptTerms(acceptTerms);
+      window.electron.setSetting("acceptTerms", acceptTerms);
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
     GET_EXPERIMENTAL_SETTING({ dispatch }) {
