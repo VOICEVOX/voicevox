@@ -66,7 +66,6 @@ export interface Sandbox {
   }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
-  inheritAudioInfo(newValue?: boolean): Promise<boolean>;
   activePointScrollMode(
     newValue?: ActivePointScrollMode
   ): Promise<ActivePointScrollMode>;

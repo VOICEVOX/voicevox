@@ -154,10 +154,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  inheritAudioInfo: (newValue) => {
-    return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
-  },
-
   activePointScrollMode: (newValue) => {
     return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
   },

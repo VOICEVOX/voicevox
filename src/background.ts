@@ -1026,14 +1026,6 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("inheritAudioInfo", newValue);
-  }
-
-  return store.get("inheritAudioInfo", false);
-});
-
 ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
   if (newValue !== undefined) {
     store.set("activePointScrollMode", newValue);

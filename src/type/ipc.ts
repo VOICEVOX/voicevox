@@ -151,11 +151,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  INHERIT_AUDIOINFO: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
   ACTIVE_POINT_SCROLL_MODE: {
     args: [obj: { newValue?: ActivePointScrollMode }];
     return: ActivePointScrollMode;

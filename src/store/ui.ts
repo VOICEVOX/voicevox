@@ -377,7 +377,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async GET_INHERIT_AUDIOINFO({ commit }) {
         commit("SET_INHERIT_AUDIOINFO", {
-          inheritAudioInfo: await window.electron.inheritAudioInfo(),
+          inheritAudioInfo: await window.electron.getSetting(
+            "inheritAudioInfo"
+          ),
         });
       },
       async SET_INHERIT_AUDIOINFO(
@@ -385,7 +387,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { inheritAudioInfo }: { inheritAudioInfo: boolean }
       ) {
         commit("SET_INHERIT_AUDIOINFO", {
-          inheritAudioInfo: await window.electron.inheritAudioInfo(
+          inheritAudioInfo: await window.electron.setSetting(
+            "inheritAudioInfo",
             inheritAudioInfo
           ),
         });
