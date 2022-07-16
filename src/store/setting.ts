@@ -121,13 +121,24 @@ export const settingStore: VoiceVoxStoreOptions<
   },
   actions: {
     async HYDRATE_SETTING_STORE({ commit, dispatch }) {
-      commit("SET_SAVING_SETTING", {
-        savingSetting: await window.electron.getSetting("savingSetting"),
+      window.electron.hotkeySettings().then((hotkeys) => {
+        hotkeys.forEach((hotkey) => {
+          dispatch("SET_HOTKEY_SETTINGS", {
+            data: hotkey,
+          });
+        });
       });
 
-      commit("SET_TOOLBAR_SETTING", {
-        toolbarSetting: await window.electron.getSetting("toolbarSetting"),
-      });
+      const theme = await window.electron.theme();
+      if (theme) {
+        commit("SET_THEME_SETTING", {
+          currentTheme: theme.currentTheme,
+          themes: theme.availableThemes,
+        });
+        dispatch("SET_THEME_SETTING", {
+          currentTheme: theme.currentTheme,
+        });
+      }
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
@@ -139,46 +150,33 @@ export const settingStore: VoiceVoxStoreOptions<
         acceptTerms: await window.electron.getSetting("acceptTerms"),
       });
 
-      dispatch("SET_EXPERIMENTAL_SETTING", {
+      commit("SET_SAVING_SETTING", {
+        savingSetting: await window.electron.getSetting("savingSetting"),
+      });
+
+      commit("SET_TOOLBAR_SETTING", {
+        toolbarSetting: await window.electron.getSetting("toolbarSetting"),
+      });
+
+      commit("SET_EXPERIMENTAL_SETTING", {
         experimentalSetting: await window.electron.getSetting(
           "experimentalSetting"
         ),
       });
 
-      dispatch("SET_SPLIT_TEXT_WHEN_PASTE", {
+      commit("SET_SPLIT_TEXT_WHEN_PASTE", {
         splitTextWhenPaste: await window.electron.getSetting(
           "splitTextWhenPaste"
         ),
       });
 
-      dispatch("SET_SPLITTER_POSITION", {
+      commit("SET_SPLITTER_POSITION", {
         splitterPosition: await window.electron.getSetting("splitterPosition"),
       });
 
-      dispatch("SET_CONFIRMED_TIPS", {
+      commit("SET_CONFIRMED_TIPS", {
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
-
-      // hotkey
-      window.electron.hotkeySettings().then((hotkeys) => {
-        hotkeys.forEach((hotkey) => {
-          dispatch("SET_HOTKEY_SETTINGS", {
-            data: hotkey,
-          });
-        });
-      });
-
-      // theme
-      const theme = await window.electron.theme();
-      if (theme) {
-        commit("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
-        });
-        dispatch("SET_THEME_SETTING", {
-          currentTheme: theme.currentTheme,
-        });
-      }
     },
 
     SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
