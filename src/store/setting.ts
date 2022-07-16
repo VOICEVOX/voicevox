@@ -169,13 +169,13 @@ export const settingStore: VoiceVoxStoreOptions<
       });
     },
     GET_TOOLBAR_SETTING({ commit }) {
-      const newData = window.electron.toolbarSetting();
+      const newData = window.electron.getSetting("toolbarSetting");
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
       });
     },
     SET_TOOLBAR_SETTING({ commit }, { data }: { data: ToolbarSetting }) {
-      const newData = window.electron.toolbarSetting(data);
+      const newData = window.electron.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
       });

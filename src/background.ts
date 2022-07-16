@@ -1069,13 +1069,6 @@ ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
   await restartEngine(engineKey);
 });
 
-ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("toolbarSetting", newData);
-  }
-  return store.get("toolbarSetting");
-});
-
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");

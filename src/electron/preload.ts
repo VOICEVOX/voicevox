@@ -206,10 +206,6 @@ const api: Sandbox = {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 
-  toolbarSetting: (newData) => {
-    return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
-  },
-
   getUserCharacterOrder: async () => {
     return await ipcRendererInvoke("GET_USER_CHARACTER_ORDER");
   },

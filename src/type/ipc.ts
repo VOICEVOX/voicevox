@@ -211,11 +211,6 @@ export type IpcIHData = {
     return: HotkeySetting[];
   };
 
-  TOOLBAR_SETTING: {
-    args: [obj: { newData?: ToolbarSetting }];
-    return: ToolbarSetting;
-  };
-
   GET_USER_CHARACTER_ORDER: {
     args: [];
     return: string[];

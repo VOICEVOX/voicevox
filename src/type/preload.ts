@@ -80,7 +80,6 @@ export interface Sandbox {
   restartEngineAll(): Promise<void>;
   restartEngine(engineKey: string): Promise<void>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
-  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   getUserCharacterOrder(): Promise<string[]>;
