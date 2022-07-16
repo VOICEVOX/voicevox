@@ -360,9 +360,21 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           isAcceptTermsDialogOpen,
         });
       },
-      async GET_USE_GPU({ commit }) {
+      async HYDRATE_UI_STORE({ commit }) {
         commit("SET_USE_GPU", {
           useGpu: await window.electron.getSetting("useGpu"),
+        });
+
+        commit("SET_INHERIT_AUDIOINFO", {
+          inheritAudioInfo: await window.electron.getSetting(
+            "inheritAudioInfo"
+          ),
+        });
+
+        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
+          activePointScrollMode: await window.electron.getSetting(
+            "activePointScrollMode"
+          ),
         });
       },
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
@@ -375,13 +387,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           engineInfos: await window.electron.engineInfos(),
         });
       },
-      async GET_INHERIT_AUDIOINFO({ commit }) {
-        commit("SET_INHERIT_AUDIOINFO", {
-          inheritAudioInfo: await window.electron.getSetting(
-            "inheritAudioInfo"
-          ),
-        });
-      },
       async SET_INHERIT_AUDIOINFO(
         { commit },
         { inheritAudioInfo }: { inheritAudioInfo: boolean }
@@ -390,13 +395,6 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           inheritAudioInfo: await window.electron.setSetting(
             "inheritAudioInfo",
             inheritAudioInfo
-          ),
-        });
-      },
-      async GET_ACTIVE_POINT_SCROLL_MODE({ commit }) {
-        commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-          activePointScrollMode: await window.electron.getSetting(
-            "activePointScrollMode"
           ),
         });
       },

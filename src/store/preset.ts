@@ -33,7 +33,7 @@ export const presetStore: VoiceVoxStoreOptions<
     },
   },
   actions: {
-    GET_PRESET_CONFIG: async (context) => {
+    HYDRATE_PRESET_STORE: async ({ commit }) => {
       const presetConfig = await window.electron.getSetting("presets");
       if (
         presetConfig === undefined ||
@@ -41,10 +41,10 @@ export const presetStore: VoiceVoxStoreOptions<
         presetConfig.keys === undefined
       )
         return;
-      context.commit("SET_PRESET_ITEMS", {
+      commit("SET_PRESET_ITEMS", {
         presetItems: presetConfig.items,
       });
-      context.commit("SET_PRESET_KEYS", {
+      commit("SET_PRESET_KEYS", {
         presetKeys: presetConfig.keys,
       });
     },

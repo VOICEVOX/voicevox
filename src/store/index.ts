@@ -165,20 +165,10 @@ export const indexStore: VoiceVoxStoreOptions<
     async INIT_VUEX({ dispatch }) {
       const promises = [];
 
-      promises.push(dispatch("GET_USE_GPU"));
-      promises.push(dispatch("GET_PRESET_CONFIG"));
-      promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
-      promises.push(dispatch("GET_ACTIVE_POINT_SCROLL_MODE"));
-      promises.push(dispatch("GET_SAVING_SETTING"));
-      promises.push(dispatch("GET_HOTKEY_SETTINGS"));
-      promises.push(dispatch("GET_TOOLBAR_SETTING"));
-      promises.push(dispatch("GET_THEME_SETTING"));
-      promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
-      promises.push(dispatch("GET_ACCEPT_TERMS"));
-      promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
-      promises.push(dispatch("INIT_SPLIT_TEXT_WHEN_PASTE"));
-      promises.push(dispatch("GET_SPLITTER_POSITION"));
-      promises.push(dispatch("GET_CONFIRMED_TIPS"));
+      // 設定ファイルからstoreへ読み込む
+      promises.push(dispatch("HYDRATE_UI_STORE"));
+      promises.push(dispatch("HYDRATE_PRESET_STORE"));
+      promises.push(dispatch("HYDRATE_SETTING_STORE"));
 
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
