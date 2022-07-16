@@ -226,16 +226,6 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
-  getSplitTextWhenPaste: async () => {
-    return await ipcRendererInvoke("GET_SPLIT_TEXT_WHEN_PASTE");
-  },
-  setSplitTextWhenPaste: async (splitTextWhenPaste) => {
-    return await ipcRendererInvoke(
-      "SET_SPLIT_TEXT_WHEN_PASTE",
-      splitTextWhenPaste
-    );
-  },
-
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",

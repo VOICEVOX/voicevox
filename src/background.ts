@@ -1126,14 +1126,6 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
-  return store.get("splitTextWhenPaste");
-});
-
-ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
-  store.set("splitTextWhenPaste", splitTextWhenPaste);
-});
-
 ipcMainHandle("GET_SETTING", (_, key) => {
   return store.get(key);
 });

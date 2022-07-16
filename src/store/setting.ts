@@ -263,12 +263,12 @@ export const settingStore: VoiceVoxStoreOptions<
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
     INIT_SPLIT_TEXT_WHEN_PASTE({ dispatch }) {
-      window.electron.getSplitTextWhenPaste().then((v) => {
+      window.electron.getSetting("splitTextWhenPaste").then((v) => {
         dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste: v });
       });
     },
     SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
-      window.electron.setSplitTextWhenPaste(splitTextWhenPaste);
+      window.electron.setSetting("splitTextWhenPaste", splitTextWhenPaste);
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
     GET_SPLITTER_POSITION({ dispatch }) {

@@ -236,15 +236,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  GET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [];
-    return: SplitTextWhenPasteType;
-  };
-  SET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [splitTextWhenPaste: SplitTextWhenPasteType];
-    return: void;
-  };
-
   // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
     args: [key: keyof ElectronStoreType];
