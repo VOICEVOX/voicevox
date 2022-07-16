@@ -1142,14 +1142,6 @@ ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
   store.set("acceptTems", acceptTerms);
 });
 
-ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
-  return store.get("experimentalSetting");
-});
-
-ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
-  store.set("experimentalSetting", experimentalSetting);
-});
-
 ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
   return store.get("splitTextWhenPaste");
 });

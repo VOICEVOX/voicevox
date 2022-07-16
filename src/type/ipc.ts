@@ -244,14 +244,6 @@ export type IpcIHData = {
     args: [acceptTerms: AcceptTermsStatus];
     return: void;
   };
-  GET_EXPERIMENTAL_SETTING: {
-    args: [];
-    return: ExperimentalSetting;
-  };
-  SET_EXPERIMENTAL_SETTING: {
-    args: [experimentalSetting: ExperimentalSetting];
-    return: void;
-  };
 
   GET_SPLITTER_POSITION: {
     args: [];

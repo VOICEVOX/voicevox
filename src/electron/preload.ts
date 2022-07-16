@@ -229,14 +229,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
   },
 
-  getExperimentalSetting: async () => {
-    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
-  },
-
-  setExperimentalSetting: async (setting) => {
-    return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
-  },
-
   getSplitterPosition: async () => {
     return await ipcRendererInvoke("GET_SPLITTER_POSITION");
   },

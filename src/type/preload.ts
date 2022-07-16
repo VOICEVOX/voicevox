@@ -89,8 +89,6 @@ export interface Sandbox {
   ): Promise<void>;
   getAcceptTerms(): Promise<AcceptTermsStatus>;
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
-  getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getSplitterPosition(): Promise<SplitterPosition>;
   setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;

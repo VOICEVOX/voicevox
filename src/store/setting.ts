@@ -249,12 +249,14 @@ export const settingStore: VoiceVoxStoreOptions<
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
     GET_EXPERIMENTAL_SETTING({ dispatch }) {
-      window.electron.getExperimentalSetting().then((experimentalSetting) => {
-        dispatch("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
-      });
+      window.electron
+        .getSetting("experimentalSetting")
+        .then((experimentalSetting) => {
+          dispatch("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+        });
     },
     SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
-      window.electron.setExperimentalSetting(experimentalSetting);
+      window.electron.setSetting("experimentalSetting", experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
     INIT_SPLIT_TEXT_WHEN_PASTE({ dispatch }) {
