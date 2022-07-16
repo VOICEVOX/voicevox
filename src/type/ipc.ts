@@ -211,16 +211,6 @@ export type IpcIHData = {
     return: HotkeySetting[];
   };
 
-  GET_USER_CHARACTER_ORDER: {
-    args: [];
-    return: string[];
-  };
-
-  SET_USER_CHARACTER_ORDER: {
-    args: [string[]];
-    return: void;
-  };
-
   IS_UNSET_DEFAULT_STYLE_ID: {
     args: [speakerUuid: string];
     return: boolean;

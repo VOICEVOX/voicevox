@@ -1113,14 +1113,6 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
-  return store.get("userCharacterOrder");
-});
-
-ipcMainHandle("SET_USER_CHARACTER_ORDER", (_, userCharacterOrder) => {
-  store.set("userCharacterOrder", userCharacterOrder);
-});
-
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   const defaultStyleIds = store.get("defaultStyleIds");
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);

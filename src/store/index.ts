@@ -108,12 +108,17 @@ export const indexStore: VoiceVoxStoreOptions<
       window.electron.logInfo(...params);
     },
     async LOAD_USER_CHARACTER_ORDER({ commit }) {
-      const userCharacterOrder = await window.electron.getUserCharacterOrder();
+      const userCharacterOrder = await window.electron.getSetting(
+        "userCharacterOrder"
+      );
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
     },
     async SET_USER_CHARACTER_ORDER({ commit }, userCharacterOrder) {
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
-      await window.electron.setUserCharacterOrder(userCharacterOrder);
+      await window.electron.setSetting(
+        "userCharacterOrder",
+        userCharacterOrder
+      );
     },
     GET_NEW_CHARACTERS({ state }) {
       if (!state.characterInfos) throw new Error("characterInfos is undefined");

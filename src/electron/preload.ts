@@ -206,14 +206,6 @@ const api: Sandbox = {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 
-  getUserCharacterOrder: async () => {
-    return await ipcRendererInvoke("GET_USER_CHARACTER_ORDER");
-  },
-
-  setUserCharacterOrder: async (userCharacterOrder) => {
-    await ipcRendererInvoke("SET_USER_CHARACTER_ORDER", userCharacterOrder);
-  },
-
   isUnsetDefaultStyleId: async (speakerUuid: string) => {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
