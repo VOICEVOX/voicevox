@@ -1134,14 +1134,6 @@ ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
   store.set("splitTextWhenPaste", splitTextWhenPaste);
 });
 
-ipcMainHandle("GET_SPLITTER_POSITION", () => {
-  return store.get("splitterPosition");
-});
-
-ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
-  store.set("splitterPosition", splitterPosition);
-});
-
 ipcMainHandle("GET_SETTING", (_, key) => {
   return store.get(key);
 });

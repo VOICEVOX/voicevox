@@ -83,8 +83,6 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
-  getSplitterPosition(): Promise<SplitterPosition>;
-  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;

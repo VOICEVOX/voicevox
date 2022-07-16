@@ -210,14 +210,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
 
-  getSplitterPosition: async () => {
-    return await ipcRendererInvoke("GET_SPLITTER_POSITION");
-  },
-
-  setSplitterPosition: async (splitterPosition) => {
-    return await ipcRendererInvoke("SET_SPLITTER_POSITION", splitterPosition);
-  },
-
   getDefaultHotkeySettings: async () => {
     return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
   },

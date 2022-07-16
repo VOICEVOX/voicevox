@@ -226,16 +226,6 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
-  GET_SPLITTER_POSITION: {
-    args: [];
-    return: SplitterPosition;
-  };
-
-  SET_SPLITTER_POSITION: {
-    args: [splitterPosition: SplitterPosition];
-    return: void;
-  };
-
   THEME: {
     args: [obj: { newData?: string }];
     return: ThemeSetting | void;

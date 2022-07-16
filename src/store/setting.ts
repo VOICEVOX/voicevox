@@ -272,12 +272,14 @@ export const settingStore: VoiceVoxStoreOptions<
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
     GET_SPLITTER_POSITION({ dispatch }) {
-      window.electron.getSplitterPosition().then((splitterPosition) => {
-        dispatch("SET_SPLITTER_POSITION", { splitterPosition });
-      });
+      window.electron
+        .getSetting("splitterPosition")
+        .then((splitterPosition) => {
+          dispatch("SET_SPLITTER_POSITION", { splitterPosition });
+        });
     },
     SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
-      window.electron.setSplitterPosition(splitterPosition);
+      window.electron.setSetting("splitterPosition", splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
     GET_CONFIRMED_TIPS({ dispatch }) {
