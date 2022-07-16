@@ -206,18 +206,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  SAVING_PRESETS: {
-    args: [
-      obj: {
-        newPresets?: {
-          presetItems: Record<string, Preset>;
-          presetKeys: string[];
-        };
-      }
-    ];
-    return: PresetConfig;
-  };
-
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: HotkeySetting }];
     return: HotkeySetting[];

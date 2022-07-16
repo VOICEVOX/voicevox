@@ -83,10 +83,6 @@ export interface Sandbox {
   toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  savingPresets(newPresets?: {
-    presetItems: Record<string, Preset>;
-    presetKeys: string[];
-  }): Promise<PresetConfig>;
   getUserCharacterOrder(): Promise<string[]>;
   setUserCharacterOrder(userCharacterOrder: string[]): Promise<void>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;

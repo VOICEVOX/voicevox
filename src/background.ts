@@ -1120,14 +1120,6 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
-  if (newPresets !== undefined) {
-    store.set("presets.items", newPresets.presetItems);
-    store.set("presets.keys", newPresets.presetKeys);
-  }
-  return store.get("presets");
-});
-
 ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
   return store.get("userCharacterOrder");
 });
