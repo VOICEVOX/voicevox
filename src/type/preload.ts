@@ -66,9 +66,6 @@ export interface Sandbox {
   }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
-  activePointScrollMode(
-    newValue?: ActivePointScrollMode
-  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,

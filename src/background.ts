@@ -1026,14 +1026,6 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("activePointScrollMode", newValue);
-  }
-
-  return store.get("activePointScrollMode", "OFF");
-});
-
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });

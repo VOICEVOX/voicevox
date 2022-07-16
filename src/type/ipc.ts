@@ -151,11 +151,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  ACTIVE_POINT_SCROLL_MODE: {
-    args: [obj: { newValue?: ActivePointScrollMode }];
-    return: ActivePointScrollMode;
-  };
-
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;

@@ -395,7 +395,9 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async GET_ACTIVE_POINT_SCROLL_MODE({ commit }) {
         commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-          activePointScrollMode: await window.electron.activePointScrollMode(),
+          activePointScrollMode: await window.electron.getSetting(
+            "activePointScrollMode"
+          ),
         });
       },
       async SET_ACTIVE_POINT_SCROLL_MODE(
@@ -405,7 +407,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         }: { activePointScrollMode: ActivePointScrollMode }
       ) {
         commit("SET_ACTIVE_POINT_SCROLL_MODE", {
-          activePointScrollMode: await window.electron.activePointScrollMode(
+          activePointScrollMode: await window.electron.setSetting(
+            "activePointScrollMode",
             activePointScrollMode
           ),
         });

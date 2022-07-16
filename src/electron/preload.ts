@@ -154,10 +154,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  activePointScrollMode: (newValue) => {
-    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
-  },
-
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
