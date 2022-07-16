@@ -118,7 +118,7 @@
               </q-input>
             </div>
             <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
-            <div class="row q-pl-md accent-desc">
+            <div class="row q-pl-md desc-row">
               語尾のアクセントを考慮するため、「が」が自動で挿入されます。
             </div>
             <div class="row q-px-md" style="height: 130px">
@@ -775,7 +775,7 @@ export default defineComponent({
   }
 }
 
-.accent-desc {
+.desc-row {
   color: rgba(colors.$display-rgb, 0.5);
   font-size: 12px;
 }
