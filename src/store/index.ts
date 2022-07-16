@@ -136,7 +136,7 @@ export const indexStore: VoiceVoxStoreOptions<
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
-      let defaultStyleIds = await window.electron.getDefaultStyleIds();
+      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
       if (!state.characterInfos) throw new Error("characterInfos is undefined");
 
@@ -160,7 +160,7 @@ export const indexStore: VoiceVoxStoreOptions<
     },
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
-      await window.electron.setDefaultStyleIds(defaultStyleIds);
+      await window.electron.setSetting("defaultStyleIds", defaultStyleIds);
     },
     async INIT_VUEX({ dispatch }) {
       const promises = [];

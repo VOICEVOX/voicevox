@@ -216,16 +216,6 @@ export type IpcIHData = {
     return: boolean;
   };
 
-  GET_DEFAULT_STYLE_IDS: {
-    args: [];
-    return: DefaultStyleId[];
-  };
-
-  SET_DEFAULT_STYLE_IDS: {
-    args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
-    return: void;
-  };
-
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
     return: HotkeySetting[];
