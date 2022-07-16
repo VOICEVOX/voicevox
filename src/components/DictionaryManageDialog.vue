@@ -175,6 +175,30 @@
                 </div>
               </div>
             </div>
+            <div class="row q-pl-md q-pt-sm text-h6">単語優先度</div>
+            <div class="row q-pl-md desc-row">
+              単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
+            </div>
+            <div
+              class="row q-px-md"
+              :style="{
+                justifyContent: 'center',
+              }"
+            >
+              <q-slider
+                v-model="wordPriority"
+                snap
+                dense
+                marker-labels
+                color="primary-light"
+                :min="0"
+                :max="10"
+                :step="1"
+                :style="{
+                  width: '80%',
+                }"
+              />
+            </div>
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
               <q-btn
@@ -222,6 +246,8 @@ import {
 import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
+
+const default_dict_priority = 5;
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -457,6 +483,8 @@ export default defineComponent({
       return accent;
     };
 
+    const wordPriority = ref(default_dict_priority);
+
     // 操作（ステートの移動）
     const isWordChanged = computed(() => {
       if (selectedId.value === "") {
@@ -469,7 +497,8 @@ export default defineComponent({
         dictData &&
         (dictData.surface !== surface.value ||
           dictData.yomi !== yomi.value ||
-          dictData.accentType !== computeRegisteredAccent())
+          dictData.accentType !== computeRegisteredAccent() ||
+          dictData.priority !== wordPriority.value)
       );
     });
     const saveWord = async () => {
@@ -607,6 +636,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
+      wordPriority.value = default_dict_priority;
       editWord();
     };
     const editWord = () => {
@@ -616,6 +646,7 @@ export default defineComponent({
       selectedId.value = id;
       surface.value = userDict.value[id].surface;
       setYomi(userDict.value[id].yomi, true);
+      wordPriority.value = userDict.value[id].priority;
       toWordSelectedState();
     };
     const cancel = () => {
@@ -632,6 +663,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
+      wordPriority.value = default_dict_priority;
     };
     // 単語が選択されているだけの状態
     const toWordSelectedState = () => {
@@ -676,6 +708,7 @@ export default defineComponent({
       stop,
       isWordChanged,
       isDeletable,
+      wordPriority,
       saveWord,
       deleteWord,
       resetWord,
@@ -823,6 +856,7 @@ export default defineComponent({
   padding: 20px;
 
   display: flex;
+  flex: 1;
   align-items: flex-end;
 }
 </style>
