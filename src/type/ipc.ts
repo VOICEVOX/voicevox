@@ -4,6 +4,7 @@ import {
   ActivePointScrollMode,
   AppInfos,
   DefaultStyleId,
+  ElectronStoreType,
   EngineInfo,
   ExperimentalSetting,
   HotkeySetting,
@@ -340,15 +341,12 @@ export type IpcIHData = {
 
   // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
-    args: [key: keyof import("@/type/preload").ElectronStoreType];
+    args: [key: keyof ElectronStoreType];
     return: unknown;
   };
 
   SET_SETTING: {
-    args: [
-      key: keyof import("@/type/preload").ElectronStoreType,
-      newValue: unknown
-    ];
+    args: [key: keyof ElectronStoreType, newValue: unknown];
     return: unknown;
   };
 };
