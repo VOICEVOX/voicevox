@@ -511,6 +511,7 @@ export default defineComponent({
             surface: surface.value,
             pronunciation: yomi.value,
             accentType: accent,
+            priority: wordPriority.value,
           });
         } catch {
           $q.dialog({
@@ -531,6 +532,7 @@ export default defineComponent({
               surface: surface.value,
               pronunciation: yomi.value,
               accentType: accent,
+              priority: wordPriority.value,
             })
           );
         } catch {

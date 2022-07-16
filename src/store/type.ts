@@ -1153,6 +1153,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   REWRITE_WORD: {
@@ -1161,6 +1162,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   DELETE_WORD: {

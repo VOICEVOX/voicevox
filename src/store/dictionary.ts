@@ -68,7 +68,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
 
     REWRITE_WORD: async (
       { state, dispatch },
-      { wordUuid, surface, pronunciation, accentType }
+      { wordUuid, surface, pronunciation, accentType, priority }
     ) => {
       const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
       if (engineKey === undefined)
@@ -82,6 +82,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
             surface,
             pronunciation,
             accentType,
+            priority,
           },
         ],
       }).then(toDispatchResponse("rewriteUserDictWordUserDictWordWordUuidPut"));
