@@ -362,12 +362,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async GET_USE_GPU({ commit }) {
         commit("SET_USE_GPU", {
-          useGpu: await window.electron.useGpu(),
+          useGpu: await window.electron.getSetting("useGpu"),
         });
       },
       async SET_USE_GPU({ commit }, { useGpu }: { useGpu: boolean }) {
         commit("SET_USE_GPU", {
-          useGpu: await window.electron.useGpu(useGpu),
+          useGpu: await window.electron.setSetting("useGpu", useGpu),
         });
       },
       async GET_ENGINE_INFOS({ commit }) {

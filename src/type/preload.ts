@@ -66,7 +66,6 @@ export interface Sandbox {
   }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
-  useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
   activePointScrollMode(
     newValue?: ActivePointScrollMode

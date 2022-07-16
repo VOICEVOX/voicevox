@@ -154,10 +154,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  useGpu: (newValue) => {
-    return ipcRendererInvoke("USE_GPU", { newValue });
-  },
-
   inheritAudioInfo: (newValue) => {
     return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
   },

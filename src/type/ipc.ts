@@ -151,11 +151,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  USE_GPU: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
   INHERIT_AUDIOINFO: {
     args: [obj: { newValue?: boolean }];
     return: boolean;

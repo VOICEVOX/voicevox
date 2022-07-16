@@ -1026,14 +1026,6 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMainHandle("USE_GPU", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("useGpu", newValue);
-  }
-
-  return store.get("useGpu", false);
-});
-
 ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
   if (newValue !== undefined) {
     store.set("inheritAudioInfo", newValue);
