@@ -194,10 +194,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("RESTART_ENGINE", { engineKey });
   },
 
-  savingSetting: (newData) => {
-    return ipcRenderer.invoke("SAVING_SETTING", { newData });
-  },
-
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },

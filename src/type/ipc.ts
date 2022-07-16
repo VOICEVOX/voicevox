@@ -196,11 +196,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  SAVING_SETTING: {
-    args: [obj: { newData?: SavingSetting }];
-    return: SavingSetting;
-  };
-
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;

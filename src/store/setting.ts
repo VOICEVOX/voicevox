@@ -125,15 +125,15 @@ export const settingStore: VoiceVoxStoreOptions<
   },
   actions: {
     GET_SAVING_SETTING({ commit }) {
-      const newData = window.electron.savingSetting();
+      const newData = window.electron.getSetting("savingSetting");
       newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
+        commit("SET_SAVING_SETTING", { savingSetting });
       });
     },
     SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
-      const newData = window.electron.savingSetting(data);
+      const newData = window.electron.setSetting("savingSetting", data);
       newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
+        commit("SET_SAVING_SETTING", { savingSetting });
       });
     },
     GET_HOTKEY_SETTINGS({ dispatch }) {

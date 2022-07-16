@@ -79,7 +79,6 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineKey: string): Promise<void>;
-  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;

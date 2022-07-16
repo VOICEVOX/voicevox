@@ -1069,13 +1069,6 @@ ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
   await restartEngine(engineKey);
 });
 
-ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("savingSetting", newData);
-  }
-  return store.get("savingSetting");
-});
-
 ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
   if (newData !== undefined) {
     store.set("toolbarSetting", newData);
