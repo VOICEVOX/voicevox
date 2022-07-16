@@ -18,7 +18,7 @@
       reverse
       snap
       color="primary-light"
-      trackSize="3px"
+      trackSize="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"
