@@ -226,15 +226,6 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
-  GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [];
-    return: AcceptRetrieveTelemetryStatus;
-  };
-
-  SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus];
-    return: void;
-  };
   GET_ACCEPT_TERMS: {
     args: [];
     return: AcceptTermsStatus;

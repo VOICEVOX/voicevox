@@ -222,7 +222,7 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     GET_ACCEPT_RETRIEVE_TELEMETRY({ dispatch }) {
       window.electron
-        .getAcceptRetrieveTelemetry()
+        .getSetting("acceptRetrieveTelemetry")
         .then((acceptRetrieveTelemetry) =>
           dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry })
         );
@@ -232,7 +232,10 @@ export const settingStore: VoiceVoxStoreOptions<
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
+      window.electron.setSetting(
+        "acceptRetrieveTelemetry",
+        acceptRetrieveTelemetry
+      );
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
     },
     GET_ACCEPT_TERMS({ dispatch }) {

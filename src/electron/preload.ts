@@ -210,17 +210,6 @@ const api: Sandbox = {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
 
-  getAcceptRetrieveTelemetry: async () => {
-    return await ipcRendererInvoke("GET_ACCEPT_RETRIEVE_TELEMETRY");
-  },
-
-  setAcceptRetrieveTelemetry: async (acceptRetrieveTelemetry) => {
-    return await ipcRendererInvoke(
-      "SET_ACCEPT_RETRIEVE_TELEMETRY",
-      acceptRetrieveTelemetry
-    );
-  },
-
   getAcceptTerms: async () => {
     return await ipcRendererInvoke("GET_ACCEPT_TERMS");
   },

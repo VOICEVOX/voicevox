@@ -1126,14 +1126,6 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
-  return store.get("acceptRetrieveTelemetry");
-});
-
-ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
-  store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
-});
-
 ipcMainHandle("GET_ACCEPT_TERMS", () => {
   return store.get("acceptTems");
 });

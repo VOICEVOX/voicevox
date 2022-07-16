@@ -83,10 +83,6 @@ export interface Sandbox {
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
-  getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
-  setAcceptRetrieveTelemetry(
-    acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
-  ): Promise<void>;
   getAcceptTerms(): Promise<AcceptTermsStatus>;
   setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
   getSplitterPosition(): Promise<SplitterPosition>;
