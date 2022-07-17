@@ -13,6 +13,7 @@
           snap
           dense
           color="primary-light"
+          trackSize="2px"
           :min="previewAccentSlider.qSliderProps.min.value"
           :max="previewAccentSlider.qSliderProps.max.value"
           :step="previewAccentSlider.qSliderProps.step.value"
@@ -131,6 +132,7 @@ div {
       left: 0;
       right: 0;
       bottom: 0;
+      height: 18px;
       > div {
         padding-left: 5px;
       }
