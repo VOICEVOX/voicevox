@@ -54,6 +54,9 @@ export const settingStoreState: SettingStoreState = {
     audioInfoPaneWidth: undefined,
     portraitPaneWidth: undefined,
   },
+  confirmedTips: {
+    tweakableSliderByScroll: false,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -115,6 +118,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_SPLITTER_POSITION(state, { splitterPosition }) {
       state.splitterPosition = splitterPosition;
+    },
+    SET_CONFIRMED_TIPS(state, { confirmedTips }) {
+      state.confirmedTips = confirmedTips;
     },
   },
   actions: {
@@ -268,6 +274,15 @@ export const settingStore: VoiceVoxStoreOptions<
     SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
       window.electron.setSplitterPosition(splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
+    },
+    GET_CONFIRMED_TIPS({ dispatch }) {
+      window.electron.getSetting("confirmedTips").then((confirmedTips) => {
+        dispatch("SET_CONFIRMED_TIPS", { confirmedTips });
+      });
+    },
+    SET_CONFIRMED_TIPS({ commit }, { confirmedTips }) {
+      window.electron.setSetting("confirmedTips", confirmedTips);
+      commit("SET_CONFIRMED_TIPS", { confirmedTips });
     },
 
     /**

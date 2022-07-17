@@ -331,8 +331,6 @@
                   </template>
                 </q-input>
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.fixedExportEnabled"
                   @update:model-value="
                     handleSavingSettingChange('fixedExportEnabled', $event)
@@ -459,8 +457,6 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.exportLab"
                   @update:model-value="
                     handleSavingSettingChange('exportLab', $event)
@@ -496,8 +492,6 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.outputStereo"
                   @update:model-value="
                     handleSavingSettingChange('outputStereo', $event)
@@ -691,12 +685,7 @@
                   </q-icon>
                 </div>
                 <q-space />
-                <q-toggle
-                  name="enabled"
-                  align="left"
-                  v-model="acceptRetrieveTelemetryComputed"
-                >
-                </q-toggle>
+                <q-toggle v-model="acceptRetrieveTelemetryComputed" />
               </q-card-actions>
             </q-card>
           </div>
