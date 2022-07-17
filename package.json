@@ -64,7 +64,6 @@
     "@typescript-eslint/eslint-plugin": "4.24.0",
     "@typescript-eslint/parser": "4.24.0",
     "@vue/cli-plugin-babel": "4.5.13",
-    "@vue/cli-plugin-e2e-cypress": "4.5.13",
     "@vue/cli-plugin-eslint": "4.5.13",
     "@vue/cli-plugin-router": "4.5.13",
     "@vue/cli-plugin-typescript": "4.5.13",
