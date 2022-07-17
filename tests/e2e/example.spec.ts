@@ -1,27 +1,18 @@
-import { test } from "@playwright/test";
+import { Page, test } from "@playwright/test";
 import { assert } from "chai";
 import { testWithPlaywright } from "vue-cli-plugin-electron-builder";
+import dotenv from "dotenv";
 
-test("launch app in production mode", async () => {
-  const {app, stop } = await testWithPlaywright({mode: "production"});
+test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
+  // TODO: configに持っていく
+  test.setTimeout(60000);
 
-  // Get the first window that the app opens, wait if necessary.
-  const win = await app.firstWindow();
-  await win.waitForLoadState("domcontentloaded");
+  dotenv.config();  // FIXME: エンジンの設定直読み
+  const { app, stop } = await testWithPlaywright();
+  const sut = await app.firstWindow();
 
-  assert.equal(await win.title(), "voicevox");
-
-  await stop();
-});
-
-test("launch app in development mode", async () => {
-  const {app, stop } = await testWithPlaywright({mode: "development"});
-
-  // Get the first window that the app opens, wait if necessary.
-  const win = await app.firstWindow();
-  await win.waitForLoadState("domcontentloaded");
-
-  assert.equal(await win.title(), "voicevox");
+  // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
+  await sut.waitForSelector('text=利用規約に関するお知らせ');
 
   await stop();
 });
