@@ -43,7 +43,7 @@ npm run electron:build
 
 ```bash
 npm run test:unit
-npx playwright test
+npm run test:e2e
 ```
 
 ## 依存ライブラリのライセンス情報の生成

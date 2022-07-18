@@ -12,7 +12,7 @@
     "build": "vue-cli-service build",
     "test:unit": "vue-cli-service test:unit",
     "test-watch:unit": "vue-cli-service test:unit --watch",
-    "test:e2e": "vue-cli-service test:e2e",
+    "test:e2e": "playwright test",
     "test-watch:e2e": "vue-cli-service test:e2e --watch",
     "lint": "vue-cli-service lint --no-fix",
     "markdownlint": "markdownlint *.md",
