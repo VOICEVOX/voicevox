@@ -247,7 +247,7 @@ import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
 
-const default_dict_priority = 5;
+const defaultDictPriority = 5;
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -483,7 +483,7 @@ export default defineComponent({
       return accent;
     };
 
-    const wordPriority = ref(default_dict_priority);
+    const wordPriority = ref(defaultDictPriority);
 
     // 操作（ステートの移動）
     const isWordChanged = computed(() => {
@@ -638,7 +638,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
-      wordPriority.value = default_dict_priority;
+      wordPriority.value = defaultDictPriority;
       editWord();
     };
     const editWord = () => {
@@ -665,7 +665,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
-      wordPriority.value = default_dict_priority;
+      wordPriority.value = defaultDictPriority;
     };
     // 単語が選択されているだけの状態
     const toWordSelectedState = () => {
