@@ -25,7 +25,6 @@
     "license:generate": "node build/generateLicenses.js",
     "license:merge": "node build/mergeLicenses.js"
   },
-  "main": "background.js",
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
