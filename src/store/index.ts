@@ -173,6 +173,7 @@ export const indexStore: VoiceVoxStoreOptions<
       promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
       promises.push(dispatch("INIT_SPLIT_TEXT_WHEN_PASTE"));
       promises.push(dispatch("GET_SPLITTER_POSITION"));
+      promises.push(dispatch("GET_CONFIRMED_TIPS"));
 
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");

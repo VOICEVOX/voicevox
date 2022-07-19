@@ -27,6 +27,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  ConfirmedTips,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -799,6 +800,7 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
 };
 
 type SettingStoreTypes = {
@@ -883,6 +885,15 @@ type SettingStoreTypes = {
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  GET_CONFIRMED_TIPS: {
+    action(): void;
+  };
+
+  SET_CONFIRMED_TIPS: {
+    mutation: { confirmedTips: ConfirmedTips };
+    action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
   CHANGE_USE_GPU: {
