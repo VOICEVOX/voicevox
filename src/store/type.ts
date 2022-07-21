@@ -1184,11 +1184,19 @@ export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
 >;
 
+type IEngineConnectorFactoryActionsMapper = <
+  K extends keyof IEngineConnectorFactoryActions
+>(
+  action: K
+) => (
+  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
+) => ReturnType<IEngineConnectorFactoryActions[K]>;
+
 type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
       engineKey: string;
-    }): Promise<IEngineConnectorFactoryActions>;
+    }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
 

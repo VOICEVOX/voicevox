@@ -33,7 +33,12 @@ const proxyStoreCreator = (
           );
 
         const instance = _engineFactory.instance(engineInfo.host);
-        return Promise.resolve(instance);
+        return Promise.resolve({
+          invoke: (v) => (arg) =>
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            instance[v](arg) as any,
+        });
       },
     },
   };
