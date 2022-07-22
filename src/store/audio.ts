@@ -668,7 +668,7 @@ export const audioStore: VoiceVoxStoreOptions<
         (instance) =>
           instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
             speaker: styleId,
-          }) as any as string
+          }) as unknown as string
       );
       if (isInitialized !== "true" && isInitialized !== "false")
         throw new Error(`Failed to get isInitialized.`);
