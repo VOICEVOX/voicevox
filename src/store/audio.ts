@@ -712,7 +712,7 @@ export const audioStore: VoiceVoxStoreOptions<
      * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      * 初期化済みだった場合は何もしない。
      */
-    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { engineId, styleId }) {
+    async SETUP_ENGINE_SPEAKER({ dispatch }, { engineId, styleId }) {
       // FIXME: なぜかbooleanではなくstringが返ってくる。
       // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
       const isInitialized: string = await dispatch(
@@ -768,7 +768,6 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      let engineId: string | undefined = undefined;
       let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
 
