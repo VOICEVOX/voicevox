@@ -196,7 +196,7 @@ export type HotkeySetting = {
 };
 
 export type EngineInfo = {
-  key: string;
+  id: string;
   host: string;
   executionEnabled: boolean;
   executionFilePath: string;

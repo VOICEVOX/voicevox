@@ -396,14 +396,14 @@ async function runEngineAll() {
   log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
-    log.info(`ENGINE ${engineInfo.key}: Start launching`);
-    await runEngine(engineInfo.key);
+    log.info(`ENGINE ${engineInfo.id}: Start launching`);
+    await runEngine(engineInfo.id);
   }
 }
 
 async function runEngine(engineId: string) {
   const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.key === engineId
+    (engineInfo) => engineInfo.id === engineId
   );
   if (!engineInfo)
     throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
@@ -604,7 +604,7 @@ function killEngine({
 
 async function restartEngineAll() {
   for (const engineInfo of engineInfos) {
-    await restartEngine(engineInfo.key);
+    await restartEngine(engineInfo.id);
   }
 }
 
