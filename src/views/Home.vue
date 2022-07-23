@@ -511,8 +511,11 @@ export default defineComponent({
       focusCell({ audioKey: newAudioKey });
 
       // 最初の話者を初期化
-      if (audioItem.styleId != undefined) {
-        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+        store.dispatch("SETUP_ENGINE_SPEAKER", {
+          engineKey: audioItem.engineId,
+          styleId: audioItem.styleId,
+        });
       }
 
       // ショートカットキーの設定
