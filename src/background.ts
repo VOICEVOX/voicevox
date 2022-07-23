@@ -1238,29 +1238,24 @@ app.on("before-quit", (event) => {
 
   // 非同期的にすべてのエンジンプロセスをキル
   (async () => {
-    const waitingKilledPromises: Array<Promise<void>> = [];
-
-    for (const [engineKey, promise] of Object.entries(killingProcessPromises)) {
-      // 各エンジンを非同期にキル
-      waitingKilledPromises.push(
-        (async () => {
-          try {
-            await promise;
-          } catch (error: unknown) {
-            // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-            log.error(
-              `ENGINE ${engineKey}: Error during killing process: ${error}`
-            );
-            // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
-          }
-
-          // TODO: 各エンジンプロセスキルの成功をUIに通知する
+    const waitingKilledPromises: Array<Promise<void>> = Object.entries(
+      killingProcessPromises
+    ).map(([engineKey, promise]) => {
+      return promise
+        .catch((error) => {
+          // TODO: 各エンジンプロセスキルの失敗をUIに通知する
+          log.error(
+            `ENGINE ${engineKey}: Error during killing process: ${error}`
+          );
+          // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
+        })
+        .finally(() => {
           numEngineProcessKilled++;
           log.info(
             `ENGINE ${engineKey}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
           );
-        })()
-      );
+        });
+    });
     }
 
     // すべてのエンジンプロセスキル処理が完了するまで待機
