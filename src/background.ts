@@ -1256,7 +1256,6 @@ app.on("before-quit", (event) => {
           );
         });
     });
-    }
 
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
