@@ -90,6 +90,9 @@ describe("store/vuex.js test", () => {
           audioInfoPaneWidth: 20,
           portraitPaneWidth: 50,
         },
+        confirmedTips: {
+          tweakableSliderByScroll: false,
+        },
       },
       getters: {
         ...uiStore.getters,

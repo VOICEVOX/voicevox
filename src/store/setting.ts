@@ -54,6 +54,9 @@ export const settingStoreState: SettingStoreState = {
     audioInfoPaneWidth: undefined,
     portraitPaneWidth: undefined,
   },
+  confirmedTips: {
+    tweakableSliderByScroll: false,
+  },
 };
 
 export const settingStore: VoiceVoxStoreOptions<
@@ -115,6 +118,9 @@ export const settingStore: VoiceVoxStoreOptions<
     },
     SET_SPLITTER_POSITION(state, { splitterPosition }) {
       state.splitterPosition = splitterPosition;
+    },
+    SET_CONFIRMED_TIPS(state, { confirmedTips }) {
+      state.confirmedTips = confirmedTips;
     },
   },
   actions: {
@@ -269,6 +275,15 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setSplitterPosition(splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
+    GET_CONFIRMED_TIPS({ dispatch }) {
+      window.electron.getSetting("confirmedTips").then((confirmedTips) => {
+        dispatch("SET_CONFIRMED_TIPS", { confirmedTips });
+      });
+    },
+    SET_CONFIRMED_TIPS({ commit }, { confirmedTips }) {
+      window.electron.setSetting("confirmedTips", confirmedTips);
+      commit("SET_CONFIRMED_TIPS", { confirmedTips });
+    },
 
     /**
      * CPU/GPUモードを切り替えようとする。
@@ -296,10 +311,12 @@ export const settingStore: VoiceVoxStoreOptions<
           }
         }
 
+        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
+        if (engineKey === undefined)
+          throw new Error(`No such engine registered: index == 0`);
+
         await dispatch("SET_USE_GPU", { useGpu });
-        const success = await dispatch("RESTART_ENGINE", {
-          engineKey: state.engineInfos[0].key,
-        }); // TODO: 複数エンジン対応
+        const success = await dispatch("RESTART_ENGINE", { engineKey });
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい

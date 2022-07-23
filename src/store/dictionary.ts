@@ -6,7 +6,6 @@ import {
   DictionaryStoreState,
   VoiceVoxStoreOptions,
 } from "@/store/type";
-import { toDispatchResponse } from "./audio";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
@@ -19,11 +18,9 @@ export const dictionaryStore: VoiceVoxStoreOptions<
   mutations: {},
   actions: {
     LOAD_USER_DICT: async ({ dispatch }, { engineKey }) => {
-      const engineDict = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+      const engineDict = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "getUserDictWordsUserDictGet",
-        payload: [],
-      }).then(toDispatchResponse("getUserDictWordsUserDictGet"));
+      }).then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
 
       // 50音順にソートするために、一旦arrayにする
       const dictArray = Object.keys(engineDict).map((k) => {
@@ -50,54 +47,47 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
       if (engineKey === undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INVOKE_ENGINE_CONNECTOR", {
+      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "addUserDictWordUserDictWordPost",
-        payload: [
-          {
-            surface,
-            pronunciation,
-            accentType,
-          },
-        ],
-      }).then(toDispatchResponse("addUserDictWordUserDictWordPost"));
+      }).then((instance) =>
+        instance.invoke("addUserDictWordUserDictWordPost")({
+          surface,
+          pronunciation,
+          accentType,
+        })
+      );
     },
 
     REWRITE_WORD: async (
       { state, dispatch },
-      { wordUuid, surface, pronunciation, accentType }
+      { wordUuid, surface, pronunciation, accentType, priority }
     ) => {
       const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
       if (engineKey === undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INVOKE_ENGINE_CONNECTOR", {
+      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "rewriteUserDictWordUserDictWordWordUuidPut",
-        payload: [
-          {
-            wordUuid,
-            surface,
-            pronunciation,
-            accentType,
-          },
-        ],
-      }).then(toDispatchResponse("rewriteUserDictWordUserDictWordWordUuidPut"));
+      }).then((instance) =>
+        instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
+          wordUuid,
+          surface,
+          pronunciation,
+          accentType,
+          priority,
+        })
+      );
     },
 
     DELETE_WORD: async ({ state, dispatch }, { wordUuid }) => {
       const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
       if (engineKey === undefined)
         throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INVOKE_ENGINE_CONNECTOR", {
+      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "deleteUserDictWordUserDictWordWordUuidDelete",
-        payload: [
-          {
-            wordUuid,
-          },
-        ],
-      }).then(
-        toDispatchResponse("deleteUserDictWordUserDictWordWordUuidDelete")
+      }).then((instance) =>
+        instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
+          wordUuid,
+        })
       );
     },
   },

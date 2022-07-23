@@ -16,7 +16,6 @@ import {
   AudioCommandMutations,
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
-  IEngineConnectorFactoryActions,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -28,7 +27,6 @@ import {
   WriteFileErrorResult,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
-import { PromiseType } from "./vuex";
 import {
   buildFileNameFromRawData,
   buildProjectFileName,
@@ -628,11 +626,9 @@ export const audioStore: VoiceVoxStoreOptions<
           }
 
           try {
-            await dispatch("INVOKE_ENGINE_CONNECTOR", {
+            await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
               engineKey,
-              action: "versionVersionGet",
-              payload: [],
-            }).then(toDispatchResponse("versionVersionGet"));
+            }).then((instance) => instance.invoke("versionVersionGet")({}));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -660,13 +656,10 @@ export const audioStore: VoiceVoxStoreOptions<
     }),
     LOAD_CHARACTER: createUILockAction(
       async ({ commit, dispatch }, { engineKey }) => {
-        const speakers = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+        const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineKey,
-          action: "speakersSpeakersGet",
-          // 連想配列が第一引数になければ失敗する
-          payload: [{}],
         })
-          .then(toDispatchResponse("speakersSpeakersGet"))
+          .then((instance) => instance.invoke("speakersSpeakersGet")({}))
           .catch((error) => {
             window.electron.logError(error, `Failed to get speakers.`);
             throw error;
@@ -702,12 +695,14 @@ export const audioStore: VoiceVoxStoreOptions<
           return styles;
         };
         const getSpeakerInfo = async function (speaker: Speaker) {
-          const speakerInfo = await dispatch("INVOKE_ENGINE_CONNECTOR", {
+          const speakerInfo = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
             engineKey,
-            action: "speakerInfoSpeakerInfoGet",
-            payload: [{ speakerUuid: speaker.speakerUuid }],
           })
-            .then(toDispatchResponse("speakerInfoSpeakerInfoGet"))
+            .then((instance) =>
+              instance.invoke("speakerInfoSpeakerInfoGet")({
+                speakerUuid: speaker.speakerUuid,
+              })
+            )
             .catch((error) => {
               window.electron.logError(error, `Failed to get speakers.`);
               throw error;
@@ -742,25 +737,33 @@ export const audioStore: VoiceVoxStoreOptions<
      * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      * 初期化済みだった場合は何もしない。
      */
-    async SETUP_ENGINE_SPEAKER({ dispatch }, { engineKey, styleId }) {
+    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { engineKey, styleId }) {
       // FIXME: なぜかbooleanではなくstringが返ってくる。
       // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
-      const isInitialized: string = await dispatch("INVOKE_ENGINE_CONNECTOR", {
-        engineKey,
-        action: "isInitializedSpeakerIsInitializedSpeakerGet",
-        payload: [{ speaker: styleId }],
-      });
+      const isInitialized: string = await dispatch(
+        "INSTANTIATE_ENGINE_CONNECTOR",
+        {
+          engineKey,
+        }
+      ).then(
+        (instance) =>
+          instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
+            speaker: styleId,
+          }) as unknown as string
+      );
       if (isInitialized !== "true" && isInitialized !== "false")
         throw new Error(`Failed to get isInitialized.`);
 
       if (isInitialized === "false") {
         await dispatch("ASYNC_UI_LOCK", {
           callback: () =>
-            dispatch("INVOKE_ENGINE_CONNECTOR", {
+            dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
               engineKey,
-              action: "initializeSpeakerInitializeSpeakerPost",
-              payload: [{ speaker: styleId }],
-            }),
+            }).then((instance) =>
+              instance.invoke("initializeSpeakerInitializeSpeakerPost")({
+                speaker: styleId,
+              })
+            ),
         });
       }
     },
@@ -945,18 +948,16 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
-      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+      return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "accentPhrasesAccentPhrasesPost",
-        payload: [
-          {
+      })
+        .then((instance) =>
+          instance.invoke("accentPhrasesAccentPhrasesPost")({
             text,
             speaker: styleId,
             isKana,
-          },
-        ],
-      })
-        .then(toDispatchResponse("accentPhrasesAccentPhrasesPost"))
+          })
+        )
         .catch((error) => {
           window.electron.logError(
             error,
@@ -973,12 +974,15 @@ export const audioStore: VoiceVoxStoreOptions<
         styleId,
       }: { accentPhrases: AccentPhrase[]; engineKey: string; styleId: number }
     ) {
-      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+      return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "moraDataMoraDataPost",
-        payload: [{ accentPhrase: accentPhrases, speaker: styleId }],
       })
-        .then(toDispatchResponse("moraDataMoraDataPost"))
+        .then((instance) =>
+          instance.invoke("moraDataMoraDataPost")({
+            accentPhrase: accentPhrases,
+            speaker: styleId,
+          })
+        )
         .catch((error) => {
           window.electron.logError(
             error,
@@ -1024,17 +1028,15 @@ export const audioStore: VoiceVoxStoreOptions<
         styleId,
       }: { text: string; engineKey: string; styleId: number }
     ) {
-      return dispatch("INVOKE_ENGINE_CONNECTOR", {
+      return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineKey,
-        action: "audioQueryAudioQueryPost",
-        payload: [
-          {
+      })
+        .then((instance) =>
+          instance.invoke("audioQueryAudioQueryPost")({
             text,
             speaker: styleId,
-          },
-        ],
-      })
-        .then(toDispatchResponse("audioQueryAudioQueryPost"))
+          })
+        )
         .catch((error) => {
           window.electron.logError(
             error,
@@ -1136,16 +1138,14 @@ export const audioStore: VoiceVoxStoreOptions<
         if (engineKey === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
-        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineKey,
-          action: "connectWavesConnectWavesPost",
-          payload: [
-            {
-              requestBody: encodedBlobs,
-            },
-          ],
         })
-          .then(toDispatchResponse("connectWavesConnectWavesPost"))
+          .then((instance) =>
+            instance.invoke("connectWavesConnectWavesPost")({
+              requestBody: encodedBlobs,
+            })
+          )
           .then(async (blob) => {
             return blob;
           })
@@ -1181,19 +1181,17 @@ export const audioStore: VoiceVoxStoreOptions<
           return null;
         }
 
-        return dispatch("INVOKE_ENGINE_CONNECTOR", {
+        return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineKey,
-          action: "synthesisSynthesisPost",
-          payload: [
-            {
+        })
+          .then((instance) =>
+            instance.invoke("synthesisSynthesisPost")({
               audioQuery,
               speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
-            },
-          ],
-        })
-          .then(toDispatchResponse("synthesisSynthesisPost"))
+            })
+          )
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
@@ -2768,14 +2766,3 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     },
   }),
 };
-
-// FIXME: ProxyStoreのactionとVuexの組み合わせでReturnValueの型付けが中途半端になり、Promise<any>になってしまっている
-export const toDispatchResponse =
-  <T extends keyof IEngineConnectorFactoryActions>(_: T) =>
-  (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    response: any
-  ): PromiseType<ReturnType<IEngineConnectorFactoryActions[T]>> => {
-    _; // Unused回避のため
-    return response;
-  };

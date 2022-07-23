@@ -26,12 +26,25 @@
               text-color="display-dark"
               icon="stop"
               @click="stop"
+              :disable="nowGenerating"
             ></q-btn>
           </template>
         </div>
       </div>
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
+        <tip
+          tip-key="tweakableSliderByScroll"
+          v-if="selectedDetail === 'pitch'"
+          class="tip-tweakable-slider-by-scroll"
+        >
+          <p>
+            マウスホイールを使って<br />
+            スライダーを微調整できます。
+          </p>
+          ホイール: ±0.1<br />
+          Ctrl + ホイール: ±0.01
+        </tip>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -242,6 +255,7 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import Tip from "./Tip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
@@ -249,7 +263,7 @@ import { setHotkeyFunctions } from "@/store/setting";
 import { Mora } from "@/openapi/models";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter },
+  components: { AudioAccent, AudioParameter, Tip },
 
   name: "AudioDetail",
 
@@ -784,6 +798,13 @@ export default defineComponent({
 @use '@/styles/colors' as colors;
 
 $pitch-label-height: 24px;
+
+.tip-tweakable-slider-by-scroll {
+  z-index: 1;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
 
 .root > div {
   display: flex;

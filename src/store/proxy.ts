@@ -24,7 +24,7 @@ const proxyStoreCreator = (
     getters: {},
     mutations: {},
     actions: {
-      INVOKE_ENGINE_CONNECTOR({ state }, payload) {
+      INSTANTIATE_ENGINE_CONNECTOR({ state }, payload) {
         const engineKey = payload.engineKey;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineKey];
         if (engineInfo === undefined)
@@ -33,11 +33,12 @@ const proxyStoreCreator = (
           );
 
         const instance = _engineFactory.instance(engineInfo.host);
-        const action = payload.action;
-        const args = payload.payload;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return instance[action](...args);
+        return Promise.resolve({
+          invoke: (v) => (arg) =>
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            instance[v](arg) as any,
+        });
       },
     },
   };

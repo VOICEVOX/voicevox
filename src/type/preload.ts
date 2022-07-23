@@ -1,4 +1,24 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcSOData } from "./ipc";
+
+export interface ElectronStoreType {
+  useGpu: boolean;
+  inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
+  savingSetting: SavingSetting;
+  presets: PresetConfig;
+  hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
+  defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
+}
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
@@ -90,12 +110,19 @@ export interface Sandbox {
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getSplitterPosition(): Promise<SplitterPosition>;
   setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
-  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
   setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
+  getSetting<Key extends keyof ElectronStoreType>(
+    key: Key
+  ): Promise<ElectronStoreType[Key]>;
+  setSetting<Key extends keyof ElectronStoreType>(
+    key: Key,
+    newValue: ElectronStoreType[Key]
+  ): Promise<ElectronStoreType[Key]>;
 }
 
 export type AppInfos = {
@@ -280,6 +307,10 @@ export type SplitterPosition = {
   portraitPaneWidth: number | undefined;
   audioInfoPaneWidth: number | undefined;
   audioDetailPaneHeight: number | undefined;
+};
+
+export type ConfirmedTips = {
+  tweakableSliderByScroll: boolean;
 };
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
