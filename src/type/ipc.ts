@@ -207,7 +207,7 @@ export type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [obj: { engineKey: string }];
+    args: [obj: { engineId: string }];
     return: void;
   };
 
@@ -371,7 +371,7 @@ export type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [obj: { engineKey: string }];
+    args: [obj: { engineId: string }];
     return: void;
   };
 

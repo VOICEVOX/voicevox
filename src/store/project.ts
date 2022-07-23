@@ -170,7 +170,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
-                    engineKey: "074fc39e-678b-4c13-8916-ffca8d505d1d", // VOICEVOX ENGINE
+                    engineId: "074fc39e-678b-4c13-8916-ffca8d505d1d", // VOICEVOX ENGINE
                     styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {

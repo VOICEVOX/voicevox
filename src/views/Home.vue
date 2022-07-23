@@ -484,11 +484,11 @@ export default defineComponent({
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
 
-      for (const engineKey of store.state.engineKeys) {
+      for (const engineId of store.state.engineIds) {
         const engineCharacterInfos: CharacterInfo[] | undefined =
-          store.state.characterInfos[engineKey];
+          store.state.characterInfos[engineId];
         if (engineCharacterInfos === undefined)
-          throw new Error(`CharacterInfos not loaded for engine ${engineKey}`);
+          throw new Error(`CharacterInfos not loaded for engine ${engineId}`);
 
         for (const info of engineCharacterInfos) {
           isUnsetDefaultStyleIds ||=
@@ -513,7 +513,7 @@ export default defineComponent({
       // 最初の話者を初期化
       if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
         store.dispatch("SETUP_ENGINE_SPEAKER", {
-          engineKey: audioItem.engineId,
+          engineId: audioItem.engineId,
           styleId: audioItem.styleId,
         });
       }
@@ -543,10 +543,10 @@ export default defineComponent({
       let lastEngineState: EngineState | undefined = undefined;
 
       // 登録されているすべてのエンジンについて状態を確認する
-      for (const engineKey of store.state.engineKeys) {
-        const engineState: EngineState | undefined = engineStates[engineKey];
+      for (const engineId of store.state.engineIds) {
+        const engineState: EngineState | undefined = engineStates[engineId];
         if (engineState === undefined)
-          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+          throw new Error(`No such engineState set: engineId == ${engineId}`);
 
         // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
         if (engineState === "STARTING") {

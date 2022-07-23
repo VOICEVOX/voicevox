@@ -17,9 +17,9 @@ export const dictionaryStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
-    LOAD_USER_DICT: async ({ dispatch }, { engineKey }) => {
+    LOAD_USER_DICT: async ({ dispatch }, { engineId }) => {
       const engineDict = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       }).then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
 
       // 50音順にソートするために、一旦arrayにする
@@ -44,11 +44,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       { state, dispatch },
       { surface, pronunciation, accentType }
     ) => {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
       await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       }).then((instance) =>
         instance.invoke("addUserDictWordUserDictWordPost")({
           surface,
@@ -62,11 +62,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       { state, dispatch },
       { wordUuid, surface, pronunciation, accentType, priority }
     ) => {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
       await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       }).then((instance) =>
         instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
           wordUuid,
@@ -79,11 +79,11 @@ export const dictionaryStore: VoiceVoxStoreOptions<
     },
 
     DELETE_WORD: async ({ state, dispatch }, { wordUuid }) => {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
       await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       }).then((instance) =>
         instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
           wordUuid,
