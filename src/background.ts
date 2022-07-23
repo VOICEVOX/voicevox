@@ -381,7 +381,19 @@ const store = new Store<ElectronStoreType>({
       },
     },
   },
-  migrations: {},
+  migrations: {
+    "0.13": (store) => {
+      const prevIdentifier = "acceptTems";
+      const prevValue = store.get(prevIdentifier, undefined) as
+        | AcceptTermsStatus
+        | undefined;
+      if (prevValue) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        store.delete(prevIdentifier as any);
+        store.set("acceptTerms", prevValue);
+      }
+    },
+  },
 });
 
 // engine
