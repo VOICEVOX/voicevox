@@ -528,10 +528,10 @@ export default defineComponent({
       let lastEngineState: EngineState | undefined = undefined;
 
       // 登録されているすべてのエンジンについて状態を確認する
-      for (const engineKey of store.state.engineKeys) {
-        const engineState: EngineState | undefined = engineStates[engineKey];
+      for (const engineId of store.state.engineIds) {
+        const engineState: EngineState | undefined = engineStates[engineId];
         if (engineState === undefined)
-          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+          throw new Error(`No such engineState set: engineId == ${engineId}`);
 
         // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
         if (engineState === "STARTING") {

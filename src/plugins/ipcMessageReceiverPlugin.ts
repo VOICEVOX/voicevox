@@ -24,8 +24,8 @@ export const ipcMessageReceiver: Plugin = {
 
     window.electron.onReceivedIPCMsg(
       "DETECTED_ENGINE_ERROR",
-      (_, { engineKey }) =>
-        options.store.dispatch("DETECTED_ENGINE_ERROR", { engineKey })
+      (_, { engineId }) =>
+        options.store.dispatch("DETECTED_ENGINE_ERROR", { engineId })
     );
 
     window.electron.onReceivedIPCMsg("DETECT_PINNED", () => {
