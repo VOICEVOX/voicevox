@@ -64,7 +64,12 @@ export interface Sandbox {
     filePath: string;
     buffer: ArrayBuffer;
   }): WriteFileErrorResult | undefined;
+  writeSpeakerFile(obj: {
+    filePath: string;
+    buffer: ArrayBuffer;
+  }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
+  removeFile(obj: { filePath: string }): undefined;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
   inheritAudioInfo(newValue?: boolean): Promise<boolean>;
@@ -82,6 +87,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
+  appDirPath(): Promise<string>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineKey: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
@@ -144,6 +150,16 @@ export type MetasJson = {
 };
 
 export type CharacterInfo = {
+  portraitPath: string;
+  metas: {
+    speakerUuid: string;
+    speakerName: string;
+    styles: StyleInfo[];
+    policy: string;
+  };
+};
+
+export type CharacterDownloadInfo = {
   portraitPath: string;
   metas: {
     speakerUuid: string;

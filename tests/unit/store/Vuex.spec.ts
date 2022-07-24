@@ -40,6 +40,7 @@ describe("store/vuex.js test", () => {
         isHotkeySettingDialogOpen: false,
         isToolbarSettingDialogOpen: false,
         isCharacterOrderDialogOpen: false,
+        isCharacterDownloadDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isDictionaryManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
@@ -160,6 +161,7 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.isSettingDialogOpen, false);
     assert.equal(store.state.isHotkeySettingDialogOpen, false);
     assert.equal(store.state.isCharacterOrderDialogOpen, false);
+    assert.equal(store.state.isCharacterDownloadDialogOpen, false);
     assert.equal(store.state.isDefaultStyleSelectDialogOpen, false);
     assert.equal(store.state.isDictionaryManageDialogOpen, false);
     assert.equal(store.state.isAcceptRetrieveTelemetryDialogOpen, false);

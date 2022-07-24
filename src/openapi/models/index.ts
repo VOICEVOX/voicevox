@@ -2,6 +2,8 @@
 /* eslint-disable */
 export * from './AccentPhrase';
 export * from './AudioQuery';
+export * from './DownloadableModel';
+export * from './DownloadInfo';
 export * from './EngineManifest';
 export * from './HTTPValidationError';
 export * from './LicenseInfo';

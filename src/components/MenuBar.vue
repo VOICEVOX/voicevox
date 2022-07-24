@@ -197,6 +197,9 @@ export default defineComponent({
       store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
         isCharacterOrderDialogOpen: false,
       });
+      store.dispatch("IS_CHARACTER_DOWNLOAD_DIALOG_OPEN", {
+        isCharacterDownloadDialogOpen: false,
+      });
       store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
       });
@@ -328,6 +331,15 @@ export default defineComponent({
             onClick() {
               store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
                 isCharacterOrderDialogOpen: true,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "キャラクターダウンロード",
+            onClick() {
+              store.dispatch("IS_CHARACTER_DOWNLOAD_DIALOG_OPEN", {
+                isCharacterDownloadDialogOpen: true,
               });
             },
           },

@@ -201,6 +201,11 @@ export type IpcIHData = {
     return: EngineInfo[];
   };
 
+  APP_DIR_PATH: {
+    args: [];
+    return: string;
+  };
+
   RESTART_ENGINE_ALL: {
     args: [];
     return: void;

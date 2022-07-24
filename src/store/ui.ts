@@ -38,6 +38,7 @@ export const uiStoreState: UiStoreState = {
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
   isCharacterOrderDialogOpen: false,
+  isCharacterDownloadDialogOpen: false,
   isDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
@@ -108,6 +109,14 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         { isCharacterOrderDialogOpen }: { isCharacterOrderDialogOpen: boolean }
       ) {
         state.isCharacterOrderDialogOpen = isCharacterOrderDialogOpen;
+      },
+      IS_CHARACTER_DOWNLOAD_DIALOG_OPEN(
+        state,
+        {
+          isCharacterDownloadDialogOpen,
+        }: { isCharacterDownloadDialogOpen: boolean }
+      ) {
+        state.isCharacterDownloadDialogOpen = isCharacterDownloadDialogOpen;
       },
       IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(
         state,
@@ -287,6 +296,27 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
 
         commit("IS_CHARACTER_ORDER_DIALOG_OPEN", {
           isCharacterOrderDialogOpen,
+        });
+      },
+      async IS_CHARACTER_DOWNLOAD_DIALOG_OPEN(
+        { state, commit },
+        { isCharacterDownloadDialogOpen }
+      ) {
+        if (
+          state.isCharacterDownloadDialogOpen === isCharacterDownloadDialogOpen
+        )
+          return;
+
+        if (isCharacterDownloadDialogOpen) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
+
+        commit("IS_CHARACTER_DOWNLOAD_DIALOG_OPEN", {
+          isCharacterDownloadDialogOpen,
         });
       },
       async IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN(

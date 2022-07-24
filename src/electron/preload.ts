@@ -146,8 +146,29 @@ const api: Sandbox = {
     return undefined;
   },
 
+  writeSpeakerFile: ({ filePath, buffer }) => {
+    try {
+      // フォルダも作成するようにwriteFileを修正
+      if (buffer.byteLength === 0) {
+        fs.mkdirSync(filePath, { recursive: true });
+      } else {
+        fs.writeFileSync(filePath, new DataView(buffer));
+      }
+    } catch (e) {
+      const a = e as SystemError;
+      return { code: a.code, message: a.message };
+    }
+
+    return undefined;
+  },
+
   readFile: ({ filePath }) => {
     return fs.promises.readFile(filePath);
+  },
+
+  removeFile: ({ filePath }) => {
+    fs.rmSync(filePath, { recursive: true, force: true });
+    return undefined;
   },
 
   openTextEditContextMenu: () => {
@@ -196,6 +217,10 @@ const api: Sandbox = {
 
   engineInfos: () => {
     return ipcRendererInvoke("ENGINE_INFOS");
+  },
+
+  appDirPath: () => {
+    return ipcRendererInvoke("APP_DIR_PATH");
   },
 
   restartEngineAll: () => {

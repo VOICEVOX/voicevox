@@ -136,6 +136,11 @@
     :characterInfos="characterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
+  <character-download-dialog
+    v-if="downloadInfos"
+    :downloadInfos="downloadInfos"
+    v-model="isCharacterDownloadDialogOpenComputed"
+  />
   <default-style-select-dialog
     v-if="characterInfos"
     :characterInfos="characterInfos"
@@ -171,6 +176,7 @@ import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
+import CharacterDownloadDialog from "@/components/CharacterDownloadDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
@@ -201,6 +207,7 @@ export default defineComponent({
     CharacterPortrait,
     DefaultStyleSelectDialog,
     CharacterOrderDialog,
+    CharacterDownloadDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
     DictionaryManageDialog,
@@ -469,6 +476,7 @@ export default defineComponent({
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
       await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_DOWNLOAD_INFOS");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
@@ -597,6 +605,18 @@ export default defineComponent({
         }),
     });
 
+    // キャラクターダウンロード
+    const downloadInfos = computed(() => store.state.downloadInfos);
+    const isCharacterDownloadDialogOpenComputed = computed({
+      get: () =>
+        !store.state.isAcceptTermsDialogOpen &&
+        store.state.isCharacterDownloadDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_CHARACTER_DOWNLOAD_DIALOG_OPEN", {
+          isCharacterDownloadDialogOpen: val,
+        }),
+    });
+
     // デフォルトスタイル選択
     const isDefaultStyleSelectDialogOpenComputed = computed({
       get: () =>
@@ -689,6 +709,8 @@ export default defineComponent({
       isToolbarSettingDialogOpenComputed,
       characterInfos,
       isCharacterOrderDialogOpenComputed,
+      downloadInfos,
+      isCharacterDownloadDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
