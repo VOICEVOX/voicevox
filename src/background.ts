@@ -383,6 +383,7 @@ const store = new Store<ElectronStoreType>({
   },
   migrations: {
     "0.13": (store) => {
+      // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
       const prevValue = store.get(prevIdentifier, undefined) as
         | AcceptTermsStatus
