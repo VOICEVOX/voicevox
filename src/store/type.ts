@@ -1153,6 +1153,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   REWRITE_WORD: {
@@ -1161,6 +1162,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   DELETE_WORD: {
@@ -1182,22 +1184,19 @@ export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
 >;
 
-type IEngineConnectorFactoryActionsMapper<K> =
+type IEngineConnectorFactoryActionsMapper = <
   K extends keyof IEngineConnectorFactoryActions
-    ? (payload: {
-        engineKey: string;
-        action: K;
-        payload: Parameters<IEngineConnectorFactoryActions[K]>;
-      }) => ReturnType<IEngineConnectorFactoryActions[K]>
-    : never;
+>(
+  action: K
+) => (
+  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
+) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 type ProxyStoreTypes = {
-  INVOKE_ENGINE_CONNECTOR: {
-    // FIXME: actionに対してIEngineConnectorFactoryActionsのUnion型を与えているため、actionとpayloadが与えられるとReturnValueの型が得られる
-    // しかしVuexの型を通すとReturnValueの型付けが行われなくなりPromise<any>に落ちてしまうため、明示的な型付けを行う必要がある
-    action: IEngineConnectorFactoryActionsMapper<
-      keyof IEngineConnectorFactoryActions
-    >;
+  INSTANTIATE_ENGINE_CONNECTOR: {
+    action(payload: {
+      engineKey: string;
+    }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
 
