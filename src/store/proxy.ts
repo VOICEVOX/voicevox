@@ -2,6 +2,7 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import { EngineInfo } from "@/type/preload";
 import {
   ProxyActions,
   ProxyGetters,
@@ -23,22 +24,21 @@ const proxyStoreCreator = (
     getters: {},
     mutations: {},
     actions: {
-      INVOKE_ENGINE_CONNECTOR({ state }, payload) {
+      INSTANTIATE_ENGINE_CONNECTOR({ state }, payload) {
         const engineKey = payload.engineKey;
-        const engineInfo = state.engineInfos.find(
-          (engineInfo) => engineInfo.key === engineKey
-        );
-        if (!engineInfo)
+        const engineInfo: EngineInfo | undefined = state.engineInfos[engineKey];
+        if (engineInfo === undefined)
           throw new Error(
             `No such engineInfo registered: engineKey == ${engineKey}`
           );
 
         const instance = _engineFactory.instance(engineInfo.host);
-        const action = payload.action;
-        const args = payload.payload;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return instance[action](...args);
+        return Promise.resolve({
+          invoke: (v) => (arg) =>
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            instance[v](arg) as any,
+        });
       },
     },
   };

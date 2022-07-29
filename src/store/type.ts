@@ -27,6 +27,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  ConfirmedTips,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -55,7 +56,15 @@ export type SaveResult =
   | "WRITE_ERROR"
   | "ENGINE_ERROR"
   | "CANCELED";
-export type SaveResultObject = { result: SaveResult; path: string | undefined };
+export type SaveResultObject = {
+  result: SaveResult;
+  path: string | undefined;
+  errorMessage?: string;
+};
+export type WriteErrorTypeForSaveAllResultDialog = {
+  path: string;
+  message: string;
+};
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -74,7 +83,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineState: EngineState;
+  engineStates: Record<string, EngineState>;
   characterInfos?: CharacterInfo[];
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -97,28 +106,43 @@ type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ENGINE_READY: {
+  IS_ALL_ENGINE_READY: {
     getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineKey: string): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
   };
 
-  START_WAITING_ENGINE: {
+  START_WAITING_ENGINE_ALL: {
     action(): void;
   };
 
-  RESTART_ENGINE: {
+  START_WAITING_ENGINE: {
     action(payload: { engineKey: string }): void;
   };
 
+  // NOTE: 複数のEngineKeyを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 個別にエンジンの状態を確認できるようにする？
+  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
+  RESTART_ENGINE_ALL: {
+    action(): Promise<boolean>;
+  };
+
+  RESTART_ENGINE: {
+    action(payload: { engineKey: string }): Promise<boolean>;
+  };
+
   DETECTED_ENGINE_ERROR: {
-    action(): void;
+    action(payload: { engineKey: string }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineState: EngineState };
+    mutation: { engineKey: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER: {
@@ -135,6 +159,10 @@ type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
+  };
+
+  SETUP_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -697,13 +725,6 @@ type IndexStoreTypes = {
     action(): string[];
   };
 
-  SHOW_WARNING_DIALOG: {
-    action(payload: {
-      title: string;
-      message: string;
-    }): Promise<Electron.MessageBoxReturnValue>;
-  };
-
   LOG_ERROR: {
     action(...payload: unknown[]): void;
   };
@@ -772,12 +793,14 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineInfos: EngineInfo[];
+  engineKeys: string[];
+  engineInfos: Record<string, EngineInfo>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
 };
 
 type SettingStoreTypes = {
@@ -862,6 +885,19 @@ type SettingStoreTypes = {
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  GET_CONFIRMED_TIPS: {
+    action(): void;
+  };
+
+  SET_CONFIRMED_TIPS: {
+    mutation: { confirmedTips: ConfirmedTips };
+    action(payload: { confirmedTips: ConfirmedTips }): void;
+  };
+
+  CHANGE_USE_GPU: {
+    action(payload: { useGpu: boolean }): void;
   };
 };
 
@@ -1078,6 +1114,9 @@ type PresetStoreTypes = {
   GET_PRESET_CONFIG: {
     action(): void;
   };
+  SAVE_PRESET_ORDER: {
+    action(payload: { presetKeys: string[] }): void;
+  };
   SAVE_PRESET_CONFIG: {
     action(payload: {
       presetItems: Record<string, Preset>;
@@ -1114,6 +1153,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   REWRITE_WORD: {
@@ -1122,6 +1162,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   DELETE_WORD: {
@@ -1143,22 +1184,19 @@ export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
 >;
 
-type IEngineConnectorFactoryActionsMapper<K> =
+type IEngineConnectorFactoryActionsMapper = <
   K extends keyof IEngineConnectorFactoryActions
-    ? (payload: {
-        engineKey: string;
-        action: K;
-        payload: Parameters<IEngineConnectorFactoryActions[K]>;
-      }) => ReturnType<IEngineConnectorFactoryActions[K]>
-    : never;
+>(
+  action: K
+) => (
+  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
+) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 type ProxyStoreTypes = {
-  INVOKE_ENGINE_CONNECTOR: {
-    // FIXME: actionに対してIEngineConnectorFactoryActionsのUnion型を与えているため、actionとpayloadが与えられるとReturnValueの型が得られる
-    // しかしVuexの型を通すとReturnValueの型付けが行われなくなりPromise<any>に落ちてしまうため、明示的な型付けを行う必要がある
-    action: IEngineConnectorFactoryActionsMapper<
-      keyof IEngineConnectorFactoryActions
-    >;
+  INSTANTIATE_ENGINE_CONNECTOR: {
+    action(payload: {
+      engineKey: string;
+    }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
 

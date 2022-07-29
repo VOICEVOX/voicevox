@@ -1,4 +1,24 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcSOData } from "./ipc";
+
+export interface ElectronStoreType {
+  useGpu: boolean;
+  inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
+  savingSetting: SavingSetting;
+  presets: PresetConfig;
+  hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
+  defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
+}
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
@@ -27,22 +47,23 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showInfoDialog(obj: {
+  showMessageDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+  }): Promise<Electron.MessageBoxReturnValue>;
+  showQuestionDialog(obj: {
+    type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
     buttons: string[];
     cancelId?: number;
   }): Promise<number>;
-  showWarningDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showErrorDialog(obj: {
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
-  writeFile(obj: { filePath: string; buffer: ArrayBuffer }): void;
+  writeFile(obj: {
+    filePath: string;
+    buffer: ArrayBuffer;
+  }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   useGpu(newValue?: boolean): Promise<boolean>;
@@ -61,6 +82,7 @@ export interface Sandbox {
   logError(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
+  restartEngineAll(): Promise<void>;
   restartEngine(engineKey: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -88,12 +110,19 @@ export interface Sandbox {
   setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
   getSplitterPosition(): Promise<SplitterPosition>;
   setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
-  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
   setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
+  getSetting<Key extends keyof ElectronStoreType>(
+    key: Key
+  ): Promise<ElectronStoreType[Key]>;
+  setSetting<Key extends keyof ElectronStoreType>(
+    key: Key,
+    newValue: ElectronStoreType[Key]
+  ): Promise<ElectronStoreType[Key]>;
 }
 
 export type AppInfos = {
@@ -207,7 +236,7 @@ export type HotkeyAction =
   | "プロジェクトを上書き保存"
   | "プロジェクト読み込み"
   | "テキスト読み込む"
-  | "イントネーションをリセット"
+  | "全体のイントネーションをリセット"
   | "選択中のアクセント句のイントネーションをリセット";
 
 export type HotkeyCombo = string;
@@ -278,4 +307,28 @@ export type SplitterPosition = {
   portraitPaneWidth: number | undefined;
   audioInfoPaneWidth: number | undefined;
   audioDetailPaneHeight: number | undefined;
+};
+
+export type ConfirmedTips = {
+  tweakableSliderByScroll: boolean;
+};
+
+// workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
+export class SystemError extends Error {
+  code?: string | undefined;
+  constructor(message: string, code?: string | undefined) {
+    super(message);
+
+    this.name = new.target.name;
+    this.code = code;
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, SystemError);
+    }
+  }
+}
+
+export type WriteFileErrorResult = {
+  code: string | undefined;
+  message: string;
 };

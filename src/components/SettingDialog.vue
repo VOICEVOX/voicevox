@@ -155,7 +155,7 @@
                 </div>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
-                <div>分割の挙動</div>
+                <div>テキスト分割の挙動</div>
                 <div>
                   <q-icon
                     name="help_outline"
@@ -331,8 +331,6 @@
                   </template>
                 </q-input>
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.fixedExportEnabled"
                   @update:model-value="
                     handleSavingSettingChange('fixedExportEnabled', $event)
@@ -459,8 +457,6 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.exportLab"
                   @update:model-value="
                     handleSavingSettingChange('exportLab', $event)
@@ -496,8 +492,6 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  name="enabled"
-                  align="left"
                   :model-value="savingSetting.outputStereo"
                   @update:model-value="
                     handleSavingSettingChange('outputStereo', $event)
@@ -691,12 +685,7 @@
                   </q-icon>
                 </div>
                 <q-space />
-                <q-toggle
-                  name="enabled"
-                  align="left"
-                  v-model="acceptRetrieveTelemetryComputed"
-                >
-                </q-toggle>
+                <q-toggle v-model="acceptRetrieveTelemetryComputed" />
               </q-card-actions>
             </q-card>
           </div>
@@ -864,62 +853,16 @@ export default defineComponent({
     const changeUseGPU = async (useGpu: boolean) => {
       if (store.state.useGpu === useGpu) return;
 
-      const change = async () => {
-        await store.dispatch("SET_USE_GPU", { useGpu });
-        store.dispatch("RESTART_ENGINE", {
-          engineKey: store.state.engineInfos[0].key,
-        }); // TODO: 複数エンジン対応
-
-        $q.dialog({
-          title: "エンジンの起動モードを変更しました",
-          message: "変更を適用するためにエンジンを再起動します。",
-          ok: {
-            flat: true,
-            textColor: "display",
-          },
-        });
-      };
-
-      const isAvailableGPUMode = await new Promise<boolean>((resolve) => {
-        store.dispatch("ASYNC_UI_LOCK", {
-          callback: async () => {
-            $q.loading.show({
-              spinnerColor: "primary",
-              spinnerSize: 50,
-              boxClass: "bg-background text-display",
-              message: "起動モードを変更中です",
-            });
-            resolve(await window.electron.isAvailableGPUMode());
-            $q.loading.hide();
-          },
-        });
+      $q.loading.show({
+        spinnerColor: "primary",
+        spinnerSize: 50,
+        boxClass: "bg-background text-display",
+        message: "起動モードを変更中です",
       });
 
-      if (useGpu && !isAvailableGPUMode) {
-        $q.dialog({
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。<br />" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          html: true,
-          persistent: true,
-          focus: "cancel",
-          style: {
-            width: "90vw",
-            maxWidth: "90vw",
-          },
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(change);
-      } else change();
+      await store.dispatch("CHANGE_USE_GPU", { useGpu });
+
+      $q.loading.hide();
     };
 
     const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
@@ -936,10 +879,8 @@ export default defineComponent({
       });
     };
 
-    const restartEngineProcess = () => {
-      store.dispatch("RESTART_ENGINE", {
-        engineKey: store.state.engineInfos[0].key,
-      }); // TODO: 複数エンジン対応
+    const restartAllEngineProcess = () => {
+      store.dispatch("RESTART_ENGINE_ALL");
     };
 
     const savingSetting = computed(() => store.state.savingSetting);
@@ -1012,7 +953,7 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
-      restartEngineProcess,
+      restartAllEngineProcess,
       savingSetting,
       handleSavingSettingChange,
       openFileExplore,

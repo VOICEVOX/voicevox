@@ -37,6 +37,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -186,7 +187,7 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "",
   },
   {
-    action: "イントネーションをリセット",
+    action: "全体のイントネーションをリセット",
     combination: !isMac ? "Ctrl G" : "Meta G",
   },
   {
@@ -205,23 +206,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<{
-  useGpu: boolean;
-  inheritAudioInfo: boolean;
-  activePointScrollMode: ActivePointScrollMode;
-  savingSetting: SavingSetting;
-  presets: PresetConfig;
-  hotkeySettings: HotkeySetting[];
-  toolbarSetting: ToolbarSetting;
-  userCharacterOrder: string[];
-  defaultStyleIds: DefaultStyleId[];
-  currentTheme: string;
-  experimentalSetting: ExperimentalSetting;
-  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  acceptTerms: AcceptTermsStatus;
-  splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
-}>({
+const store = new Store<ElectronStoreType>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -386,6 +371,15 @@ const store = new Store<{
       },
       default: {},
     },
+    confirmedTips: {
+      type: "object",
+      properties: {
+        tweakableSliderByScroll: { type: "boolean", default: false },
+      },
+      default: {
+        tweakableSliderByScroll: false,
+      },
+    },
   },
   migrations: {},
 });
@@ -412,7 +406,7 @@ async function runEngine(engineKey: string) {
     (engineInfo) => engineInfo.key === engineKey
   );
   if (!engineInfo)
-    throw new Error(`No such engineInfo registered: key == ${engineKey}`);
+    throw new Error(`No such engineInfo registered: engineKey == ${engineKey}`);
 
   if (!engineInfo.executionEnabled) {
     log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
@@ -489,7 +483,7 @@ async function runEngine(engineKey: string) {
     log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR");
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineKey });
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
@@ -978,12 +972,20 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   return result.filePaths;
 });
 
+ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
+  return dialog.showMessageBox(win, {
+    type,
+    title,
+    message,
+  });
+});
+
 ipcMainHandle(
-  "SHOW_INFO_DIALOG",
-  (_, { title, message, buttons, cancelId }) => {
+  "SHOW_QUESTION_DIALOG",
+  (_, { type, title, message, buttons, cancelId }) => {
     return dialog
       .showMessageBox(win, {
-        type: "info",
+        type,
         buttons,
         title,
         message,
@@ -1224,6 +1226,15 @@ ipcMainHandle("GET_SPLITTER_POSITION", () => {
 
 ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
   store.set("splitterPosition", splitterPosition);
+});
+
+ipcMainHandle("GET_SETTING", (_, key) => {
+  return store.get(key);
+});
+
+ipcMainHandle("SET_SETTING", (_, key, newValue) => {
+  store.set(key, newValue);
+  return store.get(key);
 });
 
 // app callback

@@ -7,7 +7,8 @@ import {
 import fs from "fs";
 import path from "path";
 
-import { Sandbox } from "@/type/preload";
+import { Sandbox, SystemError, ElectronStoreType } from "@/type/preload";
+import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
   channel: T,
@@ -115,8 +116,13 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
   },
 
-  showInfoDialog: ({ title, message, buttons, cancelId }) => {
-    return ipcRendererInvoke("SHOW_INFO_DIALOG", {
+  showMessageDialog: ({ type, title, message }) => {
+    return ipcRendererInvoke("SHOW_MESSAGE_DIALOG", { type, title, message });
+  },
+
+  showQuestionDialog: ({ type, title, message, buttons, cancelId }) => {
+    return ipcRendererInvoke("SHOW_QUESTION_DIALOG", {
+      type,
       title,
       message,
       buttons,
@@ -124,20 +130,20 @@ const api: Sandbox = {
     });
   },
 
-  showWarningDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_WARNING_DIALOG", { title, message });
-  },
-
-  showErrorDialog: ({ title, message }) => {
-    return ipcRendererInvoke("SHOW_ERROR_DIALOG", { title, message });
-  },
-
   showImportFileDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", { title });
   },
 
   writeFile: ({ filePath, buffer }) => {
-    fs.writeFileSync(filePath, new DataView(buffer));
+    try {
+      // throwだと`.code`の情報が消えるのでreturn
+      fs.writeFileSync(filePath, new DataView(buffer));
+    } catch (e) {
+      const a = e as SystemError;
+      return { code: a.code, message: a.message };
+    }
+
+    return undefined;
   },
 
   readFile: ({ filePath }) => {
@@ -192,8 +198,12 @@ const api: Sandbox = {
     return ipcRendererInvoke("ENGINE_INFOS");
   },
 
-  restartEngine: (engineKey) => {
-    return ipcRendererInvoke("RESTART_ENGINE", { engineKey: engineKey });
+  restartEngineAll: () => {
+    return ipcRendererInvoke("RESTART_ENGINE_ALL");
+  },
+
+  restartEngine: (engineKey: string) => {
+    return ipcRendererInvoke("RESTART_ENGINE", { engineKey });
   },
 
   savingSetting: (newData) => {
@@ -299,6 +309,21 @@ const api: Sandbox = {
       "SET_SPLIT_TEXT_WHEN_PASTE",
       splitTextWhenPaste
     );
+  },
+
+  getSetting: async (key) => {
+    return (await ipcRendererInvoke(
+      "GET_SETTING",
+      key
+    )) as ElectronStoreType[typeof key];
+  },
+
+  setSetting: async (key, newValue) => {
+    return (await ipcRendererInvoke(
+      "SET_SETTING",
+      key,
+      newValue
+    )) as typeof newValue;
   },
 };
 

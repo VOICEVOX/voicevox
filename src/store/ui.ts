@@ -139,7 +139,13 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.useGpu = useGpu;
       },
       SET_ENGINE_INFOS(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-        state.engineInfos = engineInfos;
+        state.engineKeys = engineInfos.map((engineInfo) => engineInfo.key);
+        state.engineInfos = Object.fromEntries(
+          engineInfos.map((engineInfo) => [engineInfo.key, engineInfo])
+        );
+        state.engineStates = Object.fromEntries(
+          engineInfos.map((engineInfo) => [engineInfo.key, "STARTING"])
+        );
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -421,7 +427,8 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       },
       async CHECK_EDITED_AND_NOT_SAVE({ getters }) {
         if (getters.IS_EDITED) {
-          const result: number = await window.electron.showInfoDialog({
+          const result: number = await window.electron.showQuestionDialog({
+            type: "info",
             title: "警告",
             message:
               "プロジェクトの変更が保存されていません。\n" +

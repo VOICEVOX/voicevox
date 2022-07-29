@@ -18,6 +18,7 @@
       reverse
       snap
       color="primary-light"
+      trackSize="2.5px"
       :style="clipPathComputed"
       :min="previewSlider.qSliderProps.min.value"
       :max="previewSlider.qSliderProps.max.value"
@@ -144,8 +145,7 @@ div {
     min-width: 20px;
     max-width: 20px;
     :deep(.q-slider__track-container--v) {
-      margin-left: -1.5px;
-      width: 3px;
+      margin-left: -3.5px;
     }
   }
   .value-label {

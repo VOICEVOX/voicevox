@@ -218,11 +218,6 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "新規プロジェクト",
-            onClick: createNewProject,
-          },
-          {
-            type: "button",
             label: "音声書き出し",
             onClick: () => {
               generateAndSaveAllAudio();
@@ -242,6 +237,7 @@ export default defineComponent({
               generateAndConnectAndSaveAllAudio();
             },
           },
+          { type: "separator" },
           {
             type: "button",
             label: "テキストを繋げて書き出し",
@@ -257,6 +253,11 @@ export default defineComponent({
             },
           },
           { type: "separator" },
+          {
+            type: "button",
+            label: "新規プロジェクト",
+            onClick: createNewProject,
+          },
           {
             type: "button",
             label: "プロジェクトを上書き保存",
@@ -291,9 +292,7 @@ export default defineComponent({
             type: "button",
             label: "再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE", {
-                engineKey: store.state.engineInfos[0].key,
-              }); // TODO: 複数エンジン対応
+              store.dispatch("RESTART_ENGINE_ALL");
             },
           },
         ],

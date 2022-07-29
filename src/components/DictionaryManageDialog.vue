@@ -33,33 +33,29 @@
           </div>
           <div class="col-4 word-list-col">
             <div v-if="wordEditing" class="word-list-disable-overlay" />
-            <div class="word-list-header">
-              <div class="word-list-title text-h5">単語一覧</div>
-              <div>
+            <div class="word-list-header text-no-wrap">
+              <div class="row word-list-title text-h5">単語一覧</div>
+              <div class="row no-wrap">
                 <q-btn
                   outline
                   text-color="warning"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="deleteWord"
                   :disable="uiLocked || !isDeletable"
                   >削除</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="editWord"
                   :disable="uiLocked || !selectedId"
                   >編集</q-btn
                 >
-              </div>
-              <div>
                 <q-btn
                   outline
                   text-color="display"
-                  class="text-no-wrap text-bold"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="newWord"
                   :disable="uiLocked"
                   >追加</q-btn
@@ -88,7 +84,10 @@
           </div>
 
           <!-- 右側のpane -->
-          <div v-if="wordEditing" class="col-8 no-wrap text-no-wrap">
+          <div
+            v-if="wordEditing"
+            class="col-8 no-wrap text-no-wrap word-editor"
+          >
             <div class="row q-pl-md q-mt-md">
               <div class="text-h6">単語</div>
               <q-input
@@ -119,7 +118,7 @@
               </q-input>
             </div>
             <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
-            <div class="row q-pl-md accent-desc">
+            <div class="row q-pl-md desc-row">
               語尾のアクセントを考慮するため、「が」が自動で挿入されます。
             </div>
             <div class="row q-px-md" style="height: 130px">
@@ -145,9 +144,6 @@
               <div
                 ref="accentPhraseTable"
                 class="accent-phrase-table overflow-hidden-y"
-                :style="{
-                  justifyContent: centeringAccentPhrase ? 'center' : undefined,
-                }"
               >
                 <div v-if="accentPhrase" class="mora-table">
                   <audio-accent
@@ -178,6 +174,30 @@
                   </template>
                 </div>
               </div>
+            </div>
+            <div class="row q-pl-md q-pt-sm text-h6">単語優先度</div>
+            <div class="row q-pl-md desc-row">
+              単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
+            </div>
+            <div
+              class="row q-px-md"
+              :style="{
+                justifyContent: 'center',
+              }"
+            >
+              <q-slider
+                v-model="wordPriority"
+                snap
+                dense
+                marker-labels
+                color="primary-light"
+                :min="0"
+                :max="10"
+                :step="1"
+                :style="{
+                  width: '80%',
+                }"
+              />
             </div>
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
@@ -215,7 +235,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
 import {
@@ -226,6 +246,8 @@ import {
 import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
 import { AudioItem } from "@/store/type";
+
+const defaultDictPriority = 5;
 
 export default defineComponent({
   name: "DictionaryManageDialog",
@@ -320,16 +342,7 @@ export default defineComponent({
     const isOnlyHiraOrKana = ref(true);
     const accentPhrase = ref<AccentPhrase | undefined>();
     const accentPhraseTable = ref<HTMLElement>();
-    // スクロールしなければならないほど長いアクセント句はセンタリングしないようにする
-    // computedにすると、ダイアログを表示した際にしか動作しないので、refにして変更時に代入する
-    const centeringAccentPhrase = ref(true);
-    // FIXME: CSSで完結させる
-    const computeCenteringAccentPhrase = () => {
-      centeringAccentPhrase.value =
-        !!accentPhraseTable.value &&
-        accentPhraseTable.value.scrollWidth ==
-          accentPhraseTable.value.offsetWidth;
-    };
+
     const convertHankakuToZenkaku = (text: string) => {
       // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
       return text.replace(/[\u0021-\u007e]/g, (s) => {
@@ -380,10 +393,7 @@ export default defineComponent({
         accentPhrase.value = undefined;
       }
       yomi.value = text;
-      await nextTick();
-      computeCenteringAccentPhrase();
     };
-    window.onresize = computeCenteringAccentPhrase;
 
     const changeAccent = async (_: number, accent: number) => {
       if (accentPhrase.value) {
@@ -473,6 +483,8 @@ export default defineComponent({
       return accent;
     };
 
+    const wordPriority = ref(defaultDictPriority);
+
     // 操作（ステートの移動）
     const isWordChanged = computed(() => {
       if (selectedId.value === "") {
@@ -485,7 +497,8 @@ export default defineComponent({
         dictData &&
         (dictData.surface !== surface.value ||
           dictData.yomi !== yomi.value ||
-          dictData.accentType !== computeRegisteredAccent())
+          dictData.accentType !== computeRegisteredAccent() ||
+          dictData.priority !== wordPriority.value)
       );
     });
     const saveWord = async () => {
@@ -498,6 +511,7 @@ export default defineComponent({
             surface: surface.value,
             pronunciation: yomi.value,
             accentType: accent,
+            priority: wordPriority.value,
           });
         } catch {
           $q.dialog({
@@ -518,6 +532,7 @@ export default defineComponent({
               surface: surface.value,
               pronunciation: yomi.value,
               accentType: accent,
+              priority: wordPriority.value,
             })
           );
         } catch {
@@ -623,6 +638,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
+      wordPriority.value = defaultDictPriority;
       editWord();
     };
     const editWord = () => {
@@ -632,6 +648,7 @@ export default defineComponent({
       selectedId.value = id;
       surface.value = userDict.value[id].surface;
       setYomi(userDict.value[id].yomi, true);
+      wordPriority.value = userDict.value[id].priority;
       toWordSelectedState();
     };
     const cancel = () => {
@@ -648,6 +665,7 @@ export default defineComponent({
       selectedId.value = "";
       surface.value = "";
       setYomi("");
+      wordPriority.value = defaultDictPriority;
     };
     // 単語が選択されているだけの状態
     const toWordSelectedState = () => {
@@ -687,12 +705,12 @@ export default defineComponent({
       setYomi,
       accentPhrase,
       accentPhraseTable,
-      centeringAccentPhrase,
       changeAccent,
       play,
       stop,
       isWordChanged,
       isDeletable,
+      wordPriority,
       saveWord,
       deleteWord,
       resetWord,
@@ -710,12 +728,12 @@ export default defineComponent({
 .word-list-col {
   border-right: solid 1px colors.$setting-item;
   position: relative; // オーバーレイのため
+  overflow-x: hidden;
 }
 
 .word-list-header {
   margin: 1rem;
 
-  display: flex;
   gap: 0.5rem;
   align-items: center;
   justify-content: space-between;
@@ -726,10 +744,10 @@ export default defineComponent({
 
 .word-list {
   // menubar-height + header-height + window-border-width +
-  // 46(title) + 52(new word button)
+  // 82(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 52px}
+      vars.$window-border-width + 82px + 30px}
   );
   width: 100%;
   overflow-y: auto;
@@ -764,6 +782,16 @@ export default defineComponent({
   z-index: 10;
 }
 
+.word-editor {
+  display: flex;
+  flex-flow: column;
+  height: calc(
+    100vh - #{vars.$menubar-height + vars.$header-height +
+      vars.$window-border-width}
+  ) !important;
+  overflow: auto;
+}
+
 .word-input {
   padding-left: 10px;
   width: calc(66vw - 80px);
@@ -782,7 +810,7 @@ export default defineComponent({
   }
 }
 
-.accent-desc {
+.desc-row {
   color: rgba(colors.$display-rgb, 0.5);
   font-size: 12px;
 }
@@ -797,6 +825,7 @@ export default defineComponent({
   align-self: stretch;
 
   display: flex;
+  height: 130px;
   overflow-x: scroll;
   width: calc(66vw - 140px);
 
@@ -807,16 +836,18 @@ export default defineComponent({
 
     .text-cell {
       padding: 0;
-      min-width: 30px;
-      max-width: 30px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row-start: 3;
       text-align: center;
+      white-space: nowrap;
       color: colors.$display;
+      position: relative;
     }
 
     .splitter-cell {
-      min-width: 10px;
-      max-width: 10px;
+      min-width: 20px;
+      max-width: 20px;
       grid-row: 3 / span 1;
       z-index: vars.$detail-view-splitter-cell-z-index;
     }
@@ -824,15 +855,10 @@ export default defineComponent({
 }
 
 .save-delete-reset-buttons {
-  // menubar-height + header-height + window-border-width
-  // 46(surface input) + 58(yomi input) + 38(accent title) + 18(accent desc) + 130(accent)
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$header-height +
-      vars.$window-border-width + 46px + 58px + 38px + 18px + 130px}
-  );
   padding: 20px;
 
   display: flex;
+  flex: 1;
   align-items: flex-end;
 }
 </style>
