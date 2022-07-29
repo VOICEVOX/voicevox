@@ -12,7 +12,8 @@
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
 Fork して `git clone` し、次のコマンドを実行してください。
 
-Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると[.node-version](.node-version) を簡単にインストールすることができます。
+Node.js の管理ツール ([nvs](https://github.com/jasongin/nvs)など)を利用すると、
+[.node-version](.node-version) を簡単にインストールすることができます。
 
 ```bash
 npm ci
