@@ -135,7 +135,7 @@
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
+        <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
           <div class="text-warning">
             ショートカットキーが次の操作と重複しています
           </div>

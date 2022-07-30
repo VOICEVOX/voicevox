@@ -95,7 +95,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="display-dark"
+                          text-color="button-icon"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>

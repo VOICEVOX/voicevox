@@ -1,5 +1,6 @@
 {
   "name": "Default",
+  "display_name": "デフォルト",
   "isDark": false,
   "colors": {
     "primary": "#A5D4AD",
@@ -10,12 +11,14 @@
     "background": "#FFFFFF",
     "background-light": "#FFFFFF",
     "setting-item": "#EEEEEE",
+    "setting-item-active": "#A5D4AD",
     "warning": "#C10015",
     "markdown-color": "#24292F",
     "markdown-background": "#FFFFFF",
     "markdown-hyperlink": "#0969DA",
     "pause-hovered": "#CCDDFF",
     "active-point-focus": "#EEF3FF",
-    "active-point-focus-hover": "#F7FAFF"
+    "active-point-focus-hover": "#F7FAFF",
+    "button-icon": "#121212"
   }
 }
