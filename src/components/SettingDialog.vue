@@ -34,12 +34,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>エンジンモード</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -76,12 +71,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>パラメータの引き継ぎ</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -103,12 +93,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>再生位置を追従</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -157,12 +142,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>テキスト分割の挙動</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -242,12 +222,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>文字コード</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -280,12 +255,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>書き出し先を固定</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -346,12 +316,7 @@
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>書き出しファイル名パターン</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -380,12 +345,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>上書き防止</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -409,12 +369,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>txtファイルを書き出し</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -439,12 +394,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>labファイルを書き出し</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -474,12 +424,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声をステレオ化</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -503,12 +448,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>再生デバイス</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -533,12 +473,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>音声のサンプリングレート</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -577,12 +512,7 @@
               <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
               <q-card-actions class="q-px-md q-py-sm bg-setting-item">
                 <div>テーマ</div>
-                <q-icon
-                  name="help_outline"
-                  color="grey-8"
-                  size="sm"
-                  class="help-hover-icon"
-                >
+                <q-icon name="help_outline" size="sm" class="help-hover-icon">
                   <q-tooltip
                     :delay="500"
                     anchor="center left"
@@ -608,12 +538,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>プリセット機能</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -637,12 +562,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>疑問文を自動調整</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -674,12 +594,7 @@
               <q-card-actions class="q-px-md q-py-none bg-setting-item">
                 <div>ソフトウェア利用状況のデータ収集を許可する</div>
                 <div>
-                  <q-icon
-                    name="help_outline"
-                    color="grey-8"
-                    size="sm"
-                    class="help-hover-icon"
-                  >
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
                       :delay="500"
                       anchor="center left"
@@ -981,6 +896,8 @@ export default defineComponent({
 
 .help-hover-icon {
   margin-left: 6px;
+  color: colors.$display;
+  opacity: 50%;
 }
 
 .hotkey-table {
