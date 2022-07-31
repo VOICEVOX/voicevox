@@ -187,7 +187,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
