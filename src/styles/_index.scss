@@ -104,6 +104,7 @@ img {
 
 // Markdown
 .markdown-body {
+  min-height: max-content;
   color: colors.$markdown-color;
   background: colors.$markdown-background;
   a {

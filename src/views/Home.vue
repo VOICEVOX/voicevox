@@ -12,7 +12,7 @@
           class="waiting-engine"
         >
           <div>
-            <q-spinner color="primary" size="2.5rem" />
+            <q-spinner color="background-light" size="2.5rem" />
             <div class="q-mt-xs">
               {{
                 allEngineState === "STARTING"
@@ -728,8 +728,8 @@ export default defineComponent({
   justify-content: center;
 
   > div {
-    color: colors.$display-dark;
-    background: colors.$background-light;
+    color: colors.$background-light;
+    background: colors.$background-header;
     border-radius: 6px;
     padding: 14px;
   }
