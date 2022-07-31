@@ -172,7 +172,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
