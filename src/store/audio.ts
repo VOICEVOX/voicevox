@@ -1644,7 +1644,7 @@ export const audioStore: VoiceVoxStoreOptions<
         .restartEngine(engineKey)
         .then(async () => {
           await dispatch("START_WAITING_ENGINE", { engineKey });
-          return state.engineState === "READY";
+          return state.engineStates[engineKey] === "READY";
         })
         .catch(async () => {
           await dispatch("DETECTED_ENGINE_ERROR", { engineKey });
