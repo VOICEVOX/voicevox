@@ -53,7 +53,7 @@
                   v-model="engineMode"
                   color="background"
                   text-color="display"
-                  toggle-color="setting-item-active"
+                  toggle-color="primary"
                   toggle-text-color="display-dark"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
@@ -162,7 +162,7 @@
                   @update:model-value="changeSplitTextWhenPaste($event)"
                   color="background"
                   text-color="display"
-                  toggle-color="setting-item-active"
+                  toggle-color="primary"
                   toggle-text-color="display-dark"
                   :options="[
                     {
@@ -244,7 +244,7 @@
                   "
                   color="background"
                   text-color="display"
-                  toggle-color="setting-item-active"
+                  toggle-color="primary"
                   toggle-text-color="display-dark"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
@@ -384,7 +384,7 @@
                 <q-space />
                 <q-toggle
                   :model-value="savingSetting.exportText"
-                  color="setting-item-active"
+                  color="primary"
                   @update:model-value="
                     handleSavingSettingChange('exportText', $event)
                   "
@@ -529,7 +529,7 @@
                   padding="xs md"
                   color="background"
                   text-color="display"
-                  toggle-color="setting-item-active"
+                  toggle-color="primary"
                   toggle-text-color="display-dark"
                   v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
@@ -896,7 +896,7 @@ export default defineComponent({
 
 .setting-dialog {
   .q-field__control {
-    color: colors.$setting-item-active;
+    color: colors.$primary;
   }
 }
 
@@ -928,7 +928,7 @@ export default defineComponent({
 }
 
 .scroll-mode-button-selected {
-  background: colors.$setting-item-active;
+  background: colors.$primary;
   color: colors.$display-dark;
 }
 

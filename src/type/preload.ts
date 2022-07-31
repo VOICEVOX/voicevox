@@ -278,7 +278,6 @@ export type ThemeColorType =
   | "background-light"
   | "background-header"
   | "setting-item"
-  | "setting-item-active"
   | "warning"
   | "markdown-color"
   | "markdown-background"

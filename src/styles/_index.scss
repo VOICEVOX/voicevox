@@ -101,21 +101,6 @@ img {
   background: colors.$background-header !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 
-// スイッチ
-.q-toggle__inner--truthy {
-  .q-toggle__track {
-    background: colors.$setting-item-active;
-  }
-
-  .q-toggle__thumb{
-    color: colors.$setting-item-active;
-
-    &::after {
-      background: colors.$setting-item-active;
-    }
-  }
-}
-
 // Markdown
 .markdown-body {
   color: colors.$markdown-color;
@@ -232,13 +217,6 @@ img {
 }
 .bg-button-icon {
   background: colors.$button-icon;
-}
-
-.text-setting-item-active {
-  color: colors.$setting-item-active;
-}
-.bg-setting-item-active {
-  background: colors.$setting-item-active;
 }
 
 .text-background-header {
