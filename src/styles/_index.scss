@@ -96,6 +96,17 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
+// スイッチ
+.q-toggle__inner--truthy {
+  .q-toggle__track {
+    background: colors.$setting-item-active
+  }
+
+  .q-toggle__thumb{
+    color: colors.$setting-item-active;
+  }
+}
+
 // Markdown
 .markdown-body {
   color: colors.$markdown-color;
