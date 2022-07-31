@@ -894,6 +894,12 @@ export default defineComponent({
 <style scoped lang="scss">
 @use "@/styles/colors" as colors;
 
+.setting-dialog {
+  .q-field__control {
+    color: colors.$setting-item-active;
+  }
+}
+
 .help-hover-icon {
   margin-left: 6px;
   color: colors.$display;

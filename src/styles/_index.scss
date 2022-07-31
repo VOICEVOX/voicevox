@@ -3,9 +3,9 @@
 
 body {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$primary};
-  border-right: solid #{vars.$window-border-width} #{colors.$primary};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$primary};
+  border-left: solid #{vars.$window-border-width} #{colors.$background-header};
+  border-right: solid #{vars.$window-border-width} #{colors.$background-header};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$background-header};
   color: colors.$display;
   background: colors.$background;
 }
@@ -94,6 +94,11 @@ img {
 
 .transparent-backdrop > .q-dialog__backdrop {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
+}
+
+// 設定とかのヘッダーの色
+.q-layout__section--marginal {
+  background: colors.$background-header !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 
 // スイッチ
@@ -234,4 +239,11 @@ img {
 }
 .bg-setting-item-active {
   background: colors.$setting-item-active;
+}
+
+.text-background-header {
+  color: colors.$background-header;
+}
+.bg-background-header {
+  background: colors.$background-header;
 }

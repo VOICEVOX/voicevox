@@ -276,6 +276,7 @@ export type ThemeColorType =
   | "display-dark"
   | "background"
   | "background-light"
+  | "background-header"
   | "setting-item"
   | "setting-item-active"
   | "warning"

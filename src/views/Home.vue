@@ -27,7 +27,7 @@
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="bg-primary"
+          separator-class="home-splitter"
           :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
@@ -38,7 +38,7 @@
           <template #before>
             <q-splitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="bg-primary"
+              separator-class="home-splitter"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
               :disable="!shouldShowPanes"
@@ -53,7 +53,7 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="bg-primary"
+                  separator-class="home-splitter"
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
@@ -699,6 +699,15 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss">
+@use '@/styles/colors' as colors;
+
+// FIXME: scopedだと動かなかった
+.home-splitter {
+  background: colors.$background-header !important; // bg-primaryも!importantでゴリ押してるので許される
+}
+</style>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
