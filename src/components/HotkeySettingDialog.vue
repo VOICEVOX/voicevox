@@ -150,7 +150,7 @@
           label="ショートカットキーを未設定にする"
           unelevated
           color="display-light"
-          text-color="display-dark"
+          text-color="display"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -162,7 +162,7 @@
           label="キャンセル"
           unelevated
           color="display-light"
-          text-color="display-dark"
+          text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
