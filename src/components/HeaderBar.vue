@@ -1,5 +1,5 @@
 <template>
-  <q-header class="q-py-sm header-bar">
+  <q-header class="q-py-sm">
     <q-toolbar>
       <template v-for="button in headerButtons" :key="button.text">
         <q-space v-if="button.text === null" />
@@ -218,11 +218,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped lang="scss">
-@use "@/styles/colors" as colors;
-
-.header-bar {
-  background: colors.$background-header;
-}
-</style>
