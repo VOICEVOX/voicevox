@@ -74,7 +74,7 @@
           outline
           class="col-auto q-ml-xs"
           size="sm"
-          text-color="display-dark"
+          text-color="display"
           :label="isRegisteredPreset ? '再登録' : '登録'"
           v-show="!isRegisteredPreset || isChangedPreset"
           @click="registerPreset({ overwrite: isRegisteredPreset })"

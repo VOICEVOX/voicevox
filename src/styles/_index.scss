@@ -1,7 +1,8 @@
 @use './variables' as vars;
 @use './colors' as colors;
 
-body {
+// 優先度を強引に上げる
+body:not(#dummy) {
   user-select: none;
   border-left: solid #{vars.$window-border-width} #{colors.$background-header};
   border-right: solid #{vars.$window-border-width} #{colors.$background-header};
