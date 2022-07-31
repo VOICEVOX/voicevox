@@ -282,6 +282,7 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
+  | "selection"
   | "pause-hovered"
   | "active-point-focus"
   | "active-point-focus-hover"

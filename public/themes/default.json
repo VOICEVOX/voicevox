@@ -15,6 +15,7 @@
     "markdown-color": "#24292F",
     "markdown-background": "#FFFFFF",
     "markdown-hyperlink": "#0969DA",
+    "selection": "#4488CC",
     "pause-hovered": "#CCDDFF",
     "active-point-focus": "#EEF3FF",
     "active-point-focus-hover": "#F7FAFF",
