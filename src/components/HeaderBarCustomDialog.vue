@@ -384,8 +384,8 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
-  background-color: colors.$selection;
-  border-color: colors.$selection;
+  background-color: colors.$header-selected;
+  border-color: colors.$header-selected;
 }
 
 .radio-space {
@@ -400,7 +400,7 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  background-color: colors.$selection;
-  border: solid 2px colors.$selection;
+  background-color: colors.$header-selected;
+  border: solid 2px colors.$header-selected;
 }
 </style>
