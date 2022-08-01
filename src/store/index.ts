@@ -108,12 +108,17 @@ export const indexStore: VoiceVoxStoreOptions<
       window.electron.logInfo(...params);
     },
     async LOAD_USER_CHARACTER_ORDER({ commit }) {
-      const userCharacterOrder = await window.electron.getUserCharacterOrder();
+      const userCharacterOrder = await window.electron.getSetting(
+        "userCharacterOrder"
+      );
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
     },
     async SET_USER_CHARACTER_ORDER({ commit }, userCharacterOrder) {
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
-      await window.electron.setUserCharacterOrder(userCharacterOrder);
+      await window.electron.setSetting(
+        "userCharacterOrder",
+        userCharacterOrder
+      );
     },
     GET_NEW_CHARACTERS({ state }) {
       if (!state.characterInfos) throw new Error("characterInfos is undefined");
@@ -131,7 +136,7 @@ export const indexStore: VoiceVoxStoreOptions<
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
-      let defaultStyleIds = await window.electron.getDefaultStyleIds();
+      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
       if (!state.characterInfos) throw new Error("characterInfos is undefined");
 
@@ -155,25 +160,15 @@ export const indexStore: VoiceVoxStoreOptions<
     },
     async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
-      await window.electron.setDefaultStyleIds(defaultStyleIds);
+      await window.electron.setSetting("defaultStyleIds", defaultStyleIds);
     },
     async INIT_VUEX({ dispatch }) {
       const promises = [];
 
-      promises.push(dispatch("GET_USE_GPU"));
-      promises.push(dispatch("GET_PRESET_CONFIG"));
-      promises.push(dispatch("GET_INHERIT_AUDIOINFO"));
-      promises.push(dispatch("GET_ACTIVE_POINT_SCROLL_MODE"));
-      promises.push(dispatch("GET_SAVING_SETTING"));
-      promises.push(dispatch("GET_HOTKEY_SETTINGS"));
-      promises.push(dispatch("GET_TOOLBAR_SETTING"));
-      promises.push(dispatch("GET_THEME_SETTING"));
-      promises.push(dispatch("GET_ACCEPT_RETRIEVE_TELEMETRY"));
-      promises.push(dispatch("GET_ACCEPT_TERMS"));
-      promises.push(dispatch("GET_EXPERIMENTAL_SETTING"));
-      promises.push(dispatch("INIT_SPLIT_TEXT_WHEN_PASTE"));
-      promises.push(dispatch("GET_SPLITTER_POSITION"));
-      promises.push(dispatch("GET_CONFIRMED_TIPS"));
+      // 設定ファイルからstoreへ読み込む
+      promises.push(dispatch("HYDRATE_UI_STORE"));
+      promises.push(dispatch("HYDRATE_PRESET_STORE"));
+      promises.push(dispatch("HYDRATE_SETTING_STORE"));
 
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");

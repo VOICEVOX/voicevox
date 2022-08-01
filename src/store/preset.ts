@@ -33,18 +33,18 @@ export const presetStore: VoiceVoxStoreOptions<
     },
   },
   actions: {
-    GET_PRESET_CONFIG: async (context) => {
-      const presetConfig = await window.electron.savingPresets();
+    HYDRATE_PRESET_STORE: async ({ commit }) => {
+      const presetConfig = await window.electron.getSetting("presets");
       if (
         presetConfig === undefined ||
         presetConfig.items === undefined ||
         presetConfig.keys === undefined
       )
         return;
-      context.commit("SET_PRESET_ITEMS", {
+      commit("SET_PRESET_ITEMS", {
         presetItems: presetConfig.items,
       });
-      context.commit("SET_PRESET_KEYS", {
+      commit("SET_PRESET_KEYS", {
         presetKeys: presetConfig.keys,
       });
     },
@@ -68,9 +68,9 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys: string[];
       }
     ) => {
-      const result = await window.electron.savingPresets({
-        presetItems: JSON.parse(JSON.stringify(presetItems)),
-        presetKeys: JSON.parse(JSON.stringify(presetKeys)),
+      const result = await window.electron.setSetting("presets", {
+        items: JSON.parse(JSON.stringify(presetItems)),
+        keys: JSON.parse(JSON.stringify(presetKeys)),
       });
       context.commit("SET_PRESET_ITEMS", { presetItems: result.items });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
