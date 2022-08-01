@@ -4,9 +4,9 @@
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$background-header};
-  border-right: solid #{vars.$window-border-width} #{colors.$background-header};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$background-header};
+  border-left: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-right: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$header-background};
   color: colors.$display;
   background: colors.$background;
 }
@@ -99,7 +99,7 @@ img {
 
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
-  background: colors.$background-header !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 
 // Markdown
@@ -221,16 +221,16 @@ img {
   background: colors.$button-icon;
 }
 
-.text-background-header {
-  color: colors.$background-header;
+.text-header-background {
+  color: colors.$header-background;
 }
-.bg-background-header {
-  background: colors.$background-header;
+.bg-header-background {
+  background: colors.$header-background;
 }
 
-.text-selection {
-  color: colors.$selection;
+.text-header-selected {
+  color: colors.$header-selected;
 }
-.bg-selection {
-  background: colors.$selection;
+.bg-header-selected {
+  background: colors.$header-selected;
 }

@@ -44,7 +44,7 @@
         </q-header>
         <q-page>
           <q-card flat square class="preview-card">
-            <q-toolbar class="bg-background-header preview-toolbar">
+            <q-toolbar class="bg-header-background preview-toolbar">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
                   v-model="selectedButton"

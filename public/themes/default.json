@@ -15,11 +15,11 @@
     "markdown-color": "#24292F",
     "markdown-background": "#FFFFFF",
     "markdown-hyperlink": "#0969DA",
-    "selection": "#DCEEDF",
+    "header-selected": "#DCEEDF",
     "pause-hovered": "#CCDDFF",
     "active-point-focus": "#EEF3FF",
     "active-point-focus-hover": "#F7FAFF",
     "button-icon": "#121212",
-    "background-header": "#A5D4AD"
+    "header-background": "#A5D4AD"
   }
 }

@@ -705,7 +705,7 @@ export default defineComponent({
 
 // FIXME: scopedだと動かなかった
 .home-splitter {
-  background: colors.$background-header !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>
 
@@ -729,7 +729,7 @@ export default defineComponent({
 
   > div {
     color: colors.$background-light;
-    background: colors.$background-header;
+    background: colors.$header-background;
     border-radius: 6px;
     padding: 14px;
   }
