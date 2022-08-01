@@ -903,7 +903,7 @@ export default defineComponent({
 .help-hover-icon {
   margin-left: 6px;
   color: colors.$display;
-  opacity: 50%;
+  opacity: 0.5;
 }
 
 .hotkey-table {
