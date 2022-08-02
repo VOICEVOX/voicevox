@@ -1,7 +1,7 @@
 {
   "name": "Dark",
   "display_name": "ダーク",
-  "index": 1,
+  "rank": 9999,
   "isDark": true,
   "colors": {
     "primary": "#86C591",

@@ -291,7 +291,7 @@ export type ThemeColorType =
 export type ThemeConf = {
   name: string;
   display_name: string;
-  index: number;
+  rank: number;
   isDark: boolean;
   colors: {
     [K in ThemeColorType]: string;
