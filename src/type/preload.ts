@@ -66,11 +66,6 @@ export interface Sandbox {
   }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
-  useGpu(newValue?: boolean): Promise<boolean>;
-  inheritAudioInfo(newValue?: boolean): Promise<boolean>;
-  activePointScrollMode(
-    newValue?: ActivePointScrollMode
-  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -84,38 +79,14 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineKey: string): Promise<void>;
-  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
-  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  savingPresets(newPresets?: {
-    presetItems: Record<string, Preset>;
-    presetKeys: string[];
-  }): Promise<PresetConfig>;
-  getUserCharacterOrder(): Promise<string[]>;
-  setUserCharacterOrder(userCharacterOrder: string[]): Promise<void>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
-  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
-  setDefaultStyleIds(
-    defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
-  ): Promise<void>;
-  getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
-  setAcceptRetrieveTelemetry(
-    acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
-  ): Promise<void>;
-  getAcceptTerms(): Promise<AcceptTermsStatus>;
-  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
-  getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
-  getSplitterPosition(): Promise<SplitterPosition>;
-  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
-  setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
   getSetting<Key extends keyof ElectronStoreType>(
     key: Key
   ): Promise<ElectronStoreType[Key]>;

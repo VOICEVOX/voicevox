@@ -381,7 +381,20 @@ const store = new Store<ElectronStoreType>({
       },
     },
   },
-  migrations: {},
+  migrations: {
+    "0.13": (store) => {
+      // acceptTems -> acceptTerms
+      const prevIdentifier = "acceptTems";
+      const prevValue = store.get(prevIdentifier, undefined) as
+        | AcceptTermsStatus
+        | undefined;
+      if (prevValue) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        store.delete(prevIdentifier as any);
+        store.set("acceptTerms", prevValue);
+      }
+    },
+  },
 });
 
 // engine
@@ -1026,30 +1039,6 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMainHandle("USE_GPU", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("useGpu", newValue);
-  }
-
-  return store.get("useGpu", false);
-});
-
-ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("inheritAudioInfo", newValue);
-  }
-
-  return store.get("inheritAudioInfo", false);
-});
-
-ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("activePointScrollMode", newValue);
-  }
-
-  return store.get("activePointScrollMode", "OFF");
-});
-
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
@@ -1091,20 +1080,6 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
 
 ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
   await restartEngine(engineKey);
-});
-
-ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("savingSetting", newData);
-  }
-  return store.get("savingSetting");
-});
-
-ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("toolbarSetting", newData);
-  }
-  return store.get("toolbarSetting");
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
@@ -1151,33 +1126,9 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
-  if (newPresets !== undefined) {
-    store.set("presets.items", newPresets.presetItems);
-    store.set("presets.keys", newPresets.presetKeys);
-  }
-  return store.get("presets");
-});
-
-ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
-  return store.get("userCharacterOrder");
-});
-
-ipcMainHandle("SET_USER_CHARACTER_ORDER", (_, userCharacterOrder) => {
-  store.set("userCharacterOrder", userCharacterOrder);
-});
-
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   const defaultStyleIds = store.get("defaultStyleIds");
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
-});
-
-ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
-  return store.get("defaultStyleIds");
-});
-
-ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
-  store.set("defaultStyleIds", defaultStyleIds);
 });
 
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
@@ -1186,46 +1137,6 @@ ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
 
 ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
-});
-
-ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
-  return store.get("acceptRetrieveTelemetry");
-});
-
-ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
-  store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
-});
-
-ipcMainHandle("GET_ACCEPT_TERMS", () => {
-  return store.get("acceptTems");
-});
-
-ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
-  store.set("acceptTems", acceptTerms);
-});
-
-ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
-  return store.get("experimentalSetting");
-});
-
-ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
-  store.set("experimentalSetting", experimentalSetting);
-});
-
-ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
-  return store.get("splitTextWhenPaste");
-});
-
-ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
-  store.set("splitTextWhenPaste", splitTextWhenPaste);
-});
-
-ipcMainHandle("GET_SPLITTER_POSITION", () => {
-  return store.get("splitterPosition");
-});
-
-ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
-  store.set("splitterPosition", splitterPosition);
 });
 
 ipcMainHandle("GET_SETTING", (_, key) => {

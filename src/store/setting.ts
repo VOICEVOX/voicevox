@@ -64,11 +64,7 @@ export const settingStore: VoiceVoxStoreOptions<
   SettingActions,
   SettingMutations
 > = {
-  getters: {
-    GET_SAVING_SETTING(state) {
-      return state.savingSetting;
-    },
-  },
+  getters: {},
   mutations: {
     SET_SAVING_SETTING(
       state,
@@ -124,25 +120,69 @@ export const settingStore: VoiceVoxStoreOptions<
     },
   },
   actions: {
-    GET_SAVING_SETTING({ commit }) {
-      const newData = window.electron.savingSetting();
-      newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
-      });
-    },
-    SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
-      const newData = window.electron.savingSetting(data);
-      newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting: savingSetting });
-      });
-    },
-    GET_HOTKEY_SETTINGS({ dispatch }) {
+    async HYDRATE_SETTING_STORE({ commit, dispatch }) {
       window.electron.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
           dispatch("SET_HOTKEY_SETTINGS", {
             data: hotkey,
           });
         });
+      });
+
+      const theme = await window.electron.theme();
+      if (theme) {
+        commit("SET_THEME_SETTING", {
+          currentTheme: theme.currentTheme,
+          themes: theme.availableThemes,
+        });
+        dispatch("SET_THEME_SETTING", {
+          currentTheme: theme.currentTheme,
+        });
+      }
+
+      dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+        acceptRetrieveTelemetry: await window.electron.getSetting(
+          "acceptRetrieveTelemetry"
+        ),
+      });
+
+      dispatch("SET_ACCEPT_TERMS", {
+        acceptTerms: await window.electron.getSetting("acceptTerms"),
+      });
+
+      commit("SET_SAVING_SETTING", {
+        savingSetting: await window.electron.getSetting("savingSetting"),
+      });
+
+      commit("SET_TOOLBAR_SETTING", {
+        toolbarSetting: await window.electron.getSetting("toolbarSetting"),
+      });
+
+      commit("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: await window.electron.getSetting(
+          "experimentalSetting"
+        ),
+      });
+
+      commit("SET_SPLIT_TEXT_WHEN_PASTE", {
+        splitTextWhenPaste: await window.electron.getSetting(
+          "splitTextWhenPaste"
+        ),
+      });
+
+      commit("SET_SPLITTER_POSITION", {
+        splitterPosition: await window.electron.getSetting("splitterPosition"),
+      });
+
+      commit("SET_CONFIRMED_TIPS", {
+        confirmedTips: await window.electron.getSetting("confirmedTips"),
+      });
+    },
+
+    SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
+      const newData = window.electron.setSetting("savingSetting", data);
+      newData.then((savingSetting) => {
+        commit("SET_SAVING_SETTING", { savingSetting });
       });
     },
     SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
@@ -168,28 +208,10 @@ export const settingStore: VoiceVoxStoreOptions<
         newHotkey: data,
       });
     },
-    GET_TOOLBAR_SETTING({ commit }) {
-      const newData = window.electron.toolbarSetting();
-      newData.then((toolbarSetting) => {
-        commit("SET_TOOLBAR_SETTING", { toolbarSetting });
-      });
-    },
     SET_TOOLBAR_SETTING({ commit }, { data }: { data: ToolbarSetting }) {
-      const newData = window.electron.toolbarSetting(data);
+      const newData = window.electron.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
-      });
-    },
-    GET_THEME_SETTING({ commit, dispatch }) {
-      const currentTheme = window.electron.theme();
-      currentTheme.then((value) => {
-        if (value) {
-          commit("SET_THEME_SETTING", {
-            currentTheme: value.currentTheme,
-            themes: value.availableThemes,
-          });
-          dispatch("SET_THEME_SETTING", { currentTheme: value.currentTheme });
-        }
       });
     },
     SET_THEME_SETTING(
@@ -220,65 +242,36 @@ export const settingStore: VoiceVoxStoreOptions<
         currentTheme: currentTheme,
       });
     },
-    GET_ACCEPT_RETRIEVE_TELEMETRY({ dispatch }) {
-      window.electron
-        .getAcceptRetrieveTelemetry()
-        .then((acceptRetrieveTelemetry) =>
-          dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry })
-        );
-    },
     SET_ACCEPT_RETRIEVE_TELEMETRY({ commit }, { acceptRetrieveTelemetry }) {
       window.dataLayer?.push({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.electron.setAcceptRetrieveTelemetry(acceptRetrieveTelemetry);
+      window.electron.setSetting(
+        "acceptRetrieveTelemetry",
+        acceptRetrieveTelemetry
+      );
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
-    },
-    GET_ACCEPT_TERMS({ dispatch }) {
-      window.electron
-        .getAcceptTerms()
-        .then((acceptTerms) => dispatch("SET_ACCEPT_TERMS", { acceptTerms }));
     },
     SET_ACCEPT_TERMS({ commit }, { acceptTerms }) {
       window.dataLayer?.push({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.electron.setAcceptTerms(acceptTerms);
+      window.electron.setSetting("acceptTerms", acceptTerms);
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
-    GET_EXPERIMENTAL_SETTING({ dispatch }) {
-      window.electron.getExperimentalSetting().then((experimentalSetting) => {
-        dispatch("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
-      });
-    },
     SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
-      window.electron.setExperimentalSetting(experimentalSetting);
+      window.electron.setSetting("experimentalSetting", experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
-    INIT_SPLIT_TEXT_WHEN_PASTE({ dispatch }) {
-      window.electron.getSplitTextWhenPaste().then((v) => {
-        dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste: v });
-      });
-    },
     SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
-      window.electron.setSplitTextWhenPaste(splitTextWhenPaste);
+      window.electron.setSetting("splitTextWhenPaste", splitTextWhenPaste);
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
-    GET_SPLITTER_POSITION({ dispatch }) {
-      window.electron.getSplitterPosition().then((splitterPosition) => {
-        dispatch("SET_SPLITTER_POSITION", { splitterPosition });
-      });
-    },
     SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
-      window.electron.setSplitterPosition(splitterPosition);
+      window.electron.setSetting("splitterPosition", splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
-    },
-    GET_CONFIRMED_TIPS({ dispatch }) {
-      window.electron.getSetting("confirmedTips").then((confirmedTips) => {
-        dispatch("SET_CONFIRMED_TIPS", { confirmedTips });
-      });
     },
     SET_CONFIRMED_TIPS({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);

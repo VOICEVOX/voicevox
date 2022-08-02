@@ -154,18 +154,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_TEXT_EDIT_CONTEXT_MENU");
   },
 
-  useGpu: (newValue) => {
-    return ipcRendererInvoke("USE_GPU", { newValue });
-  },
-
-  inheritAudioInfo: (newValue) => {
-    return ipcRendererInvoke("INHERIT_AUDIOINFO", { newValue });
-  },
-
-  activePointScrollMode: (newValue) => {
-    return ipcRendererInvoke("ACTIVE_POINT_SCROLL_MODE", { newValue });
-  },
-
   isAvailableGPUMode: () => {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
@@ -206,10 +194,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("RESTART_ENGINE", { engineKey });
   },
 
-  savingSetting: (newData) => {
-    return ipcRenderer.invoke("SAVING_SETTING", { newData });
-  },
-
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },
@@ -218,71 +202,12 @@ const api: Sandbox = {
     ipcRenderer.invoke("CHANGE_PIN_WINDOW");
   },
 
-  savingPresets: (newPresets) => {
-    return ipcRenderer.invoke("SAVING_PRESETS", { newPresets });
-  },
-
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
   },
 
-  toolbarSetting: (newData) => {
-    return ipcRenderer.invoke("TOOLBAR_SETTING", { newData });
-  },
-
-  getUserCharacterOrder: async () => {
-    return await ipcRendererInvoke("GET_USER_CHARACTER_ORDER");
-  },
-
-  setUserCharacterOrder: async (userCharacterOrder) => {
-    await ipcRendererInvoke("SET_USER_CHARACTER_ORDER", userCharacterOrder);
-  },
-
   isUnsetDefaultStyleId: async (speakerUuid: string) => {
     return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
-  },
-
-  getDefaultStyleIds: async () => {
-    return await ipcRendererInvoke("GET_DEFAULT_STYLE_IDS");
-  },
-
-  setDefaultStyleIds: async (defaultStyleIds) => {
-    await ipcRendererInvoke("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
-  },
-
-  getAcceptRetrieveTelemetry: async () => {
-    return await ipcRendererInvoke("GET_ACCEPT_RETRIEVE_TELEMETRY");
-  },
-
-  setAcceptRetrieveTelemetry: async (acceptRetrieveTelemetry) => {
-    return await ipcRendererInvoke(
-      "SET_ACCEPT_RETRIEVE_TELEMETRY",
-      acceptRetrieveTelemetry
-    );
-  },
-
-  getAcceptTerms: async () => {
-    return await ipcRendererInvoke("GET_ACCEPT_TERMS");
-  },
-
-  setAcceptTerms: async (acceptTerms) => {
-    return await ipcRendererInvoke("SET_ACCEPT_TERMS", acceptTerms);
-  },
-
-  getExperimentalSetting: async () => {
-    return await ipcRendererInvoke("GET_EXPERIMENTAL_SETTING");
-  },
-
-  setExperimentalSetting: async (setting) => {
-    return await ipcRendererInvoke("SET_EXPERIMENTAL_SETTING", setting);
-  },
-
-  getSplitterPosition: async () => {
-    return await ipcRendererInvoke("GET_SPLITTER_POSITION");
-  },
-
-  setSplitterPosition: async (splitterPosition) => {
-    return await ipcRendererInvoke("SET_SPLITTER_POSITION", splitterPosition);
   },
 
   getDefaultHotkeySettings: async () => {
@@ -299,16 +224,6 @@ const api: Sandbox = {
 
   vuexReady: () => {
     ipcRenderer.invoke("ON_VUEX_READY");
-  },
-
-  getSplitTextWhenPaste: async () => {
-    return await ipcRendererInvoke("GET_SPLIT_TEXT_WHEN_PASTE");
-  },
-  setSplitTextWhenPaste: async (splitTextWhenPaste) => {
-    return await ipcRendererInvoke(
-      "SET_SPLIT_TEXT_WHEN_PASTE",
-      splitTextWhenPaste
-    );
   },
 
   getSetting: async (key) => {
