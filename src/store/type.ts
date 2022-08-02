@@ -111,7 +111,7 @@ type AudioStoreTypes = {
   };
 
   IS_ENGINE_READY: {
-    getter(engineKey: string): boolean;
+    getter(engineId: string): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
@@ -123,10 +123,10 @@ type AudioStoreTypes = {
   };
 
   START_WAITING_ENGINE: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineId: string }): void;
   };
 
-  // NOTE: 複数のEngineKeyを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
   // NOTE: 個別にエンジンの状態を確認できるようにする？
   // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
   RESTART_ENGINE_ALL: {
@@ -134,15 +134,15 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(payload: { engineKey: string }): Promise<boolean>;
+    action(payload: { engineId: string }): Promise<boolean>;
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineId: string }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineKey: string; engineState: EngineState };
+    mutation: { engineId: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER: {
@@ -793,7 +793,7 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineKeys: string[];
+  engineIds: string[];
   engineInfos: Record<string, EngineInfo>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -1151,7 +1151,7 @@ type IEngineConnectorFactoryActionsMapper = <
 type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
-      engineKey: string;
+      engineId: string;
     }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };

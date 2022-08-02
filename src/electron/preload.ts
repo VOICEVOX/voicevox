@@ -190,8 +190,8 @@ const api: Sandbox = {
     return ipcRendererInvoke("RESTART_ENGINE_ALL");
   },
 
-  restartEngine: (engineKey: string) => {
-    return ipcRendererInvoke("RESTART_ENGINE", { engineKey });
+  restartEngine: (engineId: string) => {
+    return ipcRendererInvoke("RESTART_ENGINE", { engineId });
   },
 
   checkFileExists: (file) => {

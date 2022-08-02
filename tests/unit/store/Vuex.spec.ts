@@ -70,10 +70,10 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineKeys: ["88022f86-c823-436e-85a3-500c629749c4"],
+        engineIds: ["88022f86-c823-436e-85a3-500c629749c4"],
         engineInfos: {
           "88022f86-c823-436e-85a3-500c629749c4": {
-            key: "88022f86-c823-436e-85a3-500c629749c4",
+            uuid: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
@@ -135,9 +135,9 @@ describe("store/vuex.js test", () => {
     assert.exists(store);
     assert.isObject(store);
     assert.isObject(store.state);
-    assert.hasAllKeys(store.state.engineStates, store.state.engineKeys);
-    store.state.engineKeys.forEach((engineKey) =>
-      assert.equal(store.state.engineStates[engineKey], "STARTING")
+    assert.hasAllKeys(store.state.engineStates, store.state.engineIds);
+    store.state.engineIds.forEach((engineId) =>
+      assert.equal(store.state.engineStates[engineId], "STARTING")
     );
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
@@ -184,9 +184,9 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.themeSetting.availableThemes);
     assert.equal(store.state.acceptRetrieveTelemetry, "Unconfirmed");
     assert.equal(store.state.acceptTerms, "Unconfirmed");
-    assert.isArray(store.state.engineKeys);
+    assert.isArray(store.state.engineIds);
     assert.isObject(store.state.engineInfos);
-    assert.hasAllKeys(store.state.engineInfos, store.state.engineKeys);
+    assert.hasAllKeys(store.state.engineInfos, store.state.engineIds);
     assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(
       store.state.experimentalSetting.enableInterrogativeUpspeak,
