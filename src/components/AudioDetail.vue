@@ -875,7 +875,7 @@ $pitch-label-height: 24px;
         &.splitter-cell {
           min-width: 20px;
           max-width: 20px;
-          grid-row: 3 / span 1;
+          grid-row: 2 / 4;
           z-index: vars.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
