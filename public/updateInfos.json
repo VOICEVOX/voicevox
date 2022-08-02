@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.12.5",
+    "descriptions": ["キャラクター「ずんだもん」の「ささやき」スタイルを追加"],
+    "contributors": []
+  },
+  {
     "version": "0.12.4",
     "descriptions": ["キャラクター「剣崎雌雄」を追加"],
     "contributors": []

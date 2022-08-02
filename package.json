@@ -4,8 +4,8 @@
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
-    "node": ">=14.16 <15",
-    "npm": ">=6.14.11 <7"
+    "node": ">=14.20.0 <15",
+    "npm": ">=6.14.17 <7"
   },
   "scripts": {
     "serve": "vue-cli-service serve",

@@ -1,18 +1,8 @@
 import {
-  AcceptRetrieveTelemetryStatus,
-  AcceptTermsStatus,
-  ActivePointScrollMode,
   AppInfos,
-  DefaultStyleId,
   ElectronStoreType,
   EngineInfo,
-  ExperimentalSetting,
   HotkeySetting,
-  Preset,
-  PresetConfig,
-  SavingSetting,
-  SplitterPosition,
-  SplitTextWhenPasteType,
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
@@ -151,21 +141,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  USE_GPU: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
-  INHERIT_AUDIOINFO: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
-  ACTIVE_POINT_SCROLL_MODE: {
-    args: [obj: { newValue?: ActivePointScrollMode }];
-    return: ActivePointScrollMode;
-  };
-
   IS_AVAILABLE_GPU_MODE: {
     args: [];
     return: boolean;
@@ -211,11 +186,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  SAVING_SETTING: {
-    args: [obj: { newData?: SavingSetting }];
-    return: SavingSetting;
-  };
-
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;
@@ -226,51 +196,14 @@ export type IpcIHData = {
     return: void;
   };
 
-  SAVING_PRESETS: {
-    args: [
-      obj: {
-        newPresets?: {
-          presetItems: Record<string, Preset>;
-          presetKeys: string[];
-        };
-      }
-    ];
-    return: PresetConfig;
-  };
-
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: HotkeySetting }];
     return: HotkeySetting[];
   };
 
-  TOOLBAR_SETTING: {
-    args: [obj: { newData?: ToolbarSetting }];
-    return: ToolbarSetting;
-  };
-
-  GET_USER_CHARACTER_ORDER: {
-    args: [];
-    return: string[];
-  };
-
-  SET_USER_CHARACTER_ORDER: {
-    args: [string[]];
-    return: void;
-  };
-
   IS_UNSET_DEFAULT_STYLE_ID: {
     args: [speakerUuid: string];
     return: boolean;
-  };
-
-  GET_DEFAULT_STYLE_IDS: {
-    args: [];
-    return: DefaultStyleId[];
-  };
-
-  SET_DEFAULT_STYLE_IDS: {
-    args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
-    return: void;
   };
 
   GET_DEFAULT_HOTKEY_SETTINGS: {
@@ -283,43 +216,6 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
-  GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [];
-    return: AcceptRetrieveTelemetryStatus;
-  };
-
-  SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus];
-    return: void;
-  };
-  GET_ACCEPT_TERMS: {
-    args: [];
-    return: AcceptTermsStatus;
-  };
-
-  SET_ACCEPT_TERMS: {
-    args: [acceptTerms: AcceptTermsStatus];
-    return: void;
-  };
-  GET_EXPERIMENTAL_SETTING: {
-    args: [];
-    return: ExperimentalSetting;
-  };
-  SET_EXPERIMENTAL_SETTING: {
-    args: [experimentalSetting: ExperimentalSetting];
-    return: void;
-  };
-
-  GET_SPLITTER_POSITION: {
-    args: [];
-    return: SplitterPosition;
-  };
-
-  SET_SPLITTER_POSITION: {
-    args: [splitterPosition: SplitterPosition];
-    return: void;
-  };
-
   THEME: {
     args: [obj: { newData?: string }];
     return: ThemeSetting | void;
@@ -327,15 +223,6 @@ export type IpcIHData = {
 
   ON_VUEX_READY: {
     args: [];
-    return: void;
-  };
-
-  GET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [];
-    return: SplitTextWhenPasteType;
-  };
-  SET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [splitTextWhenPaste: SplitTextWhenPasteType];
     return: void;
   };
 
