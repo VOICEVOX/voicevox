@@ -1,6 +1,7 @@
 {
   "name": "Default",
   "display_name": "デフォルト",
+  "index": 0,
   "isDark": false,
   "colors": {
     "primary": "#A5D4AD",

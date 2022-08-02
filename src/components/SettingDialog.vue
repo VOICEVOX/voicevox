@@ -704,9 +704,11 @@ export default defineComponent({
     );
 
     const availableThemeNameComputed = computed(() => {
-      return store.state.themeSetting.availableThemes.map((theme) => {
-        return { label: theme.display_name, value: theme.name };
-      });
+      return [...store.state.themeSetting.availableThemes]
+        .sort((a, b) => a.index - b.index)
+        .map((theme) => {
+          return { label: theme.display_name, value: theme.name };
+        });
     });
 
     const currentAudioOutputDeviceComputed = computed<{
