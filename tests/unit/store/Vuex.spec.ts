@@ -72,8 +72,8 @@ describe("store/vuex.js test", () => {
         acceptTerms: "Unconfirmed",
         engineIds: ["88022f86-c823-436e-85a3-500c629749c4"],
         engineInfos: {
-          "8uuid22f86-c823-436e-85a3-500c629749c4": {
-            id: "88022f86-c823-436e-85a3-500c629749c4",
+          "88022f86-c823-436e-85a3-500c629749c4": {
+            uuid: "88022f86-c823-436e-85a3-500c629749c4",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
