@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.12.3
-  VOICEVOX_RESOURCE_VERSION: 0.12.3
+  VOICEVOX_ENGINE_VERSION: 0.12.4
+  VOICEVOX_RESOURCE_VERSION: 0.12.4
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}

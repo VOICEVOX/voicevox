@@ -826,8 +826,7 @@ export type SettingStoreState = {
 };
 
 type SettingStoreTypes = {
-  GET_SAVING_SETTING: {
-    getter: SavingSetting;
+  HYDRATE_SETTING_STORE: {
     action(): void;
   };
 
@@ -836,17 +835,9 @@ type SettingStoreTypes = {
     action(payload: { data: SavingSetting }): void;
   };
 
-  GET_HOTKEY_SETTINGS: {
-    action(): void;
-  };
-
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
-  };
-
-  GET_TOOLBAR_SETTING: {
-    action(): void;
   };
 
   SET_TOOLBAR_SETTING: {
@@ -854,21 +845,9 @@ type SettingStoreTypes = {
     action(payload: { data: ToolbarSetting }): void;
   };
 
-  GET_THEME_SETTING: {
-    action(): void;
-  };
-
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
-  };
-
-  GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    action(): void;
-  };
-
-  GET_ACCEPT_TERMS: {
-    action(): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -883,34 +862,19 @@ type SettingStoreTypes = {
     action(payload: { acceptTerms: AcceptTermsStatus }): void;
   };
 
-  GET_EXPERIMENTAL_SETTING: {
-    action(): void;
-  };
-
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
   };
 
-  INIT_SPLIT_TEXT_WHEN_PASTE: {
-    action(): void;
-  };
   SET_SPLIT_TEXT_WHEN_PASTE: {
     mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
     action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
   };
 
-  GET_SPLITTER_POSITION: {
-    action(): void;
-  };
-
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
-  };
-
-  GET_CONFIRMED_TIPS: {
-    action(): void;
   };
 
   SET_CONFIRMED_TIPS: {
@@ -1037,7 +1001,7 @@ type UiStoreTypes = {
     action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
   };
 
-  GET_USE_GPU: {
+  HYDRATE_UI_STORE: {
     action(): void;
   };
 
@@ -1052,17 +1016,9 @@ type UiStoreTypes = {
 
   SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
 
-  GET_INHERIT_AUDIOINFO: {
-    action(): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
-  };
-
-  GET_ACTIVE_POINT_SCROLL_MODE: {
-    action(): void;
   };
 
   SET_ACTIVE_POINT_SCROLL_MODE: {
@@ -1133,7 +1089,7 @@ type PresetStoreTypes = {
       presetKeys: string[];
     };
   };
-  GET_PRESET_CONFIG: {
+  HYDRATE_PRESET_STORE: {
     action(): void;
   };
   SAVE_PRESET_ORDER: {
