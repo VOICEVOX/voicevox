@@ -135,7 +135,7 @@
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
+        <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
           <div class="text-warning">
             ショートカットキーが次の操作と重複しています
           </div>
@@ -150,7 +150,7 @@
           label="ショートカットキーを未設定にする"
           unelevated
           color="display-light"
-          text-color="display-dark"
+          text-color="display"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -162,7 +162,7 @@
           label="キャンセル"
           unelevated
           color="display-light"
-          text-color="display-dark"
+          text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -172,7 +172,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -187,7 +187,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-dark"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"

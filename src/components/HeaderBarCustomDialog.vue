@@ -44,7 +44,7 @@
         </q-header>
         <q-page>
           <q-card flat square class="preview-card">
-            <q-toolbar class="bg-primary preview-toolbar">
+            <q-toolbar class="bg-header-background preview-toolbar">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
                   v-model="selectedButton"
@@ -266,12 +266,12 @@ export default defineComponent({
         ok: {
           label: "はい",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
         cancel: {
           label: "いいえ",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
       }).onOk(() => {
         toolbarButtons.value = [...defaultSetting];
@@ -337,6 +337,8 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 @use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
+
 .header-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
   overflow-x: hidden;
@@ -382,14 +384,14 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
-  color: red;
-  border: solid 2px red;
+  background-color: colors.$header-selected;
+  border-color: colors.$header-selected;
 }
 
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: var(--color-background-light);
+  color: transparent;
 }
 
 .radio-space:hover {
@@ -398,6 +400,7 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  border: solid 2px red;
+  background-color: colors.$header-selected;
+  border: solid 2px colors.$header-selected;
 }
 </style>

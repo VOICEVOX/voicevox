@@ -91,7 +91,7 @@
                       dense
                       icon="chevron_left"
                       color="background-light"
-                      text-color="display-dark"
+                      text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
@@ -108,7 +108,7 @@
                       dense
                       icon="chevron_right"
                       color="background-light"
-                      text-color="display-dark"
+                      text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"

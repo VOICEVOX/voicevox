@@ -27,7 +27,7 @@
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="bg-primary"
+          separator-class="home-splitter"
           :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
@@ -38,7 +38,7 @@
           <template #before>
             <q-splitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="bg-primary"
+              separator-class="home-splitter"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
               :disable="!shouldShowPanes"
@@ -53,7 +53,7 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="bg-primary"
+                  separator-class="home-splitter"
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
@@ -95,7 +95,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="display-dark"
+                          text-color="button-icon"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -719,8 +719,8 @@ export default defineComponent({
   justify-content: center;
 
   > div {
-    color: colors.$display-dark;
-    background: colors.$background-light;
+    color: colors.$display;
+    background: colors.$setting-item;
     border-radius: 6px;
     padding: 14px;
   }
@@ -782,5 +782,9 @@ export default defineComponent({
     margin-right: 26px;
     margin-bottom: 10px;
   }
+}
+
+.q-splitter > :deep(.home-splitter) {
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>

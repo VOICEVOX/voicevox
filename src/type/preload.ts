@@ -248,17 +248,22 @@ export type ThemeColorType =
   | "display-dark"
   | "background"
   | "background-light"
+  | "header-background"
   | "setting-item"
   | "warning"
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
+  | "header-selected"
   | "pause-hovered"
   | "active-point-focus"
-  | "active-point-focus-hover";
+  | "active-point-focus-hover"
+  | "button-icon";
 
 export type ThemeConf = {
   name: string;
+  displayName: string;
+  order: number;
   isDark: boolean;
   colors: {
     [K in ThemeColorType]: string;
