@@ -705,7 +705,7 @@ export default defineComponent({
 
     const availableThemeNameComputed = computed(() => {
       return [...store.state.themeSetting.availableThemes]
-        .sort((a, b) => b.rank - a.rank)
+        .sort((a, b) => a.order - b.order)
         .map((theme) => {
           return { label: theme.display_name, value: theme.name };
         });
