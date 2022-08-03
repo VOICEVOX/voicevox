@@ -707,7 +707,7 @@ export default defineComponent({
       return [...store.state.themeSetting.availableThemes]
         .sort((a, b) => a.order - b.order)
         .map((theme) => {
-          return { label: theme.display_name, value: theme.name };
+          return { label: theme.displayName, value: theme.name };
         });
     });
 

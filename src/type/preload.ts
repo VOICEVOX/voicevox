@@ -290,7 +290,7 @@ export type ThemeColorType =
 
 export type ThemeConf = {
   name: string;
-  display_name: string;
+  displayName: string;
   order: number;
   isDark: boolean;
   colors: {

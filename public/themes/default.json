@@ -1,6 +1,6 @@
 {
   "name": "Default",
-  "display_name": "デフォルト",
+  "displayName": "デフォルト",
   "order": 1,
   "isDark": false,
   "colors": {
