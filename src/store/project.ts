@@ -123,6 +123,8 @@ export const projectStore: VoiceVoxStoreOptions<
           };
 
           // Migration
+          const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
           ) {
@@ -170,7 +172,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
-                    engineId: "074fc39e-678b-4c13-8916-ffca8d505d1d", // VOICEVOX ENGINE
+                    engineId,
                     styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
@@ -230,7 +232,7 @@ export const projectStore: VoiceVoxStoreOptions<
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.engineId === undefined) {
-                audioItem.engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d"; // VOICEVOX ENGINE
+                audioItem.engineId = engineId;
               }
             }
           }
