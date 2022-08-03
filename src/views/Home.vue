@@ -132,13 +132,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="characterInfos"
-    :characterInfos="characterInfos"
+    v-if="flattenCharacterInfos.length > 0"
+    :characterInfos="flattenCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="characterInfos"
-    :characterInfos="characterInfos"
+    v-if="flattenCharacterInfos.length > 0"
+    :characterInfos="flattenCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -178,11 +178,13 @@ import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
+  CharacterInfo,
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import { getFlattenCharacterInfos } from "@/store/audio";
 
 export default defineComponent({
   name: "Home",
@@ -368,9 +370,11 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
+      let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
+        engineId = store.state.audioItems[prevAudioKey].engineId;
         styleId = store.state.audioItems[prevAudioKey].styleId;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
@@ -384,6 +388,7 @@ export default defineComponent({
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+        engineId,
         styleId,
         presetKey,
         baseAudioItem,
@@ -468,7 +473,7 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
-      await store.dispatch("LOAD_CHARACTER");
+      await store.dispatch("LOAD_CHARACTER_ALL");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
@@ -478,13 +483,20 @@ export default defineComponent({
 
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
-      if (characterInfos.value == undefined) throw new Error();
-      for (const info of characterInfos.value) {
-        isUnsetDefaultStyleIds ||=
-          info.metas.styles.length > 1 &&
-          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
-            speakerUuid: info.metas.speakerUuid,
-          }));
+
+      for (const engineId of store.state.engineIds) {
+        const engineCharacterInfos: CharacterInfo[] | undefined =
+          store.state.characterInfos[engineId];
+        if (engineCharacterInfos === undefined)
+          throw new Error(`CharacterInfos not loaded for engine ${engineId}`);
+
+        for (const info of engineCharacterInfos) {
+          isUnsetDefaultStyleIds ||=
+            info.metas.styles.length > 1 &&
+            (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
+              speakerUuid: info.metas.speakerUuid,
+            }));
+        }
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
@@ -499,8 +511,11 @@ export default defineComponent({
       focusCell({ audioKey: newAudioKey });
 
       // 最初の話者を初期化
-      if (audioItem.styleId != undefined) {
-        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+        store.dispatch("SETUP_ENGINE_SPEAKER", {
+          engineId: audioItem.engineId,
+          styleId: audioItem.styleId,
+        });
       }
 
       // ショートカットキーの設定
@@ -586,7 +601,9 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const characterInfos = computed(() => store.state.characterInfos);
+    const flattenCharacterInfos = computed(() =>
+      getFlattenCharacterInfos(store.state)
+    );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
@@ -687,7 +704,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      characterInfos,
+      flattenCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,

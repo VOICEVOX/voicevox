@@ -34,6 +34,7 @@ import { QVueGlobals } from "quasar";
 
 export type AudioItem = {
   text: string;
+  engineId?: string;
   styleId?: number;
   query?: AudioQuery;
   presetKey?: string;
@@ -84,7 +85,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   engineStates: Record<string, EngineState>;
-  characterInfos?: CharacterInfo[];
+  characterInfos: Record<string, CharacterInfo[]>;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -145,12 +146,20 @@ type AudioStoreTypes = {
     mutation: { engineId: string; engineState: EngineState };
   };
 
-  LOAD_CHARACTER: {
+  LOAD_CHARACTER_ALL: {
     action(): void;
   };
 
+  LOAD_CHARACTER: {
+    action(payload: { engineId: string }): void;
+  };
+
   SET_CHARACTER_INFOS: {
-    mutation: { characterInfos: CharacterInfo[] };
+    mutation: { engineId: string; characterInfos: CharacterInfo[] };
+  };
+
+  CHARACTER_INFO: {
+    getter(engineId: string, styleId: number): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -162,7 +171,7 @@ type AudioStoreTypes = {
   };
 
   SETUP_ENGINE_SPEAKER: {
-    action(payload: { styleId: number }): void;
+    action(payload: { engineId: string; styleId: number }): void;
   };
 
   SET_ACTIVE_AUDIO_KEY: {
@@ -190,6 +199,7 @@ type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
+      engineId?: string;
       styleId?: number;
       presetKey?: string;
       baseAudioItem?: AudioItem;
@@ -272,11 +282,15 @@ type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_QUERY: {
-    action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
+    action(payload: {
+      text: string;
+      engineId: string;
+      styleId: number;
+    }): Promise<AudioQuery>;
   };
 
   SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; styleId: number };
+    mutation: { audioKey: string; engineId: string; styleId: number };
   };
 
   SET_ACCENT_PHRASES: {
@@ -286,6 +300,7 @@ type AudioStoreTypes = {
   FETCH_ACCENT_PHRASES: {
     action(payload: {
       text: string;
+      engineId: string;
       styleId: number;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
@@ -316,6 +331,7 @@ type AudioStoreTypes = {
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineId: string;
       styleId: number;
     }): Promise<AccentPhrase[]>;
   };
@@ -323,6 +339,7 @@ type AudioStoreTypes = {
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineId: string;
       styleId: number;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
@@ -462,12 +479,16 @@ type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { styleId: number; audioKey: string } & (
+    mutation: { engineId: string; styleId: number; audioKey: string } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: { audioKey: string; styleId: number }): void;
+    action(payload: {
+      audioKey: string;
+      engineId: string;
+      styleId: number;
+    }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -604,6 +625,7 @@ type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
+      engineId: string;
       styleId: number;
     }): string[];
   };
@@ -1102,7 +1124,9 @@ export type DictionaryStoreState = Record<string, unknown>;
 
 type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
-    action(): Promise<Record<string, UserDictWord>>;
+    action(payload: {
+      engineId: string;
+    }): Promise<Record<string, UserDictWord>>;
   };
   ADD_WORD: {
     action(payload: {
