@@ -17,7 +17,7 @@
             <q-input
               dense
               outlined
-              bg-color="background-light"
+              bg-color="background"
               label="ファイル名パターン"
               suffix=".wav"
               :maxlength="maxLength"
