@@ -48,6 +48,9 @@ import {
     WordTypes,
     WordTypesFromJSON,
     WordTypesToJSON,
+    DownloadInfo,
+    DownloadInfoFromJSON,
+    DownloadInfoToJSON,
 } from '../models';
 
 export interface AccentPhrasesAccentPhrasesPostRequest {
@@ -137,6 +140,10 @@ export interface RewriteUserDictWordUserDictWordWordUuidPutRequest {
     accentType: number;
     wordType?: WordTypes;
     priority?: number;
+}
+
+export interface DownloadInfosDownloadInfosGetRequest {
+    coreVersion?: string;
 }
 
 export interface SpeakerInfoSpeakerInfoGetRequest {
@@ -527,6 +534,21 @@ export interface DefaultApiInterface {
      * Speakers
      */
     speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<Array<Speaker>>;
+
+    /**
+     *
+     * @summary DownloadInfos
+     * @param {string} [coreVersion]
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    downloadInfosDownloadInfosGetRaw(requestParameters: DownloadInfosDownloadInfosGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<DownloadInfo>>>;
+
+    /**
+     * Download Info
+     */
+    downloadInfosDownloadInfosGet(requestParameters: DownloadInfosDownloadInfosGetRequest, initOverrides?: RequestInit): Promise<Array<DownloadInfo>>;
 
     /**
      * 
@@ -1460,6 +1482,37 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit): Promise<Array<Speaker>> {
         const response = await this.speakersSpeakersGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * ダウンロード可能な話者情報をjson形式で返します。 画像や音声はbase64エンコードされたものが返されます。  Returns ------- ret_data: DownloadInfo
+     * Download Info
+     */
+    async downloadInfosDownloadInfosGetRaw(requestParameters: DownloadInfosDownloadInfosGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<DownloadInfo>>> {
+       const queryParameters: any = {};
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/download_infos`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(DownloadInfoFromJSON));
+    }
+
+    /**
+     * Download Info
+     */
+    async downloadInfosDownloadInfosGet(requestParameters: DownloadInfosDownloadInfosGetRequest, initOverrides?: RequestInit): Promise<Array<DownloadInfo>> {
+        const response = await this.downloadInfosDownloadInfosGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

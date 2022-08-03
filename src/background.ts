@@ -1070,6 +1070,10 @@ ipcMainHandle("ENGINE_INFOS", () => {
   return engineInfos;
 });
 
+ipcMainHandle("APP_DIR_PATH", () => {
+  return appDirPath;
+});
+
 /**
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
