@@ -700,15 +700,6 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss">
-@use '@/styles/colors' as colors;
-
-// FIXME: scopedだと動かなかった
-.home-splitter {
-  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
-}
-</style>
-
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
@@ -791,5 +782,9 @@ export default defineComponent({
     margin-right: 26px;
     margin-bottom: 10px;
   }
+}
+
+.q-splitter > :deep(.home-splitter) {
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>
