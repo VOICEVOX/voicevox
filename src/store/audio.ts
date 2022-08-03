@@ -814,9 +814,6 @@ export const audioStore: VoiceVoxStoreOptions<
       if (engineId === undefined)
         throw new Error(`assert engineId != undefined`);
 
-      if (engineId === undefined)
-        throw new Error(`assert engineId != undefined`);
-
       if (styleId === undefined) throw new Error(`assert styleId != undefined`);
 
       const baseAudioItem = payload.baseAudioItem;
