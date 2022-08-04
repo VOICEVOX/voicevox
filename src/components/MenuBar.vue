@@ -103,6 +103,7 @@ export default defineComponent({
     const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
+    const engineInfos = computed(() => store.state.engineInfos);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -295,7 +296,6 @@ export default defineComponent({
           closeAllDialog();
         },
         subMenu: [
-          { type: "separator" },
           {
             type: "button",
             label: "全てのエンジンを再起動",
@@ -409,33 +409,44 @@ export default defineComponent({
     setHotkeyFunctions(hotkeyMap);
 
     // エンジン毎の項目を追加
-    // TODO: 動的にする
-    onMounted(async () => {
-      const subMenu = (
+    async function updateEngines() {
+      (
         menudata.value.find(
           (x) => x.type === "root" && x.label === "エンジン"
         ) as MenuItemRoot
-      ).subMenu;
-      await store.dispatch("GET_ENGINE_INFOS");
-
-      Object.values(store.state.engineInfos).forEach((engineInfo) => {
-        subMenu.unshift({
-          type: "root",
-          label: engineInfo.name,
-          subMenu: [
-            {
-              type: "button",
-              label: "再起動",
-              onClick: () => {
-                store.dispatch("RESTART_ENGINE", {
-                  engineId: engineInfo.uuid,
-                });
-              },
-            },
-          ],
-        } as MenuItemRoot);
-      });
-    });
+      ).subMenu = [
+        ...Object.values(engineInfos.value).map(
+          (engineInfo) =>
+            ({
+              type: "root",
+              label: engineInfo.name,
+              subMenu: [
+                {
+                  type: "button",
+                  label: "再起動",
+                  onClick: () => {
+                    store.dispatch("RESTART_ENGINE", {
+                      engineId: engineInfo.uuid,
+                    });
+                  },
+                },
+              ],
+            } as MenuItemRoot)
+        ),
+        {
+          type: "separator",
+        },
+        {
+          type: "button",
+          label: "全てのエンジンを再起動",
+          onClick: () => {
+            store.dispatch("RESTART_ENGINE_ALL");
+          },
+        },
+      ];
+    }
+    watch(engineInfos, updateEngines); // engineInfosを見て動的に更新できるようにする
+    updateEngines(); // 更新したときに消えるので手動で1回呼び出す。多分もっといい実装ある
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
