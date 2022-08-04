@@ -3,6 +3,7 @@
   <q-item
     class="bg-background"
     v-else-if="menudata.type === 'root'"
+    clickable
     dense
     :class="selected && 'active-menu'"
   >
@@ -17,6 +18,7 @@
       transition-show="none"
       transition-hide="none"
       v-model="selectedComputed"
+      :target="!uiLocked"
     >
       <menu-item
         v-for="(menu, i) of menudata.subMenu"
@@ -87,6 +89,7 @@ export default defineComponent({
       }
     };
     if (props.menudata.type === "root") {
+      const uiLocked = computed(() => store.getters.UI_LOCKED);
       const selectedComputed = computed({
         get: () => props.selected,
         set: (val) => emit("update:selected", val),
@@ -122,6 +125,7 @@ export default defineComponent({
       return {
         selectedComputed,
         subMenuOpenFlags,
+        uiLocked,
         reassignSubMenuOpen,
         getMenuBarHotkey,
       };
