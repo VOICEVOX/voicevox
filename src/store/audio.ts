@@ -245,18 +245,10 @@ export const audioStore: VoiceVoxStoreOptions<
     CHARACTER_INFO: (state) => (engineId, styleId) => {
       return getCharacterInfo(state, engineId, styleId);
     },
-    USER_ORDERED_CHARACTER_INFOS: (state) => {
-      let characterInfoList: CharacterInfo[] = [];
-      for (const engineId of state.engineIds) {
-        const engineCharacterInfos: CharacterInfo[] | undefined =
-          state.characterInfos[engineId];
-        if (engineCharacterInfos === undefined) continue;
-
-        characterInfoList = characterInfoList.concat(engineCharacterInfos);
-      }
-
-      return characterInfoList.length !== 0
-        ? characterInfoList.sort(
+    USER_ORDERED_CHARACTER_INFOS: (state, getters) => {
+      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
+      return flattenCharacterInfos.length !== 0
+        ? flattenCharacterInfos.sort(
             (a, b) =>
               state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
               state.userCharacterOrder.indexOf(b.metas.speakerUuid)
