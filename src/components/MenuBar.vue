@@ -32,7 +32,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
+import {
+  defineComponent,
+  ref,
+  computed,
+  ComputedRef,
+  watch,
+  onMounted,
+} from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
@@ -288,9 +295,10 @@ export default defineComponent({
           closeAllDialog();
         },
         subMenu: [
+          { type: "separator" },
           {
             type: "button",
-            label: "再起動",
+            label: "全てのエンジンを再起動",
             onClick: () => {
               store.dispatch("RESTART_ENGINE_ALL");
             },
@@ -399,6 +407,33 @@ export default defineComponent({
     ]);
 
     setHotkeyFunctions(hotkeyMap);
+
+    onMounted(async () => {
+      const subMenu = (
+        menudata.value.find(
+          (x) => x.type === "root" && x.label === "エンジン"
+        ) as MenuItemRoot
+      ).subMenu;
+      await store.dispatch("GET_ENGINE_INFOS");
+
+      Object.values(store.state.engineInfos).forEach((engineInfo) => {
+        subMenu.unshift({
+          type: "root",
+          label: engineInfo.name,
+          subMenu: [
+            {
+              type: "button",
+              label: "再起動",
+              onClick: () => {
+                store.dispatch("RESTART_ENGINE", {
+                  engineId: engineInfo.uuid,
+                });
+              },
+            },
+          ],
+        } as MenuItemRoot);
+      });
+    });
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

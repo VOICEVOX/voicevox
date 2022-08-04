@@ -170,6 +170,7 @@ export type HotkeySetting = {
 export type EngineInfo = {
   uuid: string;
   host: string;
+  name: string;
   executionEnabled: boolean;
   executionFilePath: string;
 };
