@@ -752,10 +752,7 @@ export const audioStore: VoiceVoxStoreOptions<
       let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
 
-      if (
-        (payload.engineId !== undefined && payload.styleId === undefined) ||
-        (payload.engineId === undefined && payload.styleId !== undefined)
-      )
+      if ((payload.engineId === undefined) != (payload.styleId === undefined))
         throw new Error(
           "(engineId, styleId) must be (defined, defined) or (undefined, undefined)"
         );
