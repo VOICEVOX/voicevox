@@ -746,19 +746,15 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      let engineId: string | undefined = undefined;
-      let styleId: number | undefined = undefined;
-
-      if ((payload.engineId === undefined) != (payload.styleId === undefined))
+      let engineId = payload.engineId;
+      let styleId = payload.styleId;
+      if ((engineId === undefined) != (styleId === undefined))
         throw new Error(
           "(engineId, styleId) must be (defined, defined) or (undefined, undefined)"
         );
 
-      if (payload.engineId !== undefined && payload.styleId !== undefined) {
-        engineId = payload.engineId;
-        styleId = payload.styleId;
-      } else {
-        // select default style if (engineId, styleId) === (undefined, undefined)
+      // 0番目のキャラのデフォルトスタイルを使う
+      if (styleId === undefined) {
         const defaultCharacterInfo: CharacterInfo | undefined =
           userOrderedCharacterInfos[0];
         if (defaultCharacterInfo === undefined)
@@ -768,21 +764,22 @@ export const audioStore: VoiceVoxStoreOptions<
           (defaultStyleId) =>
             defaultStyleId.speakerUuid ===
             defaultCharacterInfo.metas.speakerUuid
-        ); // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+        );
         if (defaultStyleId === undefined) throw new Error(`No defaultStyleId`);
 
-        // 最初に一致するspeakerUuidをもつengineInfoを使用する
-        // FIXME: 同一のengineIdを持つ複数のengineIdが存在する場合の処理
-        const firstMatchengineId = state.engineIds.find((engineId) =>
+        // speakerUuid・styleIdが一致するCharacterInfoを持つエンジンを探す
+        engineId = state.engineIds.find((engineId) =>
           (state.characterInfos[engineId] ?? []).some(
             (characterInfo) =>
-              characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid
+              characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid &&
+              characterInfo.metas.styles.some(
+                (style) => style.styleId === defaultStyleId.defaultStyleId
+              )
           )
         );
-        if (firstMatchengineId === undefined)
+        if (engineId === undefined)
           throw new Error(`No engineId for defaultStyleId`);
 
-        engineId = firstMatchengineId;
         styleId = defaultStyleId.defaultStyleId;
       }
 
