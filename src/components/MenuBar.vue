@@ -408,6 +408,7 @@ export default defineComponent({
 
     setHotkeyFunctions(hotkeyMap);
 
+    // エンジン毎の項目を追加
     onMounted(async () => {
       const subMenu = (
         menudata.value.find(
