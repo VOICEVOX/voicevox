@@ -196,21 +196,20 @@ export const audioStore: VoiceVoxStoreOptions<
       // レンダラープロセスがメインプロセスからエンジンリストを取得完了する前にレンダリングが行われるため、
       // IS_ALL_ENGINE_READYがエンジンリスト未初期化の状態で呼び出される可能性がある
       // この場合の意図しない挙動を抑制するためfalseを返す
-      if (state.engineKeys.length === 0) {
+      if (state.engineIds.length === 0) {
         return false;
       }
 
-      for (const engineKey of state.engineKeys) {
-        const isReady = getters.IS_ENGINE_READY(engineKey);
+      for (const engineId of state.engineIds) {
+        const isReady = getters.IS_ENGINE_READY(engineId);
         if (!isReady) return false;
       }
       return true; // state.engineStatesが空のときはtrue
     },
-    IS_ENGINE_READY: (state) => (engineKey) => {
-      const engineState: EngineState | undefined =
-        state.engineStates[engineKey];
+    IS_ENGINE_READY: (state) => (engineId) => {
+      const engineState: EngineState | undefined = state.engineStates[engineId];
       if (engineState === undefined)
-        throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+        throw new Error(`No such engineState set: engineId == ${engineId}`);
 
       return engineState === "READY";
     },
@@ -232,12 +231,9 @@ export const audioStore: VoiceVoxStoreOptions<
   mutations: {
     SET_ENGINE_STATE(
       state,
-      {
-        engineKey,
-        engineState,
-      }: { engineKey: string; engineState: EngineState }
+      { engineId, engineState }: { engineId: string; engineState: EngineState }
     ) {
-      state.engineStates[engineKey] = engineState;
+      state.engineStates[engineId] = engineState;
     },
     SET_CHARACTER_INFOS(
       state,
@@ -520,28 +516,25 @@ export const audioStore: VoiceVoxStoreOptions<
   actions: {
     START_WAITING_ENGINE_ALL: createUILockAction(
       async ({ state, dispatch }) => {
-        const engineKeys = state.engineKeys;
+        const engineIds = state.engineIds;
 
-        for (const engineKey of engineKeys) {
+        for (const engineId of engineIds) {
           await dispatch("START_WAITING_ENGINE", {
-            engineKey,
+            engineId,
           });
         }
       }
     ),
     START_WAITING_ENGINE: createUILockAction(
-      async ({ state, commit, dispatch }, { engineKey }) => {
-        let engineState: EngineState | undefined =
-          state.engineStates[engineKey];
+      async ({ state, commit, dispatch }, { engineId }) => {
+        let engineState: EngineState | undefined = state.engineStates[engineId];
         if (engineState === undefined)
-          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+          throw new Error(`No such engineState set: engineId == ${engineId}`);
 
         for (let i = 0; i < 100; i++) {
-          engineState = state.engineStates[engineKey]; // FIXME: explicit undefined
+          engineState = state.engineStates[engineId]; // FIXME: explicit undefined
           if (engineState === undefined)
-            throw new Error(
-              `No such engineState set: engineKey == ${engineKey}`
-            );
+            throw new Error(`No such engineState set: engineId == ${engineId}`);
 
           if (engineState === "FAILED_STARTING") {
             break;
@@ -549,34 +542,34 @@ export const audioStore: VoiceVoxStoreOptions<
 
           try {
             await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-              engineKey,
+              engineId,
             }).then((instance) => instance.invoke("versionVersionGet")({}));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            window.electron.logInfo(`Waiting engine ${engineKey}`);
+            window.electron.logInfo(`Waiting engine ${engineId}`);
             continue;
           }
           engineState = "READY";
-          commit("SET_ENGINE_STATE", { engineKey, engineState });
+          commit("SET_ENGINE_STATE", { engineId, engineState });
           break;
         }
 
         if (engineState !== "READY") {
           commit("SET_ENGINE_STATE", {
-            engineKey,
+            engineId,
             engineState: "FAILED_STARTING",
           });
         }
       }
     ),
     LOAD_CHARACTER: createUILockAction(async ({ state, commit, dispatch }) => {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       })
         .then((instance) => instance.invoke("speakersSpeakersGet")({}))
         .catch((error) => {
@@ -612,7 +605,7 @@ export const audioStore: VoiceVoxStoreOptions<
       };
       const getSpeakerInfo = async function (speaker: Speaker) {
         const speakerInfo = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineKey,
+          engineId,
         })
           .then((instance) =>
             instance.invoke("speakerInfoSpeakerInfoGet")({
@@ -653,8 +646,8 @@ export const audioStore: VoiceVoxStoreOptions<
      * 初期化済みだった場合は何もしない。
      */
     async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加する予定
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       // FIXME: なぜかbooleanではなくstringが返ってくる。
@@ -662,7 +655,7 @@ export const audioStore: VoiceVoxStoreOptions<
       const isInitialized: string = await dispatch(
         "INSTANTIATE_ENGINE_CONNECTOR",
         {
-          engineKey,
+          engineId,
         }
       ).then(
         (instance) =>
@@ -677,7 +670,7 @@ export const audioStore: VoiceVoxStoreOptions<
         await dispatch("ASYNC_UI_LOCK", {
           callback: () =>
             dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-              engineKey,
+              engineId,
             }).then((instance) =>
               instance.invoke("initializeSpeakerInitializeSpeakerPost")({
                 speaker: styleId,
@@ -711,8 +704,8 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineKeyを追加する予定
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       const styleId =
@@ -725,7 +718,7 @@ export const audioStore: VoiceVoxStoreOptions<
         ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
 
-      const query = getters.IS_ENGINE_READY(engineKey)
+      const query = getters.IS_ENGINE_READY(engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
             styleId,
@@ -820,12 +813,12 @@ export const audioStore: VoiceVoxStoreOptions<
         isKana?: boolean;
       }
     ) {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       })
         .then((instance) =>
           instance.invoke("accentPhrasesAccentPhrasesPost")({
@@ -849,12 +842,12 @@ export const audioStore: VoiceVoxStoreOptions<
         styleId,
       }: { accentPhrases: AccentPhrase[]; styleId: number }
     ) {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       })
         .then((instance) =>
           instance.invoke("moraDataMoraDataPost")({
@@ -900,12 +893,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { dispatch, state },
       { text, styleId }: { text: string; styleId: number }
     ) {
-      const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-      if (engineKey === undefined)
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
 
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineKey,
+        engineId,
       })
         .then((instance) =>
           instance.invoke("audioQueryAudioQueryPost")({
@@ -1010,12 +1003,12 @@ export const audioStore: VoiceVoxStoreOptions<
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-        if (engineKey === undefined)
+        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+        if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineKey,
+          engineId,
         })
           .then((instance) =>
             instance.invoke("connectWavesConnectWavesPost")({
@@ -1042,9 +1035,9 @@ export const audioStore: VoiceVoxStoreOptions<
     },
     GENERATE_AUDIO_FROM_AUDIO_ITEM: createUILockAction(
       async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
-        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-        if (engineKey === undefined)
-          throw new Error(`No such engineKey registered: index == 0`);
+        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+        if (engineId === undefined)
+          throw new Error(`No such engineId registered: index == 0`);
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1056,7 +1049,7 @@ export const audioStore: VoiceVoxStoreOptions<
         }
 
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineKey,
+          engineId,
         })
           .then((instance) =>
             instance.invoke("synthesisSynthesisPost")({
@@ -1604,50 +1597,49 @@ export const audioStore: VoiceVoxStoreOptions<
     OPEN_TEXT_EDIT_CONTEXT_MENU() {
       window.electron.openTextEditContextMenu();
     },
-    DETECTED_ENGINE_ERROR({ state, commit }, { engineKey }) {
-      const engineState: EngineState | undefined =
-        state.engineStates[engineKey];
+    DETECTED_ENGINE_ERROR({ state, commit }, { engineId }) {
+      const engineState: EngineState | undefined = state.engineStates[engineId];
       if (engineState === undefined)
-        throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+        throw new Error(`No such engineState set: engineId == ${engineId}`);
 
       switch (engineState) {
         case "STARTING":
           commit("SET_ENGINE_STATE", {
-            engineKey,
+            engineId,
             engineState: "FAILED_STARTING",
           });
           break;
         case "READY":
-          commit("SET_ENGINE_STATE", { engineKey, engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineId, engineState: "ERROR" });
           break;
         default:
-          commit("SET_ENGINE_STATE", { engineKey, engineState: "ERROR" });
+          commit("SET_ENGINE_STATE", { engineId, engineState: "ERROR" });
       }
     },
     async RESTART_ENGINE_ALL({ state, dispatch }) {
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
       let allSuccess = true;
-      const engineKeys = state.engineKeys;
+      const engineIds = state.engineIds;
 
-      for (const engineKey of engineKeys) {
+      for (const engineId of engineIds) {
         const success = await dispatch("RESTART_ENGINE", {
-          engineKey,
+          engineId,
         });
         allSuccess = allSuccess && success;
       }
 
       return allSuccess;
     },
-    async RESTART_ENGINE({ dispatch, commit, state }, { engineKey }) {
-      commit("SET_ENGINE_STATE", { engineKey, engineState: "STARTING" });
+    async RESTART_ENGINE({ dispatch, commit, state }, { engineId }) {
+      commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
       const success = await window.electron
-        .restartEngine(engineKey)
+        .restartEngine(engineId)
         .then(async () => {
-          await dispatch("START_WAITING_ENGINE", { engineKey });
-          return state.engineStates[engineKey] === "READY";
+          await dispatch("START_WAITING_ENGINE", { engineId });
+          return state.engineStates[engineId] === "READY";
         })
         .catch(async () => {
-          await dispatch("DETECTED_ENGINE_ERROR", { engineKey });
+          await dispatch("DETECTED_ENGINE_ERROR", { engineId });
           return false;
         });
       return success;

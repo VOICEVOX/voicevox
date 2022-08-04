@@ -34,6 +34,7 @@ createApp(App)
       brand: {
         primary: "#a5d4ad",
         secondary: "#212121",
+        negative: "var(--color-warning)",
       },
     },
     iconSet,

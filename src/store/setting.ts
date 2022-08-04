@@ -37,7 +37,7 @@ export const settingStoreState: SettingStoreState = {
   },
   hotkeySettings: [],
   toolbarSetting: [],
-  engineKeys: [],
+  engineIds: [],
   engineInfos: {},
   themeSetting: {
     currentTheme: "Default",
@@ -304,12 +304,12 @@ export const settingStore: VoiceVoxStoreOptions<
           }
         }
 
-        const engineKey: string | undefined = state.engineKeys[0]; // TODO: 複数エンジン対応
-        if (engineKey === undefined)
+        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+        if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
         await dispatch("SET_USE_GPU", { useGpu });
-        const success = await dispatch("RESTART_ENGINE", { engineKey });
+        const success = await dispatch("RESTART_ENGINE", { engineId });
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい

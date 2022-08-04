@@ -409,39 +409,39 @@ async function runEngineAll() {
   log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
-    log.info(`ENGINE ${engineInfo.key}: Start launching`);
-    await runEngine(engineInfo.key);
+    log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
+    await runEngine(engineInfo.uuid);
   }
 }
 
-async function runEngine(engineKey: string) {
+async function runEngine(engineId: string) {
   const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.key === engineKey
+    (engineInfo) => engineInfo.uuid === engineId
   );
   if (!engineInfo)
-    throw new Error(`No such engineInfo registered: engineKey == ${engineKey}`);
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
 
   if (!engineInfo.executionEnabled) {
-    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
+    log.info(`ENGINE ${engineId}: Skipped engineInfo execution: disabled`);
     return;
   }
 
   if (!engineInfo.executionFilePath) {
     log.info(
-      `ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`
+      `ENGINE ${engineId}: Skipped engineInfo execution: empty executionFilePath`
     );
     return;
   }
 
-  log.info(`ENGINE ${engineKey}: Starting process`);
+  log.info(`ENGINE ${engineId}: Starting process`);
 
-  if (!(engineKey in engineProcessContainers)) {
-    engineProcessContainers[engineKey] = {
+  if (!(engineId in engineProcessContainers)) {
+    engineProcessContainers[engineId] = {
       willQuitEngine: false,
     };
   }
 
-  const engineProcessContainer = engineProcessContainers[engineKey];
+  const engineProcessContainer = engineProcessContainers[engineId];
   engineProcessContainer.willQuitEngine = false;
 
   // 最初のエンジンモード
@@ -464,7 +464,7 @@ async function runEngine(engineKey: string) {
   }
   const useGpu = store.get("useGpu");
 
-  log.info(`ENGINE ${engineKey} mode: ${useGpu ? "GPU" : "CPU"}`);
+  log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -473,8 +473,8 @@ async function runEngine(engineKey: string) {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
-  log.info(`ENGINE ${engineKey} path: ${enginePath}`);
-  log.info(`ENGINE ${engineKey} args: ${JSON.stringify(args)}`);
+  log.info(`ENGINE ${engineId} path: ${enginePath}`);
+  log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
 
   const engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
@@ -482,21 +482,21 @@ async function runEngine(engineKey: string) {
   engineProcessContainer.engineProcess = engineProcess;
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info(`ENGINE ${engineKey} STDOUT: ${data.toString("utf-8")}`);
+    log.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error(`ENGINE ${engineKey} STDERR: ${data.toString("utf-8")}`);
+    log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
     log.info(
-      `ENGINE ${engineKey}: Process terminated due to receipt of signal ${signal}`
+      `ENGINE ${engineId}: Process terminated due to receipt of signal ${signal}`
     );
-    log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
+    log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineKey });
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
@@ -512,16 +512,16 @@ function killEngineAll({
 }: {
   onFirstKillStart?: VoidFunction;
   onAllKilled?: VoidFunction;
-  onError?: (engineKey: string, message: unknown) => void;
+  onError?: (engineId: string, message: unknown) => void;
 }) {
   let anyKillStart = false;
 
   const numEngineProcess = Object.keys(engineProcessContainers).length;
   let numEngineProcessKilled = 0;
 
-  for (const [engineKey] of Object.entries(engineProcessContainers)) {
+  for (const [engineId] of Object.entries(engineProcessContainers)) {
     killEngine({
-      engineKey,
+      engineId,
       onKillStart: () => {
         if (!anyKillStart) {
           anyKillStart = true;
@@ -539,12 +539,12 @@ function killEngineAll({
         }
       },
       onError: (message) => {
-        onError?.(engineKey, message);
+        onError?.(engineId, message);
 
         // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなして次のエンジンプロセスをキルする
         numEngineProcessKilled++;
         log.info(
-          `ENGINE ${engineKey}: process kill errored, but assume to have been killed`
+          `ENGINE ${engineId}: process kill errored, but assume to have been killed`
         );
         log.info(
           `ENGINE ${numEngineProcessKilled} / ${numEngineProcess} processes killed`
@@ -559,76 +559,76 @@ function killEngineAll({
 }
 
 function killEngine({
-  engineKey,
+  engineId,
   onKillStart,
   onKilled,
   onError,
 }: {
-  engineKey: string;
+  engineId: string;
   onKillStart?: VoidFunction;
   onKilled?: VoidFunction;
   onError?: (error: unknown) => void;
 }) {
   // この関数では、呼び出し元に結果を通知するためonKilledまたはonErrorを同期または非同期で必ず呼び出さなければならない
 
-  const engineProcessContainer = engineProcessContainers[engineKey];
+  const engineProcessContainer = engineProcessContainers[engineId];
   if (!engineProcessContainer) {
-    onError?.(`No such engineProcessContainer: key == ${engineKey}`);
+    onError?.(`No such engineProcessContainer: key == ${engineId}`);
     return;
   }
 
   const engineProcess = engineProcessContainer.engineProcess;
   if (engineProcess == undefined) {
     // nop if no process started (already killed or not started yet)
-    log.info(`ENGINE ${engineKey}: Process not started`);
+    log.info(`ENGINE ${engineId}: Process not started`);
     onKilled?.();
     return;
   }
 
   // considering the case that ENGINE process killed after checking process status
   engineProcess.once("close", () => {
-    log.info(`ENGINE ${engineKey}: Process closed`);
+    log.info(`ENGINE ${engineId}: Process closed`);
     onKilled?.();
   });
 
   log.info(
-    `ENGINE ${engineKey}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+    `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
   );
 
   const engineNotExited = engineProcess.exitCode === null;
   const engineNotKilled = engineProcess.signalCode === null;
 
   if (engineNotExited && engineNotKilled) {
-    log.info(`ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`);
+    log.info(`ENGINE ${engineId}: Killing process (PID=${engineProcess.pid})`);
     onKillStart?.();
 
     engineProcessContainer.willQuitEngine = true;
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
     } catch (error: unknown) {
-      log.error(`ENGINE ${engineKey}: Error during killing process`);
+      log.error(`ENGINE ${engineId}: Error during killing process`);
       onError?.(error);
     }
   } else {
-    log.info(`ENGINE ${engineKey}: Process already closed`);
+    log.info(`ENGINE ${engineId}: Process already closed`);
     onKilled?.();
   }
 }
 
 async function restartEngineAll() {
   for (const engineInfo of engineInfos) {
-    await restartEngine(engineInfo.key);
+    await restartEngine(engineInfo.uuid);
   }
 }
 
-async function restartEngine(engineKey: string) {
+async function restartEngine(engineId: string) {
   await new Promise<void>((resolve, reject) => {
     const engineProcessContainer: EngineProcessContainer | undefined =
-      engineProcessContainers[engineKey];
+      engineProcessContainers[engineId];
     const engineProcess = engineProcessContainer?.engineProcess;
 
     log.info(
-      `ENGINE ${engineKey}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
+      `ENGINE ${engineId}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
     );
 
     // エンジンのプロセスがすでに終了している、またはkillされている場合
@@ -638,10 +638,10 @@ async function restartEngine(engineKey: string) {
     // engineProcess === undefinedの場合true
     if (engineExited || engineKilled) {
       log.info(
-        `ENGINE ${engineKey}: Process is not started yet or already killed. Starting process...`
+        `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
       );
 
-      runEngine(engineKey);
+      runEngine(engineId);
       resolve();
       return;
     }
@@ -652,21 +652,21 @@ async function restartEngine(engineKey: string) {
     // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
     // closeイベントはexitイベントよりも後に発火します。
     const restartEngineOnProcessClosedCallback = () => {
-      log.info(`ENGINE ${engineKey}: Process killed. Restarting process...`);
+      log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
-      runEngine(engineKey);
+      runEngine(engineId);
       resolve();
     };
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
     log.info(
-      `ENGINE ${engineKey}: Killing current process (PID=${engineProcess.pid})...`
+      `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
     );
     treeKill(engineProcess.pid, (error) => {
       // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
       if (error != null) {
-        log.error(`ENGINE ${engineKey}: Failed to kill process`);
+        log.error(`ENGINE ${engineId}: Failed to kill process`);
         log.error(error);
 
         // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
@@ -1078,8 +1078,8 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
   await restartEngineAll();
 });
 
-ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
-  await restartEngine(engineKey);
+ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
+  await restartEngine(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
@@ -1192,10 +1192,8 @@ app.on("before-quit", (event) => {
       }
       // else: before-quit event is not cancelled
     },
-    onError: (engineKey, message) => {
-      log.error(
-        `ENGINE ${engineKey}: Error during killing process: ${message}`
-      );
+    onError: (engineId, message) => {
+      log.error(`ENGINE ${engineId}: Error during killing process: ${message}`);
     },
   });
 });

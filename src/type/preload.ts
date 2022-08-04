@@ -78,7 +78,8 @@ export interface Sandbox {
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
-  restartEngine(engineKey: string): Promise<void>;
+  restartEngine(engineId: string): Promise<void>;
+  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -167,7 +168,7 @@ export type HotkeySetting = {
 };
 
 export type EngineInfo = {
-  key: string;
+  uuid: string;
   host: string;
   executionEnabled: boolean;
   executionFilePath: string;
@@ -247,17 +248,22 @@ export type ThemeColorType =
   | "display-dark"
   | "background"
   | "background-light"
+  | "header-background"
   | "setting-item"
   | "warning"
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
+  | "header-selected"
   | "pause-hovered"
   | "active-point-focus"
-  | "active-point-focus-hover";
+  | "active-point-focus-hover"
+  | "button-icon";
 
 export type ThemeConf = {
   name: string;
+  displayName: string;
+  order: number;
   isDark: boolean;
   colors: {
     [K in ThemeColorType]: string;

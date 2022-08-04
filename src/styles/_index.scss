@@ -1,11 +1,12 @@
 @use './variables' as vars;
 @use './colors' as colors;
 
-body {
+// 優先度を強引に上げる
+body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$primary};
-  border-right: solid #{vars.$window-border-width} #{colors.$primary};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$primary};
+  border-left: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-right: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$header-background};
   color: colors.$display;
   background: colors.$background;
 }
@@ -96,8 +97,14 @@ img {
   background: transparent; // デフォルトの設定だと全画面ダイアログが出る際に黒背景がちらつく
 }
 
+// 設定とかのヘッダーの色
+.q-layout__section--marginal {
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
+}
+
 // Markdown
 .markdown-body {
+  min-height: max-content;
   color: colors.$markdown-color;
   background: colors.$markdown-background;
   a {
@@ -205,4 +212,25 @@ img {
 }
 .bg-warning {
   background: colors.$warning;
+}
+
+.text-button-icon {
+  color: colors.$button-icon;
+}
+.bg-button-icon {
+  background: colors.$button-icon;
+}
+
+.text-header-background {
+  color: colors.$header-background;
+}
+.bg-header-background {
+  background: colors.$header-background;
+}
+
+.text-header-selected {
+  color: colors.$header-selected;
+}
+.bg-header-selected {
+  background: colors.$header-selected;
 }
