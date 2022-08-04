@@ -7,6 +7,10 @@
     dense
     :class="selected && 'active-menu'"
   >
+    <q-item-section side class="q-py-2" v-if="menudata.icon">
+      <img :src="menudata.icon" class="engine-icon" />
+    </q-item-section>
+
     <q-item-section>{{ menudata.label }}</q-item-section>
 
     <q-item-section side>
@@ -43,12 +47,26 @@
       <q-icon v-else />
     </q-item-section>
 
+    <q-item-section avatar v-if="menudata.icon">
+      <q-avatar>
+        <img :src="menudata.icon" />
+      </q-avatar>
+    </q-item-section>
+
     <q-item-section>{{ menudata.label }}</q-item-section>
     <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
   </q-item>
 </template>
+
+<style lang="scss" scoped>
+.engine-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+}
+</style>
 
 <script lang="ts">
 import { defineComponent, ref, PropType, computed, watch } from "vue";

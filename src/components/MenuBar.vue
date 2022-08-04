@@ -56,10 +56,12 @@ export type MenuItemSeparator = MenuItemBase<"separator">;
 export type MenuItemRoot = MenuItemBase<"root"> & {
   onClick: () => void;
   subMenu: MenuItemData[];
+  icon?: string;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  icon?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -413,6 +415,7 @@ export default defineComponent({
             ({
               type: "root",
               label: engineInfo.name,
+              icon: engineInfo.icon,
               subMenu: [
                 {
                   type: "button",

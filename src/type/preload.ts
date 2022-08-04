@@ -171,6 +171,7 @@ export type EngineInfo = {
   uuid: string;
   host: string;
   name: string;
+  icon?: string;
   executionEnabled: boolean;
   executionFilePath: string;
 };
