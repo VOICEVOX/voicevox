@@ -482,20 +482,12 @@ export default defineComponent({
 
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
-
-      for (const engineId of store.state.engineIds) {
-        const engineCharacterInfos: CharacterInfo[] | undefined =
-          store.state.characterInfos[engineId];
-        if (engineCharacterInfos === undefined)
-          throw new Error(`CharacterInfos not loaded for engine ${engineId}`);
-
-        for (const info of engineCharacterInfos) {
-          isUnsetDefaultStyleIds ||=
-            info.metas.styles.length > 1 &&
-            (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
-              speakerUuid: info.metas.speakerUuid,
-            }));
-        }
+      for (const info of flattenCharacterInfos.value) {
+        isUnsetDefaultStyleIds ||=
+          info.metas.styles.length > 1 &&
+          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
+            speakerUuid: info.metas.speakerUuid,
+          }));
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
