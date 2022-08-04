@@ -20,7 +20,6 @@ import {
   audioCommandStore,
   audioCommandStoreState,
   getCharacterInfo,
-  getFlattenCharacterInfos,
 } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -46,7 +45,18 @@ export const indexStore: VoiceVoxStoreOptions<
   IndexActions,
   IndexMutations
 > = {
-  getters: {},
+  getters: {
+    /**
+     * すべてのエンジンのキャラクター情報のリスト。
+     * キャラクター情報が読み出されていないときは、空リストを返す。
+     */
+    GET_FLATTEN_CHARACTER_INFOS(state) {
+      const flattenCharacterInfos = state.engineIds.flatMap(
+        (engineId) => state.characterInfos[engineId] ?? []
+      );
+      return flattenCharacterInfos;
+    },
+  },
   mutations: {
     SET_DEFAULT_STYLE_IDS(state, { defaultStyleIds }) {
       state.defaultStyleIds = defaultStyleIds;
@@ -128,8 +138,8 @@ export const indexStore: VoiceVoxStoreOptions<
         userCharacterOrder
       );
     },
-    GET_NEW_CHARACTERS({ state }) {
-      const flattenCharacterInfos = getFlattenCharacterInfos(state);
+    GET_NEW_CHARACTERS({ state, getters }) {
+      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
       const allSpeakerUuid = flattenCharacterInfos.map(
@@ -143,10 +153,10 @@ export const indexStore: VoiceVoxStoreOptions<
     async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
-    async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
+    async LOAD_DEFAULT_STYLE_IDS({ commit, getters }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
-      const flattenCharacterInfos = getFlattenCharacterInfos(state);
+      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
 
       // デフォルトスタイルが設定されていない場合は0をセットする
       // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき

@@ -113,6 +113,7 @@ function parseTextFile(
   return audioItems;
 }
 
+// TODO: GETTERに移動する
 function buildFileName(state: State, audioKey: string) {
   const fileNamePattern = state.savingSetting.fileNamePattern;
 
@@ -166,19 +167,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
   return `何らかの理由で失敗しました。${writeFileErrorResult.message}`;
 }
 
-export function getFlattenCharacterInfos(state: State): CharacterInfo[] {
-  const flattenCharacterInfos = state.engineIds.flatMap(
-    (engineId) => state.characterInfos[engineId] ?? []
-  );
-
-  // まだキャラクター情報が読み出されていないときは、例外を投げる
-  // if (flattenCharacterInfos.length === 0)
-  //   throw new Error("CharacterInfos not fetched yet");
-
-  // まだキャラクター情報が読み出されていないときは、空リストを返す
-  return flattenCharacterInfos;
-}
-
+// TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
   engineId: string,

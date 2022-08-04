@@ -184,7 +184,6 @@ import {
   SplitterPosition,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import { getFlattenCharacterInfos } from "@/store/audio";
 
 export default defineComponent({
   name: "Home",
@@ -601,8 +600,8 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const flattenCharacterInfos = computed(() =>
-      getFlattenCharacterInfos(store.state)
+    const flattenCharacterInfos = computed(
+      () => store.getters.GET_FLATTEN_CHARACTER_INFOS
     );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
