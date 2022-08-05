@@ -136,6 +136,7 @@ const engineInfos: EngineInfo[] = (() => {
     return {
       ...engineInfo,
       icon: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
+      path: engineInfo.path && path.resolve(appDirPath, engineInfo.path),
     };
   });
 })();
@@ -713,6 +714,23 @@ async function restartEngine(engineId: string) {
   });
 }
 
+// エンジンのフォルダを開く
+function openEngineDirectory(engineId: string) {
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.uuid === engineId
+  );
+  if (engineInfo == null) {
+    return;
+  }
+
+  const engineDirectory = engineInfo.path;
+  if (engineDirectory == null) {
+    return;
+  }
+
+  shell.openPath(engineDirectory);
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -1111,6 +1129,10 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
 
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await restartEngine(engineId);
+});
+
+ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
+  openEngineDirectory(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {

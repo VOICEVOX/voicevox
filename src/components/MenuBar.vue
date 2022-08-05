@@ -417,6 +417,15 @@ export default defineComponent({
               label: engineInfo.name,
               icon: engineInfo.icon,
               subMenu: [
+                engineInfo.path && {
+                  type: "button",
+                  label: "フォルダを開く",
+                  onClick: () => {
+                    store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                      engineId: engineInfo.uuid,
+                    });
+                  },
+                },
                 {
                   type: "button",
                   label: "再起動",
@@ -426,7 +435,7 @@ export default defineComponent({
                     });
                   },
                 },
-              ],
+              ].filter((x) => x),
             } as MenuItemRoot)
         ),
         {
