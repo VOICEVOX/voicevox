@@ -728,7 +728,7 @@ function openEngineDirectory(engineId: string) {
     return;
   }
 
-  shell.openPath(engineDirectory);
+  shell.openPath(path.resolve(engineDirectory));
 }
 
 // temp dir
