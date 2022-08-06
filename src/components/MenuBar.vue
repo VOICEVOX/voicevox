@@ -405,50 +405,73 @@ export default defineComponent({
 
     // エンジン毎の項目を追加
     async function updateEngines() {
-      (
-        menudata.value.find(
-          (x) => x.type === "root" && x.label === "エンジン"
-        ) as MenuItemRoot
-      ).subMenu = [
-        ...Object.values(engineInfos.value).map(
-          (engineInfo) =>
-            ({
-              type: "root",
-              label: engineInfo.name,
-              icon: engineInfo.icon,
-              subMenu: [
-                engineInfo.path && {
-                  type: "button",
-                  label: "フォルダを開く",
-                  onClick: () => {
-                    store.dispatch("OPEN_ENGINE_DIRECTORY", {
-                      engineId: engineInfo.uuid,
-                    });
-                  },
-                },
-                {
-                  type: "button",
-                  label: "再起動",
-                  onClick: () => {
-                    store.dispatch("RESTART_ENGINE", {
-                      engineId: engineInfo.uuid,
-                    });
-                  },
-                },
-              ].filter((x) => x),
-            } as MenuItemRoot)
-        ),
-        {
-          type: "separator",
-        },
-        {
-          type: "button",
-          label: "全てのエンジンを再起動",
-          onClick: () => {
-            store.dispatch("RESTART_ENGINE_ALL");
+      const engineMenu = menudata.value.find(
+        (x) => x.type === "root" && x.label === "エンジン"
+      ) as MenuItemRoot;
+      if (Object.values(engineInfos.value).length === 1) {
+        const engineInfo = Object.values(engineInfos.value)[0];
+        engineMenu.subMenu = [
+          engineInfo.path && {
+            type: "button",
+            label: "フォルダを開く",
+            onClick: () => {
+              store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                engineId: engineInfo.uuid,
+              });
+            },
           },
-        },
-      ];
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => {
+              store.dispatch("RESTART_ENGINE", {
+                engineId: engineInfo.uuid,
+              });
+            },
+          },
+        ].filter((x) => x) as MenuItemData[];
+      } else {
+        engineMenu.subMenu = [
+          ...Object.values(engineInfos.value).map(
+            (engineInfo) =>
+              ({
+                type: "root",
+                label: engineInfo.name,
+                icon: engineInfo.icon,
+                subMenu: [
+                  engineInfo.path && {
+                    type: "button",
+                    label: "フォルダを開く",
+                    onClick: () => {
+                      store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                        engineId: engineInfo.uuid,
+                      });
+                    },
+                  },
+                  {
+                    type: "button",
+                    label: "再起動",
+                    onClick: () => {
+                      store.dispatch("RESTART_ENGINE", {
+                        engineId: engineInfo.uuid,
+                      });
+                    },
+                  },
+                ].filter((x) => x),
+              } as MenuItemRoot)
+          ),
+          {
+            type: "separator",
+          },
+          {
+            type: "button",
+            label: "全てのエンジンを再起動",
+            onClick: () => {
+              store.dispatch("RESTART_ENGINE_ALL");
+            },
+          },
+        ];
+      }
     }
     watch(engineInfos, updateEngines, { immediate: true }); // engineInfosを見て動的に更新できるようにする
 
