@@ -719,8 +719,8 @@ function openEngineDirectory(engineId: string) {
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
-  if (engineInfo == null) {
-    return;
+  if (!engineInfo) {
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
   }
 
   const engineDirectory = engineInfo.path;
