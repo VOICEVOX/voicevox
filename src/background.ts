@@ -123,19 +123,19 @@ const engineInfos: EngineInfo[] = (() => {
   }
 
   return engines.map((engineInfo: EngineInfo) => {
-    if (!engineInfo.icon) return engineInfo;
+    if (!engineInfo.iconPath) return engineInfo;
     let b64icon: string;
     try {
-      b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.icon), {
+      b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.iconPath), {
         encoding: "base64",
       });
     } catch (e) {
-      log.error("Failed to read icon file: " + engineInfo.icon);
+      log.error("Failed to read icon file: " + engineInfo.iconPath);
       return engineInfo;
     }
     return {
       ...engineInfo,
-      icon: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
+      iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
       path: engineInfo.path && path.resolve(appDirPath, engineInfo.path),
     };
   });

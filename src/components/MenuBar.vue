@@ -437,7 +437,7 @@ export default defineComponent({
               ({
                 type: "root",
                 label: engineInfo.name,
-                icon: engineInfo.icon,
+                icon: engineInfo.iconData,
                 subMenu: [
                   engineInfo.path && {
                     type: "button",

@@ -172,7 +172,8 @@ export type EngineInfo = {
   uuid: string;
   host: string;
   name: string;
-  icon?: string;
+  iconPath?: string;
+  iconData?: string;
   path?: string;
   executionEnabled: boolean;
   executionFilePath: string;
