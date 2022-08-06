@@ -450,8 +450,7 @@ export default defineComponent({
         },
       ];
     }
-    watch(engineInfos, updateEngines); // engineInfosを見て動的に更新できるようにする
-    updateEngines(); // 更新したときに消えるので手動で1回呼び出す。多分もっといい実装ある
+    watch(engineInfos, updateEngines, { immediate: true }); // engineInfosを見て動的に更新できるようにする
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
