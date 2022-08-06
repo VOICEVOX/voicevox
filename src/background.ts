@@ -136,7 +136,10 @@ const engineInfos: EngineInfo[] = (() => {
     return {
       ...engineInfo,
       iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
-      path: engineInfo.path && path.resolve(appDirPath, engineInfo.path),
+      path:
+        engineInfo.path === undefined
+          ? undefined
+          : path.resolve(appDirPath, engineInfo.path),
     };
   });
 })();
