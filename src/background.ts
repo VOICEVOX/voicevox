@@ -728,7 +728,9 @@ function openEngineDirectory(engineId: string) {
     return;
   }
 
-  shell.openPath(path.resolve(engineDirectory)); // Windows環境だとそのまま動かない
+  // Windows環境だとスラッシュ区切りのパスが動かない。
+  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
+  shell.openPath(path.resolve(engineDirectory));
 }
 
 // temp dir
