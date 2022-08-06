@@ -165,6 +165,7 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   engineStates: {},
+  isInitializingSpeaker: false,
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -240,6 +241,12 @@ export const audioStore: VoiceVoxStoreOptions<
       { characterInfos }: { characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos = characterInfos;
+    },
+    SET_IS_INITIALIZING_SPEAKER(
+      state,
+      { isInitializingSpeaker }: { isInitializingSpeaker: boolean }
+    ) {
+      state.isInitializingSpeaker = isInitializingSpeaker;
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -645,7 +652,7 @@ export const audioStore: VoiceVoxStoreOptions<
      * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      * 初期化済みだった場合は何もしない。
      */
-    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+    async SETUP_ENGINE_SPEAKER({ state, commit, dispatch }, { styleId }) {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
@@ -668,14 +675,21 @@ export const audioStore: VoiceVoxStoreOptions<
 
       if (isInitialized === "false") {
         await dispatch("ASYNC_UI_LOCK", {
-          callback: () =>
-            dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          callback: async () => {
+            commit("SET_IS_INITIALIZING_SPEAKER", {
+              isInitializingSpeaker: true,
+            });
+            await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
               engineId,
             }).then((instance) =>
               instance.invoke("initializeSpeakerInitializeSpeakerPost")({
                 speaker: styleId,
               })
-            ),
+            );
+            commit("SET_IS_INITIALIZING_SPEAKER", {
+              isInitializingSpeaker: false,
+            });
+          },
         });
       }
     },

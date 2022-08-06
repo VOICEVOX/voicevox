@@ -22,6 +22,14 @@
             </div>
           </div>
         </div>
+        <div v-if="isInitializingSpeaker" class="initializing-speaker">
+          <div>
+            <q-spinner color="primary" size="2.5rem" />
+            <div class="q-mt-xs">
+              {{ "キャラクターを読み込み中です" }}
+            </div>
+          </div>
+        </div>
         <q-splitter
           horizontal
           reverse
@@ -520,6 +528,10 @@ export default defineComponent({
       isCompletedInitialStartup.value = true;
     });
 
+    const isInitializingSpeaker = computed(
+      () => store.state.isInitializingSpeaker
+    );
+
     // エンジン待機
     // TODO: 個別のエンジンの状態をUIで確認できるようにする
     const allEngineState = computed(() => {
@@ -682,6 +694,7 @@ export default defineComponent({
       updateAudioInfoPane,
       updateAudioDetailPane,
       isCompletedInitialStartup,
+      isInitializingSpeaker,
       allEngineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
@@ -708,7 +721,8 @@ export default defineComponent({
   height: vars.$header-height;
 }
 
-.waiting-engine {
+.waiting-engine,
+.initializing-speaker {
   background-color: rgba(colors.$display-dark-rgb, 0.15);
   position: absolute;
   inset: 0;
