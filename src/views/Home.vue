@@ -8,25 +8,23 @@
       <q-page class="main-row-panes">
         <!-- TODO: 複数エンジン対応 -->
         <div
-          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
-          class="waiting-engine"
+          v-if="
+            !isCompletedInitialStartup ||
+            allEngineState === 'STARTING' ||
+            isInitializingSpeaker
+          "
+          class="loading-indicator"
         >
           <div>
             <q-spinner color="primary" size="2.5rem" />
             <div class="q-mt-xs">
-              {{
-                allEngineState === "STARTING"
-                  ? "エンジン起動中・・・"
-                  : "データ準備中・・・"
-              }}
-            </div>
-          </div>
-        </div>
-        <div v-if="isInitializingSpeaker" class="initializing-speaker">
-          <div>
-            <q-spinner color="primary" size="2.5rem" />
-            <div class="q-mt-xs">
-              {{ "キャラクターを読み込み中です" }}
+              <template v-if="allEngineState === 'STARTING'">
+                エンジン起動中・・・
+              </template>
+              <template v-else-if="isInitializingSpeaker">
+                キャラクターを読み込み中です
+              </template>
+              <template v-else> データ準備中・・・ </template>
             </div>
           </div>
         </div>
@@ -506,11 +504,6 @@ export default defineComponent({
       });
       focusCell({ audioKey: newAudioKey });
 
-      // 最初の話者を初期化
-      if (audioItem.styleId != undefined) {
-        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
-      }
-
       // ショートカットキーの設定
       document.addEventListener("keydown", disableDefaultUndoRedo);
 
@@ -524,6 +517,13 @@ export default defineComponent({
       isAcceptTermsDialogOpenComputed.value =
         process.env.NODE_ENV == "production" &&
         store.state.acceptTerms !== "Accepted";
+
+      // 最初の話者を初期化
+      if (audioItem.styleId != undefined) {
+        await store.dispatch("SETUP_ENGINE_SPEAKER", {
+          styleId: audioItem.styleId,
+        });
+      }
 
       isCompletedInitialStartup.value = true;
     });
@@ -721,8 +721,7 @@ export default defineComponent({
   height: vars.$header-height;
 }
 
-.waiting-engine,
-.initializing-speaker {
+.loading-indicator {
   background-color: rgba(colors.$display-dark-rgb, 0.15);
   position: absolute;
   inset: 0;
