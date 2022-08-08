@@ -7,9 +7,17 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
+    <q-btn
+      flat
+      class="q-pa-none character-button"
+      :disable="uiLocked"
+      :class="{ opaque: isInitializingSpeaker }"
+    >
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
+      <div v-if="isInitializingSpeaker" class="loading">
+        <q-spinner color="primary" size="1.6rem" :thickness="7" />
+      </div>
       <q-menu
         class="character-menu"
         transition-show="none"
@@ -174,6 +182,9 @@ export default defineComponent({
     const store = useStore();
     const userOrderedCharacterInfos = computed(
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    );
+    const isInitializingSpeaker = computed(
+      () => store.state.isInitializingSpeaker
     );
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
@@ -398,6 +409,7 @@ export default defineComponent({
 
     return {
       userOrderedCharacterInfos,
+      isInitializingSpeaker,
       audioItem,
       deleteButtonEnable,
       uiLocked,
@@ -461,6 +473,24 @@ export default defineComponent({
       height: 2rem;
       object-fit: scale-down;
     }
+    .loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      background-color: rgba(colors.$background-rgb, 0.76);
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      svg {
+        filter: drop-shadow(0 0 1px colors.$background);
+      }
+    }
+  }
+  .opaque {
+    opacity: 1 !important;
   }
   .q-input {
     :deep(.q-field__control) {
