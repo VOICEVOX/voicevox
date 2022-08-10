@@ -1,21 +1,26 @@
 {
   "name": "Dark",
+  "displayName": "ダーク",
+  "order": 2,
   "isDark": true,
   "colors": {
-    "primary": "#0A0A0A",
-    "primary-light": "#E0E0E0",
+    "primary": "#86C591",
+    "primary-light": "#86C591",
     "display": "#F5F5F5",
-    "display-light": "#E0E0E0",
-    "display-dark": "#121212",
-    "background": "#121212",
-    "background-light": "#E0E0E0",
+    "display-light": "#333333",
+    "display-dark": "#1F1F1F",
+    "background": "#1F1F1F",
+    "background-light": "#86C591",
     "setting-item": "#424242",
-    "warning": "#F2C037",
-    "markdown-color": "#c9d1d9",
-    "markdown-background": "#0D1117",
+    "warning": "#F27483",
+    "markdown-color": "#F5F5F5",
+    "markdown-background": "#1F1F1F",
     "markdown-hyperlink": "#58A6FF",
+    "header-selected": "#BADDC0",
     "pause-hovered": "#333A44",
-    "active-point-focus": "#EEF3FF",
-    "active-point-focus-hover": "#F7FAFF"
+    "active-point-focus": "#12122B",
+    "active-point-focus-hover": "#2B2B2B",
+    "button-icon": "#2B2B2B",
+    "header-background": "#2B2B2B"
   }
 }

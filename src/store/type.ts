@@ -27,6 +27,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  ConfirmedTips,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -110,7 +111,7 @@ type AudioStoreTypes = {
   };
 
   IS_ENGINE_READY: {
-    getter(engineKey: string): boolean;
+    getter(engineId: string): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
@@ -122,10 +123,10 @@ type AudioStoreTypes = {
   };
 
   START_WAITING_ENGINE: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineId: string }): void;
   };
 
-  // NOTE: 複数のEngineKeyを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
   // NOTE: 個別にエンジンの状態を確認できるようにする？
   // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
   RESTART_ENGINE_ALL: {
@@ -133,15 +134,15 @@ type AudioStoreTypes = {
   };
 
   RESTART_ENGINE: {
-    action(payload: { engineKey: string }): Promise<boolean>;
+    action(payload: { engineId: string }): Promise<boolean>;
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(payload: { engineKey: string }): void;
+    action(payload: { engineId: string }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineKey: string; engineState: EngineState };
+    mutation: { engineId: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER: {
@@ -792,18 +793,18 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineKeys: string[];
+  engineIds: string[];
   engineInfos: Record<string, EngineInfo>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
 };
 
 type SettingStoreTypes = {
-  GET_SAVING_SETTING: {
-    getter: SavingSetting;
+  HYDRATE_SETTING_STORE: {
     action(): void;
   };
 
@@ -812,17 +813,9 @@ type SettingStoreTypes = {
     action(payload: { data: SavingSetting }): void;
   };
 
-  GET_HOTKEY_SETTINGS: {
-    action(): void;
-  };
-
   SET_HOTKEY_SETTINGS: {
     mutation: { newHotkey: HotkeySetting };
     action(payload: { data: HotkeySetting }): void;
-  };
-
-  GET_TOOLBAR_SETTING: {
-    action(): void;
   };
 
   SET_TOOLBAR_SETTING: {
@@ -830,21 +823,9 @@ type SettingStoreTypes = {
     action(payload: { data: ToolbarSetting }): void;
   };
 
-  GET_THEME_SETTING: {
-    action(): void;
-  };
-
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
-  };
-
-  GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    action(): void;
-  };
-
-  GET_ACCEPT_TERMS: {
-    action(): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -859,30 +840,24 @@ type SettingStoreTypes = {
     action(payload: { acceptTerms: AcceptTermsStatus }): void;
   };
 
-  GET_EXPERIMENTAL_SETTING: {
-    action(): void;
-  };
-
   SET_EXPERIMENTAL_SETTING: {
     mutation: { experimentalSetting: ExperimentalSetting };
     action(payload: { experimentalSetting: ExperimentalSetting }): void;
   };
 
-  INIT_SPLIT_TEXT_WHEN_PASTE: {
-    action(): void;
-  };
   SET_SPLIT_TEXT_WHEN_PASTE: {
     mutation: { splitTextWhenPaste: SplitTextWhenPasteType };
     action(payload: { splitTextWhenPaste: SplitTextWhenPasteType }): void;
   };
 
-  GET_SPLITTER_POSITION: {
-    action(): void;
-  };
-
   SET_SPLITTER_POSITION: {
     mutation: { splitterPosition: SplitterPosition };
     action(payload: { splitterPosition: SplitterPosition }): void;
+  };
+
+  SET_CONFIRMED_TIPS: {
+    mutation: { confirmedTips: ConfirmedTips };
+    action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
   CHANGE_USE_GPU: {
@@ -1004,7 +979,7 @@ type UiStoreTypes = {
     action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
   };
 
-  GET_USE_GPU: {
+  HYDRATE_UI_STORE: {
     action(): void;
   };
 
@@ -1019,17 +994,9 @@ type UiStoreTypes = {
 
   SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
 
-  GET_INHERIT_AUDIOINFO: {
-    action(): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
-  };
-
-  GET_ACTIVE_POINT_SCROLL_MODE: {
-    action(): void;
   };
 
   SET_ACTIVE_POINT_SCROLL_MODE: {
@@ -1100,7 +1067,7 @@ type PresetStoreTypes = {
       presetKeys: string[];
     };
   };
-  GET_PRESET_CONFIG: {
+  HYDRATE_PRESET_STORE: {
     action(): void;
   };
   SAVE_PRESET_ORDER: {
@@ -1142,6 +1109,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   REWRITE_WORD: {
@@ -1150,6 +1118,7 @@ type DictionaryStoreTypes = {
       surface: string;
       pronunciation: string;
       accentType: number;
+      priority: number;
     }): Promise<void>;
   };
   DELETE_WORD: {
@@ -1171,22 +1140,19 @@ export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
 >;
 
-type IEngineConnectorFactoryActionsMapper<K> =
+type IEngineConnectorFactoryActionsMapper = <
   K extends keyof IEngineConnectorFactoryActions
-    ? (payload: {
-        engineKey: string;
-        action: K;
-        payload: Parameters<IEngineConnectorFactoryActions[K]>;
-      }) => ReturnType<IEngineConnectorFactoryActions[K]>
-    : never;
+>(
+  action: K
+) => (
+  _: Parameters<IEngineConnectorFactoryActions[K]>[0]
+) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
 type ProxyStoreTypes = {
-  INVOKE_ENGINE_CONNECTOR: {
-    // FIXME: actionに対してIEngineConnectorFactoryActionsのUnion型を与えているため、actionとpayloadが与えられるとReturnValueの型が得られる
-    // しかしVuexの型を通すとReturnValueの型付けが行われなくなりPromise<any>に落ちてしまうため、明示的な型付けを行う必要がある
-    action: IEngineConnectorFactoryActionsMapper<
-      keyof IEngineConnectorFactoryActions
-    >;
+  INSTANTIATE_ENGINE_CONNECTOR: {
+    action(payload: {
+      engineId: string;
+    }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
 

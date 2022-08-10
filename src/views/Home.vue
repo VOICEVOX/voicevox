@@ -27,7 +27,7 @@
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="bg-primary"
+          separator-class="home-splitter"
           :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
           class="full-width"
           before-class="overflow-hidden"
@@ -38,7 +38,7 @@
           <template #before>
             <q-splitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="bg-primary"
+              separator-class="home-splitter"
               :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
               before-class="overflow-hidden"
               :disable="!shouldShowPanes"
@@ -53,7 +53,7 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="bg-primary"
+                  separator-class="home-splitter"
                   :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
@@ -95,7 +95,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="display-dark"
+                          text-color="button-icon"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -488,6 +488,7 @@ export default defineComponent({
       }
       isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
+      // 最初のAudioCellを作成
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",
         {}
@@ -497,6 +498,12 @@ export default defineComponent({
       });
       focusCell({ audioKey: newAudioKey });
 
+      // 最初の話者を初期化
+      if (audioItem.styleId != undefined) {
+        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+      }
+
+      // ショートカットキーの設定
       document.addEventListener("keydown", disableDefaultUndoRedo);
 
       hotkeyActionsNative.forEach((item) => {
@@ -521,10 +528,10 @@ export default defineComponent({
       let lastEngineState: EngineState | undefined = undefined;
 
       // 登録されているすべてのエンジンについて状態を確認する
-      for (const engineKey of store.state.engineKeys) {
-        const engineState: EngineState | undefined = engineStates[engineKey];
+      for (const engineId of store.state.engineIds) {
+        const engineState: EngineState | undefined = engineStates[engineId];
         if (engineState === undefined)
-          throw new Error(`No such engineState set: engineKey == ${engineKey}`);
+          throw new Error(`No such engineState set: engineId == ${engineId}`);
 
         // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
         if (engineState === "STARTING") {
@@ -712,8 +719,8 @@ export default defineComponent({
   justify-content: center;
 
   > div {
-    color: colors.$display-dark;
-    background: colors.$background-light;
+    color: colors.$display;
+    background: colors.$setting-item;
     border-radius: 6px;
     padding: 14px;
   }
@@ -775,5 +782,9 @@ export default defineComponent({
     margin-right: 26px;
     margin-bottom: 10px;
   }
+}
+
+.q-splitter > :deep(.home-splitter) {
+  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>

@@ -1,12 +1,20 @@
-import { EngineInfo, SplitTextWhenPasteType } from "@/type/preload";
+import {
+  AppInfos,
+  ElectronStoreType,
+  EngineInfo,
+  HotkeySetting,
+  ThemeSetting,
+  ToolbarSetting,
+  UpdateInfo,
+} from "@/type/preload";
 
 /**
  * invoke, handle
  */
-type IpcIHData = {
+export type IpcIHData = {
   GET_APP_INFOS: {
     args: [];
-    return: import("@/type/preload").AppInfos;
+    return: AppInfos;
   };
 
   GET_TEMP_DIR: {
@@ -31,7 +39,7 @@ type IpcIHData = {
 
   GET_UPDATE_INFOS: {
     args: [];
-    return: import("@/type/preload").UpdateInfo[];
+    return: UpdateInfo[];
   };
 
   GET_OSS_COMMUNITY_INFOS: {
@@ -55,6 +63,11 @@ type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
+    args: [obj: { title: string; defaultPath?: string }];
+    return?: string;
+  };
+
+  SHOW_TEXT_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
   };
@@ -103,24 +116,29 @@ type IpcIHData = {
     return: number;
   };
 
+  SHOW_WARNING_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      }
+    ];
+    return: Electron.MessageBoxReturnValue;
+  };
+
   OPEN_TEXT_EDIT_CONTEXT_MENU: {
     args: [];
     return: void;
-  };
-
-  USE_GPU: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
-  INHERIT_AUDIOINFO: {
-    args: [obj: { newValue?: boolean }];
-    return: boolean;
-  };
-
-  ACTIVE_POINT_SCROLL_MODE: {
-    args: [obj: { newValue?: import("@/type/preload").ActivePointScrollMode }];
-    return: import("@/type/preload").ActivePointScrollMode;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -158,14 +176,14 @@ type IpcIHData = {
     return: EngineInfo[];
   };
 
-  RESTART_ENGINE: {
-    args: [obj: { engineKey: string }];
+  RESTART_ENGINE_ALL: {
+    args: [];
     return: void;
   };
 
-  SAVING_SETTING: {
-    args: [obj: { newData?: import("@/type/preload").SavingSetting }];
-    return: import("@/type/preload").SavingSetting;
+  RESTART_ENGINE: {
+    args: [obj: { engineId: string }];
+    return: void;
   };
 
   CHECK_FILE_EXISTS: {
@@ -178,36 +196,9 @@ type IpcIHData = {
     return: void;
   };
 
-  SAVING_PRESETS: {
-    args: [
-      obj: {
-        newPresets?: {
-          presetItems: Record<string, import("@/type/preload").Preset>;
-          presetKeys: string[];
-        };
-      }
-    ];
-    return: import("@/type/preload").PresetConfig;
-  };
-
   HOTKEY_SETTINGS: {
-    args: [obj: { newData?: import("@/type/preload").HotkeySetting }];
-    return: import("@/type/preload").HotkeySetting[];
-  };
-
-  TOOLBAR_SETTING: {
-    args: [obj: { newData?: import("@/type/preload").ToolbarSetting }];
-    return: import("@/type/preload").ToolbarSetting;
-  };
-
-  GET_USER_CHARACTER_ORDER: {
-    args: [];
-    return: string[];
-  };
-
-  SET_USER_CHARACTER_ORDER: {
-    args: [string[]];
-    return: void;
+    args: [obj: { newData?: HotkeySetting }];
+    return: HotkeySetting[];
   };
 
   IS_UNSET_DEFAULT_STYLE_ID: {
@@ -215,68 +206,19 @@ type IpcIHData = {
     return: boolean;
   };
 
-  GET_DEFAULT_STYLE_IDS: {
-    args: [];
-    return: import("@/type/preload").DefaultStyleId[];
-  };
-
-  SET_DEFAULT_STYLE_IDS: {
-    args: [defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]];
-    return: void;
-  };
-
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
-    return: import("@/type/preload").HotkeySetting[];
+    return: HotkeySetting[];
   };
 
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
-    return: import("@/type/preload").ToolbarSetting;
-  };
-
-  GET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [];
-    return: import("@/type/preload").AcceptRetrieveTelemetryStatus;
-  };
-
-  SET_ACCEPT_RETRIEVE_TELEMETRY: {
-    args: [
-      acceptRetrieveTelemetry: import("@/type/preload").AcceptRetrieveTelemetryStatus
-    ];
-    return: void;
-  };
-  GET_ACCEPT_TERMS: {
-    args: [];
-    return: import("@/type/preload").AcceptTermsStatus;
-  };
-
-  SET_ACCEPT_TERMS: {
-    args: [acceptTerms: import("@/type/preload").AcceptTermsStatus];
-    return: void;
-  };
-  GET_EXPERIMENTAL_SETTING: {
-    args: [];
-    return: ExperimentalSetting;
-  };
-  SET_EXPERIMENTAL_SETTING: {
-    args: [experimentalSetting: ExperimentalSetting];
-    return: void;
-  };
-
-  GET_SPLITTER_POSITION: {
-    args: [];
-    return: import("@/type/preload").SplitterPosition;
-  };
-
-  SET_SPLITTER_POSITION: {
-    args: [splitterPosition: import("@/type/preload").SplitterPosition];
-    return: void;
+    return: ToolbarSetting;
   };
 
   THEME: {
     args: [obj: { newData?: string }];
-    return: import("@/type/preload").ThemeSetting | void;
+    return: ThemeSetting | void;
   };
 
   ON_VUEX_READY: {
@@ -284,20 +226,22 @@ type IpcIHData = {
     return: void;
   };
 
-  GET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [];
-    return: SplitTextWhenPasteType;
+  // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
+  GET_SETTING: {
+    args: [key: keyof ElectronStoreType];
+    return: unknown;
   };
-  SET_SPLIT_TEXT_WHEN_PASTE: {
-    args: [splitTextWhenPaste: SplitTextWhenPasteType];
-    return: void;
+
+  SET_SETTING: {
+    args: [key: keyof ElectronStoreType, newValue: unknown];
+    return: unknown;
   };
 };
 
 /**
  * send, on
  */
-type IpcSOData = {
+export type IpcSOData = {
   LOAD_PROJECT_FILE: {
     args: [obj: { filePath?: string; confirm?: boolean }];
     return: void;
@@ -314,7 +258,7 @@ type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [obj: { engineKey: string }];
+    args: [obj: { engineId: string }];
     return: void;
   };
 

@@ -1,4 +1,24 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcSOData } from "./ipc";
+
+export interface ElectronStoreType {
+  useGpu: boolean;
+  inheritAudioInfo: boolean;
+  activePointScrollMode: ActivePointScrollMode;
+  savingSetting: SavingSetting;
+  presets: PresetConfig;
+  hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
+  userCharacterOrder: string[];
+  defaultStyleIds: DefaultStyleId[];
+  currentTheme: string;
+  experimentalSetting: ExperimentalSetting;
+  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptTerms: AcceptTermsStatus;
+  splitTextWhenPaste: SplitTextWhenPasteType;
+  splitterPosition: SplitterPosition;
+  confirmedTips: ConfirmedTips;
+}
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
@@ -46,11 +66,6 @@ export interface Sandbox {
   }): WriteFileErrorResult | undefined;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
-  useGpu(newValue?: boolean): Promise<boolean>;
-  inheritAudioInfo(newValue?: boolean): Promise<boolean>;
-  activePointScrollMode(
-    newValue?: ActivePointScrollMode
-  ): Promise<ActivePointScrollMode>;
   isAvailableGPUMode(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
@@ -63,39 +78,23 @@ export interface Sandbox {
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
-  restartEngine(engineKey: string): Promise<void>;
+  restartEngine(engineId: string): Promise<void>;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
-  toolbarSetting(newData?: ToolbarSetting): Promise<ToolbarSetting>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  savingPresets(newPresets?: {
-    presetItems: Record<string, Preset>;
-    presetKeys: string[];
-  }): Promise<PresetConfig>;
-  getUserCharacterOrder(): Promise<string[]>;
-  setUserCharacterOrder(userCharacterOrder: string[]): Promise<void>;
   isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
-  getDefaultStyleIds(): Promise<DefaultStyleId[]>;
-  setDefaultStyleIds(
-    defaultStyleIds: { speakerUuid: string; defaultStyleId: number }[]
-  ): Promise<void>;
-  getAcceptRetrieveTelemetry(): Promise<AcceptRetrieveTelemetryStatus>;
-  setAcceptRetrieveTelemetry(
-    acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus
-  ): Promise<void>;
-  getAcceptTerms(): Promise<AcceptTermsStatus>;
-  setAcceptTerms(acceptTerms: AcceptTermsStatus): Promise<void>;
-  getExperimentalSetting(): Promise<ExperimentalSetting>;
-  setExperimentalSetting(setting: ExperimentalSetting): Promise<void>;
-  getSplitterPosition(): Promise<SplitterPosition>;
-  setSplitterPosition(splitterPosition: SplitterPosition): Promise<void>;
-  getDefaultHotkeySettings(): Promise<HotKeySetting[]>;
+  getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSplitTextWhenPaste(): Promise<SplitTextWhenPasteType>;
-  setSplitTextWhenPaste(splitTextWhenPaste: SplitTextWhenPasteType): void;
+  getSetting<Key extends keyof ElectronStoreType>(
+    key: Key
+  ): Promise<ElectronStoreType[Key]>;
+  setSetting<Key extends keyof ElectronStoreType>(
+    key: Key,
+    newValue: ElectronStoreType[Key]
+  ): Promise<ElectronStoreType[Key]>;
 }
 
 export type AppInfos = {
@@ -169,7 +168,7 @@ export type HotkeySetting = {
 };
 
 export type EngineInfo = {
-  key: string;
+  uuid: string;
   host: string;
   executionEnabled: boolean;
   executionFilePath: string;
@@ -249,17 +248,22 @@ export type ThemeColorType =
   | "display-dark"
   | "background"
   | "background-light"
+  | "header-background"
   | "setting-item"
   | "warning"
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
+  | "header-selected"
   | "pause-hovered"
   | "active-point-focus"
-  | "active-point-focus-hover";
+  | "active-point-focus-hover"
+  | "button-icon";
 
 export type ThemeConf = {
   name: string;
+  displayName: string;
+  order: number;
   isDark: boolean;
   colors: {
     [K in ThemeColorType]: string;
@@ -280,6 +284,10 @@ export type SplitterPosition = {
   portraitPaneWidth: number | undefined;
   audioInfoPaneWidth: number | undefined;
   audioDetailPaneHeight: number | undefined;
+};
+
+export type ConfirmedTips = {
+  tweakableSliderByScroll: boolean;
 };
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。

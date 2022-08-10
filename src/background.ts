@@ -37,6 +37,7 @@ import {
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
+  ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -205,23 +206,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<{
-  useGpu: boolean;
-  inheritAudioInfo: boolean;
-  activePointScrollMode: ActivePointScrollMode;
-  savingSetting: SavingSetting;
-  presets: PresetConfig;
-  hotkeySettings: HotkeySetting[];
-  toolbarSetting: ToolbarSetting;
-  userCharacterOrder: string[];
-  defaultStyleIds: DefaultStyleId[];
-  currentTheme: string;
-  experimentalSetting: ExperimentalSetting;
-  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  acceptTerms: AcceptTermsStatus;
-  splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
-}>({
+const store = new Store<ElectronStoreType>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -386,8 +371,30 @@ const store = new Store<{
       },
       default: {},
     },
+    confirmedTips: {
+      type: "object",
+      properties: {
+        tweakableSliderByScroll: { type: "boolean", default: false },
+      },
+      default: {
+        tweakableSliderByScroll: false,
+      },
+    },
   },
-  migrations: {},
+  migrations: {
+    "0.13": (store) => {
+      // acceptTems -> acceptTerms
+      const prevIdentifier = "acceptTems";
+      const prevValue = store.get(prevIdentifier, undefined) as
+        | AcceptTermsStatus
+        | undefined;
+      if (prevValue) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        store.delete(prevIdentifier as any);
+        store.set("acceptTerms", prevValue);
+      }
+    },
+  },
 });
 
 // engine
@@ -402,39 +409,39 @@ async function runEngineAll() {
   log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
-    log.info(`ENGINE ${engineInfo.key}: Start launching`);
-    await runEngine(engineInfo.key);
+    log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
+    await runEngine(engineInfo.uuid);
   }
 }
 
-async function runEngine(engineKey: string) {
+async function runEngine(engineId: string) {
   const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.key === engineKey
+    (engineInfo) => engineInfo.uuid === engineId
   );
   if (!engineInfo)
-    throw new Error(`No such engineInfo registered: engineKey == ${engineKey}`);
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
 
   if (!engineInfo.executionEnabled) {
-    log.info(`ENGINE ${engineKey}: Skipped engineInfo execution: disabled`);
+    log.info(`ENGINE ${engineId}: Skipped engineInfo execution: disabled`);
     return;
   }
 
   if (!engineInfo.executionFilePath) {
     log.info(
-      `ENGINE ${engineKey}: Skipped engineInfo execution: empty executionFilePath`
+      `ENGINE ${engineId}: Skipped engineInfo execution: empty executionFilePath`
     );
     return;
   }
 
-  log.info(`ENGINE ${engineKey}: Starting process`);
+  log.info(`ENGINE ${engineId}: Starting process`);
 
-  if (!(engineKey in engineProcessContainers)) {
-    engineProcessContainers[engineKey] = {
+  if (!(engineId in engineProcessContainers)) {
+    engineProcessContainers[engineId] = {
       willQuitEngine: false,
     };
   }
 
-  const engineProcessContainer = engineProcessContainers[engineKey];
+  const engineProcessContainer = engineProcessContainers[engineId];
   engineProcessContainer.willQuitEngine = false;
 
   // 最初のエンジンモード
@@ -457,7 +464,7 @@ async function runEngine(engineKey: string) {
   }
   const useGpu = store.get("useGpu");
 
-  log.info(`ENGINE ${engineKey} mode: ${useGpu ? "GPU" : "CPU"}`);
+  log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
   // エンジンプロセスの起動
   const enginePath = path.resolve(
@@ -466,8 +473,8 @@ async function runEngine(engineKey: string) {
   );
   const args = useGpu ? ["--use_gpu"] : [];
 
-  log.info(`ENGINE ${engineKey} path: ${enginePath}`);
-  log.info(`ENGINE ${engineKey} args: ${JSON.stringify(args)}`);
+  log.info(`ENGINE ${engineId} path: ${enginePath}`);
+  log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
 
   const engineProcess = spawn(enginePath, args, {
     cwd: path.dirname(enginePath),
@@ -475,21 +482,21 @@ async function runEngine(engineKey: string) {
   engineProcessContainer.engineProcess = engineProcess;
 
   engineProcess.stdout?.on("data", (data) => {
-    log.info(`ENGINE ${engineKey} STDOUT: ${data.toString("utf-8")}`);
+    log.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
   });
 
   engineProcess.stderr?.on("data", (data) => {
-    log.error(`ENGINE ${engineKey} STDERR: ${data.toString("utf-8")}`);
+    log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
   });
 
   engineProcess.on("close", (code, signal) => {
     log.info(
-      `ENGINE ${engineKey}: Process terminated due to receipt of signal ${signal}`
+      `ENGINE ${engineId}: Process terminated due to receipt of signal ${signal}`
     );
-    log.info(`ENGINE ${engineKey}: Process exited with code ${code}`);
+    log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
     if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineKey });
+      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
@@ -501,11 +508,11 @@ async function runEngine(engineKey: string) {
 function killEngineAll(): Record<string, Promise<void>> {
   const killingProcessPromises: Record<string, Promise<void>> = {};
 
-  for (const engineKey of Object.keys(engineProcessContainers)) {
-    const promise = killEngine(engineKey);
+  for (const engineId of Object.keys(engineProcessContainers)) {
+    const promise = killEngine(engineId);
     if (promise === undefined) continue;
 
-    killingProcessPromises[engineKey] = promise;
+    killingProcessPromises[engineId] = promise;
   }
 
   return killingProcessPromises;
@@ -515,10 +522,10 @@ function killEngineAll(): Record<string, Promise<void>> {
 // Promise.resolve: エンジンプロセスのキルに成功した（非同期）
 // Promise.reject: エンジンプロセスのキルに失敗した（非同期）
 // undefined: エンジンプロセスのキルが開始されなかった＝エンジンプロセスがすでに停止している（同期）
-function killEngine(engineKey: string): Promise<void> | undefined {
-  const engineProcessContainer = engineProcessContainers[engineKey];
+function killEngine(engineId: string): Promise<void> | undefined {
+  const engineProcessContainer = engineProcessContainers[engineId];
   if (!engineProcessContainer) {
-    log.error(`No such engineProcessContainer: key == ${engineKey}`);
+    log.error(`No such engineProcessContainer: engineId == ${engineId}`);
 
     return undefined;
   }
@@ -526,7 +533,7 @@ function killEngine(engineKey: string): Promise<void> | undefined {
   const engineProcess = engineProcessContainer.engineProcess;
   if (engineProcess === undefined) {
     // nop if no process started (already killed or not started yet)
-    log.info(`ENGINE ${engineKey}: Process not started`);
+    log.info(`ENGINE ${engineId}: Process not started`);
 
     return undefined;
   }
@@ -535,32 +542,32 @@ function killEngine(engineKey: string): Promise<void> | undefined {
   const engineNotKilled = engineProcess.signalCode === null;
 
   log.info(
-    `ENGINE ${engineKey}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
+    `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
   );
 
   const isAlive = engineNotExited && engineNotKilled;
   if (!isAlive) {
-    log.info(`ENGINE ${engineKey}: Process already closed`);
+    log.info(`ENGINE ${engineId}: Process already closed`);
 
     return undefined;
   }
 
   return new Promise<void>((resolve, reject) => {
-    log.info(`ENGINE ${engineKey}: Killing process (PID=${engineProcess.pid})`);
+    log.info(`ENGINE ${engineId}: Killing process (PID=${engineProcess.pid})`);
 
     // エラーダイアログを抑制
     engineProcessContainer.willQuitEngine = true;
 
     // プロセス終了時のイベントハンドラ
     engineProcess.once("close", () => {
-      log.info(`ENGINE ${engineKey}: Process closed`);
+      log.info(`ENGINE ${engineId}: Process closed`);
       resolve();
     });
 
     try {
       engineProcess.pid != undefined && treeKill(engineProcess.pid);
     } catch (error: unknown) {
-      log.error(`ENGINE ${engineKey}: Error during killing process`);
+      log.error(`ENGINE ${engineId}: Error during killing process`);
       reject(error);
     }
   });
@@ -568,18 +575,18 @@ function killEngine(engineKey: string): Promise<void> | undefined {
 
 async function restartEngineAll() {
   for (const engineInfo of engineInfos) {
-    await restartEngine(engineInfo.key);
+    await restartEngine(engineInfo.uuid);
   }
 }
 
-async function restartEngine(engineKey: string) {
+async function restartEngine(engineId: string) {
   await new Promise<void>((resolve, reject) => {
     const engineProcessContainer: EngineProcessContainer | undefined =
-      engineProcessContainers[engineKey];
+      engineProcessContainers[engineId];
     const engineProcess = engineProcessContainer?.engineProcess;
 
     log.info(
-      `ENGINE ${engineKey}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
+      `ENGINE ${engineId}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
     );
 
     // エンジンのプロセスがすでに終了している、またはkillされている場合
@@ -589,10 +596,10 @@ async function restartEngine(engineKey: string) {
     // engineProcess === undefinedの場合true
     if (engineExited || engineKilled) {
       log.info(
-        `ENGINE ${engineKey}: Process is not started yet or already killed. Starting process...`
+        `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
       );
 
-      runEngine(engineKey);
+      runEngine(engineId);
       resolve();
       return;
     }
@@ -603,21 +610,21 @@ async function restartEngine(engineKey: string) {
     // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
     // closeイベントはexitイベントよりも後に発火します。
     const restartEngineOnProcessClosedCallback = () => {
-      log.info(`ENGINE ${engineKey}: Process killed. Restarting process...`);
+      log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
-      runEngine(engineKey);
+      runEngine(engineId);
       resolve();
     };
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
     log.info(
-      `ENGINE ${engineKey}: Killing current process (PID=${engineProcess.pid})...`
+      `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
     );
     treeKill(engineProcess.pid, (error) => {
       // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
       if (error != null) {
-        log.error(`ENGINE ${engineKey}: Failed to kill process`);
+        log.error(`ENGINE ${engineId}: Failed to kill process`);
         log.error(error);
 
         // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
@@ -990,30 +997,6 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
   textEditContextMenu.popup({ window: win });
 });
 
-ipcMainHandle("USE_GPU", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("useGpu", newValue);
-  }
-
-  return store.get("useGpu", false);
-});
-
-ipcMainHandle("INHERIT_AUDIOINFO", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("inheritAudioInfo", newValue);
-  }
-
-  return store.get("inheritAudioInfo", false);
-});
-
-ipcMainHandle("ACTIVE_POINT_SCROLL_MODE", (_, { newValue }) => {
-  if (newValue !== undefined) {
-    store.set("activePointScrollMode", newValue);
-  }
-
-  return store.get("activePointScrollMode", "OFF");
-});
-
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu();
 });
@@ -1053,22 +1036,8 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
   await restartEngineAll();
 });
 
-ipcMainHandle("RESTART_ENGINE", async (_, { engineKey }) => {
-  await restartEngine(engineKey);
-});
-
-ipcMainHandle("SAVING_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("savingSetting", newData);
-  }
-  return store.get("savingSetting");
-});
-
-ipcMainHandle("TOOLBAR_SETTING", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("toolbarSetting", newData);
-  }
-  return store.get("toolbarSetting");
+ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
+  await restartEngine(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
@@ -1115,33 +1084,9 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("SAVING_PRESETS", (_, { newPresets }) => {
-  if (newPresets !== undefined) {
-    store.set("presets.items", newPresets.presetItems);
-    store.set("presets.keys", newPresets.presetKeys);
-  }
-  return store.get("presets");
-});
-
-ipcMainHandle("GET_USER_CHARACTER_ORDER", () => {
-  return store.get("userCharacterOrder");
-});
-
-ipcMainHandle("SET_USER_CHARACTER_ORDER", (_, userCharacterOrder) => {
-  store.set("userCharacterOrder", userCharacterOrder);
-});
-
 ipcMainHandle("IS_UNSET_DEFAULT_STYLE_ID", (_, speakerUuid) => {
   const defaultStyleIds = store.get("defaultStyleIds");
   return !defaultStyleIds.find((style) => style.speakerUuid === speakerUuid);
-});
-
-ipcMainHandle("GET_DEFAULT_STYLE_IDS", () => {
-  return store.get("defaultStyleIds");
-});
-
-ipcMainHandle("SET_DEFAULT_STYLE_IDS", (_, defaultStyleIds) => {
-  store.set("defaultStyleIds", defaultStyleIds);
 });
 
 ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
@@ -1152,44 +1097,13 @@ ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_ACCEPT_RETRIEVE_TELEMETRY", () => {
-  return store.get("acceptRetrieveTelemetry");
+ipcMainHandle("GET_SETTING", (_, key) => {
+  return store.get(key);
 });
 
-ipcMainHandle("SET_ACCEPT_RETRIEVE_TELEMETRY", (_, acceptRetrieveTelemetry) => {
-  store.set("acceptRetrieveTelemetry", acceptRetrieveTelemetry);
-});
-
-ipcMainHandle("GET_ACCEPT_TERMS", () => {
-  return store.get("acceptTems");
-});
-
-ipcMainHandle("SET_ACCEPT_TERMS", (_, acceptTerms) => {
-  store.set("acceptTems", acceptTerms);
-});
-
-ipcMainHandle("GET_EXPERIMENTAL_SETTING", () => {
-  return store.get("experimentalSetting");
-});
-
-ipcMainHandle("SET_EXPERIMENTAL_SETTING", (_, experimentalSetting) => {
-  store.set("experimentalSetting", experimentalSetting);
-});
-
-ipcMainHandle("GET_SPLIT_TEXT_WHEN_PASTE", () => {
-  return store.get("splitTextWhenPaste");
-});
-
-ipcMainHandle("SET_SPLIT_TEXT_WHEN_PASTE", (_, splitTextWhenPaste) => {
-  store.set("splitTextWhenPaste", splitTextWhenPaste);
-});
-
-ipcMainHandle("GET_SPLITTER_POSITION", () => {
-  return store.get("splitterPosition");
-});
-
-ipcMainHandle("SET_SPLITTER_POSITION", (_, splitterPosition) => {
-  store.set("splitterPosition", splitterPosition);
+ipcMainHandle("SET_SETTING", (_, key, newValue) => {
+  store.set(key, newValue);
+  return store.get(key);
 });
 
 // app callback
@@ -1240,19 +1154,19 @@ app.on("before-quit", (event) => {
   (async () => {
     const waitingKilledPromises: Array<Promise<void>> = Object.entries(
       killingProcessPromises
-    ).map(([engineKey, promise]) => {
+    ).map(([engineId, promise]) => {
       return promise
         .catch((error) => {
           // TODO: 各エンジンプロセスキルの失敗をUIに通知する
           log.error(
-            `ENGINE ${engineKey}: Error during killing process: ${error}`
+            `ENGINE ${engineId}: Error during killing process: ${error}`
           );
           // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
         })
         .finally(() => {
           numEngineProcessKilled++;
           log.info(
-            `ENGINE ${engineKey}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
+            `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
           );
         });
     });

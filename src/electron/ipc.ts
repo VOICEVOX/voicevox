@@ -1,3 +1,4 @@
+import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
 import log from "electron-log";
 
