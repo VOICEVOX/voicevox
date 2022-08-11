@@ -500,7 +500,26 @@ export default defineComponent({
 
       // 最初の話者を初期化
       if (audioItem.styleId != undefined) {
-        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+        // actionで行った方がいい
+        const styleId = audioItem.styleId;
+        store.commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+          audioKey: newAudioKey,
+        });
+        store
+          .dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+            styleId: styleId,
+          })
+          .then(async (isInitialized) => {
+            if (isInitialized) return;
+            await store.dispatch("INITIALIZE_ENGINE_SPEAKER", {
+              styleId: styleId,
+            });
+          })
+          .finally(() => {
+            store.commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+              audioKey: undefined,
+            });
+          });
       }
 
       // ショートカットキーの設定

@@ -184,7 +184,7 @@ export default defineComponent({
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
     const isInitializingSpeaker = computed(
-      () => store.state.isInitializingSpeaker
+      () => store.state.audioKeyInitializingSpeaker === props.audioKey
     );
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
@@ -480,7 +480,7 @@ export default defineComponent({
       right: 0;
       bottom: 0;
       margin: auto;
-      background-color: rgba(colors.$background-rgb, 0.76);
+      background-color: rgba(colors.$background-rgb, 0.74);
       display: grid;
       justify-content: center;
       align-content: center;

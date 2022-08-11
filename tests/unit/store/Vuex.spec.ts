@@ -23,7 +23,6 @@ describe("store/vuex.js test", () => {
         },
         defaultStyleIds: [],
         userCharacterOrder: [],
-        isInitializingSpeaker: false,
         audioItems: {},
         audioKeys: [],
         audioStates: {},

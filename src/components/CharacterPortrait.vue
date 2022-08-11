@@ -49,9 +49,10 @@ export default defineComponent({
 
     const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
-    const isInitializingSpeaker = computed(
-      () => store.state.isInitializingSpeaker
-    );
+    const isInitializingSpeaker = computed(() => {
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+    });
 
     return {
       characterName,
@@ -90,7 +91,7 @@ export default defineComponent({
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(colors.$background-rgb, 0.32);
+    background-color: rgba(colors.$background-rgb, 0.3);
     display: grid;
     justify-content: center;
     align-content: center;
