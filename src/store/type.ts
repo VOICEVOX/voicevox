@@ -170,6 +170,10 @@ type AudioStoreTypes = {
     action(payload: { styleId: number }): void;
   };
 
+  SETUP_SPEAKER: {
+    action(payload: { audioKey: string; styleId: number }): void;
+  };
+
   SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
     mutation: { audioKey?: string };
   };

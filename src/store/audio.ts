@@ -692,6 +692,24 @@ export const audioStore: VoiceVoxStoreOptions<
           ),
       });
     },
+    /**
+     * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     */
+    async SETUP_SPEAKER({ commit, dispatch }, { audioKey, styleId }) {
+      const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+        styleId,
+      });
+      if (isInitialized) return;
+
+      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+        audioKey,
+      });
+      await dispatch("INITIALIZE_ENGINE_SPEAKER", { styleId }).finally(() => {
+        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+          audioKey: undefined,
+        });
+      });
+    },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
         commit("REMOVE_AUDIO_ITEM", { audioKey });
@@ -1745,21 +1763,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const query = state.audioItems[audioKey].query;
       try {
-        const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+        await dispatch("SETUP_SPEAKER", {
+          audioKey,
           styleId,
         });
-        if (!isInitialized) {
-          commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-            audioKey: audioKey,
-          });
-          await dispatch("INITIALIZE_ENGINE_SPEAKER", { styleId }).finally(
-            () => {
-              commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
-                audioKey: undefined,
-              });
-            }
-          );
-        }
 
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;
