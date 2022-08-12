@@ -4,9 +4,9 @@
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$primary};
-  border-right: solid #{vars.$window-border-width} #{colors.$primary};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$primary};
+  border-left: solid #{vars.$window-border-width} #{colors.$splitter};
+  border-right: solid #{vars.$window-border-width} #{colors.$splitter};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
 }
@@ -99,16 +99,16 @@ img {
 
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
-  background: colors.$toolbar !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$toolbar !important;
 }
 
 // Markdown
 .markdown-body {
   min-height: max-content;
-  color: colors.$markdown-color;
-  background: colors.$markdown-background;
+  color: colors.$display;
+  background: colors.$background;
   a {
-    color: colors.$markdown-hyperlink;
+    color: colors.$display-hyperlink;
   }
 }
 .markdown {
@@ -198,13 +198,6 @@ img {
 }
 .bg-warning {
   background: colors.$warning;
-}
-
-.text-button-icon {
-  color: colors.$button-icon;
-}
-.bg-button-icon {
-  background: colors.$button-icon;
 }
 
 .text-toolbar {

@@ -245,16 +245,13 @@ export type ThemeColorType =
   | "primary-light"
   | "display"
   | "display-on-primary"
+  | "display-hyperlink"
   | "background"
   | "surface"
   | "warning"
-  | "markdown-color"
-  | "markdown-background"
-  | "markdown-hyperlink"
   | "pause-hovered"
   | "active-point-focus"
-  | "active-point-focus-hover"
-  | "button-icon";
+  | "active-point-focus-hover";
 
 export type ThemeConf = {
   name: string;

@@ -8,15 +8,12 @@
     "primary-light": "#A5D4AD",
     "display": "#121212",
     "display-on-primary": "#121212",
+    "display-hyperlink": "#0969DA",
     "background": "#FFFFFF",
     "surface": "#EEEEEE",
     "warning": "#C10015",
-    "markdown-color": "#24292F",
-    "markdown-background": "#FFFFFF",
-    "markdown-hyperlink": "#0969DA",
     "pause-hovered": "#CCDDFF",
     "active-point-focus": "#E0EAFF",
-    "active-point-focus-hover": "#EEF3FF",
-    "button-icon": "#121212"
+    "active-point-focus-hover": "#EEF3FF"
   }
 }

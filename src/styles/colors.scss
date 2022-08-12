@@ -10,6 +10,9 @@ $display-rgb: var(--color-display-rgb);
 $display-on-primary: var(--color-display-on-primary);
 $display-on-primary-rgb: var(--color-display-on-primary-rgb);
 
+$display-hyperlink: var(--color-display-hyperlink);
+$display-hyperlink-rgb: var(--color-display-hyperlink-rgb);
+
 $background: var(--color-background);
 $background-rgb: var(--color-background-rgb);
 
@@ -19,15 +22,6 @@ $surface-rgb: var(--color-surface-rgb);
 $warning: var(--color-warning);
 $warning-rgb: var(--color-warning-rgb);
 
-$markdown-color: var(--color-markdown-color);
-$markdown-color-rgb: var(--color-markdown-color-rgb);
-
-$markdown-background: var(--color-markdown-background);
-$markdown-background-rgb: var(--color-markdown-background-rgb);
-
-$markdown-hyperlink: var(--color-markdown-hyperlink);
-$markdown-hyperlink-rgb: var(--color-markdown-hyperlink-rgb);
-
 $pause-hovered: var(--color-pause-hovered);
 $pause-hovered-rgb: var(--color-pause-hovered-rgb);
 
@@ -36,9 +30,6 @@ $active-point-focus-rgb: var(--color-active-point-focus-rgb);
 
 $active-point-focus-hover: var(--color-active-point-focus-hover);
 $active-point-focus-hover-rgb: var(--color-active-point-focus-hover-rgb);
-
-$button-icon: var(--color-button-icon);
-$button-icon-rgb: var(--color-button-icon-rgb);
 
 // ダークモードと通常モードで変わる色
 :root {

@@ -15,7 +15,7 @@
               v-if="!nowPlaying && !nowGenerating"
               fab
               color="primary-light"
-              text-color="button-icon"
+              text-color="display-on-primary"
               icon="play_arrow"
               @click="play"
             ></q-btn>
@@ -23,7 +23,7 @@
               v-else
               fab
               color="primary-light"
-              text-color="button-icon"
+              text-color="display-on-primary"
               icon="stop"
               @click="stop"
               :disable="nowGenerating"

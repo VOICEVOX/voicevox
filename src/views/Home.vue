@@ -95,7 +95,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="button-icon"
+                          text-color="display-on-primary"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -785,6 +785,6 @@ export default defineComponent({
 }
 
 .q-splitter > :deep(.home-splitter) {
-  background: colors.$toolbar !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$splitter !important;
 }
 </style>
