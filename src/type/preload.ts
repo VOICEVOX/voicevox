@@ -249,9 +249,9 @@ export type ThemeColorType =
   | "background"
   | "surface"
   | "warning"
-  | "pause-hovered"
+  | "text-splitter-hover"
   | "active-point-focus"
-  | "active-point-focus-hover";
+  | "active-point-hover";
 
 export type ThemeConf = {
   name: string;

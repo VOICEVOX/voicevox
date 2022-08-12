@@ -879,7 +879,7 @@ $pitch-label-height: 24px;
           z-index: vars.$detail-view-splitter-cell-z-index;
         }
         &.splitter-cell:hover {
-          background-color: colors.$pause-hovered;
+          background-color: colors.$text-splitter-hover;
           cursor: pointer;
         }
         &.splitter-cell-be-split {
@@ -912,7 +912,7 @@ $pitch-label-height: 24px;
 
     .mora-table-hover:hover {
       cursor: pointer;
-      background-color: colors.$active-point-focus-hover;
+      background-color: colors.$active-point-hover;
     }
 
     .mora-table-focus {

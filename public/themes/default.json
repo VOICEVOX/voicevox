@@ -12,8 +12,8 @@
     "background": "#FFFFFF",
     "surface": "#EEEEEE",
     "warning": "#C10015",
-    "pause-hovered": "#CCDDFF",
+    "text-splitter-hover": "#CCDDFF",
     "active-point-focus": "#E0EAFF",
-    "active-point-focus-hover": "#EEF3FF"
+    "active-point-hover": "#EEF3FF"
   }
 }
