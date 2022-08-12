@@ -254,7 +254,6 @@ export type ThemeColorType =
   | "markdown-color"
   | "markdown-background"
   | "markdown-hyperlink"
-  | "header-selected"
   | "pause-hovered"
   | "active-point-focus"
   | "active-point-focus-hover"

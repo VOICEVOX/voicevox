@@ -29,9 +29,8 @@
               <template v-slot:after>
                 <q-btn
                   label="デフォルトにリセット"
-                  unelevated
-                  color="background-light"
-                  text-color="display-dark"
+                  outline
+                  text-color="display"
                   class="text-no-wrap q-mr-sm"
                   @click="resetToDefault"
                 />
@@ -47,9 +46,8 @@
             v-for="tagString in tagStrings"
             :key="tagString"
             :label="`$${tagString}$`"
-            unelevated
-            color="background-light"
-            text-color="display-dark"
+            outline
+            text-color="display"
             class="text-no-wrap q-mr-sm"
             @click="insertTagToCurrentPosition(`$${tagString}$`)"
           />
@@ -57,16 +55,15 @@
         <div class="row full-width justify-end">
           <q-btn
             label="キャンセル"
-            unelevated
-            color="background-light"
-            text-color="display-dark"
+            outline
+            text-color="display"
             class="text-no-wrap text-bold q-mr-sm col-2"
             @click="updateOpenDialog(false)"
           />
           <q-btn
             label="確定"
             unelevated
-            color="background-light"
+            color="primary"
             text-color="display-dark"
             class="text-no-wrap text-bold q-mr-sm col-2"
             :disable="hasError"

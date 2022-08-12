@@ -524,7 +524,7 @@ export default defineComponent({
 
     .character-order-item {
       border-radius: 10px;
-      border: 2px solid colors.$display-light;
+      border: 2px solid colors.$setting-item;
       text-align: center;
       cursor: grab;
       &.selected-character-order-item {

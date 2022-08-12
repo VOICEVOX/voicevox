@@ -9,6 +9,7 @@
     "display": "#121212",
     "display-light": "#EBEBEB",
     "display-dark": "#121212",
+    "display-on-primary": "121212",
     "background": "#FFFFFF",
     "background-light": "#FFFFFF",
     "setting-item": "#EEEEEE",
@@ -16,10 +17,9 @@
     "markdown-color": "#24292F",
     "markdown-background": "#FFFFFF",
     "markdown-hyperlink": "#0969DA",
-    "header-selected": "#DCEEDF",
     "pause-hovered": "#CCDDFF",
-    "active-point-focus": "#EEF3FF",
-    "active-point-focus-hover": "#F7FAFF",
+    "active-point-focus": "#E0EAFF",
+    "active-point-focus-hover": "#EEF3FF",
     "button-icon": "#121212",
     "header-background": "#A5D4AD"
   }

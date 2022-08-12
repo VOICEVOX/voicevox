@@ -62,7 +62,7 @@
                     ' text-no-wrap text-bold text-display q-mr-sm'
                   "
                   ><q-tooltip
-                    :delay="500"
+                    :delay="800"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -384,8 +384,9 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
-  background-color: colors.$header-selected;
-  border-color: colors.$header-selected;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .radio-space {
@@ -400,7 +401,8 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  background-color: colors.$header-selected;
-  border: solid 2px colors.$header-selected;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>

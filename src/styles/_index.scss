@@ -4,9 +4,9 @@
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$header-background};
-  border-right: solid #{vars.$window-border-width} #{colors.$header-background};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-left: solid #{vars.$window-border-width} #{colors.$primary};
+  border-right: solid #{vars.$window-border-width} #{colors.$primary};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$primary};
   color: colors.$display;
   background: colors.$background;
 }
@@ -226,11 +226,4 @@ img {
 }
 .bg-header-background {
   background: colors.$header-background;
-}
-
-.text-header-selected {
-  color: colors.$header-selected;
-}
-.bg-header-selected {
-  background: colors.$header-selected;
 }

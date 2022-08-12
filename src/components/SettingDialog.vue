@@ -335,8 +335,8 @@
                 <q-btn
                   label="編集"
                   unelevated
-                  color="background-light"
-                  text-color="display-dark"
+                  color="background"
+                  text-color="display"
                   class="text-no-wrap q-mr-sm"
                   @click="showsFilePatternEditDialog = true"
                 />

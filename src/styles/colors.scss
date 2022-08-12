@@ -34,9 +34,6 @@ $markdown-background-rgb: var(--color-markdown-background-rgb);
 $markdown-hyperlink: var(--color-markdown-hyperlink);
 $markdown-hyperlink-rgb: var(--color-markdown-hyperlink-rgb);
 
-$header-selected: var(--color-header-selected);
-$header-selected-rgb: var(--color-header-selected-rgb);
-
 $pause-hovered: var(--color-pause-hovered);
 $pause-hovered-rgb: var(--color-pause-hovered-rgb);
 
@@ -51,3 +48,17 @@ $button-icon-rgb: var(--color-button-icon-rgb);
 
 $header-background: var(--color-header-background);
 $header-background-rgb: var(--color-header-background-rgb);
+
+:root {
+  --color-header: var(--color-primary);
+  --color-header-button: var(--color-background);
+  --color-header-button-display: var(--color-display);
+  --color-splitter: var(--color-primary);
+}
+
+:root[is-dark-theme="true"] {
+  --color-header: var(--color-setting-item);
+  --color-header-button: var(--color-primary);
+  --color-header-button-display: var(--color-display-on-primary);
+  --color-splitter: var(--color-setting-item);
+}

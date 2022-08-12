@@ -768,7 +768,7 @@ export default defineComponent({
 
   > div {
     color: colors.$display-dark;
-    background: colors.$background-light;
+    background: colors.$background;
     border-radius: 6px;
     padding: 14px;
   }

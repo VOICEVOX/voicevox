@@ -149,7 +149,7 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="display-light"
+          color="setting-item"
           text-color="display"
           class="q-mt-sm"
           @click="
@@ -161,7 +161,7 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="display-light"
+          color="setting-item"
           text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
