@@ -720,7 +720,7 @@ export default defineComponent({
 
   > div {
     color: colors.$display;
-    background: colors.$setting-item;
+    background: colors.$surface;
     border-radius: 6px;
     padding: 14px;
   }
@@ -785,6 +785,6 @@ export default defineComponent({
 }
 
 .q-splitter > :deep(.home-splitter) {
-  background: colors.$header !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$toolbar !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>

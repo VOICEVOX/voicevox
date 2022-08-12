@@ -726,7 +726,7 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 
 .word-list-col {
-  border-right: solid 1px colors.$setting-item;
+  border-right: solid 1px colors.$surface;
   position: relative; // オーバーレイのため
   overflow-x: hidden;
 }

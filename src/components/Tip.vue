@@ -1,6 +1,6 @@
 <template>
   <div v-if="!tipConfirmed">
-    <q-banner class="bg-setting-item text-display" dense rounded inline-actions>
+    <q-banner class="bg-surface text-display" dense rounded inline-actions>
       <template v-slot:avatar>
         <q-icon name="info" color="primary" />
       </template>

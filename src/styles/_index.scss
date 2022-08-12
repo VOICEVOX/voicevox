@@ -99,7 +99,7 @@ img {
 
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
-  background: colors.$header !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$toolbar !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 
 // Markdown
@@ -157,7 +157,7 @@ img {
   }
 }
 
-// カラー
+// Quasar用のカラー設定
 .text-primary-light {
   color: colors.$primary-light;
 }
@@ -193,18 +193,11 @@ img {
   background: colors.$background;
 }
 
-.text-background-light {
-  color: colors.$background-light;
+.text-surface {
+  color: colors.$surface;
 }
-.bg-background-light {
-  background: colors.$background-light;
-}
-
-.text-setting-item {
-  color: colors.$setting-item;
-}
-.bg-setting-item {
-  background: colors.$setting-item;
+.bg-surface {
+  background: colors.$surface;
 }
 
 .text-warning {
@@ -221,9 +214,16 @@ img {
   background: colors.$button-icon;
 }
 
-.text-header {
-  color: colors.$header;
+.text-toolbar {
+  color: colors.$toolbar;
 }
-.bg-header {
-  background: colors.$header;
+.bg-toolbar {
+  background: colors.$toolbar;
+}
+
+.text-toolbar-button {
+  color: colors.$toolbar-button;
+}
+.bg-toolbar-button {
+  background: colors.$toolbar-button;
 }

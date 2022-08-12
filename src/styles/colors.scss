@@ -16,11 +16,8 @@ $display-dark-rgb: var(--color-display-dark-rgb);
 $background: var(--color-background);
 $background-rgb: var(--color-background-rgb);
 
-$background-light: var(--color-background-light);
-$background-light-rgb: var(--color-background-light-rgb);
-
-$setting-item: var(--color-setting-item);
-$setting-item-rgb: var(--color-setting-item-rgb);
+$surface: var(--color-surface);
+$surface-rgb: var(--color-surface-rgb);
 
 $warning: var(--color-warning);
 $warning-rgb: var(--color-warning-rgb);
@@ -48,41 +45,41 @@ $button-icon-rgb: var(--color-button-icon-rgb);
 
 // ダークモードと通常モードで変わる色
 :root {
-  --color-header: var(--color-primary);
-  --color-header-rgb: var(--color-primary-rgb);
+  --color-toolbar: var(--color-primary);
+  --color-toolbar-rgb: var(--color-primary-rgb);
 
-  --color-header-button: var(--color-background);
-  --color-header-button-rgb: var(--color-background-rgb);
+  --color-toolbar-button: var(--color-background);
+  --color-toolbar-button-rgb: var(--color-background-rgb);
 
-  --color-header-button-display: var(--color-display);
-  --color-header-button-display-rgb: var(--color-display-rgb);
+  --color-toolbar-button-display: var(--color-display);
+  --color-toolbar-button-display-rgb: var(--color-display-rgb);
 
   --color-splitter: var(--color-primary);
   --color-splitter-rgb: var(--color-primary-rgb);
 }
 
 :root[is-dark-theme="true"] {
-  --color-header: var(--color-setting-item);
-  --color-header-rgb: var(--color-setting-item-rgb);
+  --color-toolbar: var(--color-surface);
+  --color-toolbar-rgb: var(--color-surface-rgb);
 
-  --color-header-button: var(--color-primary);
-  --color-header-button-rgb: var(--color-primary-rgb);
+  --color-toolbar-button: var(--color-primary);
+  --color-toolbar-button-rgb: var(--color-primary-rgb);
 
-  --color-header-button-display: var(--color-display-on-primary);
-  --color-header-button-display-rgb: var(--color-display-on-primary-rgb);
+  --color-toolbar-button-display: var(--color-display-on-primary);
+  --color-toolbar-button-display-rgb: var(--color-display-on-primary-rgb);
 
-  --color-splitter: var(--color-setting-item);
-  --color-splitter-rgb: var(--color-setting-item-rgb);
+  --color-splitter: var(--color-surface);
+  --color-splitter-rgb: var(--color-surface-rgb);
 }
 
-$header: var(--color-header);
-$header-rgb: var(--color-header-rgb);
+$toolbar: var(--color-toolbar);
+$toolbar-rgb: var(--color-toolbar-rgb);
 
-$header-button: var(--color-header-button);
-$header-button-rgb: var(--color-header-button-rgb);
+$toolbar-button: var(--color-toolbar-button);
+$toolbar-button-rgb: var(--color-toolbar-button-rgb);
 
-$header-button-display: var(--color-header-button-display);
-$header-button-display-rgb: var(--color-header-button-display-rgb);
+$toolbar-button-display: var(--color-toolbar-button-display);
+$toolbar-button-display-rgb: var(--color-toolbar-button-display-rgb);
 
 $splitter: var(--color-splitter);
 $splitter-rgb: var(--color-splitter-rgb);

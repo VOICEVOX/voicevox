@@ -238,7 +238,7 @@ export default defineComponent({
 .setting-card {
   width: 100%;
   min-width: 475px;
-  background: colors.$setting-item;
+  background: colors.$surface;
 }
 
 .text-ellipsis {

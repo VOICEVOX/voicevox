@@ -16,7 +16,7 @@
             <q-space />
             <q-btn
               unelevated
-              color="background-light"
+              color="toolbar-button"
               text-color="display-dark"
               class="text-no-wrap text-bold q-mr-sm"
               @click="applyDefaultSetting"
@@ -25,7 +25,7 @@
             >
             <q-btn
               unelevated
-              color="background-light"
+              color="toolbar-button"
               text-color="display-dark"
               class="text-no-wrap text-bold q-mr-sm"
               @click="saveCustomToolbar"
@@ -106,7 +106,7 @@
               <div class="text-h5">表示するボタンの選択</div>
             </q-card-actions>
             <q-card-actions class="no-padding">
-              <q-list class="usable-button-list bg-setting-item">
+              <q-list class="usable-button-list bg-surface">
                 <q-item
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
@@ -372,10 +372,10 @@ export default defineComponent({
 
 .radio {
   padding: 6px 14px;
-  border: solid 2px var(--color-background-light);
+  border: solid 2px var(--color-toolbar-button);
   border-radius: 3px;
   color: var(--color-display-dark);
-  background-color: var(--color-background-light);
+  background-color: var(--color-toolbar-button);
 }
 
 .radio:hover {
