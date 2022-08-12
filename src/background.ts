@@ -1003,7 +1003,7 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
 
 ipcMainHandle("CLOSE_WINDOW", () => {
   willQuit = true;
-  app.emit("window-all-closed");
+  win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
