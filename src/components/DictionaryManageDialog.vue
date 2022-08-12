@@ -104,7 +104,7 @@
               <div class="text-h6">読み</div>
               <q-input
                 ref="yomiInput"
-                class="word-input"
+                class="word-input q-pb-none"
                 v-model="yomi"
                 @blur="setYomi(yomi)"
                 @keydown="setYomiWhenEnter"
@@ -117,7 +117,7 @@
                 </template>
               </q-input>
             </div>
-            <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
+            <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
             <div class="row q-pl-md desc-row">
               語尾のアクセントを考慮するため、「が」が自動で挿入されます。
             </div>
@@ -175,7 +175,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-pl-md q-pt-sm text-h6">単語優先度</div>
+            <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
               単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
             </div>
