@@ -522,7 +522,7 @@ export default defineComponent({
 
     .character-order-item {
       border-radius: 10px;
-      border: 2px solid colors.$surface;
+      border: 2px solid rgba(colors.$display-rgb, 0.15);
       text-align: center;
       cursor: grab;
       &.selected-character-order-item {
