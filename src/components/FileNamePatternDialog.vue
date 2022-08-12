@@ -64,7 +64,7 @@
             label="確定"
             unelevated
             color="primary"
-            text-color="display-dark"
+            text-color="display-on-primary"
             class="text-no-wrap text-bold q-mr-sm col-2"
             :disable="hasError"
             @click="submit"

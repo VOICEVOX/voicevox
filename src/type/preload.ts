@@ -244,8 +244,6 @@ export type ThemeColorType =
   | "primary"
   | "primary-light"
   | "display"
-  | "display-light"
-  | "display-dark"
   | "display-on-primary"
   | "background"
   | "surface"

@@ -17,7 +17,7 @@
             <q-btn
               unelevated
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               @click="applyDefaultSetting"
               :disable="isDefault"
@@ -26,7 +26,7 @@
             <q-btn
               unelevated
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               @click="saveCustomToolbar"
               :disable="!isChanged"
@@ -374,7 +374,7 @@ export default defineComponent({
   padding: 6px 14px;
   border: solid 2px var(--color-toolbar-button);
   border-radius: 3px;
-  color: var(--color-display-dark);
+  color: var(--color-toolbar-button-display);
   background-color: var(--color-toolbar-button);
 }
 

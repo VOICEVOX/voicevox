@@ -172,7 +172,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="display-dark"
+          text-color="display-on-primary"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -187,7 +187,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="display-dark"
+          text-color="display-on-primary"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"

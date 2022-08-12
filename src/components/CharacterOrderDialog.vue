@@ -24,7 +24,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />

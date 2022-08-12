@@ -42,7 +42,7 @@
               unelevated
               label="戻る"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md"
               @click="prevPage"
             />
@@ -57,7 +57,7 @@
               unelevated
               label="次へ"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="nextPage"
             />
@@ -67,7 +67,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />

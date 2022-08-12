@@ -22,7 +22,7 @@
               unelevated
               label="拒否"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-color"
               class="text-no-wrap q-mr-md text-bold"
               @click="handler(false)"
             />
@@ -31,7 +31,7 @@
               unelevated
               label="許可"
               color="toolbar-button"
-              text-color="display-dark"
+              text-color="toolbar-button-color"
               class="text-no-wrap text-bold"
               @click="handler(true)"
             />

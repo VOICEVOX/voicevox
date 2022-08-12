@@ -54,7 +54,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -163,7 +163,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     {
                       label: '句点と改行',
@@ -245,7 +245,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
@@ -530,7 +530,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
                 />
@@ -926,7 +926,7 @@ export default defineComponent({
 
 .scroll-mode-button-selected {
   background: colors.$primary;
-  color: colors.$display-dark;
+  color: colors.$display-on-primary;
 }
 
 .text-ellipsis {

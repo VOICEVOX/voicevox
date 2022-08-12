@@ -709,7 +709,7 @@ export default defineComponent({
 }
 
 .waiting-engine {
-  background-color: rgba(colors.$display-dark-rgb, 0.15);
+  background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -742,7 +742,7 @@ export default defineComponent({
 }
 
 .ghost {
-  background-color: rgba(colors.$display-dark-rgb, 0.15);
+  background-color: rgba(colors.$display-rgb, 0.15);
 }
 
 .audio-cell-pane {
@@ -754,7 +754,7 @@ export default defineComponent({
   height: 100%;
 
   &.is-dragging {
-    background-color: rgba(colors.$display-dark-rgb, 0.15);
+    background-color: rgba(colors.$display-rgb, 0.15);
   }
 
   .audio-cells {

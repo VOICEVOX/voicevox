@@ -8,7 +8,7 @@
       <template v-slot:action>
         <q-btn
           color="primary"
-          text-color="display-dark"
+          text-color="display-on-primary"
           label="OK"
           @click="tipConfirmed = true"
         />
