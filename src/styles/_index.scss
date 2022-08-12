@@ -99,7 +99,7 @@ img {
 
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
-  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$header !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 
 // Markdown
@@ -221,9 +221,9 @@ img {
   background: colors.$button-icon;
 }
 
-.text-header-background {
-  color: colors.$header-background;
+.text-header {
+  color: colors.$header;
 }
-.bg-header-background {
-  background: colors.$header-background;
+.bg-header {
+  background: colors.$header;
 }

@@ -248,7 +248,7 @@ export type ThemeColorType =
   | "display-dark"
   | "background"
   | "background-light"
-  | "header-background"
+  | "header"
   | "setting-item"
   | "warning"
   | "markdown-color"

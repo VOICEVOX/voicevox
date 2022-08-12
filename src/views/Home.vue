@@ -785,6 +785,6 @@ export default defineComponent({
 }
 
 .q-splitter > :deep(.home-splitter) {
-  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$header !important; // bg-primaryも!importantでゴリ押してるので許される
 }
 </style>

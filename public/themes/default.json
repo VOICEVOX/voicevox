@@ -20,7 +20,6 @@
     "pause-hovered": "#CCDDFF",
     "active-point-focus": "#E0EAFF",
     "active-point-focus-hover": "#EEF3FF",
-    "button-icon": "#121212",
-    "header-background": "#A5D4AD"
+    "button-icon": "#121212"
   }
 }

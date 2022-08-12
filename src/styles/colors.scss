@@ -46,19 +46,43 @@ $active-point-focus-hover-rgb: var(--color-active-point-focus-hover-rgb);
 $button-icon: var(--color-button-icon);
 $button-icon-rgb: var(--color-button-icon-rgb);
 
-$header-background: var(--color-header-background);
-$header-background-rgb: var(--color-header-background-rgb);
-
+// ダークモードと通常モードで変わる色
 :root {
   --color-header: var(--color-primary);
+  --color-header-rgb: var(--color-primary-rgb);
+
   --color-header-button: var(--color-background);
+  --color-header-button-rgb: var(--color-background-rgb);
+
   --color-header-button-display: var(--color-display);
+  --color-header-button-display-rgb: var(--color-display-rgb);
+
   --color-splitter: var(--color-primary);
+  --color-splitter-rgb: var(--color-primary-rgb);
 }
 
 :root[is-dark-theme="true"] {
   --color-header: var(--color-setting-item);
+  --color-header-rgb: var(--color-setting-item-rgb);
+
   --color-header-button: var(--color-primary);
+  --color-header-button-rgb: var(--color-primary-rgb);
+
   --color-header-button-display: var(--color-display-on-primary);
+  --color-header-button-display-rgb: var(--color-display-on-primary-rgb);
+
   --color-splitter: var(--color-setting-item);
+  --color-splitter-rgb: var(--color-setting-item-rgb);
 }
+
+$header: var(--color-header);
+$header-rgb: var(--color-header-rgb);
+
+$header-button: var(--color-header-button);
+$header-button-rgb: var(--color-header-button-rgb);
+
+$header-button-display: var(--color-header-button-display);
+$header-button-display-rgb: var(--color-header-button-display-rgb);
+
+$splitter: var(--color-splitter);
+$splitter-rgb: var(--color-splitter-rgb);
