@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!tipConfirmed">
+  <div v-if="!tipConfirmed" style="z-index: 10">
     <q-banner
       class="bg-display-light text-display"
       dense
