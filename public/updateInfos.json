@@ -1,5 +1,39 @@
 [
   {
+    "version": "0.13.0",
+    "descriptions": [
+      "イントネーションのTips追加",
+      "辞書登録単語の優先度を変更可能に",
+      "ダークテーマを追加",
+      "コアをRust言語に移行"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "k-chop",
+      "madosuki",
+      "nebocco",
+      "PickledChair",
+      "qryxip",
+      "qwerty2501",
+      "Segu-g",
+      "sevenc-nanashi",
+      "shigobu",
+      "shirowanisan",
+      "SIY1121",
+      "so-c",
+      "sousuke0422",
+      "takana-v",
+      "ToshihiroWatanabe",
+      "yamachu",
+      "y-chan",
+      "Yosshi999"
+    ]
+  },
+
+  {
     "version": "0.12.5",
     "descriptions": ["キャラクター「ずんだもん」の「ささやき」スタイルを追加"],
     "contributors": []
