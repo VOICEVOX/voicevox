@@ -241,6 +241,12 @@ export const audioStore: VoiceVoxStoreOptions<
     ) {
       state.characterInfos = characterInfos;
     },
+    SET_AUDIO_KEY_INITIALIZING_SPEAKER(
+      state,
+      { audioKey }: { audioKey?: string }
+    ) {
+      state.audioKeyInitializingSpeaker = audioKey;
+    },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
     },
@@ -642,10 +648,9 @@ export const audioStore: VoiceVoxStoreOptions<
       return audioKey;
     },
     /**
-     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
-     * 初期化済みだった場合は何もしない。
+     * 指定した話者（スタイルID）がエンジン側で初期化されているか
      */
-    async SETUP_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+    async IS_INITIALIZED_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
@@ -666,18 +671,44 @@ export const audioStore: VoiceVoxStoreOptions<
       if (isInitialized !== "true" && isInitialized !== "false")
         throw new Error(`Failed to get isInitialized.`);
 
-      if (isInitialized === "false") {
-        await dispatch("ASYNC_UI_LOCK", {
-          callback: () =>
-            dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-              engineId,
-            }).then((instance) =>
-              instance.invoke("initializeSpeakerInitializeSpeakerPost")({
-                speaker: styleId,
-              })
-            ),
+      return isInitialized === "true";
+    },
+    /**
+     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     */
+    async INITIALIZE_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
+      if (engineId === undefined)
+        throw new Error(`No such engine registered: index == 0`);
+
+      await dispatch("ASYNC_UI_LOCK", {
+        callback: () =>
+          dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId,
+          }).then((instance) =>
+            instance.invoke("initializeSpeakerInitializeSpeakerPost")({
+              speaker: styleId,
+            })
+          ),
+      });
+    },
+    /**
+     * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     */
+    async SETUP_SPEAKER({ commit, dispatch }, { audioKey, styleId }) {
+      const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+        styleId,
+      });
+      if (isInitialized) return;
+
+      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+        audioKey,
+      });
+      await dispatch("INITIALIZE_ENGINE_SPEAKER", { styleId }).finally(() => {
+        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+          audioKey: undefined,
         });
-      }
+      });
     },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
@@ -1732,7 +1763,10 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const query = state.audioItems[audioKey].query;
       try {
-        await dispatch("SETUP_ENGINE_SPEAKER", { styleId });
+        await dispatch("SETUP_SPEAKER", {
+          audioKey,
+          styleId,
+        });
 
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;

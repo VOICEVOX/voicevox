@@ -500,7 +500,10 @@ export default defineComponent({
 
       // 最初の話者を初期化
       if (audioItem.styleId != undefined) {
-        store.dispatch("SETUP_ENGINE_SPEAKER", { styleId: audioItem.styleId });
+        store.dispatch("SETUP_SPEAKER", {
+          audioKey: newAudioKey,
+          styleId: audioItem.styleId,
+        });
       }
 
       // ショートカットキーの設定
