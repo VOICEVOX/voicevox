@@ -223,20 +223,27 @@ export const settingStore: VoiceVoxStoreOptions<
         return value.name == currentTheme;
       });
 
-      if (theme) {
-        for (const key in theme.colors) {
-          const color = theme.colors[key as ThemeColorType];
-          const { r, g, b } = colors.hexToRgb(color);
-          document.documentElement.style.setProperty(`--color-${key}`, color);
-          document.documentElement.style.setProperty(
-            `--color-${key}-rgb`,
-            `${r}, ${g}, ${b}`
-          );
-        }
-        Dark.set(theme.isDark);
-        setCssVar("primary", theme.colors["primary"]);
-        setCssVar("warning", theme.colors["warning"]);
+      if (theme == undefined) {
+        throw Error("Theme not found");
       }
+
+      for (const key in theme.colors) {
+        const color = theme.colors[key as ThemeColorType];
+        const { r, g, b } = colors.hexToRgb(color);
+        document.documentElement.style.setProperty(`--color-${key}`, color);
+        document.documentElement.style.setProperty(
+          `--color-${key}-rgb`,
+          `${r}, ${g}, ${b}`
+        );
+      }
+      Dark.set(theme.isDark);
+      setCssVar("primary", theme.colors["primary"]);
+      setCssVar("warning", theme.colors["warning"]);
+
+      document.documentElement.setAttribute(
+        "is-dark-theme",
+        theme.isDark ? "true" : "false"
+      );
 
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
@@ -294,7 +301,7 @@ export const settingStore: VoiceVoxStoreOptions<
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
-              "GPUモードの利用には、メモリが3GB以上あるNVIDIA製GPUが必要です。\n" +
+              "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
             buttons: ["変更する", "変更しない"],
             cancelId: 1,

@@ -127,7 +127,7 @@
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary-light"
-                  text-color="display-dark"
+                  text-color="display-on-primary"
                   icon="play_arrow"
                   @click="play"
                 />
@@ -135,7 +135,7 @@
                   v-else
                   fab
                   color="primary-light"
-                  text-color="display-dark"
+                  text-color="display-on-primary"
                   icon="stop"
                   @click="stop"
                   :disable="nowGenerating"
@@ -726,7 +726,7 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 
 .word-list-col {
-  border-right: solid 1px colors.$setting-item;
+  border-right: solid 1px colors.$surface;
   position: relative; // オーバーレイのため
   overflow-x: hidden;
 }
@@ -758,6 +758,7 @@ export default defineComponent({
 }
 
 .loading-dict {
+  background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -767,8 +768,8 @@ export default defineComponent({
   justify-content: center;
 
   > div {
-    color: colors.$display-dark;
-    background: colors.$background-light;
+    color: colors.$display;
+    background: colors.$background;
     border-radius: 6px;
     padding: 14px;
   }

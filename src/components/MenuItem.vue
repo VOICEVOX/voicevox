@@ -1,5 +1,5 @@
 <template>
-  <q-separator class="bg-display-light" v-if="menudata.type === 'separator'" />
+  <q-separator class="bg-surface" v-if="menudata.type === 'separator'" />
   <q-item
     class="bg-background"
     v-else-if="menudata.type === 'root'"

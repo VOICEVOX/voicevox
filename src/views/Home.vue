@@ -95,7 +95,7 @@
                           fab
                           icon="add"
                           color="primary-light"
-                          text-color="button-icon"
+                          text-color="display-on-primary"
                           :disable="uiLocked"
                           @click="addAudioItem"
                         ></q-btn>
@@ -709,7 +709,7 @@ export default defineComponent({
 }
 
 .waiting-engine {
-  background-color: rgba(colors.$display-dark-rgb, 0.15);
+  background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -720,7 +720,7 @@ export default defineComponent({
 
   > div {
     color: colors.$display;
-    background: colors.$setting-item;
+    background: colors.$surface;
     border-radius: 6px;
     padding: 14px;
   }
@@ -742,7 +742,7 @@ export default defineComponent({
 }
 
 .ghost {
-  background-color: rgba(colors.$display-dark-rgb, 0.15);
+  background-color: rgba(colors.$display-rgb, 0.15);
 }
 
 .audio-cell-pane {
@@ -754,7 +754,7 @@ export default defineComponent({
   height: 100%;
 
   &.is-dragging {
-    background-color: rgba(colors.$display-dark-rgb, 0.15);
+    background-color: rgba(colors.$display-rgb, 0.15);
   }
 
   .audio-cells {
@@ -785,6 +785,6 @@ export default defineComponent({
 }
 
 .q-splitter > :deep(.home-splitter) {
-  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$splitter !important;
 }
 </style>
