@@ -42,9 +42,8 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      GPUモードの利用には GPU
-                      が必要です。Linuxの場合はNVIDIA&trade; 製
-                      GPUのみ対応しています。
+                      GPU モードの利用には GPU が必要です。Linux は
+                      NVIDIA&trade; 製 GPU のみ対応しています。
                     </q-tooltip>
                   </q-icon>
                 </div>
