@@ -7,20 +7,13 @@
     "primary": "#A5D4AD",
     "primary-light": "#A5D4AD",
     "display": "#121212",
-    "display-light": "#EBEBEB",
-    "display-dark": "#121212",
+    "display-on-primary": "#121212",
+    "display-hyperlink": "#0969DA",
     "background": "#FFFFFF",
-    "background-light": "#FFFFFF",
-    "setting-item": "#EEEEEE",
+    "surface": "#EEEEEE",
     "warning": "#C10015",
-    "markdown-color": "#24292F",
-    "markdown-background": "#FFFFFF",
-    "markdown-hyperlink": "#0969DA",
-    "header-selected": "#DCEEDF",
-    "pause-hovered": "#CCDDFF",
-    "active-point-focus": "#EEF3FF",
-    "active-point-focus-hover": "#F7FAFF",
-    "button-icon": "#121212",
-    "header-background": "#A5D4AD"
+    "text-splitter-hover": "#CCDDFF",
+    "active-point-focus": "#E0EAFF",
+    "active-point-hover": "#EEF3FF"
   }
 }

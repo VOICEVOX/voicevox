@@ -223,20 +223,27 @@ export const settingStore: VoiceVoxStoreOptions<
         return value.name == currentTheme;
       });
 
-      if (theme) {
-        for (const key in theme.colors) {
-          const color = theme.colors[key as ThemeColorType];
-          const { r, g, b } = colors.hexToRgb(color);
-          document.documentElement.style.setProperty(`--color-${key}`, color);
-          document.documentElement.style.setProperty(
-            `--color-${key}-rgb`,
-            `${r}, ${g}, ${b}`
-          );
-        }
-        Dark.set(theme.isDark);
-        setCssVar("primary", theme.colors["primary"]);
-        setCssVar("warning", theme.colors["warning"]);
+      if (theme == undefined) {
+        throw Error("Theme not found");
       }
+
+      for (const key in theme.colors) {
+        const color = theme.colors[key as ThemeColorType];
+        const { r, g, b } = colors.hexToRgb(color);
+        document.documentElement.style.setProperty(`--color-${key}`, color);
+        document.documentElement.style.setProperty(
+          `--color-${key}-rgb`,
+          `${r}, ${g}, ${b}`
+        );
+      }
+      Dark.set(theme.isDark);
+      setCssVar("primary", theme.colors["primary"]);
+      setCssVar("warning", theme.colors["warning"]);
+
+      document.documentElement.setAttribute(
+        "is-dark-theme",
+        theme.isDark ? "true" : "false"
+      );
 
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,

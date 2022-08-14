@@ -23,8 +23,8 @@
             <q-btn
               unelevated
               label="完了"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -90,7 +90,6 @@
                       flat
                       dense
                       icon="chevron_left"
-                      color="background-light"
                       text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
@@ -107,7 +106,6 @@
                       flat
                       dense
                       icon="chevron_right"
-                      color="background-light"
                       text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
@@ -524,7 +522,7 @@ export default defineComponent({
 
     .character-order-item {
       border-radius: 10px;
-      border: 2px solid colors.$display-light;
+      border: 2px solid rgba(colors.$display-rgb, 0.15);
       text-align: center;
       cursor: grab;
       &.selected-character-order-item {
