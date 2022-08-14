@@ -294,7 +294,7 @@ export const settingStore: VoiceVoxStoreOptions<
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
-              "GPUモードの利用にはGPUが必要です。\n" +
+              "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
             buttons: ["変更する", "変更しない"],
             cancelId: 1,
