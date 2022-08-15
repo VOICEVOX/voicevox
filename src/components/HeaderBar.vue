@@ -6,8 +6,8 @@
         <q-btn
           v-else
           unelevated
-          color="background-light"
-          text-color="display-dark"
+          color="toolbar-button"
+          text-color="toolbar-button-display"
           class="text-no-wrap text-bold q-mr-sm"
           :disable="button.disable.value"
           @click="button.click"

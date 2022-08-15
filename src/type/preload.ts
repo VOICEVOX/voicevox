@@ -244,21 +244,19 @@ export type ThemeColorType =
   | "primary"
   | "primary-light"
   | "display"
-  | "display-light"
-  | "display-dark"
+  | "display-on-primary"
+  | "display-hyperlink"
   | "background"
-  | "background-light"
-  | "setting-item"
+  | "surface"
   | "warning"
-  | "markdown-color"
-  | "markdown-background"
-  | "markdown-hyperlink"
-  | "pause-hovered"
+  | "text-splitter-hover"
   | "active-point-focus"
-  | "active-point-focus-hover";
+  | "active-point-hover";
 
 export type ThemeConf = {
   name: string;
+  displayName: string;
+  order: number;
   isDark: boolean;
   colors: {
     [K in ThemeColorType]: string;

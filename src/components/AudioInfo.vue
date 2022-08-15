@@ -15,7 +15,7 @@
                   <q-avatar
                     icon="add_circle_outline"
                     color="primary-light"
-                    text-color="display-dark"
+                    text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
                 <q-item-section>
@@ -31,7 +31,7 @@
                   <q-avatar
                     icon="edit_note"
                     color="primary-light"
-                    text-color="display-dark"
+                    text-color="display-on-primary"
                   ></q-avatar>
                 </q-item-section>
                 <q-item-section>
@@ -49,7 +49,7 @@
           :options="selectablePresetList"
           class="col overflow-hidden"
           color="primary-light"
-          text-color="display-dark"
+          text-color="display-on-primary"
           outlined
           dense
           transition-show="none"
@@ -74,7 +74,7 @@
           outline
           class="col-auto q-ml-xs"
           size="sm"
-          text-color="display-dark"
+          text-color="display"
           :label="isRegisteredPreset ? '再登録' : '登録'"
           v-show="!isRegisteredPreset || isChangedPreset"
           @click="registerPreset({ overwrite: isRegisteredPreset })"
@@ -91,13 +91,12 @@
           </q-card-section>
 
           <q-form @submit.prevent="checkRewritePreset">
-            <q-card-section class="q-pt-none" text-color="display-dark">
+            <q-card-section class="q-pt-none">
               <q-select
                 fill-input
                 autofocus
                 hide-selected
                 label="タイトル"
-                label-color="display-dark"
                 color="primary-light"
                 use-input
                 input-debounce="0"
@@ -108,7 +107,7 @@
               />
             </q-card-section>
 
-            <q-card-actions align="right" text-color="display-dark">
+            <q-card-actions align="right">
               <q-btn
                 flat
                 label="キャンセル"

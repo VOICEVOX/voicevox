@@ -2,6 +2,9 @@
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
     <img :src="portraitPath" class="character-portrait" />
+    <div v-if="isInitializingSpeaker" class="loading">
+      <q-spinner color="primary" size="5rem" :thickness="4" />
+    </div>
   </div>
 </template>
 
@@ -45,9 +48,15 @@ export default defineComponent({
 
     const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
+    const isInitializingSpeaker = computed(() => {
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+    });
+
     return {
       characterName,
       portraitPath,
+      isInitializingSpeaker,
     };
   },
 });
@@ -76,6 +85,15 @@ export default defineComponent({
   overflow: hidden;
   .character-portrait {
     margin: auto;
+  }
+  .loading {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(colors.$background-rgb, 0.3);
+    display: grid;
+    justify-content: center;
+    align-content: center;
   }
 }
 </style>

@@ -268,11 +268,7 @@ export const audioStore: VoiceVoxStoreOptions<
         characterInfos,
       }: { engineId: string; characterInfos: CharacterInfo[] }
     ) {
-      const allCharacterInfos: Record<string, CharacterInfo[]> = JSON.parse(
-        JSON.stringify(state.characterInfos)
-      );
-      allCharacterInfos[engineId] = characterInfos;
-      state.characterInfos = allCharacterInfos;
+      state.characterInfos = characterInfos;
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -687,10 +683,9 @@ export const audioStore: VoiceVoxStoreOptions<
       return audioKey;
     },
     /**
-     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
-     * 初期化済みだった場合は何もしない。
+     * 指定した話者（スタイルID）がエンジン側で初期化されているか
      */
-    async SETUP_ENGINE_SPEAKER({ dispatch }, { engineId, styleId }) {
+    async IS_INITIALIZED_ENGINE_SPEAKER({ dispatch }, { engineId, styleId }) {
       // FIXME: なぜかbooleanではなくstringが返ってくる。
       // おそらくエンジン側のresponse_modelをBaseModel継承にしないといけない。
       const isInitialized: string = await dispatch(
@@ -707,18 +702,44 @@ export const audioStore: VoiceVoxStoreOptions<
       if (isInitialized !== "true" && isInitialized !== "false")
         throw new Error(`Failed to get isInitialized.`);
 
-      if (isInitialized === "false") {
-        await dispatch("ASYNC_UI_LOCK", {
-          callback: () =>
-            dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-              engineId,
-            }).then((instance) =>
-              instance.invoke("initializeSpeakerInitializeSpeakerPost")({
-                speaker: styleId,
-              })
-            ),
+      return isInitialized === "true";
+    },
+    /**
+     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     */
+    async INITIALIZE_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
+      if (engineId === undefined)
+        throw new Error(`No such engine registered: index == 0`);
+
+      await dispatch("ASYNC_UI_LOCK", {
+        callback: () =>
+          dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId,
+          }).then((instance) =>
+            instance.invoke("initializeSpeakerInitializeSpeakerPost")({
+              speaker: styleId,
+            })
+          ),
+      });
+    },
+    /**
+     * AudioItemに設定される話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     */
+    async SETUP_SPEAKER({ commit, dispatch }, { engineId, audioKey, styleId }) {
+      const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+        styleId,
+      });
+      if (isInitialized) return;
+
+      commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+        audioKey,
+      });
+      await dispatch("INITIALIZE_ENGINE_SPEAKER", { styleId }).finally(() => {
+        commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
+          audioKey: undefined,
         });
-      }
+      });
     },
     REMOVE_ALL_AUDIO_ITEM({ commit, state }) {
       for (const audioKey of [...state.audioKeys]) {
@@ -746,48 +767,18 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      let engineId = payload.engineId;
-      let styleId = payload.styleId;
-      if ((engineId === undefined) != (styleId === undefined))
-        throw new Error(
-          "(engineId, styleId) must be (defined, defined) or (undefined, undefined)"
-        );
-
-      // 0番目のキャラのデフォルトスタイルを使う
-      if (styleId === undefined) {
-        const defaultCharacterInfo: CharacterInfo | undefined =
-          userOrderedCharacterInfos[0];
-        if (defaultCharacterInfo === undefined)
-          throw new Error(`No default characterInfo (no character loaded)`);
-
-        const defaultStyleId = state.defaultStyleIds.find(
-          (defaultStyleId) =>
-            defaultStyleId.speakerUuid ===
-            defaultCharacterInfo.metas.speakerUuid
-        );
-        if (defaultStyleId === undefined) throw new Error(`No defaultStyleId`);
-
-        // speakerUuid・styleIdが一致するCharacterInfoを持つエンジンを探す
-        engineId = state.engineIds.find((engineId) =>
-          (state.characterInfos[engineId] ?? []).some(
-            (characterInfo) =>
-              characterInfo.metas.speakerUuid === defaultStyleId.speakerUuid &&
-              characterInfo.metas.styles.some(
-                (style) => style.styleId === defaultStyleId.defaultStyleId
-              )
-          )
-        );
-        if (engineId === undefined)
-          throw new Error(`No engineId for defaultStyleId`);
-
-        styleId = defaultStyleId.defaultStyleId;
-      }
-
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
       if (engineId === undefined)
-        throw new Error(`assert engineId != undefined`);
+        throw new Error(`No such engine registered: index == 0`);
 
-      if (styleId === undefined) throw new Error(`assert styleId != undefined`);
-
+      const styleId =
+        payload.styleId ??
+        state.defaultStyleIds[
+          state.defaultStyleIds.findIndex(
+            (x) =>
+              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
+          )
+        ].defaultStyleId;
       const baseAudioItem = payload.baseAudioItem;
 
       const query = getters.IS_ENGINE_READY(engineId)
@@ -1816,7 +1807,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
     ) {
       const query = state.audioItems[audioKey].query;
       try {
-        await dispatch("SETUP_ENGINE_SPEAKER", { engineId, styleId });
+        await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
 
         if (query !== undefined) {
           const accentPhrases = query.accentPhrases;

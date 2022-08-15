@@ -130,12 +130,12 @@
           Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
           Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
           -->
-          <q-chip :ripple="false" color="setting-item">
+          <q-chip :ripple="false" color="surface">
             {{ hotkey === "Meta" ? "Cmd" : hotkey }}
           </q-chip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-negative q-mt-lg">
+        <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
           <div class="text-warning">
             ショートカットキーが次の操作と重複しています
           </div>
@@ -149,8 +149,8 @@
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
-          color="display-light"
-          text-color="display-dark"
+          color="surface"
+          text-color="display"
           class="q-mt-sm"
           @click="
             deleteHotkey(lastAction);
@@ -161,8 +161,8 @@
           padding="xs md"
           label="キャンセル"
           unelevated
-          color="display-light"
-          text-color="display-dark"
+          color="surface"
+          text-color="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
@@ -172,7 +172,7 @@
           label="OK"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-on-primary"
           class="q-mt-sm"
           @click="
             changeHotkeySettings(lastAction, lastRecord)?.then(() =>
@@ -187,7 +187,7 @@
           label="上書きする"
           unelevated
           color="primary"
-          text-color="display"
+          text-color="display-on-primary"
           class="q-mt-sm"
           @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
@@ -421,7 +421,7 @@ export default defineComponent({
     position: sticky;
     top: 0;
     font-weight: bold;
-    background-color: colors.$setting-item;
+    background-color: colors.$surface;
     z-index: 1;
   }
 
