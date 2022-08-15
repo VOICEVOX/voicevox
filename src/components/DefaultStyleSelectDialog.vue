@@ -41,8 +41,8 @@
               v-show="pageIndex >= 1"
               unelevated
               label="戻る"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md"
               @click="prevPage"
             />
@@ -56,8 +56,8 @@
               v-show="canNext"
               unelevated
               label="次へ"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="nextPage"
             />
@@ -66,8 +66,8 @@
               v-show="canNext"
               unelevated
               label="完了"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />

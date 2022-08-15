@@ -85,6 +85,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 export type AudioStoreState = {
   engineStates: Record<string, EngineState>;
   characterInfos?: CharacterInfo[];
+  audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
   audioStates: Record<string, AudioState>;
@@ -161,8 +162,20 @@ type AudioStoreTypes = {
     action(): string;
   };
 
-  SETUP_ENGINE_SPEAKER: {
+  IS_INITIALIZED_ENGINE_SPEAKER: {
+    action(payload: { styleId: number }): Promise<boolean>;
+  };
+
+  INITIALIZE_ENGINE_SPEAKER: {
     action(payload: { styleId: number }): void;
+  };
+
+  SETUP_SPEAKER: {
+    action(payload: { audioKey: string; styleId: number }): void;
+  };
+
+  SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
+    mutation: { audioKey?: string };
   };
 
   SET_ACTIVE_AUDIO_KEY: {

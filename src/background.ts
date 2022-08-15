@@ -446,7 +446,7 @@ async function runEngine(engineId: string) {
 
   // 最初のエンジンモード
   if (!store.has("useGpu")) {
-    const hasGpu = await hasSupportedGpu();
+    const hasGpu = await hasSupportedGpu(process.platform);
     store.set("useGpu", hasGpu);
 
     dialog.showMessageBox(win, {
@@ -998,12 +998,11 @@ ipcMainHandle("OPEN_TEXT_EDIT_CONTEXT_MENU", () => {
 });
 
 ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
-  return hasSupportedGpu();
+  return hasSupportedGpu(process.platform);
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
   willQuit = true;
-  app.emit("window-all-closed");
   win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
