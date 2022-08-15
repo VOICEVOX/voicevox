@@ -502,10 +502,10 @@ export default defineComponent({
       focusCell({ audioKey: newAudioKey });
 
       // 最初の話者を初期化
-      if (audioItem.styleId != undefined) {
+      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
         store.dispatch("SETUP_SPEAKER", {
-          engineId: audioItem.engineId,
           audioKey: newAudioKey,
+          engineId: audioItem.engineId,
           styleId: audioItem.styleId,
         });
       }

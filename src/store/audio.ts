@@ -268,7 +268,13 @@ export const audioStore: VoiceVoxStoreOptions<
         characterInfos,
       }: { engineId: string; characterInfos: CharacterInfo[] }
     ) {
-      state.characterInfos = characterInfos;
+      state.characterInfos[engineId] = characterInfos;
+    },
+    SET_AUDIO_KEY_INITIALIZING_SPEAKER(
+      state,
+      { audioKey }: { audioKey?: string }
+    ) {
+      state.audioKeyInitializingSpeaker = audioKey;
     },
     SET_ACTIVE_AUDIO_KEY(state, { audioKey }: { audioKey?: string }) {
       state._activeAudioKey = audioKey;
@@ -728,6 +734,7 @@ export const audioStore: VoiceVoxStoreOptions<
      */
     async SETUP_SPEAKER({ commit, dispatch }, { engineId, audioKey, styleId }) {
       const isInitialized = await dispatch("IS_INITIALIZED_ENGINE_SPEAKER", {
+        engineId,
         styleId,
       });
       if (isInitialized) return;
@@ -735,7 +742,10 @@ export const audioStore: VoiceVoxStoreOptions<
       commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
         audioKey,
       });
-      await dispatch("INITIALIZE_ENGINE_SPEAKER", { styleId }).finally(() => {
+      await dispatch("INITIALIZE_ENGINE_SPEAKER", {
+        engineId,
+        styleId,
+      }).finally(() => {
         commit("SET_AUDIO_KEY_INITIALIZING_SPEAKER", {
           audioKey: undefined,
         });
