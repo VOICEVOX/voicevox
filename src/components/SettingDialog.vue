@@ -510,7 +510,6 @@
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
               <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>テーマ</div>
                 <q-icon name="help_outline" size="sm" class="help-hover-icon">
