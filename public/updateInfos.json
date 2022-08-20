@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.13.1",
+    "descriptions": ["バグ修正"],
+    "contributors": ["Hiroshiba", "y-chan"]
+  },
+  {
     "version": "0.13.0",
     "descriptions": [
       "コード署名を追加",
@@ -12,7 +17,6 @@
     ],
     "contributors": [
       "aoirint",
-      "Hiroshiba",
       "Hiroshiba",
       "HyodaKazuaki",
       "k-chop",
