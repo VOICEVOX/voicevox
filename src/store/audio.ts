@@ -777,9 +777,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const text = payload.text ?? "";
 
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
+      const engineId = payload.engineId ?? state.engineIds[0];
 
       const styleId =
         payload.styleId ??
