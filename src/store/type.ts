@@ -32,6 +32,7 @@ import {
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
 
+// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
   engineId?: string;
