@@ -263,6 +263,7 @@ export default defineComponent({
     };
 
     const changeStyleId = (speakerUuid: string, styleId: number) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const engineId = store.state.engineIds.find((_engineId) =>
         (store.state.characterInfos[_engineId] ?? []).some(
           (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
@@ -280,6 +281,7 @@ export default defineComponent({
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );

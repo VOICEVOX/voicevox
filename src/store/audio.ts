@@ -108,6 +108,7 @@ function parseTextFile(
       continue;
     }
 
+    // FIXME: engineIdの追加
     audioItems.push({ text: splittedText, styleId: lastStyleId });
   }
   return audioItems;
@@ -779,6 +780,7 @@ export const audioStore: VoiceVoxStoreOptions<
 
       const engineId = payload.engineId ?? state.engineIds[0];
 
+      // FIXME: engineIdも含めて探査する
       const styleId =
         payload.styleId ??
         state.defaultStyleIds[
