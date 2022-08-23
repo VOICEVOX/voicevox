@@ -100,14 +100,14 @@ function parseTextFile(
     userOrderedCharacterInfos[0].metas.speakerUuid
   );
   if (lastStyleId == undefined) throw new Error(`lastStyleId is undefined.`);
-  for (const splittedText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const styleId = characters.get(splittedText);
+  for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
+    const styleId = characters.get(splitText);
     if (styleId !== undefined) {
       lastStyleId = styleId;
       continue;
     }
 
-    audioItems.push({ text: splittedText, styleId: lastStyleId });
+    audioItems.push({ text: splitText, styleId: lastStyleId });
   }
   return audioItems;
 }
@@ -1877,7 +1877,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
         JSON.stringify(query.accentPhrases)
       );
       const changeIndexes = [accentPhraseIndex];
-      // toggleAccentPhrase to newAccentPhrases and recored changeIndexes
+      // toggleAccentPhrase to newAccentPhrases and record changeIndexes
       {
         const mergeAccent = (
           accentPhrases: AccentPhrase[],
