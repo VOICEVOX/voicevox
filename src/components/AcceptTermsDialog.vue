@@ -22,7 +22,7 @@
               unelevated
               label="同意せずに終了"
               color="toolbar-button"
-              text-color="toolbar-button-color"
+              text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md text-bold"
               @click="handler(false)"
             />
@@ -31,7 +31,7 @@
               unelevated
               label="同意して使用開始"
               color="toolbar-button"
-              text-color="toolbar-button-color"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold"
               @click="handler(true)"
             />

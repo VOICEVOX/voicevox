@@ -42,7 +42,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
 
     ADD_WORD: async (
       { state, dispatch },
-      { surface, pronunciation, accentType }
+      { surface, pronunciation, accentType, priority }
     ) => {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
       if (engineId === undefined)
@@ -54,6 +54,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
           surface,
           pronunciation,
           accentType,
+          priority,
         })
       );
     },

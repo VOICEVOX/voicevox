@@ -800,7 +800,6 @@ export default defineComponent({
 $pitch-label-height: 24px;
 
 .tip-tweakable-slider-by-scroll {
-  z-index: 1;
   position: absolute;
   right: 4px;
   top: 4px;
