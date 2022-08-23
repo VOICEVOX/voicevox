@@ -74,6 +74,6 @@ exports.default = async function (target) {
   inputStream.on("end", () => {
     const iniFilePath = path.resolve(outputDirectory, fileName).concat(".ini");
     fs.writeFileSync(iniFilePath, createIni(sizes, hashes));
-    console.log("Split NSIS Archive.");
+    console.log("Finished NSIS Archive split.");
   });
 };
