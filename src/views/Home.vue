@@ -178,7 +178,6 @@ import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
-  CharacterInfo,
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
