@@ -375,7 +375,7 @@ EOS
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
-    echo "[+] Removing spit archives..."
+    echo "[+] Removing split archives..."
 
     for filename in "${ARCHIVE_NAME_LIST[@]}"; do
         echo "[+] Removing ${filename}..."
