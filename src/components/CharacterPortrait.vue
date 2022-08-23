@@ -19,18 +19,17 @@ export default defineComponent({
     const store = useStore();
 
     const characterInfo = computed(() => {
-      const characterInfos = store.state.characterInfos || [];
       const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
+
+      const engineId = audioItem?.engineId;
       const styleId = audioItem?.styleId;
 
-      return styleId !== undefined
-        ? characterInfos.find((info) =>
-            info.metas.styles.find((style) => style.styleId === styleId)
-          )
-        : undefined;
+      if (engineId === undefined || styleId === undefined) return undefined;
+
+      return store.getters.CHARACTER_INFO(engineId, styleId);
     });
 
     const characterName = computed(() => {

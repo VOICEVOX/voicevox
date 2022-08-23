@@ -19,6 +19,7 @@ import {
   audioStore,
   audioCommandStore,
   audioCommandStoreState,
+  getCharacterInfo,
 } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -44,7 +45,18 @@ export const indexStore: VoiceVoxStoreOptions<
   IndexActions,
   IndexMutations
 > = {
-  getters: {},
+  getters: {
+    /**
+     * すべてのエンジンのキャラクター情報のリスト。
+     * キャラクター情報が読み出されていないときは、空リストを返す。
+     */
+    GET_FLATTEN_CHARACTER_INFOS(state) {
+      const flattenCharacterInfos = state.engineIds.flatMap(
+        (engineId) => state.characterInfos[engineId] ?? []
+      );
+      return flattenCharacterInfos;
+    },
+  },
   mutations: {
     SET_DEFAULT_STYLE_IDS(state, { defaultStyleIds }) {
       state.defaultStyleIds = defaultStyleIds;
@@ -54,14 +66,20 @@ export const indexStore: VoiceVoxStoreOptions<
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          const characterInfo = state.characterInfos?.find(
-            (info) =>
-              info.metas.styles.find(
-                (style) => style.styleId == audioItem.styleId
-              ) != undefined
+          if (audioItem.engineId === undefined)
+            throw new Error("assert audioItem.engineId !== undefined");
+
+          if (audioItem.styleId === undefined)
+            throw new Error("assert audioItem.styleId !== undefined");
+
+          const characterInfo = getCharacterInfo(
+            state,
+            audioItem.engineId,
+            audioItem.styleId
           );
-          if (characterInfo == undefined)
-            throw new Error("characterInfo == undefined");
+
+          if (characterInfo === undefined)
+            throw new Error("assert characterInfo !== undefined");
 
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
@@ -120,11 +138,11 @@ export const indexStore: VoiceVoxStoreOptions<
         userCharacterOrder
       );
     },
-    GET_NEW_CHARACTERS({ state }) {
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+    GET_NEW_CHARACTERS({ state, getters }) {
+      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
-      const allSpeakerUuid = state.characterInfos.map(
+      const allSpeakerUuid = flattenCharacterInfos.map(
         (characterInfo) => characterInfo.metas.speakerUuid
       );
       const newSpeakerUuid = allSpeakerUuid.filter(
@@ -135,14 +153,14 @@ export const indexStore: VoiceVoxStoreOptions<
     async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
       return await window.electron.isUnsetDefaultStyleId(speakerUuid);
     },
-    async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
+    async LOAD_DEFAULT_STYLE_IDS({ commit, getters }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
 
       // デフォルトスタイルが設定されていない場合は0をセットする
       // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
-      const unsetCharacterInfos = state.characterInfos.filter(
+      const unsetCharacterInfos = flattenCharacterInfos.filter(
         (characterInfo) =>
           !defaultStyleIds.some(
             (styleId) => styleId.speakerUuid == characterInfo.metas.speakerUuid

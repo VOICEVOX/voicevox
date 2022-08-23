@@ -157,6 +157,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
+// FIXME: engineIdを追加
 export type DefaultStyleId = {
   speakerUuid: string;
   defaultStyleId: number;

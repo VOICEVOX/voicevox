@@ -42,6 +42,7 @@
                 "
                 @click="
                   changeStyleId(
+                    characterInfo.metas.speakerUuid,
                     getDefaultStyle(characterInfo.metas.speakerUuid).styleId
                   )
                 "
@@ -97,7 +98,12 @@
                         v-close-popup
                         active-class="selected-character-item"
                         :active="style.styleId === selectedStyle.styleId"
-                        @click="changeStyleId(style.styleId)"
+                        @click="
+                          changeStyleId(
+                            characterInfo.metas.speakerUuid,
+                            style.styleId
+                          )
+                        "
                       >
                         <q-avatar rounded size="2rem" class="q-mr-md">
                           <q-img
@@ -198,11 +204,11 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() =>
       userOrderedCharacterInfos.value !== undefined &&
+      audioItem.value.engineId !== undefined &&
       audioItem.value.styleId !== undefined
-        ? userOrderedCharacterInfos.value.find((info) =>
-            info.metas.styles.find(
-              (style) => style.styleId === audioItem.value.styleId
-            )
+        ? store.getters.CHARACTER_INFO(
+            audioItem.value.engineId,
+            audioItem.value.styleId
           )
         : undefined
     );
@@ -256,13 +262,26 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (styleId: number) => {
+    const changeStyleId = (speakerUuid: string, styleId: number) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+      const engineId = store.state.engineIds.find((_engineId) =>
+        (store.state.characterInfos[_engineId] ?? []).some(
+          (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
+        )
+      );
+      if (engineId === undefined)
+        throw new Error(
+          `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+        );
+
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
+        engineId,
         styleId,
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
@@ -316,10 +335,17 @@ export default defineComponent({
             await pushAudioText();
           }
 
+          const engineId = audioItem.value.engineId;
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
+
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined) throw new Error("styleId == undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            engineId,
             styleId,
             prevAudioKey,
           });
