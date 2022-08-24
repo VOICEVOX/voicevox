@@ -195,7 +195,7 @@ if [ "$REUSE_LIST" != "1" ]; then
 fi
 
 echo
-echo "[+] Listing of splitted archives..."
+echo "[+] Listing of split archives..."
 _readarray ARCHIVE_LIST < "list.txt"
 
 if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
@@ -375,7 +375,7 @@ EOS
 
 # Remove archives
 if [ "${KEEP_ARCHIVE}" != "1" ]; then
-    echo "[+] Removing splitted archives..."
+    echo "[+] Removing split archives..."
 
     for filename in "${ARCHIVE_NAME_LIST[@]}"; do
         echo "[+] Removing ${filename}..."
