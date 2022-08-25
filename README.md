@@ -24,7 +24,7 @@ npm ci
 `.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`があるパスを指定します。
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
-voicevoxエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
+VOICEVOXエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
 
 また、エンジンAPIの宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
