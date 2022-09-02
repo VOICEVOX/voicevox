@@ -1717,6 +1717,11 @@ export const audioStore: VoiceVoxStoreOptions<
         });
       return success;
     },
+
+    OPEN_ENGINE_DIRECTORY(_, { engineId }) {
+      return window.electron.openEngineDirectory(engineId);
+    },
+
     CHECK_FILE_EXISTS(_, { file }: { file: string }) {
       return window.electron.checkFileExists(file);
     },

@@ -144,6 +144,10 @@ type AudioStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
+  OPEN_ENGINE_DIRECTORY: {
+    action(payload: { engineId: string }): void;
+  };
+
   SET_ENGINE_STATE: {
     mutation: { engineId: string; engineState: EngineState };
   };

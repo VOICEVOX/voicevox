@@ -99,14 +99,49 @@ protocol.registerSchemesAsPrivileged([
 
 const isMac = process.platform === "darwin";
 
+function detectImageTypeFromBase64(data: string): string {
+  switch (data[0]) {
+    case "/":
+      return "image/svg+xml";
+    case "R":
+      return "image/gif";
+    case "i":
+      return "image/png";
+    case "D":
+      return "image/jpeg";
+    default:
+      return "";
+  }
+}
+
 const engineInfos: EngineInfo[] = (() => {
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+  let engines: EngineInfo[] = [];
 
   if (defaultEngineInfosEnv) {
-    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+    engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return [];
+  return engines.map((engineInfo: EngineInfo) => {
+    if (!engineInfo.iconPath) return engineInfo;
+    let b64icon: string;
+    try {
+      b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.iconPath), {
+        encoding: "base64",
+      });
+    } catch (e) {
+      log.error("Failed to read icon file: " + engineInfo.iconPath);
+      return engineInfo;
+    }
+    return {
+      ...engineInfo,
+      iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
+      path:
+        engineInfo.path === undefined
+          ? undefined
+          : path.resolve(appDirPath, engineInfo.path),
+    };
+  });
 })();
 
 const defaultHotkeySettings: HotkeySetting[] = [
@@ -640,6 +675,25 @@ async function restartEngine(engineId: string) {
   });
 }
 
+// エンジンのフォルダを開く
+function openEngineDirectory(engineId: string) {
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.uuid === engineId
+  );
+  if (!engineInfo) {
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+  }
+
+  const engineDirectory = engineInfo.path;
+  if (engineDirectory == null) {
+    return;
+  }
+
+  // Windows環境だとスラッシュ区切りのパスが動かない。
+  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
+  shell.openPath(path.resolve(engineDirectory));
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -1037,6 +1091,10 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
 
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await restartEngine(engineId);
+});
+
+ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
+  openEngineDirectory(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
