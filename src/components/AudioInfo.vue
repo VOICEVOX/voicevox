@@ -372,7 +372,6 @@ export default defineComponent({
     const supportedFeatures = computed(
       () => engineManifest.value.supportedFeatures
     );
-    console.log(store.state);
 
     const applyPreset = () => {
       store.dispatch("COMMAND_APPLY_AUDIO_PRESET", {
