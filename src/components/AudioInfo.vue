@@ -370,7 +370,9 @@ export default defineComponent({
         : ({} as EngineManifest)
     );
     const supportedFeatures = computed(
-      () => engineManifest.value.supportedFeatures
+      () =>
+        engineManifest.value.supportedFeatures ||
+        ({} as EngineManifest["supportedFeatures"])
     );
 
     const applyPreset = () => {
