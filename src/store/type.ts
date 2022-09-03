@@ -75,12 +75,12 @@ export type WriteErrorTypeForSaveAllResultDialog = {
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
-  ? never
-  : P]: T[P] extends {
+    ? never
+    : P]: T[P] extends {
     [K in U]: infer R;
   }
-  ? R
-  : never;
+    ? R
+    : never;
 };
 
 export type QuasarDialog = QVueGlobals["dialog"];
