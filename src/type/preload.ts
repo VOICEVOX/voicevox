@@ -79,6 +79,7 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
+  openEngineDirectory(engineId: string): void;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
@@ -171,6 +172,10 @@ export type HotkeySetting = {
 export type EngineInfo = {
   uuid: string;
   host: string;
+  name: string;
+  iconPath?: string;
+  iconData?: string;
+  path?: string;
   executionEnabled: boolean;
   executionFilePath: string;
 };

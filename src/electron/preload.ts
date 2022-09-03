@@ -194,6 +194,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("RESTART_ENGINE", { engineId });
   },
 
+  openEngineDirectory: (engineId: string) => {
+    return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
+  },
+
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },

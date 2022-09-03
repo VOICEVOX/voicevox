@@ -186,6 +186,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  OPEN_ENGINE_DIRECTORY: {
+    args: [obj: { engineId: string }];
+    return: void;
+  };
+
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;

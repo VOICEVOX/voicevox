@@ -56,10 +56,12 @@ export type MenuItemSeparator = MenuItemBase<"separator">;
 export type MenuItemRoot = MenuItemBase<"root"> & {
   onClick: () => void;
   subMenu: MenuItemData[];
+  icon?: string;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
+  icon?: string;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
@@ -96,6 +98,7 @@ export default defineComponent({
     const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
+    const engineInfos = computed(() => store.state.engineInfos);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -290,7 +293,7 @@ export default defineComponent({
         subMenu: [
           {
             type: "button",
-            label: "再起動",
+            label: "全てのエンジンを再起動",
             onClick: () => {
               store.dispatch("RESTART_ENGINE_ALL");
             },
@@ -399,6 +402,78 @@ export default defineComponent({
     ]);
 
     setHotkeyFunctions(hotkeyMap);
+
+    // エンジン毎の項目を追加
+    async function updateEngines() {
+      const engineMenu = menudata.value.find(
+        (x) => x.type === "root" && x.label === "エンジン"
+      ) as MenuItemRoot;
+      if (Object.values(engineInfos.value).length === 1) {
+        const engineInfo = Object.values(engineInfos.value)[0];
+        engineMenu.subMenu = [
+          engineInfo.path && {
+            type: "button",
+            label: "フォルダを開く",
+            onClick: () => {
+              store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                engineId: engineInfo.uuid,
+              });
+            },
+          },
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => {
+              store.dispatch("RESTART_ENGINE", {
+                engineId: engineInfo.uuid,
+              });
+            },
+          },
+        ].filter((x) => x) as MenuItemData[];
+      } else {
+        engineMenu.subMenu = [
+          ...Object.values(engineInfos.value).map(
+            (engineInfo) =>
+              ({
+                type: "root",
+                label: engineInfo.name,
+                icon: engineInfo.iconData,
+                subMenu: [
+                  engineInfo.path && {
+                    type: "button",
+                    label: "フォルダを開く",
+                    onClick: () => {
+                      store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                        engineId: engineInfo.uuid,
+                      });
+                    },
+                  },
+                  {
+                    type: "button",
+                    label: "再起動",
+                    onClick: () => {
+                      store.dispatch("RESTART_ENGINE", {
+                        engineId: engineInfo.uuid,
+                      });
+                    },
+                  },
+                ].filter((x) => x),
+              } as MenuItemRoot)
+          ),
+          {
+            type: "separator",
+          },
+          {
+            type: "button",
+            label: "全てのエンジンを再起動",
+            onClick: () => {
+              store.dispatch("RESTART_ENGINE_ALL");
+            },
+          },
+        ];
+      }
+    }
+    watch(engineInfos, updateEngines, { immediate: true }); // engineInfosを見て動的に更新できるようにする
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
