@@ -310,6 +310,7 @@ import { useStore } from "@/store";
 import { Preset } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import PresetManageDialog from "./PresetManageDialog.vue";
+import { EngineManifest } from "@/openapi";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -332,6 +333,16 @@ export default defineComponent({
       () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
+
+    const engineManifest = computed(() =>
+      audioItem.value.engineId
+        ? store.state.engineManifests[audioItem.value.engineId]
+        : ({} as EngineManifest)
+    );
+    const supportedFeatures = computed(
+      () => engineManifest.value.supportedFeatures
+    );
+    console.log(store.state);
 
     const applyPreset = () => {
       store.dispatch("COMMAND_APPLY_AUDIO_PRESET", {
@@ -383,7 +394,8 @@ export default defineComponent({
 
     const speedScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.speedScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
       onChange: setAudioSpeedScale,
       max: () => 2,
       min: () => 0.5,
@@ -393,7 +405,8 @@ export default defineComponent({
     });
     const pitchScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.pitchScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
       onChange: setAudioPitchScale,
       max: () => 0.15,
       min: () => -0.15,
@@ -402,7 +415,9 @@ export default defineComponent({
     });
     const intonationScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.intonationScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value ||
+        supportedFeatures.value?.adjustIntonationScale === false,
       onChange: setAudioIntonationScale,
       max: () => 2,
       min: () => 0,
@@ -412,7 +427,8 @@ export default defineComponent({
     });
     const volumeScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.volumeScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
       onChange: setAudioVolumeScale,
       max: () => 2,
       min: () => 0,
