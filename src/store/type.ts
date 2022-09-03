@@ -6,7 +6,12 @@ import {
   StoreOptions,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
+import {
+  AccentPhrase,
+  AudioQuery,
+  EngineManifest,
+  UserDictWord,
+} from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -70,12 +75,12 @@ export type WriteErrorTypeForSaveAllResultDialog = {
 
 type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
-    ? never
-    : P]: T[P] extends {
+  ? never
+  : P]: T[P] extends {
     [K in U]: infer R;
   }
-    ? R
-    : never;
+  ? R
+  : never;
 };
 
 export type QuasarDialog = QVueGlobals["dialog"];
@@ -1181,6 +1186,31 @@ export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
 export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
 
 /*
+  Engine manifest Store Types
+*/
+
+export type EngineManifestStoreState = Record<string, unknown>;
+
+type EngineManifestStoreTypes = {
+  GET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): Promise<EngineManifest>;
+  };
+};
+
+export type EngineManifestGetters = StoreType<
+  EngineManifestStoreTypes,
+  "getter"
+>;
+export type EngineManifestMutations = StoreType<
+  EngineManifestStoreTypes,
+  "mutation"
+>;
+export type EngineManifestActions = StoreType<
+  EngineManifestStoreTypes,
+  "action"
+>;
+
+/*
  * Setting Store Types
  */
 
@@ -1223,6 +1253,7 @@ export type State = AudioStoreState &
   UiStoreState &
   PresetStoreState &
   DictionaryStoreState &
+  EngineManifestStoreState &
   ProxyStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
@@ -1234,6 +1265,7 @@ type AllStoreTypes = AudioStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
+  EngineManifestStoreTypes &
   ProxyStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
