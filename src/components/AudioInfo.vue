@@ -275,7 +275,9 @@
       <span
         class="text-body1 q-mb-xs"
         :style="{
-          opacity: `${prePhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+          opacity: `${
+            prePhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
+          }`,
         }"
         >開始無音
         {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
@@ -302,7 +304,9 @@
       <span
         class="text-body1 q-mb-xs"
         :style="{
-          opacity: `${postPhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+          opacity: `${
+            postPhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
+          }`,
         }"
         >終了無音
         {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
