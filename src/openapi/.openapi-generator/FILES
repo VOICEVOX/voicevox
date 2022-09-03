@@ -15,6 +15,7 @@ models/SpeakerInfo.ts
 models/SpeakerStyle.ts
 models/StyleInfo.ts
 models/SupportedDevicesInfo.ts
+models/SupportedFeatures.ts
 models/UpdateInfo.ts
 models/UserDictWord.ts
 models/ValidationError.ts
