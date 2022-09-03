@@ -6,7 +6,12 @@ import {
   StoreOptions,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
+import {
+  AccentPhrase,
+  AudioQuery,
+  EngineManifest,
+  UserDictWord,
+} from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -843,6 +848,7 @@ export type SettingStoreState = {
   toolbarSetting: ToolbarSetting;
   engineIds: string[];
   engineInfos: Record<string, EngineInfo>;
+  engineManifests: Record<string, EngineManifest>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -1041,6 +1047,12 @@ type UiStoreTypes = {
   };
 
   SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  LOAD_ENGINE_MANIFESTS: { action(): void };
 
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };

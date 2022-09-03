@@ -10,6 +10,7 @@ import {
   VoiceVoxStoreOptions,
 } from "./type";
 import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
+import { EngineManifest } from "@/openapi";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -146,6 +147,12 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
         state.engineStates = Object.fromEntries(
           engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
         );
+      },
+      SET_ENGINE_MANIFESTS(
+        state,
+        { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+      ) {
+        state.engineManifests = engineManifests;
       },
       SET_INHERIT_AUDIOINFO(
         state,
@@ -385,6 +392,25 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
       async GET_ENGINE_INFOS({ commit }) {
         commit("SET_ENGINE_INFOS", {
           engineInfos: await window.electron.engineInfos(),
+        });
+      },
+      async LOAD_ENGINE_MANIFESTS({ state, commit }) {
+        commit("SET_ENGINE_MANIFESTS", {
+          engineManifests: Object.fromEntries(
+            await Promise.all(
+              state.engineIds.map(
+                async (engineId) =>
+                  await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                    engineId,
+                  }).then(async (instance) => [
+                    engineId,
+                    await instance.invoke("engineManifestEngineManifestGet")(
+                      {}
+                    ),
+                  ])
+              )
+            )
+          ),
         });
       },
       async SET_INHERIT_AUDIOINFO(
