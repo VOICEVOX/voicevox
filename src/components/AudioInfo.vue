@@ -167,9 +167,9 @@
     <div class="q-mx-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          speedScaleSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${speedScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        }"
         >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -193,9 +193,9 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          pitchScaleSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${pitchScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        }"
         >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -219,9 +219,11 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          intonationScaleSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${
+            intonationScaleSlider.qSliderProps.disable.value ? 0.5 : 1
+          }`,
+        }"
         >抑揚
         {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -246,9 +248,9 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          volumeScaleSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${volumeScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        }"
         >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -272,9 +274,9 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          prePhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${prePhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        }"
         >開始無音
         {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -299,9 +301,9 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="`opacity: ${
-          postPhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
-        }`"
+        :style="{
+          opacity: `${postPhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        }"
         >終了無音
         {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
