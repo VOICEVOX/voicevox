@@ -28,10 +28,6 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { DefaultStyleId } from "@/type/preload";
-import {
-  engineManifestStore,
-  engineManifestStoreState,
-} from "./engineManifest";
 
 const isDevelopment = process.env.NODE_ENV == "development";
 
@@ -210,7 +206,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStoreState,
     ...presetStoreState,
     ...dictionaryStoreState,
-    ...engineManifestStoreState,
     ...proxyStoreState,
   },
 
@@ -222,7 +217,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...settingStore.getters,
     ...presetStore.getters,
     ...dictionaryStore.getters,
-    ...engineManifestStore.getters,
     ...audioCommandStore.getters,
     ...indexStore.getters,
     ...proxyStore.getters,
@@ -237,7 +231,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore.mutations,
     ...presetStore.mutations,
     ...dictionaryStore.mutations,
-    ...engineManifestStore.mutations,
     ...indexStore.mutations,
     ...proxyStore.mutations,
   },
@@ -251,7 +244,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...audioCommandStore.actions,
     ...presetStore.actions,
     ...dictionaryStore.actions,
-    ...engineManifestStore.actions,
     ...indexStore.actions,
     ...proxyStore.actions,
   },
