@@ -88,6 +88,7 @@
                 :uiLocked="uiLocked"
                 :min="minPitch"
                 :max="maxPitch"
+                :disable="mora.pitch == 0.0"
                 :type="'pitch'"
                 :clip="false"
                 :shiftKeyFlag="shiftKeyFlag"
