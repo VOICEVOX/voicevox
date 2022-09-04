@@ -36,6 +36,14 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 
+type ManifestType = {
+  name: string;
+  uuid: string;
+  command: string;
+  port: string;
+  icon: string;
+};
+
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.console.level = "silly";
@@ -165,13 +173,6 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       continue;
     }
 
-    type ManifestType = {
-      name: string;
-      uuid: string;
-      command: string;
-      port: string;
-      icon: string;
-    };
     const manifest: ManifestType = JSON.parse(
       fs.readFileSync(manifestPath, { encoding: "utf8" })
     );
