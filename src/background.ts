@@ -36,7 +36,7 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 
-type ManifestType = {
+type EngineManifest = {
   name: string;
   uuid: string;
   command: string;
@@ -173,7 +173,7 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       continue;
     }
 
-    const manifest: ManifestType = JSON.parse(
+    const manifest: EngineManifest = JSON.parse(
       fs.readFileSync(manifestPath, { encoding: "utf8" })
     );
 
