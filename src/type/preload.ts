@@ -175,7 +175,7 @@ export type EngineInfo = {
   name: string;
   iconPath?: string;
   iconData?: string;
-  path?: string;
+  path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
 };
