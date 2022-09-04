@@ -181,7 +181,7 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       uuid: manifest.uuid,
       host: `http://127.0.0.1:${manifest.port}`,
       name: manifest.name,
-      iconPath: manifest.icon,
+      iconPath: path.join(engineDir, manifest.icon),
       path: engineDir,
       executionEnabled: true,
       executionFilePath: path.join(engineDir, manifest.command),
