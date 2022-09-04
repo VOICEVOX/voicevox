@@ -133,7 +133,7 @@ function replaceEngineInfoIconData(engineInfo: EngineInfo): EngineInfo {
 }
 
 const defaultEngineInfos: EngineInfo[] = (() => {
-  // TODO: envではなくengine_manifest.jsonから情報を得るようにする
+  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
   let engines: EngineInfo[] = [];
 
