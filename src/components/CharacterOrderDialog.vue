@@ -163,7 +163,7 @@
             <draggable
               class="character-order q-px-sm"
               v-model="characterOrder"
-              :item-key="keyOfcharacterOrderItem"
+              :item-key="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >
@@ -302,7 +302,7 @@ export default defineComponent({
     );
 
     // draggable用
-    const keyOfcharacterOrderItem = (item: CharacterInfo) =>
+    const keyOfCharacterOrderItem = (item: CharacterInfo) =>
       item.metas.speakerUuid;
 
     // キャラクター枠のホバー状態を表示するかどうか
@@ -394,7 +394,7 @@ export default defineComponent({
       selectedCharacter,
       selectCharacter,
       characterOrder,
-      keyOfcharacterOrderItem,
+      keyOfCharacterOrderItem,
       isHoverableItem,
       playing,
       togglePlayOrStop,
