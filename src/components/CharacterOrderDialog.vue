@@ -280,7 +280,7 @@ export default defineComponent({
           selectedCharacter.value = sampleCharacterOrder.value[0];
 
           // 保存済みのキャラクターリストを取得
-          // FIXME: 並び替えると不明なキャラがリセットされる。
+          // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
           characterOrder.value = store.state.userCharacterOrder
             .map((speakerUuid) => characterInfosMap.value[speakerUuid])
             .filter((info) => info !== undefined) as CharacterInfo[];
