@@ -367,6 +367,8 @@ export default defineComponent({
         engineManifest.value.supportedFeatures ||
         ({} as EngineManifest["supportedFeatures"])
     );
+
+    // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
     watch(
       supportedFeatures,
       (newFeatures) => {
