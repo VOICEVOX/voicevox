@@ -358,15 +358,11 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
 
-    const engineManifest = computed(() =>
-      audioItem.value.engineId
-        ? store.state.engineManifests[audioItem.value.engineId]
-        : ({} as EngineManifest)
-    );
     const supportedFeatures = computed(
       () =>
-        engineManifest.value.supportedFeatures ||
-        ({} as EngineManifest["supportedFeatures"])
+        store.state.engineManifests[
+          audioItem.value.engineId ?? store.state.engineIds[0]
+        ]?.supportedFeatures || ({} as EngineManifest["supportedFeatures"])
     );
 
     const applyPreset = () => {
