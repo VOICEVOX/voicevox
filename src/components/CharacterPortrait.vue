@@ -1,7 +1,9 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name">{{ characterEngineName }}</span>
+    <span class="character-engine-name" v-if="isEngineMultiple">{{
+      characterEngineName
+    }}</span>
     <img :src="portraitPath" class="character-portrait" />
     <div v-if="isInitializingSpeaker" class="loading">
       <q-spinner color="primary" size="5rem" :thickness="4" />
@@ -64,11 +66,14 @@ export default defineComponent({
       return store.state.audioKeyInitializingSpeaker === activeAudioKey;
     });
 
+    const isEngineMultiple = store.state.engineIds.length > 1;
+
     return {
       characterName,
       characterEngineName,
       portraitPath,
       isInitializingSpeaker,
+      isEngineMultiple,
     };
   },
 });
