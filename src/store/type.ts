@@ -1052,7 +1052,7 @@ type UiStoreTypes = {
     mutation: { engineManifests: Record<string, EngineManifest> };
   };
 
-  LOAD_ENGINE_MANIFESTS: { action(): void };
+  FETCH_AND_SET_ENGINE_MANIFESTS: { action(): void };
 
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };

@@ -469,7 +469,7 @@ export default defineComponent({
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
-      await store.dispatch("LOAD_ENGINE_MANIFESTS");
+      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
       await store.dispatch("LOAD_CHARACTER_ALL");

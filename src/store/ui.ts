@@ -394,7 +394,7 @@ export const uiStore: VoiceVoxStoreOptions<UiGetters, UiActions, UiMutations> =
           engineInfos: await window.electron.engineInfos(),
         });
       },
-      async LOAD_ENGINE_MANIFESTS({ state, commit }) {
+      async FETCH_AND_SET_ENGINE_MANIFESTS({ state, commit }) {
         commit("SET_ENGINE_MANIFESTS", {
           engineManifests: Object.fromEntries(
             await Promise.all(
