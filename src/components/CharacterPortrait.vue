@@ -66,7 +66,7 @@ export default defineComponent({
       return store.state.audioKeyInitializingSpeaker === activeAudioKey;
     });
 
-    const isEngineMultiple = store.state.engineIds.length > 1;
+    const isMultipleEngine = store.state.engineIds.length > 1;
 
     return {
       characterName,
