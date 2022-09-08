@@ -167,8 +167,8 @@
     <div class="q-mx-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${speedScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        :class="{
+          disabled: speedScaleSlider.qSliderProps.disable.value,
         }"
         >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -193,8 +193,8 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${pitchScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        :class="{
+          disabled: pitchScaleSlider.qSliderProps.disable.value,
         }"
         >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -219,10 +219,8 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${
-            intonationScaleSlider.qSliderProps.disable.value ? 0.5 : 1
-          }`,
+        :class="{
+          disabled: intonationScaleSlider.qSliderProps.disable.value,
         }"
         >抑揚
         {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
@@ -248,8 +246,8 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${volumeScaleSlider.qSliderProps.disable.value ? 0.5 : 1}`,
+        :class="{
+          disabled: volumeScaleSlider.qSliderProps.disable.value,
         }"
         >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -274,10 +272,8 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${
-            prePhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
-          }`,
+        :class="{
+          disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
         }"
         >開始無音
         {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
@@ -303,10 +299,8 @@
     <div class="q-px-md">
       <span
         class="text-body1 q-mb-xs"
-        :style="{
-          opacity: `${
-            postPhonemeLengthSlider.qSliderProps.disable.value ? 0.5 : 1
-          }`,
+        :class="{
+          disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
         }"
         >終了無音
         {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
