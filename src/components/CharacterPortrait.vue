@@ -1,8 +1,8 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name" v-if="isEngineMultiple">{{
-      characterEngineName
+    <span class="character-engine-name" v-if="isMultipleEngine">{{
+      engineName
     }}</span>
     <img :src="portraitPath" class="character-portrait" />
     <div v-if="isInitializingSpeaker" class="loading">
@@ -49,7 +49,7 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
-    const characterEngineName = computed(() => {
+    const engineName = computed(() => {
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
@@ -70,10 +70,10 @@ export default defineComponent({
 
     return {
       characterName,
-      characterEngineName,
+      engineName,
       portraitPath,
       isInitializingSpeaker,
-      isEngineMultiple,
+      isMultipleEngine,
     };
   },
 });
