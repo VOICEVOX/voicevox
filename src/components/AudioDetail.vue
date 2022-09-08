@@ -369,6 +369,8 @@ export default defineComponent({
     );
 
     // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
+    // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
+    //       タブ自体の無効化＆移動以外の方法で無効化する
     watch(
       supportedFeatures,
       (newFeatures) => {
