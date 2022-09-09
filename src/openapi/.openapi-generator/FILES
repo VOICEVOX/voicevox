@@ -3,6 +3,7 @@ apis/index.ts
 index.ts
 models/AccentPhrase.ts
 models/AudioQuery.ts
+models/DownloadableLibrary.ts
 models/EngineManifest.ts
 models/HTTPValidationError.ts
 models/LicenseInfo.ts
@@ -14,6 +15,7 @@ models/SpeakerInfo.ts
 models/SpeakerStyle.ts
 models/StyleInfo.ts
 models/SupportedDevicesInfo.ts
+models/SupportedFeatures.ts
 models/UpdateInfo.ts
 models/UserDictWord.ts
 models/ValidationError.ts

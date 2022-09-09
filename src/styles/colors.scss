@@ -7,47 +7,67 @@ $primary-light-rgb: var(--color-primary-light-rgb);
 $display: var(--color-display);
 $display-rgb: var(--color-display-rgb);
 
-$display-light: var(--color-display-light);
-$display-light-rgb: var(--color-display-light-rgb);
+$display-on-primary: var(--color-display-on-primary);
+$display-on-primary-rgb: var(--color-display-on-primary-rgb);
 
-$display-dark: var(--color-display-dark);
-$display-dark-rgb: var(--color-display-dark-rgb);
+$display-hyperlink: var(--color-display-hyperlink);
+$display-hyperlink-rgb: var(--color-display-hyperlink-rgb);
 
 $background: var(--color-background);
 $background-rgb: var(--color-background-rgb);
 
-$background-light: var(--color-background-light);
-$background-light-rgb: var(--color-background-light-rgb);
-
-$setting-item: var(--color-setting-item);
-$setting-item-rgb: var(--color-setting-item-rgb);
+$surface: var(--color-surface);
+$surface-rgb: var(--color-surface-rgb);
 
 $warning: var(--color-warning);
 $warning-rgb: var(--color-warning-rgb);
 
-$markdown-color: var(--color-markdown-color);
-$markdown-color-rgb: var(--color-markdown-color-rgb);
-
-$markdown-background: var(--color-markdown-background);
-$markdown-background-rgb: var(--color-markdown-background-rgb);
-
-$markdown-hyperlink: var(--color-markdown-hyperlink);
-$markdown-hyperlink-rgb: var(--color-markdown-hyperlink-rgb);
-
-$header-selected: var(--color-header-selected);
-$header-selected-rgb: var(--color-header-selected-rgb);
-
-$pause-hovered: var(--color-pause-hovered);
-$pause-hovered-rgb: var(--color-pause-hovered-rgb);
+$text-splitter-hover: var(--color-text-splitter-hover);
+$text-splitter-hover-rgb: var(--color-text-splitter-hover-rgb);
 
 $active-point-focus: var(--color-active-point-focus);
 $active-point-focus-rgb: var(--color-active-point-focus-rgb);
 
-$active-point-focus-hover: var(--color-active-point-focus-hover);
-$active-point-focus-hover-rgb: var(--color-active-point-focus-hover-rgb);
+$active-point-hover: var(--color-active-point-hover);
+$active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
-$button-icon: var(--color-button-icon);
-$button-icon-rgb: var(--color-button-icon-rgb);
+// ダークテーマと通常テーマで変わる色
+:root {
+  --color-toolbar: var(--color-primary);
+  --color-toolbar-rgb: var(--color-primary-rgb);
 
-$header-background: var(--color-header-background);
-$header-background-rgb: var(--color-header-background-rgb);
+  --color-toolbar-button: var(--color-background);
+  --color-toolbar-button-rgb: var(--color-background-rgb);
+
+  --color-toolbar-button-display: var(--color-display);
+  --color-toolbar-button-display-rgb: var(--color-display-rgb);
+
+  --color-splitter: var(--color-primary);
+  --color-splitter-rgb: var(--color-primary-rgb);
+}
+
+:root[is-dark-theme="true"] {
+  --color-toolbar: var(--color-surface);
+  --color-toolbar-rgb: var(--color-surface-rgb);
+
+  --color-toolbar-button: var(--color-primary);
+  --color-toolbar-button-rgb: var(--color-primary-rgb);
+
+  --color-toolbar-button-display: var(--color-display-on-primary);
+  --color-toolbar-button-display-rgb: var(--color-display-on-primary-rgb);
+
+  --color-splitter: var(--color-surface);
+  --color-splitter-rgb: var(--color-surface-rgb);
+}
+
+$toolbar: var(--color-toolbar);
+$toolbar-rgb: var(--color-toolbar-rgb);
+
+$toolbar-button: var(--color-toolbar-button);
+$toolbar-button-rgb: var(--color-toolbar-button-rgb);
+
+$toolbar-button-display: var(--color-toolbar-button-display);
+$toolbar-button-display-rgb: var(--color-toolbar-button-display-rgb);
+
+$splitter: var(--color-splitter);
+$splitter-rgb: var(--color-splitter-rgb);

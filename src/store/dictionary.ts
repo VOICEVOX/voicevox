@@ -17,10 +17,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
   getters: {},
   mutations: {},
   actions: {
-    LOAD_USER_DICT: async ({ state, dispatch }) => {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
+    LOAD_USER_DICT: async ({ dispatch }, { engineId }) => {
       const engineDict = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
       }).then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
@@ -45,7 +42,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
 
     ADD_WORD: async (
       { state, dispatch },
-      { surface, pronunciation, accentType }
+      { surface, pronunciation, accentType, priority }
     ) => {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
       if (engineId === undefined)
@@ -57,6 +54,7 @@ export const dictionaryStore: VoiceVoxStoreOptions<
           surface,
           pronunciation,
           accentType,
+          priority,
         })
       );
     },

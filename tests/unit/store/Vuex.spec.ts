@@ -21,6 +21,7 @@ describe("store/vuex.js test", () => {
         engineStates: {
           "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
         },
+        characterInfos: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -74,6 +75,7 @@ describe("store/vuex.js test", () => {
         engineInfos: {
           "88022f86-c823-436e-85a3-500c629749c4": {
             uuid: "88022f86-c823-436e-85a3-500c629749c4",
+            name: "Engine 1",
             executionEnabled: false,
             executionFilePath: "",
             host: "http://127.0.0.1",
@@ -139,6 +141,7 @@ describe("store/vuex.js test", () => {
     store.state.engineIds.forEach((engineId) =>
       assert.equal(store.state.engineStates[engineId], "STARTING")
     );
+    assert.isObject(store.state.characterInfos);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);

@@ -104,7 +104,7 @@
               <div class="text-h6">読み</div>
               <q-input
                 ref="yomiInput"
-                class="word-input"
+                class="word-input q-pb-none"
                 v-model="yomi"
                 @blur="setYomi(yomi)"
                 @keydown="setYomiWhenEnter"
@@ -117,7 +117,7 @@
                 </template>
               </q-input>
             </div>
-            <div class="row q-pl-md q-pt-sm text-h6">アクセント調整</div>
+            <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
             <div class="row q-pl-md desc-row">
               語尾のアクセントを考慮するため、「が」が自動で挿入されます。
             </div>
@@ -127,7 +127,7 @@
                   v-if="!nowPlaying && !nowGenerating"
                   fab
                   color="primary-light"
-                  text-color="display-dark"
+                  text-color="display-on-primary"
                   icon="play_arrow"
                   @click="play"
                 />
@@ -135,7 +135,7 @@
                   v-else
                   fab
                   color="primary-light"
-                  text-color="display-dark"
+                  text-color="display-on-primary"
                   icon="stop"
                   @click="stop"
                   :disable="nowGenerating"
@@ -175,7 +175,7 @@
                 </div>
               </div>
             </div>
-            <div class="row q-pl-md q-pt-sm text-h6">単語優先度</div>
+            <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
               単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
             </div>
@@ -263,6 +263,8 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
+    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
+
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -282,10 +284,16 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       loadingDict.value = true;
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT")
+          store.dispatch("LOAD_USER_DICT", {
+            engineId,
+          })
         );
       } catch {
         $q.dialog({
@@ -356,6 +364,10 @@ export default defineComponent({
       surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
@@ -378,6 +390,7 @@ export default defineComponent({
           await createUILockAction(
             store.dispatch("FETCH_ACCENT_PHRASES", {
               text: text + "ガ'",
+              engineId,
               styleId: styleId.value,
               isKana: true,
             })
@@ -396,12 +409,17 @@ export default defineComponent({
     };
 
     const changeAccent = async (_: number, accent: number) => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
           await createUILockAction(
             store.dispatch("FETCH_MORA_DATA", {
               accentPhrases: [accentPhrase.value],
+              engineId,
               styleId: styleId.value,
             })
           )
@@ -413,6 +431,10 @@ export default defineComponent({
     audioElem.pause();
 
     const play = async () => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       if (!accentPhrase.value) return;
       nowGenerating.value = true;
       const query: AudioQuery = {
@@ -429,6 +451,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
+        engineId,
         styleId: styleId.value,
         query,
       };
@@ -726,7 +749,7 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 
 .word-list-col {
-  border-right: solid 1px colors.$setting-item;
+  border-right: solid 1px colors.$surface;
   position: relative; // オーバーレイのため
   overflow-x: hidden;
 }
@@ -758,6 +781,7 @@ export default defineComponent({
 }
 
 .loading-dict {
+  background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;
   z-index: 10;
@@ -767,8 +791,8 @@ export default defineComponent({
   justify-content: center;
 
   > div {
-    color: colors.$display-dark;
-    background: colors.$background-light;
+    color: colors.$display;
+    background: colors.$background;
     border-radius: 6px;
     padding: 14px;
   }

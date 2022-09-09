@@ -79,6 +79,7 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
+  openEngineDirectory(engineId: string): void;
   savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
@@ -157,6 +158,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
+// FIXME: engineIdを追加
 export type DefaultStyleId = {
   speakerUuid: string;
   defaultStyleId: number;
@@ -170,6 +172,10 @@ export type HotkeySetting = {
 export type EngineInfo = {
   uuid: string;
   host: string;
+  name: string;
+  iconPath?: string;
+  iconData?: string;
+  path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
 };
@@ -244,21 +250,14 @@ export type ThemeColorType =
   | "primary"
   | "primary-light"
   | "display"
-  | "display-light"
-  | "display-dark"
+  | "display-on-primary"
+  | "display-hyperlink"
   | "background"
-  | "background-light"
-  | "header-background"
-  | "setting-item"
+  | "surface"
   | "warning"
-  | "markdown-color"
-  | "markdown-background"
-  | "markdown-hyperlink"
-  | "header-selected"
-  | "pause-hovered"
+  | "text-splitter-hover"
   | "active-point-focus"
-  | "active-point-focus-hover"
-  | "button-icon";
+  | "active-point-hover";
 
 export type ThemeConf = {
   name: string;

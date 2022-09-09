@@ -32,7 +32,7 @@ export default defineComponent({
 }
 
 .markdown :deep(img) {
-  border: 1px solid #333;
+  border: 1px solid #888;
   vertical-align: middle;
   margin-bottom: 1rem;
 }

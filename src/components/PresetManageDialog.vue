@@ -20,7 +20,7 @@
                     <q-btn
                       icon="delete"
                       flat
-                      color="grey-9"
+                      color="display"
                       @click="deletePreset(item.key)"
                     ></q-btn>
                   </q-item-section>
@@ -28,7 +28,7 @@
               </template>
             </draggable>
             <q-item v-if="presetList.length === 0">
-              <q-item-section class="text-grey-8">
+              <q-item-section class="display">
                 プリセットがありません
               </q-item-section>
             </q-item>

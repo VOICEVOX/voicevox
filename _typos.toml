@@ -4,6 +4,7 @@
 [default.extend-identifiers]
 
 [default.extend-words]
+ba="ba" # 7zコマンドの-baオプション
 
 [files]
 extend-exclude = ["package-lock.json", "src/store/project.ts", "*.svg"]

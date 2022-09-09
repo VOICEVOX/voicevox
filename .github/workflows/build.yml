@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.12.4
-  VOICEVOX_RESOURCE_VERSION: 0.12.4
+  VOICEVOX_ENGINE_VERSION: 0.13.0
+  VOICEVOX_RESOURCE_VERSION: 0.13.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
@@ -62,11 +62,11 @@ jobs:
             linux_executable_name: voicevox
             sed_name: sed
             os: ubuntu-18.04
-          # Windows NVIDIA GPU
+          # Windows CUDA
           - artifact_name: windows-noengine-prepackage
             artifact_path: dist_electron/win-unpacked
-            package_name: voicevox
-            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
+            package_name: voicevox-cuda
+            nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # Windows CPU
@@ -79,8 +79,8 @@ jobs:
           # Windows DirectML
           - artifact_name: windows-noengine-directml-prepackage
             artifact_path: dist_electron/win-unpacked
-            package_name: voicevox-directml
-            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
+            package_name: voicevox
+            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
@@ -108,9 +108,6 @@ jobs:
       - name: Replace package name & version
         shell: bash
         run: |
-          # GPU: "name": "voicevox" => "name": "voicevox"
-          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          # DirectML: "name": "voicevox" => "name": "voicevox-directml"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
@@ -572,8 +569,8 @@ jobs:
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
-            package_name: voicevox
-            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
+            package_name: voicevox-cuda
+            nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # Windows CPU
@@ -586,8 +583,8 @@ jobs:
           # Windows DirectML
           - artifact_name: windows-directml-nsis-web
             engine_artifact_name: windows-directml-prepackage
-            package_name: voicevox-directml
-            nsis_web_artifact_name: "VOICEVOX-DirectML Web Setup ${version}.${ext}"
+            package_name: voicevox
+            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
@@ -621,9 +618,6 @@ jobs:
       - name: Replace package name & version
         shell: bash
         run: |
-          # GPU: "name": "voicevox" => "name": "voicevox"
-          # CPU: "name": "voicevox" => "name": "voicevox-cpu"
-          # DirectML: "name": "voicevox" => "name": "voicevox-directml"
           "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
           # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 

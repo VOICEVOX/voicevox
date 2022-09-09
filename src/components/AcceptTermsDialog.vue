@@ -21,8 +21,8 @@
             <q-btn
               unelevated
               label="同意せずに終了"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap q-mr-md text-bold"
               @click="handler(false)"
             />
@@ -30,8 +30,8 @@
             <q-btn
               unelevated
               label="同意して使用開始"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold"
               @click="handler(true)"
             />

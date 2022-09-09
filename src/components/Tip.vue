@@ -1,11 +1,6 @@
 <template>
-  <div v-if="!tipConfirmed">
-    <q-banner
-      class="bg-display-light text-display"
-      dense
-      rounded
-      inline-actions
-    >
+  <div v-if="!tipConfirmed" style="z-index: 10">
+    <q-banner class="bg-surface text-display" dense rounded inline-actions>
       <template v-slot:avatar>
         <q-icon name="info" color="primary" />
       </template>
@@ -13,7 +8,7 @@
       <template v-slot:action>
         <q-btn
           color="primary"
-          text-color="display"
+          text-color="display-on-primary"
           label="OK"
           @click="tipConfirmed = true"
         />

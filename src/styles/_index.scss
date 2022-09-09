@@ -4,9 +4,9 @@
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$header-background};
-  border-right: solid #{vars.$window-border-width} #{colors.$header-background};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$header-background};
+  border-left: solid #{vars.$window-border-width} #{colors.$splitter};
+  border-right: solid #{vars.$window-border-width} #{colors.$splitter};
+  border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
 }
@@ -99,16 +99,16 @@ img {
 
 // 設定とかのヘッダーの色
 .q-layout__section--marginal {
-  background: colors.$header-background !important; // bg-primaryも!importantでゴリ押してるので許される
+  background: colors.$toolbar !important;
 }
 
 // Markdown
 .markdown-body {
   min-height: max-content;
-  color: colors.$markdown-color;
-  background: colors.$markdown-background;
+  color: colors.$display;
+  background: colors.$background;
   a {
-    color: colors.$markdown-hyperlink;
+    color: colors.$display-hyperlink;
   }
 }
 .markdown {
@@ -157,7 +157,7 @@ img {
   }
 }
 
-// カラー
+// Quasar用のカラー設定
 .text-primary-light {
   color: colors.$primary-light;
 }
@@ -172,18 +172,11 @@ img {
   background: colors.$display;
 }
 
-.text-display-light {
-  color: colors.$display-light;
+.text-display-on-primary {
+  color: colors.$display-on-primary;
 }
-.bg-display-light {
-  background: colors.$display-light;
-}
-
-.text-display-dark {
-  color: colors.$display-dark;
-}
-.bg-display-dark {
-  background: colors.$display-dark;
+.bg-display-on-primary {
+  background: colors.$display-on-primary;
 }
 
 .text-background {
@@ -193,18 +186,11 @@ img {
   background: colors.$background;
 }
 
-.text-background-light {
-  color: colors.$background-light;
+.text-surface {
+  color: colors.$surface;
 }
-.bg-background-light {
-  background: colors.$background-light;
-}
-
-.text-setting-item {
-  color: colors.$setting-item;
-}
-.bg-setting-item {
-  background: colors.$setting-item;
+.bg-surface {
+  background: colors.$surface;
 }
 
 .text-warning {
@@ -214,23 +200,23 @@ img {
   background: colors.$warning;
 }
 
-.text-button-icon {
-  color: colors.$button-icon;
+.text-toolbar {
+  color: colors.$toolbar;
 }
-.bg-button-icon {
-  background: colors.$button-icon;
-}
-
-.text-header-background {
-  color: colors.$header-background;
-}
-.bg-header-background {
-  background: colors.$header-background;
+.bg-toolbar {
+  background: colors.$toolbar;
 }
 
-.text-header-selected {
-  color: colors.$header-selected;
+.text-toolbar-button {
+  color: colors.$toolbar-button;
 }
-.bg-header-selected {
-  background: colors.$header-selected;
+.bg-toolbar-button {
+  background: colors.$toolbar-button;
+}
+
+.text-toolbar-button-display {
+  color: colors.$toolbar-button-display;
+}
+.bg-toolbar-button-display {
+  background: colors.$toolbar-button-display;
 }

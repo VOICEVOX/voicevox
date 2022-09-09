@@ -7,9 +7,17 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <q-btn flat class="q-pa-none character-button" :disable="uiLocked">
+    <q-btn
+      flat
+      class="q-pa-none character-button"
+      :disable="uiLocked"
+      :class="{ opaque: isInitializingSpeaker }"
+    >
       <!-- q-imgだとdisableのタイミングで点滅する -->
       <img class="q-pa-none q-ma-none" :src="selectedStyle.iconPath" />
+      <div v-if="isInitializingSpeaker" class="loading">
+        <q-spinner color="primary" size="1.6rem" :thickness="7" />
+      </div>
       <q-menu
         class="character-menu"
         transition-show="none"
@@ -34,6 +42,7 @@
                 "
                 @click="
                   changeStyleId(
+                    characterInfo.metas.speakerUuid,
                     getDefaultStyle(characterInfo.metas.speakerUuid).styleId
                   )
                 "
@@ -89,7 +98,12 @@
                         v-close-popup
                         active-class="selected-character-item"
                         :active="style.styleId === selectedStyle.styleId"
-                        @click="changeStyleId(style.styleId)"
+                        @click="
+                          changeStyleId(
+                            characterInfo.metas.speakerUuid,
+                            style.styleId
+                          )
+                        "
                       >
                         <q-avatar rounded size="2rem" class="q-mr-md">
                           <q-img
@@ -175,6 +189,9 @@ export default defineComponent({
     const userOrderedCharacterInfos = computed(
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
+    const isInitializingSpeaker = computed(
+      () => store.state.audioKeyInitializingSpeaker === props.audioKey
+    );
     const audioItem = computed(() => store.state.audioItems[props.audioKey]);
     const nowPlaying = computed(
       () => store.state.audioStates[props.audioKey].nowPlaying
@@ -187,11 +204,11 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() =>
       userOrderedCharacterInfos.value !== undefined &&
+      audioItem.value.engineId !== undefined &&
       audioItem.value.styleId !== undefined
-        ? userOrderedCharacterInfos.value.find((info) =>
-            info.metas.styles.find(
-              (style) => style.styleId === audioItem.value.styleId
-            )
+        ? store.getters.CHARACTER_INFO(
+            audioItem.value.engineId,
+            audioItem.value.styleId
           )
         : undefined
     );
@@ -245,13 +262,26 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (styleId: number) => {
+    const changeStyleId = (speakerUuid: string, styleId: number) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+      const engineId = store.state.engineIds.find((_engineId) =>
+        (store.state.characterInfos[_engineId] ?? []).some(
+          (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
+        )
+      );
+      if (engineId === undefined)
+        throw new Error(
+          `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+        );
+
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
+        engineId,
         styleId,
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
@@ -305,10 +335,17 @@ export default defineComponent({
             await pushAudioText();
           }
 
+          const engineId = audioItem.value.engineId;
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
+
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined) throw new Error("styleId == undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            engineId,
             styleId,
             prevAudioKey,
           });
@@ -398,6 +435,7 @@ export default defineComponent({
 
     return {
       userOrderedCharacterInfos,
+      isInitializingSpeaker,
       audioItem,
       deleteButtonEnable,
       uiLocked,
@@ -461,6 +499,24 @@ export default defineComponent({
       height: 2rem;
       object-fit: scale-down;
     }
+    .loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      background-color: rgba(colors.$background-rgb, 0.74);
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      svg {
+        filter: drop-shadow(0 0 1px colors.$background);
+      }
+    }
+  }
+  .opaque {
+    opacity: 1 !important;
   }
   .q-input {
     :deep(.q-field__control) {

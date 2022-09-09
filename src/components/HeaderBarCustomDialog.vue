@@ -16,8 +16,8 @@
             <q-space />
             <q-btn
               unelevated
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               @click="applyDefaultSetting"
               :disable="isDefault"
@@ -25,8 +25,8 @@
             >
             <q-btn
               unelevated
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               @click="saveCustomToolbar"
               :disable="!isChanged"
@@ -44,7 +44,7 @@
         </q-header>
         <q-page>
           <q-card flat square class="preview-card">
-            <q-toolbar class="bg-header-background preview-toolbar">
+            <q-toolbar class="bg-toolbar preview-toolbar">
               <template v-for="button in toolbarButtons" :key="button">
                 <q-radio
                   v-model="selectedButton"
@@ -62,7 +62,7 @@
                     ' text-no-wrap text-bold text-display q-mr-sm'
                   "
                   ><q-tooltip
-                    :delay="500"
+                    :delay="800"
                     anchor="center left"
                     self="center right"
                     transition-show="jump-left"
@@ -106,7 +106,7 @@
               <div class="text-h5">表示するボタンの選択</div>
             </q-card-actions>
             <q-card-actions class="no-padding">
-              <q-list class="usable-button-list bg-setting-item">
+              <q-list class="usable-button-list bg-surface">
                 <q-item
                   v-for="(desc, key) in usableButtonsDesc"
                   :key="key"
@@ -372,10 +372,10 @@ export default defineComponent({
 
 .radio {
   padding: 6px 14px;
-  border: solid 2px var(--color-background-light);
+  border: solid 2px var(--color-toolbar-button);
   border-radius: 3px;
-  color: var(--color-display-dark);
-  background-color: var(--color-background-light);
+  color: var(--color-toolbar-button-display);
+  background-color: var(--color-toolbar-button);
 }
 
 .radio:hover {
@@ -384,8 +384,9 @@ export default defineComponent({
 
 .radio-selected {
   @extend .radio;
-  background-color: colors.$header-selected;
-  border-color: colors.$header-selected;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .radio-space {
@@ -400,7 +401,8 @@ export default defineComponent({
 
 .radio-space-selected {
   @extend .radio-space;
-  background-color: colors.$header-selected;
-  border: solid 2px colors.$header-selected;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
 }
 </style>

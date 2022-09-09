@@ -23,8 +23,8 @@
             <q-btn
               unelevated
               label="完了"
-              color="background-light"
-              text-color="display-dark"
+              color="toolbar-button"
+              text-color="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -90,7 +90,6 @@
                       flat
                       dense
                       icon="chevron_left"
-                      color="background-light"
                       text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
@@ -107,7 +106,6 @@
                       flat
                       dense
                       icon="chevron_right"
-                      color="background-light"
                       text-color="display"
                       class="style-select-button"
                       @mouseenter="isHoverableItem = false"
@@ -165,7 +163,7 @@
             <draggable
               class="character-order q-px-sm"
               v-model="characterOrder"
-              :item-key="keyOfcharacterOrderItem"
+              :item-key="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >
@@ -282,9 +280,10 @@ export default defineComponent({
           selectedCharacter.value = sampleCharacterOrder.value[0];
 
           // 保存済みのキャラクターリストを取得
-          characterOrder.value = store.state.userCharacterOrder.map(
-            (speakerUuid) => characterInfosMap.value[speakerUuid]
-          );
+          // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
+          characterOrder.value = store.state.userCharacterOrder
+            .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+            .filter((info) => info !== undefined) as CharacterInfo[];
 
           // 含まれていないキャラクターを足す
           const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -304,7 +303,7 @@ export default defineComponent({
     );
 
     // draggable用
-    const keyOfcharacterOrderItem = (item: CharacterInfo) =>
+    const keyOfCharacterOrderItem = (item: CharacterInfo) =>
       item.metas.speakerUuid;
 
     // キャラクター枠のホバー状態を表示するかどうか
@@ -396,7 +395,7 @@ export default defineComponent({
       selectedCharacter,
       selectCharacter,
       characterOrder,
-      keyOfcharacterOrderItem,
+      keyOfCharacterOrderItem,
       isHoverableItem,
       playing,
       togglePlayOrStop,
@@ -524,7 +523,7 @@ export default defineComponent({
 
     .character-order-item {
       border-radius: 10px;
-      border: 2px solid colors.$display-light;
+      border: 2px solid rgba(colors.$display-rgb, 0.15);
       text-align: center;
       cursor: grab;
       &.selected-character-order-item {

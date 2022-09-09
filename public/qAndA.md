@@ -7,12 +7,12 @@
 Windows／Mac／Linux 搭載の PC に対応しています。
 
 ※Windows：Windows 10・Windows 11
-※Mac：macOS Catalina以降
+※Mac：macOS Catalina 以降
 ※Linux：Ubuntu 18.04・Ubuntu 20.04
 
 #### GPU 版
 
-Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
+GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
 ## インストールに関する質問
 
@@ -33,7 +33,7 @@ Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
 3. 「ダウンロードしているファイルまたはそのソースが信頼できることを確認してから、ファイルを開いてください。」と表示されます。「詳細表示」をクリックします。
 4. VOICEVOX のホームページからダウンロードしたインストーラーなど、安全性が確認できる場合は、「保持する」をクリックします。アプリやファイルの提供元が不明など、安全性が確認できない場合は、「削除」ボタンをクリックします。VOICEVOX のホームページからダウンロードするインストーラーなどでも「発行元」に「不明」と表示されることがあります。「不明」と表示されても、安全性が確認できる場合は保存してください。
 
-### 「Windows によって PC が保護されました」と表示されます。
+### Q. 「Windows によって PC が保護されました」と表示されます。
 
 インストーラーを実行しようとすると、「Windows によって PC が保護されました」と表示されることがあります。  
 これは、実行しようとしたアプリやファイルの危険性がないかどうかの確認を促す、Windows SmartScreen（または Windows Defender SmartScreen）という機能からのメッセージです。  
@@ -54,6 +54,10 @@ Windows／Linux と Nvidia 製 GPU 搭載の PC に対応しています。
 ### Q. アップデート方法を教えてください。
 
 ホームページから最新版を再インストールすることでアップデートできます。
+
+### Q. 過去のバージョンに戻すことはできますか？
+
+[こちら](https://github.com/VOICEVOX/voicevox/releases)から過去のバージョンを入手することが出来ます。
 
 ## 使い方に関する質問
 

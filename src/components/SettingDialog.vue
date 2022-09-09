@@ -31,7 +31,7 @@
               <q-card-actions>
                 <div class="text-h5">エンジン</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>エンジンモード</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -42,7 +42,8 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      GPUモードの利用には NVIDIA&trade; GPU が必要です
+                      GPU モードの利用には GPU が必要です。Linux は
+                      NVIDIA&trade; 製 GPU のみ対応しています。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -54,7 +55,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
@@ -68,7 +69,7 @@
               <q-card-actions>
                 <div class="text-h5">操作</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>パラメータの引き継ぎ</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -90,7 +91,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>再生位置を追従</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -139,7 +140,7 @@
                   </q-radio>
                 </div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>テキスト分割の挙動</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -163,7 +164,7 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     {
                       label: '句点と改行',
@@ -219,7 +220,7 @@
               <q-card-actions>
                 <div class="text-h5">保存</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>文字コード</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -245,14 +246,14 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   :options="[
                     { label: 'UTF-8', value: 'UTF-8' },
                     { label: 'Shift_JIS', value: 'Shift_JIS' },
                   ]"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>書き出し先を固定</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -313,7 +314,7 @@
                 v-model:open-dialog="showsFilePatternEditDialog"
               />
 
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>書き出しファイル名パターン</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -335,14 +336,14 @@
                 <q-btn
                   label="編集"
                   unelevated
-                  color="background-light"
-                  text-color="display-dark"
+                  color="background"
+                  text-color="display"
                   class="text-no-wrap q-mr-sm"
                   @click="showsFilePatternEditDialog = true"
                 />
               </q-card-actions>
 
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>上書き防止</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -366,7 +367,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>txtファイルを書き出し</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -391,7 +392,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>labファイルを書き出し</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -421,7 +422,7 @@
               <q-card-actions>
                 <div class="text-h5">高度な設定</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>音声をステレオ化</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -445,7 +446,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>再生デバイス</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -470,7 +471,7 @@
                 >
                 </q-select>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>音声のサンプリングレート</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -509,8 +510,7 @@
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <!-- FIXME: 0.9.1に間に合わなかったのでダークモード機能を一旦省きました -->
-              <q-card-actions class="q-px-md q-py-sm bg-setting-item">
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>テーマ</div>
                 <q-icon name="help_outline" size="sm" class="help-hover-icon">
                   <q-tooltip
@@ -530,12 +530,12 @@
                   color="background"
                   text-color="display"
                   toggle-color="primary"
-                  toggle-text-color="display-dark"
+                  toggle-text-color="display-on-primary"
                   v-model="currentThemeNameComputed"
                   :options="availableThemeNameComputed"
                 />
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>プリセット機能</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -559,7 +559,7 @@
                 >
                 </q-toggle>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>疑問文を自動調整</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -591,7 +591,7 @@
               <q-card-actions>
                 <div class="text-h5">データ収集</div>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-setting-item">
+              <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>ソフトウェア利用状況のデータ収集を許可する</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -926,7 +926,7 @@ export default defineComponent({
 
 .scroll-mode-button-selected {
   background: colors.$primary;
-  color: colors.$display-dark;
+  color: colors.$display-on-primary;
 }
 
 .text-ellipsis {
