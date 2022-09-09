@@ -4,7 +4,7 @@
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "engines": {
-    "node": ">=16.16.0 <17",
+    "node": ">=16.17.0 <17",
     "npm": ">=8.11.0 <9"
   },
   "scripts": {
