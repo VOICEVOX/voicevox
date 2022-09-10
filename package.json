@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "test-watch:e2e": "vue-cli-service test:e2e --watch",
     "lint": "vue-cli-service lint --no-fix",
+    "typecheck": "tsc --noEmit",
     "markdownlint": "markdownlint *.md",
     "fmt": "vue-cli-service lint",
     "electron:build": "vue-cli-service electron:build",
