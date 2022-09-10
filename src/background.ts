@@ -704,6 +704,9 @@ async function restartEngine(engineId: string) {
       runEngine(engineId);
       resolve();
     };
+
+    if (engineProcess === undefined) throw Error("engineProcess === undefined");
+
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
