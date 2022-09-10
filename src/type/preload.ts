@@ -80,7 +80,6 @@ export interface Sandbox {
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
   openEngineDirectory(engineId: string): void;
-  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -175,7 +174,7 @@ export type EngineInfo = {
   name: string;
   iconPath?: string;
   iconData?: string;
-  path?: string;
+  path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
 };

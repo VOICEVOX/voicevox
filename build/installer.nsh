@@ -782,3 +782,20 @@ FunctionEnd
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
 
 !macroend
+
+!macro customHeader
+  ; インストール成功後に%LOCALAPPDATA%\voicevox-updater\を削除する
+  Function .onInstSuccess
+    ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
+    ${if} $installMode == "all"
+      SetShellVarContext current
+    ${endif}
+    Push $R0
+    ${GetParent} "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}" $R0
+    RMDir /r "$R0"
+    Pop $R0
+    ${if} $installMode == "all"
+      SetShellVarContext all
+    ${endif}
+  FunctionEnd
+!macroend

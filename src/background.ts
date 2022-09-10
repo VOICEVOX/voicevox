@@ -24,25 +24,25 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import {
-  DefaultStyleId,
   HotkeySetting,
-  SavingSetting,
-  PresetConfig,
   ThemeConf,
-  ExperimentalSetting,
-  AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
   ToolbarSetting,
-  ActivePointScrollMode,
   EngineInfo,
-  SplitTextWhenPasteType,
-  SplitterPosition,
   ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+
+type EngineManifest = {
+  name: string;
+  uuid: string;
+  command: string;
+  port: string;
+  icon: string;
+};
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -114,7 +114,26 @@ function detectImageTypeFromBase64(data: string): string {
   }
 }
 
-const engineInfos: EngineInfo[] = (() => {
+// EngineInfoからアイコンを読み込む
+function replaceEngineInfoIconData(engineInfo: EngineInfo): EngineInfo {
+  if (!engineInfo.iconPath) return engineInfo;
+  let b64icon;
+  try {
+    b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.iconPath), {
+      encoding: "base64",
+    });
+  } catch (e) {
+    log.error("Failed to read icon file: " + engineInfo.iconPath);
+    return engineInfo;
+  }
+  return {
+    ...engineInfo,
+    iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
+  };
+}
+
+const defaultEngineInfos: EngineInfo[] = (() => {
+  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
   let engines: EngineInfo[] = [];
 
@@ -122,20 +141,9 @@ const engineInfos: EngineInfo[] = (() => {
     engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return engines.map((engineInfo: EngineInfo) => {
-    if (!engineInfo.iconPath) return engineInfo;
-    let b64icon: string;
-    try {
-      b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.iconPath), {
-        encoding: "base64",
-      });
-    } catch (e) {
-      log.error("Failed to read icon file: " + engineInfo.iconPath);
-      return engineInfo;
-    }
+  return engines.map(replaceEngineInfoIconData).map((engineInfo) => {
     return {
       ...engineInfo,
-      iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
       path:
         engineInfo.path === undefined
           ? undefined
@@ -143,6 +151,49 @@ const engineInfos: EngineInfo[] = (() => {
     };
   });
 })();
+
+// ユーザーディレクトリにあるエンジンを取得する
+function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
+  const userEngineDir = path.join(app.getPath("userData"), "engines");
+  if (!fs.existsSync(userEngineDir)) {
+    fs.mkdirSync(userEngineDir);
+  }
+
+  const engines: EngineInfo[] = [];
+  for (const dirName of fs.readdirSync(userEngineDir)) {
+    const engineDir = path.join(userEngineDir, dirName);
+    if (!fs.statSync(engineDir).isDirectory()) {
+      console.log(`${engineDir} is not directory`);
+      continue;
+    }
+
+    const manifestPath = path.join(engineDir, "engine_manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      console.log(`${manifestPath} is not found`);
+      continue;
+    }
+
+    const manifest: EngineManifest = JSON.parse(
+      fs.readFileSync(manifestPath, { encoding: "utf8" })
+    );
+
+    engines.push({
+      uuid: manifest.uuid,
+      host: `http://127.0.0.1:${manifest.port}`,
+      name: manifest.name,
+      iconPath: path.join(engineDir, manifest.icon),
+      path: engineDir,
+      executionEnabled: true,
+      executionFilePath: path.join(engineDir, manifest.command),
+    });
+  }
+  return engines.map(replaceEngineInfoIconData);
+}
+
+function fetchEngineInfos(): EngineInfo[] {
+  const userEngineInfos = fetchEngineInfosFromUserDirectory();
+  return [...defaultEngineInfos, ...userEngineInfos];
+}
 
 const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -441,6 +492,7 @@ type EngineProcessContainer = {
 const engineProcessContainers: Record<string, EngineProcessContainer> = {};
 
 async function runEngineAll() {
+  const engineInfos = fetchEngineInfos();
   log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
@@ -450,6 +502,7 @@ async function runEngineAll() {
 }
 
 async function runEngine(engineId: string) {
+  const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
@@ -609,6 +662,7 @@ function killEngine(engineId: string): Promise<void> | undefined {
 }
 
 async function restartEngineAll() {
+  const engineInfos = fetchEngineInfos();
   for (const engineInfo of engineInfos) {
     await restartEngine(engineInfo.uuid);
   }
@@ -650,6 +704,9 @@ async function restartEngine(engineId: string) {
       runEngine(engineId);
       resolve();
     };
+
+    if (engineProcess === undefined) throw Error("engineProcess === undefined");
+
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
@@ -677,6 +734,7 @@ async function restartEngine(engineId: string) {
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: string) {
+  const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
@@ -1077,8 +1135,8 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 });
 
 ipcMainHandle("ENGINE_INFOS", () => {
-  // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
-  return engineInfos;
+  // エンジン情報を設定ファイルに保存しないためにstoreは使わない
+  return fetchEngineInfos();
 });
 
 /**

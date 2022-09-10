@@ -163,7 +163,7 @@
             <draggable
               class="character-order q-px-sm"
               v-model="characterOrder"
-              :item-key="keyOfcharacterOrderItem"
+              :item-key="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >
@@ -280,9 +280,10 @@ export default defineComponent({
           selectedCharacter.value = sampleCharacterOrder.value[0];
 
           // 保存済みのキャラクターリストを取得
-          characterOrder.value = store.state.userCharacterOrder.map(
-            (speakerUuid) => characterInfosMap.value[speakerUuid]
-          );
+          // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
+          characterOrder.value = store.state.userCharacterOrder
+            .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+            .filter((info) => info !== undefined) as CharacterInfo[];
 
           // 含まれていないキャラクターを足す
           const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -302,7 +303,7 @@ export default defineComponent({
     );
 
     // draggable用
-    const keyOfcharacterOrderItem = (item: CharacterInfo) =>
+    const keyOfCharacterOrderItem = (item: CharacterInfo) =>
       item.metas.speakerUuid;
 
     // キャラクター枠のホバー状態を表示するかどうか
@@ -394,7 +395,7 @@ export default defineComponent({
       selectedCharacter,
       selectCharacter,
       characterOrder,
-      keyOfcharacterOrderItem,
+      keyOfCharacterOrderItem,
       isHoverableItem,
       playing,
       togglePlayOrStop,

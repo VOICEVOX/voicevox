@@ -714,11 +714,7 @@ export const audioStore: VoiceVoxStoreOptions<
     /**
      * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      */
-    async INITIALIZE_ENGINE_SPEAKER({ state, dispatch }, { styleId }) {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に0番目のエンジンのみを使用する。将来的にGENERATE_AUDIO_ITEMの引数にengineId/engineIdを追加する予定
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
-
+    async INITIALIZE_ENGINE_SPEAKER({ dispatch }, { engineId, styleId }) {
       await dispatch("ASYNC_UI_LOCK", {
         callback: () =>
           dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
