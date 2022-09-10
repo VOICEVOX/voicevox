@@ -705,30 +705,30 @@ async function restartEngine(engineId: string) {
       resolve();
     };
 
-    if (engineProcess) {
-      engineProcess.once("close", restartEngineOnProcessClosedCallback);
+    if (engineProcess === undefined) throw Error("engineProcess === undefined");
 
-      // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info(
-        `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
-      );
-      treeKill(engineProcess.pid, (error) => {
-        // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-        if (error != null) {
-          log.error(`ENGINE ${engineId}: Failed to kill process`);
-          log.error(error);
+    engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
-          // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
-          // listenerを削除してENGINEの意図しない再起動を防止
-          engineProcess.removeListener(
-            "close",
-            restartEngineOnProcessClosedCallback
-          );
+    // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
+    log.info(
+      `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
+    );
+    treeKill(engineProcess.pid, (error) => {
+      // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
+      if (error != null) {
+        log.error(`ENGINE ${engineId}: Failed to kill process`);
+        log.error(error);
 
-          reject();
-        }
-      });
-    }
+        // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
+        // listenerを削除してENGINEの意図しない再起動を防止
+        engineProcess.removeListener(
+          "close",
+          restartEngineOnProcessClosedCallback
+        );
+
+        reject();
+      }
+    });
   });
 }
 
