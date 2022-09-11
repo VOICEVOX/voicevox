@@ -1,5 +1,4 @@
 import { InjectionKey } from "vue";
-import { createLogger } from "vuex";
 import { createStore, Store, useStore as baseUseStore } from "./vuex";
 
 import {
@@ -28,8 +27,6 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { DefaultStyleId } from "@/type/preload";
-
-const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -247,7 +244,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.actions,
     ...proxyStore.actions,
   },
-  plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",
 });
 
