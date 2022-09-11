@@ -16,6 +16,7 @@
     "test-watch:e2e": "vue-cli-service test:e2e --watch",
     "lint": "vue-cli-service lint --no-fix",
     "typecheck": "tsc --noEmit",
+    "typecheck:vue-tsc": "vue-tsc --noEmit",
     "markdownlint": "markdownlint *.md",
     "fmt": "vue-cli-service lint",
     "electron:build": "vue-cli-service electron:build",
@@ -91,6 +92,7 @@
     "tmp": "0.2.1",
     "typescript": "4.2.4",
     "vue-cli-plugin-electron-builder": "3.0.0-alpha.4",
+    "vue-tsc": "0.40.13",
     "yargs": "17.2.1"
   }
 }
