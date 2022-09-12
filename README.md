@@ -82,6 +82,20 @@ typos
 もし誤判定やチェックから除外すべきファイルがあれば
 [設定ファイルの説明](https://github.com/crate-ci/typos#false-positives) に従って`_typos.toml`を編集してください。
 
+## 型チェック
+
+TypeScriptの型チェックを行います。
+※ 現在チェック方法は2種類ありますが、将来的に1つになります。
+
+```bash
+# .tsのみ型チェック
+npm run typecheck
+
+# .vueも含めて型チェック
+# ※ 現状、大量にエラーが検出されます。
+npm run typecheck:vue-tsc
+```
+
 ## Markdownlint
 
 Markdown の文法チェックを行います。
