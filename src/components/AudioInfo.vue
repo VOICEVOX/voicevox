@@ -360,9 +360,11 @@ export default defineComponent({
 
     const supportedFeatures = computed(
       () =>
-        store.state.engineManifests[
-          audioItem.value.engineId ?? store.state.engineIds[0]
-        ]?.supportedFeatures || ({} as EngineManifest["supportedFeatures"])
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
     );
 
     const applyPreset = () => {

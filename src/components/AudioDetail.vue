@@ -8,12 +8,12 @@
             <q-tab
               name="pitch"
               label="ｲﾝﾄﾈｰｼｮﾝ"
-              :disable="!supportedFeatures.adjustMoraPitch"
+              :disable="!supportedFeatures?.adjustMoraPitch"
             />
             <q-tab
               name="length"
               label="長さ"
-              :disable="!supportedFeatures.adjustPhonemeLength"
+              :disable="!supportedFeatures?.adjustPhonemeLength"
             />
           </q-tabs>
         </div>
@@ -359,9 +359,11 @@ export default defineComponent({
 
     const supportedFeatures = computed(
       () =>
-        store.state.engineManifests[
-          audioItem.value.engineId ?? store.state.engineIds[0]
-        ]?.supportedFeatures || ({} as EngineManifest["supportedFeatures"])
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
     );
 
     // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
