@@ -81,6 +81,28 @@ describe("store/vuex.js test", () => {
             host: "http://127.0.0.1",
           },
         },
+        engineManifests: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
+            manifestVersion: "0.13.0",
+            name: "DUMMY VOICEVOX ENGINE",
+            uuid: "c7b58856-bd56-4aa1-afb7-b8415f824b06",
+            url: "https://github.com/VOICEVOX/voicevox_engine",
+            icon: "engine_manifest_assets/icon.png",
+            defaultSamplingRate: 24000,
+            termsOfService: "engine_manifest_assets/terms_of_service.md",
+            updateInfos: [],
+            dependencyLicenses: [],
+            supportedFeatures: {
+              adjustMoraPitch: true,
+              adjustPhonemeLength: true,
+              adjustSpeedScale: true,
+              adjustPitchScale: true,
+              adjustIntonationScale: true,
+              adjustVolumeScale: true,
+              interrogativeUpspeak: true,
+            },
+          },
+        },
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
