@@ -15,7 +15,9 @@
             <q-tab
               name="length"
               label="長さ"
-              :disable="!supportedFeatures?.adjustPhonemeLength"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustPhonemeLength)
+              "
             />
           </q-tabs>
         </div>
