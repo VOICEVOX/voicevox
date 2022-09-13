@@ -8,7 +8,9 @@
             <q-tab
               name="pitch"
               label="ｲﾝﾄﾈｰｼｮﾝ"
-              :disable="!supportedFeatures?.adjustMoraPitch"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustMoraPitch)
+              "
             />
             <q-tab
               name="length"
