@@ -721,6 +721,14 @@ export default defineComponent({
   min-height: calc(100vh - #{vars.$menubar-height});
 }
 
+.q-layout-container > :deep(.absolute-full) {
+  right: 0 !important;
+  > .scroll {
+    width: unset !important;
+    overflow: hidden;
+  }
+}
+
 .waiting-engine {
   background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
