@@ -37,6 +37,22 @@ import {
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
 
+/**
+ * エディタ用のAudioQuery
+ */
+export type EditorAudioQuery = {
+  accentPhrases: AccentPhrase[];
+  speedScale: number;
+  pitchScale: number;
+  intonationScale: number;
+  volumeScale: number;
+  prePhonemeLength: number;
+  postPhonemeLength: number;
+  outputSamplingRate: number | "default";
+  outputStereo: boolean;
+  kana?: string;
+};
+
 // FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;

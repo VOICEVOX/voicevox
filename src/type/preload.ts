@@ -153,7 +153,7 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number;
+  outputSamplingRate: number | "default";
   audioOutputDevice: string;
 };
 

@@ -2,8 +2,10 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import { AudioQuery } from "@/openapi";
 import { EngineInfo } from "@/type/preload";
 import {
+  EditorAudioQuery,
   ProxyActions,
   ProxyGetters,
   ProxyMutations,
@@ -43,6 +45,25 @@ const proxyStoreCreator = (
     },
   };
   return proxyStore;
+};
+
+export const convertToEditorAudioQuery = (
+  audioQuery: AudioQuery
+): EditorAudioQuery => {
+  return { ...audioQuery };
+};
+
+export const convertFromEditorAudioQuery = (
+  editorAudioQuery: EditorAudioQuery,
+  defaultOutputSamplingRate: number
+): AudioQuery => {
+  return {
+    ...editorAudioQuery,
+    outputSamplingRate:
+      editorAudioQuery.outputSamplingRate == "default"
+        ? defaultOutputSamplingRate
+        : editorAudioQuery.outputSamplingRate,
+  };
 };
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);
