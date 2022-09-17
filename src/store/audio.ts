@@ -666,6 +666,7 @@ export const audioStore: VoiceVoxStoreOptions<
           const styles = getStyles(speaker, speakerInfo);
           const characterInfo: CharacterInfo = {
             portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
+            engineId,
             metas: {
               speakerUuid: speaker.speakerUuid,
               speakerName: speaker.name,

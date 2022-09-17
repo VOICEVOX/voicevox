@@ -58,6 +58,15 @@
                       getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
                     "
                   />
+                  <q-avatar
+                    class="engine-icon"
+                    rounded
+                    v-if="
+                      isMultipleEngine && characterInfo.metas.styles.length < 2
+                    "
+                  >
+                    <img :src="engineInfos[characterInfo.engineId].iconData" />
+                  </q-avatar>
                 </q-avatar>
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
@@ -114,6 +123,17 @@
                               characterInfo.metas.styles[styleIndex].iconPath
                             "
                           />
+                          <q-avatar
+                            rounded
+                            class="engine-icon"
+                            v-if="isMultipleEngine"
+                          >
+                            <img
+                              :src="
+                                engineInfos[characterInfo.engineId].iconData
+                              "
+                            />
+                          </q-avatar>
                         </q-avatar>
                         <q-item-section v-if="style.styleName"
                           >{{ characterInfo.metas.speakerName }} ({{
@@ -433,6 +453,9 @@ export default defineComponent({
       textfield.value.focus();
     };
 
+    // 複数エンジン
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
     return {
       userOrderedCharacterInfos,
       isInitializingSpeaker,
@@ -447,6 +470,8 @@ export default defineComponent({
       reassignSubMenuOpen,
       isActiveAudioCell,
       audioTextBuffer,
+      isMultipleEngine,
+      engineInfos: store.state.engineInfos,
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
@@ -561,6 +586,28 @@ export default defineComponent({
   .selected-character-item,
   .opened-character-item {
     background-color: rgba(colors.$primary-rgb, 0.2);
+  }
+  .engine-name {
+    // position: absolute;
+    // left: 4px;
+    // bottom: 0;
+    margin-top: auto;
+    margin-left: auto;
+    padding-left: 8px;
+    text-align: right;
+    opacity: 67%;
+    font-size: 0.67rem;
+  }
+  .engine-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%);
+
+    :deep(img) {
+      width: 27.5% !important;
+      height: 27.5% !important;
+    }
   }
 }
 </style>
