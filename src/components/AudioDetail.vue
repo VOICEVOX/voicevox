@@ -5,8 +5,20 @@
         <div class="detail-selector">
           <q-tabs dense vertical class="text-display" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
-            <q-tab name="length" label="長さ" />
+            <q-tab
+              name="pitch"
+              label="ｲﾝﾄﾈｰｼｮﾝ"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustMoraPitch)
+              "
+            />
+            <q-tab
+              name="length"
+              label="長さ"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustPhonemeLength)
+              "
+            />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
@@ -260,7 +272,7 @@ import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { Mora } from "@/openapi/models";
+import { EngineManifest, Mora } from "@/openapi/models";
 
 export default defineComponent({
   components: { AudioAccent, AudioParameter, Tip },
@@ -348,6 +360,32 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
+
+    const supportedFeatures = computed(
+      () =>
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
+    );
+
+    // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
+    // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
+    //       タブ自体の無効化＆移動以外の方法で無効化する
+    watch(
+      supportedFeatures,
+      (newFeatures) => {
+        if (
+          (!newFeatures?.adjustMoraPitch && selectedDetail.value === "pitch") ||
+          (!newFeatures?.adjustPhonemeLength &&
+            selectedDetail.value === "length")
+        ) {
+          selectedDetail.value = "accent";
+        }
+      },
+      { immediate: true }
+    );
 
     const activePointScrollMode = computed(
       () => store.state.activePointScrollMode
@@ -767,6 +805,7 @@ export default defineComponent({
       activePoint,
       setPlayAndStartPoint,
       uiLocked,
+      supportedFeatures,
       audioItem,
       query,
       accentPhrases,

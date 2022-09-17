@@ -39,6 +39,7 @@ export const settingStoreState: SettingStoreState = {
   toolbarSetting: [],
   engineIds: [],
   engineInfos: {},
+  engineManifests: {},
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],
