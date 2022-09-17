@@ -118,6 +118,7 @@ export type MetasJson = {
 
 export type CharacterInfo = {
   portraitPath: string;
+  engineId: string;
   metas: {
     speakerUuid: string;
     speakerName: string;
