@@ -106,6 +106,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  engineId: string;
   voiceSamplePaths: string[];
 };
 
@@ -117,7 +118,6 @@ export type MetasJson = {
 
 export type CharacterInfo = {
   portraitPath: string;
-  engineId: string;
   metas: {
     speakerUuid: string;
     speakerName: string;

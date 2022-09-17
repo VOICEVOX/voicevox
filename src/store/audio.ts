@@ -644,6 +644,7 @@ export const audioStore: VoiceVoxStoreOptions<
             styles[i] = {
               styleName: style.name,
               styleId: style.id,
+              engineId,
               iconPath: base64ToUrl(styleInfo.icon, "image/png"),
               voiceSamplePaths: voiceSamples,
             };
@@ -666,7 +667,6 @@ export const audioStore: VoiceVoxStoreOptions<
           const styles = getStyles(speaker, speakerInfo);
           const characterInfo: CharacterInfo = {
             portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
-            engineId,
             metas: {
               speakerUuid: speaker.speakerUuid,
               speakerName: speaker.name,

@@ -65,7 +65,14 @@
                       isMultipleEngine && characterInfo.metas.styles.length < 2
                     "
                   >
-                    <img :src="engineInfos[characterInfo.engineId].iconData" />
+                    <img
+                      :src="
+                        engineInfos[
+                          getDefaultStyle(characterInfo.metas.speakerUuid)
+                            .engineId
+                        ].iconData
+                      "
+                    />
                   </q-avatar>
                 </q-avatar>
                 <div>{{ characterInfo.metas.speakerName }}</div>
@@ -130,7 +137,10 @@
                           >
                             <img
                               :src="
-                                engineInfos[characterInfo.engineId].iconData
+                                engineInfos[
+                                  characterInfo.metas.styles[styleIndex]
+                                    .engineId
+                                ].iconData
                               "
                             />
                           </q-avatar>
