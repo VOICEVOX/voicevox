@@ -1,7 +1,7 @@
 <template>
   <menu-bar />
 
-  <q-layout reveal elevated>
+  <q-layout reveal elevated container class="layout-container">
     <header-bar />
 
     <q-page-container>
@@ -715,6 +715,18 @@ export default defineComponent({
 
 .q-header {
   height: vars.$header-height;
+}
+
+.layout-container {
+  min-height: calc(100vh - #{vars.$menubar-height});
+}
+
+.q-layout-container > :deep(.absolute-full) {
+  right: 0 !important;
+  > .scroll {
+    width: unset !important;
+    overflow: hidden;
+  }
 }
 
 .waiting-engine {
