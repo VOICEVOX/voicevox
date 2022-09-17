@@ -42,9 +42,32 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
      * キャラクター情報が読み出されていないときは、空リストを返す。
      */
     getter(state) {
-      const flattenCharacterInfos = state.engineIds.flatMap(
-        (engineId) => state.characterInfos[engineId] ?? []
-      );
+      const speakerUuids = [
+        ...new Set(
+          state.engineIds.flatMap((engineId) =>
+            (state.characterInfos[engineId] ?? []).map(
+              (c) => c.metas.speakerUuid
+            )
+          )
+        ),
+      ];
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
       return flattenCharacterInfos;
     },
   },
