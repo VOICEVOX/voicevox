@@ -244,7 +244,9 @@ export default defineComponent({
     );
     const selectedStyle = computed(() =>
       selectedCharacterInfo.value?.metas.styles.find(
-        (style) => style.styleId === audioItem.value.styleId
+        (style) =>
+          style.styleId === audioItem.value.styleId &&
+          style.engineId === audioItem.value.engineId
       )
     );
 
@@ -293,10 +295,13 @@ export default defineComponent({
     };
 
     const changeStyleId = (speakerUuid: string, styleId: number) => {
-      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const engineId = store.state.engineIds.find((_engineId) =>
         (store.state.characterInfos[_engineId] ?? []).some(
-          (characterInfo) => characterInfo.metas.speakerUuid === speakerUuid
+          (characterInfo) =>
+            characterInfo.metas.speakerUuid === speakerUuid &&
+            characterInfo.metas.styles.some(
+              (style) => style.styleId === styleId
+            )
         )
       );
       if (engineId === undefined)
