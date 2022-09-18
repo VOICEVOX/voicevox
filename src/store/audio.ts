@@ -16,6 +16,7 @@ import {
   AudioCommandMutations,
   AudioCommandStoreState,
   VoiceVoxStoreOptions,
+  EditorAudioQuery,
 } from "./type";
 import { createUILockAction } from "./ui";
 import {
@@ -35,11 +36,12 @@ import {
   createKanaRegex,
   currentDateString,
 } from "./utility";
+import { convertFromEditorAudioQuery } from "./proxy";
 
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
-): Promise<[string, AudioQuery | undefined]> {
+): Promise<[string, EditorAudioQuery | undefined]> {
   audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
   const audioQuery = audioItem.query;
   if (audioQuery != undefined) {
@@ -1122,7 +1124,10 @@ export const audioStore: VoiceVoxStoreOptions<
         })
           .then((instance) =>
             instance.invoke("synthesisSynthesisPost")({
-              audioQuery,
+              audioQuery: convertFromEditorAudioQuery(
+                audioQuery,
+                state.engineManifests[engineId].defaultSamplingRate
+              ),
               speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
@@ -1769,7 +1774,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       if (styleId === undefined)
         throw new Error("assert styleId !== undefined");
 
-      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      const query = state.audioItems[audioKey].query;
       try {
         if (query !== undefined) {
           const accentPhrases: AccentPhrase[] = await dispatch(
@@ -1929,7 +1934,7 @@ export const audioCommandStore: VoiceVoxStoreOptions<
       )
     ) {
       const { audioKey, accentPhraseIndex } = payload;
-      const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+      const query = state.audioItems[audioKey].query;
 
       const engineId = state.audioItems[audioKey].engineId;
       if (engineId === undefined)

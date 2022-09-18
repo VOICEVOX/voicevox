@@ -144,6 +144,8 @@ export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
+electron用の型とVue用の型を作らないといけない;
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;

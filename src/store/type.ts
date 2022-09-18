@@ -58,7 +58,7 @@ export type AudioItem = {
   text: string;
   engineId?: string;
   styleId?: number;
-  query?: AudioQuery;
+  query?: EditorAudioQuery;
   presetKey?: string;
 };
 

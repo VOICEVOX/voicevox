@@ -325,7 +325,7 @@ const store = new Store<ElectronStoreType>({
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: { type: "number", default: 24000 },
+        outputSamplingRate: { type: "number", default: 0 }, // 0 はエンジンのデフォルトサンプリングレートを使う
         audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
@@ -337,7 +337,7 @@ const store = new Store<ElectronStoreType>({
         exportLab: false,
         exportText: false,
         outputStereo: false,
-        outputSamplingRate: 24000,
+        outputSamplingRate: 0,
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },

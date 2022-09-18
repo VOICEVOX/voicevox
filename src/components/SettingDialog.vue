@@ -491,12 +491,10 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="[24000, 44100, 48000, 88200, 96000]"
+                  :options="['default', 24000, 44100, 48000, 88200, 96000]"
                   :option-label="
                     (item) =>
-                      `${item / 1000} kHz${
-                        item === 24000 ? '(デフォルト)' : ''
-                      }`
+                      item === 'default' ? 'デフォルト' : `${item / 1000} kHz`
                   "
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
