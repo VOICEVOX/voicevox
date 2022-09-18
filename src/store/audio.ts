@@ -644,6 +644,7 @@ export const audioStore: VoiceVoxStoreOptions<
             styles[i] = {
               styleName: style.name,
               styleId: style.id,
+              engineId,
               iconPath: base64ToUrl(styleInfo.icon, "image/png"),
               voiceSamplePaths: voiceSamples,
             };
