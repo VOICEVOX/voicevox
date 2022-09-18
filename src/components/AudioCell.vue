@@ -597,17 +597,6 @@ export default defineComponent({
   .opened-character-item {
     background-color: rgba(colors.$primary-rgb, 0.2);
   }
-  .engine-name {
-    // position: absolute;
-    // left: 4px;
-    // bottom: 0;
-    margin-top: auto;
-    margin-left: auto;
-    padding-left: 8px;
-    text-align: right;
-    opacity: 67%;
-    font-size: 0.67rem;
-  }
   .engine-icon {
     position: absolute;
     bottom: 0;
