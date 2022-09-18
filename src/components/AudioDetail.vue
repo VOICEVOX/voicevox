@@ -287,6 +287,15 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
+    const supportedFeatures = computed(
+      () =>
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
+    );
+
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
         "再生/停止",
@@ -307,13 +316,17 @@ export default defineComponent({
       [
         "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
         () => {
-          selectedDetail.value = "pitch";
+          if (supportedFeatures.value?.adjustMoraPitch) {
+            selectedDetail.value = "pitch";
+          }
         },
       ],
       [
         "長さ欄を表示",
         () => {
-          selectedDetail.value = "length";
+          if (supportedFeatures.value?.adjustPhonemeLength) {
+            selectedDetail.value = "length";
+          }
         },
       ],
       [
@@ -360,15 +373,6 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
-
-    const supportedFeatures = computed(
-      () =>
-        (audioItem.value?.engineId &&
-          store.state.engineManifests[audioItem.value?.engineId]
-            .supportedFeatures) as
-          | EngineManifest["supportedFeatures"]
-          | undefined
-    );
 
     // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
     // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
