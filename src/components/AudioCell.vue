@@ -67,10 +67,10 @@
                   >
                     <img
                       :src="
-                        engineInfos[
+                        engineIcons[
                           getDefaultStyle(characterInfo.metas.speakerUuid)
                             .engineId
-                        ].iconData
+                        ]
                       "
                     />
                   </q-avatar>
@@ -137,10 +137,10 @@
                           >
                             <img
                               :src="
-                                engineInfos[
+                                engineIcons[
                                   characterInfo.metas.styles[styleIndex]
                                     .engineId
-                                ].iconData
+                                ]
                               "
                             />
                           </q-avatar>
@@ -466,6 +466,16 @@ export default defineComponent({
     // 複数エンジン
     const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
+    const engineIcons = computed(
+      () =>
+        Object.fromEntries(
+          store.state.engineIds.map((engineId) => [
+            engineId,
+            store.state.engineInfos[engineId].iconData,
+          ])
+        ) as { [key: string]: string }
+    );
+
     return {
       userOrderedCharacterInfos,
       isInitializingSpeaker,
@@ -481,7 +491,7 @@ export default defineComponent({
       isActiveAudioCell,
       audioTextBuffer,
       isMultipleEngine,
-      engineInfos: store.state.engineInfos,
+      engineIcons,
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
