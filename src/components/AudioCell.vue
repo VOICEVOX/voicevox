@@ -466,14 +466,13 @@ export default defineComponent({
     // 複数エンジン
     const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
-    const engineIcons = computed(
-      () =>
-        Object.fromEntries(
-          store.state.engineIds.map((engineId) => [
-            engineId,
-            store.state.engineInfos[engineId].iconData,
-          ])
-        ) as { [key: string]: string }
+    const engineIcons = computed(() =>
+      Object.fromEntries(
+        store.state.engineIds.map((engineId) => [
+          engineId,
+          store.state.engineInfos[engineId].iconData,
+        ])
+      )
     );
 
     return {
