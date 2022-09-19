@@ -17,17 +17,22 @@
       >
         <div class="column full-height">
           <q-list>
-            <q-item
-              v-for="(page, i) of pagedata"
-              :key="i"
-              clickable
-              v-ripple
-              active-class="selected-item"
-              :active="selectedPage === page.name"
-              @click="selectedPage = page.name"
-            >
-              <q-item-section>{{ page.name }}</q-item-section>
-            </q-item>
+            <template v-for="(page, i) of pagedata" :key="i">
+              <q-item
+                v-if="page.type === 'item'"
+                clickable
+                v-ripple
+                active-class="selected-item"
+                :active="selectedPage === page.name"
+                @click="selectedPage = page.name"
+              >
+                <q-item-section> {{ page.name }} </q-item-section>
+              </q-item>
+              <template v-else-if="page.type === 'separator'">
+                <q-separator />
+                <q-item-label header>{{ page.name }}</q-item-label>
+              </template>
+            </template>
           </q-list>
         </div>
       </q-drawer>
@@ -58,7 +63,7 @@
                     />
                   </q-toolbar>
                 </q-header>
-                <component :is="page.component" :v-if="page.type === 'item'" />
+                <component :is="page.component" />
               </div>
             </q-tab-panel>
           </q-tab-panels>
@@ -105,13 +110,9 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const pagedata = computed(
-      () =>
+    const pagedata = computed(() =>
+      (
         [
-          {
-            type: "separator",
-            name: "VOICEVOX エディタ",
-          },
           {
             type: "item",
             name: "ソフトウェアの利用規約",
@@ -152,12 +153,21 @@ export default defineComponent({
             name: "お問い合わせ",
             component: ContactInfo,
           },
-        ].concat([
-          /* TODO: エンジン毎に項目を追加する */
-        ]) as PageData[]
+        ] as PageData[]
+      ).concat([
+        {
+          type: "separator",
+          name: "ヘッダテスト01",
+        },
+        {
+          type: "item",
+          name: "test",
+          component: ContactInfo,
+        } /* TODO: エンジン毎に項目を追加する */,
+      ])
     );
 
-    const selectedPage = ref(pagedata.value[0].name);
+    const selectedPage = ref(pagedata.value[1].name);
 
     return {
       modelValueComputed,
@@ -184,5 +194,9 @@ export default defineComponent({
 .selected-item {
   background-color: rgba(colors.$primary-rgb, 0.4);
   color: colors.$display;
+}
+
+.q-item__label {
+  padding: 8px 16px;
 }
 </style>
