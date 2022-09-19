@@ -32,10 +32,8 @@
 </template>
 
 <script lang="ts">
-import { useStore } from "@/store";
-import { computed, defineComponent, PropType, ref } from "@vue/runtime-core";
+import { defineComponent, PropType } from "@vue/runtime-core";
 import { UpdateInfo } from "../type/preload";
-import semver from "semver";
 
 export default defineComponent({
   props: {
