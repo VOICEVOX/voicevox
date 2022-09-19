@@ -167,6 +167,11 @@ export default defineComponent({
       return isCheckingFinished.value && latestVersion.value !== "";
     });
 
+    // VoicevoxのOSSライセンス取得
+
+    let licenses = ref<Record<string, string>[]>();
+    store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
+
     const pagedata = computed(() =>
       (
         [
@@ -194,6 +199,9 @@ export default defineComponent({
             type: "item",
             name: "ライセンス情報",
             component: OssLicense,
+            props: {
+              licenses: licenses.value,
+            },
           },
           {
             type: "item",
@@ -221,6 +229,14 @@ export default defineComponent({
           {
             type: "separator",
             name: manifest.name,
+          },
+          {
+            type: "item",
+            name: "ライセンス情報",
+            component: OssLicense,
+            props: {
+              licenses: manifest.dependencyLicenses,
+            },
           },
           {
             type: "item",
