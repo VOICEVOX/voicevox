@@ -23,8 +23,8 @@
                 clickable
                 v-ripple
                 active-class="selected-item"
-                :active="selectedPage === page.name"
-                @click="selectedPage = page.name"
+                :active="selectedPage === i"
+                @click="selectedPage = i"
               >
                 <q-item-section> {{ page.name }} </q-item-section>
               </q-item>
@@ -43,7 +43,7 @@
             <q-tab-panel
               v-for="(page, i) of pagedata"
               :key="i"
-              :name="page.name"
+              :name="i"
               class="q-pa-none"
             >
               <div class="root">
@@ -216,20 +216,28 @@ export default defineComponent({
             component: ContactInfo,
           },
         ] as PageData[]
-      ).concat([
-        {
-          type: "separator",
-          name: "ヘッダテスト01",
-        },
-        {
-          type: "item",
-          name: "test",
-          component: ContactInfo,
-        } /* TODO: エンジン毎に項目を追加する */,
-      ])
+      ).concat(
+        Object.values(store.state.engineManifests).flatMap((manifest) => [
+          {
+            type: "separator",
+            name: manifest.name,
+          },
+          {
+            type: "item",
+            name: "アップデート情報",
+            component: UpdateInfo,
+            props: {
+              updateInfos: manifest.updateInfos,
+              // TODO: エンジン側で最新バージョンのチェックを実装したい。
+              //       /update_availableみたいなエンドポイントがあれば良さそう
+              isUpdateAvailable: false,
+            },
+          } /* TODO: エンジン毎に項目を追加する */,
+        ])
+      )
     );
 
-    const selectedPage = ref(pagedata.value[1].name);
+    const selectedPage = ref(1);
 
     return {
       modelValueComputed,
