@@ -63,7 +63,7 @@
                     />
                   </q-toolbar>
                 </q-header>
-                <component :is="page.component" />
+                <component :is="page.component" v-bind="page.props" />
               </div>
             </q-tab-panel>
           </q-tab-panels>
@@ -83,10 +83,14 @@ import UpdateInfo from "@/components/UpdateInfo.vue";
 import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
 import QAndA from "@/components/QAndA.vue";
 import ContactInfo from "@/components/ContactInfo.vue";
+import semver from "semver";
+import { UpdateInfo as UpdateInfoObject } from "../type/preload";
+import { useStore } from "@/store";
 type PageItem = {
   type: "item";
   name: string;
   component: Component;
+  props?: Record<string, unknown>;
 };
 type PageSeparator = {
   type: "separator";
@@ -108,6 +112,59 @@ export default defineComponent({
     const modelValueComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
+    });
+
+    // Voicevoxのアップデート確認
+    const store = useStore();
+
+    const updateInfos = ref<UpdateInfoObject[]>();
+    store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
+
+    let isCheckingFinished = ref<boolean>(false);
+
+    // 最新版があるか調べる
+    const currentVersion = ref("");
+    const latestVersion = ref("");
+    window.electron
+      .getAppInfos()
+      .then((obj) => {
+        currentVersion.value = obj.version;
+      })
+      .then(() => {
+        fetch("https://api.github.com/repos/VOICEVOX/voicevox/releases", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        })
+          .then((response) => {
+            if (!response.ok) throw new Error("Network response was not ok.");
+            return response.json();
+          })
+          .then((json) => {
+            const newerVersion = json.find(
+              (item: { prerelease: boolean; tag_name: string }) => {
+                return (
+                  !item.prerelease &&
+                  semver.valid(currentVersion.value) &&
+                  semver.valid(item.tag_name) &&
+                  semver.lt(currentVersion.value, item.tag_name)
+                );
+              }
+            );
+            if (newerVersion) {
+              latestVersion.value = newerVersion.tag_name;
+            }
+            isCheckingFinished.value = true;
+          })
+          .catch((err) => {
+            throw new Error(err);
+          });
+      });
+
+    const isUpdateAvailable = computed(() => {
+      return isCheckingFinished.value && latestVersion.value !== "";
     });
 
     const pagedata = computed(() =>
@@ -142,6 +199,11 @@ export default defineComponent({
             type: "item",
             name: "アップデート情報",
             component: UpdateInfo,
+            props: {
+              updateInfos: updateInfos.value,
+              isUpdateAvailable: isUpdateAvailable.value,
+              latestVersion: latestVersion.value,
+            },
           },
           {
             type: "item",
