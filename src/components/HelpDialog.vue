@@ -50,9 +50,9 @@
                 <q-header class="q-pa-sm">
                   <q-toolbar>
                     <q-toolbar-title class="text-display">
-                      ヘルプ / {{ page.name }}
+                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
+                      }}{{ page.name }}
                     </q-toolbar-title>
-                    <q-space />
                     <!-- close button -->
                     <q-btn
                       round
@@ -89,6 +89,7 @@ import { useStore } from "@/store";
 type PageItem = {
   type: "item";
   name: string;
+  parent?: string;
   component: Component;
   props?: Record<string, unknown>;
 };
@@ -172,6 +173,9 @@ export default defineComponent({
     let licenses = ref<Record<string, string>[]>();
     store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
+    let policy = ref<string>();
+    store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
+
     const pagedata = computed(() =>
       (
         [
@@ -179,6 +183,9 @@ export default defineComponent({
             type: "item",
             name: "ソフトウェアの利用規約",
             component: Policy,
+            props: {
+              policy: policy.value,
+            },
           },
           {
             type: "item",
@@ -225,14 +232,28 @@ export default defineComponent({
           },
         ] as PageData[]
       ).concat(
-        Object.values(store.state.engineManifests).flatMap((manifest) => [
+        // エンジンが一つだけの場合は従来の表示のみ
+        (store.state.engineIds.length > 1
+          ? Object.values(store.state.engineManifests)
+          : []
+        ).flatMap((manifest) => [
           {
             type: "separator",
             name: manifest.name,
           },
           {
             type: "item",
+            name: "利用規約",
+            parent: manifest.name,
+            component: Policy,
+            props: {
+              policy: manifest.termsOfService,
+            },
+          },
+          {
+            type: "item",
             name: "ライセンス情報",
+            parent: manifest.name,
             component: OssLicense,
             props: {
               licenses: manifest.dependencyLicenses,
@@ -241,6 +262,7 @@ export default defineComponent({
           {
             type: "item",
             name: "アップデート情報",
+            parent: manifest.name,
             component: UpdateInfo,
             props: {
               updateInfos: manifest.updateInfos,
