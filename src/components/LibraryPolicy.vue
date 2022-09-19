@@ -10,7 +10,7 @@
           :key="engineIndex"
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
-          <template v-if="engineInfos.length > 0">
+          <template v-if="engineInfos.length > 1">
             <q-separator spaced v-if="engineIndex > 0" />
             <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
           </template>
