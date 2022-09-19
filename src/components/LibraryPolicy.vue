@@ -5,12 +5,28 @@
   >
     <div class="q-pa-md markdown-body">
       <q-list v-if="detailIndex === undefined">
-        <template v-for="(characterInfo, index) in characterInfos" :key="index">
-          <q-item clickable @click="selectCharacterInfIndex(index)">
-            <q-item-section>{{
-              characterInfo.metas.speakerName
-            }}</q-item-section>
-          </q-item>
+        <template
+          v-for="(engineInfo, engineIndex) in engineInfos"
+          :key="engineIndex"
+        >
+          <!-- エンジンが一つだけの場合は名前を表示しない -->
+          <template v-if="engineInfos.length > 0">
+            <q-separator spaced v-if="engineIndex > 0" />
+            <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
+          </template>
+          <template
+            v-for="(characterInfo, characterIndex) in engineInfo.characterInfos"
+            :key="characterIndex"
+          >
+            <q-item
+              clickable
+              @click="selectCharacterInfoIndex([engineIndex, characterIndex])"
+            >
+              <q-item-section>{{
+                characterInfo.metas.speakerName
+              }}</q-item-section>
+            </q-item>
+          </template>
         </template>
       </q-list>
       <div v-else>
@@ -20,15 +36,23 @@
             color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
-            @click="selectCharacterInfIndex(undefined)"
+            @click="selectCharacterInfoIndex(undefined)"
           />
         </div>
         <div class="text-subtitle">
-          {{ characterInfos[detailIndex].metas.speakerName }}
+          {{
+            engineInfos[detailIndex[0]].characterInfos[detailIndex[1]].metas
+              .speakerName
+          }}
         </div>
         <div
           class="markdown"
-          v-html="convertMarkdown(characterInfos[detailIndex].metas.policy)"
+          v-html="
+            convertMarkdown(
+              engineInfos[detailIndex[0]].characterInfos[detailIndex[1]].metas
+                .policy
+            )
+          "
         ></div>
       </div>
     </div>
@@ -45,18 +69,24 @@ export default defineComponent({
     const store = useStore();
     const md = useMarkdownIt();
 
-    const flattenCharacterInfos = computed(
-      () => store.getters.GET_FLATTEN_CHARACTER_INFOS
+    const engineInfos = computed(() =>
+      Object.entries(store.state.characterInfos).map(
+        ([engineId, characterInfos]) => ({
+          engineId,
+          engineName: store.state.engineManifests[engineId].name,
+          characterInfos,
+        })
+      )
     );
 
     const convertMarkdown = (text: string) => {
       return md.render(text);
     };
 
-    const detailIndex = ref<number | undefined>(undefined);
+    const detailIndex = ref<[number, number] | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfIndex = (index: number | undefined) => {
+    const selectCharacterInfoIndex = (index: [number, number] | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
@@ -64,9 +94,9 @@ export default defineComponent({
     };
 
     return {
-      characterInfos: flattenCharacterInfos,
+      engineInfos,
       convertMarkdown,
-      selectCharacterInfIndex,
+      selectCharacterInfoIndex,
       detailIndex,
       scroller,
     };
