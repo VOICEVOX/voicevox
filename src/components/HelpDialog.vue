@@ -58,7 +58,7 @@
                     />
                   </q-toolbar>
                 </q-header>
-                <component :is="page.component" />
+                <component :is="page.component" :v-if="page.type === 'item'" />
               </div>
             </q-tab-panel>
           </q-tab-panels>
@@ -78,10 +78,16 @@ import UpdateInfo from "@/components/UpdateInfo.vue";
 import OssCommunityInfo from "@/components/OssCommunityInfo.vue";
 import QAndA from "@/components/QAndA.vue";
 import ContactInfo from "@/components/ContactInfo.vue";
-type Page = {
+type PageItem = {
+  type: "item";
   name: string;
   component: Component;
 };
+type PageSeparator = {
+  type: "separator";
+  name: string;
+};
+type PageData = PageItem | PageSeparator;
 
 export default defineComponent({
   name: "HelpDialog",
@@ -99,42 +105,59 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const pagedata: Page[] = [
-      {
-        name: "ソフトウェアの利用規約",
-        component: Policy,
-      },
-      {
-        name: "音声ライブラリの利用規約",
-        component: LibraryPolicy,
-      },
-      {
-        name: "使い方",
-        component: HowToUse,
-      },
-      {
-        name: "開発コミュニティ",
-        component: OssCommunityInfo,
-      },
-      {
-        name: "ライセンス情報",
-        component: OssLicense,
-      },
-      {
-        name: "アップデート情報",
-        component: UpdateInfo,
-      },
-      {
-        name: "よくあるご質問",
-        component: QAndA,
-      },
-      {
-        name: "お問い合わせ",
-        component: ContactInfo,
-      },
-    ];
+    const pagedata = computed(
+      () =>
+        [
+          {
+            type: "separator",
+            name: "VOICEVOX エディタ",
+          },
+          {
+            type: "item",
+            name: "ソフトウェアの利用規約",
+            component: Policy,
+          },
+          {
+            type: "item",
+            name: "音声ライブラリの利用規約",
+            component: LibraryPolicy,
+          },
+          {
+            type: "item",
+            name: "使い方",
+            component: HowToUse,
+          },
+          {
+            type: "item",
+            name: "開発コミュニティ",
+            component: OssCommunityInfo,
+          },
+          {
+            type: "item",
+            name: "ライセンス情報",
+            component: OssLicense,
+          },
+          {
+            type: "item",
+            name: "アップデート情報",
+            component: UpdateInfo,
+          },
+          {
+            type: "item",
+            name: "よくあるご質問",
+            component: QAndA,
+          },
+          {
+            type: "item",
+            name: "お問い合わせ",
+            component: ContactInfo,
+          },
+        ].concat([
+          /* TODO: エンジン毎に項目を追加する */
+        ]) as PageData[]
+    );
 
-    const selectedPage = ref(pagedata[0].name);
+    const selectedPage = ref(pagedata.value[0].name);
 
     return {
       modelValueComputed,
