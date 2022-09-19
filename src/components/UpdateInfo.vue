@@ -4,7 +4,31 @@
     class="relative-absolute-wrapper scroller markdown-body"
   >
     <div class="q-pa-md">
-      <div v-html="html"></div>
+      <template v-if="isUpdateAvailable">
+        <h3>最新バージョン {{ latestVersion }} が見つかりました</h3>
+        <a href="https://voicevox.hiroshiba.jp/" target="_blank"
+          >ダウンロードページ</a
+        >
+        <hr />
+      </template>
+      <h3>アップデート履歴</h3>
+      <template v-for="(info, i) of updateInfos" :key="i">
+        <h3>バージョン {{ info.version }}</h3>
+        <ul>
+          <template v-for="(item, j) of info.descriptions" :key="j">
+            <li>{{ item }}</li>
+          </template>
+        </ul>
+        <h4>貢献者リスト</h4>
+        <p>
+          <template v-for="(item, j) of info.contributors" :key="j">
+            <span v-if="j > 0"> / </span>
+            <a :href="`https://github.com/${item}`" target="_blank">{{
+              item
+            }}</a>
+          </template>
+        </p>
+      </template>
     </div>
   </q-page>
 </template>
@@ -45,7 +69,7 @@ export default defineComponent({
             return response.json();
           })
           .then((json) => {
-            const obj = json.find(
+            const newerVersion = json.find(
               (item: { prerelease: boolean; tag_name: string }) => {
                 return (
                   !item.prerelease &&
@@ -55,7 +79,9 @@ export default defineComponent({
                 );
               }
             );
-            obj ? (latestVersion.value = obj.tag_name) : undefined;
+            if (newerVersion) {
+              latestVersion.value = newerVersion.tag_name;
+            }
             isCheckingFinished.value = true;
           })
           .catch((err) => {
@@ -67,43 +93,10 @@ export default defineComponent({
       return isCheckingFinished.value && latestVersion.value !== "";
     });
 
-    const html = computed(() => {
-      if (!updateInfos.value) return "";
-
-      let html = "";
-
-      if (isUpdateAvailable.value) {
-        html += `<h3>最新バージョン ${latestVersion.value} が見つかりました</h3>`;
-        html += `<a href="https://voicevox.hiroshiba.jp/" target="_blank">ダウンロードページ</a>`;
-      }
-
-      html += `<hr />`;
-      html += `<h3>アップデート履歴</h3>`;
-
-      for (const info of updateInfos.value) {
-        const version: string = info.version;
-        const descriptions: string[] = info.descriptions;
-        const contributors: string[] = info.contributors;
-
-        html += `<h3>バージョン ${version}</h3>`;
-
-        html += `<ul>`;
-        for (const description of descriptions) {
-          html += `<li>${description}</li>`;
-        }
-        html += `</ul>`;
-
-        if (contributors.length > 0) {
-          html += `<h4>貢献者リスト</h4>`;
-          html += `<p>${contributors.join(" / ")}</p>`;
-        }
-      }
-
-      return html;
-    });
-
     return {
-      html,
+      isUpdateAvailable,
+      latestVersion,
+      updateInfos,
     };
   },
 });
