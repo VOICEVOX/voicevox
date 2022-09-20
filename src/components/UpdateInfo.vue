@@ -10,17 +10,23 @@
         <hr />
       </template>
       <h3>アップデート履歴</h3>
-      <template v-for="(info, i) of updateInfos" :key="i">
+      <template v-for="(info, infoIndex) of updateInfos" :key="infoIndex">
         <h3>バージョン {{ info.version }}</h3>
         <ul>
-          <template v-for="(item, j) of info.descriptions" :key="j">
+          <template
+            v-for="(item, descriptionIndex) of info.descriptions"
+            :key="descriptionIndex"
+          >
             <li>{{ item }}</li>
           </template>
         </ul>
         <h4>貢献者リスト</h4>
         <p>
-          <template v-for="(item, j) of info.contributors" :key="j">
-            <span v-if="j > 0"> / </span>
+          <template
+            v-for="(item, contributorIndex) of info.contributors"
+            :key="contributorIndex"
+          >
+            <span v-if="contributorIndex > 0"> / </span>
             <a :href="`https://github.com/${item}`" target="_blank">{{
               item
             }}</a>

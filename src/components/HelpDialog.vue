@@ -17,14 +17,14 @@
       >
         <div class="column full-height">
           <q-list>
-            <template v-for="(page, i) of pagedata" :key="i">
+            <template v-for="(page, pageIndex) of pagedata" :key="i">
               <q-item
                 v-if="page.type === 'item'"
                 clickable
                 v-ripple
                 active-class="selected-item"
-                :active="selectedPage === i"
-                @click="selectedPage = i"
+                :active="selectedPage === pageIndex"
+                @click="selectedPage = pageIndex"
               >
                 <q-item-section> {{ page.name }} </q-item-section>
               </q-item>
@@ -41,9 +41,9 @@
         <q-page>
           <q-tab-panels v-model="selectedPage">
             <q-tab-panel
-              v-for="(page, i) of pagedata"
-              :key="i"
-              :name="i"
+              v-for="(page, pageIndex) of pagedata"
+              :key="pageIndex"
+              :name="pageIndex"
               class="q-pa-none"
             >
               <div class="root">
