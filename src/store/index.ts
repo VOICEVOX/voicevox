@@ -23,8 +23,12 @@ import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
+<<<<<<< HEAD
 import { createPartialStore } from "./vuex";
 import { DefaultStyleId } from "@/type/preload";
+=======
+import { CharacterInfo, DefaultStyleId } from "@/type/preload";
+>>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -42,7 +46,11 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
      * 同じspeakerUuidのキャラクター情報は、登録順が速いエンジンの情報を元に統合される。
      * キャラクター情報が読み出されていないときは、空リストを返す。
      */
+<<<<<<< HEAD
     getter(state) {
+=======
+    GET_ALL_CHARACTER_INFOS(state) {
+>>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
       const speakerUuids = [
         ...new Set(
           state.engineIds.flatMap((engineId) =>
@@ -69,7 +77,9 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           },
         };
       });
-      return flattenCharacterInfos;
+      return new Map(
+        flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
+      );
     },
   },
 
@@ -212,16 +222,19 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         userCharacterOrder
       );
     },
+<<<<<<< HEAD
   },
 
   GET_NEW_CHARACTERS: {
     action({ state, getters }) {
       const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
+=======
+    GET_NEW_CHARACTERS({ state, getters }) {
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
+>>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
-      const allSpeakerUuid = flattenCharacterInfos.map(
-        (characterInfo) => characterInfo.metas.speakerUuid
-      );
+      const allSpeakerUuid = [...allCharacterInfos.keys()];
       const newSpeakerUuid = allSpeakerUuid.filter(
         (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
       );
@@ -229,9 +242,30 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+<<<<<<< HEAD
   LOG_ERROR: {
     action(_, ...params: unknown[]) {
       window.electron.logError(...params);
+=======
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
+
+      // デフォルトスタイルが設定されていない場合は0をセットする
+      // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
+      const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
+        (speakerUuid) =>
+          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
+      );
+      defaultStyleIds = [
+        ...defaultStyleIds,
+        ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => ({
+          speakerUuid: speakerUuid,
+          defaultStyleId: (allCharacterInfos.get(speakerUuid) as CharacterInfo)
+            .metas.styles[0].styleId,
+        })),
+      ];
+
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+>>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
     },
   },
 

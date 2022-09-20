@@ -4,9 +4,12 @@
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="detailIndex === undefined">
-        <template v-for="(characterInfo, index) in characterInfos" :key="index">
-          <q-item clickable @click="selectCharacterInfIndex(index)">
+      <q-list v-if="detailUuid === undefined">
+        <template
+          v-for="([characterUuid, characterInfo], index) in characterInfos"
+          :key="index"
+        >
+          <q-item clickable @click="selectCharacterInfo(characterUuid)">
             <q-item-section>{{
               characterInfo.metas.speakerName
             }}</q-item-section>
@@ -20,15 +23,15 @@
             color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
-            @click="selectCharacterInfIndex(undefined)"
+            @click="selectCharacterInfo(undefined)"
           />
         </div>
         <div class="text-subtitle">
-          {{ characterInfos[detailIndex].metas.speakerName }}
+          {{ characterInfos.get(detailUuid).metas.speakerName }}
         </div>
         <div
           class="markdown"
-          v-html="convertMarkdown(characterInfos[detailIndex].metas.policy)"
+          v-html="convertMarkdown(characterInfos.get(detailUuid).metas.policy)"
         ></div>
       </div>
     </div>
@@ -45,29 +48,29 @@ export default defineComponent({
     const store = useStore();
     const md = useMarkdownIt();
 
-    const flattenCharacterInfos = computed(
-      () => store.getters.GET_FLATTEN_CHARACTER_INFOS
+    const allCharacterInfos = computed(
+      () => store.getters.GET_ALL_CHARACTER_INFOS
     );
 
     const convertMarkdown = (text: string) => {
       return md.render(text);
     };
 
-    const detailIndex = ref<number | undefined>(undefined);
+    const detailUuid = ref<string | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfIndex = (index: number | undefined) => {
+    const selectCharacterInfo = (index: string | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
-      detailIndex.value = index;
+      detailUuid.value = index;
     };
 
     return {
-      characterInfos: flattenCharacterInfos,
+      characterInfos: allCharacterInfos,
       convertMarkdown,
-      selectCharacterInfIndex,
-      detailIndex,
+      selectCharacterInfo,
+      detailUuid,
       scroller,
     };
   },
