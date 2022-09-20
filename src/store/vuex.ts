@@ -171,7 +171,10 @@ export type Action<
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
 > = ActionHandler<S, R, SG, SA, SM, K> | ActionObject<S, R, SG, SA, SM, K>;
-export type Mutation<S, P> = (state: S, payload: P) => void;
+export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
+  state: S,
+  payload: M[K]
+) => void;
 
 export type GetterTree<S, R, G, SG = G> = G extends GettersBase
   ? CustomGetterTree<S, R, G, SG>
@@ -208,5 +211,5 @@ export type MutationTree<S, M> = M extends MutationsBase
   : OriginalMutationTree<S>;
 
 export type CustomMutationTree<S, M extends MutationsBase> = {
-  [K in keyof M]: Mutation<S, M[K]>;
+  [K in keyof M]: Mutation<S, M, K>;
 };

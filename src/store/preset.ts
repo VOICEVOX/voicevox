@@ -1,39 +1,29 @@
-import {
-  PresetGetters,
-  PresetActions,
-  PresetMutations,
-  PresetStoreState,
-  VoiceVoxStoreOptions,
-} from "@/store/type";
+import { PresetStoreState, PresetStoreTypes } from "@/store/type";
 import { Preset } from "@/type/preload";
 
 import { v4 as uuidv4 } from "uuid";
+import { createPartialStore } from "./utility";
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
   presetKeys: [],
 };
 
-export const presetStore: VoiceVoxStoreOptions<
-  PresetGetters,
-  PresetActions,
-  PresetMutations
-> = {
-  getters: {},
-  mutations: {
-    SET_PRESET_ITEMS(
-      state,
-      { presetItems }: { presetItems: Record<string, Preset> }
-    ) {
+export const presetStore = createPartialStore<PresetStoreTypes>({
+  SET_PRESET_ITEMS: {
+    mutation(state, { presetItems }: { presetItems: Record<string, Preset> }) {
       state.presetItems = presetItems;
     },
+  },
 
-    SET_PRESET_KEYS(state, { presetKeys }: { presetKeys: string[] }) {
+  SET_PRESET_KEYS: {
+    mutation(state, { presetKeys }: { presetKeys: string[] }) {
       state.presetKeys = presetKeys;
     },
   },
-  actions: {
-    HYDRATE_PRESET_STORE: async ({ commit }) => {
+
+  HYDRATE_PRESET_STORE: {
+    async action({ commit }) {
       const presetConfig = await window.electron.getSetting("presets");
       if (
         presetConfig === undefined ||
@@ -48,26 +38,25 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys: presetConfig.keys,
       });
     },
+  },
 
-    SAVE_PRESET_ORDER(
-      { state, dispatch },
-      { presetKeys }: { presetKeys: string[] }
-    ) {
+  SAVE_PRESET_ORDER: {
+    action({ state, dispatch }, { presetKeys }: { presetKeys: string[] }) {
       return dispatch("SAVE_PRESET_CONFIG", {
         presetItems: state.presetItems,
         presetKeys,
       });
     },
-    SAVE_PRESET_CONFIG: async (
+  },
+
+  SAVE_PRESET_CONFIG: {
+    async action(
       context,
       {
         presetItems,
         presetKeys,
-      }: {
-        presetItems: Record<string, Preset>;
-        presetKeys: string[];
-      }
-    ) => {
+      }: { presetItems: Record<string, Preset>; presetKeys: string[] }
+    ) {
       const result = await window.electron.setSetting("presets", {
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
@@ -75,8 +64,10 @@ export const presetStore: VoiceVoxStoreOptions<
       context.commit("SET_PRESET_ITEMS", { presetItems: result.items });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
     },
+  },
 
-    async ADD_PRESET(context, { presetData }: { presetData: Preset }) {
+  ADD_PRESET: {
+    async action(context, { presetData }: { presetData: Preset }) {
       const newKey = uuidv4();
       const newPresetItems = {
         ...context.state.presetItems,
@@ -91,7 +82,10 @@ export const presetStore: VoiceVoxStoreOptions<
 
       return newKey;
     },
-    async UPDATE_PRESET(
+  },
+
+  UPDATE_PRESET: {
+    async action(
       context,
       { presetKey, presetData }: { presetData: Preset; presetKey: string }
     ) {
@@ -108,7 +102,10 @@ export const presetStore: VoiceVoxStoreOptions<
         presetKeys: newPresetKeys,
       });
     },
-    async DELETE_PRESET(context, { presetKey }: { presetKey: string }) {
+  },
+
+  DELETE_PRESET: {
+    async action(context, { presetKey }: { presetKey: string }) {
       const newPresetKeys = context.state.presetKeys.filter(
         (key) => key != presetKey
       );
@@ -121,4 +118,4 @@ export const presetStore: VoiceVoxStoreOptions<
       });
     },
   },
-};
+});
