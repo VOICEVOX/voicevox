@@ -115,7 +115,7 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    // Voicevoxのアップデート確認
+    // エディタのアップデート確認
     const store = useStore();
 
     const updateInfos = ref<UpdateInfoObject[]>();
