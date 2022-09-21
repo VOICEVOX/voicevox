@@ -920,7 +920,9 @@ async function createWindow() {
     } else {
       if (process.argv.length >= 2) {
         const filePath = process.argv[1];
-        ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+        }
       }
     }
   });
