@@ -17,14 +17,14 @@
       >
         <div class="column full-height">
           <q-list>
-            <template v-for="(page, pageIndex) of pagedata" :key="i">
+            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
               <q-item
                 v-if="page.type === 'item'"
                 clickable
                 v-ripple
                 active-class="selected-item"
-                :active="selectedPage === pageIndex"
-                @click="selectedPage = pageIndex"
+                :active="selectedPageIndex === pageIndex"
+                @click="selectedPageIndex = pageIndex"
               >
                 <q-item-section> {{ page.name }} </q-item-section>
               </q-item>
@@ -39,7 +39,7 @@
 
       <q-page-container>
         <q-page>
-          <q-tab-panels v-model="selectedPage">
+          <q-tab-panels v-model="selectedPageIndex">
             <q-tab-panel
               v-for="(page, pageIndex) of pagedata"
               :key="pageIndex"
@@ -275,12 +275,12 @@ export default defineComponent({
       )
     );
 
-    const selectedPage = ref(1);
+    const selectedPageIndex = ref(0);
 
     return {
       modelValueComputed,
       pagedata,
-      selectedPage,
+      selectedPageIndex,
     };
   },
 });
