@@ -320,7 +320,7 @@ export default defineComponent({
 }
 
 .preview-toolbar {
-  height: calc(vars.$header-height + 16px);
+  height: calc(#{vars.$header-height} + 8px);
   display: block;
 }
 
