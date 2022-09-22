@@ -45,7 +45,12 @@
         <q-page>
           <q-card flat square class="preview-card">
             <q-toolbar class="bg-toolbar preview-toolbar">
-              <draggable v-model="toolbarButtons" :item-key="toolbarButtonKey">
+              <draggable
+                v-model="toolbarButtons"
+                :item-key="toolbarButtonKey"
+                @start="toolbarButtonDragging = true"
+                @end="toolbarButtonDragging = false"
+              >
                 <template v-slot:item="{ element: button }">
                   <div
                     :class="
@@ -60,6 +65,9 @@
                       self="center right"
                       transition-show="jump-left"
                       transition-hide="jump-right"
+                      :style="{
+                        display: toolbarButtonDragging ? 'none' : 'block',
+                      }"
                       >{{ usableButtonsDesc[button] }}</q-tooltip
                     >
                   </div>
@@ -125,6 +133,7 @@ export default defineComponent({
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting]);
     const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
+    const toolbarButtonDragging = ref(false);
     const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
       toolbarButtons.value[0]
     );
@@ -167,17 +176,6 @@ export default defineComponent({
       get: () => props.modelValue || isChanged.value,
       set: (val) => emit("update:modelValue", val),
     });
-
-    const leftShiftable = computed(
-      () => selectedButton.value !== toolbarButtons.value[0] && removable.value
-    );
-    const rightShiftable = computed(
-      () =>
-        selectedButton.value !==
-          toolbarButtons.value[toolbarButtons.value.length - 1] &&
-        removable.value
-    );
-    const removable = computed(() => selectedButton.value !== undefined);
 
     const isChanged = computed(() => {
       const nowSetting = store.state.toolbarSetting;
@@ -290,10 +288,8 @@ export default defineComponent({
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
       toolbarButtonKey,
+      toolbarButtonDragging,
       selectedButton,
-      leftShiftable,
-      rightShiftable,
-      removable,
       isChanged,
       isDefault,
       moveLeftButton,
