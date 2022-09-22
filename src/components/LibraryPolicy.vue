@@ -20,7 +20,12 @@
           >
             <q-item
               clickable
-              @click="selectCharacterInfoIndex([engineIndex, characterIndex])"
+              @click="
+                selectedCharacterInfo({
+                  engine: engineIndex,
+                  character: characterIndex,
+                })
+              "
             >
               <q-item-section>{{
                 characterInfo.metas.speakerName
@@ -36,21 +41,23 @@
             color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
-            @click="selectCharacterInfoIndex(undefined)"
+            @click="selectedCharacterInfo(undefined)"
           />
         </div>
         <div class="text-subtitle">
           {{
-            engineInfos[detailIndex[0]].characterInfos[detailIndex[1]].metas
-              .speakerName
+            engineInfos[detailIndex.engine].characterInfos[
+              detailIndex.character
+            ].metas.speakerName
           }}
         </div>
         <div
           class="markdown"
           v-html="
             convertMarkdown(
-              engineInfos[detailIndex[0]].characterInfos[detailIndex[1]].metas
-                .policy
+              engineInfos[detailIndex.engine].characterInfos[
+                detailIndex.character
+              ].metas.policy
             )
           "
         ></div>
@@ -63,6 +70,8 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+type detailKey = { engine: number; character: number };
 
 export default defineComponent({
   setup() {
@@ -83,10 +92,10 @@ export default defineComponent({
       return md.render(text);
     };
 
-    const detailIndex = ref<[number, number] | undefined>(undefined);
+    const detailIndex = ref<detailKey | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfoIndex = (index: [number, number] | undefined) => {
+    const selectedCharacterInfo = (index: detailKey | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
@@ -96,7 +105,7 @@ export default defineComponent({
     return {
       engineInfos,
       convertMarkdown,
-      selectCharacterInfoIndex,
+      selectedCharacterInfo,
       detailIndex,
       scroller,
     };
