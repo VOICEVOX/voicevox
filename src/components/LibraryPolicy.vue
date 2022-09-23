@@ -21,7 +21,7 @@
             <q-item
               clickable
               @click="
-                selectedCharacterInfo({
+                selectCharacterInfo({
                   engine: engineIndex,
                   character: characterIndex,
                 })
@@ -41,7 +41,7 @@
             color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
-            @click="selectedCharacterInfo(undefined)"
+            @click="selectCharacterInfo(undefined)"
           />
         </div>
         <div class="text-subtitle">
@@ -95,7 +95,7 @@ export default defineComponent({
     const detailIndex = ref<detailKey | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectedCharacterInfo = (index: detailKey | undefined) => {
+    const selectCharacterInfo = (index: detailKey | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
@@ -105,7 +105,7 @@ export default defineComponent({
     return {
       engineInfos,
       convertMarkdown,
-      selectedCharacterInfo,
+      selectCharacterInfo,
       detailIndex,
       scroller,
     };
