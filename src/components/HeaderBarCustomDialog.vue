@@ -52,10 +52,13 @@
                 @end="toolbarButtonDragging = false"
               >
                 <template v-slot:item="{ element: button }">
-                  <div
+                  <q-btn
+                    unelevated
+                    color="toolbar-button"
+                    text-color="toolbar-button-display"
                     :class="
-                      (button === 'EMPTY' ? 'radio-space' : 'radio') +
-                      ' text-no-wrap text-bold text-display q-mr-sm'
+                      (button === 'EMPTY' ? ' radio-space' : ' radio') +
+                      ' text-no-wrap text-bold q-mr-sm'
                     "
                   >
                     {{ getToolbarButtonName(button) }}
@@ -70,7 +73,7 @@
                       }"
                       >{{ usableButtonsDesc[button] }}</q-tooltip
                     >
-                  </div>
+                  </q-btn>
                 </template>
               </draggable>
               <div class="preview-toolbar-drag-hint">
@@ -358,10 +361,9 @@ export default defineComponent({
   border-radius: 3px;
   color: var(--color-toolbar-button-display);
   background-color: var(--color-toolbar-button);
-}
-
-.radio:hover {
-  cursor: grab;
+  &:hover {
+    cursor: grab;
+  }
 }
 
 .radio-space {
