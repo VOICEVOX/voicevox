@@ -146,6 +146,11 @@ export type IpcIHData = {
     return: boolean;
   };
 
+  IS_MAXIMIZED: {
+    args: [];
+    return: boolean;
+  };
+
   CLOSE_WINDOW: {
     args: [];
     return: void;

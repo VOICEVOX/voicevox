@@ -344,6 +344,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           "activePointScrollMode"
         ),
       });
+
+      // electron-window-stateがvuex初期化前に働くので
+      // ここで改めてelectron windowの最大化状態をVuex storeに同期
+      if (await window.electron.isMaximized()) {
+        commit("DETECT_MAXIMIZED");
+      }
     },
   },
 
