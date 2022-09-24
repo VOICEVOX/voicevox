@@ -356,7 +356,7 @@ export default defineComponent({
       const characterInfo = props.characterInfos.get(speakerUuid);
 
       if (!characterInfo) {
-        return; // TypeScriptのエラー回避
+        throw new Error(`characterInfo is undefined. speakerUuid: ${speakerUuid}`);
       }
       // 0 <= index <= length に収める
       const length = characterInfo.metas.styles.length;
