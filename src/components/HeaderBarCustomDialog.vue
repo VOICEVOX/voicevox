@@ -356,11 +356,6 @@ export default defineComponent({
 }
 
 .radio {
-  padding: 6px 14px;
-  border: solid 2px var(--color-toolbar-button);
-  border-radius: 3px;
-  color: var(--color-toolbar-button-display);
-  background-color: var(--color-toolbar-button);
   &:hover {
     cursor: grab;
   }
