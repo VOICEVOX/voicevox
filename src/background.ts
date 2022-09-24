@@ -1115,7 +1115,7 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu(process.platform);
 });
 
-ipcMainHandle("IS_MAXIMIZED", () => {
+ipcMainHandle("IS_MAXIMIZED_WINDOW", () => {
   return win.isMaximized();
 });
 

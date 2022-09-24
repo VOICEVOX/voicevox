@@ -347,7 +347,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
-      if (await window.electron.isMaximized()) {
+      if (await window.electron.isMaximizedWindow()) {
         commit("DETECT_MAXIMIZED");
       }
     },
