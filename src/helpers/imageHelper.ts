@@ -15,11 +15,7 @@ export function detectImageTypeFromBase64(data: string): string {
 
 export function base64ImageToUri(image: string): string {
   const mimeType = detectImageTypeFromBase64(image);
-  const rawBytes = atob(image);
-  const buffer = new Uint8Array(rawBytes.length); //②
-  buffer.forEach((_, i) => {
-    buffer[i] = rawBytes.charCodeAt(i);
-  });
+  const buffer = Buffer.from(image, "base64");
   return URL.createObjectURL(
     new Blob([buffer.buffer], {
       type: mimeType,
