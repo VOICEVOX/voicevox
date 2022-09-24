@@ -716,6 +716,10 @@ type IndexStoreTypes = {
 >>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
   };
 
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
+    getter: CharacterInfo[];
+  };
+
   GET_HOW_TO_USE_TEXT: {
     action(): Promise<string>;
   };

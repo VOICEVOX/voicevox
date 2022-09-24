@@ -195,7 +195,7 @@ export default defineComponent({
       required: true,
     },
     characterInfos: {
-      type: Object as PropType<Map<string, CharacterInfo>>,
+      type: Object as PropType<CharacterInfo[]>,
       required: true,
     },
   },
@@ -210,7 +210,7 @@ export default defineComponent({
 
     // 複数スタイルあるキャラクター
     const multiStyleCharacterInfos = computed(() => {
-      return [...props.characterInfos.values()].filter(
+      return props.characterInfos.filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       );
     });

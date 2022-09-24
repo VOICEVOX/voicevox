@@ -42,7 +42,7 @@ export const indexStoreState: IndexStoreState = {
 export const indexStore = createPartialStore<IndexStoreTypes>({
   GET_FLATTEN_CHARACTER_INFOS: {
     /**
-     * すべてのエンジンのキャラクター情報のリスト。
+     * すべてのエンジンのキャラクター情報のMap。
      * 同じspeakerUuidのキャラクター情報は、登録順が早いエンジンの情報を元に統合される。
      * キャラクター情報が読み出されていないときは、空リストを返す。
      */
@@ -80,6 +80,35 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       return new Map(
         flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
       );
+    },
+    /**
+     * すべてのエンジンのキャラクター情報のリスト。
+     * GET_ALL_CHARACTER_INFOSとは違い、話者の順番が保持される。
+     */
+    GET_ORDERED_ALL_CHARACTER_INFOS(state) {
+      const speakerUuids = state.engineIds
+        .flatMap((engineId) =>
+          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
+        )
+        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されない。
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
+      return flattenCharacterInfos;
     },
   },
 

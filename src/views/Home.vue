@@ -132,13 +132,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="allCharacterInfos.size > 0"
-    :characterInfos="allCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="allCharacterInfos.size > 0"
-    :characterInfos="allCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -482,7 +482,7 @@ export default defineComponent({
 
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
-      for (const info of allCharacterInfos.value.values()) {
+      for (const info of orderedAllCharacterInfos.value) {
         isUnsetDefaultStyleIds ||=
           info.metas.styles.length > 1 &&
           (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
@@ -593,8 +593,8 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const allCharacterInfos = computed(
-      () => store.getters.GET_ALL_CHARACTER_INFOS
+    const orderedAllCharacterInfos = computed(
+      () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
     );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
@@ -696,7 +696,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      allCharacterInfos,
+      orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
