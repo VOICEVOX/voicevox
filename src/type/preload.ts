@@ -106,6 +106,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  engineId: string;
   voiceSamplePaths: string[];
 };
 

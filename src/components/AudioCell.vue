@@ -58,6 +58,22 @@
                       getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
                     "
                   />
+                  <q-avatar
+                    class="engine-icon"
+                    rounded
+                    v-if="
+                      isMultipleEngine && characterInfo.metas.styles.length < 2
+                    "
+                  >
+                    <img
+                      :src="
+                        engineIcons[
+                          getDefaultStyle(characterInfo.metas.speakerUuid)
+                            .engineId
+                        ]
+                      "
+                    />
+                  </q-avatar>
                 </q-avatar>
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
@@ -114,6 +130,20 @@
                               characterInfo.metas.styles[styleIndex].iconPath
                             "
                           />
+                          <q-avatar
+                            rounded
+                            class="engine-icon"
+                            v-if="isMultipleEngine"
+                          >
+                            <img
+                              :src="
+                                engineIcons[
+                                  characterInfo.metas.styles[styleIndex]
+                                    .engineId
+                                ]
+                              "
+                            />
+                          </q-avatar>
                         </q-avatar>
                         <q-item-section v-if="style.styleName"
                           >{{ characterInfo.metas.speakerName }} ({{
@@ -433,6 +463,18 @@ export default defineComponent({
       textfield.value.focus();
     };
 
+    // 複数エンジン
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
+    const engineIcons = computed(() =>
+      Object.fromEntries(
+        store.state.engineIds.map((engineId) => [
+          engineId,
+          store.state.engineInfos[engineId].iconData,
+        ])
+      )
+    );
+
     return {
       userOrderedCharacterInfos,
       isInitializingSpeaker,
@@ -447,6 +489,8 @@ export default defineComponent({
       reassignSubMenuOpen,
       isActiveAudioCell,
       audioTextBuffer,
+      isMultipleEngine,
+      engineIcons,
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
@@ -561,6 +605,17 @@ export default defineComponent({
   .selected-character-item,
   .opened-character-item {
     background-color: rgba(colors.$primary-rgb, 0.2);
+  }
+  .engine-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    transform: translate(50%, 50%);
+
+    :deep(img) {
+      width: 27.5% !important;
+      height: 27.5% !important;
+    }
   }
 }
 </style>

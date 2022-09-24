@@ -1,6 +1,9 @@
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
+    <span class="character-engine-name" v-if="isMultipleEngine">{{
+      engineName
+    }}</span>
     <img :src="portraitPath" class="character-portrait" />
     <div v-if="isInitializingSpeaker" class="loading">
       <q-spinner color="primary" size="5rem" :thickness="4" />
@@ -46,6 +49,16 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
+    const engineName = computed(() => {
+      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+      const audioItem = activeAudioKey
+        ? store.state.audioItems[activeAudioKey]
+        : undefined;
+      const engineId = audioItem?.engineId ?? store.state.engineIds[0];
+      const engineInfo = store.state.engineInfos[engineId];
+      return engineInfo?.name;
+    });
+
     const portraitPath = computed(() => characterInfo.value?.portraitPath);
 
     const isInitializingSpeaker = computed(() => {
@@ -53,10 +66,14 @@ export default defineComponent({
       return store.state.audioKeyInitializingSpeaker === activeAudioKey;
     });
 
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
     return {
       characterName,
+      engineName,
       portraitPath,
       isInitializingSpeaker,
+      isMultipleEngine,
     };
   },
 });
@@ -74,6 +91,19 @@ export default defineComponent({
     rgba(colors.$background-rgb, 0.5) 75%,
     transparent 100%
   );
+  overflow-wrap: anywhere;
+}
+
+.character-engine-name {
+  position: absolute;
+  padding: 1px 24px 1px 8px;
+  background-image: linear-gradient(
+    90deg,
+    rgba(colors.$background-rgb, 0.5) 0%,
+    rgba(colors.$background-rgb, 0.5) 75%,
+    transparent 100%
+  );
+  bottom: 0;
   overflow-wrap: anywhere;
 }
 
