@@ -45,6 +45,7 @@ import {
   generateAndSaveOneAudioWithDialog,
   connectAndExportTextWithDialog,
 } from "@/components/Dialog";
+import { base64ImageToUri } from "@/helpers/imageHelper";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -99,6 +100,7 @@ export default defineComponent({
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
     const engineInfos = computed(() => store.state.engineInfos);
+    const engineManifests = computed(() => store.state.engineManifests);
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -437,7 +439,11 @@ export default defineComponent({
               ({
                 type: "root",
                 label: engineInfo.name,
-                icon: engineInfo.iconData,
+                icon:
+                  store.state.engineManifests[engineInfo.uuid] &&
+                  base64ImageToUri(
+                    store.state.engineManifests[engineInfo.uuid].icon
+                  ),
                 subMenu: [
                   engineInfo.path && {
                     type: "button",
@@ -473,7 +479,7 @@ export default defineComponent({
         ];
       }
     }
-    watch(engineInfos, updateEngines, { immediate: true }); // engineInfosを見て動的に更新できるようにする
+    watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 
     watch(uiLocked, () => {
       // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
