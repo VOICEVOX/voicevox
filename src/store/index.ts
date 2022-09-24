@@ -90,7 +90,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         .flatMap((engineId) =>
           (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
         )
-        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されない。
+        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されないのでindexOfで重複削除をする。
       const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
         const characterInfos = state.engineIds.flatMap(
           (engineId) =>
