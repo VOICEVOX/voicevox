@@ -71,7 +71,7 @@ import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-type detailKey = { engine: number; character: number };
+type DetailKey = { engine: number; character: number };
 
 export default defineComponent({
   setup() {
@@ -92,10 +92,10 @@ export default defineComponent({
       return md.render(text);
     };
 
-    const detailIndex = ref<detailKey | undefined>(undefined);
+    const detailIndex = ref<DetailKey | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfo = (index: detailKey | undefined) => {
+    const selectCharacterInfo = (index: DetailKey | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
