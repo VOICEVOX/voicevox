@@ -1,4 +1,4 @@
-export function detectImageTypeFromBase64(data: string): string {
+function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
     case "/":
       return "image/svg+xml";
