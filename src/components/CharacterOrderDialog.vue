@@ -41,7 +41,7 @@
       >
         <div class="character-portrait-wrapper">
           <img
-            :src="characterInfosMap[selectedCharacter].portraitPath"
+            :src="characterInfos.get(selectedCharacter).portraitPath"
             class="character-portrait"
           />
         </div>
@@ -71,18 +71,18 @@
                 <div class="character-item-inner">
                   <img
                     :src="
-                      characterInfosMap[speakerUuid].metas.styles[
+                      characterInfos.get(speakerUuid).metas.styles[
                         selectedStyleIndexes[speakerUuid] ?? 0
                       ].iconPath
                     "
                     class="style-icon"
                   />
                   <span class="text-subtitle1 q-ma-sm">{{
-                    characterInfosMap[speakerUuid].metas.speakerName
+                    characterInfos.get(speakerUuid).metas.speakerName
                   }}</span>
                   <div
                     v-if="
-                      characterInfosMap[speakerUuid].metas.styles.length > 1
+                      characterInfos.get(speakerUuid).metas.styles.length > 1
                     "
                     class="style-select-container"
                   >
@@ -209,7 +209,7 @@ export default defineComponent({
       required: true,
     },
     characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
+      type: Object as PropType<Map<string, CharacterInfo>>,
       required: true,
     },
   },
@@ -220,14 +220,6 @@ export default defineComponent({
     const modelValueComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
-    });
-
-    const characterInfosMap = computed(() => {
-      const map: { [key: string]: CharacterInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
-        map[characterInfo.metas.speakerUuid] = characterInfo;
-      });
-      return map;
     });
 
     // 新しいキャラクター
@@ -251,7 +243,9 @@ export default defineComponent({
     });
 
     // 選択中のキャラクター
-    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+    const selectedCharacter = ref(
+      [...props.characterInfos.values()][0].metas.speakerUuid
+    );
     const selectCharacter = (speakerUuid: string) => {
       selectedCharacter.value = speakerUuid;
     };
@@ -270,7 +264,7 @@ export default defineComponent({
           // サンプルの順番、新しいキャラクターは上に
           sampleCharacterOrder.value = [
             ...newCharacters.value,
-            ...props.characterInfos
+            ...[...props.characterInfos.values()]
               .filter(
                 (info) => !newCharacters.value.includes(info.metas.speakerUuid)
               )
@@ -282,11 +276,13 @@ export default defineComponent({
           // 保存済みのキャラクターリストを取得
           // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
           characterOrder.value = store.state.userCharacterOrder
-            .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+            .map((speakerUuid) => props.characterInfos.get(speakerUuid))
             .filter((info) => info !== undefined) as CharacterInfo[];
 
           // 含まれていないキャラクターを足す
-          const notIncludesCharacterInfos = props.characterInfos.filter(
+          const notIncludesCharacterInfos = [
+            ...props.characterInfos.values(),
+          ].filter(
             (characterInfo) =>
               !characterOrder.value.find(
                 (characterInfoInList) =>
@@ -357,8 +353,13 @@ export default defineComponent({
 
     // スタイル番号をずらす
     const rollStyleIndex = (speakerUuid: string, diff: number) => {
+      const characterInfo = props.characterInfos.get(speakerUuid);
+
+      if (!characterInfo) {
+        return; // TypeScriptのエラー回避
+      }
       // 0 <= index <= length に収める
-      const length = characterInfosMap.value[speakerUuid].metas.styles.length;
+      const length = characterInfo.metas.styles.length;
       const selectedStyleIndex: number | undefined =
         selectedStyleIndexes.value[speakerUuid];
 
@@ -367,8 +368,7 @@ export default defineComponent({
       selectedStyleIndexes.value[speakerUuid] = styleIndex;
 
       // 音声を再生する。同じstyleIndexだったら停止する。
-      const selectedStyleInfo =
-        characterInfosMap.value[speakerUuid].metas.styles[styleIndex];
+      const selectedStyleInfo = characterInfo.metas.styles[styleIndex];
       togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
     };
 
@@ -386,7 +386,6 @@ export default defineComponent({
 
     return {
       modelValueComputed,
-      characterInfosMap,
       sampleCharacterOrder,
       newCharacters,
       hasNewCharacter,

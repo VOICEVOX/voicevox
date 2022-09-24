@@ -133,12 +133,12 @@
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
     v-if="allCharacterInfos.size > 0"
-    :characterInfos="[...allCharacterInfos.values()]"
+    :characterInfos="allCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
     v-if="allCharacterInfos.size > 0"
-    :characterInfos="[...allCharacterInfos.values()]"
+    :characterInfos="allCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
