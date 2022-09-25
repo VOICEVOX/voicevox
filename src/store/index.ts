@@ -174,11 +174,18 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       );
       defaultStyleIds = [
         ...defaultStyleIds,
-        ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => ({
-          speakerUuid: speakerUuid,
-          defaultStyleId: (allCharacterInfos.get(speakerUuid) as CharacterInfo)
-            .metas.styles[0].styleId,
-        })),
+        ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => {
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+          if (!characterInfo) {
+            throw new Error(
+              `characterInfo not found. speakerUuid=${speakerUuid}`
+            );
+          }
+          return {
+            speakerUuid: speakerUuid,
+            defaultStyleId: characterInfo.metas.styles[0].styleId,
+          };
+        }),
       ];
 
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
