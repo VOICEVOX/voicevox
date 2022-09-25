@@ -30,7 +30,7 @@ import {
   createKanaRegex,
   currentDateString,
 } from "./utility";
-import { createPartialStore } from "./utility";
+import { createPartialStore } from "./vuex";
 
 async function generateUniqueIdAndQuery(
   state: State,

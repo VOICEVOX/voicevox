@@ -13,7 +13,7 @@ import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import { Dark, setCssVar, colors } from "quasar";
 import { createUILockAction } from "./ui";
-import { createPartialStore } from "./utility";
+import { createPartialStore } from "./vuex";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 

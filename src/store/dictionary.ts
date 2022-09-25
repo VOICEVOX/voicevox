@@ -1,6 +1,6 @@
 import { UserDictWord } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
-import { createPartialStore } from "./utility";
+import { createPartialStore } from "./vuex";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 

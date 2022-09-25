@@ -1,8 +1,8 @@
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
 import { Preset } from "@/type/preload";
+import { createPartialStore } from "./vuex";
 
 import { v4 as uuidv4 } from "uuid";
-import { createPartialStore } from "./utility";
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},

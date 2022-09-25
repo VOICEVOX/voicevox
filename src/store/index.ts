@@ -23,7 +23,7 @@ import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
-import { createPartialStore } from "./utility";
+import { createPartialStore } from "./vuex";
 import { DefaultStyleId } from "@/type/preload";
 
 export const storeKey: InjectionKey<

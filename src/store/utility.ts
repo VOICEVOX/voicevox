@@ -1,20 +1,5 @@
-import {
-  AllActions,
-  AllGetters,
-  AllMutations,
-  State,
-  StoreType,
-} from "@/store/type";
+import { State } from "@/store/type";
 import { ToolbarButtonTagType } from "@/type/preload";
-import {
-  Action,
-  ActionsBase,
-  Getter,
-  GettersBase,
-  Mutation,
-  MutationsBase,
-  StoreOptions,
-} from "./vuex";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -180,70 +165,4 @@ export const convertLongVowel = (text: string): string => {
     .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
     .replace(/(?<=[ン]ー*)ー/g, "ン")
     .replace(/(?<=[ッ]ー*)ー/g, "ッ");
-};
-
-type StoreTypesBase = {
-  [key: string]: {
-    getter?: GettersBase[number];
-    mutation?: MutationsBase[number];
-    action?: ActionsBase[number];
-  };
-};
-
-type PartialStoreOptions<
-  S,
-  T extends StoreTypesBase,
-  G extends GettersBase,
-  A extends ActionsBase,
-  M extends MutationsBase
-> = {
-  [K in keyof T]: {
-    [GAM in keyof T[K]]: GAM extends "getter"
-      ? K extends keyof G
-        ? Getter<S, S, G, K, AllGetters>
-        : never
-      : GAM extends "action"
-      ? K extends keyof A
-        ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
-        : never
-      : GAM extends "mutation"
-      ? K extends keyof M
-        ? Mutation<S, M, K>
-        : never
-      : never;
-  };
-};
-
-export const createPartialStore = <
-  T extends StoreTypesBase,
-  G extends GettersBase = StoreType<T, "getter">,
-  A extends ActionsBase = StoreType<T, "action">,
-  M extends MutationsBase = StoreType<T, "mutation">
->(
-  options: PartialStoreOptions<State, T, G, A, M>
-): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const obj = Object.keys(options).reduce(
-    (acc, cur) => {
-      const option = options[cur];
-
-      if (option.getter) {
-        acc.getters[cur] = option.getter;
-      }
-      if (option.mutation) {
-        acc.mutations[cur] = option.mutation;
-      }
-      if (option.action) {
-        acc.actions[cur] = option.action;
-      }
-
-      return acc;
-    },
-    {
-      getters: Object.create(null),
-      mutations: Object.create(null),
-      actions: Object.create(null),
-    }
-  );
-
-  return obj;
 };

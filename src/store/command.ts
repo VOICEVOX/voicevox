@@ -7,8 +7,12 @@ import { enableMapSet as enableMapSetImpl } from "immer/src/plugins/mapset";
 import { getPlugin } from "immer/src/utils/plugins";
 
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
-import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
-import { createPartialStore } from "./utility";
+import {
+  createPartialStore,
+  Mutation,
+  MutationsBase,
+  MutationTree,
+} from "@/store/vuex";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。

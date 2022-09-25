@@ -1,7 +1,8 @@
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
-import { buildProjectFileName, createPartialStore } from "./utility";
+import { buildProjectFileName } from "./utility";
+import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";

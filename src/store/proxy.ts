@@ -4,7 +4,7 @@ import {
 } from "@/infrastructures/EngineConnector";
 import { EngineInfo } from "@/type/preload";
 import { ProxyStoreState, ProxyStoreTypes } from "./type";
-import { createPartialStore } from "./utility";
+import { createPartialStore } from "./vuex";
 
 export const proxyStoreState: ProxyStoreState = {};
 
