@@ -269,7 +269,7 @@ export default defineComponent({
               //       https://github.com/VOICEVOX/voicevox_engine/issues/476
               isUpdateAvailable: false,
             },
-          } /* TODO: エンジン毎に項目を追加する */,
+          },
         ])
       )
     );
