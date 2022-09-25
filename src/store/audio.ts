@@ -247,22 +247,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;
     },
-<<<<<<< HEAD
-=======
-    CHARACTER_INFO: (state) => (engineId, styleId) => {
-      return getCharacterInfo(state, engineId, styleId);
-    },
-    USER_ORDERED_CHARACTER_INFOS: (state, getters) => {
-      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
-      return allCharacterInfos.size !== 0
-        ? [...allCharacterInfos.values()].sort(
-            (a, b) =>
-              state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
-              state.userCharacterOrder.indexOf(b.metas.speakerUuid)
-          )
-        : undefined;
-    },
->>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
   },
 
   START_WAITING_ENGINE_ALL: {
@@ -491,9 +475,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   USER_ORDERED_CHARACTER_INFOS: {
     getter: (state, getters) => {
-      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
-      return flattenCharacterInfos.length !== 0
-        ? flattenCharacterInfos.sort(
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
+      return allCharacterInfos.size !== 0
+        ? [...allCharacterInfos.values()].sort(
             (a, b) =>
               state.userCharacterOrder.indexOf(a.metas.speakerUuid) -
               state.userCharacterOrder.indexOf(b.metas.speakerUuid)

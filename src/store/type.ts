@@ -705,15 +705,9 @@ export type IndexStoreState = {
   userCharacterOrder: string[];
 };
 
-<<<<<<< HEAD
 export type IndexStoreTypes = {
-  GET_FLATTEN_CHARACTER_INFOS: {
-    getter: CharacterInfo[];
-=======
-type IndexStoreTypes = {
   GET_ALL_CHARACTER_INFOS: {
     getter: Map<string, CharacterInfo>;
->>>>>>> ca4e32c (Change: GET_FLATTEN_CHARACTER_INFOSをMapに変更)
   };
 
   GET_ORDERED_ALL_CHARACTER_INFOS: {
