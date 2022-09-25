@@ -31,6 +31,7 @@ import {
   currentDateString,
 } from "./utility";
 import { createPartialStore } from "./vuex";
+import { base64ImageToUri } from "@/helpers/imageHelper";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -414,7 +415,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             styleName: style.name,
             styleId: style.id,
             engineId,
-            iconPath: base64ToUrl(styleInfo.icon, "image/png"),
+            iconPath: base64ImageToUri(styleInfo.icon),
             voiceSamplePaths: voiceSamples,
           };
         });
@@ -435,7 +436,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
         const styles = getStyles(speaker, speakerInfo);
         const characterInfo: CharacterInfo = {
-          portraitPath: base64ToUrl(speakerInfo.portrait, "image/png"),
+          portraitPath: base64ImageToUri(speakerInfo.portrait),
           metas: {
             speakerUuid: speaker.speakerUuid,
             speakerName: speaker.name,

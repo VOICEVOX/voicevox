@@ -173,8 +173,6 @@ export type EngineInfo = {
   uuid: string;
   host: string;
   name: string;
-  iconPath?: string;
-  iconData?: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;

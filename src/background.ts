@@ -99,39 +99,6 @@ protocol.registerSchemesAsPrivileged([
 
 const isMac = process.platform === "darwin";
 
-function detectImageTypeFromBase64(data: string): string {
-  switch (data[0]) {
-    case "/":
-      return "image/svg+xml";
-    case "R":
-      return "image/gif";
-    case "i":
-      return "image/png";
-    case "D":
-      return "image/jpeg";
-    default:
-      return "";
-  }
-}
-
-// EngineInfoからアイコンを読み込む
-function replaceEngineInfoIconData(engineInfo: EngineInfo): EngineInfo {
-  if (!engineInfo.iconPath) return engineInfo;
-  let b64icon;
-  try {
-    b64icon = fs.readFileSync(path.resolve(appDirPath, engineInfo.iconPath), {
-      encoding: "base64",
-    });
-  } catch (e) {
-    log.error("Failed to read icon file: " + engineInfo.iconPath);
-    return engineInfo;
-  }
-  return {
-    ...engineInfo,
-    iconData: `data:${detectImageTypeFromBase64(b64icon)};base64,${b64icon}`,
-  };
-}
-
 const defaultEngineInfos: EngineInfo[] = (() => {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
@@ -141,7 +108,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return engines.map(replaceEngineInfoIconData).map((engineInfo) => {
+  return engines.map((engineInfo) => {
     return {
       ...engineInfo,
       path:
@@ -181,13 +148,12 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       uuid: manifest.uuid,
       host: `http://127.0.0.1:${manifest.port}`,
       name: manifest.name,
-      iconPath: path.join(engineDir, manifest.icon),
       path: engineDir,
       executionEnabled: true,
       executionFilePath: path.join(engineDir, manifest.command),
     });
   }
-  return engines.map(replaceEngineInfoIconData);
+  return engines;
 }
 
 function fetchEngineInfos(): EngineInfo[] {
