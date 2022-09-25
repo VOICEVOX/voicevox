@@ -168,8 +168,7 @@ export default defineComponent({
       return isCheckingFinished.value && latestVersion.value !== "";
     });
 
-    // VoicevoxのOSSライセンス取得
-
+    // エディタのOSSライセンス取得
     let licenses = ref<Record<string, string>[]>();
     store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
