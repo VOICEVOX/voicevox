@@ -1,4 +1,5 @@
 <template>
+  <singer-tab />
   <menu-bar />
 
   <q-layout reveal elevated container class="layout-container">
@@ -174,6 +175,7 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
+import SingerTab from "@/components/SingerTab.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
@@ -204,6 +206,7 @@ export default defineComponent({
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
     DictionaryManageDialog,
+    SingerTab,
   },
 
   setup() {
