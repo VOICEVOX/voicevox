@@ -5,11 +5,16 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import Home from "../views/Home.vue";
+import SingerHome from "../views/SingerHome.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/home",
     component: Home,
+  },
+  {
+    path: "/singer-home",
+    component: SingerHome,
   },
 ];
 
