@@ -893,6 +893,10 @@ $pitch-label-height: 24px;
       align-self: stretch;
       grid-template-rows: 1fr 60px 30px;
 
+      &:last-child {
+        padding-right: 20px;
+      }
+
       div {
         padding: 0px;
         &.text-cell {
