@@ -183,7 +183,12 @@ export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
   payload: M[K]
 ) => void;
 
-export type GetterTree<S, R, G, SG = G> = G extends GettersBase
+export type GetterTree<
+  S,
+  R,
+  G extends GettersBase,
+  SG extends GettersBase = G
+> = G extends GettersBase
   ? CustomGetterTree<S, R, G, SG>
   : OriginalGetterTree<S, R>;
 
@@ -196,7 +201,14 @@ export type CustomGetterTree<
   [K in keyof G]: Getter<S, R, G, K, SG>;
 };
 
-export type ActionTree<S, R, A, SG, SA, SM> = A extends ActionsBase
+export type ActionTree<
+  S,
+  R,
+  A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase
+> = A extends ActionsBase
   ? SA extends ActionsBase
     ? CustomActionTree<S, R, A, SG, SA, SM>
     : OriginalActionTree<S, R>
