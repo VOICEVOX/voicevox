@@ -365,6 +365,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  OPEN_USER_ENGINE_DIRECTORY: {
+    action() {
+      return window.electron.openUserEngineDirectory();
+    },
+  },
+
   SET_ENGINE_STATE: {
     mutation(
       state,
