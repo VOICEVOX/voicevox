@@ -471,7 +471,7 @@ export default defineComponent({
       }
       engineMenu.subMenu.push({
         type: "button",
-        label: "エンジンのフォルダを開く",
+        label: "追加エンジンのフォルダを開く",
         onClick: () => {
           store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
         },
