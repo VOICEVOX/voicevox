@@ -6,7 +6,6 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 export default defineComponent({
