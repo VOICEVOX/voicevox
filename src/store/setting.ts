@@ -55,6 +55,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
   },
+  engineSetting: {},
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -115,6 +116,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       commit("SET_CONFIRMED_TIPS", {
         confirmedTips: await window.electron.getSetting("confirmedTips"),
+      });
+
+      commit("SET_ENGINE_SETTING", {
+        engineSetting: await window.electron.getSetting("engineSetting"),
       });
     },
   },
@@ -304,6 +309,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
+    },
+  },
+
+  SET_ENGINE_SETTING: {
+    mutation(state, { engineSetting }) {
+      state.engineSetting = engineSetting;
+    },
+    action({ commit }, { engineSetting }) {
+      window.electron.setSetting("engineSetting", engineSetting);
+      commit("SET_ENGINE_SETTING", { engineSetting });
     },
   },
 

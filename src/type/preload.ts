@@ -258,6 +258,13 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
+export type EngineSetting = Record<string, EngineSettingRecord>;
+
+type EngineSettingRecord = {
+  useGpu: boolean | "inherit";
+  outputSamplingRate: number | "inherit";
+};
+
 export type DefaultStyleId = {
   engineId: string;
   speakerUuid: string;
@@ -446,6 +453,14 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
+    engineSetting: z.record(
+      z.object({
+        useGpu: z.union([z.boolean(), z.literal("inherit")]).default("inherit"),
+        outputSamplingRate: z
+          .union([z.number(), z.literal("inherit")])
+          .default("inherit"),
+      })
+    ),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({

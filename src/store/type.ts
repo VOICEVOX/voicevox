@@ -37,6 +37,7 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  EngineSetting,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -938,6 +939,7 @@ export type SettingStoreState = {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineSetting: EngineSetting;
 };
 
 export type SettingStoreTypes = {
@@ -1000,6 +1002,11 @@ export type SettingStoreTypes = {
   SET_CONFIRMED_TIPS: {
     mutation: { confirmedTips: ConfirmedTips };
     action(payload: { confirmedTips: ConfirmedTips }): void;
+  };
+
+  SET_ENGINE_SETTING: {
+    mutation: { engineSetting: EngineSetting };
+    action(payload: { engineSetting: EngineSetting }): void;
   };
 
   CHANGE_USE_GPU: {

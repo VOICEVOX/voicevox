@@ -63,6 +63,39 @@
                 >
                 </q-btn-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>音声のサンプリングレート(全エンジン共通)</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-select
+                  borderless
+                  name="samplingRate"
+                  :model-value="savingSetting.outputSamplingRate"
+                  :options="[24000, 44100, 48000, 88200, 96000]"
+                  :option-label="
+                    (item) =>
+                      `${item / 1000} kHz${
+                        item === 24000 ? '(デフォルト)' : ''
+                      }`
+                  "
+                  @update:model-value="
+                    handleSavingSettingChange('outputSamplingRate', $event)
+                  "
+                >
+                </q-select>
+              </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
             <q-card flat class="setting-card">
@@ -535,34 +568,6 @@
                   label="再生デバイス"
                   :options="availableAudioOutputDevices"
                   class="col-7"
-                >
-                </q-select>
-              </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>音声のサンプリングレート</div>
-                <div>
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-select
-                  borderless
-                  name="samplingRate"
-                  :model-value="savingSetting.outputSamplingRate"
-                  :options="samplingRateOptions"
-                  :option-label="renderSamplingRateLabel"
-                  @update:model-value="
-                    handleSavingSettingChange('outputSamplingRate', $event)
-                  "
                 >
                 </q-select>
               </q-card-actions>
