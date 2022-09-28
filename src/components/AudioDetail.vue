@@ -614,7 +614,7 @@ export default defineComponent({
     });
 
     const pronunciationByPhrase = computed(() => {
-      let textArray: Array<string> = [];
+      const textArray: Array<string> = [];
       accentPhrases.value?.forEach((accentPhrase) => {
         let textString = "";
         accentPhrase.moras.forEach((mora) => {

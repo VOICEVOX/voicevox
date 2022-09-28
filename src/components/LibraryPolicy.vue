@@ -68,7 +68,7 @@
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "@vue/runtime-core";
+import { computed, defineComponent, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 type DetailKey = { engine: number; character: number };

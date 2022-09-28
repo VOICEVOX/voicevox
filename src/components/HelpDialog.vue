@@ -121,7 +121,7 @@ export default defineComponent({
     const updateInfos = ref<UpdateInfoObject[]>();
     store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-    let isCheckingFinished = ref<boolean>(false);
+    const isCheckingFinished = ref<boolean>(false);
 
     // 最新版があるか調べる
     const currentVersion = ref("");
@@ -169,10 +169,10 @@ export default defineComponent({
     });
 
     // エディタのOSSライセンス取得
-    let licenses = ref<Record<string, string>[]>();
+    const licenses = ref<Record<string, string>[]>();
     store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
-    let policy = ref<string>();
+    const policy = ref<string>();
     store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
     const pagedata = computed(() =>

@@ -38,7 +38,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from "@vue/runtime-core";
+import { defineComponent, PropType } from "vue";
 import { UpdateInfo } from "../type/preload";
 
 export default defineComponent({
