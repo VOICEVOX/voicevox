@@ -80,6 +80,7 @@
     "electron": "19.0.6",
     "electron-devtools-installer": "3.2.0",
     "eslint": "8.24.0",
+    "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "3.4.0",
     "eslint-plugin-vue": "9.5.1",
     "license-checker": "25.0.1",
