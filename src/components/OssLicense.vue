@@ -35,21 +35,22 @@
 </template>
 
 <script lang="ts">
-import { useStore } from "@/store";
-import { defineComponent, ref } from "vue";
+import { defineComponent, PropType, ref } from "vue";
 
 export default defineComponent({
   name: "OssLicense",
 
+  props: {
+    licenses: {
+      type: Array as PropType<Record<string, string>[]>,
+      required: true,
+    },
+  },
   setup() {
-    const store = useStore();
-
-    let licenses = ref<Record<string, string>[]>();
-    store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
-
     const detailIndex = ref<number | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
+
     const selectLicenseIndex = (index: number | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
@@ -58,7 +59,6 @@ export default defineComponent({
     };
 
     return {
-      licenses,
       selectLicenseIndex,
       detailIndex,
       scroller,

@@ -4,16 +4,36 @@
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="detailUuid === undefined">
+      <q-list v-if="selectedInfo === undefined">
         <template
-          v-for="([characterUuid, characterInfo], index) in characterInfos"
-          :key="index"
+          v-for="([engineId, engineInfo], engineIndex) in engineInfos.entries()"
+          :key="engineIndex"
         >
-          <q-item clickable @click="selectCharacterInfo(characterUuid)">
-            <q-item-section>{{
-              characterInfo.metas.speakerName
-            }}</q-item-section>
-          </q-item>
+          <!-- エンジンが一つだけの場合は名前を表示しない -->
+          <template v-if="engineInfos.size > 1">
+            <q-separator spaced v-if="engineIndex > 0" />
+            <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
+          </template>
+          <template
+            v-for="(
+              [, characterInfo], characterIndex
+            ) in engineInfo.characterInfos"
+            :key="characterIndex"
+          >
+            <q-item
+              clickable
+              @click="
+                selectCharacterInfo({
+                  engine: engineId,
+                  character: characterInfo.metas.speakerUuid,
+                })
+              "
+            >
+              <q-item-section>{{
+                characterInfo.metas.speakerName
+              }}</q-item-section>
+            </q-item>
+          </template>
         </template>
       </q-list>
       <div v-else>
@@ -27,11 +47,21 @@
           />
         </div>
         <div class="text-subtitle">
-          {{ characterInfos.get(detailUuid).metas.speakerName }}
+          {{
+            engineInfos
+              .get(selectedInfo.engine)
+              .characterInfos.get(selectedInfo.character).metas.speakerName
+          }}
         </div>
         <div
           class="markdown"
-          v-html="convertMarkdown(characterInfos.get(detailUuid).metas.policy)"
+          v-html="
+            convertMarkdown(
+              engineInfos
+                .get(selectedInfo.engine)
+                .characterInfos.get(selectedInfo.character).metas.policy
+            )
+          "
         ></div>
       </div>
     </div>
@@ -43,6 +73,8 @@ import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "@vue/runtime-core";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
+type DetailKey = { engine: string; character: string };
+
 export default defineComponent({
   setup() {
     const store = useStore();
@@ -52,25 +84,44 @@ export default defineComponent({
       () => store.getters.GET_ALL_CHARACTER_INFOS
     );
 
+    const engineInfos = computed(
+      () =>
+        new Map(
+          Object.entries(store.state.characterInfos).map(
+            ([engineId, characterInfos]) => [
+              engineId,
+              {
+                engineId,
+                engineName: store.state.engineManifests[engineId].name,
+                characterInfos: new Map(
+                  characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+                ),
+              },
+            ]
+          )
+        )
+    );
+
     const convertMarkdown = (text: string) => {
       return md.render(text);
     };
 
-    const detailUuid = ref<string | undefined>(undefined);
+    const selectedInfo = ref<DetailKey | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfo = (index: string | undefined) => {
+    const selectCharacterInfo = (index: DetailKey | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
-      detailUuid.value = index;
+      selectedInfo.value = index;
     };
 
     return {
       characterInfos: allCharacterInfos,
+      engineInfos,
       convertMarkdown,
       selectCharacterInfo,
-      detailUuid,
+      selectedInfo,
       scroller,
     };
   },

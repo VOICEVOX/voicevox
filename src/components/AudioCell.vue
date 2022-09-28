@@ -204,6 +204,7 @@ import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { QInput, debounce } from "quasar";
+import { base64ImageToUri } from "@/helpers/imageHelper";
 
 export default defineComponent({
   name: "AudioCell",
@@ -475,7 +476,7 @@ export default defineComponent({
       Object.fromEntries(
         store.state.engineIds.map((engineId) => [
           engineId,
-          store.state.engineInfos[engineId].iconData,
+          base64ImageToUri(store.state.engineManifests[engineId].icon),
         ])
       )
     );
