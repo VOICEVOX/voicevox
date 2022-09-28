@@ -23,7 +23,7 @@ import { ConfirmedTips } from "@/type/preload";
 import { useStore } from "@/store";
 
 export default defineComponent({
-  name: "Tip",
+  name: "ToolTip",
 
   props: {
     tipKey: { type: String as PropType<keyof ConfirmedTips>, required: true },

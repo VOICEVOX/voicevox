@@ -185,7 +185,7 @@ import {
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
-  name: "Home",
+  name: "EditorHome",
 
   components: {
     draggable,

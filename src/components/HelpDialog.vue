@@ -75,7 +75,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, Component } from "vue";
-import Policy from "@/components/Policy.vue";
+import HelpPolicy from "@/components/HelpPolicy.vue";
 import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
@@ -181,7 +181,7 @@ export default defineComponent({
           {
             type: "item",
             name: "ソフトウェアの利用規約",
-            component: Policy,
+            component: HelpPolicy,
             props: {
               policy: policy.value,
             },
@@ -244,7 +244,7 @@ export default defineComponent({
             type: "item",
             name: "利用規約",
             parent: manifest.name,
-            component: Policy,
+            component: HelpPolicy,
             props: {
               policy: manifest.termsOfService,
             },
