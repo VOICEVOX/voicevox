@@ -712,10 +712,6 @@ type IndexStoreTypes = {
     action(): Promise<string>;
   };
 
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    action(payload: { speakerUuid: string }): Promise<boolean>;
-  };
-
   LOAD_DEFAULT_STYLE_IDS: {
     action(): Promise<void>;
   };
