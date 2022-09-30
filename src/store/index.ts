@@ -132,16 +132,12 @@ export const indexStore: VoiceVoxStoreOptions<
       );
       return newSpeakerUuid;
     },
-    async IS_UNSET_DEFAULT_STYLE_ID(_, { speakerUuid }) {
-      return await window.electron.isUnsetDefaultStyleId(speakerUuid);
-    },
     async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
       if (!state.characterInfos) throw new Error("characterInfos is undefined");
 
       // デフォルトスタイルが設定されていない場合は0をセットする
-      // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
       const unsetCharacterInfos = state.characterInfos.filter(
         (characterInfo) =>
           !defaultStyleIds.some(

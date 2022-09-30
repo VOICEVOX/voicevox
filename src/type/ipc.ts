@@ -201,11 +201,6 @@ export type IpcIHData = {
     return: HotkeySetting[];
   };
 
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    args: [speakerUuid: string];
-    return: boolean;
-  };
-
   GET_DEFAULT_HOTKEY_SETTINGS: {
     args: [];
     return: HotkeySetting[];
