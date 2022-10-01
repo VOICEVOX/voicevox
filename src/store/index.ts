@@ -36,15 +36,72 @@ export const indexStoreState: IndexStoreState = {
 };
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
-  GET_FLATTEN_CHARACTER_INFOS: {
+  GET_ALL_CHARACTER_INFOS: {
     /**
-     * すべてのエンジンのキャラクター情報のリスト。
+     * すべてのエンジンのキャラクター情報のMap。
+     * 同じspeakerUuidのキャラクター情報は、登録順が早いエンジンの情報を元に統合される。
      * キャラクター情報が読み出されていないときは、空リストを返す。
      */
     getter(state) {
-      const flattenCharacterInfos = state.engineIds.flatMap(
-        (engineId) => state.characterInfos[engineId] ?? []
+      const speakerUuids = [
+        ...new Set(
+          state.engineIds.flatMap((engineId) =>
+            (state.characterInfos[engineId] ?? []).map(
+              (c) => c.metas.speakerUuid
+            )
+          )
+        ),
+      ];
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
+      return new Map(
+        flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
       );
+    },
+  },
+  /**
+   * すべてのエンジンのキャラクター情報のリスト。
+   * GET_ALL_CHARACTER_INFOSとは違い、話者の順番が保持される。
+   */
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
+    getter(state) {
+      const speakerUuids = state.engineIds
+        .flatMap((engineId) =>
+          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
+        )
+        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されないのでindexOfで重複削除をする。
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
       return flattenCharacterInfos;
     },
   },
@@ -107,22 +164,28 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     async action({ commit, getters }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
 
-      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
       // デフォルトスタイルが設定されていない場合は0をセットする
       // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
-      const unsetCharacterInfos = flattenCharacterInfos.filter(
-        (characterInfo) =>
-          !defaultStyleIds.some(
-            (styleId) => styleId.speakerUuid == characterInfo.metas.speakerUuid
-          )
+      const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
+        (speakerUuid) =>
+          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
       );
       defaultStyleIds = [
         ...defaultStyleIds,
-        ...unsetCharacterInfos.map<DefaultStyleId>((info) => ({
-          speakerUuid: info.metas.speakerUuid,
-          defaultStyleId: info.metas.styles[0].styleId,
-        })),
+        ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => {
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+          if (!characterInfo) {
+            throw new Error(
+              `characterInfo not found. speakerUuid=${speakerUuid}`
+            );
+          }
+          return {
+            speakerUuid: speakerUuid,
+            defaultStyleId: characterInfo.metas.styles[0].styleId,
+          };
+        }),
       ];
 
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
@@ -192,12 +255,10 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_NEW_CHARACTERS: {
     action({ state, getters }) {
-      const flattenCharacterInfos = getters.GET_FLATTEN_CHARACTER_INFOS;
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
-      const allSpeakerUuid = flattenCharacterInfos.map(
-        (characterInfo) => characterInfo.metas.speakerUuid
-      );
+      const allSpeakerUuid = [...allCharacterInfos.keys()];
       const newSpeakerUuid = allSpeakerUuid.filter(
         (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
       );

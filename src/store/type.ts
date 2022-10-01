@@ -706,7 +706,11 @@ export type IndexStoreState = {
 };
 
 export type IndexStoreTypes = {
-  GET_FLATTEN_CHARACTER_INFOS: {
+  GET_ALL_CHARACTER_INFOS: {
+    getter: Map<string, CharacterInfo>;
+  };
+
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
     getter: CharacterInfo[];
   };
 

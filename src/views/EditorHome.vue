@@ -132,13 +132,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="flattenCharacterInfos.length > 0"
-    :characterInfos="flattenCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="flattenCharacterInfos.length > 0"
-    :characterInfos="flattenCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -468,9 +468,11 @@ export default defineComponent({
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
-      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
+
+      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+
       await store.dispatch("LOAD_CHARACTER_ALL");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
@@ -481,7 +483,7 @@ export default defineComponent({
 
       // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
       let isUnsetDefaultStyleIds = false;
-      for (const info of flattenCharacterInfos.value) {
+      for (const info of orderedAllCharacterInfos.value) {
         isUnsetDefaultStyleIds ||=
           info.metas.styles.length > 1 &&
           (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
@@ -592,8 +594,8 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const flattenCharacterInfos = computed(
-      () => store.getters.GET_FLATTEN_CHARACTER_INFOS
+    const orderedAllCharacterInfos = computed(
+      () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
     );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
@@ -695,7 +697,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      flattenCharacterInfos,
+      orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
