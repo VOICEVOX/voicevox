@@ -609,14 +609,10 @@ export default defineComponent({
   }
   .engine-icon {
     position: absolute;
-    bottom: 0;
-    right: 0;
-    transform: translate(50%, 50%);
-
-    :deep(img) {
-      width: 27.5% !important;
-      height: 27.5% !important;
-    }
+    width: 13px;
+    height: 13px;
+    bottom: -6px;
+    right: -6px;
   }
 }
 </style>
