@@ -4,6 +4,7 @@ import {
   GettersBase,
   ActionsBase,
   StoreOptions,
+  PayloadFunction,
 } from "./vuex";
 import { Patch } from "immer";
 import {
@@ -73,13 +74,17 @@ export type WriteErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
-type StoreType<T, U extends "getter" | "mutation" | "action"> = {
+export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
     ? never
     : P]: T[P] extends {
     [K in U]: infer R;
   }
-    ? R
+    ? U extends "action"
+      ? R extends PayloadFunction
+        ? R
+        : never
+      : R
     : never;
 };
 
@@ -101,7 +106,7 @@ export type AudioStoreState = {
   nowPlayingContinuously: boolean;
 };
 
-type AudioStoreTypes = {
+export type AudioStoreTypes = {
   ACTIVE_AUDIO_KEY: {
     getter: string | undefined;
   };
@@ -461,10 +466,6 @@ type AudioStoreTypes = {
   };
 };
 
-export type AudioGetters = StoreType<AudioStoreTypes, "getter">;
-export type AudioMutations = StoreType<AudioStoreTypes, "mutation">;
-export type AudioActions = StoreType<AudioStoreTypes, "action">;
-
 /*
  * Audio Command Store Types
  */
@@ -473,7 +474,7 @@ export type AudioCommandStoreState = {
   //
 };
 
-type AudioCommandStoreTypes = {
+export type AudioCommandStoreTypes = {
   COMMAND_REGISTER_AUDIO_ITEM: {
     mutation: {
       audioItem: AudioItem;
@@ -658,13 +659,6 @@ type AudioCommandStoreTypes = {
   };
 };
 
-export type AudioCommandGetters = StoreType<AudioCommandStoreTypes, "getter">;
-export type AudioCommandMutations = StoreType<
-  AudioCommandStoreTypes,
-  "mutation"
->;
-export type AudioCommandActions = StoreType<AudioCommandStoreTypes, "action">;
-
 /*
  * Command Store Types
  */
@@ -674,7 +668,7 @@ export type CommandStoreState = {
   redoCommands: Command[];
 };
 
-type CommandStoreTypes = {
+export type CommandStoreTypes = {
   CAN_UNDO: {
     getter: boolean;
   };
@@ -702,10 +696,6 @@ type CommandStoreTypes = {
   };
 };
 
-export type CommandGetters = StoreType<CommandStoreTypes, "getter">;
-export type CommandMutations = StoreType<CommandStoreTypes, "mutation">;
-export type CommandActions = StoreType<CommandStoreTypes, "action">;
-
 /*
  * Index Store Types
  */
@@ -715,8 +705,12 @@ export type IndexStoreState = {
   userCharacterOrder: string[];
 };
 
-type IndexStoreTypes = {
-  GET_FLATTEN_CHARACTER_INFOS: {
+export type IndexStoreTypes = {
+  GET_ALL_CHARACTER_INFOS: {
+    getter: Map<string, CharacterInfo>;
+  };
+
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
     getter: CharacterInfo[];
   };
 
@@ -791,10 +785,6 @@ type IndexStoreTypes = {
   };
 };
 
-export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
-export type IndexMutations = StoreType<IndexStoreTypes, "mutation">;
-export type IndexActions = StoreType<IndexStoreTypes, "action">;
-
 /*
  * Project Store Types
  */
@@ -804,7 +794,7 @@ export type ProjectStoreState = {
   savedLastCommandUnixMillisec: number | null;
 };
 
-type ProjectStoreTypes = {
+export type ProjectStoreTypes = {
   PROJECT_NAME: {
     getter: string | undefined;
   };
@@ -834,10 +824,6 @@ type ProjectStoreTypes = {
   };
 };
 
-export type ProjectGetters = StoreType<ProjectStoreTypes, "getter">;
-export type ProjectMutations = StoreType<ProjectStoreTypes, "mutation">;
-export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
-
 /*
  * Setting Store Types
  */
@@ -857,7 +843,7 @@ export type SettingStoreState = {
   confirmedTips: ConfirmedTips;
 };
 
-type SettingStoreTypes = {
+export type SettingStoreTypes = {
   HYDRATE_SETTING_STORE: {
     action(): void;
   };
@@ -919,10 +905,6 @@ type SettingStoreTypes = {
   };
 };
 
-export type SettingGetters = StoreType<SettingStoreTypes, "getter">;
-export type SettingMutations = StoreType<SettingStoreTypes, "mutation">;
-export type SettingActions = StoreType<SettingStoreTypes, "action">;
-
 /*
  * Ui Store Types
  */
@@ -947,7 +929,7 @@ export type UiStoreState = {
   isFullscreen: boolean;
 };
 
-type UiStoreTypes = {
+export type UiStoreTypes = {
   UI_LOCKED: {
     getter: boolean;
   };
@@ -1046,13 +1028,17 @@ type UiStoreTypes = {
     action(): void;
   };
 
-  SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
+  SET_ENGINE_INFOS: {
+    mutation: { engineInfos: EngineInfo[] };
+  };
 
   SET_ENGINE_MANIFESTS: {
     mutation: { engineManifests: Record<string, EngineManifest> };
   };
 
-  FETCH_AND_SET_ENGINE_MANIFESTS: { action(): void };
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
 
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
@@ -1103,10 +1089,6 @@ type UiStoreTypes = {
   };
 };
 
-export type UiGetters = StoreType<UiStoreTypes, "getter">;
-export type UiMutations = StoreType<UiStoreTypes, "mutation">;
-export type UiActions = StoreType<UiStoreTypes, "action">;
-
 /*
   Preset Store Types
 */
@@ -1116,7 +1098,7 @@ export type PresetStoreState = {
   presetItems: Record<string, Preset>;
 };
 
-type PresetStoreTypes = {
+export type PresetStoreTypes = {
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<string, Preset>;
@@ -1150,17 +1132,13 @@ type PresetStoreTypes = {
   };
 };
 
-export type PresetGetters = StoreType<PresetStoreTypes, "getter">;
-export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
-export type PresetActions = StoreType<PresetStoreTypes, "action">;
-
 /*
  * Dictionary Store Types
  */
 
 export type DictionaryStoreState = Record<string, unknown>;
 
-type DictionaryStoreTypes = {
+export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
     action(payload: {
       engineId: string;
@@ -1188,10 +1166,6 @@ type DictionaryStoreTypes = {
   };
 };
 
-export type DictionaryGetters = StoreType<DictionaryStoreTypes, "getter">;
-export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
-export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
-
 /*
  * Setting Store Types
  */
@@ -1210,17 +1184,13 @@ type IEngineConnectorFactoryActionsMapper = <
   _: Parameters<IEngineConnectorFactoryActions[K]>[0]
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
-type ProxyStoreTypes = {
+export type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
       engineId: string;
     }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
-
-export type ProxyGetters = StoreType<ProxyStoreTypes, "getter">;
-export type ProxyMutations = StoreType<ProxyStoreTypes, "mutation">;
-export type ProxyActions = StoreType<ProxyStoreTypes, "action">;
 
 /*
  * All Store Types
@@ -1252,12 +1222,21 @@ export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
 
-export type VoiceVoxStoreOptions<
+export const commandMutationsCreator = <S, M extends MutationsBase>(
+  arg: PayloadRecipeTree<S, M>
+): MutationTree<S, M> => createCommandMutationTree<S, M>(arg);
+
+export const transformCommandStore = <
+  S,
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase
-> = StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations>;
-
-export const commandMutationsCreator = <M extends MutationsBase>(
-  arg: PayloadRecipeTree<State, M>
-): MutationTree<State, M> => createCommandMutationTree<State, M>(arg);
+>(
+  options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>
+): StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations> => {
+  if (options.mutations)
+    options.mutations = commandMutationsCreator<S, M>(
+      options.mutations as PayloadRecipeTree<S, M>
+    );
+  return options;
+};

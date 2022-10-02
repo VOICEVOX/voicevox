@@ -6,6 +6,19 @@
 コアは [VOICEVOX CORE](https://github.com/VOICEVOX/voicevox_core/) 、
 全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
 
+## ユーザーの方へ
+
+こちらは開発用のページになります。利用方法に関しては[VOICEVOX 公式サイト](https://voicevox.hiroshiba.jp/) をご覧ください。
+
+## 貢献者の方へ
+
+Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
+Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
+
+### デザインガイドライン
+
+[UX・UIデザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
+
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
@@ -33,11 +46,6 @@ npm run electron:serve
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
-
-## 貢献者の方へ
-
-Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
-Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
 
 ## ビルド
 

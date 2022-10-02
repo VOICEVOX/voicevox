@@ -147,6 +147,15 @@
       <q-card-actions align="center">
         <q-btn
           padding="xs md"
+          label="キャンセル"
+          unelevated
+          color="surface"
+          text-color="display"
+          class="q-mt-sm"
+          @click="closeHotkeyDialog"
+        />
+        <q-btn
+          padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
           color="surface"
@@ -156,15 +165,6 @@
             deleteHotkey(lastAction);
             closeHotkeyDialog();
           "
-        />
-        <q-btn
-          padding="xs md"
-          label="キャンセル"
-          unelevated
-          color="surface"
-          text-color="display"
-          class="q-mt-sm"
-          @click="closeHotkeyDialog"
         />
         <q-btn
           v-if="duplicatedHotkey == undefined"
@@ -252,7 +252,7 @@ export default defineComponent({
       if (!isHotkeyDialogOpened.value) {
         return;
       } else {
-        let recordedCombo = parseCombo(event);
+        const recordedCombo = parseCombo(event);
         lastRecord.value = recordedCombo;
         event.preventDefault();
       }
