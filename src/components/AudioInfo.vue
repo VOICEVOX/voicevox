@@ -165,7 +165,11 @@
     </div>
 
     <div class="q-mx-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: speedScaleSlider.qSliderProps.disable.value,
+        }"
         >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -187,7 +191,11 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: pitchScaleSlider.qSliderProps.disable.value,
+        }"
         >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -209,7 +217,11 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: intonationScaleSlider.qSliderProps.disable.value,
+        }"
         >抑揚
         {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -232,7 +244,11 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: volumeScaleSlider.qSliderProps.disable.value,
+        }"
         >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
       <q-slider
@@ -254,7 +270,11 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
+        }"
         >開始無音
         {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -277,7 +297,11 @@
       />
     </div>
     <div class="q-px-md">
-      <span class="text-body1 q-mb-xs"
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
+        }"
         >終了無音
         {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
       >
@@ -310,6 +334,7 @@ import { useStore } from "@/store";
 import { Preset } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import PresetManageDialog from "./PresetManageDialog.vue";
+import { EngineManifest } from "@/openapi";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -332,6 +357,15 @@ export default defineComponent({
       () => store.state.audioItems[props.activeAudioKey]
     );
     const query = computed(() => audioItem.value?.query);
+
+    const supportedFeatures = computed(
+      () =>
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
+    );
 
     const applyPreset = () => {
       store.dispatch("COMMAND_APPLY_AUDIO_PRESET", {
@@ -383,7 +417,8 @@ export default defineComponent({
 
     const speedScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.speedScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
       onChange: setAudioSpeedScale,
       max: () => 2,
       min: () => 0.5,
@@ -393,7 +428,8 @@ export default defineComponent({
     });
     const pitchScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.pitchScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
       onChange: setAudioPitchScale,
       max: () => 0.15,
       min: () => -0.15,
@@ -402,7 +438,9 @@ export default defineComponent({
     });
     const intonationScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.intonationScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value ||
+        supportedFeatures.value?.adjustIntonationScale === false,
       onChange: setAudioIntonationScale,
       max: () => 2,
       min: () => 0,
@@ -412,7 +450,8 @@ export default defineComponent({
     });
     const volumeScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.volumeScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
       onChange: setAudioVolumeScale,
       max: () => 2,
       min: () => 0,

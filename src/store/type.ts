@@ -4,9 +4,15 @@ import {
   GettersBase,
   ActionsBase,
   StoreOptions,
+  PayloadFunction,
 } from "./vuex";
 import { Patch } from "immer";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
+import {
+  AccentPhrase,
+  AudioQuery,
+  EngineManifest,
+  UserDictWord,
+} from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -32,8 +38,10 @@ import {
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
 
+// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
+  engineId?: string;
   styleId?: number;
   query?: AudioQuery;
   presetKey?: string;
@@ -66,13 +74,17 @@ export type WriteErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
-type StoreType<T, U extends "getter" | "mutation" | "action"> = {
+export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
     ? never
     : P]: T[P] extends {
     [K in U]: infer R;
   }
-    ? R
+    ? U extends "action"
+      ? R extends PayloadFunction
+        ? R
+        : never
+      : R
     : never;
 };
 
@@ -84,7 +96,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   engineStates: Record<string, EngineState>;
-  characterInfos?: CharacterInfo[];
+  characterInfos: Record<string, CharacterInfo[]>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -94,7 +106,7 @@ export type AudioStoreState = {
   nowPlayingContinuously: boolean;
 };
 
-type AudioStoreTypes = {
+export type AudioStoreTypes = {
   ACTIVE_AUDIO_KEY: {
     getter: string | undefined;
   };
@@ -142,16 +154,28 @@ type AudioStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
+  OPEN_ENGINE_DIRECTORY: {
+    action(payload: { engineId: string }): void;
+  };
+
   SET_ENGINE_STATE: {
     mutation: { engineId: string; engineState: EngineState };
   };
 
-  LOAD_CHARACTER: {
+  LOAD_CHARACTER_ALL: {
     action(): void;
   };
 
+  LOAD_CHARACTER: {
+    action(payload: { engineId: string }): void;
+  };
+
   SET_CHARACTER_INFOS: {
-    mutation: { characterInfos: CharacterInfo[] };
+    mutation: { engineId: string; characterInfos: CharacterInfo[] };
+  };
+
+  CHARACTER_INFO: {
+    getter(engineId: string, styleId: number): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -163,15 +187,19 @@ type AudioStoreTypes = {
   };
 
   IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { styleId: number }): Promise<boolean>;
+    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
   };
 
   INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { styleId: number }): void;
+    action(payload: { engineId: string; styleId: number }): void;
   };
 
   SETUP_SPEAKER: {
-    action(payload: { audioKey: string; styleId: number }): void;
+    action(payload: {
+      audioKey: string;
+      engineId: string;
+      styleId: number;
+    }): void;
   };
 
   SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
@@ -203,6 +231,7 @@ type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
+      engineId?: string;
       styleId?: number;
       presetKey?: string;
       baseAudioItem?: AudioItem;
@@ -285,11 +314,15 @@ type AudioStoreTypes = {
   };
 
   FETCH_AUDIO_QUERY: {
-    action(payload: { text: string; styleId: number }): Promise<AudioQuery>;
+    action(payload: {
+      text: string;
+      engineId: string;
+      styleId: number;
+    }): Promise<AudioQuery>;
   };
 
   SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; styleId: number };
+    mutation: { audioKey: string; engineId: string; styleId: number };
   };
 
   SET_ACCENT_PHRASES: {
@@ -299,6 +332,7 @@ type AudioStoreTypes = {
   FETCH_ACCENT_PHRASES: {
     action(payload: {
       text: string;
+      engineId: string;
       styleId: number;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
@@ -329,6 +363,7 @@ type AudioStoreTypes = {
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineId: string;
       styleId: number;
     }): Promise<AccentPhrase[]>;
   };
@@ -336,6 +371,7 @@ type AudioStoreTypes = {
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
+      engineId: string;
       styleId: number;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
@@ -430,10 +466,6 @@ type AudioStoreTypes = {
   };
 };
 
-export type AudioGetters = StoreType<AudioStoreTypes, "getter">;
-export type AudioMutations = StoreType<AudioStoreTypes, "mutation">;
-export type AudioActions = StoreType<AudioStoreTypes, "action">;
-
 /*
  * Audio Command Store Types
  */
@@ -442,7 +474,7 @@ export type AudioCommandStoreState = {
   //
 };
 
-type AudioCommandStoreTypes = {
+export type AudioCommandStoreTypes = {
   COMMAND_REGISTER_AUDIO_ITEM: {
     mutation: {
       audioItem: AudioItem;
@@ -475,12 +507,16 @@ type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { styleId: number; audioKey: string } & (
+    mutation: { engineId: string; styleId: number; audioKey: string } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: { audioKey: string; styleId: number }): void;
+    action(payload: {
+      audioKey: string;
+      engineId: string;
+      styleId: number;
+    }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -617,17 +653,11 @@ type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
+      engineId: string;
       styleId: number;
     }): string[];
   };
 };
-
-export type AudioCommandGetters = StoreType<AudioCommandStoreTypes, "getter">;
-export type AudioCommandMutations = StoreType<
-  AudioCommandStoreTypes,
-  "mutation"
->;
-export type AudioCommandActions = StoreType<AudioCommandStoreTypes, "action">;
 
 /*
  * Command Store Types
@@ -638,7 +668,7 @@ export type CommandStoreState = {
   redoCommands: Command[];
 };
 
-type CommandStoreTypes = {
+export type CommandStoreTypes = {
   CAN_UNDO: {
     getter: boolean;
   };
@@ -666,10 +696,6 @@ type CommandStoreTypes = {
   };
 };
 
-export type CommandGetters = StoreType<CommandStoreTypes, "getter">;
-export type CommandMutations = StoreType<CommandStoreTypes, "mutation">;
-export type CommandActions = StoreType<CommandStoreTypes, "action">;
-
 /*
  * Index Store Types
  */
@@ -679,7 +705,15 @@ export type IndexStoreState = {
   userCharacterOrder: string[];
 };
 
-type IndexStoreTypes = {
+export type IndexStoreTypes = {
+  GET_ALL_CHARACTER_INFOS: {
+    getter: Map<string, CharacterInfo>;
+  };
+
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
+    getter: CharacterInfo[];
+  };
+
   GET_HOW_TO_USE_TEXT: {
     action(): Promise<string>;
   };
@@ -747,10 +781,6 @@ type IndexStoreTypes = {
   };
 };
 
-export type IndexGetters = StoreType<IndexStoreTypes, "getter">;
-export type IndexMutations = StoreType<IndexStoreTypes, "mutation">;
-export type IndexActions = StoreType<IndexStoreTypes, "action">;
-
 /*
  * Project Store Types
  */
@@ -760,7 +790,7 @@ export type ProjectStoreState = {
   savedLastCommandUnixMillisec: number | null;
 };
 
-type ProjectStoreTypes = {
+export type ProjectStoreTypes = {
   PROJECT_NAME: {
     getter: string | undefined;
   };
@@ -790,10 +820,6 @@ type ProjectStoreTypes = {
   };
 };
 
-export type ProjectGetters = StoreType<ProjectStoreTypes, "getter">;
-export type ProjectMutations = StoreType<ProjectStoreTypes, "mutation">;
-export type ProjectActions = StoreType<ProjectStoreTypes, "action">;
-
 /*
  * Setting Store Types
  */
@@ -804,6 +830,7 @@ export type SettingStoreState = {
   toolbarSetting: ToolbarSetting;
   engineIds: string[];
   engineInfos: Record<string, EngineInfo>;
+  engineManifests: Record<string, EngineManifest>;
   themeSetting: ThemeSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
@@ -812,7 +839,7 @@ export type SettingStoreState = {
   confirmedTips: ConfirmedTips;
 };
 
-type SettingStoreTypes = {
+export type SettingStoreTypes = {
   HYDRATE_SETTING_STORE: {
     action(): void;
   };
@@ -874,10 +901,6 @@ type SettingStoreTypes = {
   };
 };
 
-export type SettingGetters = StoreType<SettingStoreTypes, "getter">;
-export type SettingMutations = StoreType<SettingStoreTypes, "mutation">;
-export type SettingActions = StoreType<SettingStoreTypes, "action">;
-
 /*
  * Ui Store Types
  */
@@ -902,7 +925,7 @@ export type UiStoreState = {
   isFullscreen: boolean;
 };
 
-type UiStoreTypes = {
+export type UiStoreTypes = {
   UI_LOCKED: {
     getter: boolean;
   };
@@ -1001,7 +1024,17 @@ type UiStoreTypes = {
     action(): void;
   };
 
-  SET_ENGINE_INFOS: { mutation: { engineInfos: EngineInfo[] } };
+  SET_ENGINE_INFOS: {
+    mutation: { engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
 
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
@@ -1052,10 +1085,6 @@ type UiStoreTypes = {
   };
 };
 
-export type UiGetters = StoreType<UiStoreTypes, "getter">;
-export type UiMutations = StoreType<UiStoreTypes, "mutation">;
-export type UiActions = StoreType<UiStoreTypes, "action">;
-
 /*
   Preset Store Types
 */
@@ -1065,7 +1094,7 @@ export type PresetStoreState = {
   presetItems: Record<string, Preset>;
 };
 
-type PresetStoreTypes = {
+export type PresetStoreTypes = {
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<string, Preset>;
@@ -1099,19 +1128,17 @@ type PresetStoreTypes = {
   };
 };
 
-export type PresetGetters = StoreType<PresetStoreTypes, "getter">;
-export type PresetMutations = StoreType<PresetStoreTypes, "mutation">;
-export type PresetActions = StoreType<PresetStoreTypes, "action">;
-
 /*
  * Dictionary Store Types
  */
 
 export type DictionaryStoreState = Record<string, unknown>;
 
-type DictionaryStoreTypes = {
+export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
-    action(): Promise<Record<string, UserDictWord>>;
+    action(payload: {
+      engineId: string;
+    }): Promise<Record<string, UserDictWord>>;
   };
   ADD_WORD: {
     action(payload: {
@@ -1135,10 +1162,6 @@ type DictionaryStoreTypes = {
   };
 };
 
-export type DictionaryGetters = StoreType<DictionaryStoreTypes, "getter">;
-export type DictionaryMutations = StoreType<DictionaryStoreTypes, "mutation">;
-export type DictionaryActions = StoreType<DictionaryStoreTypes, "action">;
-
 /*
  * Setting Store Types
  */
@@ -1157,17 +1180,13 @@ type IEngineConnectorFactoryActionsMapper = <
   _: Parameters<IEngineConnectorFactoryActions[K]>[0]
 ) => ReturnType<IEngineConnectorFactoryActions[K]>;
 
-type ProxyStoreTypes = {
+export type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
       engineId: string;
     }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
-
-export type ProxyGetters = StoreType<ProxyStoreTypes, "getter">;
-export type ProxyMutations = StoreType<ProxyStoreTypes, "mutation">;
-export type ProxyActions = StoreType<ProxyStoreTypes, "action">;
 
 /*
  * All Store Types
@@ -1199,12 +1218,21 @@ export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
 
-export type VoiceVoxStoreOptions<
+export const commandMutationsCreator = <S, M extends MutationsBase>(
+  arg: PayloadRecipeTree<S, M>
+): MutationTree<S, M> => createCommandMutationTree<S, M>(arg);
+
+export const transformCommandStore = <
+  S,
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase
-> = StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations>;
-
-export const commandMutationsCreator = <M extends MutationsBase>(
-  arg: PayloadRecipeTree<State, M>
-): MutationTree<State, M> => createCommandMutationTree<State, M>(arg);
+>(
+  options: StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations>
+): StoreOptions<S, G, A, M, AllGetters, AllActions, AllMutations> => {
+  if (options.mutations)
+    options.mutations = commandMutationsCreator<S, M>(
+      options.mutations as PayloadRecipeTree<S, M>
+    );
+  return options;
+};

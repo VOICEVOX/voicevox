@@ -8,17 +8,12 @@ import {
   ThemeConf,
   ToolbarSetting,
 } from "@/type/preload";
-import {
-  SettingGetters,
-  SettingActions,
-  SettingMutations,
-  SettingStoreState,
-  VoiceVoxStoreOptions,
-} from "./type";
+import { SettingStoreState, SettingStoreTypes } from "./type";
 import Mousetrap from "mousetrap";
 import { useStore } from "@/store";
 import { Dark, setCssVar, colors } from "quasar";
 import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -39,6 +34,7 @@ export const settingStoreState: SettingStoreState = {
   toolbarSetting: [],
   engineIds: [],
   engineInfos: {},
+  engineManifests: {},
   themeSetting: {
     currentTheme: "Default",
     availableThemes: [],
@@ -59,68 +55,9 @@ export const settingStoreState: SettingStoreState = {
   },
 };
 
-export const settingStore: VoiceVoxStoreOptions<
-  SettingGetters,
-  SettingActions,
-  SettingMutations
-> = {
-  getters: {},
-  mutations: {
-    SET_SAVING_SETTING(
-      state,
-      { savingSetting }: { savingSetting: SavingSetting }
-    ) {
-      state.savingSetting = savingSetting;
-    },
-    SET_HOTKEY_SETTINGS(state, { newHotkey }: { newHotkey: HotkeySetting }) {
-      let flag = true;
-      state.hotkeySettings.forEach((hotkey) => {
-        if (hotkey.action == newHotkey.action) {
-          hotkey.combination = newHotkey.combination;
-          flag = false;
-        }
-      });
-      if (flag) state.hotkeySettings.push(newHotkey);
-    },
-    SET_TOOLBAR_SETTING(
-      state,
-      { toolbarSetting }: { toolbarSetting: ToolbarSetting }
-    ) {
-      state.toolbarSetting = toolbarSetting;
-    },
-    SET_THEME_SETTING(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
-    ) {
-      if (themes) {
-        state.themeSetting.availableThemes = themes;
-      }
-      state.themeSetting.currentTheme = currentTheme;
-    },
-    SET_EXPERIMENTAL_SETTING(
-      state,
-      { experimentalSetting }: { experimentalSetting: ExperimentalSetting }
-    ) {
-      state.experimentalSetting = experimentalSetting;
-    },
-    SET_ACCEPT_RETRIEVE_TELEMETRY(state, { acceptRetrieveTelemetry }) {
-      state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
-    },
-    SET_ACCEPT_TERMS(state, { acceptTerms }) {
-      state.acceptTerms = acceptTerms;
-    },
-    SET_SPLIT_TEXT_WHEN_PASTE(state, { splitTextWhenPaste }) {
-      state.splitTextWhenPaste = splitTextWhenPaste;
-    },
-    SET_SPLITTER_POSITION(state, { splitterPosition }) {
-      state.splitterPosition = splitterPosition;
-    },
-    SET_CONFIRMED_TIPS(state, { confirmedTips }) {
-      state.confirmedTips = confirmedTips;
-    },
-  },
-  actions: {
-    async HYDRATE_SETTING_STORE({ commit, dispatch }) {
+export const settingStore = createPartialStore<SettingStoreTypes>({
+  HYDRATE_SETTING_STORE: {
+    async action({ commit, dispatch }) {
       window.electron.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
           dispatch("SET_HOTKEY_SETTINGS", {
@@ -178,14 +115,32 @@ export const settingStore: VoiceVoxStoreOptions<
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
     },
+  },
 
-    SET_SAVING_SETTING({ commit }, { data }: { data: SavingSetting }) {
+  SET_SAVING_SETTING: {
+    mutation(state, { savingSetting }: { savingSetting: SavingSetting }) {
+      state.savingSetting = savingSetting;
+    },
+    action({ commit }, { data }: { data: SavingSetting }) {
       const newData = window.electron.setSetting("savingSetting", data);
       newData.then((savingSetting) => {
         commit("SET_SAVING_SETTING", { savingSetting });
       });
     },
-    SET_HOTKEY_SETTINGS({ state, commit }, { data }: { data: HotkeySetting }) {
+  },
+
+  SET_HOTKEY_SETTINGS: {
+    mutation(state, { newHotkey }: { newHotkey: HotkeySetting }) {
+      let flag = true;
+      state.hotkeySettings.forEach((hotkey) => {
+        if (hotkey.action == newHotkey.action) {
+          hotkey.combination = newHotkey.combination;
+          flag = false;
+        }
+      });
+      if (flag) state.hotkeySettings.push(newHotkey);
+    },
+    action({ state, commit }, { data }: { data: HotkeySetting }) {
       window.electron.hotkeySettings(data);
       const oldHotkey = state.hotkeySettings.find((value) => {
         return value.action == data.action;
@@ -208,16 +163,31 @@ export const settingStore: VoiceVoxStoreOptions<
         newHotkey: data,
       });
     },
-    SET_TOOLBAR_SETTING({ commit }, { data }: { data: ToolbarSetting }) {
+  },
+
+  SET_TOOLBAR_SETTING: {
+    mutation(state, { toolbarSetting }: { toolbarSetting: ToolbarSetting }) {
+      state.toolbarSetting = toolbarSetting;
+    },
+    action({ commit }, { data }: { data: ToolbarSetting }) {
       const newData = window.electron.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
         commit("SET_TOOLBAR_SETTING", { toolbarSetting });
       });
     },
-    SET_THEME_SETTING(
-      { state, commit },
-      { currentTheme }: { currentTheme: string }
+  },
+
+  SET_THEME_SETTING: {
+    mutation(
+      state,
+      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
     ) {
+      if (themes) {
+        state.themeSetting.availableThemes = themes;
+      }
+      state.themeSetting.currentTheme = currentTheme;
+    },
+    action({ state, commit }, { currentTheme }: { currentTheme: string }) {
       window.electron.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
@@ -249,7 +219,13 @@ export const settingStore: VoiceVoxStoreOptions<
         currentTheme: currentTheme,
       });
     },
-    SET_ACCEPT_RETRIEVE_TELEMETRY({ commit }, { acceptRetrieveTelemetry }) {
+  },
+
+  SET_ACCEPT_RETRIEVE_TELEMETRY: {
+    mutation(state, { acceptRetrieveTelemetry }) {
+      state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
+    },
+    action({ commit }, { acceptRetrieveTelemetry }) {
       window.dataLayer?.push({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
@@ -260,7 +236,13 @@ export const settingStore: VoiceVoxStoreOptions<
       );
       commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
     },
-    SET_ACCEPT_TERMS({ commit }, { acceptTerms }) {
+  },
+
+  SET_ACCEPT_TERMS: {
+    mutation(state, { acceptTerms }) {
+      state.acceptTerms = acceptTerms;
+    },
+    action({ commit }, { acceptTerms }) {
       window.dataLayer?.push({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
@@ -268,72 +250,99 @@ export const settingStore: VoiceVoxStoreOptions<
       window.electron.setSetting("acceptTerms", acceptTerms);
       commit("SET_ACCEPT_TERMS", { acceptTerms });
     },
-    SET_EXPERIMENTAL_SETTING({ commit }, { experimentalSetting }) {
+  },
+
+  SET_EXPERIMENTAL_SETTING: {
+    mutation(
+      state,
+      { experimentalSetting }: { experimentalSetting: ExperimentalSetting }
+    ) {
+      state.experimentalSetting = experimentalSetting;
+    },
+    action({ commit }, { experimentalSetting }) {
       window.electron.setSetting("experimentalSetting", experimentalSetting);
       commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
     },
-    SET_SPLIT_TEXT_WHEN_PASTE({ commit }, { splitTextWhenPaste }) {
+  },
+
+  SET_SPLIT_TEXT_WHEN_PASTE: {
+    mutation(state, { splitTextWhenPaste }) {
+      state.splitTextWhenPaste = splitTextWhenPaste;
+    },
+    action({ commit }, { splitTextWhenPaste }) {
       window.electron.setSetting("splitTextWhenPaste", splitTextWhenPaste);
       commit("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     },
-    SET_SPLITTER_POSITION({ commit }, { splitterPosition }) {
+  },
+
+  SET_SPLITTER_POSITION: {
+    mutation(state, { splitterPosition }) {
+      state.splitterPosition = splitterPosition;
+    },
+    action({ commit }, { splitterPosition }) {
       window.electron.setSetting("splitterPosition", splitterPosition);
       commit("SET_SPLITTER_POSITION", { splitterPosition });
     },
-    SET_CONFIRMED_TIPS({ commit }, { confirmedTips }) {
+  },
+
+  SET_CONFIRMED_TIPS: {
+    mutation(state, { confirmedTips }) {
+      state.confirmedTips = confirmedTips;
+    },
+    action({ commit }, { confirmedTips }) {
       window.electron.setSetting("confirmedTips", confirmedTips);
       commit("SET_CONFIRMED_TIPS", { confirmedTips });
     },
+  },
 
+  CHANGE_USE_GPU: {
     /**
      * CPU/GPUモードを切り替えようとする。
      * GPUモードでエンジン起動に失敗した場合はCPUモードに戻す。
      */
-    CHANGE_USE_GPU: createUILockAction(
-      async ({ state, dispatch }, { useGpu }) => {
-        if (state.useGpu === useGpu) return;
+    action: createUILockAction(async ({ state, dispatch }, { useGpu }) => {
+      if (state.useGpu === useGpu) return;
 
-        const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
+      const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
 
-        // 対応するGPUがない場合に変更を続行するか問う
-        if (useGpu && !isAvailableGPUMode) {
-          const result = await window.electron.showQuestionDialog({
-            type: "warning",
-            title: "対応するGPUデバイスが見つかりません",
-            message:
-              "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
-              "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-            buttons: ["変更する", "変更しない"],
-            cancelId: 1,
-          });
-          if (result == 1) {
-            return;
-          }
-        }
-
-        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-        if (engineId === undefined)
-          throw new Error(`No such engine registered: index == 0`);
-
-        await dispatch("SET_USE_GPU", { useGpu });
-        const success = await dispatch("RESTART_ENGINE", { engineId });
-
-        // GPUモードに変更できなかった場合はCPUモードに戻す
-        // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
-        if (!success && useGpu) {
-          await window.electron.showMessageDialog({
-            type: "error",
-            title: "GPUモードに変更できませんでした",
-            message:
-              "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
-          });
-          await dispatch("CHANGE_USE_GPU", { useGpu: false });
+      // 対応するGPUがない場合に変更を続行するか問う
+      if (useGpu && !isAvailableGPUMode) {
+        const result = await window.electron.showQuestionDialog({
+          type: "warning",
+          title: "対応するGPUデバイスが見つかりません",
+          message:
+            "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
+            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+          buttons: ["変更する", "変更しない"],
+          cancelId: 1,
+        });
+        if (result == 1) {
           return;
         }
       }
-    ),
+
+      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      if (engineId === undefined)
+        throw new Error(`No such engine registered: index == 0`);
+
+      await dispatch("SET_USE_GPU", { useGpu });
+      const success = await dispatch("RESTART_ENGINE", { engineId });
+
+      // GPUモードに変更できなかった場合はCPUモードに戻す
+      // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
+      if (!success && useGpu) {
+        await window.electron.showMessageDialog({
+          type: "error",
+          title: "GPUモードに変更できませんでした",
+          message:
+            "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
+        });
+        await dispatch("CHANGE_USE_GPU", { useGpu: false });
+        return;
+      }
+    }),
   },
-};
+});
 
 export const setHotkeyFunctions = (
   hotkeyMap: Map<HotkeyAction, () => HotkeyReturnType>,

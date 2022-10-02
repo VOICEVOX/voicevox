@@ -214,17 +214,17 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
-                :disable="uiLocked || !isWordChanged"
-                >保存</q-btn
+                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                :disable="uiLocked"
+                >キャンセル</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
-                :disable="uiLocked"
-                >キャンセル</q-btn
+                @click="saveWord"
+                :disable="uiLocked || !isWordChanged"
+                >保存</q-btn
               >
             </div>
           </div>
@@ -263,6 +263,8 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
+    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
+
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -282,10 +284,16 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       loadingDict.value = true;
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT")
+          store.dispatch("LOAD_USER_DICT", {
+            engineId,
+          })
         );
       } catch {
         $q.dialog({
@@ -356,6 +364,10 @@ export default defineComponent({
       surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
       isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
       // 読みが変更されていない場合は、アクセントフレーズに変更を加えない
@@ -378,6 +390,7 @@ export default defineComponent({
           await createUILockAction(
             store.dispatch("FETCH_ACCENT_PHRASES", {
               text: text + "ガ'",
+              engineId,
               styleId: styleId.value,
               isKana: true,
             })
@@ -396,12 +409,17 @@ export default defineComponent({
     };
 
     const changeAccent = async (_: number, accent: number) => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       if (accentPhrase.value) {
         accentPhrase.value.accent = accent;
         accentPhrase.value = (
           await createUILockAction(
             store.dispatch("FETCH_MORA_DATA", {
               accentPhrases: [accentPhrase.value],
+              engineId,
               styleId: styleId.value,
             })
           )
@@ -413,6 +431,10 @@ export default defineComponent({
     audioElem.pause();
 
     const play = async () => {
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       if (!accentPhrase.value) return;
       nowGenerating.value = true;
       const query: AudioQuery = {
@@ -429,6 +451,7 @@ export default defineComponent({
 
       const audioItem: AudioItem = {
         text: yomi.value,
+        engineId,
         styleId: styleId.value,
         query,
       };

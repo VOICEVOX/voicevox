@@ -6,6 +6,19 @@
 コアは [VOICEVOX CORE](https://github.com/VOICEVOX/voicevox_core/) 、
 全体構成は [こちら](./docs/全体構成.md) に詳細があります。）
 
+## ユーザーの方へ
+
+こちらは開発用のページになります。利用方法に関しては[VOICEVOX 公式サイト](https://voicevox.hiroshiba.jp/) をご覧ください。
+
+## 貢献者の方へ
+
+Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
+Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
+
+### デザインガイドライン
+
+[UX・UIデザインの方針](./docs/UX・UIデザインの方針.md)をご参照ください。
+
 ## 環境構築
 
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
@@ -24,17 +37,15 @@ npm ci
 `.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`があるパスを指定します。
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
+VOICEVOXエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
+
+また、エンジンAPIの宛先エンドポイントを変更する場合は`DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
 
 ```bash
 npm run electron:serve
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
-
-## 貢献者の方へ
-
-Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
-Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
 
 ## ビルド
 
@@ -78,6 +89,20 @@ typos
 でタイポチェックを行えます。
 もし誤判定やチェックから除外すべきファイルがあれば
 [設定ファイルの説明](https://github.com/crate-ci/typos#false-positives) に従って`_typos.toml`を編集してください。
+
+## 型チェック
+
+TypeScriptの型チェックを行います。
+※ 現在チェック方法は2種類ありますが、将来的に1つになります。
+
+```bash
+# .tsのみ型チェック
+npm run typecheck
+
+# .vueも含めて型チェック
+# ※ 現状、大量にエラーが検出されます。
+npm run typecheck:vue-tsc
+```
 
 ## Markdownlint
 

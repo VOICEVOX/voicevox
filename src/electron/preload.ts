@@ -158,6 +158,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
 
+  isMaximizedWindow: () => {
+    return ipcRendererInvoke("IS_MAXIMIZED_WINDOW");
+  },
+
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRendererOn(channel, callback);
   },
@@ -192,6 +196,10 @@ const api: Sandbox = {
 
   restartEngine: (engineId: string) => {
     return ipcRendererInvoke("RESTART_ENGINE", { engineId });
+  },
+
+  openEngineDirectory: (engineId: string) => {
+    return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
   },
 
   checkFileExists: (file) => {

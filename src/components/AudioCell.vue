@@ -42,6 +42,7 @@
                 "
                 @click="
                   changeStyleId(
+                    characterInfo.metas.speakerUuid,
                     getDefaultStyle(characterInfo.metas.speakerUuid).styleId
                   )
                 "
@@ -57,6 +58,22 @@
                       getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
                     "
                   />
+                  <q-avatar
+                    class="engine-icon"
+                    rounded
+                    v-if="
+                      isMultipleEngine && characterInfo.metas.styles.length < 2
+                    "
+                  >
+                    <img
+                      :src="
+                        engineIcons[
+                          getDefaultStyle(characterInfo.metas.speakerUuid)
+                            .engineId
+                        ]
+                      "
+                    />
+                  </q-avatar>
                 </q-avatar>
                 <div>{{ characterInfo.metas.speakerName }}</div>
               </q-btn>
@@ -97,7 +114,12 @@
                         v-close-popup
                         active-class="selected-character-item"
                         :active="style.styleId === selectedStyle.styleId"
-                        @click="changeStyleId(style.styleId)"
+                        @click="
+                          changeStyleId(
+                            characterInfo.metas.speakerUuid,
+                            style.styleId
+                          )
+                        "
                       >
                         <q-avatar rounded size="2rem" class="q-mr-md">
                           <q-img
@@ -108,6 +130,20 @@
                               characterInfo.metas.styles[styleIndex].iconPath
                             "
                           />
+                          <q-avatar
+                            rounded
+                            class="engine-icon"
+                            v-if="isMultipleEngine"
+                          >
+                            <img
+                              :src="
+                                engineIcons[
+                                  characterInfo.metas.styles[styleIndex]
+                                    .engineId
+                                ]
+                              "
+                            />
+                          </q-avatar>
                         </q-avatar>
                         <q-item-section v-if="style.styleName"
                           >{{ characterInfo.metas.speakerName }} ({{
@@ -168,6 +204,7 @@ import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
 import { QInput, debounce } from "quasar";
+import { base64ImageToUri } from "@/helpers/imageHelper";
 
 export default defineComponent({
   name: "AudioCell",
@@ -198,17 +235,19 @@ export default defineComponent({
 
     const selectedCharacterInfo = computed(() =>
       userOrderedCharacterInfos.value !== undefined &&
+      audioItem.value.engineId !== undefined &&
       audioItem.value.styleId !== undefined
-        ? userOrderedCharacterInfos.value.find((info) =>
-            info.metas.styles.find(
-              (style) => style.styleId === audioItem.value.styleId
-            )
+        ? store.getters.CHARACTER_INFO(
+            audioItem.value.engineId,
+            audioItem.value.styleId
           )
         : undefined
     );
     const selectedStyle = computed(() =>
       selectedCharacterInfo.value?.metas.styles.find(
-        (style) => style.styleId === audioItem.value.styleId
+        (style) =>
+          style.styleId === audioItem.value.styleId &&
+          style.engineId === audioItem.value.engineId
       )
     );
 
@@ -256,13 +295,29 @@ export default defineComponent({
       }
     };
 
-    const changeStyleId = (styleId: number) => {
+    const changeStyleId = (speakerUuid: string, styleId: number) => {
+      const engineId = store.state.engineIds.find((_engineId) =>
+        (store.state.characterInfos[_engineId] ?? []).some(
+          (characterInfo) =>
+            characterInfo.metas.speakerUuid === speakerUuid &&
+            characterInfo.metas.styles.some(
+              (style) => style.styleId === styleId
+            )
+        )
+      );
+      if (engineId === undefined)
+        throw new Error(
+          `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
+        );
+
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
+        engineId,
         styleId,
       });
     };
     const getDefaultStyle = (speakerUuid: string) => {
+      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = userOrderedCharacterInfos.value?.find(
         (info) => info.metas.speakerUuid === speakerUuid
       );
@@ -316,10 +371,17 @@ export default defineComponent({
             await pushAudioText();
           }
 
+          const engineId = audioItem.value.engineId;
+          if (engineId === undefined)
+            throw new Error("assert engineId !== undefined");
+
           const styleId = audioItem.value.styleId;
-          if (styleId == undefined) throw new Error("styleId == undefined");
+          if (styleId === undefined)
+            throw new Error("assert styleId !== undefined");
+
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
+            engineId,
             styleId,
             prevAudioKey,
           });
@@ -407,6 +469,18 @@ export default defineComponent({
       textfield.value.focus();
     };
 
+    // 複数エンジン
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
+    const engineIcons = computed(() =>
+      Object.fromEntries(
+        store.state.engineIds.map((engineId) => [
+          engineId,
+          base64ImageToUri(store.state.engineManifests[engineId].icon),
+        ])
+      )
+    );
+
     return {
       userOrderedCharacterInfos,
       isInitializingSpeaker,
@@ -421,6 +495,8 @@ export default defineComponent({
       reassignSubMenuOpen,
       isActiveAudioCell,
       audioTextBuffer,
+      isMultipleEngine,
+      engineIcons,
       setAudioTextBuffer,
       pushAudioText,
       changeStyleId,
@@ -535,6 +611,13 @@ export default defineComponent({
   .selected-character-item,
   .opened-character-item {
     background-color: rgba(colors.$primary-rgb, 0.2);
+  }
+  .engine-icon {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    bottom: -6px;
+    right: -6px;
   }
 }
 </style>

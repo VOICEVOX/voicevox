@@ -5,8 +5,20 @@
         <div class="detail-selector">
           <q-tabs dense vertical class="text-display" v-model="selectedDetail">
             <q-tab name="accent" label="ｱｸｾﾝﾄ" />
-            <q-tab name="pitch" label="ｲﾝﾄﾈｰｼｮﾝ" />
-            <q-tab name="length" label="長さ" />
+            <q-tab
+              name="pitch"
+              label="ｲﾝﾄﾈｰｼｮﾝ"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustMoraPitch)
+              "
+            />
+            <q-tab
+              name="length"
+              label="長さ"
+              :disable="
+                !(supportedFeatures && supportedFeatures.adjustPhonemeLength)
+              "
+            />
           </q-tabs>
         </div>
         <div class="play-button-wrapper">
@@ -33,7 +45,7 @@
       </div>
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
-        <tip
+        <tool-tip
           tip-key="tweakableSliderByScroll"
           v-if="selectedDetail === 'pitch'"
           class="tip-tweakable-slider-by-scroll"
@@ -44,7 +56,7 @@
           </p>
           ホイール: ±0.1<br />
           Ctrl + ホイール: ±0.01
-        </tip>
+        </tool-tip>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -255,15 +267,15 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import Tip from "./Tip.vue";
+import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { Mora } from "@/openapi/models";
+import { EngineManifest, Mora } from "@/openapi/models";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter, Tip },
+  components: { AudioAccent, AudioParameter, ToolTip },
 
   name: "AudioDetail",
 
@@ -274,6 +286,15 @@ export default defineComponent({
   setup(props) {
     const store = useStore();
     const $q = useQuasar();
+
+    const supportedFeatures = computed(
+      () =>
+        (audioItem.value?.engineId &&
+          store.state.engineManifests[audioItem.value?.engineId]
+            .supportedFeatures) as
+          | EngineManifest["supportedFeatures"]
+          | undefined
+    );
 
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
       [
@@ -295,13 +316,17 @@ export default defineComponent({
       [
         "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
         () => {
-          selectedDetail.value = "pitch";
+          if (supportedFeatures.value?.adjustMoraPitch) {
+            selectedDetail.value = "pitch";
+          }
         },
       ],
       [
         "長さ欄を表示",
         () => {
-          selectedDetail.value = "length";
+          if (supportedFeatures.value?.adjustPhonemeLength) {
+            selectedDetail.value = "length";
+          }
         },
       ],
       [
@@ -348,6 +373,23 @@ export default defineComponent({
     );
     const query = computed(() => audioItem.value?.query);
     const accentPhrases = computed(() => query.value?.accentPhrases);
+
+    // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
+    // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
+    //       タブ自体の無効化＆移動以外の方法で無効化する
+    watch(
+      supportedFeatures,
+      (newFeatures) => {
+        if (
+          (!newFeatures?.adjustMoraPitch && selectedDetail.value === "pitch") ||
+          (!newFeatures?.adjustPhonemeLength &&
+            selectedDetail.value === "length")
+        ) {
+          selectedDetail.value = "accent";
+        }
+      },
+      { immediate: true }
+    );
 
     const activePointScrollMode = computed(
       () => store.state.activePointScrollMode
@@ -572,7 +614,7 @@ export default defineComponent({
     });
 
     const pronunciationByPhrase = computed(() => {
-      let textArray: Array<string> = [];
+      const textArray: Array<string> = [];
       accentPhrases.value?.forEach((accentPhrase) => {
         let textString = "";
         accentPhrase.moras.forEach((mora) => {
@@ -767,6 +809,7 @@ export default defineComponent({
       activePoint,
       setPlayAndStartPoint,
       uiLocked,
+      supportedFeatures,
       audioItem,
       query,
       accentPhrases,
@@ -849,6 +892,10 @@ $pitch-label-height: 24px;
       display: inline-grid;
       align-self: stretch;
       grid-template-rows: 1fr 60px 30px;
+
+      &:last-child {
+        padding-right: 20px;
+      }
 
       div {
         padding: 0px;

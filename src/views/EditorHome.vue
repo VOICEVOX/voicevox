@@ -1,7 +1,7 @@
 <template>
   <menu-bar />
 
-  <q-layout reveal elevated>
+  <q-layout reveal elevated container class="layout-container">
     <header-bar />
 
     <q-page-container>
@@ -132,13 +132,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="characterInfos"
-    :characterInfos="characterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="characterInfos"
-    :characterInfos="characterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -185,7 +185,7 @@ import {
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
-  name: "Home",
+  name: "EditorHome",
 
   components: {
     draggable,
@@ -368,13 +368,14 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
+      let engineId: string | undefined = undefined;
       let styleId: number | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
+        engineId = store.state.audioItems[prevAudioKey].engineId;
         styleId = store.state.audioItems[prevAudioKey].styleId;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
-      let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
       if (store.state.inheritAudioInfo) {
         baseAudioItem = prevAudioKey
@@ -383,7 +384,8 @@ export default defineComponent({
       }
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
-      audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+        engineId,
         styleId,
         presetKey,
         baseAudioItem,
@@ -468,7 +470,10 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
-      await store.dispatch("LOAD_CHARACTER");
+
+      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+
+      await store.dispatch("LOAD_CHARACTER_ALL");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
@@ -487,9 +492,10 @@ export default defineComponent({
       focusCell({ audioKey: newAudioKey });
 
       // 最初の話者を初期化
-      if (audioItem.styleId != undefined) {
+      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
         store.dispatch("SETUP_SPEAKER", {
           audioKey: newAudioKey,
+          engineId: audioItem.engineId,
           styleId: audioItem.styleId,
         });
       }
@@ -577,7 +583,9 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const characterInfos = computed(() => store.state.characterInfos);
+    const orderedAllCharacterInfos = computed(
+      () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+    );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
@@ -678,7 +686,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      characterInfos,
+      orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
@@ -697,6 +705,18 @@ export default defineComponent({
 
 .q-header {
   height: vars.$header-height;
+}
+
+.layout-container {
+  min-height: calc(100vh - #{vars.$menubar-height});
+}
+
+.q-layout-container > :deep(.absolute-full) {
+  right: 0 !important;
+  > .scroll {
+    width: unset !important;
+    overflow: hidden;
+  }
 }
 
 .waiting-engine {

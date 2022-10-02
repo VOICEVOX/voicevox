@@ -1,17 +1,13 @@
 import { InjectionKey } from "vue";
-import { createLogger } from "vuex";
 import { createStore, Store, useStore as baseUseStore } from "./vuex";
 
 import {
   AllActions,
   AllGetters,
   AllMutations,
-  IndexActions,
-  IndexGetters,
-  IndexMutations,
   IndexStoreState,
+  IndexStoreTypes,
   State,
-  VoiceVoxStoreOptions,
 } from "./type";
 import { commandStoreState, commandStore } from "./command";
 import {
@@ -19,6 +15,7 @@ import {
   audioStore,
   audioCommandStore,
   audioCommandStoreState,
+  getCharacterInfo,
 } from "./audio";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -26,9 +23,8 @@ import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
+import { createPartialStore } from "./vuex";
 import { DefaultStyleId } from "@/type/preload";
-
-const isDevelopment = process.env.NODE_ENV == "development";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -39,14 +35,158 @@ export const indexStoreState: IndexStoreState = {
   userCharacterOrder: [],
 };
 
-export const indexStore: VoiceVoxStoreOptions<
-  IndexGetters,
-  IndexActions,
-  IndexMutations
-> = {
-  getters: {},
-  mutations: {
-    SET_DEFAULT_STYLE_IDS(state, { defaultStyleIds }) {
+export const indexStore = createPartialStore<IndexStoreTypes>({
+  GET_ALL_CHARACTER_INFOS: {
+    /**
+     * すべてのエンジンのキャラクター情報のMap。
+     * 同じspeakerUuidのキャラクター情報は、登録順が早いエンジンの情報を元に統合される。
+     * キャラクター情報が読み出されていないときは、空リストを返す。
+     */
+    getter(state) {
+      const speakerUuids = [
+        ...new Set(
+          state.engineIds.flatMap((engineId) =>
+            (state.characterInfos[engineId] ?? []).map(
+              (c) => c.metas.speakerUuid
+            )
+          )
+        ),
+      ];
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
+      return new Map(
+        flattenCharacterInfos.map((c) => [c.metas.speakerUuid, c])
+      );
+    },
+  },
+  /**
+   * すべてのエンジンのキャラクター情報のリスト。
+   * GET_ALL_CHARACTER_INFOSとは違い、話者の順番が保持される。
+   */
+  GET_ORDERED_ALL_CHARACTER_INFOS: {
+    getter(state) {
+      const speakerUuids = state.engineIds
+        .flatMap((engineId) =>
+          (state.characterInfos[engineId] ?? []).map((c) => c.metas.speakerUuid)
+        )
+        .filter((uuid, index, uuids) => uuids.indexOf(uuid) === index); // Setを使うと順番が保証されないのでindexOfで重複削除をする。
+      const flattenCharacterInfos = speakerUuids.map((speakerUuid) => {
+        const characterInfos = state.engineIds.flatMap(
+          (engineId) =>
+            state.characterInfos[engineId]?.find(
+              (c) => c.metas.speakerUuid === speakerUuid
+            ) ?? []
+        );
+
+        // エンジンの登録順が早い方が優先される。
+        return {
+          ...characterInfos[0],
+          metas: {
+            ...characterInfos[0].metas,
+            styles: characterInfos.flatMap((c) => c.metas.styles),
+          },
+        };
+      });
+      return flattenCharacterInfos;
+    },
+  },
+
+  GET_HOW_TO_USE_TEXT: {
+    async action() {
+      return await window.electron.getHowToUseText();
+    },
+  },
+
+  GET_CONTACT_TEXT: {
+    async action() {
+      return await window.electron.getContactText();
+    },
+  },
+
+  GET_Q_AND_A_TEXT: {
+    async action() {
+      return await window.electron.getQAndAText();
+    },
+  },
+
+  GET_POLICY_TEXT: {
+    async action() {
+      return await window.electron.getPolicyText();
+    },
+  },
+
+  GET_OSS_LICENSES: {
+    async action() {
+      return await window.electron.getOssLicenses();
+    },
+  },
+
+  GET_UPDATE_INFOS: {
+    async action() {
+      return await window.electron.getUpdateInfos();
+    },
+  },
+
+  GET_OSS_COMMUNITY_INFOS: {
+    async action() {
+      return await window.electron.getOssCommunityInfos();
+    },
+  },
+
+  GET_PRIVACY_POLICY_TEXT: {
+    async action() {
+      return await window.electron.getPrivacyPolicyText();
+    },
+  },
+
+  LOAD_DEFAULT_STYLE_IDS: {
+    async action({ commit, getters }) {
+      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
+
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
+
+      // デフォルトスタイルが設定されていない場合は0をセットする
+      const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
+        (speakerUuid) =>
+          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
+      );
+      defaultStyleIds = [
+        ...defaultStyleIds,
+        ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => {
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+          if (!characterInfo) {
+            throw new Error(
+              `characterInfo not found. speakerUuid=${speakerUuid}`
+            );
+          }
+          return {
+            speakerUuid: speakerUuid,
+            defaultStyleId: characterInfo.metas.styles[0].styleId,
+          };
+        }),
+      ];
+
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+    },
+  },
+
+  SET_DEFAULT_STYLE_IDS: {
+    mutation(state, { defaultStyleIds }) {
       state.defaultStyleIds = defaultStyleIds;
 
       // 初期状態（空のAudioCellが１つだけ）だった場合は、スタイルを変更する
@@ -54,14 +194,20 @@ export const indexStore: VoiceVoxStoreOptions<
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          const characterInfo = state.characterInfos?.find(
-            (info) =>
-              info.metas.styles.find(
-                (style) => style.styleId == audioItem.styleId
-              ) != undefined
+          if (audioItem.engineId === undefined)
+            throw new Error("assert audioItem.engineId !== undefined");
+
+          if (audioItem.styleId === undefined)
+            throw new Error("assert audioItem.styleId !== undefined");
+
+          const characterInfo = getCharacterInfo(
+            state,
+            audioItem.engineId,
+            audioItem.styleId
           );
-          if (characterInfo == undefined)
-            throw new Error("characterInfo == undefined");
+
+          if (characterInfo === undefined)
+            throw new Error("assert characterInfo !== undefined");
 
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
@@ -72,93 +218,61 @@ export const indexStore: VoiceVoxStoreOptions<
         }
       }
     },
-    SET_USER_CHARACTER_ORDER(state, { userCharacterOrder }) {
-      state.userCharacterOrder = userCharacterOrder;
+    async action({ commit }, defaultStyleIds) {
+      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+      await window.electron.setSetting("defaultStyleIds", defaultStyleIds);
     },
   },
-  actions: {
-    async GET_HOW_TO_USE_TEXT() {
-      return await window.electron.getHowToUseText();
-    },
-    async GET_POLICY_TEXT() {
-      return await window.electron.getPolicyText();
-    },
-    async GET_OSS_LICENSES() {
-      return await window.electron.getOssLicenses();
-    },
-    async GET_UPDATE_INFOS() {
-      return await window.electron.getUpdateInfos();
-    },
-    async GET_OSS_COMMUNITY_INFOS() {
-      return await window.electron.getOssCommunityInfos();
-    },
-    async GET_PRIVACY_POLICY_TEXT() {
-      return await window.electron.getPrivacyPolicyText();
-    },
-    async GET_CONTACT_TEXT() {
-      return await window.electron.getContactText();
-    },
-    async GET_Q_AND_A_TEXT() {
-      return await window.electron.getQAndAText();
-    },
-    LOG_ERROR(_, ...params: unknown[]) {
-      window.electron.logError(...params);
-    },
-    LOG_INFO(_, ...params: unknown[]) {
-      window.electron.logInfo(...params);
-    },
-    async LOAD_USER_CHARACTER_ORDER({ commit }) {
+
+  LOAD_USER_CHARACTER_ORDER: {
+    async action({ commit }) {
       const userCharacterOrder = await window.electron.getSetting(
         "userCharacterOrder"
       );
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
     },
-    async SET_USER_CHARACTER_ORDER({ commit }, userCharacterOrder) {
+  },
+
+  SET_USER_CHARACTER_ORDER: {
+    mutation(state, { userCharacterOrder }) {
+      state.userCharacterOrder = userCharacterOrder;
+    },
+    async action({ commit }, userCharacterOrder) {
       commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
       await window.electron.setSetting(
         "userCharacterOrder",
         userCharacterOrder
       );
     },
-    GET_NEW_CHARACTERS({ state }) {
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
+  },
+
+  GET_NEW_CHARACTERS: {
+    action({ state, getters }) {
+      const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
       // キャラクター表示順序に含まれていなければ新規キャラとみなす
-      const allSpeakerUuid = state.characterInfos.map(
-        (characterInfo) => characterInfo.metas.speakerUuid
-      );
+      const allSpeakerUuid = [...allCharacterInfos.keys()];
       const newSpeakerUuid = allSpeakerUuid.filter(
         (speakerUuid) => !state.userCharacterOrder.includes(speakerUuid)
       );
       return newSpeakerUuid;
     },
-    async LOAD_DEFAULT_STYLE_IDS({ commit, state }) {
-      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
+  },
 
-      if (!state.characterInfos) throw new Error("characterInfos is undefined");
-
-      // デフォルトスタイルが設定されていない場合は0をセットする
-      const unsetCharacterInfos = state.characterInfos.filter(
-        (characterInfo) =>
-          !defaultStyleIds.some(
-            (styleId) => styleId.speakerUuid == characterInfo.metas.speakerUuid
-          )
-      );
-      defaultStyleIds = [
-        ...defaultStyleIds,
-        ...unsetCharacterInfos.map<DefaultStyleId>((info) => ({
-          speakerUuid: info.metas.speakerUuid,
-          defaultStyleId: info.metas.styles[0].styleId,
-        })),
-      ];
-
-      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+  LOG_ERROR: {
+    action(_, ...params: unknown[]) {
+      window.electron.logError(...params);
     },
-    async SET_DEFAULT_STYLE_IDS({ commit }, defaultStyleIds) {
-      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
-      await window.electron.setSetting("defaultStyleIds", defaultStyleIds);
+  },
+
+  LOG_INFO: {
+    action(_, ...params: unknown[]) {
+      window.electron.logInfo(...params);
     },
-    async INIT_VUEX({ dispatch }) {
+  },
+
+  INIT_VUEX: {
+    async action({ dispatch }) {
       const promises = [];
 
       // 設定ファイルからstoreへ読み込む
@@ -171,7 +285,7 @@ export const indexStore: VoiceVoxStoreOptions<
       });
     },
   },
-};
+});
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   state: {
@@ -225,7 +339,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...indexStore.actions,
     ...proxyStore.actions,
   },
-  plugins: isDevelopment ? [createLogger()] : undefined,
   strict: process.env.NODE_ENV !== "production",
 });
 

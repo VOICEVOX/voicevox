@@ -146,6 +146,11 @@ export type IpcIHData = {
     return: boolean;
   };
 
+  IS_MAXIMIZED_WINDOW: {
+    args: [];
+    return: boolean;
+  };
+
   CLOSE_WINDOW: {
     args: [];
     return: void;
@@ -182,6 +187,11 @@ export type IpcIHData = {
   };
 
   RESTART_ENGINE: {
+    args: [obj: { engineId: string }];
+    return: void;
+  };
+
+  OPEN_ENGINE_DIRECTORY: {
     args: [obj: { engineId: string }];
     return: void;
   };

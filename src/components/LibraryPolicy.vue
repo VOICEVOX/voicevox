@@ -4,13 +4,36 @@
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="detailIndex === undefined">
-        <template v-for="(characterInfo, index) in characterInfos" :key="index">
-          <q-item clickable @click="selectCharacterInfIndex(index)">
-            <q-item-section>{{
-              characterInfo.metas.speakerName
-            }}</q-item-section>
-          </q-item>
+      <q-list v-if="selectedInfo === undefined">
+        <template
+          v-for="([engineId, engineInfo], engineIndex) in engineInfos.entries()"
+          :key="engineIndex"
+        >
+          <!-- エンジンが一つだけの場合は名前を表示しない -->
+          <template v-if="engineInfos.size > 1">
+            <q-separator spaced v-if="engineIndex > 0" />
+            <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
+          </template>
+          <template
+            v-for="(
+              [, characterInfo], characterIndex
+            ) in engineInfo.characterInfos"
+            :key="characterIndex"
+          >
+            <q-item
+              clickable
+              @click="
+                selectCharacterInfo({
+                  engine: engineId,
+                  character: characterInfo.metas.speakerUuid,
+                })
+              "
+            >
+              <q-item-section>{{
+                characterInfo.metas.speakerName
+              }}</q-item-section>
+            </q-item>
+          </template>
         </template>
       </q-list>
       <div v-else>
@@ -20,15 +43,25 @@
             color="primary-light"
             icon="keyboard_arrow_left"
             label="戻る"
-            @click="selectCharacterInfIndex(undefined)"
+            @click="selectCharacterInfo(undefined)"
           />
         </div>
         <div class="text-subtitle">
-          {{ characterInfos[detailIndex].metas.speakerName }}
+          {{
+            engineInfos
+              .get(selectedInfo.engine)
+              .characterInfos.get(selectedInfo.character).metas.speakerName
+          }}
         </div>
         <div
           class="markdown"
-          v-html="convertMarkdown(characterInfos[detailIndex].metas.policy)"
+          v-html="
+            convertMarkdown(
+              engineInfos
+                .get(selectedInfo.engine)
+                .characterInfos.get(selectedInfo.character).metas.policy
+            )
+          "
         ></div>
       </div>
     </div>
@@ -37,35 +70,58 @@
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "@vue/runtime-core";
+import { computed, defineComponent, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+type DetailKey = { engine: string; character: string };
 
 export default defineComponent({
   setup() {
     const store = useStore();
     const md = useMarkdownIt();
 
-    const characterInfos = computed(() => store.state.characterInfos);
+    const allCharacterInfos = computed(
+      () => store.getters.GET_ALL_CHARACTER_INFOS
+    );
+
+    const engineInfos = computed(
+      () =>
+        new Map(
+          Object.entries(store.state.characterInfos).map(
+            ([engineId, characterInfos]) => [
+              engineId,
+              {
+                engineId,
+                engineName: store.state.engineManifests[engineId].name,
+                characterInfos: new Map(
+                  characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+                ),
+              },
+            ]
+          )
+        )
+    );
 
     const convertMarkdown = (text: string) => {
       return md.render(text);
     };
 
-    const detailIndex = ref<number | undefined>(undefined);
+    const selectedInfo = ref<DetailKey | undefined>(undefined);
 
     const scroller = ref<HTMLElement>();
-    const selectCharacterInfIndex = (index: number | undefined) => {
+    const selectCharacterInfo = (index: DetailKey | undefined) => {
       if (scroller.value == undefined)
         throw new Error("scroller.value == undefined");
       scroller.value.scrollTop = 0;
-      detailIndex.value = index;
+      selectedInfo.value = index;
     };
 
     return {
-      characterInfos,
+      characterInfos: allCharacterInfos,
+      engineInfos,
       convertMarkdown,
-      selectCharacterInfIndex,
-      detailIndex,
+      selectCharacterInfo,
+      selectedInfo,
       scroller,
     };
   },

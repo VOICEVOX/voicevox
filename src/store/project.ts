@@ -1,14 +1,8 @@
 import { createUILockAction } from "@/store/ui";
-import {
-  AudioItem,
-  ProjectStoreState,
-  ProjectGetters,
-  ProjectActions,
-  ProjectMutations,
-  VoiceVoxStoreOptions,
-} from "@/store/type";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
 import { buildProjectFileName } from "./utility";
+import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -19,36 +13,23 @@ export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
 };
 
-export const projectStore: VoiceVoxStoreOptions<
-  ProjectGetters,
-  ProjectActions,
-  ProjectMutations
-> = {
-  getters: {
-    PROJECT_NAME(state) {
+export const projectStore = createPartialStore<ProjectStoreTypes>({
+  PROJECT_NAME: {
+    getter(state) {
       return state.projectFilePath !== undefined
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
     },
-    IS_EDITED(state, getters) {
-      return (
-        getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
-      );
-    },
   },
 
-  mutations: {
-    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
+  SET_PROJECT_FILEPATH: {
+    mutation(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
-    SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
-      state.savedLastCommandUnixMillisec = unixMillisec;
-    },
   },
 
-  actions: {
-    CREATE_NEW_PROJECT: createUILockAction(
+  CREATE_NEW_PROJECT: {
+    action: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
           const result: number = await window.electron.showQuestionDialog({
@@ -80,7 +61,10 @@ export const projectStore: VoiceVoxStoreOptions<
         context.commit("CLEAR_COMMANDS");
       }
     ),
-    LOAD_PROJECT_FILE: createUILockAction(
+  },
+
+  LOAD_PROJECT_FILE: {
+    action: createUILockAction(
       async (
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
@@ -123,6 +107,8 @@ export const projectStore: VoiceVoxStoreOptions<
           };
 
           // Migration
+          const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
           ) {
@@ -170,6 +156,7 @@ export const projectStore: VoiceVoxStoreOptions<
                 await context
                   .dispatch("FETCH_MORA_DATA", {
                     accentPhrases: audioItem.query.accentPhrases,
+                    engineId,
                     styleId: audioItem.characterIndex,
                   })
                   .then((accentPhrases: AccentPhrase[]) => {
@@ -223,6 +210,17 @@ export const projectStore: VoiceVoxStoreOptions<
             }
           }
 
+          if (
+            semver.satisfies(projectAppVersion, "<0.14", semverSatisfiesOptions)
+          ) {
+            for (const audioItemsKey in obj.audioItems) {
+              const audioItem = obj.audioItems[audioItemsKey];
+              if (audioItem.engineId === undefined) {
+                audioItem.engineId = engineId;
+              }
+            }
+          }
+
           // Validation check
           const ajv = new Ajv();
           const validate = ajv.compile(projectSchema);
@@ -235,6 +233,16 @@ export const projectStore: VoiceVoxStoreOptions<
                 " Every audioKey in audioKeys should be a key of audioItems"
             );
           }
+          if (
+            !obj.audioKeys.every(
+              (audioKey) => obj.audioItems[audioKey].engineId != undefined
+            )
+          ) {
+            throw new Error(
+              'Every audioItem should have a "engineId" attribute.'
+            );
+          }
+          // FIXME: assert engineId is registered
           if (
             !obj.audioKeys.every(
               (audioKey) => obj.audioItems[audioKey].styleId != undefined
@@ -291,7 +299,10 @@ export const projectStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    SAVE_PROJECT_FILE: createUILockAction(
+  },
+
+  SAVE_PROJECT_FILE: {
+    action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
@@ -337,7 +348,22 @@ export const projectStore: VoiceVoxStoreOptions<
       }
     ),
   },
-};
+
+  IS_EDITED: {
+    getter(state, getters) {
+      return (
+        getters.LAST_COMMAND_UNIX_MILLISEC !==
+        state.savedLastCommandUnixMillisec
+      );
+    },
+  },
+
+  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
+    mutation(state, unixMillisec) {
+      state.savedLastCommandUnixMillisec = unixMillisec;
+    },
+  },
+});
 
 const moraSchema = {
   properties: {
@@ -389,6 +415,7 @@ const audioItemSchema = {
     text: { type: "string" },
   },
   optionalProperties: {
+    engineId: { type: "string" },
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },

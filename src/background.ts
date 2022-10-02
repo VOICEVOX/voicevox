@@ -24,25 +24,25 @@ import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 import fs from "fs";
 import {
-  DefaultStyleId,
   HotkeySetting,
-  SavingSetting,
-  PresetConfig,
   ThemeConf,
-  ExperimentalSetting,
-  AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
   ToolbarSetting,
-  ActivePointScrollMode,
   EngineInfo,
-  SplitTextWhenPasteType,
-  SplitterPosition,
   ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+
+type EngineManifest = {
+  name: string;
+  uuid: string;
+  command: string;
+  port: string;
+  icon: string;
+};
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -99,15 +99,67 @@ protocol.registerSchemesAsPrivileged([
 
 const isMac = process.platform === "darwin";
 
-const engineInfos: EngineInfo[] = (() => {
+const defaultEngineInfos: EngineInfo[] = (() => {
+  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
+  let engines: EngineInfo[] = [];
 
   if (defaultEngineInfosEnv) {
-    return JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+    engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return [];
+  return engines.map((engineInfo) => {
+    return {
+      ...engineInfo,
+      path:
+        engineInfo.path === undefined
+          ? undefined
+          : path.resolve(appDirPath, engineInfo.path),
+    };
+  });
 })();
+
+// ユーザーディレクトリにあるエンジンを取得する
+function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
+  const userEngineDir = path.join(app.getPath("userData"), "engines");
+  if (!fs.existsSync(userEngineDir)) {
+    fs.mkdirSync(userEngineDir);
+  }
+
+  const engines: EngineInfo[] = [];
+  for (const dirName of fs.readdirSync(userEngineDir)) {
+    const engineDir = path.join(userEngineDir, dirName);
+    if (!fs.statSync(engineDir).isDirectory()) {
+      console.log(`${engineDir} is not directory`);
+      continue;
+    }
+
+    const manifestPath = path.join(engineDir, "engine_manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      console.log(`${manifestPath} is not found`);
+      continue;
+    }
+
+    const manifest: EngineManifest = JSON.parse(
+      fs.readFileSync(manifestPath, { encoding: "utf8" })
+    );
+
+    engines.push({
+      uuid: manifest.uuid,
+      host: `http://127.0.0.1:${manifest.port}`,
+      name: manifest.name,
+      path: engineDir,
+      executionEnabled: true,
+      executionFilePath: path.join(engineDir, manifest.command),
+    });
+  }
+  return engines;
+}
+
+function fetchEngineInfos(): EngineInfo[] {
+  const userEngineInfos = fetchEngineInfosFromUserDirectory();
+  return [...defaultEngineInfos, ...userEngineInfos];
+}
 
 const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -406,6 +458,7 @@ type EngineProcessContainer = {
 const engineProcessContainers: Record<string, EngineProcessContainer> = {};
 
 async function runEngineAll() {
+  const engineInfos = fetchEngineInfos();
   log.info(`Starting ${engineInfos.length} engine/s...`);
 
   for (const engineInfo of engineInfos) {
@@ -415,6 +468,7 @@ async function runEngineAll() {
 }
 
 async function runEngine(engineId: string) {
+  const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
@@ -574,6 +628,7 @@ function killEngine(engineId: string): Promise<void> | undefined {
 }
 
 async function restartEngineAll() {
+  const engineInfos = fetchEngineInfos();
   for (const engineInfo of engineInfos) {
     await restartEngine(engineInfo.uuid);
   }
@@ -615,6 +670,9 @@ async function restartEngine(engineId: string) {
       runEngine(engineId);
       resolve();
     };
+
+    if (engineProcess === undefined) throw Error("engineProcess === undefined");
+
     engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
     // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
@@ -638,6 +696,26 @@ async function restartEngine(engineId: string) {
       }
     });
   });
+}
+
+// エンジンのフォルダを開く
+function openEngineDirectory(engineId: string) {
+  const engineInfos = fetchEngineInfos();
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.uuid === engineId
+  );
+  if (!engineInfo) {
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+  }
+
+  const engineDirectory = engineInfo.path;
+  if (engineDirectory == null) {
+    return;
+  }
+
+  // Windows環境だとスラッシュ区切りのパスが動かない。
+  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
+  shell.openPath(path.resolve(engineDirectory));
 }
 
 // temp dir
@@ -808,7 +886,9 @@ async function createWindow() {
     } else {
       if (process.argv.length >= 2) {
         const filePath = process.argv[1];
-        ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
+        }
       }
     }
   });
@@ -1001,9 +1081,12 @@ ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
   return hasSupportedGpu(process.platform);
 });
 
+ipcMainHandle("IS_MAXIMIZED_WINDOW", () => {
+  return win.isMaximized();
+});
+
 ipcMainHandle("CLOSE_WINDOW", () => {
   willQuit = true;
-  app.emit("window-all-closed");
   win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
@@ -1024,8 +1107,8 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 });
 
 ipcMainHandle("ENGINE_INFOS", () => {
-  // エンジン情報を設定ファイルに保存しないためにstoreではなくグローバル変数を使用する
-  return engineInfos;
+  // エンジン情報を設定ファイルに保存しないためにstoreは使わない
+  return fetchEngineInfos();
 });
 
 /**
@@ -1038,6 +1121,10 @@ ipcMainHandle("RESTART_ENGINE_ALL", async () => {
 
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await restartEngine(engineId);
+});
+
+ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
+  openEngineDirectory(engineId);
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {

@@ -14,6 +14,7 @@ export * from './SpeakerInfo';
 export * from './SpeakerStyle';
 export * from './StyleInfo';
 export * from './SupportedDevicesInfo';
+export * from './SupportedFeatures';
 export * from './UpdateInfo';
 export * from './UserDictWord';
 export * from './ValidationError';

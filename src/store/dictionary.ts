@@ -1,26 +1,12 @@
 import { UserDictWord } from "@/openapi";
-import {
-  DictionaryGetters,
-  DictionaryActions,
-  DictionaryMutations,
-  DictionaryStoreState,
-  VoiceVoxStoreOptions,
-} from "@/store/type";
+import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
+import { createPartialStore } from "./vuex";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 
-export const dictionaryStore: VoiceVoxStoreOptions<
-  DictionaryGetters,
-  DictionaryActions,
-  DictionaryMutations
-> = {
-  getters: {},
-  mutations: {},
-  actions: {
-    LOAD_USER_DICT: async ({ state, dispatch }) => {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
+export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
+  LOAD_USER_DICT: {
+    async action({ dispatch }, { engineId }) {
       const engineDict = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
       }).then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
@@ -42,11 +28,13 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       });
       return Object.fromEntries(dictEntries);
     },
+  },
 
-    ADD_WORD: async (
+  ADD_WORD: {
+    async action(
       { state, dispatch },
       { surface, pronunciation, accentType, priority }
-    ) => {
+    ) {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
@@ -61,11 +49,13 @@ export const dictionaryStore: VoiceVoxStoreOptions<
         })
       );
     },
+  },
 
-    REWRITE_WORD: async (
+  REWRITE_WORD: {
+    async action(
       { state, dispatch },
       { wordUuid, surface, pronunciation, accentType, priority }
-    ) => {
+    ) {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
@@ -81,8 +71,10 @@ export const dictionaryStore: VoiceVoxStoreOptions<
         })
       );
     },
+  },
 
-    DELETE_WORD: async ({ state, dispatch }, { wordUuid }) => {
+  DELETE_WORD: {
+    async action({ state, dispatch }, { wordUuid }) {
       const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
@@ -95,4 +87,4 @@ export const dictionaryStore: VoiceVoxStoreOptions<
       );
     },
   },
-};
+});

@@ -67,6 +67,7 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
+  isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
@@ -79,7 +80,7 @@ export interface Sandbox {
   engineInfos(): Promise<EngineInfo[]>;
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
-  savingSetting(newData?: SavingSetting): Promise<SavingSetting>;
+  openEngineDirectory(engineId: string): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -105,6 +106,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  engineId: string;
   voiceSamplePaths: string[];
 };
 
@@ -156,6 +158,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
+// FIXME: engineIdを追加
 export type DefaultStyleId = {
   speakerUuid: string;
   defaultStyleId: number;
@@ -169,6 +172,8 @@ export type HotkeySetting = {
 export type EngineInfo = {
   uuid: string;
   host: string;
+  name: string;
+  path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
 };
