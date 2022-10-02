@@ -252,7 +252,7 @@ export default defineComponent({
       if (!isHotkeyDialogOpened.value) {
         return;
       } else {
-        let recordedCombo = parseCombo(event);
+        const recordedCombo = parseCombo(event);
         lastRecord.value = recordedCombo;
         event.preventDefault();
       }
