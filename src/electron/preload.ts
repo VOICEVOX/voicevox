@@ -158,6 +158,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
 
+  isMaximizedWindow: () => {
+    return ipcRendererInvoke("IS_MAXIMIZED_WINDOW");
+  },
+
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRendererOn(channel, callback);
   },

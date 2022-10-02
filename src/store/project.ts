@@ -1,14 +1,8 @@
 import { createUILockAction } from "@/store/ui";
-import {
-  AudioItem,
-  ProjectStoreState,
-  ProjectGetters,
-  ProjectActions,
-  ProjectMutations,
-  VoiceVoxStoreOptions,
-} from "@/store/type";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
 import { buildProjectFileName } from "./utility";
+import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
@@ -19,36 +13,23 @@ export const projectStoreState: ProjectStoreState = {
   savedLastCommandUnixMillisec: null,
 };
 
-export const projectStore: VoiceVoxStoreOptions<
-  ProjectGetters,
-  ProjectActions,
-  ProjectMutations
-> = {
-  getters: {
-    PROJECT_NAME(state) {
+export const projectStore = createPartialStore<ProjectStoreTypes>({
+  PROJECT_NAME: {
+    getter(state) {
       return state.projectFilePath !== undefined
         ? window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
     },
-    IS_EDITED(state, getters) {
-      return (
-        getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
-      );
-    },
   },
 
-  mutations: {
-    SET_PROJECT_FILEPATH(state, { filePath }: { filePath?: string }) {
+  SET_PROJECT_FILEPATH: {
+    mutation(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
     },
-    SET_SAVED_LAST_COMMAND_UNIX_MILLISEC(state, unixMillisec) {
-      state.savedLastCommandUnixMillisec = unixMillisec;
-    },
   },
 
-  actions: {
-    CREATE_NEW_PROJECT: createUILockAction(
+  CREATE_NEW_PROJECT: {
+    action: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
           const result: number = await window.electron.showQuestionDialog({
@@ -80,7 +61,10 @@ export const projectStore: VoiceVoxStoreOptions<
         context.commit("CLEAR_COMMANDS");
       }
     ),
-    LOAD_PROJECT_FILE: createUILockAction(
+  },
+
+  LOAD_PROJECT_FILE: {
+    action: createUILockAction(
       async (
         context,
         { filePath, confirm }: { filePath?: string; confirm?: boolean }
@@ -315,7 +299,10 @@ export const projectStore: VoiceVoxStoreOptions<
         }
       }
     ),
-    SAVE_PROJECT_FILE: createUILockAction(
+  },
+
+  SAVE_PROJECT_FILE: {
+    action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
@@ -361,7 +348,22 @@ export const projectStore: VoiceVoxStoreOptions<
       }
     ),
   },
-};
+
+  IS_EDITED: {
+    getter(state, getters) {
+      return (
+        getters.LAST_COMMAND_UNIX_MILLISEC !==
+        state.savedLastCommandUnixMillisec
+      );
+    },
+  },
+
+  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
+    mutation(state, unixMillisec) {
+      state.savedLastCommandUnixMillisec = unixMillisec;
+    },
+  },
+});
 
 const moraSchema = {
   properties: {

@@ -45,63 +45,42 @@
         <q-page>
           <q-card flat square class="preview-card">
             <q-toolbar class="bg-toolbar preview-toolbar">
-              <template v-for="button in toolbarButtons" :key="button">
-                <q-radio
-                  v-model="selectedButton"
-                  size="0"
-                  :val="button"
-                  :label="getToolbarButtonName(button)"
-                  :class="
-                    (button === 'EMPTY'
-                      ? selectedButton === button
-                        ? 'radio-space-selected'
-                        : 'radio-space'
-                      : selectedButton === button
-                      ? 'radio-selected'
-                      : 'radio') +
-                    ' text-no-wrap text-bold text-display q-mr-sm'
-                  "
-                  ><q-tooltip
-                    :delay="800"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                    >{{ usableButtonsDesc[button] }}</q-tooltip
-                  ></q-radio
-                >
-              </template>
-            </q-toolbar>
-            <q-card-actions class="no-wrap text-no-wrap">
-              <div v-if="selectedButton !== undefined" class="text-h5">
-                「{{ getToolbarButtonName(selectedButton) }}」を選択中
+              <draggable
+                v-model="toolbarButtons"
+                :item-key="toolbarButtonKey"
+                @start="toolbarButtonDragging = true"
+                @end="toolbarButtonDragging = false"
+              >
+                <template v-slot:item="{ element: button }">
+                  <q-btn
+                    unelevated
+                    color="toolbar-button"
+                    text-color="toolbar-button-display"
+                    :class="
+                      (button === 'EMPTY' ? ' radio-space' : ' radio') +
+                      ' text-no-wrap text-bold q-mr-sm'
+                    "
+                  >
+                    {{ getToolbarButtonName(button) }}
+                    <q-tooltip
+                      :delay="800"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                      :style="{
+                        display: toolbarButtonDragging ? 'none' : 'block',
+                      }"
+                      >{{ usableButtonsDesc[button] }}</q-tooltip
+                    >
+                  </q-btn>
+                </template>
+              </draggable>
+              <div class="preview-toolbar-drag-hint">
+                ドラッグでボタンの並びを変更できます。
               </div>
-              <q-space />
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="!leftShiftable"
-                @click="moveLeftButton"
-                >左に動かす</q-btn
-              >
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="!rightShiftable"
-                @click="moveRightButton"
-                >右に動かす</q-btn
-              >
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="!removable"
-                @click="removeButton"
-                >削除する</q-btn
-              >
-            </q-card-actions>
+            </q-toolbar>
+
             <q-card-actions>
               <div class="text-h5">表示するボタンの選択</div>
             </q-card-actions>
@@ -136,9 +115,13 @@ import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
 import { useQuasar } from "quasar";
 import { getToolbarButtonName } from "@/store/utility";
+import draggable from "vuedraggable";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",
+  components: {
+    draggable,
+  },
   props: {
     modelValue: {
       type: Boolean,
@@ -152,6 +135,8 @@ export default defineComponent({
 
     // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
     const toolbarButtons = ref([...store.state.toolbarSetting]);
+    const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
+    const toolbarButtonDragging = ref(false);
     const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
       toolbarButtons.value[0]
     );
@@ -194,17 +179,6 @@ export default defineComponent({
       get: () => props.modelValue || isChanged.value,
       set: (val) => emit("update:modelValue", val),
     });
-
-    const leftShiftable = computed(
-      () => selectedButton.value !== toolbarButtons.value[0] && removable.value
-    );
-    const rightShiftable = computed(
-      () =>
-        selectedButton.value !==
-          toolbarButtons.value[toolbarButtons.value.length - 1] &&
-        removable.value
-    );
-    const removable = computed(() => selectedButton.value !== undefined);
 
     const isChanged = computed(() => {
       const nowSetting = store.state.toolbarSetting;
@@ -316,10 +290,9 @@ export default defineComponent({
     return {
       headerBarCustomDialogOpenComputed,
       toolbarButtons,
+      toolbarButtonKey,
+      toolbarButtonDragging,
       selectedButton,
-      leftShiftable,
-      rightShiftable,
-      removable,
       isChanged,
       isDefault,
       moveLeftButton,
@@ -350,7 +323,19 @@ export default defineComponent({
 }
 
 .preview-toolbar {
-  height: vars.$header-height;
+  height: calc(#{vars.$header-height} + 8px);
+  display: block;
+}
+
+// draggableのdiv。
+.preview-toolbar > div:not(.preview-toolbar-drag-hint) {
+  width: 100%;
+  display: inline-flex;
+}
+
+.preview-toolbar-drag-hint {
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .preview-card {
@@ -361,48 +346,24 @@ export default defineComponent({
 
 .usable-button-list {
   // menubar-height + header-height * 2(main+preview) + window-border-width
-  // 52(preview part buttons) * 2 + 46(select part title)
+  // 52(preview part buttons) * 2 + 46(select part title) + 22(preview part hint)
   height: calc(
-    100vh - #{vars.$menubar-height + (vars.$header-height * 2) +
-      vars.$window-border-width + 52px + 46px}
+    100vh - #{vars.$menubar-height + (vars.$header-height) +
+      vars.$window-border-width + 52px + 46px + 22px}
   );
   width: 100%;
   overflow-y: scroll;
 }
 
 .radio {
-  padding: 6px 14px;
-  border: solid 2px var(--color-toolbar-button);
-  border-radius: 3px;
-  color: var(--color-toolbar-button-display);
-  background-color: var(--color-toolbar-button);
-}
-
-.radio:hover {
-  @extend .radio-selected;
-}
-
-.radio-selected {
-  @extend .radio;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
+  &:hover {
+    cursor: grab;
+  }
 }
 
 .radio-space {
   @extend .radio;
   flex-grow: 1;
   color: transparent;
-}
-
-.radio-space:hover {
-  @extend .radio-space-selected;
-}
-
-.radio-space-selected {
-  @extend .radio-space;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  margin-bottom: 10px;
 }
 </style>
