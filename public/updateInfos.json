@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.13.2",
+    "descriptions": [
+      "キャラクター「WhiteCUL」「後鬼」「No.7」を追加",
+      "キャラクター「白上虎太郎」のスタイルを追加",
+      "バグ修正"
+    ],
+    "contributors": ["kantas-spike", "PickledChair"]
+  },
+  {
     "version": "0.13.1",
     "descriptions": ["バグ修正"],
     "contributors": ["Hiroshiba", "y-chan"]

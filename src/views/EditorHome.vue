@@ -481,17 +481,6 @@ export default defineComponent({
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
       isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
 
-      // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
-      let isUnsetDefaultStyleIds = false;
-      for (const info of orderedAllCharacterInfos.value) {
-        isUnsetDefaultStyleIds ||=
-          info.metas.styles.length > 1 &&
-          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
-            speakerUuid: info.metas.speakerUuid,
-          }));
-      }
-      isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
-
       // 最初のAudioCellを作成
       const audioItem: AudioItem = await store.dispatch(
         "GENERATE_AUDIO_ITEM",

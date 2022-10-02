@@ -10,28 +10,9 @@
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
-            <q-toolbar-title
-              v-if="isFirstTime && showCharacterInfos.length > 0"
-              class="text-display text-h6"
-              >「{{ showCharacterInfos[pageIndex].metas.speakerName }}」の{{
-                showCharacterInfos[pageIndex].metas.styles.length > 1
-                  ? "デフォルトのスタイル（喋り方）を選んでください"
-                  : "サンプル音声を視聴できます"
-              }}
-            </q-toolbar-title>
-            <q-toolbar-title v-else class="text-display"
+            <q-toolbar-title class="text-display"
               >設定 / デフォルトスタイル・試聴</q-toolbar-title
             >
-            <span
-              v-if="
-                isFirstTime &&
-                showCharacterInfos.length > 0 &&
-                showCharacterInfos[pageIndex].metas.styles.length > 1
-              "
-              class="text-display text-caption q-ml-sm"
-            >
-              ※後からでも変更できます
-            </span>
           </div>
 
           <q-space />
@@ -48,11 +29,11 @@
             />
 
             <div class="text-subtitle2 text-no-wrap text-display q-mr-md">
-              {{ pageIndex + 1 }} / {{ showCharacterInfos.length }}
+              {{ pageIndex + 1 }} / {{ multiStyleCharacterInfos.length }}
             </div>
 
             <q-btn
-              v-if="pageIndex + 1 < showCharacterInfos.length"
+              v-if="pageIndex + 1 < multiStyleCharacterInfos.length"
               v-show="canNext"
               unelevated
               label="次へ"
@@ -84,18 +65,20 @@
       >
         <div class="character-portrait-wrapper">
           <img
-            v-if="showCharacterInfos.length > 0"
-            :src="showCharacterInfos[pageIndex].portraitPath"
+            v-if="multiStyleCharacterInfos.length > 0"
+            :src="multiStyleCharacterInfos[pageIndex].portraitPath"
             class="character-portrait"
           />
         </div>
       </q-drawer>
 
       <q-page-container>
-        <q-page v-if="showCharacterInfos && selectedStyleIndexes">
+        <q-page v-if="multiStyleCharacterInfos && selectedStyleIndexes">
           <q-tab-panels v-model="pageIndex">
             <q-tab-panel
-              v-for="(characterInfo, characterIndex) of showCharacterInfos"
+              v-for="(
+                characterInfo, characterIndex
+              ) of multiStyleCharacterInfos"
               :key="characterIndex"
               :name="characterIndex"
             >
@@ -215,12 +198,6 @@ export default defineComponent({
       );
     });
 
-    // アップデートで増えたスタイルがあれば、それらに対して起動時にデフォルトスタイル選択を問うための変数
-    // その他の場合は、characterInfosと同じになる
-    // FIXME: 現状はスタイルが増えてもデフォルトスタイルを問えないので、そこを改修しなければならない
-    const showCharacterInfos = ref(multiStyleCharacterInfos.value);
-
-    const isFirstTime = ref(false);
     const selectedStyleIndexes = ref<(number | undefined)[]>([]);
 
     // ダイアログが開かれたときに初期値を求める
@@ -228,43 +205,18 @@ export default defineComponent({
       () => props.modelValue,
       async (newValue, oldValue) => {
         if (!oldValue && newValue) {
-          showCharacterInfos.value = [];
           selectedStyleIndexes.value = await Promise.all(
             multiStyleCharacterInfos.value.map(async (info) => {
-              const styles = info.metas.styles;
-              const isUnsetDefaultStyleId = await store.dispatch(
-                "IS_UNSET_DEFAULT_STYLE_ID",
-                { speakerUuid: info.metas.speakerUuid }
-              );
-              if (isUnsetDefaultStyleId) {
-                isFirstTime.value = true;
-                showCharacterInfos.value.push(info);
-                return undefined;
-              }
-
               const defaultStyleId = store.state.defaultStyleIds.find(
                 (x) => x.speakerUuid === info.metas.speakerUuid
               )?.defaultStyleId;
 
-              const index = styles.findIndex(
+              const index = info.metas.styles.findIndex(
                 (style) => style.styleId === defaultStyleId
               );
               return index === -1 ? undefined : index;
             })
           );
-          if (!isFirstTime.value) {
-            showCharacterInfos.value = multiStyleCharacterInfos.value;
-          } else {
-            selectedStyleIndexes.value = showCharacterInfos.value.map(
-              (info) => {
-                if (info.metas.styles.length > 1) {
-                  return undefined;
-                } else {
-                  return 0;
-                }
-              }
-            );
-          }
         }
       }
     );
@@ -273,7 +225,7 @@ export default defineComponent({
       selectedStyleIndexes.value[characterIndex] = styleIndex;
 
       // 音声を再生する。同じ話者/styleIndexだったら停止する。
-      const selectedCharacter = showCharacterInfos.value[characterIndex];
+      const selectedCharacter = multiStyleCharacterInfos.value[characterIndex];
       const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
       if (
         playing.value !== undefined &&
@@ -335,7 +287,7 @@ export default defineComponent({
       const defaultStyleIds = JSON.parse(
         JSON.stringify(store.state.defaultStyleIds)
       ) as DefaultStyleId[];
-      showCharacterInfos.value.forEach((info, idx) => {
+      multiStyleCharacterInfos.value.forEach((info, idx) => {
         const defaultStyleInfo = {
           speakerUuid: info.metas.speakerUuid,
           defaultStyleId:
@@ -351,7 +303,6 @@ export default defineComponent({
         }
       });
       store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
-      isFirstTime.value = false;
 
       stop();
       modelValueComputed.value = false;
@@ -360,8 +311,7 @@ export default defineComponent({
 
     return {
       modelValueComputed,
-      showCharacterInfos,
-      isFirstTime,
+      multiStyleCharacterInfos,
       selectedStyleIndexes,
       selectStyleIndex,
       pageIndex,
