@@ -75,7 +75,7 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref, Component } from "vue";
-import Policy from "@/components/Policy.vue";
+import HelpPolicy from "@/components/HelpPolicy.vue";
 import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";
 import OssLicense from "@/components/OssLicense.vue";
@@ -121,7 +121,7 @@ export default defineComponent({
     const updateInfos = ref<UpdateInfoObject[]>();
     store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
 
-    let isCheckingFinished = ref<boolean>(false);
+    const isCheckingFinished = ref<boolean>(false);
 
     // 最新版があるか調べる
     const currentVersion = ref("");
@@ -169,10 +169,10 @@ export default defineComponent({
     });
 
     // エディタのOSSライセンス取得
-    let licenses = ref<Record<string, string>[]>();
+    const licenses = ref<Record<string, string>[]>();
     store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
-    let policy = ref<string>();
+    const policy = ref<string>();
     store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
     const pagedata = computed(() =>
@@ -181,7 +181,7 @@ export default defineComponent({
           {
             type: "item",
             name: "ソフトウェアの利用規約",
-            component: Policy,
+            component: HelpPolicy,
             props: {
               policy: policy.value,
             },
@@ -244,7 +244,7 @@ export default defineComponent({
             type: "item",
             name: "利用規約",
             parent: manifest.name,
-            component: Policy,
+            component: HelpPolicy,
             props: {
               policy: manifest.termsOfService,
             },

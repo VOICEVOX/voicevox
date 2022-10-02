@@ -45,7 +45,7 @@
       </div>
 
       <div class="overflow-hidden-y accent-phrase-table" ref="audioDetail">
-        <tip
+        <tool-tip
           tip-key="tweakableSliderByScroll"
           v-if="selectedDetail === 'pitch'"
           class="tip-tweakable-slider-by-scroll"
@@ -56,7 +56,7 @@
           </p>
           ホイール: ±0.1<br />
           Ctrl + ホイール: ±0.01
-        </tip>
+        </tool-tip>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
@@ -267,7 +267,7 @@ import {
 } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
-import Tip from "./Tip.vue";
+import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
@@ -275,7 +275,7 @@ import { setHotkeyFunctions } from "@/store/setting";
 import { EngineManifest, Mora } from "@/openapi/models";
 
 export default defineComponent({
-  components: { AudioAccent, AudioParameter, Tip },
+  components: { AudioAccent, AudioParameter, ToolTip },
 
   name: "AudioDetail",
 
@@ -614,7 +614,7 @@ export default defineComponent({
     });
 
     const pronunciationByPhrase = computed(() => {
-      let textArray: Array<string> = [];
+      const textArray: Array<string> = [];
       accentPhrases.value?.forEach((accentPhrase) => {
         let textString = "";
         accentPhrase.moras.forEach((mora) => {
