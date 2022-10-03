@@ -154,12 +154,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    async action(_, { speakerUuid }) {
-      return await window.electron.isUnsetDefaultStyleId(speakerUuid);
-    },
-  },
-
   LOAD_DEFAULT_STYLE_IDS: {
     async action({ commit, getters }) {
       let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
@@ -167,7 +161,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
       // デフォルトスタイルが設定されていない場合は0をセットする
-      // FIXME: 保存しているものとstateのものが異なってしまうので良くない。デフォルトスタイルが未設定の場合はAudioCellsを表示しないようにすべき
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
         (speakerUuid) =>
           !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
