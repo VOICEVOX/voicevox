@@ -13,6 +13,7 @@ import {
   EngineManifest,
   UserDictWord,
 } from "@/openapi";
+import { Sequence, Note } from "./singing";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -50,6 +51,11 @@ export type AudioItem = {
 export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
+};
+
+export type Phrase = {
+  notes: Note[];
+  query?: AudioQuery;
 };
 
 export type Command = {
@@ -660,6 +666,17 @@ export type AudioCommandStoreTypes = {
 };
 
 /*
+ * Singing Store Types
+ */
+
+export type SingingStoreState = {
+  engineId?: string;
+  styleId?: number;
+  sequence?: Sequence;
+  phrases: Phrase[];
+};
+
+/*
  * Command Store Types
  */
 
@@ -1198,6 +1215,7 @@ export type ProxyStoreTypes = {
 
 export type State = AudioStoreState &
   AudioCommandStoreState &
+  SingingStoreState &
   CommandStoreState &
   IndexStoreState &
   ProjectStoreState &
