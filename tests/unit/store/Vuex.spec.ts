@@ -31,7 +31,7 @@ describe("store/vuex.js test", () => {
         uiLockCount: 0,
         dialogLockCount: 0,
         nowPlayingContinuously: false,
-        phrases: [],
+        renderPhrases: [],
         undoCommands: [],
         redoCommands: [],
         useGpu: false,
@@ -175,8 +175,8 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.audioPlayStartPoint, 0);
     assert.equal(store.state.uiLockCount, 0);
     assert.equal(store.state.nowPlayingContinuously, false);
-    assert.isArray(store.state.phrases);
-    assert.isEmpty(store.state.phrases);
+    assert.isArray(store.state.renderPhrases);
+    assert.isEmpty(store.state.renderPhrases);
     assert.isArray(store.state.undoCommands);
     assert.isEmpty(store.state.undoCommands);
     assert.isArray(store.state.redoCommands);

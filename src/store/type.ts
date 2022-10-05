@@ -77,8 +77,8 @@ export type Score = {
   notes: Note[];
 };
 
-export type Phrase = {
-  notes: Note[];
+export type RenderPhrase = {
+  renderNotes: Note[];
   query?: AudioQuery;
 };
 
@@ -697,7 +697,7 @@ export type SingingStoreState = {
   engineId?: string;
   styleId?: number;
   score?: Score;
-  phrases: Phrase[];
+  renderPhrases: RenderPhrase[];
 };
 
 /*
