@@ -1,7 +1,7 @@
 <template>
   <menu-bar />
 
-  <q-layout reveal elevated>
+  <q-layout reveal elevated container class="layout-container">
     <header-bar />
 
     <q-page-container>
@@ -132,13 +132,13 @@
   <hotkey-setting-dialog v-model="isHotkeySettingDialogOpenComputed" />
   <header-bar-custom-dialog v-model="isToolbarSettingDialogOpenComputed" />
   <character-order-dialog
-    v-if="flattenCharacterInfos.length > 0"
-    :characterInfos="flattenCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
   <default-style-select-dialog
-    v-if="flattenCharacterInfos.length > 0"
-    :characterInfos="flattenCharacterInfos"
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
@@ -185,7 +185,7 @@ import {
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
-  name: "Home",
+  name: "EditorHome",
 
   components: {
     draggable,
@@ -376,7 +376,6 @@ export default defineComponent({
         styleId = store.state.audioItems[prevAudioKey].styleId;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
-      let audioItem: AudioItem;
       let baseAudioItem: AudioItem | undefined = undefined;
       if (store.state.inheritAudioInfo) {
         baseAudioItem = prevAudioKey
@@ -385,7 +384,7 @@ export default defineComponent({
       }
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
-      audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         engineId,
         styleId,
         presetKey,
@@ -469,9 +468,11 @@ export default defineComponent({
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
-      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
 
       await store.dispatch("START_WAITING_ENGINE_ALL");
+
+      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+
       await store.dispatch("LOAD_CHARACTER_ALL");
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
@@ -479,17 +480,6 @@ export default defineComponent({
       // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
       isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
-
-      // スタイルが複数あって未選択なキャラがいる場合はデフォルトスタイル選択ダイアログを表示
-      let isUnsetDefaultStyleIds = false;
-      for (const info of flattenCharacterInfos.value) {
-        isUnsetDefaultStyleIds ||=
-          info.metas.styles.length > 1 &&
-          (await store.dispatch("IS_UNSET_DEFAULT_STYLE_ID", {
-            speakerUuid: info.metas.speakerUuid,
-          }));
-      }
-      isDefaultStyleSelectDialogOpenComputed.value = isUnsetDefaultStyleIds;
 
       // 最初のAudioCellを作成
       const audioItem: AudioItem = await store.dispatch(
@@ -593,8 +583,8 @@ export default defineComponent({
     });
 
     // キャラクター並び替え
-    const flattenCharacterInfos = computed(
-      () => store.getters.GET_FLATTEN_CHARACTER_INFOS
+    const orderedAllCharacterInfos = computed(
+      () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
     );
     const isCharacterOrderDialogOpenComputed = computed({
       get: () =>
@@ -696,7 +686,7 @@ export default defineComponent({
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
       isToolbarSettingDialogOpenComputed,
-      flattenCharacterInfos,
+      orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
@@ -715,6 +705,18 @@ export default defineComponent({
 
 .q-header {
   height: vars.$header-height;
+}
+
+.layout-container {
+  min-height: calc(100vh - #{vars.$menubar-height});
+}
+
+.q-layout-container > :deep(.absolute-full) {
+  right: 0 !important;
+  > .scroll {
+    width: unset !important;
+    overflow: hidden;
+  }
 }
 
 .waiting-engine {

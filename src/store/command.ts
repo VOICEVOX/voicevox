@@ -6,15 +6,13 @@ import { enablePatches as enablePatchesImpl } from "immer/src/plugins/patches";
 import { enableMapSet as enableMapSetImpl } from "immer/src/plugins/mapset";
 import { getPlugin } from "immer/src/utils/plugins";
 
+import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
 import {
-  Command,
-  CommandActions,
-  CommandGetters,
-  CommandMutations,
-  CommandStoreState,
-  VoiceVoxStoreOptions,
-} from "./type";
-import { Mutation, MutationsBase, MutationTree } from "@/store/vuex";
+  createPartialStore,
+  Mutation,
+  MutationsBase,
+  MutationTree,
+} from "@/store/vuex";
 
 // ビルド後のモジュールとビルド前のモジュールは別のスコープで変数を持っているので
 // enable * も両方叩く必要がある。
@@ -33,20 +31,12 @@ export type PayloadRecipeTree<S, M> = {
   [K in keyof M]: PayloadRecipe<S, M[K]>;
 };
 
-interface UndoRedoState {
-  undoCommands: Command[];
-  redoCommands: Command[];
-}
-
 /**
  * レシピをプロパティに持つオブジェクトから操作を記録するMutationをプロパティにもつオブジェクトを返す関数
  * @param payloadRecipeTree - レシピをプロパティに持つオブジェクト
  * @returns Mutationを持つオブジェクト(MutationTree)
  */
-export const createCommandMutationTree = <
-  S extends UndoRedoState,
-  M extends MutationsBase
->(
+export const createCommandMutationTree = <S, M extends MutationsBase>(
   payloadRecipeTree: PayloadRecipeTree<S, M>
 ): MutationTree<S, M> =>
   Object.fromEntries(
@@ -62,10 +52,10 @@ export const createCommandMutationTree = <
  * @returns レシピと同じPayloadの型を持つMutation.
  */
 export const createCommandMutation =
-  <S extends UndoRedoState, P>(
-    payloadRecipe: PayloadRecipe<S, P>
-  ): Mutation<S, P> =>
-  (state: S, payload: P): void => {
+  <S extends State, M extends MutationsBase, K extends keyof M>(
+    payloadRecipe: PayloadRecipe<S, M[K]>
+  ): Mutation<S, M, K> =>
+  (state: S, payload: M[K]): void => {
     const command = recordPatches(payloadRecipe)(state, payload);
     applyPatchesImpl(state, command.redoPatches);
     state.undoCommands.push(command);
@@ -95,19 +85,47 @@ export const commandStoreState: CommandStoreState = {
   redoCommands: [],
 };
 
-export const commandStore: VoiceVoxStoreOptions<
-  CommandGetters,
-  CommandActions,
-  CommandMutations
-> = {
-  getters: {
-    CAN_UNDO(state) {
+export const commandStore = createPartialStore<CommandStoreTypes>({
+  CAN_UNDO: {
+    getter(state) {
       return state.undoCommands.length > 0;
     },
-    CAN_REDO(state) {
+  },
+
+  CAN_REDO: {
+    getter(state) {
       return state.redoCommands.length > 0;
     },
-    LAST_COMMAND_UNIX_MILLISEC(state) {
+  },
+
+  UNDO: {
+    mutation(state) {
+      const command = state.undoCommands.pop();
+      if (command != null) {
+        state.redoCommands.push(command);
+        applyPatchesImpl(state, command.undoPatches);
+      }
+    },
+    action({ commit }) {
+      commit("UNDO");
+    },
+  },
+
+  REDO: {
+    mutation(state) {
+      const command = state.redoCommands.pop();
+      if (command != null) {
+        state.undoCommands.push(command);
+        applyPatchesImpl(state, command.redoPatches);
+      }
+    },
+    action({ commit }) {
+      commit("REDO");
+    },
+  },
+
+  LAST_COMMAND_UNIX_MILLISEC: {
+    getter(state) {
       if (state.undoCommands.length === 0) {
         return null;
       } else {
@@ -116,33 +134,10 @@ export const commandStore: VoiceVoxStoreOptions<
     },
   },
 
-  mutations: {
-    UNDO(state) {
-      const command = state.undoCommands.pop();
-      if (command != null) {
-        state.redoCommands.push(command);
-        applyPatchesImpl(state, command.undoPatches);
-      }
-    },
-    REDO(state) {
-      const command = state.redoCommands.pop();
-      if (command != null) {
-        state.undoCommands.push(command);
-        applyPatchesImpl(state, command.redoPatches);
-      }
-    },
-    CLEAR_COMMANDS(state) {
+  CLEAR_COMMANDS: {
+    mutation(state) {
       state.redoCommands.splice(0);
       state.undoCommands.splice(0);
     },
   },
-
-  actions: {
-    UNDO({ commit }) {
-      commit("UNDO");
-    },
-    REDO({ commit }) {
-      commit("REDO");
-    },
-  },
-};
+});

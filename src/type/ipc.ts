@@ -146,6 +146,11 @@ export type IpcIHData = {
     return: boolean;
   };
 
+  IS_MAXIMIZED_WINDOW: {
+    args: [];
+    return: boolean;
+  };
+
   CLOSE_WINDOW: {
     args: [];
     return: void;
@@ -204,11 +209,6 @@ export type IpcIHData = {
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: HotkeySetting }];
     return: HotkeySetting[];
-  };
-
-  IS_UNSET_DEFAULT_STYLE_ID: {
-    args: [speakerUuid: string];
-    return: boolean;
   };
 
   GET_DEFAULT_HOTKEY_SETTINGS: {

@@ -67,6 +67,7 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
+  isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
@@ -83,7 +84,6 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  isUnsetDefaultStyleId(speakerUuid: string): Promise<boolean>;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
@@ -106,6 +106,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  engineId: string;
   voiceSamplePaths: string[];
 };
 
@@ -174,8 +175,6 @@ export type EngineInfo = {
   uuid: string;
   host: string;
   name: string;
-  iconPath?: string;
-  iconData?: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;

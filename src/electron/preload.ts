@@ -158,6 +158,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
   },
 
+  isMaximizedWindow: () => {
+    return ipcRendererInvoke("IS_MAXIMIZED_WINDOW");
+  },
+
   onReceivedIPCMsg: (channel, callback) => {
     return ipcRendererOn(channel, callback);
   },
@@ -208,10 +212,6 @@ const api: Sandbox = {
 
   hotkeySettings: (newData) => {
     return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
-  },
-
-  isUnsetDefaultStyleId: async (speakerUuid: string) => {
-    return await ipcRendererInvoke("IS_UNSET_DEFAULT_STYLE_ID", speakerUuid);
   },
 
   getDefaultHotkeySettings: async () => {

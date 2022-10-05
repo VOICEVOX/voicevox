@@ -214,17 +214,17 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
-                :disable="uiLocked || !isWordChanged"
-                >保存</q-btn
+                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                :disable="uiLocked"
+                >キャンセル</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
-                :disable="uiLocked"
-                >キャンセル</q-btn
+                @click="saveWord"
+                :disable="uiLocked || !isWordChanged"
+                >保存</q-btn
               >
             </div>
           </div>
