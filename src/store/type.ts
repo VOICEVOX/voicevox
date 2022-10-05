@@ -13,7 +13,6 @@ import {
   EngineManifest,
   UserDictWord,
 } from "@/openapi";
-import { Sequence, Note } from "./singing";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
@@ -51,6 +50,31 @@ export type AudioItem = {
 export type AudioState = {
   nowPlaying: boolean;
   nowGenerating: boolean;
+};
+
+export type Tempo = {
+  position: number;
+  tempo: number;
+};
+
+export type TimeSignature = {
+  position: number;
+  beats: number;
+  beatType: number;
+};
+
+export type Note = {
+  position: number;
+  duration: number;
+  midi: number;
+  lyric: string;
+};
+
+export type Score = {
+  resolution: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+  notes: Note[];
 };
 
 export type Phrase = {
@@ -672,7 +696,7 @@ export type AudioCommandStoreTypes = {
 export type SingingStoreState = {
   engineId?: string;
   styleId?: number;
-  sequence?: Sequence;
+  score?: Score;
   phrases: Phrase[];
 };
 
