@@ -158,6 +158,10 @@ export type AudioStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
+  OPEN_USER_ENGINE_DIRECTORY: {
+    action(): void;
+  };
+
   SET_ENGINE_STATE: {
     mutation: { engineId: string; engineState: EngineState };
   };
