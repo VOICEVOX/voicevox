@@ -41,17 +41,8 @@ import { QVueGlobals } from "quasar";
 /**
  * エディタ用のAudioQuery
  */
-export type EditorAudioQuery = {
-  accentPhrases: AccentPhrase[];
-  speedScale: number;
-  pitchScale: number;
-  intonationScale: number;
-  volumeScale: number;
-  prePhonemeLength: number;
-  postPhonemeLength: number;
+export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
   outputSamplingRate: number | "default";
-  outputStereo: boolean;
-  kana?: string;
 };
 
 // FIXME: SpeakerIdを追加する
