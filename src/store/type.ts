@@ -22,7 +22,7 @@ import {
   AcceptTermsStatus,
   HotkeySetting,
   MoraDataType,
-  SavingSetting,
+  RendererSavingSetting,
   ThemeConf,
   ThemeSetting,
   ExperimentalSetting,
@@ -841,7 +841,7 @@ export type ProjectStoreTypes = {
  */
 
 export type SettingStoreState = {
-  savingSetting: SavingSetting;
+  savingSetting: RendererSavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
   engineIds: string[];
@@ -861,8 +861,8 @@ export type SettingStoreTypes = {
   };
 
   SET_SAVING_SETTING: {
-    mutation: { savingSetting: SavingSetting };
-    action(payload: { data: SavingSetting }): void;
+    mutation: { savingSetting: RendererSavingSetting };
+    action(payload: { data: RendererSavingSetting }): void;
   };
 
   SET_HOTKEY_SETTINGS: {

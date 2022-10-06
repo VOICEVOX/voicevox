@@ -7,7 +7,14 @@ import {
 import fs from "fs";
 import path from "path";
 
-import { Sandbox, SystemError, ElectronStoreType } from "@/type/preload";
+import {
+  Sandbox,
+  SystemError,
+  RendererElectronStoreType,
+  MainElectronStoreType,
+  RendererSavingSetting,
+  MainSavingSetting,
+} from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -230,19 +237,48 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
+  // 設定情報の型を変える
   getSetting: async (key) => {
-    return (await ipcRendererInvoke(
+    const value = (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as ElectronStoreType[typeof key];
+    )) as MainElectronStoreType[typeof key];
+
+    let rendererValue: unknown = value;
+    if (key === "savingSetting") {
+      const mainValue = value as MainSavingSetting;
+      rendererValue = {
+        ...mainValue,
+        outputSamplingRate:
+          mainValue.outputSamplingRate == 0
+            ? "default"
+            : mainValue.outputSamplingRate,
+      } as RendererSavingSetting;
+      console.log("getSetting: rendererValue: ", key, rendererValue);
+    }
+    return rendererValue as RendererElectronStoreType[typeof key];
   },
 
   setSetting: async (key, newValue) => {
-    return (await ipcRendererInvoke(
+    let mainValue: unknown = newValue;
+    if (key === "savingSetting") {
+      const rendererValue = newValue as RendererSavingSetting;
+      mainValue = {
+        ...rendererValue,
+        outputSamplingRate:
+          rendererValue.outputSamplingRate === "default"
+            ? 0
+            : rendererValue.outputSamplingRate,
+      } as MainSavingSetting;
+      console.log("setSetting: mainValue: ", key, mainValue);
+    }
+
+    await ipcRendererInvoke(
       "SET_SETTING",
       key,
-      newValue
-    )) as typeof newValue;
+      mainValue as MainElectronStoreType[typeof key]
+    );
+    return newValue;
   },
 };
 

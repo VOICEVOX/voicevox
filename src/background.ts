@@ -29,7 +29,7 @@ import {
   AcceptTermsStatus,
   ToolbarSetting,
   EngineInfo,
-  ElectronStoreType,
+  MainElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -258,7 +258,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<ElectronStoreType>({
+const store = new Store<MainElectronStoreType>({
   schema: {
     useGpu: {
       type: "boolean",

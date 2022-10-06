@@ -2,7 +2,7 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   HotkeySetting,
-  SavingSetting,
+  RendererSavingSetting,
   ExperimentalSetting,
   ThemeColorType,
   ThemeConf,
@@ -118,10 +118,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_SAVING_SETTING: {
-    mutation(state, { savingSetting }: { savingSetting: SavingSetting }) {
+    mutation(
+      state,
+      { savingSetting }: { savingSetting: RendererSavingSetting }
+    ) {
       state.savingSetting = savingSetting;
     },
-    action({ commit }, { data }: { data: SavingSetting }) {
+    action({ commit }, { data }: { data: RendererSavingSetting }) {
       const newData = window.electron.setSetting("savingSetting", data);
       newData.then((savingSetting) => {
         commit("SET_SAVING_SETTING", { savingSetting });
