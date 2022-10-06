@@ -291,7 +291,7 @@ const store = new Store<MainElectronStoreType>({
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: { type: "number", default: 0 }, // 0 はエンジンのデフォルトサンプリングレートを使う
+        outputSamplingRate: { type: "number", default: 0 }, // 0 のときはエンジンのデフォルトサンプリングレートを使う
         audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
