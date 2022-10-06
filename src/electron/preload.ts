@@ -254,7 +254,6 @@ const api: Sandbox = {
             ? "default"
             : mainValue.outputSamplingRate,
       } as RendererSavingSetting;
-      console.log("getSetting: rendererValue: ", key, rendererValue);
     }
     return rendererValue as RendererElectronStoreType[typeof key];
   },
@@ -270,7 +269,6 @@ const api: Sandbox = {
             ? 0
             : rendererValue.outputSamplingRate,
       } as MainSavingSetting;
-      console.log("setSetting: mainValue: ", key, mainValue);
     }
 
     await ipcRendererInvoke(
