@@ -237,7 +237,9 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
-  // 設定情報の型を変える
+  /**
+   * 設定情報を取得する。保存用とRenderer用で型が異なるので変換する
+   */
   getSetting: async (key) => {
     const value = (await ipcRendererInvoke(
       "GET_SETTING",
@@ -258,6 +260,10 @@ const api: Sandbox = {
     return rendererValue as RendererElectronStoreType[typeof key];
   },
 
+  /**
+   * 設定情報を保存する。保存用とRenderer用で型が異なるので変換する。
+   * 返り値はRenderer用の型
+   */
   setSetting: async (key, newValue) => {
     let mainValue: unknown = newValue;
     if (key === "savingSetting") {
