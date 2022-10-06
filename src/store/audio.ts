@@ -1982,8 +1982,7 @@ export const audioCommandStore = transformCommandStore(
         if (styleId === undefined)
           throw new Error("assert styleId !== undefined");
 
-        const query: EditorAudioQuery | undefined =
-          state.audioItems[audioKey].query;
+        const query = state.audioItems[audioKey].query;
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
@@ -2189,8 +2188,7 @@ export const audioCommandStore = transformCommandStore(
         } & ({ isPause: false; moraIndex: number } | { isPause: true })
       ) {
         const { audioKey, accentPhraseIndex } = payload;
-        const query: EditorAudioQuery | undefined =
-          state.audioItems[audioKey].query;
+        const query = state.audioItems[audioKey].query;
 
         const engineId = state.audioItems[audioKey].engineId;
         if (engineId === undefined)
