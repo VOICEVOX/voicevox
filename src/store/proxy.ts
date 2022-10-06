@@ -33,13 +33,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   return proxyStore;
 };
 
-export const convertToEditorAudioQuery = (
-  audioQuery: AudioQuery
-): EditorAudioQuery => {
-  return { ...audioQuery };
-};
-
-export const convertFromEditorAudioQuery = (
+export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number
 ): AudioQuery => {

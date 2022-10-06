@@ -31,7 +31,7 @@ import {
   createKanaRegex,
   currentDateString,
 } from "./utility";
-import { convertFromEditorAudioQuery } from "./proxy";
+import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
@@ -1260,7 +1260,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         })
           .then((instance) =>
             instance.invoke("synthesisSynthesisPost")({
-              audioQuery: convertFromEditorAudioQuery(
+              audioQuery: convertAudioQueryFromEditorToEngine(
                 audioQuery,
                 state.engineManifests[engineId].defaultSamplingRate
               ),
