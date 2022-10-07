@@ -238,51 +238,24 @@ const api: Sandbox = {
   },
 
   /**
-   * 設定情報を取得する。保存用とRenderer用で型が異なるので変換する
+   * 設定情報を取得する
    */
   getSetting: async (key) => {
-    const value = (await ipcRendererInvoke(
+    return (await ipcRendererInvoke(
       "GET_SETTING",
       key
     )) as MainElectronStoreType[typeof key];
-
-    let rendererValue: unknown = value;
-    if (key === "savingSetting") {
-      const mainValue = value as MainSavingSetting;
-      rendererValue = {
-        ...mainValue,
-        outputSamplingRate:
-          mainValue.outputSamplingRate == 0
-            ? "default"
-            : mainValue.outputSamplingRate,
-      } as RendererSavingSetting;
-    }
-    return rendererValue as RendererElectronStoreType[typeof key];
   },
 
   /**
-   * 設定情報を保存する。保存用とRenderer用で型が異なるので変換する。
-   * 返り値はRenderer用の型
+   * 設定情報を保存する
    */
   setSetting: async (key, newValue) => {
-    let mainValue: unknown = newValue;
-    if (key === "savingSetting") {
-      const rendererValue = newValue as RendererSavingSetting;
-      mainValue = {
-        ...rendererValue,
-        outputSamplingRate:
-          rendererValue.outputSamplingRate === "default"
-            ? 0
-            : rendererValue.outputSamplingRate,
-      } as MainSavingSetting;
-    }
-
-    await ipcRendererInvoke(
+    return (await ipcRendererInvoke(
       "SET_SETTING",
       key,
-      mainValue as MainElectronStoreType[typeof key]
-    );
-    return newValue;
+      newValue
+    )) as typeof newValue;
   },
 };
 

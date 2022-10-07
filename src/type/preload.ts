@@ -95,13 +95,13 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSetting<Key extends keyof RendererElectronStoreType>(
+  getSetting<Key extends keyof MainElectronStoreType>(
     key: Key
-  ): Promise<RendererElectronStoreType[Key]>;
-  setSetting<Key extends keyof RendererElectronStoreType>(
+  ): Promise<MainElectronStoreType[Key]>;
+  setSetting<Key extends keyof MainElectronStoreType>(
     key: Key,
-    newValue: RendererElectronStoreType[Key]
-  ): Promise<RendererElectronStoreType[Key]>;
+    newValue: MainElectronStoreType[Key]
+  ): Promise<MainElectronStoreType[Key]>;
 }
 
 export type AppInfos = {
