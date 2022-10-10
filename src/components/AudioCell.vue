@@ -396,13 +396,15 @@ export default defineComponent({
 
     // 上下に移動
     const audioKeys = computed(() => store.state.audioKeys);
-    const moveUpCell = () => {
+    const moveUpCell = (e?: KeyboardEvent) => {
+      if (e && e.isComposing) return;
       const index = audioKeys.value.indexOf(props.audioKey) - 1;
       if (index >= 0) {
         emit("focusCell", { audioKey: audioKeys.value[index] });
       }
     };
-    const moveDownCell = () => {
+    const moveDownCell = (e?: KeyboardEvent) => {
+      if (e && e.isComposing) return;
       const index = audioKeys.value.indexOf(props.audioKey) + 1;
       if (index < audioKeys.value.length) {
         emit("focusCell", { audioKey: audioKeys.value[index] });
