@@ -2,7 +2,7 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   HotkeySetting,
-  RendererSavingSetting,
+  SavingSetting,
   ExperimentalSetting,
   ThemeColorType,
   ThemeConf,
@@ -87,17 +87,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         acceptTerms: await window.electron.getSetting("acceptTerms"),
       });
 
-      const mainSavingSetting = await window.electron.getSetting(
-        "savingSetting"
-      );
       commit("SET_SAVING_SETTING", {
-        savingSetting: {
-          ...mainSavingSetting,
-          outputSamplingRate:
-            mainSavingSetting.outputSamplingRate === 0
-              ? "default"
-              : mainSavingSetting.outputSamplingRate,
-        },
+        savingSetting: await window.electron.getSetting("savingSetting"),
       });
 
       commit("SET_TOOLBAR_SETTING", {
@@ -127,20 +118,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_SAVING_SETTING: {
-    mutation(
-      state,
-      { savingSetting }: { savingSetting: RendererSavingSetting }
-    ) {
+    mutation(state, { savingSetting }: { savingSetting: SavingSetting }) {
       state.savingSetting = savingSetting;
     },
-    action({ commit }, { data }: { data: RendererSavingSetting }) {
-      const newData = window.electron.setSetting("savingSetting", {
-        ...data,
-        outputSamplingRate:
-          data.outputSamplingRate === "default" ? 0 : data.outputSamplingRate,
-      });
-      newData.then(() => {
-        commit("SET_SAVING_SETTING", { savingSetting: data });
+    action({ commit }, { data }: { data: SavingSetting }) {
+      const newData = window.electron.setSetting("savingSetting", data);
+      newData.then((savingSetting) => {
+        commit("SET_SAVING_SETTING", { savingSetting });
       });
     },
   },

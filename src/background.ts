@@ -29,7 +29,7 @@ import {
   AcceptTermsStatus,
   ToolbarSetting,
   EngineInfo,
-  MainElectronStoreType,
+  ElectronStoreType,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -258,7 +258,7 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 // 設定ファイル
-const store = new Store<MainElectronStoreType>({
+const store = new Store<ElectronStoreType>({
   schema: {
     useGpu: {
       type: "boolean",
@@ -291,7 +291,10 @@ const store = new Store<MainElectronStoreType>({
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: { type: "number", default: 0 }, // 0 のときはエンジンのデフォルトサンプリングレートを使う
+        outputSamplingRate: {
+          oneOf: [{ type: "number" }, { const: "default" }],
+          default: "default",
+        },
         audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
@@ -303,7 +306,7 @@ const store = new Store<MainElectronStoreType>({
         exportLab: false,
         exportText: false,
         outputStereo: false,
-        outputSamplingRate: 0,
+        outputSamplingRate: "default",
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },

@@ -620,7 +620,7 @@ import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
-  RendererSavingSetting,
+  SavingSetting,
   ExperimentalSetting,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
@@ -808,7 +808,7 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const handleSavingSettingChange = (
-      key: keyof RendererSavingSetting,
+      key: keyof SavingSetting,
       data: string | boolean | number
     ) => {
       const storeDispatch = (): void => {

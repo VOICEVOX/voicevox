@@ -7,14 +7,7 @@ import {
 import fs from "fs";
 import path from "path";
 
-import {
-  Sandbox,
-  SystemError,
-  RendererElectronStoreType,
-  MainElectronStoreType,
-  RendererSavingSetting,
-  MainSavingSetting,
-} from "@/type/preload";
+import { Sandbox, SystemError, ElectronStoreType } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -244,7 +237,7 @@ const api: Sandbox = {
     return (await ipcRendererInvoke(
       "GET_SETTING",
       key
-    )) as MainElectronStoreType[typeof key];
+    )) as ElectronStoreType[typeof key];
   },
 
   /**

@@ -1,10 +1,11 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
 import { IpcSOData } from "./ipc";
 
-interface ElectronStoreType {
+export interface ElectronStoreType {
   useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
+  savingSetting: SavingSetting;
   presets: PresetConfig;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
@@ -17,14 +18,6 @@ interface ElectronStoreType {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
-}
-
-export interface MainElectronStoreType extends ElectronStoreType {
-  savingSetting: MainSavingSetting;
-}
-
-export interface RendererElectronStoreType extends ElectronStoreType {
-  savingSetting: RendererSavingSetting;
 }
 
 export interface Sandbox {
@@ -95,13 +88,13 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
-  getSetting<Key extends keyof MainElectronStoreType>(
+  getSetting<Key extends keyof ElectronStoreType>(
     key: Key
-  ): Promise<MainElectronStoreType[Key]>;
-  setSetting<Key extends keyof MainElectronStoreType>(
+  ): Promise<ElectronStoreType[Key]>;
+  setSetting<Key extends keyof ElectronStoreType>(
     key: Key,
-    newValue: MainElectronStoreType[Key]
-  ): Promise<MainElectronStoreType[Key]>;
+    newValue: ElectronStoreType[Key]
+  ): Promise<ElectronStoreType[Key]>;
 }
 
 export type AppInfos = {
@@ -152,7 +145,7 @@ export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
-type SavingSetting = {
+export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
   fileNamePattern: string;
@@ -161,15 +154,8 @@ type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  audioOutputDevice: string;
-};
-
-export type MainSavingSetting = SavingSetting & {
-  outputSamplingRate: number;
-};
-
-export type RendererSavingSetting = SavingSetting & {
   outputSamplingRate: number | "default";
+  audioOutputDevice: string;
 };
 
 // FIXME: engineIdを追加

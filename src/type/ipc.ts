@@ -1,6 +1,6 @@
 import {
   AppInfos,
-  MainElectronStoreType,
+  ElectronStoreType,
   EngineInfo,
   HotkeySetting,
   ThemeSetting,
@@ -233,16 +233,16 @@ export type IpcIHData = {
 
   // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
-    args: [key: keyof MainElectronStoreType];
-    return: MainElectronStoreType[keyof MainElectronStoreType];
+    args: [key: keyof ElectronStoreType];
+    return: ElectronStoreType[keyof ElectronStoreType];
   };
 
   SET_SETTING: {
     args: [
-      key: keyof MainElectronStoreType,
-      newValue: MainElectronStoreType[keyof MainElectronStoreType]
+      key: keyof ElectronStoreType,
+      newValue: ElectronStoreType[keyof ElectronStoreType]
     ];
-    return: MainElectronStoreType[keyof MainElectronStoreType];
+    return: ElectronStoreType[keyof ElectronStoreType];
   };
 };
 
