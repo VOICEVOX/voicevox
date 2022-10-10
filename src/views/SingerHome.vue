@@ -1,6 +1,11 @@
 <template>
   <singer-tab />
-  <p>Singer Home</p>
+  <menu-bar />
+  <tool-bar />
+  <div class="sing-editor">
+    <singer-panel />
+    <score />
+  </div>
 </template>
 
 <script lang="ts">
@@ -17,10 +22,14 @@ import {
 // import path from "path";
 
 import SingerTab from "@/components/SingerTab.vue";
+import MenuBar from "@/components/Sing/MenuBar.vue";
+import ToolBar from "@/components/Sing/ToolBar.vue";
+import SingerPanel from "@/components/Sing/SingerPanel.vue";
+import Score from "@/components/Sing/Score.vue";
 
 export default defineComponent({
   name: "SingerHome",
-  components: { SingerTab },
+  components: { SingerTab, MenuBar, ToolBar, SingerPanel, Score },
 
   setup() {
     //const store = useStore();
@@ -36,5 +45,8 @@ export default defineComponent({
 
 .layout-container {
   min-height: calc(100vh - #{vars.$menubar-height});
+}
+.sing-editor {
+  display: flex;
 }
 </style>
