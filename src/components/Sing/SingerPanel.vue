@@ -1,5 +1,5 @@
 <template>
-  <div class="singer-panel" />
+  <div class="singer-panel" v-bind:class="{ hide: !isShowSinger }" />
 </template>
 
 <script lang="ts">
@@ -15,7 +15,10 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-    return null;
+    const isShowSinger = computed(() => store.state.isShowSinger);
+    return {
+      isShowSinger,
+    };
   },
 });
 </script>
@@ -26,8 +29,11 @@ export default defineComponent({
 
 .singer-panel {
   background: colors.$surface;
-  border-right: 1px solid #ccc;
   height: 100vh;
   width: 200px;
+
+  &.hide {
+    width: 0;
+  }
 }
 </style>

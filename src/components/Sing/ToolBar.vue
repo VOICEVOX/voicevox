@@ -1,7 +1,12 @@
 <template>
   <div class="sing-toolbar">
-    <div class="singer-panel-toggler">
+    <div
+      class="singer-panel-toggler"
+      v-bind:class="{ active: isShowSinger }"
+      @click="toggleShowSinger"
+    >
       <div class="singer-avatar" />
+      {showSinger}
       <!-- <img src="" class="singer-avatar" /> -->
     </div>
     <div class="sing-player">
@@ -34,7 +39,16 @@ export default defineComponent({
   setup() {
     const store = useStore();
     const $q = useQuasar();
-    return null;
+    const isShowSinger = computed(() => store.state.isShowSinger);
+    const toggleShowSinger = () => {
+      store.dispatch("SET_SHOW_SINGER", {
+        isShowSinger: !isShowSinger.value,
+      });
+    };
+    return {
+      isShowSinger,
+      toggleShowSinger,
+    };
   },
 });
 </script>
@@ -52,6 +66,7 @@ export default defineComponent({
   width: 100%;
 }
 .singer-panel-toggler {
+  border: 2px solid #777;
   border-radius: 50%;
   display: block;
   height: 48px;
@@ -61,6 +76,10 @@ export default defineComponent({
 
   &:hover {
     cursor: pointer;
+  }
+
+  &.active {
+    border-color: red;
   }
 }
 

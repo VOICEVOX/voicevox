@@ -30,6 +30,7 @@
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
+    "@tonejs/midi": "2.0.28",
     "ajv": "8.6.2",
     "core-js": "3.12.1",
     "dayjs": "1.10.7",

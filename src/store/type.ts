@@ -698,6 +698,15 @@ export type SingingStoreState = {
   styleId?: number;
   score?: Score;
   renderPhrases: RenderPhrase[];
+  // NOTE: UIの状態などは分割した方がよさそうだが、他と混在させないためいったん局所化する
+  isShowSinger: boolean;
+};
+
+export type SingingStoreTypes = {
+  SET_SHOW_SINGER: {
+    mutation: { isShowSinger: boolean };
+    action(payload: { isShowSinger: boolean }): void;
+  };
 };
 
 /*
@@ -1247,7 +1256,8 @@ export type State = AudioStoreState &
   UiStoreState &
   PresetStoreState &
   DictionaryStoreState &
-  ProxyStoreState;
+  ProxyStoreState &
+  SingingStoreState;
 
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
@@ -1258,7 +1268,8 @@ type AllStoreTypes = AudioStoreTypes &
   UiStoreTypes &
   PresetStoreTypes &
   DictionaryStoreTypes &
-  ProxyStoreTypes;
+  ProxyStoreTypes &
+  SingingStoreTypes;
 
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
