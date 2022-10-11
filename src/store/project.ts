@@ -325,6 +325,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             return;
           }
           filePath = ret;
+          if (context.state.projectFilePath) {
+            window.electron.showMessageDialog({
+              type: "info",
+              title: "保存",
+              message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+            });
+          }
         }
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = context.state;
