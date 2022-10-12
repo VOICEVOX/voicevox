@@ -6,20 +6,19 @@
       @click="toggleShowSinger"
     >
       <div class="singer-avatar" />
-      {showSinger}
       <!-- <img src="" class="singer-avatar" /> -->
     </div>
     <div class="sing-player">
-      <button type="button">戻る</button>
-      <button type="button">再生</button>
+      <button type="button" class="sing-button-temp">戻る</button>
+      <button type="button" class="sing-button-temp">再生</button>
       <div class="sing-player-position">00:00</div>
-      <input type="number" value="120" />
-      <input type="number" value="4" />/
-      <input type="number" value="4" />
+      <input type="number" value="120" class="sing-bpm" />
+      <input type="number" value="4" class="sing-tempo" />/
+      <input type="number" value="4" class="sing-tempo" />
     </div>
     <div class="sing-setting">
       <input type="range" min="0" max="100" class="sing-volume" />
-      <select>
+      <select class="sing-snap">
         <option>1/16</option>
       </select>
     </div>
@@ -94,6 +93,25 @@ export default defineComponent({
 .sing-player {
   align-items: center;
   display: flex;
+}
+
+.sing-button-temp {
+  margin: 0 4px;
+}
+
+.sing-bpm {
+  margin: 0 4px;
+  width: 56px;
+}
+
+.sing-tempo {
+  margin: 0 4px;
+  width: 32px;
+}
+
+.sing-player-position {
+  font-size: 18px;
+  margin: 0 4px;
 }
 
 .sing-setting {

@@ -1,6 +1,7 @@
 <template>
-  <div class="sing-singer-panel" v-bind:class="{ hide: !isShowSinger }">
-    シンガーの表示
+  <div class="score-sequencer">
+    <div class="score-sequencer-keys" />
+    シーケンサ
   </div>
 </template>
 
@@ -12,15 +13,14 @@ import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
-  name: "SingSingerPanel",
+  name: "SingScoreSequencer",
 
   setup() {
     const store = useStore();
     const $q = useQuasar();
-    const isShowSinger = computed(() => store.state.isShowSinger);
-    return {
-      isShowSinger,
-    };
+    // const pitches = [...Array(128).keys()].reverse();
+    // return { pitches };
+    return null;
   },
 });
 </script>
@@ -28,15 +28,4 @@ export default defineComponent({
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
-
-.sing-singer-panel {
-  background: colors.$background;
-  border-right: 1px solid #ccc;
-  height: 100%;
-  width: 200px;
-
-  &.hide {
-    display: none;
-  }
-}
 </style>

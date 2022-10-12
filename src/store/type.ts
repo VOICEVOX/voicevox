@@ -698,8 +698,9 @@ export type SingingStoreState = {
   styleId?: number;
   score?: Score;
   renderPhrases: RenderPhrase[];
-  // NOTE: UIの状態などは分割した方がよさそうだが、他と混在させないためいったん局所化する
+  // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
+  // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
 };
 
 export type SingingStoreTypes = {

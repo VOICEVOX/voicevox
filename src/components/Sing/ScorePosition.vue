@@ -1,7 +1,5 @@
 <template>
-  <div class="sing-score">
-    <div class="sing-score-keys" />
-  </div>
+  <div class="sing-score-position">シーケンサ上ツールバー</div>
 </template>
 
 <script lang="ts">
@@ -12,13 +10,11 @@ import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
-  name: "SingScore",
+  name: "SingScorePosition",
 
   setup() {
     const store = useStore();
     const $q = useQuasar();
-    // const pitches = [...Array(128).keys()].reverse();
-    // return { pitches };
     return null;
   },
 });
@@ -28,9 +24,10 @@ export default defineComponent({
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;
 
-.singer-panel {
-  background: colors.$surface;
-  height: 100vh;
-  width: 200px;
+.sing-score-position {
+  background: colors.$background;
+  border-bottom: 1px solid #ccc;
+  height: 32px;
+  width: 100%;
 }
 </style>

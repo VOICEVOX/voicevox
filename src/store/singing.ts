@@ -1,4 +1,4 @@
-import { SingingStoreState, SingingStoreTypes } from "./type";
+import { SingingStoreState, SingingStoreTypes, Score } from "./type";
 import { useStore } from "@/store";
 import { createPartialStore } from "./vuex";
 
@@ -7,7 +7,7 @@ export const singingStoreState: SingingStoreState = {
   styleId: undefined,
   score: undefined,
   renderPhrases: [],
-  // NOTE: UIの状態などはHydrateもあり分割した方がよさそう(そもそもキャラクターを使った方が)、試行のためsinging.tsに局所化する
+  // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
 };
 
