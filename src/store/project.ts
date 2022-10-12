@@ -326,7 +326,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
           filePath = ret;
         }
-        if (context.state.projectFilePath && context.state.projectFilePath != filePath) {
+        if (
+          context.state.projectFilePath &&
+          context.state.projectFilePath != filePath
+        ) {
           window.electron.showMessageDialog({
             type: "info",
             title: "保存",
