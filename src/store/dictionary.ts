@@ -86,20 +86,21 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
       { state, dispatch },
       { wordUuid, surface, pronunciation, accentType, priority }
     ) {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      }).then((instance) =>
-        instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
-          wordUuid,
-          surface,
-          pronunciation,
-          accentType,
-          priority,
-        })
-      );
+      if (state.engineIds.length === 0)
+        throw new Error(`At least one engine must be registered`);
+      for (const engineId of state.engineIds) {
+        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then((instance) =>
+          instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
+            wordUuid,
+            surface,
+            pronunciation,
+            accentType,
+            priority,
+          })
+        );
+      }
     },
   },
 
