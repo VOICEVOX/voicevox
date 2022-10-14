@@ -46,7 +46,15 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           ]);
         }
       }
-      return Object.fromEntries(mergedDictMap.values());
+      const mergedDict = [...mergedDictMap.values()];
+      mergedDict.sort((a, b) => {
+        if (a[1].yomi > b[1].yomi) {
+          return 1;
+        } else {
+          return -1;
+        }
+      });
+      return Object.fromEntries(mergedDict);
     },
   },
 
