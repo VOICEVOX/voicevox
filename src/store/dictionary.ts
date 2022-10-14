@@ -1,4 +1,4 @@
-import { UserDictWord } from "@/openapi";
+import { UserDictWord, UserDictWordToJSON } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
 import { createPartialStore } from "./vuex";
 
@@ -27,6 +27,26 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         return [key, newV];
       });
       return Object.fromEntries(dictEntries);
+    },
+  },
+
+  LOAD_ALL_USER_DICT: {
+    async action({ dispatch, state }) {
+      const allDict = await Promise.all(
+        state.engineIds.map((engineId) => {
+          return dispatch("LOAD_USER_DICT", { engineId });
+        })
+      );
+      const mergedDictMap = new Map<string, [string, UserDictWord]>();
+      for (const dict of allDict) {
+        for (const [id, dictItem] of Object.entries(dict)) {
+          mergedDictMap.set(`${dictItem.yomi}-${dictItem.surface}`, [
+            id,
+            dictItem,
+          ]);
+        }
+      }
+      return Object.fromEntries(mergedDictMap.values());
     },
   },
 
@@ -85,6 +105,27 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           wordUuid,
         })
       );
+    },
+  },
+
+  SYNC_ALL_USER_DICT: {
+    async action({ dispatch, state }) {
+      const mergedDict = await dispatch("LOAD_ALL_USER_DICT");
+      for (const engineId of state.engineIds) {
+        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId }).then(
+          (instance) => {
+            instance.invoke("importUserDictWordsImportUserDictPost")({
+              override: true,
+              requestBody: Object.fromEntries(
+                Object.entries(mergedDict).map(([k, v]) => [
+                  k,
+                  UserDictWordToJSON(v),
+                ])
+              ),
+            });
+          }
+        );
+      }
     },
   },
 });

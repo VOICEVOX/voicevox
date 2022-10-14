@@ -28,7 +28,14 @@
           <div v-if="loadingDict" class="loading-dict">
             <div>
               <q-spinner color="primary" size="2.5rem" />
-              <div class="q-mt-xs">読み込み中・・・</div>
+              <div class="q-mt-xs">
+                <template v-if="loadingType === 'loading'"
+                  >読み込み中・・・</template
+                >
+                <template v-if="loadingType === 'syncing'"
+                  >同期中・・・</template
+                >
+              </div>
             </div>
           </div>
           <div class="col-4 word-list-col">
@@ -274,6 +281,7 @@ export default defineComponent({
     const nowPlaying = ref(false);
 
     const loadingDict = ref(false);
+    const loadingType = ref<"loading" | "syncing">("loading");
     const userDict = ref<Record<string, UserDictWord>>({});
 
     const createUILockAction = function <T>(action: Promise<T>) {
@@ -289,11 +297,10 @@ export default defineComponent({
         throw new Error(`assert engineId !== undefined`);
 
       loadingDict.value = true;
+      loadingType.value = "loading";
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT", {
-            engineId,
-          })
+          store.dispatch("LOAD_ALL_USER_DICT")
         );
       } catch {
         $q.dialog({
@@ -306,6 +313,20 @@ export default defineComponent({
           },
         }).onOk(() => {
           dictionaryManageDialogOpenedComputed.value = false;
+        });
+      }
+      loadingType.value = "syncing";
+      try {
+        await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
+      } catch {
+        $q.dialog({
+          title: "辞書の同期に失敗しました",
+          message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "display",
+          },
         });
       }
       loadingDict.value = false;
@@ -711,6 +732,7 @@ export default defineComponent({
       nowPlaying,
       userDict,
       loadingDict,
+      loadingType,
       wordEditing,
       surfaceInput,
       yomiInput,
