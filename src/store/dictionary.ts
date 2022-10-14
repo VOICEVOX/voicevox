@@ -63,7 +63,8 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
       { state, dispatch },
       { surface, pronunciation, accentType, priority }
     ) {
-      // 同期処理により、一つのエンジンだけに登録しても、他のエンジンにも反映される
+      // 同期処理により、一つのエンジンだけに登録しても、他のエンジンにも反映される。
+      // むしろ全てのエンジンに登録処理をするとUUIDが合わない。
       const engineId: string | undefined = state.engineIds[0];
 
       if (engineId === undefined)
