@@ -63,7 +63,9 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
       { state, dispatch },
       { surface, pronunciation, accentType, priority }
     ) {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
+      // 同期処理により、一つのエンジンだけに登録しても、他のエンジンにも反映される
+      const engineId: string | undefined = state.engineIds[0];
+
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);
       await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
@@ -103,16 +105,17 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
 
   DELETE_WORD: {
     async action({ state, dispatch }, { wordUuid }) {
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
-      await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-        engineId,
-      }).then((instance) =>
-        instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
-          wordUuid,
-        })
-      );
+      if (state.engineIds.length === 0)
+        throw new Error(`At least one engine must be registered`);
+      for (const engineId of state.engineIds) {
+        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then((instance) =>
+          instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
+            wordUuid,
+          })
+        );
+      }
     },
   },
 
