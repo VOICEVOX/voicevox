@@ -31,14 +31,6 @@
               <div class="row no-wrap">
                 <q-btn
                   outline
-                  text-color="warning"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="deleteEngine"
-                  :disable="uiLocked || !isDeletable"
-                  >削除</q-btn
-                >
-                <q-btn
-                  outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="newEngine"
@@ -70,32 +62,37 @@
 
           <!-- 右側のpane -->
           <div v-if="selectedId" class="col-8 no-wrap text-no-wrap word-editor">
+            <div class="row no-wrap">
+              <h3 class="text-h5 q-ma-sm">
+                {{ engineInfos[selectedId].name }}
+              </h3>
+            </div>
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
+
               <q-btn
-                v-show="!!selectedId"
                 outline
-                text-color="display"
+                text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="resetWord"
-                :disable="uiLocked || !isWordChanged"
-                >リセット</q-btn
+                @click="deleteEngine"
+                :disable="uiLocked || !isDeletable"
+                >削除</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
-                :disable="uiLocked"
-                >キャンセル</q-btn
+                @click="openSelectedEngineDirectory"
+                :disable="uiLocked || !engineInfos[selectedId].path"
+                >フォルダを開く</q-btn
               >
               <q-btn
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
-                :disable="uiLocked || !isWordChanged"
-                >保存</q-btn
+                @click="restartSelectedEngine"
+                :disable="uiLocked || engineStates[selectedId] !== 'READY'"
+                >再起動</q-btn
               >
             </div>
           </div>
@@ -108,18 +105,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
-import {
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
-} from "@/store/utility";
-import AudioAccent from "@/components/AudioAccent.vue";
-import { QInput, useQuasar } from "quasar";
-import { AudioItem } from "@/store/type";
-
-const defaultDictPriority = 5;
-
+import { useQuasar } from "quasar";
 export default defineComponent({
   name: "EngineManageDialog",
   props: {
@@ -140,6 +126,7 @@ export default defineComponent({
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 
     const engineInfos = computed(() => store.state.engineInfos);
+    const engineStates = computed(() => store.state.engineStates);
 
     const selectedId = ref("");
 
@@ -153,6 +140,15 @@ export default defineComponent({
     const selectEngine = (id: string) => {
       selectedId.value = id;
     };
+
+    const openSelectedEngineDirectory = () => {
+      store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
+    };
+
+    const restartSelectedEngine = () => {
+      store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
+    };
+
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
@@ -166,10 +162,13 @@ export default defineComponent({
     return {
       engineManageDialogOpenedComputed,
       engineInfos,
+      engineStates,
       selectEngine,
       uiLocked,
       selectedId,
       toDialogClosedState,
+      openSelectedEngineDirectory,
+      restartSelectedEngine,
     };
   },
 });
