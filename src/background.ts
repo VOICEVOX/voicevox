@@ -115,9 +115,10 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return engines.map((engineInfo) => {
+  return engines.map((engineInfo, i) => {
     return {
       ...engineInfo,
+      type: i === 0 ? "main" : "sub",
       path:
         engineInfo.path === undefined
           ? undefined
@@ -159,6 +160,7 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       path: engineDir,
       executionEnabled: true,
       executionFilePath: path.join(engineDir, manifest.command),
+      type: "userDir",
     });
   }
   return engines;

@@ -62,10 +62,26 @@
 
           <!-- 右側のpane -->
           <div v-if="selectedId" class="col-8 no-wrap text-no-wrap word-editor">
-            <div class="row no-wrap">
-              <h3 class="text-h5 q-ma-sm">
+            <div>
+              <!-- Vueのバグでdivだとエラーが出る -->
+              <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
-              </h3>
+              </div>
+            </div>
+
+            <div class="no-wrap">
+              <div class="text-h6 q-ma-sm">対応している機能</div>
+              <ul>
+                <li
+                  v-for="[feature, value] in Object.entries(
+                    engineManifests[selectedId].supportedFeatures
+                  )"
+                  :key="feature"
+                  :class="value ? '' : 'text-warning'"
+                >
+                  {{ getFeatureName(feature) }}：{{ value ? "対応" : "未対応" }}
+                </li>
+              </ul>
             </div>
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
@@ -75,7 +91,7 @@
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="deleteEngine"
-                :disable="uiLocked || !isDeletable"
+                :disable="uiLocked || engineInfos[selectedId].type !== 'path'"
                 >削除</q-btn
               >
               <q-btn
@@ -127,14 +143,42 @@ export default defineComponent({
 
     const engineInfos = computed(() => store.state.engineInfos);
     const engineStates = computed(() => store.state.engineStates);
+    const engineManifests = computed(() => store.state.engineManifests);
 
     const selectedId = ref("");
+    const isDeletable = computed(() => {
+      return (
+        engineInfos.value[selectedId.value] &&
+        engineInfos.value[selectedId.value].type === "path"
+      );
+    });
 
     const createUILockAction = function <T>(action: Promise<T>) {
       uiLocked.value = true;
       return action.finally(() => {
         uiLocked.value = false;
       });
+    };
+
+    const getFeatureName = (name: string) => {
+      const featureNameMap = {
+        adjustMoraPitch: "モーラごとの音高の調整",
+        adjustPhonemeLength: "音素ごとの長さの調整",
+        adjustSpeedScale: "全体の話速の調整",
+        adjustPitchScale: "全体の音高の調整",
+        adjustIntonationScale: "全体の抑揚の調整",
+        adjustVolumeScale: "全体の音量の調整",
+        interrogativeUpspeak: "疑問文の自動調整",
+      };
+      return featureNameMap[name as keyof typeof featureNameMap];
+    };
+
+    const newEngine = () => {
+      // TODO
+    };
+
+    const deleteEngine = () => {
+      // TODO
     };
 
     const selectEngine = (id: string) => {
@@ -163,7 +207,12 @@ export default defineComponent({
       engineManageDialogOpenedComputed,
       engineInfos,
       engineStates,
+      engineManifests,
+      newEngine,
       selectEngine,
+      deleteEngine,
+      isDeletable,
+      getFeatureName,
       uiLocked,
       selectedId,
       toDialogClosedState,

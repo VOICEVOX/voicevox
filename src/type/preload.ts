@@ -177,6 +177,12 @@ export type EngineInfo = {
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
+  // エンジンの種類。
+  // main: メインエンジン
+  // sub: .envで指定されたエンジン
+  // userDir: ユーザーディレクトリにあるエンジン
+  // path: パスを指定して追加したエンジン
+  type: "main" | "sub" | "userDir" | "path";
 };
 
 export type Preset = {
