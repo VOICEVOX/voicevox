@@ -25,14 +25,14 @@
           </q-toolbar>
         </q-header>
         <q-page class="row">
-          <div v-if="loadingDict" class="loading-dict">
+          <div v-if="loadingDictState" class="loading-dict">
             <div>
               <q-spinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
-                <template v-if="loadingType === 'loading'"
+                <template v-if="loadingDictState === 'loading'"
                   >読み込み中・・・</template
                 >
-                <template v-if="loadingType === 'syncing'"
+                <template v-if="loadingDictState === 'synchronizing'"
                   >同期中・・・</template
                 >
               </div>
@@ -280,8 +280,7 @@ export default defineComponent({
     const nowGenerating = ref(false);
     const nowPlaying = ref(false);
 
-    const loadingDict = ref(false);
-    const loadingType = ref<"loading" | "syncing">("loading");
+    const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
     const userDict = ref<Record<string, UserDictWord>>({});
 
     const createUILockAction = function <T>(action: Promise<T>) {
@@ -296,8 +295,7 @@ export default defineComponent({
       if (engineId === undefined)
         throw new Error(`assert engineId !== undefined`);
 
-      loadingDict.value = true;
-      loadingType.value = "loading";
+      loadingDictState.value = "loading";
       try {
         userDict.value = await createUILockAction(
           store.dispatch("LOAD_ALL_USER_DICT")
@@ -315,7 +313,7 @@ export default defineComponent({
           dictionaryManageDialogOpenedComputed.value = false;
         });
       }
-      loadingType.value = "syncing";
+      loadingDictState.value = "synchronizing";
       try {
         await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
       } catch {
@@ -329,7 +327,7 @@ export default defineComponent({
           },
         });
       }
-      loadingDict.value = false;
+      loadingDictState.value = null;
     };
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
       if (newValue) {
