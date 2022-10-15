@@ -270,8 +270,6 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
-
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -291,9 +289,8 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
+      if (store.state.engineIds.length === 0)
+        throw new Error(`assert engineId.length > 0`);
 
       loadingDictState.value = "loading";
       try {
@@ -363,6 +360,12 @@ export default defineComponent({
       if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
       return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
         .styleId;
+    });
+    const engineIdComputed = computed(() => {
+      if (store.state.engineIds.length === 0) return "";
+      if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return "";
+      return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
+        .engineId;
     });
 
     const kanaRegex = createKanaRegex();
