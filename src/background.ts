@@ -81,6 +81,10 @@ process.on("unhandledRejection", (reason) => {
 // .envから設定をprocess.envに読み込み
 const appDirPath = path.dirname(app.getPath("exe"));
 
+// appDirPathだと開発時にelectron.exeのディレクトリになってしまうので、
+// 開発時はカレントディレクトリを使う
+let appRootPath: string;
+
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
 //       Linux・macOS ではそのディレクトリはカレントディレクトリとはならないため、.env ファイルの
@@ -88,9 +92,12 @@ const appDirPath = path.dirname(app.getPath("exe"));
 //       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
   dotenv.config({ override: true });
+  // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+  appRootPath = path.resolve(__dirname, "..");
 } else {
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
+  appRootPath = appDirPath;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -114,7 +121,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
       path:
         engineInfo.path === undefined
           ? undefined
-          : path.resolve(appDirPath, engineInfo.path),
+          : path.resolve(appRootPath, engineInfo.path),
     };
   });
 })();
