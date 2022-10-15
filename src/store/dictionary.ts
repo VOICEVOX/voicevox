@@ -123,43 +123,53 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
 
   SYNC_ALL_USER_DICT: {
     async action({ dispatch, state }) {
-      const allDict = Object.fromEntries(
-        await Promise.all(
-          state.engineIds.map(async (engineId) => {
-            return [engineId, await dispatch("LOAD_USER_DICT", { engineId })];
-          })
-        )
-      );
       const mergedDict = await dispatch("LOAD_ALL_USER_DICT");
       for (const engineId of state.engineIds) {
-        const dictIdSet = new Set(Object.keys(allDict[engineId]));
-        for (const [id] of Object.entries(mergedDict)) {
-          if (dictIdSet.has(id)) {
-            dictIdSet.delete(id);
+        // エンジンの辞書のIDリストを取得する。
+        const removedDictIdSet = await dispatch(
+          "INSTANTIATE_ENGINE_CONNECTOR",
+          {
+            engineId,
+          }
+        ).then(
+          async (instance) =>
+            new Set(
+              Object.keys(
+                await instance.invoke("getUserDictWordsUserDictGet")({})
+              )
+            )
+        );
+        // マージされた辞書にあるIDを削除する。
+        // これにより、マージ処理で削除された項目のIDが残る。
+        for (const id of Object.keys(mergedDict)) {
+          if (removedDictIdSet.has(id)) {
+            removedDictIdSet.delete(id);
           }
         }
 
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId }).then(
-          (instance) => {
-            Promise.all([
-              instance.invoke("importUserDictWordsImportUserDictPost")({
-                override: true,
-                requestBody: Object.fromEntries(
-                  Object.entries(mergedDict).map(([k, v]) => [
-                    k,
-                    UserDictWordToJSON(v),
-                  ])
-                ),
-              }),
-              // yomi、surfaceが被っていて削除された単語をエンジンの辞書から削除する。
-              ...[...dictIdSet].map((wordUuid) => {
-                return instance.invoke(
-                  "deleteUserDictWordUserDictWordWordUuidDelete"
-                )({
-                  wordUuid,
-                });
-              }),
-            ]);
+        dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId }).then(
+          async (instance) => {
+            // マージした辞書をエンジンにインポートする。
+            await instance.invoke("importUserDictWordsImportUserDictPost")({
+              override: true,
+              requestBody: Object.fromEntries(
+                Object.entries(mergedDict).map(([k, v]) => [
+                  k,
+                  UserDictWordToJSON(v),
+                ])
+              ),
+            });
+
+            // マージ処理で削除された項目をエンジンから削除する。
+            await Promise.all(
+              [...removedDictIdSet].map((id) =>
+                instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
+                  {
+                    wordUuid: id,
+                  }
+                )
+              )
+            );
           }
         );
       }
