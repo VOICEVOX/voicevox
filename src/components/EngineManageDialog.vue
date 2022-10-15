@@ -70,7 +70,7 @@
             </div>
 
             <div class="no-wrap">
-              <div class="text-h6 q-ma-sm">対応している機能</div>
+              <div class="text-h6 q-ma-sm">機能</div>
               <ul>
                 <li
                   v-for="[feature, value] in Object.entries(
