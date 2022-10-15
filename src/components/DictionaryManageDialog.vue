@@ -182,17 +182,6 @@
                 </div>
               </div>
             </div>
-            <q-select
-              dense
-              v-model="engineToUseForPreview"
-              v-if="engineIds.length > 1"
-              label="プレビューに使うエンジン"
-              :options="engineIds"
-              :option-label="(id) => engineNames[id]"
-              class="q-px-md col-7"
-            >
-            </q-select>
-
             <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
               単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
@@ -281,6 +270,8 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
+    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
+
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -293,24 +284,6 @@ export default defineComponent({
     const loadingType = ref<"loading" | "syncing">("loading");
     const userDict = ref<Record<string, UserDictWord>>({});
 
-    // FIXME: もっといい実装があるはず。
-    const engineToUseForPreviewRef = ref<string | null>(null);
-    const engineToUseForPreview = computed({
-      get: () => engineToUseForPreviewRef.value ?? store.state.engineIds[0],
-      set: (val) => {
-        engineToUseForPreviewRef.value = val;
-      },
-    });
-    const engineIds = computed(() => store.state.engineIds);
-    const engineNames = computed(() =>
-      Object.fromEntries(
-        store.state.engineIds.map((id) => [
-          id,
-          store.state.engineInfos[id].name,
-        ])
-      )
-    );
-
     const createUILockAction = function <T>(action: Promise<T>) {
       uiLocked.value = true;
       return action.finally(() => {
@@ -319,8 +292,10 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
-      if (engineIds.value.length === 0)
-        throw new Error(`assert engineIds.length > 0`);
+      const engineId = engineIdComputed.value;
+      if (engineId === undefined)
+        throw new Error(`assert engineId !== undefined`);
+
       loadingDict.value = true;
       loadingType.value = "loading";
       try {
@@ -410,7 +385,7 @@ export default defineComponent({
       surface.value = convertHankakuToZenkaku(text);
     };
     const setYomi = async (text: string, changeWord?: boolean) => {
-      const engineId = engineToUseForPreview.value;
+      const engineId = engineIdComputed.value;
       if (engineId === undefined)
         throw new Error(`assert engineId !== undefined`);
 
@@ -455,7 +430,7 @@ export default defineComponent({
     };
 
     const changeAccent = async (_: number, accent: number) => {
-      const engineId = engineToUseForPreview.value;
+      const engineId = engineIdComputed.value;
       if (engineId === undefined)
         throw new Error(`assert engineId !== undefined`);
 
@@ -477,7 +452,7 @@ export default defineComponent({
     audioElem.pause();
 
     const play = async () => {
-      const engineId = engineToUseForPreview.value;
+      const engineId = engineIdComputed.value;
       if (engineId === undefined)
         throw new Error(`assert engineId !== undefined`);
 
@@ -755,9 +730,6 @@ export default defineComponent({
       uiLocked,
       nowGenerating,
       nowPlaying,
-      engineToUseForPreview,
-      engineIds,
-      engineNames,
       userDict,
       loadingDict,
       loadingType,
