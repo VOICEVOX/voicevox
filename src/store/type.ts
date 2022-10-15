@@ -924,6 +924,7 @@ export type UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
+  isEngineManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -994,6 +995,11 @@ export type UiStoreTypes = {
   IS_ACCEPT_TERMS_DIALOG_OPEN: {
     mutation: { isAcceptTermsDialogOpen: boolean };
     action(payload: { isAcceptTermsDialogOpen: boolean }): void;
+  };
+
+  IS_ENGINE_MANAGE_DIALOG_OPEN: {
+    mutation: { isEngineManageDialogOpen: boolean };
+    action(payload: { isEngineManageDialogOpen: boolean }): void;
   };
 
   IS_DICTIONARY_MANAGE_DIALOG_OPEN: {

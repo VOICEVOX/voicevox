@@ -41,6 +41,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
+  isEngineManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -238,6 +239,30 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       commit("IS_ACCEPT_TERMS_DIALOG_OPEN", {
         isAcceptTermsDialogOpen,
+      });
+    },
+  },
+
+  IS_ENGINE_MANAGE_DIALOG_OPEN: {
+    mutation(
+      state,
+      { isEngineManageDialogOpen }: { isEngineManageDialogOpen: boolean }
+    ) {
+      state.isEngineManageDialogOpen = isEngineManageDialogOpen;
+    },
+    async action({ state, commit }, { isEngineManageDialogOpen }) {
+      if (state.isEngineManageDialogOpen === isEngineManageDialogOpen) return;
+
+      if (isEngineManageDialogOpen) {
+        commit("LOCK_UI");
+        commit("LOCK_MENUBAR");
+      } else {
+        commit("UNLOCK_UI");
+        commit("UNLOCK_MENUBAR");
+      }
+
+      commit("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+        isEngineManageDialogOpen,
       });
     },
   },
