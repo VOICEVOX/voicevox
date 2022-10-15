@@ -169,6 +169,7 @@ export default defineComponent({
       selectEngine,
       uiLocked,
       selectedId,
+      toDialogClosedState,
     };
   },
 });
