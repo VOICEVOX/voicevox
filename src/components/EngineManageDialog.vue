@@ -21,11 +21,13 @@
               icon="close"
               color="display"
               @click="toDialogClosedState"
+              :disabled="isAddingEngine"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
           <div class="col-4 engine-list-col">
+            <div v-if="isAddingEngine" class="engine-list-disable-overlay" />
             <div class="engine-list-header text-no-wrap">
               <div class="row engine-list-title text-h5">エンジン一覧</div>
               <div class="row no-wrap">
@@ -45,7 +47,6 @@
                   categorizedEngineIds
                 )"
                 :key="`engine-list-${i}`"
-                v-if="engineIds.length > 0"
               >
                 <q-separator v-if="i > 0" spaced />
                 <q-item-label header>
@@ -75,15 +76,65 @@
           </div>
 
           <!-- 右側のpane -->
-          <div v-if="selectedId" class="col-8 no-wrap text-no-wrap word-editor">
-            <div>
-              <!-- Vueのバグでdivだとエラーが出る -->
+          <div
+            v-if="isAddingEngine"
+            class="col-8 no-wrap text-no-wrap engine-detail"
+          >
+            <div class="q-pl-md q-mt-md">
+              <div class="text-h5 q-ma-sm">エンジンの追加</div>
+            </div>
+
+            <div class="no-wrap q-pl-md">
+              <div class="text-h6 q-ma-sm">場所</div>
+              <div class="q-ma-sm">
+                <q-input ref="pathInput" v-model="enginePath" dense>
+                  <template v-slot:append>
+                    <q-btn
+                      square
+                      dense
+                      flat
+                      color="primary"
+                      icon="folder_open"
+                      @click="openFileExplore"
+                    >
+                      <q-tooltip :delay="500" anchor="bottom left">
+                        フォルダ選択
+                      </q-tooltip>
+                    </q-btn>
+                  </template>
+                </q-input>
+              </div>
+            </div>
+            <div class="row q-px-md save-delete-reset-buttons">
+              <q-space />
+
+              <q-btn
+                outline
+                text-color="warning"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="toInitialState"
+                >キャンセル</q-btn
+              >
+              <q-btn
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="saveEngine"
+                >追加</q-btn
+              >
+            </div>
+          </div>
+          <div
+            v-else-if="selectedId"
+            class="col-8 no-wrap text-no-wrap engine-detail"
+          >
+            <div class="q-pl-md q-mt-md">
               <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
               </div>
             </div>
 
-            <div class="no-wrap">
+            <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
               <ul>
                 <li
@@ -97,13 +148,23 @@
                 </li>
               </ul>
             </div>
-            <div class="no-wrap">
+            <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">場所</div>
-              <div class="q-ma-sm">
-                {{ engineInfos[selectedId].path || "（組み込み）" }}
+              <div
+                :class="
+                  (engineInfos[selectedId].type === 'path' ? '' : 'disabled') +
+                  ' q-ma-sm'
+                "
+              >
+                <q-input
+                  ref="pathInput"
+                  v-model="enginePath"
+                  dense
+                  :readonly="engineInfos[selectedId].type !== 'path'"
+                />
               </div>
             </div>
-            <div class="row q-px-md save-delete-reset-buttons">
+            <div class="row q-px-md right-pane-buttons">
               <q-space />
 
               <q-btn
@@ -141,7 +202,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
+import { useQuasar, QInput } from "quasar";
 
 const engineTypeOrder = ["main", "sub", "userDir", "path"];
 export default defineComponent({
@@ -162,17 +223,23 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
+    const isAddingEngine = ref(false);
 
     const categorizedEngineIds = computed(() => {
-      const result: { [key: string]: string[] } = {};
-      for (const type of engineTypeOrder) {
-        result[type] = [];
-      }
-      for (const id of store.state.engineIds) {
-        const type = store.state.engineInfos[id].type;
-        result[type].push(id);
-      }
-      return result;
+      const result = {
+        main: Object.values(engineInfos.value)
+          .filter((info) => info.type === "main")
+          .map((info) => info.uuid),
+        sub: Object.values(engineInfos.value)
+          .filter((info) => info.type === "sub")
+          .map((info) => info.uuid),
+        plugin: Object.values(engineInfos.value)
+          .filter((info) => info.type === "userDir" || info.type === "path")
+          .map((info) => info.uuid),
+      };
+      return Object.fromEntries(
+        Object.entries(result).filter(([, ids]) => ids.length > 0)
+      );
     });
     const engineInfos = computed(() => store.state.engineInfos);
     const engineStates = computed(() => store.state.engineStates);
@@ -197,8 +264,7 @@ export default defineComponent({
       const engineTypeMap = {
         main: "メインエンジン",
         sub: "サブエンジン",
-        userDir: "追加エンジンA",
-        path: "追加エンジンB",
+        plugin: "追加エンジン",
       };
       return engineTypeMap[name as keyof typeof engineTypeMap];
     };
@@ -218,6 +284,7 @@ export default defineComponent({
 
     const newEngine = () => {
       // TODO
+      toAddEngineState();
     };
 
     const deleteEngine = () => {
@@ -236,14 +303,33 @@ export default defineComponent({
       store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
     };
 
+    const pathInput = ref<QInput>();
+    const enginePath = computed({
+      get: () => engineInfos.value[selectedId.value]?.path ?? "（組み込み）",
+      set: (val) => {
+        if (engineInfos.value[selectedId.value]) {
+          /* store.dispatch("UPDATE_ENGINE_PATH", { */
+          /*   engineId: selectedId.value, */
+          /*   path: val, */
+          /* }); */
+        }
+      },
+    });
+
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
       selectedId.value = "";
+      isAddingEngine.value = false;
+    };
+    // エンジン追加状態
+    const toAddEngineState = () => {
+      isAddingEngine.value = true;
     };
     // ダイアログが閉じている状態
     const toDialogClosedState = () => {
       engineManageDialogOpenedComputed.value = false;
+      isAddingEngine.value = false;
     };
 
     return {
@@ -259,10 +345,13 @@ export default defineComponent({
       getFeatureName,
       getEngineTypeName,
       uiLocked,
+      isAddingEngine,
       selectedId,
+      toInitialState,
       toDialogClosedState,
       openSelectedEngineDirectory,
       restartSelectedEngine,
+      enginePath,
     };
   },
 });
@@ -330,7 +419,7 @@ export default defineComponent({
   z-index: 10;
 }
 
-.word-editor {
+.engine-detail {
   display: flex;
   flex-flow: column;
   height: calc(
@@ -402,7 +491,7 @@ export default defineComponent({
   }
 }
 
-.save-delete-reset-buttons {
+.right-pane-buttons {
   padding: 20px;
 
   display: flex;
