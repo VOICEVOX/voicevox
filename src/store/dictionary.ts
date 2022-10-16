@@ -127,28 +127,10 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
     async action({ dispatch, state }) {
       const mergedDict = await dispatch("LOAD_ALL_USER_DICT");
       for (const engineId of state.engineIds) {
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-          engineId,
-        }).then((instance) =>
-          // マージした辞書をエンジンにインポートする。
-          instance.invoke("importUserDictWordsImportUserDictPost")({
-            override: true,
-            requestBody: Object.fromEntries(
-              Object.entries(mergedDict).map(([k, v]) => [
-                k,
-                UserDictWordToJSON(v),
-              ])
-            ),
-          })
-        );
-
         // エンジンの辞書のIDリストを取得する。
-        const removedDictIdSet = await dispatch(
-          "INSTANTIATE_ENGINE_CONNECTOR",
-          {
-            engineId,
-          }
-        ).then(
+        const dictIdSet = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then(
           async (instance) =>
             new Set(
               Object.keys(
@@ -156,6 +138,23 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
               )
             )
         );
+        if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
+          await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+            engineId,
+          }).then((instance) =>
+            // マージした辞書をエンジンにインポートする。
+            instance.invoke("importUserDictWordsImportUserDictPost")({
+              override: true,
+              requestBody: Object.fromEntries(
+                Object.entries(mergedDict).map(([k, v]) => [
+                  k,
+                  UserDictWordToJSON(v),
+                ])
+              ),
+            })
+          );
+        }
+        const removedDictIdSet = new Set(dictIdSet);
         // マージされた辞書にあるIDを削除する。
         // これにより、マージ処理で削除された項目のIDが残る。
         for (const id of Object.keys(mergedDict)) {
