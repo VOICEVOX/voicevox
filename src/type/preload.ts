@@ -182,7 +182,7 @@ export type EngineInfo = {
   executionFilePath: string;
   // エンジンの種類。
   // main: メインエンジン
-  // sub: .envで指定されたエンジン
+  // sub: .envで指定されたその他のエンジン
   // userDir: ユーザーディレクトリにあるエンジン
   // path: パスを指定して追加したエンジン
   type: "main" | "sub" | "userDir" | "path";
