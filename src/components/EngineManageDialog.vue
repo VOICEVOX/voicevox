@@ -458,26 +458,8 @@ export default defineComponent({
   overflow-y: auto;
 }
 
-.active-word {
+.active-engine {
   background: rgba(colors.$primary-rgb, 0.4);
-}
-
-.loading-dict {
-  background-color: rgba(colors.$display-rgb, 0.15);
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-
-  > div {
-    color: colors.$display;
-    background: colors.$background;
-    border-radius: 6px;
-    padding: 14px;
-  }
 }
 
 .engine-list-disable-overlay {
@@ -496,68 +478,6 @@ export default defineComponent({
       vars.$window-border-width}
   ) !important;
   overflow: auto;
-}
-
-.word-input {
-  padding-left: 10px;
-  width: calc(66vw - 80px);
-
-  :deep(.q-field__control) {
-    height: 2rem;
-  }
-
-  :deep(.q-placeholder) {
-    padding: 0;
-    font-size: 20px;
-  }
-
-  :deep(.q-field__after) {
-    height: 2rem;
-  }
-}
-
-.desc-row {
-  color: rgba(colors.$display-rgb, 0.5);
-  font-size: 12px;
-}
-
-.play-button {
-  margin: auto 0;
-  padding-right: 16px;
-}
-
-.accent-phrase-table {
-  flex-grow: 1;
-  align-self: stretch;
-
-  display: flex;
-  height: 130px;
-  overflow-x: scroll;
-  width: calc(66vw - 140px);
-
-  .mora-table {
-    display: inline-grid;
-    align-self: stretch;
-    grid-template-rows: 1fr 60px 30px;
-
-    .text-cell {
-      padding: 0;
-      min-width: 20px;
-      max-width: 20px;
-      grid-row-start: 3;
-      text-align: center;
-      white-space: nowrap;
-      color: colors.$display;
-      position: relative;
-    }
-
-    .splitter-cell {
-      min-width: 20px;
-      max-width: 20px;
-      grid-row: 3 / span 1;
-      z-index: vars.$detail-view-splitter-cell-z-index;
-    }
-  }
 }
 
 .right-pane-buttons {
