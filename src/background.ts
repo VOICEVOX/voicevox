@@ -869,6 +869,7 @@ function migrateHotkeySettings() {
 migrateHotkeySettings();
 
 let willQuit = false;
+let willRestart = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -1262,11 +1263,8 @@ ipcMainHandle("VALIDATE_ENGINE_PATH", (_, { enginePath }) => {
 });
 
 ipcMainHandle("RESTART_APP", async () => {
-  await Promise.all(Object.values(killEngineAll()));
-
-  win.reload();
-
-  await runEngineAll();
+  willRestart = true;
+  win.close();
 });
 
 // app callback
@@ -1299,8 +1297,25 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
+  const restartApp = async () => {
+    willRestart = false;
+    willQuit = false;
+    await createWindow();
+    await runEngineAll();
+  };
+
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
+    if (willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "All ENGINE processes killed. Now restarting app because of willRestart flag"
+      );
+
+      event.preventDefault();
+      restartApp();
+      return;
+    }
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1337,11 +1352,20 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
-    // アプリケーションの終了を再試行する
+    if (!willRestart) {
+      // アプリケーションの終了を再試行する
+      log.info(
+        "All ENGINE process kill operations done. Attempting to quit app again"
+      );
+      app.quit();
+      return;
+    }
+
+    // 再起動フラグが立っている場合はフラグを戻して再起動する
     log.info(
-      "All ENGINE process kill operations done. Attempting to quit app again"
+      "All ENGINE process kill operations done. Attempting to restart app"
     );
-    app.quit();
+    restartApp();
   })();
 });
 
