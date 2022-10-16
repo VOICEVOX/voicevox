@@ -252,6 +252,11 @@ export type IpcIHData = {
     args: [obj: { enginePath: string }];
     return: EnginePathValidationResult;
   };
+
+  RESTART_APP: {
+    args: [];
+    return: void;
+  };
 };
 
 /**

@@ -347,6 +347,24 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       return window.electron.validateEnginePath(enginePath);
     },
   },
+  ADD_ENGINE_PATH: {
+    action: async (_, { enginePath }) => {
+      const enginePaths = await window.electron.getSetting("enginePaths");
+      await window.electron.setSetting("enginePaths", [
+        ...enginePaths,
+        enginePath,
+      ]);
+    },
+  },
+  REMOVE_ENGINE_PATH: {
+    action: async (_, { enginePath }) => {
+      const enginePaths = await window.electron.getSetting("enginePaths");
+      await window.electron.setSetting(
+        "enginePaths",
+        enginePaths.filter((path) => path !== enginePath)
+      );
+    },
+  },
 });
 
 export const setHotkeyFunctions = (

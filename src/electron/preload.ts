@@ -252,6 +252,10 @@ const api: Sandbox = {
   validateEnginePath: async (enginePath) => {
     return await ipcRendererInvoke("VALIDATE_ENGINE_PATH", { enginePath });
   },
+
+  restartApp: () => {
+    ipcRendererInvoke("RESTART_APP");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

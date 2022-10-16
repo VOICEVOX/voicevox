@@ -559,4 +559,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       window.electron.closeWindow();
     },
   },
+
+  RESTART_APP: {
+    action() {
+      window.electron.restartApp();
+    },
+  },
 });

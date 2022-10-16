@@ -910,6 +910,14 @@ export type SettingStoreTypes = {
       enginePath: string;
     }): Promise<EnginePathValidationResult>;
   };
+
+  ADD_ENGINE_PATH: {
+    action(payload: { enginePath: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_PATH: {
+    action(payload: { enginePath: string }): Promise<void>;
+  };
 };
 
 /*
@@ -1099,6 +1107,10 @@ export type UiStoreTypes = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
+  };
+
+  RESTART_APP: {
+    action(): void;
   };
 };
 

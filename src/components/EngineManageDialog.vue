@@ -261,13 +261,6 @@ export default defineComponent({
       );
     });
 
-    const createUILockAction = function <T>(action: Promise<T>) {
-      uiLocked.value = true;
-      return action.finally(() => {
-        uiLocked.value = false;
-      });
-    };
-
     const getEngineTypeName = (name: string) => {
       const engineTypeMap = {
         main: "メインエンジン",
@@ -302,34 +295,37 @@ export default defineComponent({
     };
 
     const saveEngine = () => {
-      // TODO
+      store.dispatch("ADD_ENGINE_PATH", {
+        enginePath: newEnginePath.value,
+      });
 
+      requireReload("エンジンを追加しました。");
+    };
+    const deleteEngine = () => {
       $q.dialog({
-        title: "再起動が必要です",
-        message:
-          "新しいエンジンを保存しました。反映には再起動が必要です。今すぐ再起動しますか？",
+        title: "確認",
+        message: "選択中のエンジンを削除します。よろしいですか？",
         cancel: {
-          label: "後で",
+          label: "キャンセル",
           color: "display",
           flat: true,
         },
 
         ok: {
-          label: "再起動",
+          label: "削除",
           flat: true,
           textColor: "warning",
         },
-      })
-        .onOk(() => {
-          // TODO
-        })
-        .onCancel(() => {
-          // TODO
-          toInitialState();
+      }).onOk(() => {
+        const enginePath = store.state.engineInfos[selectedId.value].path;
+        if (!enginePath)
+          throw new Error("assert engineInfos[selectedId.value].path");
+        store.dispatch("REMOVE_ENGINE_PATH", {
+          enginePath,
         });
-    };
-    const deleteEngine = () => {
-      // TODO
+
+        requireReload("エンジンを削除しました。");
+      });
     };
 
     const selectEngine = (id: string) => {
@@ -342,6 +338,31 @@ export default defineComponent({
 
     const restartSelectedEngine = () => {
       store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
+    };
+
+    const requireReload = (message: string) => {
+      $q.dialog({
+        title: "リロードが必要です",
+        message:
+          message + "反映にはリロードが必要です。今すぐリロードしますか？",
+        cancel: {
+          label: "後で",
+          color: "display",
+          flat: true,
+        },
+
+        ok: {
+          label: "リロード",
+          flat: true,
+          textColor: "warning",
+        },
+      })
+        .onOk(() => {
+          store.dispatch("RESTART_APP");
+        })
+        .onCancel(() => {
+          toInitialState();
+        });
     };
 
     const pathInput = ref<QInput>();

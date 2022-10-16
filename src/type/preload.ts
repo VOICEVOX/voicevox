@@ -18,6 +18,7 @@ export interface ElectronStoreType {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  enginePaths: string[];
 }
 
 export interface Sandbox {
@@ -97,6 +98,7 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   validateEnginePath(enginePath: string): Promise<EnginePathValidationResult>;
+  restartApp(): void;
 }
 
 export type AppInfos = {

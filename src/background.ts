@@ -130,8 +130,8 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
 
-// ユーザーディレクトリにあるエンジンを取得する
-function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
+// 追加エンジンの一覧を取得する
+function fetchAdditionalEngineInfos(): EngineInfo[] {
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
@@ -164,11 +164,35 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       type: "userDir",
     });
   }
+  for (const engineDir of store.get("enginePaths")) {
+    if (!fs.existsSync(engineDir)) {
+      console.log(`${engineDir} is not found`);
+      store.set(
+        "enginePaths",
+        store.get("enginePaths").filter((p) => p !== engineDir)
+      );
+      continue;
+    }
+    const manifestPath = path.join(engineDir, "engine_manifest.json");
+    const manifest: EngineManifest = JSON.parse(
+      fs.readFileSync(manifestPath, { encoding: "utf8" })
+    );
+
+    engines.push({
+      uuid: manifest.uuid,
+      host: `http://127.0.0.1:${manifest.port}`,
+      name: manifest.name,
+      path: engineDir,
+      executionEnabled: true,
+      executionFilePath: path.join(engineDir, manifest.command),
+      type: "path",
+    });
+  }
   return engines;
 }
 
 function fetchEngineInfos(): EngineInfo[] {
-  const userEngineInfos = fetchEngineInfosFromUserDirectory();
+  const userEngineInfos = fetchAdditionalEngineInfos();
   return [...defaultEngineInfos, ...userEngineInfos];
 }
 
@@ -442,6 +466,13 @@ const store = new Store<ElectronStoreType>({
       default: {
         tweakableSliderByScroll: false,
       },
+    },
+    enginePaths: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: [],
     },
   },
   migrations: {
@@ -729,7 +760,7 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
-// パスがエンジンとして正しいかどうかを判定する
+// ディレクトリがエンジンとして正しいかどうかを判定する
 function validateEnginePath(enginePath: string): EnginePathValidationResult {
   if (!fs.existsSync(enginePath)) {
     return "directoryNotFound";
@@ -1228,6 +1259,14 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
 
 ipcMainHandle("VALIDATE_ENGINE_PATH", (_, { enginePath }) => {
   return validateEnginePath(enginePath);
+});
+
+ipcMainHandle("RESTART_APP", async () => {
+  await Promise.all(Object.values(killEngineAll()));
+
+  win.reload();
+
+  await runEngineAll();
 });
 
 // app callback
