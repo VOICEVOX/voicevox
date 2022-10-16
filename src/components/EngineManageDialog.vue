@@ -54,7 +54,9 @@
                   <q-item-label class="text-display">{{
                     info.name
                   }}</q-item-label>
-                  <q-item-label caption>{{ info.path }}</q-item-label>
+                  <q-item-label caption v-if="info.path">{{
+                    info.path
+                  }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -82,6 +84,12 @@
                   {{ getFeatureName(feature) }}：{{ value ? "対応" : "未対応" }}
                 </li>
               </ul>
+            </div>
+            <div class="no-wrap">
+              <div class="text-h6 q-ma-sm">場所</div>
+              <div class="q-ma-sm">
+                {{ engineInfos[selectedId].path || "（組み込み）" }}
+              </div>
             </div>
             <div class="row q-px-md save-delete-reset-buttons">
               <q-space />
