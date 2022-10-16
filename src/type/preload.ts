@@ -96,6 +96,7 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  validateEnginePath(enginePath: string): Promise<EnginePathValidationResult>;
 }
 
 export type AppInfos = {
@@ -313,3 +314,10 @@ export type WriteFileErrorResult = {
   code: string | undefined;
   message: string;
 };
+
+export type EnginePathValidationResult =
+  | "ok"
+  | "directoryNotFound"
+  | "manifestNotFound"
+  | "invalidManifest"
+  | "notADirectory";

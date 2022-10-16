@@ -30,6 +30,7 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
+  EnginePathValidationResult,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -728,6 +729,27 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
+// パスがエンジンとして正しいかどうかを判定する
+function validateEnginePath(enginePath: string): EnginePathValidationResult {
+  if (!fs.existsSync(enginePath)) {
+    return "directoryNotFound";
+  } else if (!fs.statSync(enginePath).isDirectory()) {
+    return "notADirectory";
+  } else if (!fs.existsSync(path.join(enginePath, "engine_manifest.json"))) {
+    return "manifestNotFound";
+  }
+  const manifest = fs.readFileSync(
+    path.join(enginePath, "engine_manifest.json"),
+    "utf-8"
+  );
+  try {
+    JSON.parse(manifest);
+  } catch (e) {
+    return "invalidManifest";
+  }
+  return "ok";
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -1202,6 +1224,10 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   store.set(key, newValue);
   return store.get(key);
+});
+
+ipcMainHandle("VALIDATE_ENGINE_PATH", (_, { enginePath }) => {
+  return validateEnginePath(enginePath);
 });
 
 // app callback

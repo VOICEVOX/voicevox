@@ -35,7 +35,7 @@
                   outline
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="newEngine"
+                  @click="toAddEngineState"
                   :disable="uiLocked"
                   >追加</q-btn
                 >
@@ -87,7 +87,7 @@
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">場所</div>
               <div class="q-ma-sm">
-                <q-input ref="pathInput" v-model="enginePath" dense>
+                <q-input ref="newEnginePathInput" v-model="newEnginePath" dense>
                   <template v-slot:append>
                     <q-btn
                       square
@@ -103,9 +103,16 @@
                     </q-btn>
                   </template>
                 </q-input>
+                <div
+                  :class="
+                    newEnginePathValidationState === 'ok' ? '' : 'text-warning'
+                  "
+                >
+                  {{ getValidationMessage(newEnginePathValidationState) }}
+                </div>
               </div>
             </div>
-            <div class="row q-px-md save-delete-reset-buttons">
+            <div class="row q-px-md right-pane-buttons">
               <q-space />
 
               <q-btn
@@ -120,6 +127,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="saveEngine"
+                :disabled="newEnginePathValidationState !== 'ok'"
                 >追加</q-btn
               >
             </div>
@@ -144,7 +152,7 @@
                   :key="feature"
                   :class="value ? '' : 'text-warning'"
                 >
-                  {{ getFeatureName(feature) }}：{{ value ? "対応" : "未対応" }}
+                  {{ getFeatureName(feature) }}：{{ value ? "対応" : "非対応" }}
                 </li>
               </ul>
             </div>
@@ -203,8 +211,8 @@
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar, QInput } from "quasar";
+import type { EnginePathValidationResult } from "@/type/preload";
 
-const engineTypeOrder = ["main", "sub", "userDir", "path"];
 export default defineComponent({
   name: "EngineManageDialog",
   props: {
@@ -282,11 +290,44 @@ export default defineComponent({
       return featureNameMap[name as keyof typeof featureNameMap];
     };
 
-    const newEngine = () => {
-      // TODO
-      toAddEngineState();
+    const getValidationMessage = (result: EnginePathValidationResult) => {
+      const messageMap = {
+        directoryNotFound: "フォルダが見つかりませんでした。",
+        notADirectory: "フォルダではありません。",
+        manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
+        invalidManifest: "engine_manifest.jsonの内容が不正です。",
+        ok: "問題は検出されませんでした。",
+      };
+      return messageMap[result as keyof typeof messageMap];
     };
 
+    const saveEngine = () => {
+      // TODO
+
+      $q.dialog({
+        title: "再起動が必要です",
+        message:
+          "新しいエンジンを保存しました。反映には再起動が必要です。今すぐ再起動しますか？",
+        cancel: {
+          label: "後で",
+          color: "display",
+          flat: true,
+        },
+
+        ok: {
+          label: "再起動",
+          flat: true,
+          textColor: "warning",
+        },
+      })
+        .onOk(() => {
+          // TODO
+        })
+        .onCancel(() => {
+          // TODO
+          toInitialState();
+        });
+    };
     const deleteEngine = () => {
       // TODO
     };
@@ -316,6 +357,26 @@ export default defineComponent({
       },
     });
 
+    const newEnginePath = ref("");
+    const newEnginePathValidationState =
+      ref<EnginePathValidationResult | null>(null);
+    const openFileExplore = async () => {
+      const path = await window.electron.showOpenDirectoryDialog({
+        title: "エンジンのフォルダを選択",
+      });
+      if (path) {
+        newEnginePath.value = path;
+      }
+    };
+    watch(newEnginePath, async () => {
+      newEnginePathValidationState.value = await store.dispatch(
+        "VALIDATE_ENGINE_PATH",
+        {
+          enginePath: newEnginePath.value,
+        }
+      );
+    });
+
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
@@ -325,6 +386,8 @@ export default defineComponent({
     // エンジン追加状態
     const toAddEngineState = () => {
       isAddingEngine.value = true;
+      newEnginePathValidationState.value = null;
+      newEnginePath.value = "";
     };
     // ダイアログが閉じている状態
     const toDialogClosedState = () => {
@@ -338,20 +401,26 @@ export default defineComponent({
       engineInfos,
       engineStates,
       engineManifests,
-      newEngine,
       selectEngine,
+      saveEngine,
       deleteEngine,
       isDeletable,
       getFeatureName,
       getEngineTypeName,
+      getValidationMessage,
       uiLocked,
       isAddingEngine,
       selectedId,
       toInitialState,
+      toAddEngineState,
       toDialogClosedState,
       openSelectedEngineDirectory,
       restartSelectedEngine,
       enginePath,
+      newEnginePath,
+      pathInput,
+      openFileExplore,
+      newEnginePathValidationState,
     };
   },
 });

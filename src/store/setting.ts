@@ -342,6 +342,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
     }),
   },
+  VALIDATE_ENGINE_PATH: {
+    action: async (_, { enginePath }) => {
+      return window.electron.validateEnginePath(enginePath);
+    },
+  },
 });
 
 export const setHotkeyFunctions = (

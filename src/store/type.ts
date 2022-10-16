@@ -34,6 +34,7 @@ import {
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
+  EnginePathValidationResult,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -902,6 +903,12 @@ export type SettingStoreTypes = {
 
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
+  };
+
+  VALIDATE_ENGINE_PATH: {
+    action(payload: {
+      enginePath: string;
+    }): Promise<EnginePathValidationResult>;
   };
 };
 
