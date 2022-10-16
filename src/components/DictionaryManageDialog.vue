@@ -362,8 +362,10 @@ export default defineComponent({
         .styleId;
     });
     const engineIdComputed = computed(() => {
-      if (store.state.engineIds.length === 0) throw new Error("assert engineId.length > 0");
-      if (!store.getters.USER_ORDERED_CHARACTER_INFOS) throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
+      if (store.state.engineIds.length === 0)
+        throw new Error("assert engineId.length > 0");
+      if (!store.getters.USER_ORDERED_CHARACTER_INFOS)
+        throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
       return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
         .engineId;
     });
