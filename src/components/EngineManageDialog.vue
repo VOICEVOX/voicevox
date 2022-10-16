@@ -40,25 +40,37 @@
               </div>
             </div>
             <q-list class="engine-list">
-              <q-item
-                v-for="info in engineInfos"
-                :key="info.uuid"
-                tag="label"
-                v-ripple
-                clickable
-                @click="selectEngine(info.uuid)"
-                :active="selectedId === info.uuid"
-                active-class="active-engine"
+              <template
+                v-for="([type, engineIds], i) in Object.entries(
+                  categorizedEngineIds
+                )"
+                :key="`engine-list-${i}`"
+                v-if="engineIds.length > 0"
               >
-                <q-item-section>
-                  <q-item-label class="text-display">{{
-                    info.name
-                  }}</q-item-label>
-                  <q-item-label caption v-if="info.path">{{
-                    info.path
-                  }}</q-item-label>
-                </q-item-section>
-              </q-item>
+                <q-separator v-if="i > 0" spaced />
+                <q-item-label header>
+                  {{ getEngineTypeName(type) }}</q-item-label
+                >
+                <q-item
+                  v-for="id in engineIds"
+                  :key="id"
+                  tag="label"
+                  v-ripple
+                  clickable
+                  @click="selectEngine(id)"
+                  :active="selectedId === id"
+                  active-class="active-engine"
+                >
+                  <q-item-section>
+                    <q-item-label class="text-display">{{
+                      engineInfos[id].name
+                    }}</q-item-label>
+                    <q-item-label caption v-if="engineInfos[id].path">{{
+                      engineInfos[id].path
+                    }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
             </q-list>
           </div>
 
@@ -130,6 +142,8 @@
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+
+const engineTypeOrder = ["main", "sub", "userDir", "path"];
 export default defineComponent({
   name: "EngineManageDialog",
   props: {
@@ -149,6 +163,17 @@ export default defineComponent({
     });
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 
+    const categorizedEngineIds = computed(() => {
+      const result: { [key: string]: string[] } = {};
+      for (const type of engineTypeOrder) {
+        result[type] = [];
+      }
+      for (const id of store.state.engineIds) {
+        const type = store.state.engineInfos[id].type;
+        result[type].push(id);
+      }
+      return result;
+    });
     const engineInfos = computed(() => store.state.engineInfos);
     const engineStates = computed(() => store.state.engineStates);
     const engineManifests = computed(() => store.state.engineManifests);
@@ -166,6 +191,16 @@ export default defineComponent({
       return action.finally(() => {
         uiLocked.value = false;
       });
+    };
+
+    const getEngineTypeName = (name: string) => {
+      const engineTypeMap = {
+        main: "メインエンジン",
+        sub: "サブエンジン",
+        userDir: "追加エンジンA",
+        path: "追加エンジンB",
+      };
+      return engineTypeMap[name as keyof typeof engineTypeMap];
     };
 
     const getFeatureName = (name: string) => {
@@ -213,6 +248,7 @@ export default defineComponent({
 
     return {
       engineManageDialogOpenedComputed,
+      categorizedEngineIds,
       engineInfos,
       engineStates,
       engineManifests,
@@ -221,6 +257,7 @@ export default defineComponent({
       deleteEngine,
       isDeletable,
       getFeatureName,
+      getEngineTypeName,
       uiLocked,
       selectedId,
       toDialogClosedState,
