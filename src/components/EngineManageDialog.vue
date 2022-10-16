@@ -160,15 +160,15 @@
               <div class="text-h6 q-ma-sm">場所</div>
               <div
                 :class="
-                  (engineInfos[selectedId].type === 'path' ? '' : 'disabled') +
-                  ' q-ma-sm'
+                  'q-ma-sm' + (engineInfos[selectedId].path ? '' : ' disabled')
                 "
               >
                 <q-input
                   ref="pathInput"
                   v-model="enginePath"
+                  disabled
                   dense
-                  :readonly="engineInfos[selectedId].type !== 'path'"
+                  readonly
                 />
               </div>
             </div>
@@ -210,7 +210,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { useQuasar, QInput } from "quasar";
+import { useQuasar } from "quasar";
 import type { EnginePathValidationResult } from "@/type/preload";
 
 export default defineComponent({
@@ -259,6 +259,9 @@ export default defineComponent({
         engineInfos.value[selectedId.value] &&
         engineInfos.value[selectedId.value].type === "path"
       );
+    });
+    const enginePath = computed(() => {
+      return engineInfos.value[selectedId.value]?.path || "（組み込み）";
     });
 
     const getEngineTypeName = (name: string) => {
@@ -365,19 +368,6 @@ export default defineComponent({
         });
     };
 
-    const pathInput = ref<QInput>();
-    const enginePath = computed({
-      get: () => engineInfos.value[selectedId.value]?.path ?? "（組み込み）",
-      set: (val) => {
-        if (engineInfos.value[selectedId.value]) {
-          /* store.dispatch("UPDATE_ENGINE_PATH", { */
-          /*   engineId: selectedId.value, */
-          /*   path: val, */
-          /* }); */
-        }
-      },
-    });
-
     const newEnginePath = ref("");
     const newEnginePathValidationState =
       ref<EnginePathValidationResult | null>(null);
@@ -439,7 +429,6 @@ export default defineComponent({
       restartSelectedEngine,
       enginePath,
       newEnginePath,
-      pathInput,
       openFileExplore,
       newEnginePathValidationState,
     };
