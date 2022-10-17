@@ -286,16 +286,20 @@ export default defineComponent({
     );
     const engineVersions = ref<Record<string, string>>({});
 
-    (async () => {
-      for (const id of store.state.engineIds) {
-        if (engineVersions.value[id]) return;
-        const version = await store
-          .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
-          .then((instance) => instance.invoke("versionVersionGet")({}));
-        // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
-        engineVersions.value[id] = JSON.parse(version);
-      }
-    })();
+    watch(
+      [engineInfos],
+      async () => {
+        for (const id of Object.keys(engineInfos.value)) {
+          if (engineVersions.value[id]) return;
+          const version = await store
+            .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
+            .then((instance) => instance.invoke("versionVersionGet")({}));
+          // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
+          engineVersions.value[id] = JSON.parse(version);
+        }
+      },
+      { immediate: true }
+    );
 
     const selectedId = ref("");
     const isDeletable = computed(() => {
