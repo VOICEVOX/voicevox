@@ -153,6 +153,19 @@
             </div>
 
             <div class="no-wrap q-pl-md">
+              <ul>
+                <li>バージョン：{{ engineVersions[selectedId] }}</li>
+                <li>
+                  URL：<a
+                    :href="engineManifests[selectedId].url"
+                    class="text-display-hyperlink"
+                    target="_blank"
+                    >{{ engineManifests[selectedId].url }}</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
               <ul>
                 <li
@@ -271,6 +284,18 @@ export default defineComponent({
         ])
       )
     );
+    const engineVersions = ref<Record<string, string>>({});
+
+    (async () => {
+      for (const id of store.state.engineIds) {
+        if (engineVersions.value[id]) return;
+        const version = await store
+          .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
+          .then((instance) => instance.invoke("versionVersionGet")({}));
+        // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
+        engineVersions.value[id] = JSON.parse(version);
+      }
+    })();
 
     const selectedId = ref("");
     const isDeletable = computed(() => {
@@ -432,6 +457,7 @@ export default defineComponent({
       engineStates,
       engineManifests,
       engineIcons,
+      engineVersions,
       selectEngine,
       saveEngine,
       deleteEngine,
@@ -522,6 +548,6 @@ export default defineComponent({
   height: 2rem;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  border-radius: 2px;
+  border-radius: 5px;
 }
 </style>
