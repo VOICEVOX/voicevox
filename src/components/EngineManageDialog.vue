@@ -92,7 +92,15 @@
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">場所</div>
               <div class="q-ma-sm">
-                <q-input ref="newEnginePathInput" v-model="newEnginePath" dense>
+                <q-input
+                  ref="newEnginePathInput"
+                  v-model="newEnginePath"
+                  dense
+                  :error="
+                    newEnginePathValidationState &&
+                    newEnginePathValidationState !== 'ok'
+                  "
+                >
                   <template v-slot:append>
                     <q-btn
                       square
@@ -107,14 +115,10 @@
                       </q-tooltip>
                     </q-btn>
                   </template>
+                  <template v-slot:error>
+                    {{ getValidationMessage(newEnginePathValidationState) }}
+                  </template>
                 </q-input>
-                <div
-                  :class="
-                    newEnginePathValidationState === 'ok' ? '' : 'text-warning'
-                  "
-                >
-                  {{ getValidationMessage(newEnginePathValidationState) }}
-                </div>
               </div>
             </div>
             <div class="row q-px-md right-pane-buttons">
@@ -428,6 +432,10 @@ export default defineComponent({
       }
     };
     watch(newEnginePath, async () => {
+      if (newEnginePath.value === "") {
+        newEnginePathValidationState.value = null;
+        return;
+      }
       newEnginePathValidationState.value = await store.dispatch(
         "VALIDATE_ENGINE_PATH",
         {
