@@ -168,7 +168,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     if (!fs.existsSync(engineDir)) {
       dialog.showErrorBox(
         "エンジンが見つかりませんでした",
-        `${engineDir}が見つかりませんでした。このエンジンの登録は解除されます。`,
+        `${engineDir}が見つかりませんでした。このエンジンの登録は解除されます。`
       );
       store.set(
         "enginePaths",
