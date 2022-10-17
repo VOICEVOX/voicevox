@@ -1,5 +1,4 @@
-import { SingingStoreState, SingingStoreTypes, Score } from "./type";
-import { useStore } from "@/store";
+import { SingingStoreState, SingingStoreTypes } from "./type";
 import { createPartialStore } from "./vuex";
 
 export const singingStoreState: SingingStoreState = {

@@ -6,20 +6,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
-import { useStore } from "@/store";
-import { useQuasar } from "quasar";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
+import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "SingScoreSequencer",
 
   setup() {
-    const store = useStore();
-    const $q = useQuasar();
-    // const pitches = [...Array(128).keys()].reverse();
-    // return { pitches };
     return null;
   },
 });

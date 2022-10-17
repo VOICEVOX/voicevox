@@ -26,18 +26,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef } from "vue";
+import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { useQuasar } from "quasar";
-import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
-import { setHotkeyFunctions } from "@/store/setting";
 
 export default defineComponent({
   name: "SingToolBar",
 
   setup() {
     const store = useStore();
-    const $q = useQuasar();
     const isShowSinger = computed(() => store.state.isShowSinger);
     const toggleShowSinger = () => {
       store.dispatch("SET_SHOW_SINGER", {

@@ -15,13 +15,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
+import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
-import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 
 type SingMenuItemBase<T extends string> = {
   type: T;
@@ -63,7 +61,6 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const $q = useQuasar();
     const currentVersion = ref("");
     window.electron.getAppInfos().then((obj) => {
       currentVersion.value = obj.version;
