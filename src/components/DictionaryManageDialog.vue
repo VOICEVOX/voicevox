@@ -177,7 +177,7 @@
             </div>
             <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
-              単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
+              単語を登録しても反映されないと感じた場合、優先度を上げてみてください。
             </div>
             <div
               class="row q-px-md"
