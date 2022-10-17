@@ -62,6 +62,11 @@
                   :active="selectedId === id"
                   active-class="active-engine"
                 >
+                  <q-item-section avatar>
+                    <q-avatar rounded>
+                      <img :src="engineIcons[id]" :alt="engineInfos[id].name" />
+                    </q-avatar>
+                  </q-item-section>
                   <q-item-section>
                     <q-item-label class="text-display">{{
                       engineInfos[id].name
@@ -136,7 +141,12 @@
             v-else-if="selectedId"
             class="col-8 no-wrap text-no-wrap engine-detail"
           >
-            <div class="q-pl-md q-mt-md">
+            <div class="q-pl-md q-mt-md flex">
+              <img
+                :src="engineIcons[selectedId]"
+                :alt="engineInfos[selectedId].name"
+                class="engine-icon"
+              />
               <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
               </div>
@@ -211,6 +221,7 @@
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { base64ImageToUri } from "@/helpers/imageHelper";
 import type { EnginePathValidationResult } from "@/type/preload";
 
 export default defineComponent({
@@ -252,6 +263,14 @@ export default defineComponent({
     const engineInfos = computed(() => store.state.engineInfos);
     const engineStates = computed(() => store.state.engineStates);
     const engineManifests = computed(() => store.state.engineManifests);
+    const engineIcons = computed(() =>
+      Object.fromEntries(
+        Object.entries(store.state.engineManifests).map(([id, manifest]) => [
+          id,
+          base64ImageToUri(manifest.icon),
+        ])
+      )
+    );
 
     const selectedId = ref("");
     const isDeletable = computed(() => {
@@ -412,6 +431,7 @@ export default defineComponent({
       engineInfos,
       engineStates,
       engineManifests,
+      engineIcons,
       selectEngine,
       saveEngine,
       deleteEngine,
@@ -496,5 +516,12 @@ export default defineComponent({
   display: flex;
   flex: 1;
   align-items: flex-end;
+}
+
+.engine-icon {
+  height: 2rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 2px;
 }
 </style>
