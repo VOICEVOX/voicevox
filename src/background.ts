@@ -1352,20 +1352,19 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
-    if (!willRestart) {
-      // アプリケーションの終了を再試行する
+    if (willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
       log.info(
-        "All ENGINE process kill operations done. Attempting to quit app again"
+        "All ENGINE process kill operations done. Attempting to restart app"
       );
-      app.quit();
-      return;
+      restartApp();
     }
-
-    // 再起動フラグが立っている場合はフラグを戻して再起動する
+    // アプリケーションの終了を再試行する
     log.info(
-      "All ENGINE process kill operations done. Attempting to restart app"
+      "All ENGINE process kill operations done. Attempting to quit app again"
     );
-    restartApp();
+    app.quit();
+    return;
   })();
 });
 
