@@ -166,7 +166,10 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
   }
   for (const engineDir of store.get("enginePaths")) {
     if (!fs.existsSync(engineDir)) {
-      console.log(`${engineDir} is not found`);
+      dialog.showErrorBox(
+        "エンジンが見つかりませんでした",
+        `${engineDir}が見つかりませんでした。このエンジンの登録は解除されます。`
+      );
       store.set(
         "enginePaths",
         store.get("enginePaths").filter((p) => p !== engineDir)
