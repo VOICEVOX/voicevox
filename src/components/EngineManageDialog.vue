@@ -340,12 +340,14 @@ export default defineComponent({
     };
 
     const getValidationMessage = (result: EngineDirValidationResult) => {
-      const messageMap: { [key in EngineDirValidationResult]: string } = {
+      const messageMap: {
+        [key in EngineDirValidationResult]: string | undefined;
+      } = {
         directoryNotFound: "フォルダが見つかりませんでした。",
         notADirectory: "フォルダではありません。",
         manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
         invalidManifest: "engine_manifest.jsonの内容が不正です。",
-        ok: "// TypeScriptのエラー回避用、実際は表示されません。",
+        ok: undefined,
       };
       return messageMap[result];
     };
