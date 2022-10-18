@@ -611,7 +611,7 @@ export default defineComponent({
         }),
     });
 
-    // 読み方＆アクセント辞書
+    // エンジン管理
     const isEngineManageDialogOpenComputed = computed({
       get: () => store.state.isEngineManageDialogOpen,
       set: (val) =>
