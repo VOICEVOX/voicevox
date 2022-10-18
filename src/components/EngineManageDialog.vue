@@ -135,7 +135,7 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="saveEngine"
+                @click="addEngine"
                 :disabled="newEnginePathValidationState !== 'ok'"
                 >追加</q-btn
               >
@@ -350,7 +350,7 @@ export default defineComponent({
       return messageMap[result];
     };
 
-    const saveEngine = () => {
+    const addEngine = () => {
       store.dispatch("ADD_ENGINE_PATH", {
         enginePath: newEnginePath.value,
       });
@@ -470,7 +470,7 @@ export default defineComponent({
       engineIcons,
       engineVersions,
       selectEngine,
-      saveEngine,
+      addEngine,
       deleteEngine,
       isDeletable,
       getFeatureName,
