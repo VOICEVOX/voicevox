@@ -108,7 +108,7 @@
                       flat
                       color="primary"
                       icon="folder_open"
-                      @click="openFileExplore"
+                      @click="selectEngineDir"
                     >
                       <q-tooltip :delay="500" anchor="bottom left">
                         フォルダ選択
@@ -422,7 +422,7 @@ export default defineComponent({
     const newEnginePath = ref("");
     const newEnginePathValidationState =
       ref<EnginePathValidationResult | null>(null);
-    const openFileExplore = async () => {
+    const selectEngineDir = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
         title: "エンジンのフォルダを選択",
       });
@@ -486,7 +486,7 @@ export default defineComponent({
       restartSelectedEngine,
       enginePath,
       newEnginePath,
-      openFileExplore,
+      selectEngineDir,
       newEnginePathValidationState,
     };
   },
