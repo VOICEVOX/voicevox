@@ -708,6 +708,20 @@ export type SingingStoreTypes = {
     mutation: { isShowSinger: boolean };
     action(payload: { isShowSinger: boolean }): void;
   };
+
+  SET_SINGER: {
+    mutation: { engineId: string; styleId: number };
+    action(payload: { engineId?: string; styleId?: number }): void;
+  };
+
+  GET_DEFAULT_SCORE: {
+    action(): Promise<Score>;
+  };
+
+  SET_SCORE: {
+    mutation: { score: Score };
+    action(payload: { score: Score }): void;
+  };
 };
 
 /*
