@@ -240,6 +240,7 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import type { EnginePathValidationResult } from "@/type/preload";
+import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 export default defineComponent({
   name: "EngineManageDialog",
@@ -325,8 +326,8 @@ export default defineComponent({
       return engineTypeMap[name as keyof typeof engineTypeMap];
     };
 
-    const getFeatureName = (name: string) => {
-      const featureNameMap = {
+    const getFeatureName = (name: keyof SupportedFeatures) => {
+      const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
         adjustMoraPitch: "モーラごとの音高の調整",
         adjustPhonemeLength: "音素ごとの長さの調整",
         adjustSpeedScale: "全体の話速の調整",
@@ -335,18 +336,18 @@ export default defineComponent({
         adjustVolumeScale: "全体の音量の調整",
         interrogativeUpspeak: "疑問文の自動調整",
       };
-      return featureNameMap[name as keyof typeof featureNameMap];
+      return featureNameMap[name];
     };
 
     const getValidationMessage = (result: EnginePathValidationResult) => {
-      const messageMap = {
+      const messageMap: { [key in EnginePathValidationResult]: string } = {
         directoryNotFound: "フォルダが見つかりませんでした。",
         notADirectory: "フォルダではありません。",
         manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
         invalidManifest: "engine_manifest.jsonの内容が不正です。",
-        ok: "問題は検出されませんでした。",
+        ok: "// TypeScriptのエラー回避用、実際は表示されません。",
       };
-      return messageMap[result as keyof typeof messageMap];
+      return messageMap[result];
     };
 
     const saveEngine = () => {
