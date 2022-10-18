@@ -177,7 +177,7 @@
             </div>
             <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
             <div class="row q-pl-md desc-row">
-              単語を登録しても反映されないと感じた場合、優先度の数値を上げてみてください。
+              単語を登録しても反映されないと感じた場合、優先度を上げてみてください。
             </div>
             <div
               class="row q-px-md"
@@ -189,11 +189,12 @@
                 v-model="wordPriority"
                 snap
                 dense
-                marker-labels
                 color="primary-light"
+                markers
                 :min="0"
                 :max="10"
                 :step="1"
+                :marker-labels="wordPriorityLabels"
                 :style="{
                   width: '80%',
                 }"
@@ -507,6 +508,13 @@ export default defineComponent({
     };
 
     const wordPriority = ref(defaultDictPriority);
+    const wordPriorityLabels = {
+      0: "最低",
+      3: "低",
+      5: "標準",
+      7: "高",
+      10: "最高",
+    };
 
     // 操作（ステートの移動）
     const isWordChanged = computed(() => {
@@ -734,6 +742,7 @@ export default defineComponent({
       isWordChanged,
       isDeletable,
       wordPriority,
+      wordPriorityLabels,
       saveWord,
       deleteWord,
       resetWord,
