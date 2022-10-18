@@ -137,59 +137,57 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
   }
 
   const engines: EngineInfo[] = [];
+  const addEngine = (engineDir: string, type: "userDir" | "path") => {
+    const manifestPath = path.join(engineDir, "engine_manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      return "manifestNotFound";
+    }
+    let manifest: EngineManifest;
+    try {
+      manifest = JSON.parse(
+        fs.readFileSync(manifestPath, { encoding: "utf8" })
+      );
+    } catch (e) {
+      return "manifestParseError";
+    }
+
+    engines.push({
+      uuid: manifest.uuid,
+      host: `http://127.0.0.1:${manifest.port}`,
+      name: manifest.name,
+      path: engineDir,
+      executionEnabled: true,
+      executionFilePath: path.join(engineDir, manifest.command),
+      type,
+    });
+    return "ok";
+  };
   for (const dirName of fs.readdirSync(userEngineDir)) {
     const engineDir = path.join(userEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
       console.log(`${engineDir} is not directory`);
       continue;
     }
-
-    const manifestPath = path.join(engineDir, "engine_manifest.json");
-    if (!fs.existsSync(manifestPath)) {
-      console.log(`${manifestPath} is not found`);
-      continue;
+    const result = addEngine(engineDir, "userDir");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
     }
-
-    const manifest: EngineManifest = JSON.parse(
-      fs.readFileSync(manifestPath, { encoding: "utf8" })
-    );
-
-    engines.push({
-      uuid: manifest.uuid,
-      host: `http://127.0.0.1:${manifest.port}`,
-      name: manifest.name,
-      path: engineDir,
-      executionEnabled: true,
-      executionFilePath: path.join(engineDir, manifest.command),
-      type: "userDir",
-    });
   }
   for (const engineDir of store.get("enginePaths")) {
-    if (!fs.existsSync(engineDir)) {
+    const result = addEngine(engineDir, "path");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+      // 動かないエンジンは追加できないので削除
+      // FIXME: エンジン管理UIで削除可能にする
       dialog.showErrorBox(
-        "エンジンが見つかりませんでした",
-        `${engineDir}が見つかりませんでした。このエンジンの登録は解除されます。`
+        "エンジンの読み込みに失敗しました。",
+        `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
       );
       store.set(
         "enginePaths",
         store.get("enginePaths").filter((p) => p !== engineDir)
       );
-      continue;
     }
-    const manifestPath = path.join(engineDir, "engine_manifest.json");
-    const manifest: EngineManifest = JSON.parse(
-      fs.readFileSync(manifestPath, { encoding: "utf8" })
-    );
-
-    engines.push({
-      uuid: manifest.uuid,
-      host: `http://127.0.0.1:${manifest.port}`,
-      name: manifest.name,
-      path: engineDir,
-      executionEnabled: true,
-      executionFilePath: path.join(engineDir, manifest.command),
-      type: "path",
-    });
   }
   return engines;
 }
