@@ -249,8 +249,8 @@ const api: Sandbox = {
     )) as typeof newValue;
   },
 
-  validateEnginePath: async (enginePath) => {
-    return await ipcRendererInvoke("VALIDATE_ENGINE_PATH", { enginePath });
+  validateEngineDir: async (enginePath) => {
+    return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { enginePath });
   },
 
   restartApp: () => {

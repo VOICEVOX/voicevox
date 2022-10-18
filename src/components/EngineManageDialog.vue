@@ -93,12 +93,12 @@
               <div class="text-h6 q-ma-sm">場所</div>
               <div class="q-ma-sm">
                 <q-input
-                  ref="newEnginePathInput"
-                  v-model="newEnginePath"
+                  ref="newEngineDirInput"
+                  v-model="newEngineDir"
                   dense
                   :error="
-                    newEnginePathValidationState &&
-                    newEnginePathValidationState !== 'ok'
+                    newEngineDirValidationState &&
+                    newEngineDirValidationState !== 'ok'
                   "
                 >
                   <template v-slot:append>
@@ -116,7 +116,7 @@
                     </q-btn>
                   </template>
                   <template v-slot:error>
-                    {{ getValidationMessage(newEnginePathValidationState) }}
+                    {{ getValidationMessage(newEngineDirValidationState) }}
                   </template>
                 </q-input>
               </div>
@@ -136,7 +136,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="addEngine"
-                :disabled="newEnginePathValidationState !== 'ok'"
+                :disabled="newEngineDirValidationState !== 'ok'"
                 >追加</q-btn
               >
             </div>
@@ -239,7 +239,7 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import type { EnginePathValidationResult } from "@/type/preload";
+import type { EngineDirValidationResult } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 export default defineComponent({
@@ -339,8 +339,8 @@ export default defineComponent({
       return featureNameMap[name];
     };
 
-    const getValidationMessage = (result: EnginePathValidationResult) => {
-      const messageMap: { [key in EnginePathValidationResult]: string } = {
+    const getValidationMessage = (result: EngineDirValidationResult) => {
+      const messageMap: { [key in EngineDirValidationResult]: string } = {
         directoryNotFound: "フォルダが見つかりませんでした。",
         notADirectory: "フォルダではありません。",
         manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
@@ -352,7 +352,7 @@ export default defineComponent({
 
     const addEngine = () => {
       store.dispatch("ADD_ENGINE_PATH", {
-        enginePath: newEnginePath.value,
+        enginePath: newEngineDir.value,
       });
 
       requireRestart("エンジンを追加しました。");
@@ -418,26 +418,26 @@ export default defineComponent({
         });
     };
 
-    const newEnginePath = ref("");
-    const newEnginePathValidationState =
-      ref<EnginePathValidationResult | null>(null);
+    const newEngineDir = ref("");
+    const newEngineDirValidationState =
+      ref<EngineDirValidationResult | null>(null);
     const selectEngineDir = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
         title: "エンジンのフォルダを選択",
       });
       if (path) {
-        newEnginePath.value = path;
+        newEngineDir.value = path;
       }
     };
-    watch(newEnginePath, async () => {
-      if (newEnginePath.value === "") {
-        newEnginePathValidationState.value = null;
+    watch(newEngineDir, async () => {
+      if (newEngineDir.value === "") {
+        newEngineDirValidationState.value = null;
         return;
       }
-      newEnginePathValidationState.value = await store.dispatch(
-        "VALIDATE_ENGINE_PATH",
+      newEngineDirValidationState.value = await store.dispatch(
+        "VALIDATE_ENGINE_DIR",
         {
-          enginePath: newEnginePath.value,
+          enginePath: newEngineDir.value,
         }
       );
     });
@@ -451,8 +451,8 @@ export default defineComponent({
     // エンジン追加状態
     const toAddEngineState = () => {
       isAddingEngine.value = true;
-      newEnginePathValidationState.value = null;
-      newEnginePath.value = "";
+      newEngineDirValidationState.value = null;
+      newEngineDir.value = "";
     };
     // ダイアログが閉じている状態
     const toDialogClosedState = () => {
@@ -484,9 +484,9 @@ export default defineComponent({
       openSelectedEngineDirectory,
       restartSelectedEngine,
       enginePath,
-      newEnginePath,
+      newEngineDir,
       selectEngineDir,
-      newEnginePathValidationState,
+      newEngineDirValidationState,
     };
   },
 });

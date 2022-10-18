@@ -2,7 +2,7 @@ import {
   AppInfos,
   ElectronStoreType,
   EngineInfo,
-  EnginePathValidationResult,
+  EngineDirValidationResult,
   HotkeySetting,
   ThemeSetting,
   ToolbarSetting,
@@ -248,9 +248,9 @@ export type IpcIHData = {
     return: unknown;
   };
 
-  VALIDATE_ENGINE_PATH: {
+  VALIDATE_ENGINE_Dir: {
     args: [obj: { enginePath: string }];
-    return: EnginePathValidationResult;
+    return: EngineDirValidationResult;
   };
 
   RESTART_APP: {

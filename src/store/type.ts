@@ -34,7 +34,7 @@ import {
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
-  EnginePathValidationResult,
+  EngineDirValidationResult,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -905,10 +905,8 @@ export type SettingStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
-  VALIDATE_ENGINE_PATH: {
-    action(payload: {
-      enginePath: string;
-    }): Promise<EnginePathValidationResult>;
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { enginePath: string }): Promise<EngineDirValidationResult>;
   };
 
   ADD_ENGINE_PATH: {

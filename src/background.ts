@@ -30,7 +30,7 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
-  EnginePathValidationResult,
+  EngineDirValidationResult,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -468,7 +468,7 @@ const store = new Store<ElectronStoreType>({
         tweakableSliderByScroll: false,
       },
     },
-    enginePaths: {
+    engineDirs: {
       type: "array",
       items: {
         type: "string",
@@ -762,7 +762,7 @@ function openEngineDirectory(engineId: string) {
 }
 
 // ディレクトリがエンジンとして正しいかどうかを判定する
-function validateEnginePath(enginePath: string): EnginePathValidationResult {
+function validateEngineDir(enginePath: string): EngineDirValidationResult {
   if (!fs.existsSync(enginePath)) {
     return "directoryNotFound";
   } else if (!fs.statSync(enginePath).isDirectory()) {
@@ -1259,8 +1259,8 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
-ipcMainHandle("VALIDATE_ENGINE_PATH", (_, { enginePath }) => {
-  return validateEnginePath(enginePath);
+ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { enginePath }) => {
+  return validateEngineDir(enginePath);
 });
 
 ipcMainHandle("RESTART_APP", async () => {

@@ -342,9 +342,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
     }),
   },
-  VALIDATE_ENGINE_PATH: {
+  VALIDATE_ENGINE_DIR: {
     action: async (_, { enginePath }) => {
-      return window.electron.validateEnginePath(enginePath);
+      return window.electron.validateEngineDir(enginePath);
     },
   },
   ADD_ENGINE_PATH: {

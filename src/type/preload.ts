@@ -18,7 +18,7 @@ export interface ElectronStoreType {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
-  enginePaths: string[];
+  engineDirs: string[];
 }
 
 export interface Sandbox {
@@ -97,7 +97,7 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
-  validateEnginePath(enginePath: string): Promise<EnginePathValidationResult>;
+  validateEngineDir(enginePath: string): Promise<EngineDirValidationResult>;
   restartApp(): void;
 }
 
@@ -317,7 +317,7 @@ export type WriteFileErrorResult = {
   message: string;
 };
 
-export type EnginePathValidationResult =
+export type EngineDirValidationResult =
   | "ok"
   | "directoryNotFound"
   | "manifestNotFound"
