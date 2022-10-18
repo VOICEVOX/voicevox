@@ -27,20 +27,23 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables' as vars;
+@use '@/styles/colors' as colors;
 .singer-tab {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid colors.$splitter;
   display: flex;
   list-style: none;
+  margin-bottom: 0;
   padding-left: 0;
 }
 .singer-tab a {
   display: block;
-  color: #333;
+  color: colors.$display;
   border-bottom: 2px solid transparent;
   text-decoration: none;
   padding: 8px;
 }
 .singer-tab-item a.router-link-exact-active {
-  border-bottom-color: #000;
+  border-bottom-color: colors.$primary;
 }
 </style>
