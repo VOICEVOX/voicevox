@@ -355,7 +355,7 @@ export default defineComponent({
         enginePath: newEnginePath.value,
       });
 
-      requireReload("エンジンを追加しました。");
+      requireRestart("エンジンを追加しました。");
     };
     const deleteEngine = () => {
       $q.dialog({
@@ -379,7 +379,7 @@ export default defineComponent({
           enginePath,
         });
 
-        requireReload("エンジンを削除しました。");
+        requireRestart("エンジンを削除しました。");
       });
     };
 
@@ -395,11 +395,10 @@ export default defineComponent({
       store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
     };
 
-    const requireReload = (message: string) => {
+    const requireRestart = (message: string) => {
       $q.dialog({
-        title: "リロードが必要です",
-        message:
-          message + "反映にはリロードが必要です。今すぐリロードしますか？",
+        title: "再起動が必要です",
+        message: message + "反映には再起動が必要です。今すぐ再起動しますか？",
         cancel: {
           label: "後で",
           color: "display",
@@ -407,7 +406,7 @@ export default defineComponent({
         },
 
         ok: {
-          label: "リロード",
+          label: "再起動",
           flat: true,
           textColor: "warning",
         },
