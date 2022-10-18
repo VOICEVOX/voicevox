@@ -404,7 +404,6 @@ export default defineComponent({
           color: "display",
           flat: true,
         },
-
         ok: {
           label: "再起動",
           flat: true,
