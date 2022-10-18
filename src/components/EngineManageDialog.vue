@@ -126,7 +126,7 @@
 
               <q-btn
                 outline
-                text-color="warning"
+                text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="toInitialState"
                 >キャンセル</q-btn
