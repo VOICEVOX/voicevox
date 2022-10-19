@@ -173,7 +173,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
       console.log(`Failed to load engine: ${result}, ${engineDir}`);
     }
   }
-  for (const engineDir of store.get("enginePaths")) {
+  for (const engineDir of store.get("engineDirs")) {
     const result = addEngine(engineDir, "path");
     if (result !== "ok") {
       console.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -184,8 +184,8 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
         `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
       );
       store.set(
-        "enginePaths",
-        store.get("enginePaths").filter((p) => p !== engineDir)
+        "engineDirs",
+        store.get("engineDirs").filter((p) => p !== engineDir)
       );
     }
   }
@@ -762,16 +762,16 @@ function openEngineDirectory(engineId: string) {
 }
 
 // ディレクトリがエンジンとして正しいかどうかを判定する
-function validateEngineDir(enginePath: string): EngineDirValidationResult {
-  if (!fs.existsSync(enginePath)) {
+function validateEngineDir(engineDir: string): EngineDirValidationResult {
+  if (!fs.existsSync(engineDir)) {
     return "directoryNotFound";
-  } else if (!fs.statSync(enginePath).isDirectory()) {
+  } else if (!fs.statSync(engineDir).isDirectory()) {
     return "notADirectory";
-  } else if (!fs.existsSync(path.join(enginePath, "engine_manifest.json"))) {
+  } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
     return "manifestNotFound";
   }
   const manifest = fs.readFileSync(
-    path.join(enginePath, "engine_manifest.json"),
+    path.join(engineDir, "engine_manifest.json"),
     "utf-8"
   );
   try {
@@ -1259,8 +1259,8 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
-ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { enginePath }) => {
-  return validateEngineDir(enginePath);
+ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
+  return validateEngineDir(engineDir);
 });
 
 ipcMainHandle("RESTART_APP", async () => {

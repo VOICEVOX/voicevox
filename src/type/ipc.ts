@@ -248,8 +248,8 @@ export type IpcIHData = {
     return: unknown;
   };
 
-  VALIDATE_ENGINE_Dir: {
-    args: [obj: { enginePath: string }];
+  VALIDATE_ENGINE_DIR: {
+    args: [obj: { engineDir: string }];
     return: EngineDirValidationResult;
   };
 
