@@ -189,7 +189,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
       );
     }
   }
-  return engines
+  return engines;
 }
 
 function fetchEngineInfos(): EngineInfo[] {
@@ -787,6 +787,13 @@ function validateEngineDir(engineDir: string): EngineDirValidationResult {
     )
   ) {
     return "invalidManifest";
+  }
+
+  const engineInfos = fetchEngineInfos();
+  if (
+    engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
+  ) {
+    return "alreadyExists";
   }
   return "ok";
 }

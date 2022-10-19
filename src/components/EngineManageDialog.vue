@@ -347,6 +347,7 @@ export default defineComponent({
         notADirectory: "フォルダではありません。",
         manifestNotFound: "engine_manifest.jsonが見つかりませんでした。",
         invalidManifest: "engine_manifest.jsonの内容が不正です。",
+        alreadyExists: "同じIDのエンジンが既に登録されています。",
         ok: undefined,
       };
       return messageMap[result];

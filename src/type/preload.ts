@@ -322,4 +322,5 @@ export type EngineDirValidationResult =
   | "directoryNotFound"
   | "manifestNotFound"
   | "invalidManifest"
-  | "notADirectory";
+  | "notADirectory"
+  | "alreadyExists";
