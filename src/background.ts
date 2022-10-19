@@ -87,7 +87,7 @@ let appDirPath: string;
 //       Linux・macOS ではそのディレクトリはカレントディレクトリとはならないため、.env ファイルの
 //       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
 //       全 OS で共通の条件分岐とした。
-if (isDevelopment) { 
+if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
