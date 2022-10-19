@@ -343,25 +343,25 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     }),
   },
   VALIDATE_ENGINE_DIR: {
-    action: async (_, { enginePath }) => {
-      return window.electron.validateEngineDir(enginePath);
+    action: async (_, { engineDir }) => {
+      return window.electron.validateEngineDir(engineDir);
     },
   },
-  ADD_ENGINE_PATH: {
-    action: async (_, { enginePath }) => {
-      const enginePaths = await window.electron.getSetting("enginePaths");
-      await window.electron.setSetting("enginePaths", [
-        ...enginePaths,
-        enginePath,
+  ADD_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
+      await window.electron.setSetting("engineDirs", [
+        ...engineDirs,
+        engineDir,
       ]);
     },
   },
-  REMOVE_ENGINE_PATH: {
-    action: async (_, { enginePath }) => {
-      const enginePaths = await window.electron.getSetting("enginePaths");
+  REMOVE_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
       await window.electron.setSetting(
-        "enginePaths",
-        enginePaths.filter((path) => path !== enginePath)
+        "engineDirs",
+        engineDirs.filter((path) => path !== engineDir)
       );
     },
   },

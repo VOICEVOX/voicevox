@@ -906,15 +906,15 @@ export type SettingStoreTypes = {
   };
 
   VALIDATE_ENGINE_DIR: {
-    action(payload: { enginePath: string }): Promise<EngineDirValidationResult>;
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
   };
 
-  ADD_ENGINE_PATH: {
-    action(payload: { enginePath: string }): Promise<void>;
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
   };
 
-  REMOVE_ENGINE_PATH: {
-    action(payload: { enginePath: string }): Promise<void>;
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
   };
 };
 

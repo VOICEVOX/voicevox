@@ -192,7 +192,7 @@
               >
                 <q-input
                   ref="pathInput"
-                  v-model="enginePath"
+                  v-model="engineDir"
                   disabled
                   dense
                   readonly
@@ -313,7 +313,7 @@ export default defineComponent({
         engineInfos.value[selectedId.value].type === "path"
       );
     });
-    const enginePath = computed(() => {
+    const engineDir = computed(() => {
       return engineInfos.value[selectedId.value]?.path || "（組み込み）";
     });
 
@@ -353,8 +353,8 @@ export default defineComponent({
     };
 
     const addEngine = () => {
-      store.dispatch("ADD_ENGINE_PATH", {
-        enginePath: newEngineDir.value,
+      store.dispatch("ADD_ENGINE_DIR", {
+        engineDir: newEngineDir.value,
       });
 
       requireRestart("エンジンを追加しました。");
@@ -374,11 +374,11 @@ export default defineComponent({
           textColor: "warning",
         },
       }).onOk(() => {
-        const enginePath = store.state.engineInfos[selectedId.value].path;
-        if (!enginePath)
+        const engineDir = store.state.engineInfos[selectedId.value].path;
+        if (!engineDir)
           throw new Error("assert engineInfos[selectedId.value].path");
-        store.dispatch("REMOVE_ENGINE_PATH", {
-          enginePath,
+        store.dispatch("REMOVE_ENGINE_DIR", {
+          engineDir,
         });
 
         requireRestart("エンジンを削除しました。");
@@ -439,7 +439,7 @@ export default defineComponent({
       newEngineDirValidationState.value = await store.dispatch(
         "VALIDATE_ENGINE_DIR",
         {
-          enginePath: newEngineDir.value,
+          engineDir: newEngineDir.value,
         }
       );
     });
@@ -485,7 +485,7 @@ export default defineComponent({
       toDialogClosedState,
       openSelectedEngineDirectory,
       restartSelectedEngine,
-      enginePath,
+      engineDir,
       newEngineDir,
       selectEngineDir,
       newEngineDirValidationState,
