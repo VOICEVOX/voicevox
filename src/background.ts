@@ -189,7 +189,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
       );
     }
   }
-  return engines;
+  return engines
 }
 
 function fetchEngineInfos(): EngineInfo[] {
@@ -774,9 +774,18 @@ function validateEngineDir(engineDir: string): EngineDirValidationResult {
     path.join(engineDir, "engine_manifest.json"),
     "utf-8"
   );
+  let manifestContent: EngineManifest;
   try {
-    JSON.parse(manifest);
+    manifestContent = JSON.parse(manifest);
   } catch (e) {
+    return "invalidManifest";
+  }
+
+  if (
+    ["name", "uuid", "port", "command", "icon"].some(
+      (key) => !(key in manifestContent)
+    )
+  ) {
     return "invalidManifest";
   }
   return "ok";
