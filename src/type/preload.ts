@@ -97,7 +97,7 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
-  validateEngineDir(enginePath: string): Promise<EngineDirValidationResult>;
+  validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(): void;
 }
 
