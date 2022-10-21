@@ -25,10 +25,17 @@
           </q-toolbar>
         </q-header>
         <q-page class="row">
-          <div v-if="loadingDict" class="loading-dict">
+          <div v-if="loadingDictState" class="loading-dict">
             <div>
               <q-spinner color="primary" size="2.5rem" />
-              <div class="q-mt-xs">読み込み中・・・</div>
+              <div class="q-mt-xs">
+                <template v-if="loadingDictState === 'loading'"
+                  >読み込み中・・・</template
+                >
+                <template v-if="loadingDictState === 'synchronizing'"
+                  >同期中・・・</template
+                >
+              </div>
             </div>
           </div>
           <div class="col-4 word-list-col">
@@ -264,8 +271,6 @@ export default defineComponent({
     const store = useStore();
     const $q = useQuasar();
 
-    const engineIdComputed = computed(() => store.state.engineIds[0]); // TODO: 複数エンジン対応
-
     const dictionaryManageDialogOpenedComputed = computed({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
@@ -274,7 +279,7 @@ export default defineComponent({
     const nowGenerating = ref(false);
     const nowPlaying = ref(false);
 
-    const loadingDict = ref(false);
+    const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
     const userDict = ref<Record<string, UserDictWord>>({});
 
     const createUILockAction = function <T>(action: Promise<T>) {
@@ -285,16 +290,13 @@ export default defineComponent({
     };
 
     const loadingDictProcess = async () => {
-      const engineId = engineIdComputed.value;
-      if (engineId === undefined)
-        throw new Error(`assert engineId !== undefined`);
+      if (store.state.engineIds.length === 0)
+        throw new Error(`assert engineId.length > 0`);
 
-      loadingDict.value = true;
+      loadingDictState.value = "loading";
       try {
         userDict.value = await createUILockAction(
-          store.dispatch("LOAD_USER_DICT", {
-            engineId,
-          })
+          store.dispatch("LOAD_ALL_USER_DICT")
         );
       } catch {
         $q.dialog({
@@ -309,7 +311,21 @@ export default defineComponent({
           dictionaryManageDialogOpenedComputed.value = false;
         });
       }
-      loadingDict.value = false;
+      loadingDictState.value = "synchronizing";
+      try {
+        await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
+      } catch {
+        $q.dialog({
+          title: "辞書の同期に失敗しました",
+          message: "エンジンの再起動をお試しください。",
+          ok: {
+            label: "閉じる",
+            flat: true,
+            textColor: "display",
+          },
+        });
+      }
+      loadingDictState.value = null;
     };
     watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
       if (newValue) {
@@ -345,6 +361,14 @@ export default defineComponent({
       if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
       return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
         .styleId;
+    });
+    const engineIdComputed = computed(() => {
+      if (store.state.engineIds.length === 0)
+        throw new Error("assert engineId.length > 0");
+      if (!store.getters.USER_ORDERED_CHARACTER_INFOS)
+        throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
+      return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
+        .engineId;
     });
 
     const kanaRegex = createKanaRegex();
@@ -718,7 +742,7 @@ export default defineComponent({
       nowGenerating,
       nowPlaying,
       userDict,
-      loadingDict,
+      loadingDictState,
       wordEditing,
       surfaceInput,
       yomiInput,
