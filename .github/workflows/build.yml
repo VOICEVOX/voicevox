@@ -874,64 +874,55 @@ jobs:
 
       - name: Upload Linux AppImage splitted archives to Release assets
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.7z.*
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.7z.*
+          target_commitish: ${{ github.sha }}
 
       # Windows NSIS Web
       - name: Upload Windows nsis-web archives to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.7z.*
-
-      - name: Upload Windows nsis-web installer to Release assets
-        if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.exe
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.7z.*
+            artifact/*.exe
+          target_commitish: ${{ github.sha }}
 
       # macOS dmg
       - name: Upload macOS dmg to Release assets
         if: endsWith(matrix.artifact_name, '-dmg')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.dmg
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.dmg
+          target_commitish: ${{ github.sha }}
 
       # targz
       - name: Upload targz to Release assets
         if: endsWith(matrix.artifact_name, '-targz')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.tar.gz
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.tar.gz
+          target_commitish: ${{ github.sha }}
 
       # zip
       - name: Upload zip to Release assets
         if: endsWith(matrix.artifact_name, '-zip')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.zip
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.zip
+          target_commitish: ${{ github.sha }}
