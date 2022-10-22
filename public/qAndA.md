@@ -119,6 +119,18 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 現状の音声合成エンジンの仕様になります。前後の無音の長さを長くすると改善することがあるのでお試しください。
 
+### Q. エラーログはどこで確認できますか？
+
+以下のディレクトリに保存されています。
+
+#### Windows 版
+
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs` もしくは `C:\Users\(ユーザー名)\AppData\Roaming\voicevox-cpu\logs`
+
+#### Mac 版
+
+`/Users/(ユーザー名)/Library/Application Support/voicevox-cpu/logs`
+
 ## その他
 
 ### Q. 公式イラストや立ち絵はどこからダウンロードできますか？
