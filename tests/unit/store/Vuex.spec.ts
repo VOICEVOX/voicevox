@@ -11,6 +11,7 @@ import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
+import { engineStore } from "@/store/engine";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -121,6 +122,7 @@ describe("store/vuex.js test", () => {
         ...uiStore.getters,
         ...audioStore.getters,
         ...commandStore.getters,
+        ...engineStore.getters,
         ...projectStore.getters,
         ...settingStore.getters,
         ...audioCommandStore.getters,
@@ -133,6 +135,7 @@ describe("store/vuex.js test", () => {
         ...uiStore.mutations,
         ...audioStore.mutations,
         ...commandStore.mutations,
+        ...engineStore.mutations,
         ...projectStore.mutations,
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
@@ -145,6 +148,7 @@ describe("store/vuex.js test", () => {
         ...uiStore.actions,
         ...audioStore.actions,
         ...commandStore.actions,
+        ...engineStore.actions,
         ...projectStore.actions,
         ...settingStore.actions,
         ...audioCommandStore.actions,
