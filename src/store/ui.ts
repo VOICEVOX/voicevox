@@ -114,218 +114,41 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  IS_HELP_DIALOG_OPEN: {
-    mutation(state, { isHelpDialogOpen }: { isHelpDialogOpen: boolean }) {
-      state.isHelpDialogOpen = isHelpDialogOpen;
-    },
-    action(
-      { state, commit },
-      { isHelpDialogOpen }: { isHelpDialogOpen: boolean }
-    ) {
-      if (state.isHelpDialogOpen === isHelpDialogOpen) return;
-
-      if (isHelpDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen });
-    },
-  },
-
-  IS_SETTING_DIALOG_OPEN: {
-    mutation(state, { isSettingDialogOpen }: { isSettingDialogOpen: boolean }) {
-      state.isSettingDialogOpen = isSettingDialogOpen;
-    },
-    action(
-      { state, commit },
-      { isSettingDialogOpen }: { isSettingDialogOpen: boolean }
-    ) {
-      if (state.isSettingDialogOpen === isSettingDialogOpen) return;
-
-      if (isSettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen });
-    },
-  },
-
-  IS_HOTKEY_SETTING_DIALOG_OPEN: {
-    mutation(state, { isHotkeySettingDialogOpen }) {
-      state.isHotkeySettingDialogOpen = isHotkeySettingDialogOpen;
-    },
-    action({ state, commit }, { isHotkeySettingDialogOpen }) {
-      if (state.isHotkeySettingDialogOpen === isHotkeySettingDialogOpen) return;
-
-      if (isHotkeySettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_HOTKEY_SETTING_DIALOG_OPEN", { isHotkeySettingDialogOpen });
-    },
-  },
-
-  IS_TOOLBAR_SETTING_DIALOG_OPEN: {
+  SET_DIALOG_OPEN: {
     mutation(
       state,
-      { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
+      dialogState: {
+        isDefaultStyleSelectDialogOpen?: boolean;
+        isAcceptRetrieveTelemetryDialogOpen?: boolean;
+        isAcceptTermsDialogOpen?: boolean;
+        isDictionaryManageDialogOpen?: boolean;
+        isHelpDialogOpen?: boolean;
+        isSettingDialogOpen?: boolean;
+        isHotkeySettingDialogOpen?: boolean;
+        isToolbarSettingDialogOpen?: boolean;
+        isCharacterOrderDialogOpen?: boolean;
+      }
     ) {
-      state.isToolbarSettingDialogOpen = isToolbarSettingDialogOpen;
+      for (const [key, value] of Object.entries(dialogState)) {
+        if (key in state) {
+          state[key] = value;
+        }
+      }
     },
-    action(
-      { state, commit },
-      { isToolbarSettingDialogOpen }: { isToolbarSettingDialogOpen: boolean }
-    ) {
-      if (state.isToolbarSettingDialogOpen === isToolbarSettingDialogOpen)
-        return;
+    async action({ state, commit }, dialogState) {
+      for (const [key, value] of Object.entries(dialogState)) {
+        if (state[key] === value) continue;
 
-      if (isToolbarSettingDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
+        if (value) {
+          commit("LOCK_UI");
+          commit("LOCK_MENUBAR");
+        } else {
+          commit("UNLOCK_UI");
+          commit("UNLOCK_MENUBAR");
+        }
       }
 
-      commit("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
-        isToolbarSettingDialogOpen,
-      });
-    },
-  },
-
-  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
-    mutation(state, { isAcceptRetrieveTelemetryDialogOpen }) {
-      state.isAcceptRetrieveTelemetryDialogOpen =
-        isAcceptRetrieveTelemetryDialogOpen;
-    },
-    async action({ state, commit }, { isAcceptRetrieveTelemetryDialogOpen }) {
-      if (
-        state.isAcceptRetrieveTelemetryDialogOpen ===
-        isAcceptRetrieveTelemetryDialogOpen
-      )
-        return;
-
-      if (isAcceptRetrieveTelemetryDialogOpen) commit("LOCK_UI");
-      else commit("UNLOCK_UI");
-
-      commit("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
-        isAcceptRetrieveTelemetryDialogOpen,
-      });
-    },
-  },
-
-  IS_ACCEPT_TERMS_DIALOG_OPEN: {
-    mutation(state, { isAcceptTermsDialogOpen }) {
-      state.isAcceptTermsDialogOpen = isAcceptTermsDialogOpen;
-    },
-    async action({ state, commit }, { isAcceptTermsDialogOpen }) {
-      if (state.isAcceptTerms_DialogOpen === isAcceptTermsDialogOpen) return;
-
-      if (isAcceptTermsDialogOpen) commit("LOCK_UI");
-      else commit("UNLOCK_UI");
-
-      commit("IS_ACCEPT_TERMS_DIALOG_OPEN", {
-        isAcceptTermsDialogOpen,
-      });
-    },
-  },
-
-  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
-    mutation(
-      state,
-      {
-        isDictionaryManageDialogOpen,
-      }: { isDictionaryManageDialogOpen: boolean }
-    ) {
-      state.isDictionaryManageDialogOpen = isDictionaryManageDialogOpen;
-    },
-    async action({ state, commit }, { isDictionaryManageDialogOpen }) {
-      if (state.isDictionaryManageDialogOpen === isDictionaryManageDialogOpen)
-        return;
-
-      if (isDictionaryManageDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
-        isDictionaryManageDialogOpen,
-      });
-    },
-  },
-
-  ON_VUEX_READY: {
-    action() {
-      window.electron.vuexReady();
-    },
-  },
-
-  IS_CHARACTER_ORDER_DIALOG_OPEN: {
-    mutation(
-      state,
-      { isCharacterOrderDialogOpen }: { isCharacterOrderDialogOpen: boolean }
-    ) {
-      state.isCharacterOrderDialogOpen = isCharacterOrderDialogOpen;
-    },
-    async action({ state, commit }, { isCharacterOrderDialogOpen }) {
-      if (state.isCharacterOrderDialogOpen === isCharacterOrderDialogOpen)
-        return;
-
-      if (isCharacterOrderDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_CHARACTER_ORDER_DIALOG_OPEN", {
-        isCharacterOrderDialogOpen,
-      });
-    },
-  },
-
-  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
-    mutation(
-      state,
-      {
-        isDefaultStyleSelectDialogOpen,
-      }: { isDefaultStyleSelectDialogOpen: boolean }
-    ) {
-      state.isDefaultStyleSelectDialogOpen = isDefaultStyleSelectDialogOpen;
-    },
-    async action({ state, commit }, { isDefaultStyleSelectDialogOpen }) {
-      if (
-        state.isDefaultStyleSelectDialogOpen === isDefaultStyleSelectDialogOpen
-      )
-        return;
-
-      if (isDefaultStyleSelectDialogOpen) {
-        commit("LOCK_UI");
-        commit("LOCK_MENUBAR");
-      } else {
-        commit("UNLOCK_UI");
-        commit("UNLOCK_MENUBAR");
-      }
-
-      commit("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
-        isDefaultStyleSelectDialogOpen,
-      });
+      commit("SET_DIALOG_OPEN", dialogState);
     },
   },
 
@@ -350,6 +173,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (await window.electron.isMaximizedWindow()) {
         commit("DETECT_MAXIMIZED");
       }
+    },
+  },
+
+  ON_VUEX_READY: {
+    action() {
+      window.electron.vuexReady();
     },
   },
 

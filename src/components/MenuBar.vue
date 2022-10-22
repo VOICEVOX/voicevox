@@ -187,28 +187,28 @@ export default defineComponent({
       }
     };
     const closeAllDialog = () => {
-      store.dispatch("IS_SETTING_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isSettingDialogOpen: false,
       });
-      store.dispatch("IS_HELP_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isHelpDialogOpen: false,
       });
-      store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isHotkeySettingDialogOpen: false,
       });
-      store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isToolbarSettingDialogOpen: false,
       });
-      store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isCharacterOrderDialogOpen: false,
       });
-      store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isDefaultStyleSelectDialogOpen: false,
       });
     };
 
     const openHelpDialog = () => {
-      store.dispatch("IS_HELP_DIALOG_OPEN", {
+      store.dispatch("SET_DIALOG_OPEN", {
         isHelpDialogOpen: true,
       });
     };
@@ -313,7 +313,7 @@ export default defineComponent({
             type: "button",
             label: "キー割り当て",
             onClick() {
-              store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isHotkeySettingDialogOpen: true,
               });
             },
@@ -322,7 +322,7 @@ export default defineComponent({
             type: "button",
             label: "ツールバーのカスタマイズ",
             onClick() {
-              store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isToolbarSettingDialogOpen: true,
               });
             },
@@ -331,7 +331,7 @@ export default defineComponent({
             type: "button",
             label: "キャラクター並び替え・試聴",
             onClick() {
-              store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isCharacterOrderDialogOpen: true,
               });
             },
@@ -340,7 +340,7 @@ export default defineComponent({
             type: "button",
             label: "デフォルトスタイル",
             onClick() {
-              store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isDefaultStyleSelectDialogOpen: true,
               });
             },
@@ -349,7 +349,7 @@ export default defineComponent({
             type: "button",
             label: "読み方＆アクセント辞書",
             onClick() {
-              store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isDictionaryManageDialogOpen: true,
               });
             },
@@ -359,7 +359,7 @@ export default defineComponent({
             type: "button",
             label: "オプション",
             onClick() {
-              store.dispatch("IS_SETTING_DIALOG_OPEN", {
+              store.dispatch("SET_DIALOG_OPEN", {
                 isSettingDialogOpen: true,
               });
             },
