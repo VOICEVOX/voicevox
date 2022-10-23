@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
+import yauzl from "yauzl";
 
 import {
   app,
@@ -719,6 +720,94 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
+async function loadVvpp(vvppPath: string) {
+  try {
+    const zipFile = await new Promise<yauzl.ZipFile>((resolve, reject) => {
+      yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
+        if (error != null) {
+          reject(error);
+          return;
+        }
+        resolve(zipFile);
+      });
+    });
+    zipFile.readEntry();
+    const manifest: EngineManifest = await new Promise<EngineManifest>(
+      (resolve, reject) => {
+        zipFile.on("entry", async (entry: yauzl.Entry) => {
+          if (entry.fileName !== "engine_manifest.json") {
+            zipFile.readEntry();
+            return;
+          }
+          await new Promise<void>((resolve2, reject2) => {
+            zipFile.openReadStream(entry, async (error, readStream) => {
+              if (error != null) {
+                reject2(error);
+                return;
+              }
+              readStream.on("data", (data) => {
+                resolve(JSON.parse(data.toString()) as EngineManifest);
+                resolve2();
+              });
+            });
+          });
+        });
+        zipFile.on("end", () => {
+          reject(new Error("engine_manifest.json not found"));
+        });
+      }
+    );
+    for (const dir in await fs.promises.readdir(path.dirname(vvppPath))) {
+      if (!dir.endsWith("+" + manifest.uuid)) {
+        continue;
+      }
+      await fs.promises.rmdir(path.join(path.dirname(vvppPath), dir));
+    }
+    const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
+      manifest.uuid
+    }`;
+    const engineDirectory = path.join(userEngineDir, dirName);
+    await new Promise<void>((resolve, reject) => {
+      yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
+        if (error != null) {
+          reject(error);
+          return;
+        }
+        zipFile.readEntry();
+        zipFile.on("entry", (entry: yauzl.Entry) => {
+          const filePath = path.join(engineDirectory, entry.fileName);
+          if (entry.fileName.endsWith("/")) {
+            fs.mkdirSync(filePath, { recursive: true });
+            zipFile.readEntry();
+            return;
+          }
+          zipFile.openReadStream(entry, (error, readStream) => {
+            if (error != null) {
+              reject(error);
+              return;
+            }
+            readStream.on("end", () => {
+              zipFile.readEntry();
+            });
+            readStream.pipe(fs.createWriteStream(filePath));
+          });
+        });
+        zipFile.on("end", () => {
+          resolve();
+        });
+      });
+    });
+    return true;
+  } catch (e) {
+    dialog.showErrorBox(
+      "読み込みエラー",
+      `${vvppPath} を読み込めませんでした。`
+    );
+    console.error(`Failed to read ${vvppPath}, {e}`);
+    return false;
+  }
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -1195,6 +1284,10 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
+ipcMainHandle("LOAD_VVPP", (_, { vvppPath }) => {
+  return loadVvpp(vvppPath);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -1280,6 +1373,10 @@ app.once("will-finish-launching", () => {
   app.once("open-file", (event, filePath) => {
     event.preventDefault();
     filePathOnMac = filePath;
+
+    if (filePath.endsWith(".vvpp")) {
+      loadVvpp(filePath);
+    }
   });
 });
 
@@ -1290,6 +1387,15 @@ app.on("ready", async () => {
     } catch (e: unknown) {
       if (e instanceof Error) {
         log.error("Vue Devtools failed to install:", e.toString());
+      }
+    }
+  }
+
+  if (process.platform !== "darwin") {
+    if (process.argv.length > 1) {
+      const filePath = process.argv[1];
+      if (filePath.endsWith(".vvpp")) {
+        await loadVvpp(filePath);
       }
     }
   }
