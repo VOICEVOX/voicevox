@@ -32,6 +32,11 @@ module.exports = {
             name: "VOICEVOX Project file",
             role: "Editor",
           },
+          {
+            ext: "vvpp",
+            name: "VOICEVOX Plugin package",
+            role: "Editor",
+          },
         ],
         extraFiles: [
           { from: "build/README.txt", to: "README.txt" },
