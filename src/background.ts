@@ -1284,10 +1284,6 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
-ipcMainHandle("LOAD_VVPP", (_, { vvppPath }) => {
-  return loadVvpp(vvppPath);
-});
-
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
