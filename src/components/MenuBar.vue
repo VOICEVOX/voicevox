@@ -413,15 +413,6 @@ export default defineComponent({
       if (Object.values(engineInfos.value).length === 1) {
         const engineInfo = Object.values(engineInfos.value)[0];
         engineMenu.subMenu = [
-          engineInfo.path && {
-            type: "button",
-            label: "フォルダを開く",
-            onClick: () => {
-              store.dispatch("OPEN_ENGINE_DIRECTORY", {
-                engineId: engineInfo.uuid,
-              });
-            },
-          },
           {
             type: "button",
             label: "再起動",
@@ -478,6 +469,13 @@ export default defineComponent({
           },
         ];
       }
+      engineMenu.subMenu.push({
+        type: "button",
+        label: "追加エンジンのフォルダを開く",
+        onClick: () => {
+          store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
+        },
+      });
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 

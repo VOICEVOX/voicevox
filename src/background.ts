@@ -119,9 +119,10 @@ const defaultEngineInfos: EngineInfo[] = (() => {
   });
 })();
 
+const userEngineDir = path.join(app.getPath("userData"), "engines");
+
 // ユーザーディレクトリにあるエンジンを取得する
 function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
-  const userEngineDir = path.join(app.getPath("userData"), "engines");
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
@@ -1125,6 +1126,12 @@ ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
+});
+
+ipcMainHandle("OPEN_USER_ENGINE_DIRECTORY", () => {
+  // Windows環境だとスラッシュ区切りのパスが動かない。
+  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
+  shell.openPath(path.resolve(userEngineDir));
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
