@@ -172,6 +172,28 @@
         }"
         >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
       >
+      <q-popup-edit
+        :class="{
+          disabled: speedScaleSlider.qSliderProps.disable.value,
+        }"
+        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
+        auto-save
+        transition-show="none"
+        transition-hide="none"
+        v-slot="scope"
+      >
+        <q-input
+          v-model="scope.value"
+          dense
+          :input-style="{
+            width: `${scope.value.length + 1}em`,
+            minWidth: '50px',
+          }"
+          autofocus
+          outlined
+          @keyup.enter="scope.set"
+        />
+      </q-popup-edit>
       <q-slider
         dense
         snap
