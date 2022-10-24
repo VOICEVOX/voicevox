@@ -1652,7 +1652,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        const characters = new Map<number, string>();
+        const characters = new Map<string, string>();
 
         if (!getters.USER_ORDERED_CHARACTER_INFOS)
           throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
@@ -1660,7 +1660,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
           for (const style of characterInfo.metas.styles) {
             characters.set(
-              style.styleId,
+              `${style.engineId}:${style.styleId}`,
               `${characterInfo.metas.speakerName}(${
                 style.styleName || "ノーマル"
               })`
@@ -1671,8 +1671,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
           const styleId = state.audioItems[audioKey].styleId;
+          const engineId = state.audioItems[audioKey].engineId;
+          if (!engineId) {
+            throw new Error("engineId is undefined");
+          }
           const speakerName =
-            styleId !== undefined ? characters.get(styleId) + "," : "";
+            styleId !== undefined
+              ? characters.get(`${engineId}:${styleId}`) + ","
+              : "";
 
           texts.push(speakerName + state.audioItems[audioKey].text);
         }
