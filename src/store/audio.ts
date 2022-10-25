@@ -1660,7 +1660,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         for (const characterInfo of getters.USER_ORDERED_CHARACTER_INFOS) {
           for (const style of characterInfo.metas.styles) {
             characters.set(
-              `${style.engineId}:${style.styleId}`,
+              `${style.engineId}:${style.styleId}`, // FIXME: 入れ子のMapにする
               `${characterInfo.metas.speakerName}(${
                 style.styleName || "ノーマル"
               })`
