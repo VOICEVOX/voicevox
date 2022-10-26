@@ -177,6 +177,7 @@ export type EngineInfo = {
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
+  executionArgs: string[];
 };
 
 export type Preset = {
