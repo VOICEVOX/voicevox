@@ -180,6 +180,7 @@ export type EngineInfo = {
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
+  executionArgs: string[];
   // エンジンの種類。
   // main: メインエンジン
   // sub: .envで指定されたその他のエンジン
