@@ -477,6 +477,9 @@ export default defineComponent({
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
+      // 辞書を同期
+      await store.dispatch("SYNC_ALL_USER_DICT");
+
       // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
       isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;

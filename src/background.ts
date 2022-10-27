@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
+import shlex from "shlex";
 
 import {
   app,
@@ -145,13 +146,16 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       fs.readFileSync(manifestPath, { encoding: "utf8" })
     );
 
+    const [command, ...args] = shlex.split(manifest.command);
+
     engines.push({
       uuid: manifest.uuid,
       host: `http://127.0.0.1:${manifest.port}`,
       name: manifest.name,
       path: engineDir,
       executionEnabled: true,
-      executionFilePath: path.join(engineDir, manifest.command),
+      executionFilePath: path.join(engineDir, command),
+      executionArgs: args,
     });
   }
   return engines;
@@ -526,7 +530,7 @@ async function runEngine(engineId: string) {
     appDirPath,
     engineInfo.executionFilePath ?? "run.exe"
   );
-  const args = useGpu ? ["--use_gpu"] : [];
+  const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : []);
 
   log.info(`ENGINE ${engineId} path: ${enginePath}`);
   log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
