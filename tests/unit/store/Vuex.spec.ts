@@ -78,6 +78,7 @@ describe("store/vuex.js test", () => {
             name: "Engine 1",
             executionEnabled: false,
             executionFilePath: "",
+            executionArgs: [],
             host: "http://127.0.0.1",
           },
         },
