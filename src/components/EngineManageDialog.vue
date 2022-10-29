@@ -63,8 +63,13 @@
                   active-class="active-engine"
                 >
                   <q-item-section avatar>
-                    <q-avatar rounded>
-                      <img :src="engineIcons[id]" :alt="engineInfos[id].name" />
+                    <q-avatar rounded color="primary">
+                      <img
+                        :src="engineIcons[id]"
+                        :alt="engineInfos[id].name"
+                        v-if="engineIcons[id]"
+                      />
+                      <span v-else class="text-display-on-primary"> ? </span>
                     </q-avatar>
                   </q-item-section>
                   <q-item-section>
@@ -150,10 +155,16 @@
           >
             <div class="q-pl-md q-mt-md flex">
               <img
+                v-if="engineIcons[selectedId]"
                 :src="engineIcons[selectedId]"
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
               />
+              <div class="title-engine-icon-container inline-block" v-else>
+                <q-avatar rounded color="primary" size="2rem">
+                  <span class="text-display-on-primary"> ? </span>
+                </q-avatar>
+              </div>
               <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
               </div>
@@ -167,15 +178,15 @@
                   }}
                 </li>
                 <li>
-                  URL：<a
+                  URL：
+                  <a
+                    v-if="engineManifests[selectedId]"
                     :href="engineManifests[selectedId].url"
                     class="text-display-hyperlink"
                     target="_blank"
-                    >{{
-                      engineManifests[selectedId]?.url ??
-                      "（取得に失敗しました）"
-                    }}</a
+                    >{{ engineManifests[selectedId].url }}</a
                   >
+                  <span v-else>（取得に失敗しました）</span>
                 </li>
               </ul>
             </div>
@@ -192,6 +203,7 @@
                   {{ getFeatureName(feature) }}：{{ value ? "対応" : "非対応" }}
                 </li>
               </ul>
+              <span v-else>（取得に失敗しました）</span>
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">場所</div>
@@ -576,5 +588,9 @@ export default defineComponent({
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   border-radius: 5px;
+}
+
+.title-engine-icon-container {
+  margin-top: 0.5rem;
 }
 </style>
