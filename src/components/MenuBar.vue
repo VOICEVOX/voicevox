@@ -481,7 +481,7 @@ export default defineComponent({
           type: "button",
           label: "エンジンの管理",
           onClick: () => {
-            store.dispatch("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+            store.dispatch("SET_DIALOG_OPEN", {
               isEngineManageDialogOpen: true,
             });
           },
