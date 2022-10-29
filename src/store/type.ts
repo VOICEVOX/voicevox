@@ -34,6 +34,7 @@ import {
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
+  EngineDirValidationResult,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -903,6 +904,18 @@ export type SettingStoreTypes = {
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
   };
+
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
 };
 
 /*
@@ -924,6 +937,7 @@ export type UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
+  isEngineManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -977,6 +991,7 @@ export type UiStoreTypes = {
       isHotkeySettingDialogOpen?: boolean;
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
     };
     action(payload: {
       isDefaultStyleSelectDialogOpen?: boolean;
@@ -988,6 +1003,7 @@ export type UiStoreTypes = {
       isHotkeySettingDialogOpen?: boolean;
       isToolbarSettingDialogOpen?: boolean;
       isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
     }): void;
   };
 
@@ -1066,6 +1082,10 @@ export type UiStoreTypes = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
+  };
+
+  RESTART_APP: {
+    action(): void;
   };
 };
 

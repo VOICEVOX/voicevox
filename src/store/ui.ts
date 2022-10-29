@@ -41,6 +41,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
+  isEngineManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -127,6 +128,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         isHotkeySettingDialogOpen?: boolean;
         isToolbarSettingDialogOpen?: boolean;
         isCharacterOrderDialogOpen?: boolean;
+        isEngineManageDialogOpen?: boolean;
       }
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
@@ -361,6 +363,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       }
 
       window.electron.closeWindow();
+    },
+  },
+
+  RESTART_APP: {
+    action() {
+      window.electron.restartApp();
     },
   },
 });

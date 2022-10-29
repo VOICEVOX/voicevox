@@ -469,13 +469,24 @@ export default defineComponent({
           },
         ];
       }
-      engineMenu.subMenu.push({
-        type: "button",
-        label: "追加エンジンのフォルダを開く",
-        onClick: () => {
-          store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
+      engineMenu.subMenu.push(
+        {
+          type: "button",
+          label: "追加エンジンのフォルダを開く",
+          onClick: () => {
+            store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
+          },
         },
-      });
+        {
+          type: "button",
+          label: "エンジンの管理",
+          onClick: () => {
+            store.dispatch("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+              isEngineManageDialogOpen: true,
+            });
+          },
+        }
+      );
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 

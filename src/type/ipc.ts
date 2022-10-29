@@ -2,6 +2,7 @@ import {
   AppInfos,
   ElectronStoreType,
   EngineInfo,
+  EngineDirValidationResult,
   HotkeySetting,
   ThemeSetting,
   ToolbarSetting,
@@ -245,6 +246,16 @@ export type IpcIHData = {
   SET_SETTING: {
     args: [key: keyof ElectronStoreType, newValue: unknown];
     return: unknown;
+  };
+
+  VALIDATE_ENGINE_DIR: {
+    args: [obj: { engineDir: string }];
+    return: EngineDirValidationResult;
+  };
+
+  RESTART_APP: {
+    args: [];
+    return: void;
   };
 };
 

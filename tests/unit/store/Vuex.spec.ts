@@ -43,6 +43,7 @@ describe("store/vuex.js test", () => {
         isCharacterOrderDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isDictionaryManageDialogOpen: false,
+        isEngineManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
@@ -80,6 +81,7 @@ describe("store/vuex.js test", () => {
             executionFilePath: "",
             executionArgs: [],
             host: "http://127.0.0.1",
+            type: "main",
           },
         },
         engineManifests: {

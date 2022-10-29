@@ -142,6 +142,7 @@
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
+  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
@@ -174,6 +175,7 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
+import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
@@ -204,6 +206,7 @@ export default defineComponent({
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
     DictionaryManageDialog,
+    EngineManageDialog,
   },
 
   setup() {
@@ -611,6 +614,15 @@ export default defineComponent({
         }),
     });
 
+    // エンジン管理
+    const isEngineManageDialogOpenComputed = computed({
+      get: () => store.state.isEngineManageDialogOpen,
+      set: (val) =>
+        store.dispatch("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+          isEngineManageDialogOpen: val,
+        }),
+    });
+
     // 読み方＆アクセント辞書
     const isDictionaryManageDialogOpenComputed = computed({
       get: () => store.state.isDictionaryManageDialogOpen,
@@ -692,6 +704,7 @@ export default defineComponent({
       orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
+      isEngineManageDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
       isAcceptTermsDialogOpenComputed,
