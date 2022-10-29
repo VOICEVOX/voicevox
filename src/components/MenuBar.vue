@@ -509,6 +509,16 @@ export default defineComponent({
           disableWhenUiLocked: false,
         }
       );
+      if (store.state.isSafeMode) {
+        engineMenu.subMenu.push({
+          type: "button",
+          label: "セーフモードを解除",
+          onClick: () => {
+            store.dispatch("RESTART_APP", { safeMode: false });
+          },
+          disableWhenUiLocked: false,
+        });
+      }
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 

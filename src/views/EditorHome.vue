@@ -559,7 +559,7 @@ export default defineComponent({
     onMounted(() => {
       setTimeout(() => {
         isEngineStartingTakingLonger.value = true;
-      }, 10);
+      }, 10000);
     });
     const restartAppWithSafeMode = () => {
       store.dispatch("RESTART_APP", { safeMode: true });
