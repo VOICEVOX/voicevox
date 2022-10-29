@@ -1167,6 +1167,9 @@ export type DictionaryStoreTypes = {
       engineId: string;
     }): Promise<Record<string, UserDictWord>>;
   };
+  LOAD_ALL_USER_DICT: {
+    action(): Promise<Record<string, UserDictWord>>;
+  };
   ADD_WORD: {
     action(payload: {
       surface: string;
@@ -1186,6 +1189,9 @@ export type DictionaryStoreTypes = {
   };
   DELETE_WORD: {
     action(payload: { wordUuid: string }): Promise<void>;
+  };
+  SYNC_ALL_USER_DICT: {
+    action(): Promise<void>;
   };
 };
 
