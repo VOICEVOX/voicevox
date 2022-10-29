@@ -161,20 +161,27 @@
 
             <div class="no-wrap q-pl-md">
               <ul>
-                <li>バージョン：{{ engineVersions[selectedId] }}</li>
+                <li>
+                  バージョン：{{
+                    engineVersions[selectedId] ?? "（取得に失敗しました）"
+                  }}
+                </li>
                 <li>
                   URL：<a
                     :href="engineManifests[selectedId].url"
                     class="text-display-hyperlink"
                     target="_blank"
-                    >{{ engineManifests[selectedId].url }}</a
+                    >{{
+                      engineManifests[selectedId]?.url ??
+                      "（取得に失敗しました）"
+                    }}</a
                   >
                 </li>
               </ul>
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
-              <ul>
+              <ul v-if="engineManifests[selectedId]">
                 <li
                   v-for="[feature, value] in Object.entries(
                     engineManifests[selectedId].supportedFeatures

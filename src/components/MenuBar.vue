@@ -58,16 +58,19 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
   onClick: () => void;
   subMenu: MenuItemData[];
   icon?: string;
+  disableWhenUiLocked: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
   icon?: string;
+  disableWhenUiLocked: boolean;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
   checked: ComputedRef<boolean>;
   onClick: () => void;
+  disableWhenUiLocked: boolean;
 };
 
 export type MenuItemData =
@@ -220,6 +223,7 @@ export default defineComponent({
         onClick: () => {
           closeAllDialog();
         },
+        disableWhenUiLocked: false,
         subMenu: [
           {
             type: "button",
@@ -227,6 +231,7 @@ export default defineComponent({
             onClick: () => {
               generateAndSaveAllAudio();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -234,6 +239,7 @@ export default defineComponent({
             onClick: () => {
               generateAndSaveOneAudio();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -241,6 +247,7 @@ export default defineComponent({
             onClick: () => {
               generateAndConnectAndSaveAllAudio();
             },
+            disableWhenUiLocked: true,
           },
           { type: "separator" },
           {
@@ -249,6 +256,7 @@ export default defineComponent({
             onClick: () => {
               connectAndExportText();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -256,12 +264,14 @@ export default defineComponent({
             onClick: () => {
               importTextFile();
             },
+            disableWhenUiLocked: true,
           },
           { type: "separator" },
           {
             type: "button",
             label: "新規プロジェクト",
             onClick: createNewProject,
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -269,6 +279,7 @@ export default defineComponent({
             onClick: () => {
               saveProject();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -276,6 +287,7 @@ export default defineComponent({
             onClick: () => {
               saveProjectAs();
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -283,6 +295,7 @@ export default defineComponent({
             onClick: () => {
               importProject();
             },
+            disableWhenUiLocked: true,
           },
         ],
       },
@@ -292,15 +305,8 @@ export default defineComponent({
         onClick: () => {
           closeAllDialog();
         },
-        subMenu: [
-          {
-            type: "button",
-            label: "全てのエンジンを再起動",
-            onClick: () => {
-              store.dispatch("RESTART_ENGINE_ALL");
-            },
-          },
-        ],
+        disableWhenUiLocked: false,
+        subMenu: [],
       },
       {
         type: "root",
@@ -308,6 +314,7 @@ export default defineComponent({
         onClick: () => {
           closeAllDialog();
         },
+        disableWhenUiLocked: false,
         subMenu: [
           {
             type: "button",
@@ -317,6 +324,7 @@ export default defineComponent({
                 isHotkeySettingDialogOpen: true,
               });
             },
+            disableWhenUiLocked: false,
           },
           {
             type: "button",
@@ -326,6 +334,7 @@ export default defineComponent({
                 isToolbarSettingDialogOpen: true,
               });
             },
+            disableWhenUiLocked: false,
           },
           {
             type: "button",
@@ -335,6 +344,7 @@ export default defineComponent({
                 isCharacterOrderDialogOpen: true,
               });
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -344,6 +354,7 @@ export default defineComponent({
                 isDefaultStyleSelectDialogOpen: true,
               });
             },
+            disableWhenUiLocked: true,
           },
           {
             type: "button",
@@ -353,6 +364,7 @@ export default defineComponent({
                 isDictionaryManageDialogOpen: true,
               });
             },
+            disableWhenUiLocked: true,
           },
           { type: "separator" },
           {
@@ -363,6 +375,7 @@ export default defineComponent({
                 isSettingDialogOpen: true,
               });
             },
+            disableWhenUiLocked: false,
           },
         ],
       },
@@ -376,6 +389,7 @@ export default defineComponent({
             openHelpDialog();
           }
         },
+        disableWhenUiLocked: false,
       },
     ]);
 
@@ -421,6 +435,7 @@ export default defineComponent({
                 engineId: engineInfo.uuid,
               });
             },
+            disableWhenUiLocked: false,
           },
         ].filter((x) => x) as MenuItemData[];
       } else {
@@ -444,6 +459,7 @@ export default defineComponent({
                         engineId: engineInfo.uuid,
                       });
                     },
+                    disableWhenUiLocked: false,
                   },
                   {
                     type: "button",
@@ -453,6 +469,7 @@ export default defineComponent({
                         engineId: engineInfo.uuid,
                       });
                     },
+                    disableWhenUiLocked: false,
                   },
                 ].filter((x) => x),
               } as MenuItemRoot)
@@ -466,6 +483,7 @@ export default defineComponent({
             onClick: () => {
               store.dispatch("RESTART_ENGINE_ALL");
             },
+            disableWhenUiLocked: false,
           },
         ];
       }
@@ -476,6 +494,7 @@ export default defineComponent({
           onClick: () => {
             store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
           },
+          disableWhenUiLocked: false,
         },
         {
           type: "button",
@@ -485,6 +504,7 @@ export default defineComponent({
               isEngineManageDialogOpen: true,
             });
           },
+          disableWhenUiLocked: false,
         }
       );
     }
