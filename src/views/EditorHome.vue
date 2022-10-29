@@ -20,6 +20,14 @@
                   : "データ準備中・・・"
               }}
             </div>
+
+            <template v-if="isEngineStartingTakingLonger">
+              <q-separator spaced />
+              エンジン起動に時間がかかっています。<br />
+              <q-btn outline click="restartAppWithSafeMode">
+                セーフモードで起動する</q-btn
+              >
+            </template>
           </div>
         </div>
         <q-splitter
@@ -547,6 +555,16 @@ export default defineComponent({
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
+    const isEngineStartingTakingLonger = ref<boolean>(false);
+    onMounted(() => {
+      setTimeout(() => {
+        isEngineStartingTakingLonger.value = true;
+      }, 10000);
+    });
+    const restartAppWithSafeMode = () => {
+      store.dispatch("RESTART_APP", { safeMode: true });
+    };
+
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
       get: () => store.state.isHelpDialogOpen,
@@ -697,6 +715,8 @@ export default defineComponent({
       updateAudioDetailPane,
       isCompletedInitialStartup,
       allEngineState,
+      isEngineStartingTakingLonger,
+      restartAppWithSafeMode,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,

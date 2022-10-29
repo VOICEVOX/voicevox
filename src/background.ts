@@ -887,6 +887,7 @@ migrateHotkeySettings();
 
 let willQuit = false;
 let willRestart = false;
+let isSafeMode = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -915,11 +916,13 @@ async function createWindow() {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/home"
+      (process.env.WEBPACK_DEV_SERVER_URL as string) +
+        "#/home?isSafeMode=" +
+        isSafeMode
     );
   } else {
     createProtocol("app");
-    win.loadURL("app://./index.html#/home");
+    win.loadURL("app://./index.html#/home?isSafeMode=" + isSafeMode);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -1279,8 +1282,9 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return validateEngineDir(engineDir);
 });
 
-ipcMainHandle("RESTART_APP", async () => {
+ipcMainHandle("RESTART_APP", async (_, { safeMode }) => {
   willRestart = true;
+  isSafeMode = safeMode;
   win.close();
 });
 

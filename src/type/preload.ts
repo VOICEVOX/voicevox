@@ -98,7 +98,7 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(): void;
+  restartApp(obj: { safeMode: boolean }): void;
 }
 
 export type AppInfos = {

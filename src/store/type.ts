@@ -708,6 +708,7 @@ export type CommandStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
+  isSafeMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -783,6 +784,11 @@ export type IndexStoreTypes = {
 
   INIT_VUEX: {
     action(): void;
+  };
+
+  SET_IS_SAFE_MODE: {
+    mutation: { isSafeMode: boolean };
+    action(payload: boolean): void;
   };
 };
 
@@ -1108,7 +1114,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(): void;
+    action(obj: { safeMode?: boolean }): void;
   };
 };
 

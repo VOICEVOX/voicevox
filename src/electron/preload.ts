@@ -253,8 +253,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },
 
-  restartApp: () => {
-    ipcRendererInvoke("RESTART_APP");
+  restartApp: ({ safeMode }: { safeMode: boolean }) => {
+    ipcRendererInvoke("RESTART_APP", { safeMode });
   },
 };
 

@@ -436,7 +436,7 @@ export default defineComponent({
         },
       })
         .onOk(() => {
-          store.dispatch("RESTART_APP");
+          store.dispatch("RESTART_APP", {});
         })
         .onCancel(() => {
           toInitialState();

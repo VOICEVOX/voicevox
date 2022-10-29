@@ -561,8 +561,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RESTART_APP: {
-    action() {
-      window.electron.restartApp();
+    action(_, { safeMode }: { safeMode?: boolean }) {
+      window.electron.restartApp({ safeMode: !!safeMode });
     },
   },
 });
