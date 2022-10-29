@@ -132,9 +132,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       }
     ) {
       for (const [key, value] of Object.entries(dialogState)) {
-        if (key in state) {
-          state[key] = value;
+        if (!(key in state)) {
+          throw new Error(`Unknown dialog state: ${key}`);
         }
+        state[key] = value;
       }
     },
     async action({ state, commit }, dialogState) {
