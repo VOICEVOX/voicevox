@@ -17,7 +17,7 @@
       "
     />
     <q-space />
-    <div class="window-title">
+    <div class="window-title" :class="{ 'text-warning': isSafeMode }">
       {{
         (isEdited ? "*" : "") +
         (projectName !== undefined ? projectName + " - " : "") +
