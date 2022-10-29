@@ -399,7 +399,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SET_ENGINE_INFOS: {
     mutation(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-      state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+      if (state.isSafeMode) {
+        state.engineIds = engineInfos
+          .filter((engineInfo) => engineInfo.type === "main")
+          .map((info) => info.uuid);
+      } else {
+        state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+      }
       state.engineInfos = Object.fromEntries(
         engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
       );
