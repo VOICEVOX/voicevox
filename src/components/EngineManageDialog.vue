@@ -71,9 +71,12 @@
                     <q-item-label class="text-display">{{
                       engineInfos[id].name
                     }}</q-item-label>
-                    <q-item-label caption v-if="engineInfos[id].path">{{
-                      engineInfos[id].path
-                    }}</q-item-label>
+                    <q-item-label
+                      caption
+                      v-if="engineInfos[id].path"
+                      class="engine-path"
+                      >{{ engineInfos[id].path }}</q-item-label
+                    >
                   </q-item-section>
                 </q-item>
               </template>
@@ -525,6 +528,10 @@ export default defineComponent({
   );
   width: 100%;
   overflow-y: auto;
+}
+
+.engine-path {
+  overflow-wrap: break-word;
 }
 
 .active-engine {
