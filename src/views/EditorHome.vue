@@ -618,7 +618,7 @@ export default defineComponent({
     const isEngineManageDialogOpenComputed = computed({
       get: () => store.state.isEngineManageDialogOpen,
       set: (val) =>
-        store.dispatch("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isEngineManageDialogOpen: val,
         }),
     });
