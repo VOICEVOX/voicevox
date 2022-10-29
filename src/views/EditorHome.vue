@@ -24,7 +24,7 @@
             <template v-if="isEngineStartingTakingLonger">
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
-              <q-btn outline click="restartAppWithSafeMode">
+              <q-btn outline @click="restartAppWithSafeMode">
                 セーフモードで起動する</q-btn
               >
             </template>
@@ -559,7 +559,7 @@ export default defineComponent({
     onMounted(() => {
       setTimeout(() => {
         isEngineStartingTakingLonger.value = true;
-      }, 10000);
+      }, 10);
     });
     const restartAppWithSafeMode = () => {
       store.dispatch("RESTART_APP", { safeMode: true });

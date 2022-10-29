@@ -23,7 +23,8 @@
         (projectName !== undefined ? projectName + " - " : "") +
         "VOICEVOX" +
         (currentVersion ? " - Ver. " + currentVersion + " - " : "") +
-        (useGpu ? "GPU" : "CPU")
+        (useGpu ? "GPU" : "CPU") +
+        (isSafeMode ? " - セーフモード" : "")
       }}
     </div>
     <q-space />
@@ -96,6 +97,7 @@ export default defineComponent({
     window.electron.getAppInfos().then((obj) => {
       currentVersion.value = obj.version;
     });
+    const isSafeMode = computed(() => store.state.isSafeMode);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
     const projectName = computed(() => store.getters.PROJECT_NAME);
@@ -524,6 +526,7 @@ export default defineComponent({
       uiLocked,
       menubarLocked,
       projectName,
+      isSafeMode,
       isEdited,
       isFullscreen,
       subMenuOpenFlags,
