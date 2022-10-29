@@ -47,6 +47,7 @@ describe("store/vuex.js test", () => {
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
+        isSafeMode: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
