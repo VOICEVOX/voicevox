@@ -179,6 +179,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  ON_VUEX_READY: {
+    action() {
+      window.electron.vuexReady();
+    },
+  },
+
   SET_USE_GPU: {
     mutation(state, { useGpu }: { useGpu: boolean }) {
       state.useGpu = useGpu;
