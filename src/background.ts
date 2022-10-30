@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
+import shlex from "shlex";
 import yauzl from "yauzl";
 
 import {
@@ -31,6 +32,7 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
+  EngineDirValidationResult,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -80,7 +82,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 // .envから設定をprocess.envに読み込み
-const appDirPath = path.dirname(app.getPath("exe"));
+let appDirPath: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -88,8 +90,11 @@ const appDirPath = path.dirname(app.getPath("exe"));
 //       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
 //       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
+  // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+  appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
 } else {
+  appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
 }
@@ -109,9 +114,10 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
   }
 
-  return engines.map((engineInfo) => {
+  return engines.map((engineInfo, i) => {
     return {
       ...engineInfo,
+      type: i === 0 ? "main" : "sub",
       path:
         engineInfo.path === undefined
           ? undefined
@@ -122,29 +128,28 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
 
-// ユーザーディレクトリにあるエンジンを取得する
-function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
+// 追加エンジンの一覧を取得する
+function fetchAdditionalEngineInfos(): EngineInfo[] {
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
 
   const engines: EngineInfo[] = [];
-  for (const dirName of fs.readdirSync(userEngineDir)) {
-    const engineDir = path.join(userEngineDir, dirName);
-    if (!fs.statSync(engineDir).isDirectory()) {
-      console.log(`${engineDir} is not directory`);
-      continue;
-    }
-
+  const addEngine = (engineDir: string, type: "userDir" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
     if (!fs.existsSync(manifestPath)) {
-      console.log(`${manifestPath} is not found`);
-      continue;
+      return "manifestNotFound";
+    }
+    let manifest: EngineManifest;
+    try {
+      manifest = JSON.parse(
+        fs.readFileSync(manifestPath, { encoding: "utf8" })
+      );
+    } catch (e) {
+      return "manifestParseError";
     }
 
-    const manifest: EngineManifest = JSON.parse(
-      fs.readFileSync(manifestPath, { encoding: "utf8" })
-    );
+    const [command, ...args] = shlex.split(manifest.command);
 
     engines.push({
       uuid: manifest.uuid,
@@ -152,14 +157,44 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       name: manifest.name,
       path: engineDir,
       executionEnabled: true,
-      executionFilePath: path.join(engineDir, manifest.command),
+      executionFilePath: path.join(engineDir, command),
+      executionArgs: args,
+      type,
     });
+    return "ok";
+  };
+  for (const dirName of fs.readdirSync(userEngineDir)) {
+    const engineDir = path.join(userEngineDir, dirName);
+    if (!fs.statSync(engineDir).isDirectory()) {
+      console.log(`${engineDir} is not directory`);
+      continue;
+    }
+    const result = addEngine(engineDir, "userDir");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+    }
+  }
+  for (const engineDir of store.get("engineDirs")) {
+    const result = addEngine(engineDir, "path");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+      // 動かないエンジンは追加できないので削除
+      // FIXME: エンジン管理UIで削除可能にする
+      dialog.showErrorBox(
+        "エンジンの読み込みに失敗しました。",
+        `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
+      );
+      store.set(
+        "engineDirs",
+        store.get("engineDirs").filter((p) => p !== engineDir)
+      );
+    }
   }
   return engines;
 }
 
 function fetchEngineInfos(): EngineInfo[] {
-  const userEngineInfos = fetchEngineInfosFromUserDirectory();
+  const userEngineInfos = fetchAdditionalEngineInfos();
   return [...defaultEngineInfos, ...userEngineInfos];
 }
 
@@ -434,6 +469,13 @@ const store = new Store<ElectronStoreType>({
         tweakableSliderByScroll: false,
       },
     },
+    engineDirs: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: [],
+    },
   },
   migrations: {
     "0.13": (store) => {
@@ -527,7 +569,7 @@ async function runEngine(engineId: string) {
     appDirPath,
     engineInfo.executionFilePath ?? "run.exe"
   );
-  const args = useGpu ? ["--use_gpu"] : [];
+  const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : []);
 
   log.info(`ENGINE ${engineId} path: ${enginePath}`);
   log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
@@ -808,6 +850,43 @@ async function loadVvpp(vvppPath: string) {
   }
 }
 
+// ディレクトリがエンジンとして正しいかどうかを判定する
+function validateEngineDir(engineDir: string): EngineDirValidationResult {
+  if (!fs.existsSync(engineDir)) {
+    return "directoryNotFound";
+  } else if (!fs.statSync(engineDir).isDirectory()) {
+    return "notADirectory";
+  } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
+    return "manifestNotFound";
+  }
+  const manifest = fs.readFileSync(
+    path.join(engineDir, "engine_manifest.json"),
+    "utf-8"
+  );
+  let manifestContent: EngineManifest;
+  try {
+    manifestContent = JSON.parse(manifest);
+  } catch (e) {
+    return "invalidManifest";
+  }
+
+  if (
+    ["name", "uuid", "port", "command", "icon"].some(
+      (key) => !(key in manifestContent)
+    )
+  ) {
+    return "invalidManifest";
+  }
+
+  const engineInfos = fetchEngineInfos();
+  if (
+    engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
+  ) {
+    return "alreadyExists";
+  }
+  return "ok";
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -896,6 +975,7 @@ function migrateHotkeySettings() {
 migrateHotkeySettings();
 
 let willQuit = false;
+let willRestart = false;
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -1284,6 +1364,15 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
+ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
+  return validateEngineDir(engineDir);
+});
+
+ipcMainHandle("RESTART_APP", async () => {
+  willRestart = true;
+  win.close();
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -1314,8 +1403,25 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
+  const restartApp = async () => {
+    willRestart = false;
+    willQuit = false;
+    await createWindow();
+    await runEngineAll();
+  };
+
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
+    if (willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "All ENGINE processes killed. Now restarting app because of willRestart flag"
+      );
+
+      event.preventDefault();
+      restartApp();
+      return;
+    }
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1352,11 +1458,19 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
+    if (willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "All ENGINE process kill operations done. Attempting to restart app"
+      );
+      restartApp();
+    }
     // アプリケーションの終了を再試行する
     log.info(
       "All ENGINE process kill operations done. Attempting to quit app again"
     );
     app.quit();
+    return;
   })();
 });
 

@@ -248,6 +248,14 @@ const api: Sandbox = {
       newValue
     )) as typeof newValue;
   },
+
+  validateEngineDir: async (engineDir) => {
+    return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
+  },
+
+  restartApp: () => {
+    ipcRendererInvoke("RESTART_APP");
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

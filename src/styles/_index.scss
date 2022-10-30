@@ -172,6 +172,13 @@ img {
   background: colors.$display;
 }
 
+.text-display-hyperlink {
+  color: colors.$display-hyperlink;
+}
+.bg-display-hyperlink {
+  background: colors.$display-hyperlink;
+}
+
 .text-display-on-primary {
   color: colors.$display-on-primary;
 }
