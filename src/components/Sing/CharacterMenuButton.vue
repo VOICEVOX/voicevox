@@ -21,7 +21,7 @@
               class="col-grow"
               :class="
                 characterInfo.metas.speakerUuid ===
-                  selectedCharacterInfo.metas.speakerUuid &&
+                  selectedCharacterInfo?.metas.speakerUuid &&
                 'selected-character-item'
               "
               @click="
@@ -92,7 +92,7 @@
                       clickable
                       v-close-popup
                       active-class="selected-character-item"
-                      :active="style.styleId === selectedStyle.styleId"
+                      :active="style.styleId === selectedStyle?.styleId"
                       @click="
                         changeStyleId(
                           characterInfo.metas.speakerUuid,
@@ -151,8 +151,8 @@ export default defineComponent({
   name: "CharacterMenuButton",
 
   props: {
-    engineId: { type: String, required: true },
-    styleId: { type: Number, required: true },
+    engineId: { type: String },
+    styleId: { type: Number },
     touchPosition: { type: Boolean, default: false },
   },
   emits: ["ChangeStyleId"],

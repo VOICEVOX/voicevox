@@ -53,9 +53,8 @@ export default defineComponent({
     });
 
     const characterName = computed(() => {
-      const styleId = store.state.styleId;
       const style = characterInfo.value?.metas.styles.find(
-        (style) => style.styleId === styleId
+        (style) => style.styleId === store.state.styleId
       );
       return style?.styleName
         ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`

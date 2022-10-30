@@ -5,7 +5,7 @@
       v-bind:class="{ active: isShowSinger }"
       @click="toggleShowSinger"
     >
-      <img :src="selectedStyle.iconPath" class="singer-avatar" />
+      <img :src="selectedStyle?.iconPath" class="singer-avatar" />
     </div>
     <div class="sing-player">
       <button type="button" class="sing-button-temp">戻る</button>
