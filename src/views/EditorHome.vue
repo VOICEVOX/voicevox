@@ -556,10 +556,21 @@ export default defineComponent({
     });
 
     const isEngineStartingTakingLonger = ref<boolean>(false);
-    onMounted(() => {
-      setTimeout(() => {
-        isEngineStartingTakingLonger.value = true;
-      }, 10000);
+    const isEngineStartingTakingLongerTimeoutId =
+      ref<number | undefined>(undefined);
+    watch(allEngineState, (newEngineState) => {
+      if (isEngineStartingTakingLongerTimeoutId.value !== undefined) {
+        clearTimeout(isEngineStartingTakingLongerTimeoutId.value);
+        isEngineStartingTakingLongerTimeoutId.value = undefined;
+      }
+      if (newEngineState === "STARTING") {
+        isEngineStartingTakingLonger.value = false;
+        isEngineStartingTakingLongerTimeoutId.value = window.setTimeout(() => {
+          isEngineStartingTakingLonger.value = true;
+        }, 10000);
+      } else {
+        isEngineStartingTakingLonger.value = false;
+      }
     });
     const restartAppWithSafeMode = () => {
       store.dispatch("RESTART_APP", { safeMode: true });
