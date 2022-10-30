@@ -174,7 +174,7 @@
               <ul>
                 <li>
                   バージョン：{{
-                    engineVersions[selectedId] ?? "（取得に失敗しました）"
+                    engineVersions[selectedId] ? engineVersions[selectedId] : "（取得に失敗しました）"
                   }}
                 </li>
                 <li>
