@@ -5,8 +5,7 @@
       v-bind:class="{ active: isShowSinger }"
       @click="toggleShowSinger"
     >
-      <div class="singer-avatar" />
-      <!-- <img src="" class="singer-avatar" /> -->
+      <img :src="selectedStyle.iconPath" class="singer-avatar" />
     </div>
     <div class="sing-player">
       <button type="button" class="sing-button-temp">戻る</button>
@@ -40,9 +39,34 @@ export default defineComponent({
         isShowSinger: !isShowSinger.value,
       });
     };
+
+    const userOrderedCharacterInfos = computed(
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+    );
+    const selectedCharacterInfo = computed(() =>
+      userOrderedCharacterInfos.value !== undefined &&
+      store.state.engineId !== undefined &&
+      store.state.styleId !== undefined
+        ? store.getters.CHARACTER_INFO(
+            store.state.engineId,
+            store.state.styleId
+          )
+        : undefined
+    );
+    const selectedStyle = computed(() =>
+      selectedCharacterInfo.value?.metas.styles.find(
+        (style) =>
+          style.styleId === store.state.styleId &&
+          style.engineId === store.state.engineId
+      )
+    );
+
     return {
       isShowSinger,
       toggleShowSinger,
+      userOrderedCharacterInfos,
+      selectedCharacterInfo,
+      selectedStyle,
     };
   },
 });
@@ -74,12 +98,12 @@ export default defineComponent({
   }
 
   &.active {
-    border-color: red;
+    border-color: colors.$primary;
   }
 }
 
 .singer-avatar {
-  background: #777;
+  background: colors.$background;
   display: block;
   object-fit: cover;
   height: 100%;
