@@ -181,6 +181,7 @@
         transition-show="none"
         transition-hide="none"
         v-slot="scope"
+        @save="handleChangeSlider($event)"
       >
         <q-input
           v-model="scope.value"
@@ -194,6 +195,7 @@
           @keyup.enter="scope.set"
         />
       </q-popup-edit>
+
       <q-slider
         dense
         snap
@@ -736,6 +738,14 @@ export default defineComponent({
     // プリセットの編集
     const showsPresetEditDialog = ref(false);
 
+    const handleChangeSlider = (speedScale: number) => {
+      console.log("変更値:" + speedScale);
+      store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
+        audioKey: props.activeAudioKey,
+        speedScale,
+      });
+    };
+
     return {
       uiLocked,
       audioItem,
@@ -771,6 +781,7 @@ export default defineComponent({
       volumeScaleSlider,
       prePhonemeLengthSlider,
       postPhonemeLengthSlider,
+      handleChangeSlider,
     };
   },
 });
