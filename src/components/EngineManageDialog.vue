@@ -160,7 +160,7 @@
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
               />
-              <div class="title-engine-icon-container inline-block" v-else>
+              <div class="q-mt-sm inline-block" v-else>
                 <q-avatar rounded color="primary" size="2rem">
                   <span class="text-display-on-primary"> ? </span>
                 </q-avatar>
@@ -174,7 +174,9 @@
               <ul>
                 <li>
                   バージョン：{{
-                    engineVersions[selectedId] ? engineVersions[selectedId] : "（取得に失敗しました）"
+                    engineVersions[selectedId]
+                      ? engineVersions[selectedId]
+                      : "（取得に失敗しました）"
                   }}
                 </li>
                 <li>
@@ -588,9 +590,5 @@ export default defineComponent({
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   border-radius: 5px;
-}
-
-.title-engine-icon-container {
-  margin-top: 0.5rem;
 }
 </style>
