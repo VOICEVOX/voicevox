@@ -5,7 +5,7 @@
       v-bind:class="{ active: isShowSinger }"
       @click="toggleShowSinger"
     >
-      <img :src="selectedStyle?.iconPath" class="singer-avatar" />
+      <img :src="selectedStyleIconPath" class="singer-avatar" />
     </div>
     <div class="sing-player">
       <button type="button" class="sing-button-temp">戻る</button>
@@ -53,12 +53,13 @@ export default defineComponent({
           )
         : undefined
     );
-    const selectedStyle = computed(() =>
-      selectedCharacterInfo.value?.metas.styles.find(
-        (style) =>
-          style.styleId === store.state.styleId &&
-          style.engineId === store.state.engineId
-      )
+    const selectedStyleIconPath = computed(
+      () =>
+        selectedCharacterInfo.value?.metas.styles.find(
+          (style) =>
+            style.styleId === store.state.styleId &&
+            style.engineId === store.state.engineId
+        )?.iconPath
     );
 
     return {
@@ -66,7 +67,7 @@ export default defineComponent({
       toggleShowSinger,
       userOrderedCharacterInfos,
       selectedCharacterInfo,
-      selectedStyle,
+      selectedStyleIconPath,
     };
   },
 });

@@ -1,13 +1,6 @@
 <template>
   <div class="sing-singer-panel" v-bind:class="{ hide: !isShowSinger }">
-    <character-menu-button
-      class="character-menu-button"
-      :engineId="engineId"
-      :styleId="styleId"
-      touchPosition
-      :disable="uiLocked"
-      @ChangeStyleId="changeStyleId"
-    >
+    <character-menu-button class="character-menu-button" :disable="uiLocked">
       <span class="character-name">{{ characterName }}</span>
       <div class="character-portrait-wrapper">
         <img class="character-portrait" :src="portraitPath" />
@@ -37,13 +30,6 @@ export default defineComponent({
       () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
 
-    const engineId = computed(() => store.state.engineId);
-    const styleId = computed(() => store.state.styleId);
-
-    const changeStyleId = (engineId: string, styleId: number) => {
-      store.dispatch("SET_SINGER", { engineId, styleId });
-    };
-
     const characterInfo = computed(() => {
       const engineId = store.state.engineId;
       const styleId = store.state.styleId;
@@ -67,9 +53,6 @@ export default defineComponent({
       isShowSinger,
       uiLocked,
       userOrderedCharacterInfos,
-      engineId,
-      styleId,
-      changeStyleId,
       characterInfo,
       characterName,
       portraitPath,

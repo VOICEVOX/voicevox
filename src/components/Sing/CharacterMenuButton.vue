@@ -5,7 +5,7 @@
       class="character-menu"
       transition-show="none"
       transition-hide="none"
-      :touch-position="touchPosition"
+      touch-position
     >
       <q-list>
         <q-item
@@ -20,8 +20,7 @@
               v-close-popup
               class="col-grow"
               :class="
-                characterInfo.metas.speakerUuid ===
-                  selectedCharacterInfo?.metas.speakerUuid &&
+                characterInfo.metas.speakerUuid === selectedSpeakerUuid &&
                 'selected-character-item'
               "
               @click="
@@ -92,7 +91,7 @@
                       clickable
                       v-close-popup
                       active-class="selected-character-item"
-                      :active="style.styleId === selectedStyle?.styleId"
+                      :active="style.styleId === selectedStyleId"
                       @click="
                         changeStyleId(
                           characterInfo.metas.speakerUuid,
@@ -150,14 +149,7 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 export default defineComponent({
   name: "CharacterMenuButton",
 
-  props: {
-    engineId: { type: String },
-    styleId: { type: Number },
-    touchPosition: { type: Boolean, default: false },
-  },
-  emits: ["ChangeStyleId"],
-
-  setup(props, { emit }) {
+  setup() {
     const store = useStore();
 
     const userOrderedCharacterInfos = computed(
@@ -192,7 +184,7 @@ export default defineComponent({
           `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`
         );
 
-      emit("ChangeStyleId", engineId, styleId);
+      store.dispatch("SET_SINGER", { engineId, styleId });
     };
 
     const getDefaultStyle = (speakerUuid: string) => {
@@ -212,18 +204,27 @@ export default defineComponent({
     const selectedCharacterInfo = computed(() => {
       if (
         userOrderedCharacterInfos.value === undefined ||
-        props.engineId === undefined ||
-        props.styleId === undefined
+        store.state.engineId === undefined ||
+        store.state.styleId === undefined
       )
         return undefined;
-      return store.getters.CHARACTER_INFO(props.engineId, props.styleId);
+      return store.getters.CHARACTER_INFO(
+        store.state.engineId,
+        store.state.styleId
+      );
     });
 
-    const selectedStyle = computed(() =>
-      selectedCharacterInfo.value?.metas.styles.find(
-        (style) =>
-          style.styleId === props.styleId && style.engineId === props.engineId
-      )
+    const selectedSpeakerUuid = computed(() => {
+      return selectedCharacterInfo.value?.metas.speakerUuid;
+    });
+
+    const selectedStyleId = computed(
+      () =>
+        selectedCharacterInfo.value?.metas.styles.find(
+          (style) =>
+            style.styleId === store.state.styleId &&
+            style.engineId === store.state.engineId
+        )?.styleId
     );
 
     // 複数エンジン
@@ -245,7 +246,8 @@ export default defineComponent({
       changeStyleId,
       getDefaultStyle,
       selectedCharacterInfo,
-      selectedStyle,
+      selectedSpeakerUuid,
+      selectedStyleId,
       isMultipleEngine,
       engineIcons,
     };
