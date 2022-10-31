@@ -90,15 +90,24 @@
           >
             <div class="q-pl-md q-mt-md">
               <div class="text-h5 q-ma-sm">エンジンの追加</div>
+
+              <q-select
+                class="q-ma-sm"
+                :options="['dir', 'vvpp']"
+                :option-label="getEngineLoaderTypeName"
+                v-model="engineLoaderType"
+                label="追加元"
+              />
             </div>
 
-            <div class="no-wrap q-pl-md">
-              <div class="text-h6 q-ma-sm">場所</div>
+            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
+              <div class="text-h6 q-ma-sm">フォルダの場所</div>
               <div class="q-ma-sm">
                 <q-input
                   ref="newEngineDirInput"
                   v-model="newEngineDir"
                   dense
+                  readonly
                   :error="
                     newEngineDirValidationState &&
                     newEngineDirValidationState !== 'ok'
@@ -115,6 +124,39 @@
                     >
                       <q-tooltip :delay="500" anchor="bottom left">
                         フォルダ選択
+                      </q-tooltip>
+                    </q-btn>
+                  </template>
+                  <template v-slot:error>
+                    {{ getValidationMessage(newEngineDirValidationState) }}
+                  </template>
+                </q-input>
+              </div>
+            </div>
+            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
+              <div class="text-h6 q-ma-sm">vvppファイルの場所</div>
+              <div class="q-ma-sm">
+                <q-input
+                  ref="newEngineDirInput"
+                  v-model="newEngineDir"
+                  dense
+                  readonly
+                  :error="
+                    newEngineDirValidationState &&
+                    newEngineDirValidationState !== 'ok'
+                  "
+                >
+                  <template v-slot:append>
+                    <q-btn
+                      square
+                      dense
+                      flat
+                      color="primary"
+                      icon="folder_open"
+                      @click="selectEngineDir"
+                    >
+                      <q-tooltip :delay="500" anchor="bottom left">
+                        ファイル選択
                       </q-tooltip>
                     </q-btn>
                   </template>
@@ -245,6 +287,8 @@ import { base64ImageToUri } from "@/helpers/imageHelper";
 import type { EngineDirValidationResult } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
+type EngineLoaderType = "dir" | "vvpp";
+
 export default defineComponent({
   name: "EngineManageDialog",
   props: {
@@ -264,6 +308,7 @@ export default defineComponent({
     });
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const isAddingEngine = ref(false);
+    const engineLoaderType = ref<EngineLoaderType>("dir");
 
     const categorizedEngineIds = computed(() => {
       const result = {
@@ -327,6 +372,14 @@ export default defineComponent({
         plugin: "追加エンジン",
       };
       return engineTypeMap[name as keyof typeof engineTypeMap];
+    };
+
+    const getEngineLoaderTypeName = (name: EngineLoaderType) => {
+      const engineLoaderTypeMap = {
+        dir: "フォルダ",
+        vvpp: "vvppファイル",
+      };
+      return engineLoaderTypeMap[name];
     };
 
     const getFeatureName = (name: keyof SupportedFeatures) => {
@@ -474,12 +527,14 @@ export default defineComponent({
       engineManifests,
       engineIcons,
       engineVersions,
+      engineLoaderType,
       selectEngine,
       addEngine,
       deleteEngine,
       isDeletable,
       getFeatureName,
       getEngineTypeName,
+      getEngineLoaderTypeName,
       getValidationMessage,
       uiLocked,
       isAddingEngine,
