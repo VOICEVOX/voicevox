@@ -395,6 +395,21 @@ export default defineComponent({
       },
     ]);
 
+    if (store.state.isSafeMode) {
+      (
+        menudata.value.find((data) => data.label === "設定") as MenuItemRoot
+      ).subMenu.push({
+        type: "button",
+        label: "セーフモードを解除",
+        onClick() {
+          store.dispatch("RESTART_APP", {
+            safeMode: false,
+          });
+        },
+        disableWhenUiLocked: false,
+      });
+    }
+
     const subMenuOpenFlags = ref(
       [...Array(menudata.value.length)].map(() => false)
     );
@@ -509,16 +524,6 @@ export default defineComponent({
           disableWhenUiLocked: false,
         }
       );
-      if (store.state.isSafeMode) {
-        engineMenu.subMenu.push({
-          type: "button",
-          label: "セーフモードを解除",
-          onClick: () => {
-            store.dispatch("RESTART_APP", { safeMode: false });
-          },
-          disableWhenUiLocked: false,
-        });
-      }
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 
