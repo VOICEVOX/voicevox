@@ -544,8 +544,10 @@ export default defineComponent({
     // エンジン追加状態
     const toAddEngineState = () => {
       isAddingEngine.value = true;
+      selectedId.value = "";
       newEngineDirValidationState.value = null;
       newEngineDir.value = "";
+      vvppFilePath.value = "";
     };
     // ダイアログが閉じている状態
     const toDialogClosedState = () => {
