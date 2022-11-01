@@ -230,4 +230,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       );
     },
   },
+  LOAD_VVPP: {
+    action: async (_, path) => {
+      return window.electron.loadVvpp(path);
+    },
+  },
 });

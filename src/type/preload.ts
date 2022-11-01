@@ -42,6 +42,10 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showVvppOpenDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
@@ -97,6 +101,7 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  loadVvpp(path: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(): void;
 }
@@ -325,3 +330,5 @@ export type EngineDirValidationResult =
   | "invalidManifest"
   | "notADirectory"
   | "alreadyExists";
+
+export type VvppFilePathValidationResult = "ok" | "fileNotFound";

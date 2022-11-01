@@ -101,6 +101,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showVvppOpenDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_VVPP_OPEN_DIALOG", { title, defaultPath });
+  },
+
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
@@ -247,6 +251,10 @@ const api: Sandbox = {
       key,
       newValue
     )) as typeof newValue;
+  },
+
+  loadVvpp: async (filePath) => {
+    return await ipcRendererInvoke("LOAD_VVPP", filePath);
   },
 
   validateEngineDir: async (engineDir) => {

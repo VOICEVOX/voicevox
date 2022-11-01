@@ -140,7 +140,7 @@
               <div class="q-ma-sm">
                 <q-input
                   ref="vvppFilePathInput"
-                  v-model="newEngineDir"
+                  v-model="vvppFilePath"
                   dense
                   readonly
                 >
@@ -151,7 +151,7 @@
                       flat
                       color="primary"
                       icon="folder_open"
-                      @click="selectVvppFilePath"
+                      @click="selectVvppFile"
                     >
                       <q-tooltip :delay="500" anchor="bottom left">
                         ファイル選択
@@ -181,7 +181,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="addEngine"
-                :disabled="newEngineDirValidationState !== 'ok'"
+                :disabled="!vvppFilePath"
                 >追加</q-btn
               >
             </div>
@@ -412,17 +412,21 @@ export default defineComponent({
     };
 
     const addEngine = () => {
+      uiLocked.value = true;
       if (engineLoaderType.value === "dir") {
         store.dispatch("ADD_ENGINE_DIR", {
           engineDir: newEngineDir.value,
         });
+
+        requireRestart("エンジンを追加しました。");
       } else {
-        store.dispatch("LOAD_VVPP", {
-          vvppFilePath: vvppFilePath.value,
+        store.dispatch("LOAD_VVPP", vvppFilePath.value).then((success) => {
+          if (success) {
+            requireRestart("エンジンを追加しました。");
+          }
         });
       }
-
-      requireRestart("エンジンを追加しました。");
+      uiLocked.value = false;
     };
     const deleteEngine = () => {
       $q.dialog({
@@ -509,8 +513,9 @@ export default defineComponent({
 
     const vvppFilePath = ref("");
     const selectVvppFile = async () => {
-      const path = await window.electron.showOpenDirectoryDialog({
-        title: "エンジンのフォルダを選択",
+      const path = await window.electron.showVvppOpenDialog({
+        title: "vvppファイルを選択",
+        defaultPath: vvppFilePath.value,
       });
       if (path) {
         vvppFilePath.value = path;

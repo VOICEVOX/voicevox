@@ -720,6 +720,10 @@ export type EngineStoreTypes = {
   REMOVE_ENGINE_DIR: {
     action(payload: { engineDir: string }): Promise<void>;
   };
+
+  LOAD_VVPP: {
+    action: (path: string) => Promise<boolean>;
+  };
 };
 
 /*

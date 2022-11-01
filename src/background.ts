@@ -845,7 +845,7 @@ async function loadVvpp(vvppPath: string) {
       "読み込みエラー",
       `${vvppPath} を読み込めませんでした。`
     );
-    console.error(`Failed to read ${vvppPath}, {e}`);
+    console.error(`Failed to read ${vvppPath}, ${e}`);
     return false;
   }
 }
@@ -1157,6 +1157,16 @@ ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
+ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
+  const result = await dialog.showOpenDialog(win, {
+    title,
+    defaultPath,
+    filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
+    properties: [],
+  });
+  return result.filePaths[0];
+});
+
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
@@ -1362,6 +1372,10 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   store.set(key, newValue);
   return store.get(key);
+});
+
+ipcMainHandle("LOAD_VVPP", async (_, path: string) => {
+  return await loadVvpp(path);
 });
 
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
