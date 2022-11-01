@@ -91,13 +91,20 @@
             <div class="q-pl-md q-mt-md">
               <div class="text-h5 q-ma-sm">エンジンの追加</div>
 
-              <q-select
-                class="q-ma-sm"
-                :options="['dir', 'vvpp']"
-                :option-label="getEngineLoaderTypeName"
-                v-model="engineLoaderType"
-                label="追加元"
-              />
+              <div class="q-ma-sm">
+                <q-btn-toggle
+                  :options="[
+                    { value: 'dir', label: 'フォルダ' },
+                    { value: 'vvpp', label: 'vvppファイル' },
+                  ]"
+                  v-model="engineLoaderType"
+                  color="surface"
+                  unelevated
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                />
+              </div>
             </div>
 
             <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
@@ -374,14 +381,6 @@ export default defineComponent({
       return engineTypeMap[name as keyof typeof engineTypeMap];
     };
 
-    const getEngineLoaderTypeName = (name: EngineLoaderType) => {
-      const engineLoaderTypeMap = {
-        dir: "フォルダ",
-        vvpp: "vvppファイル",
-      };
-      return engineLoaderTypeMap[name];
-    };
-
     const getFeatureName = (name: keyof SupportedFeatures) => {
       const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
         adjustMoraPitch: "モーラごとの音高の調整",
@@ -555,7 +554,6 @@ export default defineComponent({
       isDeletable,
       getFeatureName,
       getEngineTypeName,
-      getEngineLoaderTypeName,
       getEngineDirValidationMessage,
       uiLocked,
       isAddingEngine,
