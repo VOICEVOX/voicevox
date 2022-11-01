@@ -96,7 +96,6 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineStates: Record<string, EngineState>;
   characterInfos: Record<string, CharacterInfo[]>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
@@ -120,51 +119,8 @@ export type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ALL_ENGINE_READY: {
-    getter: boolean;
-  };
-
-  IS_ENGINE_READY: {
-    getter(engineId: string): boolean;
-  };
-
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
-  };
-
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
-  };
-
-  START_WAITING_ENGINE: {
-    action(payload: { engineId: string }): void;
-  };
-
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
-  };
-
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
-  };
-
-  DETECTED_ENGINE_ERROR: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_ENGINE_DIRECTORY: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action(): void;
-  };
-
-  SET_ENGINE_STATE: {
-    mutation: { engineId: string; engineState: EngineState };
   };
 
   LOAD_CHARACTER_ALL: {
@@ -189,14 +145,6 @@ export type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
-  };
-
-  IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
-  };
-
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): void;
   };
 
   SETUP_SPEAKER: {
@@ -698,6 +646,67 @@ export type CommandStoreTypes = {
 
   CLEAR_COMMANDS: {
     mutation: undefined;
+  };
+};
+
+/*
+ * Engine Store Types
+ */
+
+export type EngineStoreState = {
+  engineStates: Record<string, EngineState>;
+};
+
+export type EngineStoreTypes = {
+  IS_ALL_ENGINE_READY: {
+    getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineId: string): boolean;
+  };
+
+  START_WAITING_ENGINE_ALL: {
+    action(): void;
+  };
+
+  START_WAITING_ENGINE: {
+    action(payload: { engineId: string }): void;
+  };
+
+  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 個別にエンジンの状態を確認できるようにする？
+  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
+  RESTART_ENGINE_ALL: {
+    action(): Promise<boolean>;
+  };
+
+  RESTART_ENGINE: {
+    action(payload: { engineId: string }): Promise<boolean>;
+  };
+
+  DETECTED_ENGINE_ERROR: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_ENGINE_DIRECTORY: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_USER_ENGINE_DIRECTORY: {
+    action(): void;
+  };
+
+  SET_ENGINE_STATE: {
+    mutation: { engineId: string; engineState: EngineState };
+  };
+
+  IS_INITIALIZED_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
+  };
+
+  INITIALIZE_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): void;
   };
 };
 
@@ -1228,6 +1237,7 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioCommandStoreState &
   CommandStoreState &
+  EngineStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
@@ -1239,6 +1249,7 @@ export type State = AudioStoreState &
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
+  EngineStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &
