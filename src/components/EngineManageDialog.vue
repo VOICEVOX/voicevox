@@ -315,7 +315,7 @@ export default defineComponent({
     });
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const isAddingEngine = ref(false);
-    const engineLoaderType = ref<EngineLoaderType | null>(null);
+    const engineLoaderType = ref<EngineLoaderType>("dir");
 
     const categorizedEngineIds = computed(() => {
       const result = {
