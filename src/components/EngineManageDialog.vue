@@ -188,7 +188,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="addEngine"
-                :disabled="!vvppFilePath"
+                :disabled="!canAddEngine"
                 >追加</q-btn
               >
             </div>
@@ -315,7 +315,7 @@ export default defineComponent({
     });
     const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const isAddingEngine = ref(false);
-    const engineLoaderType = ref<EngineLoaderType>("dir");
+    const engineLoaderType = ref<EngineLoaderType | null>(null);
 
     const categorizedEngineIds = computed(() => {
       const result = {
@@ -521,6 +521,20 @@ export default defineComponent({
       }
     };
 
+    const canAddEngine = computed(() => {
+      if (uiLocked.value) return false;
+      if (engineLoaderType.value === "dir") {
+        return (
+          newEngineDir.value !== "" &&
+          newEngineDirValidationState.value === "ok"
+        );
+      } else if (engineLoaderType.value === "vvpp") {
+        return vvppFilePath.value !== "";
+      } else {
+        return false;
+      }
+    });
+
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
@@ -569,6 +583,7 @@ export default defineComponent({
       newEngineDirValidationState,
       vvppFilePath,
       selectVvppFile,
+      canAddEngine,
     };
   },
 });
