@@ -166,18 +166,18 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
   for (const dirName of fs.readdirSync(userEngineDir)) {
     const engineDir = path.join(userEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
-      console.log(`${engineDir} is not directory`);
+      log.log(`${engineDir} is not directory`);
       continue;
     }
     const result = addEngine(engineDir, "userDir");
     if (result !== "ok") {
-      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+      log.log(`Failed to load engine: ${result}, ${engineDir}`);
     }
   }
   for (const engineDir of store.get("engineDirs")) {
     const result = addEngine(engineDir, "path");
     if (result !== "ok") {
-      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+      log.log(`Failed to load engine: ${result}, ${engineDir}`);
       // 動かないエンジンは追加できないので削除
       // FIXME: エンジン管理UIで削除可能にする
       dialog.showErrorBox(
@@ -845,7 +845,7 @@ async function loadVvpp(vvppPath: string) {
       "読み込みエラー",
       `${vvppPath} を読み込めませんでした。`
     );
-    console.error(`Failed to read ${vvppPath}, ${e}`);
+    log.error(`Failed to read ${vvppPath}, ${e}`);
     return false;
   }
 }
