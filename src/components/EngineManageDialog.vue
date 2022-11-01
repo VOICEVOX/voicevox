@@ -128,7 +128,9 @@
                     </q-btn>
                   </template>
                   <template v-slot:error>
-                    {{ getValidationMessage(newEngineDirValidationState) }}
+                    {{
+                      getEngineDirValidationMessage(newEngineDirValidationState)
+                    }}
                   </template>
                 </q-input>
               </div>
@@ -137,14 +139,10 @@
               <div class="text-h6 q-ma-sm">vvppファイルの場所</div>
               <div class="q-ma-sm">
                 <q-input
-                  ref="newEngineDirInput"
+                  ref="vvppFilePathInput"
                   v-model="newEngineDir"
                   dense
                   readonly
-                  :error="
-                    newEngineDirValidationState &&
-                    newEngineDirValidationState !== 'ok'
-                  "
                 >
                   <template v-slot:append>
                     <q-btn
@@ -153,7 +151,7 @@
                       flat
                       color="primary"
                       icon="folder_open"
-                      @click="selectEngineDir"
+                      @click="selectVvppFilePath"
                     >
                       <q-tooltip :delay="500" anchor="bottom left">
                         ファイル選択
@@ -161,7 +159,9 @@
                     </q-btn>
                   </template>
                   <template v-slot:error>
-                    {{ getValidationMessage(newEngineDirValidationState) }}
+                    {{
+                      getEngineDirValidationMessage(newEngineDirValidationState)
+                    }}
                   </template>
                 </q-input>
               </div>
@@ -395,7 +395,9 @@ export default defineComponent({
       return featureNameMap[name];
     };
 
-    const getValidationMessage = (result: EngineDirValidationResult) => {
+    const getEngineDirValidationMessage = (
+      result: EngineDirValidationResult
+    ) => {
       const messageMap: {
         [key in EngineDirValidationResult]: string | undefined;
       } = {
@@ -410,9 +412,15 @@ export default defineComponent({
     };
 
     const addEngine = () => {
-      store.dispatch("ADD_ENGINE_DIR", {
-        engineDir: newEngineDir.value,
-      });
+      if (engineLoaderType.value === "dir") {
+        store.dispatch("ADD_ENGINE_DIR", {
+          engineDir: newEngineDir.value,
+        });
+      } else {
+        store.dispatch("LOAD_VVPP", {
+          vvppFilePath: vvppFilePath.value,
+        });
+      }
 
       requireRestart("エンジンを追加しました。");
     };
@@ -486,20 +494,28 @@ export default defineComponent({
       });
       if (path) {
         newEngineDir.value = path;
+        if (path === "") {
+          newEngineDirValidationState.value = null;
+          return;
+        }
+        newEngineDirValidationState.value = await store.dispatch(
+          "VALIDATE_ENGINE_DIR",
+          {
+            engineDir: path,
+          }
+        );
       }
     };
-    watch(newEngineDir, async () => {
-      if (newEngineDir.value === "") {
-        newEngineDirValidationState.value = null;
-        return;
+
+    const vvppFilePath = ref("");
+    const selectVvppFile = async () => {
+      const path = await window.electron.showOpenDirectoryDialog({
+        title: "エンジンのフォルダを選択",
+      });
+      if (path) {
+        vvppFilePath.value = path;
       }
-      newEngineDirValidationState.value = await store.dispatch(
-        "VALIDATE_ENGINE_DIR",
-        {
-          engineDir: newEngineDir.value,
-        }
-      );
-    });
+    };
 
     // ステートの移動
     // 初期状態
@@ -535,7 +551,7 @@ export default defineComponent({
       getFeatureName,
       getEngineTypeName,
       getEngineLoaderTypeName,
-      getValidationMessage,
+      getEngineDirValidationMessage,
       uiLocked,
       isAddingEngine,
       selectedId,
@@ -548,6 +564,8 @@ export default defineComponent({
       newEngineDir,
       selectEngineDir,
       newEngineDirValidationState,
+      vvppFilePath,
+      selectVvppFile,
     };
   },
 });
