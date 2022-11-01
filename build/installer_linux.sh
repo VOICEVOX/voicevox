@@ -442,7 +442,7 @@ fi
 # Update desktop file database
 echo "[+] Updating desktop file database..."
 if command -v update-desktop-database &> /dev/null; then
-    update-desktop-database
+    update-desktop-database ${DESKTOP_ENTRY_INSTALL_DIR}
 else
     echo "[-] Skipped: Command 'update-desktop-database' not found"
 fi
