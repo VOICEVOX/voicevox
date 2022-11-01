@@ -708,6 +708,18 @@ export type EngineStoreTypes = {
   INITIALIZE_ENGINE_SPEAKER: {
     action(payload: { engineId: string; styleId: number }): void;
   };
+
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
 };
 
 /*
@@ -912,18 +924,6 @@ export type SettingStoreTypes = {
 
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
-  };
-
-  VALIDATE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
-  };
-
-  ADD_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
-  };
-
-  REMOVE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
   };
 };
 

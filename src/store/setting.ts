@@ -342,29 +342,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
     }),
   },
-  VALIDATE_ENGINE_DIR: {
-    action: async (_, { engineDir }) => {
-      return window.electron.validateEngineDir(engineDir);
-    },
-  },
-  ADD_ENGINE_DIR: {
-    action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
-      await window.electron.setSetting("engineDirs", [
-        ...engineDirs,
-        engineDir,
-      ]);
-    },
-  },
-  REMOVE_ENGINE_DIR: {
-    action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
-      await window.electron.setSetting(
-        "engineDirs",
-        engineDirs.filter((path) => path !== engineDir)
-      );
-    },
-  },
 });
 
 export const setHotkeyFunctions = (
