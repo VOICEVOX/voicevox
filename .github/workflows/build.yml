@@ -496,7 +496,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v3
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.artifact_name, 'macos-')
@@ -647,7 +647,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v3
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: endsWith(matrix.artifact_name, '-dmg')
