@@ -141,6 +141,10 @@
                   </template>
                 </q-input>
               </div>
+              <div class="q-ma-sm">
+                既にインストールされているエンジンのフォルダを指定します。FIXME:
+                説明を良い感じにする
+              </div>
             </div>
             <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
               <div class="text-h6 q-ma-sm">vvppファイルの場所</div>
@@ -171,6 +175,10 @@
                     }}
                   </template>
                 </q-input>
+              </div>
+              <div class="q-ma-sm">
+                vvppファイルとして配布されているエンジンを追加します。FIXME:
+                説明を良い感じにする
               </div>
             </div>
             <div class="row q-px-md right-pane-buttons">
