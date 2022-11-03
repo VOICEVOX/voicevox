@@ -334,7 +334,12 @@ export default defineComponent({
           .filter((info) => info.type === "sub")
           .map((info) => info.uuid),
         plugin: Object.values(engineInfos.value)
-          .filter((info) => info.type === "userDir" || info.type === "path")
+          .filter(
+            (info) =>
+              info.type === "userDir" ||
+              info.type === "path" ||
+              info.type === "vvpp"
+          )
           .map((info) => info.uuid),
       };
       return Object.fromEntries(

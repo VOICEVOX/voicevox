@@ -127,15 +127,19 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 })();
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
+const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
+  if (!fs.existsSync(vvppEngineDir)) {
+    fs.mkdirSync(vvppEngineDir);
+  }
 
   const engines: EngineInfo[] = [];
-  const addEngine = (engineDir: string, type: "userDir" | "path") => {
+  const addEngine = (engineDir: string, type: "userDir" | "vvpp" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
     if (!fs.existsSync(manifestPath)) {
       return "manifestNotFound";
@@ -170,6 +174,17 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
       continue;
     }
     const result = addEngine(engineDir, "userDir");
+    if (result !== "ok") {
+      log.log(`Failed to load engine: ${result}, ${engineDir}`);
+    }
+  }
+  for (const dirName of fs.readdirSync(vvppEngineDir)) {
+    const engineDir = path.join(vvppEngineDir, dirName);
+    if (!fs.statSync(engineDir).isDirectory()) {
+      log.log(`${engineDir} is not directory`);
+      continue;
+    }
+    const result = addEngine(engineDir, "vvpp");
     if (result !== "ok") {
       log.log(`Failed to load engine: ${result}, ${engineDir}`);
     }
@@ -808,7 +823,7 @@ async function loadVvpp(vvppPath: string) {
     const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
       manifest.uuid
     }`;
-    const engineDirectory = path.join(userEngineDir, dirName);
+    const engineDirectory = path.join(vvppEngineDir, dirName);
     await new Promise<void>((resolve, reject) => {
       yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
         if (error != null) {

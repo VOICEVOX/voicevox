@@ -190,8 +190,9 @@ export type EngineInfo = {
   // main: メインエンジン
   // sub: .envで指定されたその他のエンジン
   // userDir: ユーザーディレクトリにあるエンジン
+  // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "main" | "sub" | "userDir" | "path";
+  type: "main" | "sub" | "userDir" | "vvpp" | "path";
 };
 
 export type Preset = {
