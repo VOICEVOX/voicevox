@@ -724,6 +724,10 @@ export type EngineStoreTypes = {
   LOAD_VVPP: {
     action: (path: string) => Promise<boolean>;
   };
+
+  DELETE_VVPP_ENGINE: {
+    action: (engineId: string) => Promise<boolean>;
+  }
 };
 
 /*

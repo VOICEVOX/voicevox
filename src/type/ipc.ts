@@ -258,6 +258,11 @@ export type IpcIHData = {
     return: Promise<boolean>;
   };
 
+  DELETE_VVPP_ENGINE: {
+    args: [engineId: string];
+    return: Promise<boolean>;
+  };
+
   VALIDATE_ENGINE_DIR: {
     args: [obj: { engineDir: string }];
     return: EngineDirValidationResult;

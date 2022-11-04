@@ -865,6 +865,30 @@ async function loadVvpp(vvppPath: string) {
   }
 }
 
+async function deleteVvppEngine(engineId: string) {
+  const engineInfos = fetchEngineInfos();
+  const engineInfo = engineInfos.find(
+    (engineInfo) => engineInfo.uuid === engineId
+  );
+  if (!engineInfo) {
+    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+  }
+
+  if (engineInfo.type !== "vvpp") {
+    throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
+  }
+
+  const engineDirectory = engineInfo.path;
+  if (engineDirectory == null) {
+    throw new Error("engineDirectory == null");
+  }
+
+  // Windows環境だとエンジンを終了してから削除する必要がある。
+  // そのため、アプリの終了時に削除するようにする。
+  willDeleteEngineIds.add(engineId);
+  return true;
+}
+
 // ディレクトリがエンジンとして正しいかどうかを判定する
 function validateEngineDir(engineDir: string): EngineDirValidationResult {
   if (!fs.existsSync(engineDir)) {
@@ -991,6 +1015,7 @@ migrateHotkeySettings();
 
 let willQuit = false;
 let willRestart = false;
+let willDeleteEngineIds: Set<string> = new Set();
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -1393,6 +1418,10 @@ ipcMainHandle("LOAD_VVPP", async (_, path: string) => {
   return await loadVvpp(path);
 });
 
+ipcMainHandle("DELETE_VVPP_ENGINE", async (_, engineId: string) => {
+  return await deleteVvppEngine(engineId);
+});
+
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return validateEngineDir(engineDir);
 });
@@ -1432,9 +1461,36 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
+  const deleteEngines = async () => {
+    const engineInfos = fetchEngineInfos();
+    await Promise.all(
+      [...willDeleteEngineIds].map(async (engineId) => {
+        const engineInfo = engineInfos.find((info) => info.uuid === engineId);
+        if (engineInfo === undefined) {
+          log.error(`Engine ${engineId} not found`);
+          return;
+        }
+        if (engineInfo.path === undefined) {
+          log.error(`Engine ${engineId} path is undefined`);
+          return;
+        }
+        await fs.promises
+          .rm(engineInfo.path, { recursive: true })
+          .catch((e) => {
+            dialog.showErrorBox(
+              "エンジン削除エラー",
+              `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${engineInfo.path}\nエラー内容: ${e}`
+            );
+          });
+      })
+    );
+    willDeleteEngineIds.clear();
+  };
+
   const restartApp = async () => {
     willRestart = false;
     willQuit = false;
+    await deleteEngines();
     await createWindow();
     await runEngineAll();
   };
@@ -1452,6 +1508,7 @@ app.on("before-quit", (event) => {
       return;
     }
     log.info("All ENGINE processes killed. Now quit app");
+    deleteEngines();
     return;
   }
 
@@ -1498,6 +1555,7 @@ app.on("before-quit", (event) => {
     log.info(
       "All ENGINE process kill operations done. Attempting to quit app again"
     );
+    deleteEngines();
     app.quit();
     return;
   })();

@@ -102,6 +102,7 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   loadVvpp(path: string): Promise<boolean>;
+  deleteVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(): void;
 }

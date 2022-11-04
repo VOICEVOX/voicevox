@@ -257,6 +257,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("LOAD_VVPP", filePath);
   },
 
+  deleteVvppEngine: async (engineId) => {
+    return await ipcRendererInvoke("DELETE_VVPP_ENGINE", engineId);
+  },
+
   validateEngineDir: async (engineDir) => {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },

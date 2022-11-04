@@ -267,7 +267,10 @@
                 text-color="warning"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="deleteEngine"
-                :disable="uiLocked || engineInfos[selectedId].type !== 'path'"
+                :disable="
+                  uiLocked ||
+                  !['path', 'vvpp'].includes(engineInfos[selectedId].type)
+                "
                 >削除</q-btn
               >
               <q-btn
@@ -430,11 +433,11 @@ export default defineComponent({
           engineDir: newEngineDir.value,
         });
 
-        requireRestart("エンジンを追加しました。");
+        requireRestart("エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？");
       } else {
         store.dispatch("LOAD_VVPP", vvppFilePath.value).then((success) => {
           if (success) {
-            requireRestart("エンジンを追加しました。");
+            requireRestart("エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？");
           }
         });
       }
@@ -455,14 +458,26 @@ export default defineComponent({
           textColor: "warning",
         },
       }).onOk(() => {
-        const engineDir = store.state.engineInfos[selectedId.value].path;
-        if (!engineDir)
-          throw new Error("assert engineInfos[selectedId.value].path");
-        store.dispatch("REMOVE_ENGINE_DIR", {
-          engineDir,
-        });
-
-        requireRestart("エンジンを削除しました。");
+        switch (engineInfos.value[selectedId.value].type) {
+          case "path": {
+            const engineDir = store.state.engineInfos[selectedId.value].path;
+            if (!engineDir)
+              throw new Error("assert engineInfos[selectedId.value].path");
+            store.dispatch("REMOVE_ENGINE_DIR", {
+              engineDir,
+            });
+            requireRestart("エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？");
+            break;
+          }
+          case "vvpp":
+            store.dispatch("DELETE_VVPP_ENGINE", {
+              engineId: selectedId.value,
+            });
+            requireRestart("エンジンの削除には再起動が必要です。今すぐ再起動しますか？");
+            break;
+          default:
+            throw new Error("assert engineInfos[selectedId.value].type");
+        }
       });
     };
 
@@ -481,7 +496,7 @@ export default defineComponent({
     const requireRestart = (message: string) => {
       $q.dialog({
         title: "再起動が必要です",
-        message: message + "反映には再起動が必要です。今すぐ再起動しますか？",
+        message: message,
         cancel: {
           label: "後で",
           color: "display",
