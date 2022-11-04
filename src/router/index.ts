@@ -5,11 +5,16 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import EditorHome from "../views/EditorHome.vue";
+import SplashScreen from "../views/SplashScreen.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/home",
     component: EditorHome,
+  },
+  {
+    path: "/splash",
+    component: SplashScreen,
   },
 ];
 

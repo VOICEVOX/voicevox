@@ -64,7 +64,7 @@ if (isDevelopment) {
 }
 
 let win: BrowserWindow;
-
+let splash: BrowserWindow;
 // 多重起動防止
 if (!isDevelopment && !app.requestSingleInstanceLock()) {
   log.info("VOICEVOX already running. Cancelling launch");
@@ -833,12 +833,32 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
+  splash = new BrowserWindow({
+    width: 500,
+    height: 300,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true,
+    resizable: false,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: true,
+      contextIsolation: true,
+    },
+  });
+
+  splash.once("ready-to-show", () => {
+    splash.show();
+  });
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + "#/home"
-    );
+    const base_url = process.env.WEBPACK_DEV_SERVER_URL as string;
+    splash.loadURL(base_url + "#/splash");
+    win.loadURL(base_url + "#/home");
   } else {
     createProtocol("app");
+    splash.loadURL("app://./index.html#/splash");
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
@@ -1164,6 +1184,7 @@ ipcMainHandle("THEME", (_, { newData }) => {
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
+  splash.close();
   win.show();
 });
 
