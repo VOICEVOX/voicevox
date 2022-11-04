@@ -236,8 +236,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
   DELETE_VVPP_ENGINE: {
-    action: async (_, { engineId }) => {
+    action: async (_, engineId) => {
       return window.electron.deleteVvppEngine(engineId);
-    }
+    },
   },
 });

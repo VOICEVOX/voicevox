@@ -727,7 +727,7 @@ export type EngineStoreTypes = {
 
   DELETE_VVPP_ENGINE: {
     action: (engineId: string) => Promise<boolean>;
-  }
+  };
 };
 
 /*

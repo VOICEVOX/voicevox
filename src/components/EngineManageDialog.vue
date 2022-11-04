@@ -21,11 +21,12 @@
               icon="close"
               color="display"
               @click="toDialogClosedState"
-              :disabled="isAddingEngine"
+              :disabled="isAddingEngine || uiLocked"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
+          <div class="engine-list-disable-overlay" v-if="uiLocked" />
           <div class="col-4 engine-list-col">
             <div v-if="isAddingEngine" class="engine-list-disable-overlay" />
             <div class="engine-list-header text-no-wrap">
@@ -433,11 +434,15 @@ export default defineComponent({
           engineDir: newEngineDir.value,
         });
 
-        requireRestart("エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？");
+        requireRestart(
+          "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+        );
       } else {
         store.dispatch("LOAD_VVPP", vvppFilePath.value).then((success) => {
           if (success) {
-            requireRestart("エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？");
+            requireRestart(
+              "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+            );
           }
         });
       }
@@ -466,14 +471,18 @@ export default defineComponent({
             store.dispatch("REMOVE_ENGINE_DIR", {
               engineDir,
             });
-            requireRestart("エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？");
+            requireRestart(
+              "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
+            );
             break;
           }
           case "vvpp":
             store.dispatch("DELETE_VVPP_ENGINE", {
               engineId: selectedId.value,
             });
-            requireRestart("エンジンの削除には再起動が必要です。今すぐ再起動しますか？");
+            requireRestart(
+              "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+            );
             break;
           default:
             throw new Error("assert engineInfos[selectedId.value].type");

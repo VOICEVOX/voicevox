@@ -1015,7 +1015,7 @@ migrateHotkeySettings();
 
 let willQuit = false;
 let willRestart = false;
-let willDeleteEngineIds: Set<string> = new Set();
+const willDeleteEngineIds: Set<string> = new Set();
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
