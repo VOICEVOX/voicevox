@@ -236,6 +236,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  ON_INIT_FINISHED: {
+    args: [];
+    return: void;
+  };
+
   // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
     args: [key: keyof ElectronStoreType];

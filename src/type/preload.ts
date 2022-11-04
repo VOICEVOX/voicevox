@@ -89,6 +89,7 @@ export interface Sandbox {
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
+  initFinished(): void;
   getSetting<Key extends keyof ElectronStoreType>(
     key: Key
   ): Promise<ElectronStoreType[Key]>;

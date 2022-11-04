@@ -234,6 +234,10 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
+  initFinished: () => {
+    ipcRenderer.invoke("ON_INIT_FINISHED");
+  },
+
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",

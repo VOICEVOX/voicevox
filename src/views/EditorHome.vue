@@ -6,7 +6,8 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
-        <!-- TODO: 複数エンジン対応 -->
+        <!-- Commented out and moved to splash screen -->
+        <!-- TODO: 複数エンジン対応
         <div
           v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
           class="waiting-engine"
@@ -21,7 +22,7 @@
               }}
             </div>
           </div>
-        </div>
+        </div> -->
         <q-splitter
           horizontal
           reverse
@@ -515,31 +516,32 @@ export default defineComponent({
         store.state.acceptTerms !== "Accepted";
 
       isCompletedInitialStartup.value = true;
+      store.dispatch("ON_INIT_FINISHED");
     });
 
     // エンジン待機
     // TODO: 個別のエンジンの状態をUIで確認できるようにする
-    const allEngineState = computed(() => {
-      const engineStates = store.state.engineStates;
+    // const allEngineState = computed(() => {
+    //   const engineStates = store.state.engineStates;
 
-      let lastEngineState: EngineState | undefined = undefined;
+    //   let lastEngineState: EngineState | undefined = undefined;
 
-      // 登録されているすべてのエンジンについて状態を確認する
-      for (const engineId of store.state.engineIds) {
-        const engineState: EngineState | undefined = engineStates[engineId];
-        if (engineState === undefined)
-          throw new Error(`No such engineState set: engineId == ${engineId}`);
+    //   // 登録されているすべてのエンジンについて状態を確認する
+    //   for (const engineId of store.state.engineIds) {
+    //     const engineState: EngineState | undefined = engineStates[engineId];
+    //     if (engineState === undefined)
+    //       throw new Error(`No such engineState set: engineId == ${engineId}`);
 
-        // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
-        if (engineState === "STARTING") {
-          return engineState;
-        }
+    //     // FIXME: 1つでも接続テストに成功していないエンジンがあれば、暫定的に起動中とする
+    //     if (engineState === "STARTING") {
+    //       return engineState;
+    //     }
 
-        lastEngineState = engineState;
-      }
+    //     lastEngineState = engineState;
+    //   }
 
-      return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
-    });
+    //   return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
+    // });
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
@@ -681,7 +683,7 @@ export default defineComponent({
       updateAudioInfoPane,
       updateAudioDetailPane,
       isCompletedInitialStartup,
-      allEngineState,
+      // allEngineState,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,

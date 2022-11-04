@@ -4,7 +4,7 @@
       <q-space />
       <div class="title mx-auto">VOICEVOX</div>
       <q-linear-progress class="progress mx-auto" indeterminate />
-      <div class="indent mx-auto">Preparing...</div>
+      <div class="indent mx-auto">Loading...</div>
       <q-space />
     </div>
   </div>
@@ -13,12 +13,10 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { useStore } from "@/store";
 
 export default defineComponent({
   name: "SplashScreen",
   setup() {
-    const store = useStore();
     const version = ref("0.0.0");
     window.electron.getAppInfos().then((obj) => {
       version.value = obj.version;

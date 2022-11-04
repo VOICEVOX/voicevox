@@ -275,6 +275,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  ON_INIT_FINISHED: {
+    action() {
+      window.electron.initFinished();
+    },
+  },
+
   IS_CHARACTER_ORDER_DIALOG_OPEN: {
     mutation(
       state,

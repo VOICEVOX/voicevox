@@ -848,10 +848,6 @@ async function createWindow() {
     },
   });
 
-  splash.once("ready-to-show", () => {
-    splash.show();
-  });
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     const base_url = process.env.WEBPACK_DEV_SERVER_URL as string;
     splash.loadURL(base_url + "#/splash");
@@ -1184,6 +1180,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
+  splash.show();
+});
+
+ipcMainHandle("ON_INIT_FINISHED", () => {
   splash.close();
   win.show();
 });

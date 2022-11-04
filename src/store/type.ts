@@ -1005,6 +1005,10 @@ export type UiStoreTypes = {
     action(): void;
   };
 
+  ON_INIT_FINISHED: {
+    action(): void;
+  };
+
   IS_CHARACTER_ORDER_DIALOG_OPEN: {
     mutation: { isCharacterOrderDialogOpen: boolean };
     action(payload: { isCharacterOrderDialogOpen: boolean }): void;
