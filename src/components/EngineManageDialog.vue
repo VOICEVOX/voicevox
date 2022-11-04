@@ -21,13 +21,13 @@
               icon="close"
               color="display"
               @click="toDialogClosedState"
-              :disabled="isAddingEngine || uiLockedState"
+              :disabled="isAddingEngine || uiLocked"
             />
           </q-toolbar>
         </q-header>
         <q-page class="row">
           <div class="ui-lock-popup" v-if="uiLockedState">
-            <div>
+            <div class="q-pa-md">
               <q-spinner color="primary" size="2.5rem" />
               <div class="q-mt-xs">
                 <template v-if="uiLockedState === 'addingEngine'"
@@ -46,7 +46,7 @@
                   text-color="display"
                   class="text-no-wrap text-bold col-sm q-ma-sm"
                   @click="toAddEngineState"
-                  :disable="uiLockedState"
+                  :disable="uiLocked"
                   >追加</q-btn
                 >
               </div>
@@ -278,7 +278,7 @@
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="deleteEngine"
                 :disable="
-                  uiLockedState ||
+                  uiLocked ||
                   !['path', 'vvpp'].includes(engineInfos[selectedId].type)
                 "
                 >削除</q-btn
@@ -288,7 +288,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="openSelectedEngineDirectory"
-                :disable="uiLockedState || !engineInfos[selectedId].path"
+                :disable="uiLocked || !engineInfos[selectedId].path"
                 >フォルダを開く</q-btn
               >
               <q-btn
@@ -296,7 +296,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="restartSelectedEngine"
-                :disable="uiLockedState || engineStates[selectedId] !== 'READY'"
+                :disable="uiLocked || engineStates[selectedId] !== 'READY'"
                 >再起動</q-btn
               >
             </div>
@@ -335,6 +335,7 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
     const uiLockedState = ref<null | "addingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
+    const uiLocked = computed(() => uiLockedState.value !== null);
     const isAddingEngine = ref(false);
     const engineLoaderType = ref<EngineLoaderType>("dir");
 
@@ -617,6 +618,7 @@ export default defineComponent({
       getEngineTypeName,
       getEngineDirValidationMessage,
       uiLockedState,
+      uiLocked,
       isAddingEngine,
       selectedId,
       toInitialState,
@@ -723,7 +725,6 @@ export default defineComponent({
     color: colors.$display;
     background: colors.$background;
     border-radius: 6px;
-    padding: 14px;
   }
 }
 </style>
