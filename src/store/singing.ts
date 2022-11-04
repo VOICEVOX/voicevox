@@ -1,5 +1,7 @@
 import { Score, SingingStoreState, SingingStoreTypes } from "./type";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { Midi } from "@tonejs/midi";
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -74,7 +76,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action() {
       const score: Score = {
         resolution: 480,
-        // テンポの初期値は120で良いでしょうか？
         tempos: [{ position: 0, tempo: 120 }],
         timeSignatures: [{ position: 0, beats: 4, beatType: 4 }],
         notes: [],
@@ -90,5 +91,77 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { score }: { score: Score }) {
       commit("SET_SCORE", { score });
     },
+  },
+
+  IMPORT_MIDI_FILE: {
+    action: createUILockAction(
+      async ({ dispatch }, { filePath }: { filePath?: string }) => {
+        if (!filePath) {
+          filePath = await window.electron.showImportFileDialog({
+            title: "MIDI読み込み",
+            name: "MIDI",
+            extensions: ["mid", "midi"],
+          });
+          if (!filePath) return;
+        }
+
+        const midiData = await window.electron.readFile({ filePath });
+        const midi = new Midi(midiData);
+
+        const score = await dispatch("GET_DEFAULT_SCORE");
+
+        const ConvertToPosBasedOnRes = (position: number) => {
+          return Math.round(position * (score.resolution / midi.header.ppq));
+        };
+
+        const ConvertToDurationBasedOnRes = (
+          position: number,
+          duration: number
+        ) => {
+          let endPosition = position + duration;
+          endPosition = ConvertToPosBasedOnRes(endPosition);
+          position = ConvertToPosBasedOnRes(position);
+          return Math.max(0, endPosition - position);
+        };
+
+        score.notes = midi.tracks
+          .map((track, index) => {
+            // TODO: UIで読み込むトラックを選択できるようにする
+            if (index !== 0) return []; // ひとまず1トラック目のみを読み込む
+            return track.notes.map((note) => ({
+              position: ConvertToPosBasedOnRes(note.ticks),
+              duration: ConvertToDurationBasedOnRes(
+                note.ticks,
+                note.durationTicks
+              ),
+              midi: note.midi,
+              lyric: "",
+            }));
+          })
+          .flat()
+          .sort((a, b) => a.position - b.position);
+
+        if (midi.header.tempos.length !== 0) {
+          score.tempos = midi.header.tempos
+            .map((tempo) => ({
+              position: tempo.ticks,
+              tempo: tempo.bpm,
+            }))
+            .sort((a, b) => a.position - b.position);
+        }
+
+        if (midi.header.timeSignatures.length !== 0) {
+          score.timeSignatures = midi.header.timeSignatures
+            .map((timeSignature) => ({
+              position: timeSignature.ticks,
+              beats: timeSignature.timeSignature[0],
+              beatType: timeSignature.timeSignature[1],
+            }))
+            .sort((a, b) => a.position - b.position);
+        }
+
+        await dispatch("SET_SCORE", { score });
+      }
+    ),
   },
 });

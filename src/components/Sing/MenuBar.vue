@@ -89,8 +89,7 @@ export default defineComponent({
     };
 
     const importMidiFile = async () => {
-      return null;
-      // await store.dispatch("IMPORT_MIDI_FILE", {});
+      await store.dispatch("IMPORT_MIDI_FILE", {});
     };
 
     const importMusicXMLFile = async () => {

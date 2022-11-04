@@ -722,6 +722,10 @@ export type SingingStoreTypes = {
     mutation: { score: Score };
     action(payload: { score: Score }): void;
   };
+
+  IMPORT_MIDI_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
 };
 
 /*
