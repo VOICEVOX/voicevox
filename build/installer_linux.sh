@@ -336,14 +336,14 @@ cat << 'BANNER'
 BANNER
 
 VOICEVOX_INSTALLED_FILES=(
-    ${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop
-    ${ICON_INSTALL_DIR}/voicevox.png
-    ${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png
-    ${MIME_INSTALL_DIR}/packages/voicevox.xml
+    "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
+    "${ICON_INSTALL_DIR}/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
 VOICEVOX_INSTALLED_DIR=(
-    ${APP_DIR}
+    "${APP_DIR}"
 )
 
 echo "[+] Uninstalling VOICEVOX..."
@@ -442,7 +442,7 @@ fi
 # Update desktop file database
 echo "[+] Updating desktop file database..."
 if command -v update-desktop-database &> /dev/null; then
-    update-desktop-database ${DESKTOP_ENTRY_INSTALL_DIR}
+    update-desktop-database "${DESKTOP_ENTRY_INSTALL_DIR}"
 else
     echo "[-] Skipped: Command 'update-desktop-database' not found"
 fi
