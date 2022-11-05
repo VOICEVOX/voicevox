@@ -1053,8 +1053,22 @@ migrateHotkeySettings();
 
 let willQuit = false;
 let willRestart = false;
+
+// # エンジン削除・エンジン上書き時の処理について
+//
+// 削除：
+// * アプリ終了時にVVPPディレクトリを消去するように予約
+// * アプリ終了時、予約されていた処理を行う
+// 上書き：
+// * VVPPをインストール先にtmpとして展開、失敗したら停止
+// * アプリ終了時に古いVVPPディレクトリを消去するように予約
+// * アプリ終了時に新しいVVPPディレクトリをリネームするように予約
+// * アプリ終了時、予約されていた処理を行う
+//
+// エンジンを停止してからではないとディレクトリを削除できないため、このような実装になっている。
 const willDeleteEngineIds: Set<string> = new Set();
 const willRenameEngineIds: Set<string> = new Set();
+
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
