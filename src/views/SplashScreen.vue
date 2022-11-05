@@ -8,7 +8,7 @@
       <q-space />
     </div>
   </div>
-  <div class="copyright">Version {{ version }}</div>
+  <div class="version">Version {{ version }}</div>
 </template>
 
 <script lang="ts">
@@ -79,7 +79,7 @@ export default defineComponent({
   margin-top: 0.5rem;
 }
 
-.copyright {
+.version {
   position: fixed;
   bottom: 0;
   text-align: center;
