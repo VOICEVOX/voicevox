@@ -827,7 +827,7 @@ async function loadVvpp(vvppPath: string) {
                 return;
               }
               readStream.on("data", (data) => {
-                resolve(JSON.parse(data.toString()) as EngineManifest);
+                resolve(JSON.parse(data.toString()) as EngineManifest); // FIXME: asをやめてvalidationする
                 resolve2();
               });
             });
