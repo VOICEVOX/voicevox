@@ -473,7 +473,7 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       await Promise.all(
-        Object.keys(store.state.engineInfos).map(async (engineId) => {
+        store.state.engineIds.map(async (engineId) => {
           await store.dispatch("START_WAITING_ENGINE", { engineId });
 
           await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
