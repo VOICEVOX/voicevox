@@ -107,12 +107,8 @@ export default defineComponent({
         (useGpu.value ? "GPU" : "CPU")
     );
 
-    const titleElement = document.getElementsByTagName("title")[0];
-    if (!titleElement) {
-      throw new Error("title element is not found");
-    }
     watch(titleText, (newTitle) => {
-      titleElement.innerText = newTitle;
+      window.document.title = newTitle;
     });
 
     const createNewProject = async () => {
