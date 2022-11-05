@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
+import { moveFile } from "move-file";
 import shlex from "shlex";
 import yauzl from "yauzl";
 
@@ -182,6 +183,10 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     const engineDir = path.join(vvppEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
       log.log(`${engineDir} is not directory`);
+      continue;
+    }
+    if (engineDir.endsWith("+tmp")) {
+      log.log(`Skip temporary engine: ${engineDir}`);
       continue;
     }
     const result = addEngine(engineDir, "vvpp");
@@ -814,16 +819,24 @@ async function loadVvpp(vvppPath: string) {
         });
       }
     );
-    for (const dir in await fs.promises.readdir(path.dirname(vvppPath))) {
-      if (!dir.endsWith("+" + manifest.uuid)) {
-        continue;
-      }
-      await fs.promises.rmdir(path.join(path.dirname(vvppPath), dir));
-    }
+
+    let willRename = false;
     const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
       manifest.uuid
     }`;
-    const engineDirectory = path.join(vvppEngineDir, dirName);
+    let engineDirectory = path.join(vvppEngineDir, dirName);
+
+    for (const dir of await fs.promises.readdir(vvppEngineDir)) {
+      if (!dir.endsWith("+" + manifest.uuid)) {
+        continue;
+      }
+      willRenameEngineIds.add(dirName);
+      willRename = true;
+    }
+    if (willRename) {
+      engineDirectory += "+tmp";
+    }
+
     await new Promise<void>((resolve, reject) => {
       yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
         if (error != null) {
@@ -843,10 +856,16 @@ async function loadVvpp(vvppPath: string) {
               reject(error);
               return;
             }
-            readStream.on("end", () => {
-              zipFile.readEntry();
-            });
-            readStream.pipe(fs.createWriteStream(filePath));
+
+            try {
+              readStream
+                .pipe(fs.createWriteStream(filePath))
+                .on("close", () => {
+                  zipFile.readEntry();
+                });
+            } catch (e) {
+              reject(e);
+            }
           });
         });
         zipFile.on("end", () => {
@@ -1016,6 +1035,7 @@ migrateHotkeySettings();
 let willQuit = false;
 let willRestart = false;
 const willDeleteEngineIds: Set<string> = new Set();
+const willRenameEngineIds: Set<string> = new Set();
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -1461,7 +1481,7 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
-  const deleteEngines = async () => {
+  const runPostEngineKill = async () => {
     const engineInfos = fetchEngineInfos();
     await Promise.all(
       [...willDeleteEngineIds].map(async (engineId) => {
@@ -1485,12 +1505,37 @@ app.on("before-quit", (event) => {
       })
     );
     willDeleteEngineIds.clear();
+    await Promise.all(
+      [...willRenameEngineIds].map(async (dirName) => {
+        const engineDirectory = path.join(vvppEngineDir, dirName);
+        for (let i = 0; i < 5; i++) {
+          try {
+            await fs.promises.rm(engineDirectory, { recursive: true });
+            await moveFile(engineDirectory + "+tmp", engineDirectory);
+            log.info(`Renamed ${dirName}+tmp to ${dirName}`);
+            break;
+          } catch (e) {
+            if (i === 4) {
+              log.error(e);
+              dialog.showErrorBox(
+                "エンジン追加エラー",
+                `エンジンの追加に失敗しました。エンジンのフォルダを手動でリネームしてください。\n${engineDirectory}+tmp\nエラー内容: ${e}`
+              );
+            } else {
+              log.error(`Failed to rename engine directory: ${e}, retrying`);
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+        }
+      })
+    );
+    willRenameEngineIds.clear();
   };
 
   const restartApp = async () => {
     willRestart = false;
     willQuit = false;
-    await deleteEngines();
+    await runPostEngineKill();
     await createWindow();
     await runEngineAll();
   };
@@ -1508,7 +1553,7 @@ app.on("before-quit", (event) => {
       return;
     }
     log.info("All ENGINE processes killed. Now quit app");
-    deleteEngines();
+    runPostEngineKill();
     return;
   }
 
@@ -1550,12 +1595,12 @@ app.on("before-quit", (event) => {
         "All ENGINE process kill operations done. Attempting to restart app"
       );
       restartApp();
+      return;
     }
     // アプリケーションの終了を再試行する
     log.info(
       "All ENGINE process kill operations done. Attempting to quit app again"
     );
-    deleteEngines();
     app.quit();
     return;
   })();

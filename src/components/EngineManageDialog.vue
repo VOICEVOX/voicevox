@@ -515,6 +515,7 @@ export default defineComponent({
       $q.dialog({
         title: "再起動が必要です",
         message: message,
+        noBackdropDismiss: true,
         cancel: {
           label: "後で",
           color: "display",
