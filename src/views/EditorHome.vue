@@ -472,11 +472,15 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      await store.dispatch("START_WAITING_ENGINE_ALL");
+      await Promise.all(
+        Object.keys(store.state.engineInfos).map(async (engineId) => {
+          await store.dispatch("START_WAITING_ENGINE", { engineId });
 
-      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
 
-      await store.dispatch("LOAD_CHARACTER_ALL");
+          await store.dispatch("LOAD_CHARACTER", { engineId });
+        })
+      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 

@@ -708,6 +708,26 @@ export type EngineStoreTypes = {
   INITIALIZE_ENGINE_SPEAKER: {
     action(payload: { engineId: string; styleId: number }): void;
   };
+
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFEST: {
+    mutation: { engineId: string; engineManifest: EngineManifest };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): void;
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST_ALL: {
+    action(): void;
+  };
 };
 
 /*
@@ -1050,22 +1070,6 @@ export type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
-  };
-
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
-  SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
-  };
-
-  SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    action(): void;
   };
 
   SET_INHERIT_AUDIOINFO: {

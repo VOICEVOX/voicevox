@@ -431,10 +431,8 @@ export default defineComponent({
                 type: "root",
                 label: engineInfo.name,
                 icon:
-                  store.state.engineManifests[engineInfo.uuid] &&
-                  base64ImageToUri(
-                    store.state.engineManifests[engineInfo.uuid].icon
-                  ),
+                  engineManifests.value[engineInfo.uuid] &&
+                  base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
                 subMenu: [
                   engineInfo.path && {
                     type: "button",
