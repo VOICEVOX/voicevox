@@ -37,17 +37,14 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   START_WAITING_ENGINE_ALL: {
     action: createUILockAction(async ({ state, dispatch }) => {
-      const engineIds: string[] = state.isSafeMode
-        ? [
-            // undefinedにすると型がstring[]にならないので、空文字列を入れておく
-            Object.values(state.engineInfos).find(
-              (engine) => engine.type === "main"
-            )?.uuid || "",
-          ]
-        : state.engineIds;
-
-      if (engineIds.every((engineId) => engineId === "")) {
-        throw new Error("No main engine found");
+      let engineIds: string[];
+      if (state.isSafeMode) {
+        // メインエンジンだけを含める
+        const main = Object.values(state.engineInfos).find((engine) => engine.type === "main");
+        if (!main) throw new Error("No main engine found");
+        engineIds = [main.uuid];
+      } else {
+        engineIds = state.engineIds;
       }
 
       for (const engineId of engineIds) {
