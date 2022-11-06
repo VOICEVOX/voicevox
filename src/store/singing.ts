@@ -72,7 +72,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  GET_DEFAULT_SCORE: {
+  GET_EMPTY_SCORE: {
     async action() {
       const score: Score = {
         resolution: 480,
@@ -108,7 +108,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const midiData = await window.electron.readFile({ filePath });
         const midi = new Midi(midiData);
 
-        const score = await dispatch("GET_DEFAULT_SCORE");
+        const score = await dispatch("GET_EMPTY_SCORE");
 
         const ConvertToPosBasedOnRes = (position: number) => {
           return Math.round(position * (score.resolution / midi.header.ppq));
@@ -206,7 +206,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           );
         }
 
-        const score = await dispatch("GET_DEFAULT_SCORE");
+        const score = await dispatch("GET_EMPTY_SCORE");
 
         const getDurationOfFirstMeasure = (score: Score) => {
           const beats = score.timeSignatures[0].beats;

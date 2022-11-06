@@ -50,7 +50,7 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("SET_SINGER", {});
 
-      const score = await store.dispatch("GET_DEFAULT_SCORE");
+      const score = await store.dispatch("GET_EMPTY_SCORE");
 
       // 実装時の確認用です TODO: 必要なくなったら削除
       score.notes = [

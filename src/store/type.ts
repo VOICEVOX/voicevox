@@ -714,7 +714,7 @@ export type SingingStoreTypes = {
     action(payload: { engineId?: string; styleId?: number }): void;
   };
 
-  GET_DEFAULT_SCORE: {
+  GET_EMPTY_SCORE: {
     action(): Promise<Score>;
   };
 
