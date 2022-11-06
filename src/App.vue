@@ -22,6 +22,7 @@ export default defineComponent({
     const store = useStore();
     store.dispatch("INIT_VUEX");
 
+    // URLパラメータに従ってセーフモードにする
     const route = useRoute();
     const query = computed(() => route.query);
     watch(query, (newQuery) => {
