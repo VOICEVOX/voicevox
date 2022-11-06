@@ -37,6 +37,7 @@ import {
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+import Ajv from "ajv/dist/jtd";
 
 type EngineManifest = {
   name: string;
@@ -106,11 +107,29 @@ const isMac = process.platform === "darwin";
 
 const defaultEngineInfos: EngineInfo[] = (() => {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
-  let engines: EngineInfo[] = [];
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
-  if (defaultEngineInfosEnv) {
-    engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  const envSchema = {
+    elements: {
+      properties: {
+        uuid: { type: "string" },
+        host: { type: "string" },
+        name: { type: "string" },
+        executionEnabled: { type: "boolean" },
+        executionFilePath: { type: "string" },
+        executionArgs: { elements: { type: "string" } },
+      },
+      optionalProperties: {
+        path: { type: "string" },
+      },
+    },
+  } as const;
+  const ajv = new Ajv();
+  const validate = ajv.compile(envSchema);
+
+  const engines = JSON.parse(defaultEngineInfosEnv);
+  if (!validate(engines)) {
+    throw validate.errors;
   }
 
   return engines.map((engineInfo, i) => {

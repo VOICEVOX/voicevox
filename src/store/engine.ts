@@ -49,6 +49,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       if (engineIds.every((engineId) => engineId === "")) {
         throw new Error("No main engine found");
       }
+
       for (const engineId of engineIds) {
         await dispatch("START_WAITING_ENGINE", {
           engineId,
