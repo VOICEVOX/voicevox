@@ -555,21 +555,18 @@ export default defineComponent({
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
-    const isEngineStartingTakingLonger = ref<boolean>(false);
-    const isEngineStartingTakingLongerTimeoutId =
-      ref<number | undefined>(undefined);
+    const isEngineWaitingLong = ref<boolean>(false);
+    let engineTimer: number | undefined = undefined;
     watch(allEngineState, (newEngineState) => {
-      if (isEngineStartingTakingLongerTimeoutId.value !== undefined) {
-        clearTimeout(isEngineStartingTakingLongerTimeoutId.value);
-        isEngineStartingTakingLongerTimeoutId.value = undefined;
+      if (engineTimer !== undefined) {
+        clearTimeout(engineTimer);
+        engineTimer = undefined;
       }
       if (newEngineState === "STARTING") {
-        isEngineStartingTakingLonger.value = false;
-        isEngineStartingTakingLongerTimeoutId.value = window.setTimeout(() => {
-          isEngineStartingTakingLonger.value = true;
-        }, 10000);
+        isEngineWaitingLong.value = false;
+        engineTimer = window.setTimeout(() => { isEngineWaitingLong.value = true; }, 10000);
       } else {
-        isEngineStartingTakingLonger.value = false;
+        isEngineWaitingLong.value = false;
       }
     });
     const restartAppWithSafeMode = () => {
