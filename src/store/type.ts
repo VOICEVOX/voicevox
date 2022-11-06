@@ -726,6 +726,10 @@ export type SingingStoreTypes = {
   IMPORT_MIDI_FILE: {
     action(payload: { filePath?: string }): void;
   };
+
+  IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
 };
 
 /*

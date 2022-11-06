@@ -93,8 +93,7 @@ export default defineComponent({
     };
 
     const importMusicXMLFile = async () => {
-      return null;
-      // await store.dispatch("IMPORT_MUSICXML_FILE", {});
+      await store.dispatch("IMPORT_MUSICXML_FILE", {});
     };
 
     const exportSingDataAsWaveFile = async () => {
