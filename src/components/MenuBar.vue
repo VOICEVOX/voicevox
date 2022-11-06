@@ -403,7 +403,7 @@ export default defineComponent({
         label: "セーフモードを解除",
         onClick() {
           store.dispatch("RESTART_APP", {
-            safeMode: false,
+            isSafeMode: false,
           });
         },
         disableWhenUiLocked: false,
