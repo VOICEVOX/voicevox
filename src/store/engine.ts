@@ -35,6 +35,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  // NOTE: セーフモード時はメインエンジンの起動だけを待機する。
   START_WAITING_ENGINE_ALL: {
     action: createUILockAction(async ({ state, dispatch }) => {
       let engineIds: string[];
