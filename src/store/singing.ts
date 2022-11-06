@@ -124,7 +124,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.max(0, endPosition - position);
         };
 
-        score.notes = midi.tracks
+        const notes = midi.tracks
           .map((track, index) => {
             // TODO: UIで読み込むトラックを選択できるようにする
             if (index !== 0) return []; // ひとまず1トラック目のみを読み込む
@@ -140,25 +140,45 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           })
           .flat()
           .sort((a, b) => a.position - b.position);
+        score.notes = notes.reduce((notes: Note[], note: Note): Note[] => {
+          if (notes.length === 0) {
+            notes.push(note);
+            return notes;
+          }
+          const lastNote = notes[notes.length - 1];
+          const lastNoteEnd = lastNote.position + lastNote.duration;
+          if (note.position >= lastNoteEnd) {
+            notes.push(note);
+          }
+          return notes;
+        }, []);
 
-        if (midi.header.tempos.length !== 0) {
-          score.tempos = midi.header.tempos
-            .map((tempo) => ({
-              position: tempo.ticks,
-              tempo: tempo.bpm,
-            }))
-            .sort((a, b) => a.position - b.position);
-        }
+        const tempos = midi.header.tempos
+          .map((tempo) => ({
+            position: tempo.ticks,
+            tempo: tempo.bpm,
+          }))
+          .sort((a, b) => a.position - b.position);
+        score.tempos = score.tempos
+          .concat(tempos)
+          .filter((value, index, array) => {
+            if (index === array.length - 1) return true;
+            return value.position !== array[index + 1].position;
+          });
 
-        if (midi.header.timeSignatures.length !== 0) {
-          score.timeSignatures = midi.header.timeSignatures
-            .map((timeSignature) => ({
-              position: timeSignature.ticks,
-              beats: timeSignature.timeSignature[0],
-              beatType: timeSignature.timeSignature[1],
-            }))
-            .sort((a, b) => a.position - b.position);
-        }
+        const timeSignatures = midi.header.timeSignatures
+          .map((timeSignature) => ({
+            position: timeSignature.ticks,
+            beats: timeSignature.timeSignature[0],
+            beatType: timeSignature.timeSignature[1],
+          }))
+          .sort((a, b) => a.position - b.position);
+        score.timeSignatures = score.timeSignatures
+          .concat(timeSignatures)
+          .filter((value, index, array) => {
+            if (index === array.length - 1) return true;
+            return value.position !== array[index + 1].position;
+          });
 
         await dispatch("SET_SCORE", { score });
       }
