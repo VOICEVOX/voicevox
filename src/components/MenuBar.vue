@@ -107,6 +107,7 @@ export default defineComponent({
         (useGpu.value ? "GPU" : "CPU")
     );
 
+    // FIXME: App.vue内に移動する
     watch(titleText, (newTitle) => {
       window.document.title = newTitle;
     });
