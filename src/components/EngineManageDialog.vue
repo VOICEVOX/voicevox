@@ -155,7 +155,7 @@
           >
             <div class="q-pl-md q-mt-md flex">
               <img
-                v-if="engineIcons[selectedId]"
+                v-if="selectedId in engineIcons"
                 :src="engineIcons[selectedId]"
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
