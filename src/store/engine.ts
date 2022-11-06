@@ -37,18 +37,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  START_WAITING_ENGINE_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      const engineIds = state.engineIds;
-
-      for (const engineId of engineIds) {
-        await dispatch("START_WAITING_ENGINE", {
-          engineId,
-        });
-      }
-    }),
-  },
-
   START_WAITING_ENGINE: {
     action: createUILockAction(
       async ({ state, commit, dispatch }, { engineId }) => {
@@ -255,17 +243,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           instance.invoke("engineManifestEngineManifestGet")({})
         ),
       });
-    },
-  },
-
-  FETCH_AND_SET_ENGINE_MANIFEST_ALL: {
-    async action({ state }) {
-      await Promise.all(
-        state.engineIds.map(
-          async (engineId) =>
-            await this.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId })
-        )
-      );
     },
   },
 });

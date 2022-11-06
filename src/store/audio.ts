@@ -220,15 +220,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  LOAD_CHARACTER_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      for (const engineId of state.engineIds) {
-        window.electron.logInfo(`Load CharacterInfo from engine ${engineId}`);
-        await dispatch("LOAD_CHARACTER", { engineId });
-      }
-    }),
-  },
-
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {

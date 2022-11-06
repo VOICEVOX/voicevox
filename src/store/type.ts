@@ -123,10 +123,6 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
-  LOAD_CHARACTER_ALL: {
-    action(): void;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: string }): void;
   };
@@ -666,10 +662,6 @@ export type EngineStoreTypes = {
     getter(engineId: string): boolean;
   };
 
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
-  };
-
   START_WAITING_ENGINE: {
     action(payload: { engineId: string }): void;
   };
@@ -723,10 +715,6 @@ export type EngineStoreTypes = {
 
   FETCH_AND_SET_ENGINE_MANIFEST: {
     action(payload: { engineId: string }): void;
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFEST_ALL: {
-    action(): void;
   };
 };
 
