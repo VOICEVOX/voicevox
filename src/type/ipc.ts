@@ -254,7 +254,7 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [obj: { safeMode: boolean }];
+    args: [obj: { isSafeMode: boolean }];
     return: void;
   };
 };

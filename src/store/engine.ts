@@ -40,7 +40,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       let engineIds: string[];
       if (state.isSafeMode) {
         // メインエンジンだけを含める
-        const main = Object.values(state.engineInfos).find((engine) => engine.type === "main");
+        const main = Object.values(state.engineInfos).find(
+          (engine) => engine.type === "main"
+        );
         if (!main) throw new Error("No main engine found");
         engineIds = [main.uuid];
       } else {

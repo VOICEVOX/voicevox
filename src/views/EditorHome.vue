@@ -21,7 +21,7 @@
               }}
             </div>
 
-            <template v-if="isEngineStartingTakingLonger">
+            <template v-if="isEngineWaitingLong">
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
               <q-btn outline @click="restartAppWithSafeMode">
@@ -564,7 +564,9 @@ export default defineComponent({
       }
       if (newEngineState === "STARTING") {
         isEngineWaitingLong.value = false;
-        engineTimer = window.setTimeout(() => { isEngineWaitingLong.value = true; }, 10000);
+        engineTimer = window.setTimeout(() => {
+          isEngineWaitingLong.value = true;
+        }, 10000);
       } else {
         isEngineWaitingLong.value = false;
       }
@@ -723,7 +725,7 @@ export default defineComponent({
       updateAudioDetailPane,
       isCompletedInitialStartup,
       allEngineState,
-      isEngineStartingTakingLonger,
+      isEngineWaitingLong,
       restartAppWithSafeMode,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
