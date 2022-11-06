@@ -904,9 +904,11 @@ function migrateHotkeySettings() {
 }
 migrateHotkeySettings();
 
-let willQuit = false;
-let willRestart = false;
-let isSafeMode = false;
+const appState = {
+  willQuit: false,
+  willRestart: false,
+  isSafeMode: false,
+};
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -937,11 +939,11 @@ async function createWindow() {
     await win.loadURL(
       (process.env.WEBPACK_DEV_SERVER_URL as string) +
         "#/home?isSafeMode=" +
-        isSafeMode
+        appState.isSafeMode
     );
   } else {
     createProtocol("app");
-    win.loadURL("app://./index.html#/home?isSafeMode=" + isSafeMode);
+    win.loadURL("app://./index.html#/home?isSafeMode=" + appState.isSafeMode);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -962,7 +964,7 @@ async function createWindow() {
     );
   });
   win.on("close", (event) => {
-    if (!willQuit) {
+    if (!appState.willQuit) {
       event.preventDefault();
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
       return;
@@ -1189,7 +1191,7 @@ ipcMainHandle("IS_MAXIMIZED_WINDOW", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
-  willQuit = true;
+  appState.willQuit = true;
   win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
@@ -1301,9 +1303,9 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return validateEngineDir(engineDir);
 });
 
-ipcMainHandle("RESTART_APP", async (_, { safeMode }) => {
-  willRestart = true;
-  isSafeMode = safeMode;
+ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
+  appState.willRestart = true;
+  appState.isSafeMode = isSafeMode;
   win.close();
 });
 
@@ -1326,7 +1328,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!willQuit) {
+  if (!appState.willQuit) {
     event.preventDefault();
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
     return;
@@ -1338,15 +1340,15 @@ app.on("before-quit", (event) => {
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   const restartApp = async () => {
-    willRestart = false;
-    willQuit = false;
+    appState.willRestart = false;
+    appState.willQuit = false;
     await createWindow();
     await runEngineAll();
   };
 
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
-    if (willRestart) {
+    if (appState.willRestart) {
       // 再起動フラグが立っている場合はフラグを戻して再起動する
       log.info(
         "All ENGINE processes killed. Now restarting app because of willRestart flag"
@@ -1392,7 +1394,7 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
-    if (willRestart) {
+    if (appState.willRestart) {
       // 再起動フラグが立っている場合はフラグを戻して再起動する
       log.info(
         "All ENGINE process kill operations done. Attempting to restart app"
