@@ -572,7 +572,7 @@ export default defineComponent({
       }
     });
     const restartAppWithSafeMode = () => {
-      store.dispatch("RESTART_APP", { safeMode: true });
+      store.dispatch("RESTART_APP", { isSafeMode: true });
     };
 
     // ライセンス表示

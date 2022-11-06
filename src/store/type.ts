@@ -1123,7 +1123,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(obj: { safeMode?: boolean }): void;
+    action(obj: { isSafeMode?: boolean }): void;
   };
 };
 
