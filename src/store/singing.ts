@@ -124,7 +124,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.max(0, endPosition - position);
         };
 
-        const notes = midi.tracks
+        midi.tracks
           .map((track, index) => {
             // TODO: UIで読み込むトラックを選択できるようにする
             if (index !== 0) return []; // ひとまず1トラック目のみを読み込む
@@ -139,19 +139,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }));
           })
           .flat()
-          .sort((a, b) => a.position - b.position);
-        score.notes = notes.reduce((notes: Note[], note: Note): Note[] => {
-          if (notes.length === 0) {
-            notes.push(note);
-            return notes;
-          }
-          const lastNote = notes[notes.length - 1];
-          const lastNoteEnd = lastNote.position + lastNote.duration;
-          if (note.position >= lastNoteEnd) {
-            notes.push(note);
-          }
-          return notes;
-        }, []);
+          .sort((a, b) => a.position - b.position)
+          .forEach((note) => {
+            if (score.notes.length === 0) {
+              score.notes.push(note);
+              return;
+            }
+            const lastNote = score.notes[score.notes.length - 1];
+            const lastNoteEnd = lastNote.position + lastNote.duration;
+            if (note.position >= lastNoteEnd) {
+              score.notes.push(note);
+            }
+          });
 
         const tempos = midi.header.tempos
           .map((tempo) => ({
