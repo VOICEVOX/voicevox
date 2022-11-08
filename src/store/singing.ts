@@ -110,17 +110,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const score = await dispatch("GET_EMPTY_SCORE");
 
-        const ConvertToPosBasedOnRes = (position: number) => {
+        const convertToPosBasedOnRes = (position: number) => {
           return Math.round(position * (score.resolution / midi.header.ppq));
         };
 
-        const ConvertToDurationBasedOnRes = (
+        const convertToDurationBasedOnRes = (
           position: number,
           duration: number
         ) => {
           let endPosition = position + duration;
-          endPosition = ConvertToPosBasedOnRes(endPosition);
-          position = ConvertToPosBasedOnRes(position);
+          endPosition = convertToPosBasedOnRes(endPosition);
+          position = convertToPosBasedOnRes(position);
           return Math.max(0, endPosition - position);
         };
 
@@ -129,8 +129,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // TODO: UIで読み込むトラックを選択できるようにする
             if (index !== 0) return []; // ひとまず1トラック目のみを読み込む
             return track.notes.map((note) => ({
-              position: ConvertToPosBasedOnRes(note.ticks),
-              duration: ConvertToDurationBasedOnRes(
+              position: convertToPosBasedOnRes(note.ticks),
+              duration: convertToDurationBasedOnRes(
                 note.ticks,
                 note.durationTicks
               ),
@@ -154,10 +154,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const tempos = midi.header.tempos
           .map((tempo) => ({
-            position: tempo.ticks,
+            position: convertToPosBasedOnRes(tempo.ticks),
             tempo: tempo.bpm,
           }))
           .sort((a, b) => a.position - b.position);
+
         score.tempos = score.tempos
           .concat(tempos)
           .filter((value, index, array) => {
@@ -167,11 +168,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const timeSignatures = midi.header.timeSignatures
           .map((timeSignature) => ({
-            position: timeSignature.ticks,
+            position: convertToPosBasedOnRes(timeSignature.ticks),
             beats: timeSignature.timeSignature[0],
             beatType: timeSignature.timeSignature[1],
           }))
           .sort((a, b) => a.position - b.position);
+
         score.timeSignatures = score.timeSignatures
           .concat(timeSignatures)
           .filter((value, index, array) => {
