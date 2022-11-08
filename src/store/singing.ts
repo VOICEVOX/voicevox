@@ -331,6 +331,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               parseDivisions(childElement);
             } else if (childElement.tagName === "time") {
               parseTime(childElement);
+            } else if (childElement.tagName === "sound") {
+              parseSound(childElement);
             }
           }
         };
