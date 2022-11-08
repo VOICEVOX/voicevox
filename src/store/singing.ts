@@ -272,6 +272,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.round((score.resolution * duration) / divisions);
         };
 
+        const getTie = (elementThatMayBeTied: Element) => {
+          let tie = false;
+          for (const childElement of elementThatMayBeTied.children) {
+            if (
+              childElement.tagName === "tie" ||
+              childElement.tagName === "tied"
+            ) {
+              const tieType = childElement.getAttribute("type");
+              if (tieType === "start") {
+                tie = true;
+              } else if (tieType === "stop") {
+                tie = false;
+              } else {
+                throw new Error("The value is invalid.");
+              }
+            }
+          }
+          return tie;
+        };
+
         const parseSound = (soundElement: Element) => {
           if (!soundElement.hasAttribute("tempo")) return;
           if (score.tempos.length !== 0) {
@@ -380,11 +400,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const lyricElement = getChild(noteElement, "lyric");
           const lyric = getChild(lyricElement, "text")?.textContent ?? "";
 
-          const tieElements = noteElement.getElementsByTagName("tie");
-          let tieStart = false;
-          for (const tie of tieElements) {
-            const tieType = tie.getAttribute("type");
-            tieStart ||= tieType === "start";
+          let tie = getTie(noteElement);
+          for (const childElement of noteElement.children) {
+            if (childElement.tagName === "notations") {
+              tie = getTie(childElement);
+            }
           }
 
           const note = {
@@ -394,7 +414,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             lyric: lyric,
           };
 
-          if (tieStart) {
+          if (tie) {
             if (tieStartNote === null) {
               tieStartNote = note;
             }
