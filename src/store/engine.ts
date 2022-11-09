@@ -44,7 +44,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         const main = Object.values(state.engineInfos).find(
           (engine) => engine.type === "main"
         );
-        if (!main) throw new Error("No main engine found");
+        if (!main) {
+          throw new Error("No main engine found");
+        }
         engineIds = [main.uuid];
       } else {
         engineIds = state.engineIds;
