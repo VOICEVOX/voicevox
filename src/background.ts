@@ -40,6 +40,7 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
+import { extractVvpp } from "./helpers/vvpp";
 
 type EngineManifest = {
   name: string;
@@ -148,6 +149,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
+const tmpVvppEngineDir = path.join(app.getPath("userData"), "tmp-engines");
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
@@ -803,42 +805,9 @@ function openEngineDirectory(engineId: string) {
 
 async function loadVvpp(vvppPath: string) {
   try {
-    const zipFile = await new Promise<yauzl.ZipFile>((resolve, reject) => {
-      yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
-        if (error != null) {
-          reject(error);
-          return;
-        }
-        resolve(zipFile);
-      });
-    });
-    zipFile.readEntry();
-    const manifest: EngineManifest = await new Promise<EngineManifest>(
-      (resolve, reject) => {
-        zipFile.on("entry", async (entry: yauzl.Entry) => {
-          if (entry.fileName !== "engine_manifest.json") {
-            zipFile.readEntry();
-            return;
-          }
-          await new Promise<void>((resolve2, reject2) => {
-            zipFile.openReadStream(entry, async (error, readStream) => {
-              if (error != null) {
-                reject2(error);
-                return;
-              }
-              readStream.on("data", (data) => {
-                resolve(JSON.parse(data.toString()) as EngineManifest); // FIXME: asをやめてvalidationする
-                resolve2();
-              });
-            });
-          });
-        });
-        zipFile.on("end", () => {
-          reject(new Error("engine_manifest.json not found"));
-        });
-      }
-    );
-
+    const tmpDir = path.join(tmpVvppEngineDir, new Date().getTime().toString());
+    await fs.promises.mkdir(tmpDir, { recursive: true });
+    const manifest = await extractVvpp(vvppPath, tmpDir);
     let willRename = false;
     const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
       manifest.uuid
@@ -856,42 +825,7 @@ async function loadVvpp(vvppPath: string) {
       engineDirectory += "+tmp";
     }
 
-    await new Promise<void>((resolve, reject) => {
-      yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
-        if (error != null) {
-          reject(error);
-          return;
-        }
-        zipFile.readEntry();
-        zipFile.on("entry", (entry: yauzl.Entry) => {
-          const filePath = path.join(engineDirectory, entry.fileName);
-          if (entry.fileName.endsWith("/")) {
-            fs.mkdirSync(filePath, { recursive: true });
-            zipFile.readEntry();
-            return;
-          }
-          zipFile.openReadStream(entry, (error, readStream) => {
-            if (error != null) {
-              reject(error);
-              return;
-            }
-
-            try {
-              readStream
-                .pipe(fs.createWriteStream(filePath))
-                .on("close", () => {
-                  zipFile.readEntry();
-                });
-            } catch (e) {
-              reject(e);
-            }
-          });
-        });
-        zipFile.on("end", () => {
-          resolve();
-        });
-      });
-    });
+    await moveFile(tmpDir, engineDirectory);
     return true;
   } catch (e) {
     dialog.showErrorBox(
