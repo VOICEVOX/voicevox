@@ -6,7 +6,6 @@ import treeKill from "tree-kill";
 import Store from "electron-store";
 import { moveFile } from "move-file";
 import shlex from "shlex";
-import yauzl from "yauzl";
 
 import {
   app,
