@@ -18,14 +18,7 @@
     />
     <q-space />
     <div class="window-title" :class="{ 'text-warning': isSafeMode }">
-      {{
-        (isEdited ? "*" : "") +
-        (projectName !== undefined ? projectName + " - " : "") +
-        "VOICEVOX" +
-        (currentVersion ? " - Ver. " + currentVersion + " - " : "") +
-        (useGpu ? "GPU" : "CPU") +
-        (isSafeMode ? " - セーフモード" : "")
-      }}
+      {{ titleText }}
     </div>
     <q-space />
     <title-bar-buttons />
@@ -106,6 +99,23 @@ export default defineComponent({
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
+
+    const titleText = computed(
+      () =>
+        (isEdited.value ? "*" : "") +
+        (projectName.value !== undefined ? projectName.value + " - " : "") +
+        "VOICEVOX" +
+        (currentVersion.value
+          ? " - Ver. " + currentVersion.value + " - "
+          : "") +
+        (useGpu.value ? "GPU" : "CPU") +
+        (isSafeMode.value ? " - セーフモード" : "")
+    );
+
+    // FIXME: App.vue内に移動する
+    watch(titleText, (newTitle) => {
+      window.document.title = newTitle;
+    });
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -541,7 +551,7 @@ export default defineComponent({
       uiLocked,
       menubarLocked,
       projectName,
-      isSafeMode,
+      titleText,
       isEdited,
       isFullscreen,
       subMenuOpenFlags,
