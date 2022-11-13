@@ -6,8 +6,7 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
-import { EngineManifest } from "@/openapi";
+import { ActivePointScrollMode } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(

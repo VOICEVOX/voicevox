@@ -1,6 +1,8 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { EngineManifest } from "@/openapi";
+import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
@@ -8,7 +10,7 @@ export const engineStoreState: EngineStoreState = {
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
-    async action({ commit }) {
+    async action({ state, commit }) {
       // セーフモード時はengineIdsをメインエンジンのIDだけにする。
       let engineIds: string[]
       if (state.isSafeMode) {
@@ -30,6 +32,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     mutation(
       state,
       {
+        engineIds,
         engineInfos
       }: { engineIds: string[], engineInfos: EngineInfo[] }
     ) {
