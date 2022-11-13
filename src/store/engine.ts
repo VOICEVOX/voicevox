@@ -7,6 +7,71 @@ export const engineStoreState: EngineStoreState = {
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
+  GET_ENGINE_INFOS: {
+    async action({ commit }) {
+      // セーフモード時はengineIdsをメインエンジンのIDだけにする。
+      let engineIds: string[]
+      if (state.isSafeMode) {
+        engineIds = engineInfos
+          .filter((engineInfo) => engineInfo.type === "main")
+          .map((info) => info.uuid);
+      } else {
+        engineInfos.map((engineInfo) => engineInfo.uuid)
+      }
+
+      commit("SET_ENGINE_INFOS", {
+        engineIds,
+        engineInfos: await window.electron.engineInfos(),
+      });
+    },
+  },
+
+  SET_ENGINE_INFOS: {
+    mutation(
+      state,
+      {
+        engineInfos
+      }: { engineIds: string[], engineInfos: EngineInfo[] }
+    ) {
+      state.engineIds = engineIds;
+      state.engineInfos = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
+      );
+      state.engineStates = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
+      );
+    },
+  },
+
+  SET_ENGINE_MANIFESTS: {
+    mutation(
+      state,
+      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+    ) {
+      state.engineManifests = engineManifests;
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    async action({ state, commit }) {
+      commit("SET_ENGINE_MANIFESTS", {
+        engineManifests: Object.fromEntries(
+          await Promise.all(
+            state.engineIds.map(
+              async (engineId) =>
+                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                  engineId,
+                }).then(async (instance) => [
+                  engineId,
+                  await instance.invoke("engineManifestEngineManifestGet")({}),
+                ])
+            )
+          )
+        ),
+      });
+    },
+  },
+
   IS_ALL_ENGINE_READY: {
     getter: (state, getters) => {
       // 1つもエンジンが登録されていない場合、準備完了していないことにする

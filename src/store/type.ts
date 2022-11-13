@@ -658,6 +658,22 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
+
   IS_ALL_ENGINE_READY: {
     getter: boolean;
   };
@@ -1056,22 +1072,6 @@ export type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
-  };
-
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
-  SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
-  };
-
-  SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    action(): void;
   };
 
   SET_INHERIT_AUDIOINFO: {
