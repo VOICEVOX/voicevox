@@ -663,7 +663,7 @@ export type EngineStoreTypes = {
   };
 
   SET_ENGINE_INFOS: {
-    mutation: { engineIds: string[], engineInfos: EngineInfo[] };
+    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
   };
 
   SET_ENGINE_MANIFESTS: {
