@@ -20,7 +20,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           .filter((engineInfo) => engineInfo.type === "main")
           .map((info) => info.uuid);
       } else {
-        engineInfos.map((engineInfo) => engineInfo.uuid)
+        engineIds = engineInfos.map((engineInfo) => engineInfo.uuid)
       }
 
       commit("SET_ENGINE_INFOS", {
