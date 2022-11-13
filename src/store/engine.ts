@@ -9,7 +9,7 @@ export const engineStoreState: EngineStoreState = {
 export const engineStore = createPartialStore<EngineStoreTypes>({
   IS_ALL_ENGINE_READY: {
     getter: (state, getters) => {
-      // NOTE: 1つもエンジンが登録されていない場合、準備完了していないことにする
+      // 1つもエンジンが登録されていない場合、準備完了していないことにする
       // レンダラープロセスがメインプロセスからエンジンリストを取得完了する前にレンダリングが行われるため、
       // IS_ALL_ENGINE_READYがエンジンリスト未初期化の状態で呼び出される可能性がある
       // この場合の意図しない挙動を抑制するためfalseを返す
@@ -35,7 +35,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  // NOTE: セーフモード時はメインエンジンの起動だけを待機する。
+  // セーフモード時はメインエンジンの起動だけを待機する。
   START_WAITING_ENGINE_ALL: {
     action: createUILockAction(async ({ state, dispatch }) => {
       let engineIds: string[];
