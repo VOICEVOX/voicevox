@@ -11,6 +11,8 @@ export const engineStoreState: EngineStoreState = {
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
     async action({ state, commit }) {
+      const engineInfos = await window.electron.engineInfos()
+
       // セーフモード時はengineIdsをメインエンジンのIDだけにする。
       let engineIds: string[]
       if (state.isSafeMode) {
@@ -23,7 +25,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       commit("SET_ENGINE_INFOS", {
         engineIds,
-        engineInfos: await window.electron.engineInfos(),
+        engineInfos,
       });
     },
   },
