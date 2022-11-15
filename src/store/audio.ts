@@ -600,6 +600,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
+      query.prePhonemeLength =
+        (query.prePhonemeLength / query.speedScale) * speedScale;
+      query.postPhonemeLength =
+        (query.postPhonemeLength / query.speedScale) * speedScale;
       query.speedScale = speedScale;
     },
   },
@@ -650,7 +654,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
-      query.prePhonemeLength = prePhonemeLength;
+      query.prePhonemeLength = prePhonemeLength * query.speedScale;
     },
   },
 
@@ -664,7 +668,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
-      query.postPhonemeLength = postPhonemeLength;
+      query.postPhonemeLength = postPhonemeLength * query.speedScale;
     },
   },
 

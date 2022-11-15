@@ -460,7 +460,11 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
     const prePhonemeLengthSlider = previewSliderHelper({
-      modelValue: () => query.value?.prePhonemeLength ?? null,
+      modelValue: () => {
+        const value = query.value;
+        if (value == null) return null;
+        return value.prePhonemeLength / value.speedScale;
+      },
       disable: () => uiLocked.value,
       onChange: setAudioPrePhonemeLength,
       max: () => 1.5,
@@ -470,7 +474,11 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
     const postPhonemeLengthSlider = previewSliderHelper({
-      modelValue: () => query.value?.postPhonemeLength ?? null,
+      modelValue: () => {
+        const value = query.value;
+        if (value == null) return null;
+        return value.postPhonemeLength / value.speedScale;
+      },
       disable: () => uiLocked.value,
       onChange: setAudioPostPhonemeLength,
       max: () => 1.5,
