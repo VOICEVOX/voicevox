@@ -1,6 +1,8 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import type { EngineManifest } from "@/openapi";
+import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
@@ -33,18 +35,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       return engineState === "READY";
     },
-  },
-
-  START_WAITING_ENGINE_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      const engineIds = state.engineIds;
-
-      for (const engineId of engineIds) {
-        await dispatch("START_WAITING_ENGINE", {
-          engineId,
-        });
-      }
-    }),
   },
 
   START_WAITING_ENGINE: {
@@ -204,6 +194,54 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
               speaker: styleId,
             })
           ),
+      });
+    },
+  },
+
+  GET_ENGINE_INFOS: {
+    async action({ commit }) {
+      commit("SET_ENGINE_INFOS", {
+        engineInfos: await window.electron.engineInfos(),
+      });
+    },
+  },
+
+  SET_ENGINE_INFOS: {
+    mutation(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
+      state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+      state.engineInfos = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
+      );
+      state.engineStates = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
+      );
+    },
+  },
+
+  SET_ENGINE_MANIFEST: {
+    mutation(
+      state,
+      {
+        engineId,
+        engineManifest,
+      }: { engineId: string; engineManifest: EngineManifest }
+    ) {
+      state.engineManifests = {
+        ...state.engineManifests,
+        [engineId]: engineManifest,
+      };
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    async action({ commit }, { engineId }) {
+      commit("SET_ENGINE_MANIFEST", {
+        engineId,
+        engineManifest: await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then((instance) =>
+          instance.invoke("engineManifestEngineManifestGet")({})
+        ),
       });
     },
   },
