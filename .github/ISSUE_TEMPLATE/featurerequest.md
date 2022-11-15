@@ -1,7 +1,7 @@
 ---
 name: Feature Request
 about: 機能要望・改善提案
-labels: enhancement
+labels: 機能向上
 ---
 
 ## 内容

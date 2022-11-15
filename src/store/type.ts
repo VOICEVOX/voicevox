@@ -34,6 +34,7 @@ import {
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
+  EngineDirValidationResult,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -95,7 +96,6 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineStates: Record<string, EngineState>;
   characterInfos: Record<string, CharacterInfo[]>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
@@ -119,55 +119,8 @@ export type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ALL_ENGINE_READY: {
-    getter: boolean;
-  };
-
-  IS_ENGINE_READY: {
-    getter(engineId: string): boolean;
-  };
-
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
-  };
-
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
-  };
-
-  START_WAITING_ENGINE: {
-    action(payload: { engineId: string }): void;
-  };
-
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
-  };
-
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
-  };
-
-  DETECTED_ENGINE_ERROR: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_ENGINE_DIRECTORY: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action(): void;
-  };
-
-  SET_ENGINE_STATE: {
-    mutation: { engineId: string; engineState: EngineState };
-  };
-
-  LOAD_CHARACTER_ALL: {
-    action(): void;
   };
 
   LOAD_CHARACTER: {
@@ -188,14 +141,6 @@ export type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
-  };
-
-  IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
-  };
-
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): void;
   };
 
   SETUP_SPEAKER: {
@@ -701,6 +646,79 @@ export type CommandStoreTypes = {
 };
 
 /*
+ * Engine Store Types
+ */
+
+export type EngineStoreState = {
+  engineStates: Record<string, EngineState>;
+};
+
+export type EngineStoreTypes = {
+  IS_ALL_ENGINE_READY: {
+    getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineId: string): boolean;
+  };
+
+  START_WAITING_ENGINE: {
+    action(payload: { engineId: string }): void;
+  };
+
+  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 個別にエンジンの状態を確認できるようにする？
+  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
+  RESTART_ENGINE_ALL: {
+    action(): Promise<boolean>;
+  };
+
+  RESTART_ENGINE: {
+    action(payload: { engineId: string }): Promise<boolean>;
+  };
+
+  DETECTED_ENGINE_ERROR: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_ENGINE_DIRECTORY: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_USER_ENGINE_DIRECTORY: {
+    action(): void;
+  };
+
+  SET_ENGINE_STATE: {
+    mutation: { engineId: string; engineState: EngineState };
+  };
+
+  IS_INITIALIZED_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
+  };
+
+  INITIALIZE_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): void;
+  };
+
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFEST: {
+    mutation: { engineId: string; engineManifest: EngineManifest };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): void;
+  };
+};
+
+/*
  * Index Store Types
  */
 
@@ -903,6 +921,18 @@ export type SettingStoreTypes = {
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
   };
+
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
 };
 
 /*
@@ -924,6 +954,7 @@ export type UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
+  isEngineManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -996,6 +1027,11 @@ export type UiStoreTypes = {
     action(payload: { isAcceptTermsDialogOpen: boolean }): void;
   };
 
+  IS_ENGINE_MANAGE_DIALOG_OPEN: {
+    mutation: { isEngineManageDialogOpen: boolean };
+    action(payload: { isEngineManageDialogOpen: boolean }): void;
+  };
+
   IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
     mutation: { isDictionaryManageDialogOpen: boolean };
     action(payload: { isDictionaryManageDialogOpen: boolean }): void;
@@ -1022,22 +1058,6 @@ export type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
-  };
-
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
-  SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
-  };
-
-  SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    action(): void;
   };
 
   SET_INHERIT_AUDIOINFO: {
@@ -1086,6 +1106,10 @@ export type UiStoreTypes = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
+  };
+
+  RESTART_APP: {
+    action(): void;
   };
 };
 
@@ -1205,6 +1229,7 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioCommandStoreState &
   CommandStoreState &
+  EngineStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
@@ -1216,6 +1241,7 @@ export type State = AudioStoreState &
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
+  EngineStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &

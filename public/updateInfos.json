@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.13.3",
+    "descriptions": [
+      "キャラクター「四国めたん」「ずんだもん」のスタイルを追加",
+      "キャラクター「ずんだもん」「九州そら」の「ささやき」スタイルを更新"
+    ],
+    "contributors": ["aoirint"]
+  },
+  {
     "version": "0.13.2",
     "descriptions": [
       "キャラクター「WhiteCUL」「後鬼」「No.7」を追加",

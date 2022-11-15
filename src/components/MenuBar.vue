@@ -18,13 +18,7 @@
     />
     <q-space />
     <div class="window-title">
-      {{
-        (isEdited ? "*" : "") +
-        (projectName !== undefined ? projectName + " - " : "") +
-        "VOICEVOX" +
-        (currentVersion ? " - Ver. " + currentVersion + " - " : "") +
-        (useGpu ? "GPU" : "CPU")
-      }}
+      {{ titleText }}
     </div>
     <q-space />
     <title-bar-buttons />
@@ -101,6 +95,22 @@ export default defineComponent({
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
+
+    const titleText = computed(
+      () =>
+        (isEdited.value ? "*" : "") +
+        (projectName.value !== undefined ? projectName.value + " - " : "") +
+        "VOICEVOX" +
+        (currentVersion.value
+          ? " - Ver. " + currentVersion.value + " - "
+          : "") +
+        (useGpu.value ? "GPU" : "CPU")
+    );
+
+    // FIXME: App.vue内に移動する
+    watch(titleText, (newTitle) => {
+      window.document.title = newTitle;
+    });
 
     const createNewProject = async () => {
       if (!uiLocked.value) {
@@ -431,10 +441,8 @@ export default defineComponent({
                 type: "root",
                 label: engineInfo.name,
                 icon:
-                  store.state.engineManifests[engineInfo.uuid] &&
-                  base64ImageToUri(
-                    store.state.engineManifests[engineInfo.uuid].icon
-                  ),
+                  engineManifests.value[engineInfo.uuid] &&
+                  base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
                 subMenu: [
                   engineInfo.path && {
                     type: "button",
@@ -469,13 +477,24 @@ export default defineComponent({
           },
         ];
       }
-      engineMenu.subMenu.push({
-        type: "button",
-        label: "追加エンジンのフォルダを開く",
-        onClick: () => {
-          store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
+      engineMenu.subMenu.push(
+        {
+          type: "button",
+          label: "追加エンジンのフォルダを開く",
+          onClick: () => {
+            store.dispatch("OPEN_USER_ENGINE_DIRECTORY");
+          },
         },
-      });
+        {
+          type: "button",
+          label: "エンジンの管理",
+          onClick: () => {
+            store.dispatch("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+              isEngineManageDialogOpen: true,
+            });
+          },
+        }
+      );
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 
@@ -493,6 +512,7 @@ export default defineComponent({
       uiLocked,
       menubarLocked,
       projectName,
+      titleText,
       isEdited,
       isFullscreen,
       subMenuOpenFlags,

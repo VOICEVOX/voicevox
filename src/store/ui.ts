@@ -6,8 +6,7 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
-import { EngineManifest } from "@/openapi";
+import { ActivePointScrollMode } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
@@ -41,6 +40,7 @@ export const uiStoreState: UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
+  isEngineManageDialogOpen: false,
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
@@ -242,6 +242,30 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  IS_ENGINE_MANAGE_DIALOG_OPEN: {
+    mutation(
+      state,
+      { isEngineManageDialogOpen }: { isEngineManageDialogOpen: boolean }
+    ) {
+      state.isEngineManageDialogOpen = isEngineManageDialogOpen;
+    },
+    async action({ state, commit }, { isEngineManageDialogOpen }) {
+      if (state.isEngineManageDialogOpen === isEngineManageDialogOpen) return;
+
+      if (isEngineManageDialogOpen) {
+        commit("LOCK_UI");
+        commit("LOCK_MENUBAR");
+      } else {
+        commit("UNLOCK_UI");
+        commit("UNLOCK_MENUBAR");
+      }
+
+      commit("IS_ENGINE_MANAGE_DIALOG_OPEN", {
+        isEngineManageDialogOpen,
+      });
+    },
+  },
+
   IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
     mutation(
       state,
@@ -360,55 +384,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     async action({ commit }, { useGpu }: { useGpu: boolean }) {
       commit("SET_USE_GPU", {
         useGpu: await window.electron.setSetting("useGpu", useGpu),
-      });
-    },
-  },
-
-  GET_ENGINE_INFOS: {
-    async action({ commit }) {
-      commit("SET_ENGINE_INFOS", {
-        engineInfos: await window.electron.engineInfos(),
-      });
-    },
-  },
-
-  SET_ENGINE_INFOS: {
-    mutation(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-      state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
-      state.engineInfos = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
-      );
-      state.engineStates = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
-      );
-    },
-  },
-
-  SET_ENGINE_MANIFESTS: {
-    mutation(
-      state,
-      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
-    ) {
-      state.engineManifests = engineManifests;
-    },
-  },
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    async action({ state, commit }) {
-      commit("SET_ENGINE_MANIFESTS", {
-        engineManifests: Object.fromEntries(
-          await Promise.all(
-            state.engineIds.map(
-              async (engineId) =>
-                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-                  engineId,
-                }).then(async (instance) => [
-                  engineId,
-                  await instance.invoke("engineManifestEngineManifestGet")({}),
-                ])
-            )
-          )
-        ),
       });
     },
   },
@@ -532,6 +507,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       }
 
       window.electron.closeWindow();
+    },
+  },
+
+  RESTART_APP: {
+    action() {
+      window.electron.restartApp();
     },
   },
 });
