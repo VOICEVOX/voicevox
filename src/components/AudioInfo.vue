@@ -359,6 +359,7 @@ import { Preset } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
+import { number } from "yargs";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -738,8 +739,8 @@ export default defineComponent({
     // プリセットの編集
     const showsPresetEditDialog = ref(false);
 
-    const handleChangeSlider = (speedScale: number) => {
-      console.log("変更値:" + speedScale);
+    const handleChangeSlider = (textInput: string) => {
+      const speedScale = Number(textInput);
       store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
         audioKey: props.activeAudioKey,
         speedScale,
