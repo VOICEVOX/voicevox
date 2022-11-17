@@ -613,10 +613,17 @@ async function runEngine(engineId: string) {
 
     if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-      dialog.showErrorBox(
-        "音声合成エンジンエラー",
-        "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-      );
+      if (engineInfos.length === 1) {
+        dialog.showErrorBox(
+          "音声合成エンジンエラー",
+          "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+        );
+      } else {
+        dialog.showErrorBox(
+          "音声合成エンジンエラー",
+          `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`
+        );
+      }
     }
   });
 }
