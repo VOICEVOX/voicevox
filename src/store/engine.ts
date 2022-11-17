@@ -1,8 +1,8 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
-import { EngineManifest } from "@/openapi";
-import { ActivePointScrollMode, EngineInfo } from "@/type/preload";
+import type { EngineManifest } from "@/openapi";
+import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
@@ -103,31 +103,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       return engineState === "READY";
     },
-  },
-
-  // セーフモード時はメインエンジンの起動だけを待機する。
-  START_WAITING_ENGINE_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      let engineIds: string[];
-      if (state.isSafeMode) {
-        // メインエンジンだけを含める
-        const main = Object.values(state.engineInfos).find(
-          (engine) => engine.type === "main"
-        );
-        if (!main) {
-          throw new Error("No main engine found");
-        }
-        engineIds = [main.uuid];
-      } else {
-        engineIds = state.engineIds;
-      }
-
-      for (const engineId of engineIds) {
-        await dispatch("START_WAITING_ENGINE", {
-          engineId,
-        });
-      }
-    }),
   },
 
   START_WAITING_ENGINE: {
@@ -287,6 +262,34 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
               speaker: styleId,
             })
           ),
+      });
+    },
+  },
+
+  SET_ENGINE_MANIFEST: {
+    mutation(
+      state,
+      {
+        engineId,
+        engineManifest,
+      }: { engineId: string; engineManifest: EngineManifest }
+    ) {
+      state.engineManifests = {
+        ...state.engineManifests,
+        [engineId]: engineManifest,
+      };
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    async action({ commit }, { engineId }) {
+      commit("SET_ENGINE_MANIFEST", {
+        engineId,
+        engineManifest: await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then((instance) =>
+          instance.invoke("engineManifestEngineManifestGet")({})
+        ),
       });
     },
   },

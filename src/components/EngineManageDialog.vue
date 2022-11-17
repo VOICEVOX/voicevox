@@ -316,15 +316,20 @@ export default defineComponent({
     const engineVersions = ref<Record<string, string>>({});
 
     watch(
-      [engineInfos],
+      [engineInfos, engineStates],
       async () => {
         for (const id of Object.keys(engineInfos.value)) {
           if (engineVersions.value[id]) return;
           const version = await store
             .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
-            .then((instance) => instance.invoke("versionVersionGet")({}));
+            .then((instance) => instance.invoke("versionVersionGet")({}))
+            .catch(() => null);
+          if (!version) continue;
           // "latest"のようにダブルクォーテーションで囲まれているので、JSON.parseで外す。
-          engineVersions.value[id] = JSON.parse(version);
+          engineVersions.value = {
+            ...engineVersions.value,
+            [id]: JSON.parse(version),
+          };
         }
       },
       { immediate: true }

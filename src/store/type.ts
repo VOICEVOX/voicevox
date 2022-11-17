@@ -123,10 +123,6 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
-  LOAD_CHARACTER_ALL: {
-    action(): void;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: string }): void;
   };
@@ -662,10 +658,6 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  SET_ENGINE_INFOS: {
-    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
-  };
-
   SET_ENGINE_MANIFESTS: {
     mutation: { engineManifests: Record<string, EngineManifest> };
   };
@@ -680,10 +672,6 @@ export type EngineStoreTypes = {
 
   IS_ENGINE_READY: {
     getter(engineId: string): boolean;
-  };
-
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
   };
 
   START_WAITING_ENGINE: {
@@ -723,6 +711,18 @@ export type EngineStoreTypes = {
 
   INITIALIZE_ENGINE_SPEAKER: {
     action(payload: { engineId: string; styleId: number }): void;
+  };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFEST: {
+    mutation: { engineId: string; engineManifest: EngineManifest };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): void;
   };
 };
 

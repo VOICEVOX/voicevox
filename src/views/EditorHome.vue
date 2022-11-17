@@ -480,11 +480,28 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      await store.dispatch("START_WAITING_ENGINE_ALL");
+      let engineIds: string[];
+      if (store.state.isSafeMode) {
+        // メインエンジンだけを含める
+        const main = Object.values(store.state.engineInfos).find(
+          (engine) => engine.type === "main"
+        );
+        if (!main) {
+          throw new Error("No main engine found");
+        }
+        engineIds = [main.uuid];
+      } else {
+        engineIds = store.state.engineIds;
+      }
+      await Promise.all(
+        engineIds.map(async (engineId) => {
+          await store.dispatch("START_WAITING_ENGINE", { engineId });
 
-      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
 
-      await store.dispatch("LOAD_CHARACTER_ALL");
+          await store.dispatch("LOAD_CHARACTER", { engineId });
+        })
+      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
 
