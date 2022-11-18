@@ -63,8 +63,13 @@
                   active-class="active-engine"
                 >
                   <q-item-section avatar>
-                    <q-avatar rounded>
-                      <img :src="engineIcons[id]" :alt="engineInfos[id].name" />
+                    <q-avatar rounded color="primary">
+                      <img
+                        :src="engineIcons[id]"
+                        :alt="engineInfos[id].name"
+                        v-if="engineIcons[id]"
+                      />
+                      <span v-else class="text-display-on-primary"> ? </span>
                     </q-avatar>
                   </q-item-section>
                   <q-item-section>
@@ -150,10 +155,16 @@
           >
             <div class="q-pl-md q-mt-md flex">
               <img
+                v-if="selectedId in engineIcons"
                 :src="engineIcons[selectedId]"
                 :alt="engineInfos[selectedId].name"
                 class="engine-icon"
               />
+              <div class="q-mt-sm inline-block" v-else>
+                <q-avatar rounded color="primary" size="2rem">
+                  <span class="text-display-on-primary"> ? </span>
+                </q-avatar>
+              </div>
               <div class="text-h5 q-ma-sm">
                 {{ engineInfos[selectedId].name }}
               </div>
@@ -161,20 +172,29 @@
 
             <div class="no-wrap q-pl-md">
               <ul>
-                <li>バージョン：{{ engineVersions[selectedId] }}</li>
                 <li>
-                  URL：<a
+                  バージョン：{{
+                    engineVersions[selectedId]
+                      ? engineVersions[selectedId]
+                      : "（取得に失敗しました）"
+                  }}
+                </li>
+                <li>
+                  URL：
+                  <a
+                    v-if="engineManifests[selectedId]"
                     :href="engineManifests[selectedId].url"
                     class="text-display-hyperlink"
                     target="_blank"
                     >{{ engineManifests[selectedId].url }}</a
                   >
+                  <span v-else>（取得に失敗しました）</span>
                 </li>
               </ul>
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
-              <ul>
+              <ul v-if="engineManifests[selectedId]">
                 <li
                   v-for="[feature, value] in Object.entries(
                     engineManifests[selectedId].supportedFeatures
@@ -185,6 +205,7 @@
                   {{ getFeatureName(feature) }}：{{ value ? "対応" : "非対応" }}
                 </li>
               </ul>
+              <span v-else>（取得に失敗しました）</span>
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">場所</div>
@@ -422,7 +443,7 @@ export default defineComponent({
         },
       })
         .onOk(() => {
-          store.dispatch("RESTART_APP");
+          store.dispatch("RESTART_APP", {});
         })
         .onCancel(() => {
           toInitialState();

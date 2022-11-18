@@ -29,7 +29,7 @@
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
           :menudata="menu"
-          :disable="uiLocked"
+          :disable="uiLocked && menu.disableWhenUiLocked"
           v-model:selected="subMenuOpenFlags[index]"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"

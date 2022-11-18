@@ -654,6 +654,18 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
+
   IS_ALL_ENGINE_READY: {
     getter: boolean;
   };
@@ -701,12 +713,8 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string; styleId: number }): void;
   };
 
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
   SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
+    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
   };
 
   SET_ENGINE_MANIFEST: {
@@ -725,6 +733,7 @@ export type EngineStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
+  isSafeMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -800,6 +809,11 @@ export type IndexStoreTypes = {
 
   INIT_VUEX: {
     action(): void;
+  };
+
+  SET_IS_SAFE_MODE: {
+    mutation: { isSafeMode: boolean };
+    action(payload: boolean): void;
   };
 };
 
@@ -1109,7 +1123,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(): void;
+    action(obj: { isSafeMode?: boolean }): void;
   };
 };
 

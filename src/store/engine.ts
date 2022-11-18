@@ -9,9 +9,77 @@ export const engineStoreState: EngineStoreState = {
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
+  GET_ENGINE_INFOS: {
+    async action({ state, commit }) {
+      const engineInfos = await window.electron.engineInfos();
+
+      // セーフモード時はengineIdsをメインエンジンのIDだけにする。
+      let engineIds: string[];
+      if (state.isSafeMode) {
+        engineIds = engineInfos
+          .filter((engineInfo) => engineInfo.type === "main")
+          .map((info) => info.uuid);
+      } else {
+        engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+      }
+
+      commit("SET_ENGINE_INFOS", {
+        engineIds,
+        engineInfos,
+      });
+    },
+  },
+
+  SET_ENGINE_INFOS: {
+    mutation(
+      state,
+      {
+        engineIds,
+        engineInfos,
+      }: { engineIds: string[]; engineInfos: EngineInfo[] }
+    ) {
+      state.engineIds = engineIds;
+      state.engineInfos = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
+      );
+      state.engineStates = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
+      );
+    },
+  },
+
+  SET_ENGINE_MANIFESTS: {
+    mutation(
+      state,
+      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+    ) {
+      state.engineManifests = engineManifests;
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    async action({ state, commit }) {
+      commit("SET_ENGINE_MANIFESTS", {
+        engineManifests: Object.fromEntries(
+          await Promise.all(
+            state.engineIds.map(
+              async (engineId) =>
+                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                  engineId,
+                }).then(async (instance) => [
+                  engineId,
+                  await instance.invoke("engineManifestEngineManifestGet")({}),
+                ])
+            )
+          )
+        ),
+      });
+    },
+  },
+
   IS_ALL_ENGINE_READY: {
     getter: (state, getters) => {
-      // NOTE: 1つもエンジンが登録されていない場合、準備完了していないことにする
+      // 1つもエンジンが登録されていない場合、準備完了していないことにする
       // レンダラープロセスがメインプロセスからエンジンリストを取得完了する前にレンダリングが行われるため、
       // IS_ALL_ENGINE_READYがエンジンリスト未初期化の状態で呼び出される可能性がある
       // この場合の意図しない挙動を抑制するためfalseを返す
@@ -195,26 +263,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             })
           ),
       });
-    },
-  },
-
-  GET_ENGINE_INFOS: {
-    async action({ commit }) {
-      commit("SET_ENGINE_INFOS", {
-        engineInfos: await window.electron.engineInfos(),
-      });
-    },
-  },
-
-  SET_ENGINE_INFOS: {
-    mutation(state, { engineInfos }: { engineInfos: EngineInfo[] }) {
-      state.engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
-      state.engineInfos = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
-      );
-      state.engineStates = Object.fromEntries(
-        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
-      );
     },
   },
 

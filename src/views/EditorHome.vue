@@ -20,6 +20,14 @@
                   : "データ準備中・・・"
               }}
             </div>
+
+            <template v-if="isEngineWaitingLong">
+              <q-separator spaced />
+              エンジン起動に時間がかかっています。<br />
+              <q-btn outline @click="restartAppWithSafeMode">
+                セーフモードで起動する</q-btn
+              >
+            </template>
           </div>
         </div>
         <q-splitter
@@ -472,8 +480,21 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
+      let engineIds: string[];
+      if (store.state.isSafeMode) {
+        // メインエンジンだけを含める
+        const main = Object.values(store.state.engineInfos).find(
+          (engine) => engine.type === "main"
+        );
+        if (!main) {
+          throw new Error("No main engine found");
+        }
+        engineIds = [main.uuid];
+      } else {
+        engineIds = store.state.engineIds;
+      }
       await Promise.all(
-        store.state.engineIds.map(async (engineId) => {
+        engineIds.map(async (engineId) => {
           await store.dispatch("START_WAITING_ENGINE", { engineId });
 
           await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
@@ -550,6 +571,26 @@ export default defineComponent({
 
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
+
+    const isEngineWaitingLong = ref<boolean>(false);
+    let engineTimer: number | undefined = undefined;
+    watch(allEngineState, (newEngineState) => {
+      if (engineTimer !== undefined) {
+        clearTimeout(engineTimer);
+        engineTimer = undefined;
+      }
+      if (newEngineState === "STARTING") {
+        isEngineWaitingLong.value = false;
+        engineTimer = window.setTimeout(() => {
+          isEngineWaitingLong.value = true;
+        }, 10000);
+      } else {
+        isEngineWaitingLong.value = false;
+      }
+    });
+    const restartAppWithSafeMode = () => {
+      store.dispatch("RESTART_APP", { isSafeMode: true });
+    };
 
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
@@ -701,6 +742,8 @@ export default defineComponent({
       updateAudioDetailPane,
       isCompletedInitialStartup,
       allEngineState,
+      isEngineWaitingLong,
+      restartAppWithSafeMode,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
