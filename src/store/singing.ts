@@ -131,7 +131,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // TODO: UIで読み込むトラックを選択できるようにする
         // ひとまず1トラック目のみを読み込む
-        const notes = midi.tracks[0].notes
+        midi.tracks[0].notes
           .map((note) => ({
             position: convertToPosBasedOnRes(note.ticks),
             duration: convertToDurationBasedOnRes(
@@ -141,49 +141,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             midi: note.midi,
             lyric: "",
           }))
-          .sort((a, b) => a.position - b.position);
-
-        // ノートの重なりを考慮して、一番上の声部のノートのみインポートする
-        let topNote: Note | null = null; // 一番上の声部のノート
-        let ignoreNotes: Note[] = []; // 一番上の声部ではないので無視するノート
-        notes.forEach((note) => {
-          if (topNote === null) {
-            topNote = note;
-            score.notes.push(topNote);
-            return;
-          }
-          const topNoteEnd = topNote.position + topNote.duration;
-          if (note.position < topNoteEnd) {
-            if (note.midi > topNote.midi) {
-              ignoreNotes.push(topNote);
-              score.notes.pop();
-              topNote = note;
-              score.notes.push(topNote);
-            } else {
-              ignoreNotes.push(note);
+          .sort((a, b) => a.position - b.position)
+          .forEach((note) => {
+            // ノートの重なりを考慮して、一番音が高いノート（トップノート）のみインポートする
+            if (score.notes.length === 0) {
+              score.notes.push(note);
+              return;
             }
-            return;
-          }
-          const overlappingNotes = ignoreNotes.filter((value) => {
-            const ignoreNoteEnd = value.position + value.duration;
-            return note.position < ignoreNoteEnd;
+            const topNote = score.notes[score.notes.length - 1];
+            const topNoteEnd = topNote.position + topNote.duration;
+            if (note.position >= topNoteEnd) {
+              score.notes.push(note);
+              return;
+            }
+            if (note.midi > topNote.midi) {
+              score.notes.pop();
+              score.notes.push(note);
+            }
           });
-          if (overlappingNotes.length === 0) {
-            ignoreNotes = [];
-            topNote = note;
-            score.notes.push(topNote);
-            return;
-          }
-          const isTopNote = overlappingNotes.every(
-            (value) => note.midi > value.midi
-          );
-          if (isTopNote) {
-            topNote = note;
-            score.notes.push(topNote);
-          } else {
-            ignoreNotes.push(note);
-          }
-        });
 
         const tempos = midi.header.tempos
           .map((tempo) => ({
