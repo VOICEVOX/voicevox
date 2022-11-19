@@ -124,6 +124,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.max(0, endPosition - position);
         };
 
+        const round = (value: number, digits: number) => {
+          const powerOf10 = 10 ** digits;
+          return Math.round(value * powerOf10) / powerOf10;
+        };
+
         // TODO: UIで読み込むトラックを選択できるようにする
         // ひとまず1トラック目のみを読み込む
         midi.tracks[0].notes
@@ -152,7 +157,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos = midi.header.tempos
           .map((tempo) => ({
             position: convertToPosBasedOnRes(tempo.ticks),
-            tempo: tempo.bpm,
+            tempo: round(tempo.bpm, 2),
           }))
           .sort((a, b) => a.position - b.position);
 
@@ -249,6 +254,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return value;
         };
 
+        const round = (value: number, digits: number) => {
+          const powerOf10 = 10 ** digits;
+          return Math.round(value * powerOf10) / powerOf10;
+        };
+
         const getStepNumber = (stepElement: Element) => {
           const stepNumberDict: { [key: string]: number } = {
             C: 0,
@@ -299,9 +309,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               score.tempos.pop();
             }
           }
+          const tempo = getAttributeAsNumber(soundElement, "tempo");
           score.tempos.push({
             position: position,
-            tempo: getAttributeAsNumber(soundElement, "tempo"),
+            tempo: round(tempo, 2),
           });
         };
 
