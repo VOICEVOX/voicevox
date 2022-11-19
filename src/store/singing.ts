@@ -124,21 +124,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return Math.max(0, endPosition - position);
         };
 
-        midi.tracks
-          .map((track, index) => {
-            // TODO: UIで読み込むトラックを選択できるようにする
-            if (index !== 0) return []; // ひとまず1トラック目のみを読み込む
-            return track.notes.map((note) => ({
-              position: convertToPosBasedOnRes(note.ticks),
-              duration: convertToDurationBasedOnRes(
-                note.ticks,
-                note.durationTicks
-              ),
-              midi: note.midi,
-              lyric: "",
-            }));
-          })
-          .flat()
+        // TODO: UIで読み込むトラックを選択できるようにする
+        // ひとまず1トラック目のみを読み込む
+        midi.tracks[0].notes
+          .map((note) => ({
+            position: convertToPosBasedOnRes(note.ticks),
+            duration: convertToDurationBasedOnRes(
+              note.ticks,
+              note.durationTicks
+            ),
+            midi: note.midi,
+            lyric: "",
+          }))
           .sort((a, b) => a.position - b.position)
           .forEach((note) => {
             if (score.notes.length === 0) {
@@ -209,16 +206,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const score = await dispatch("GET_EMPTY_SCORE");
 
-        const getDurationOfFirstMeasure = (score: Score) => {
-          const beats = score.timeSignatures[0].beats;
-          const beatType = score.timeSignatures[0].beatType;
-          return (score.resolution * 4 * beats) / beatType;
+        const getMeasureDuration = (beats: number, beatType: number) => {
+          const referenceMeasureDuration = score.resolution * 4;
+          return Math.round((referenceMeasureDuration * beats) / beatType);
         };
 
         let divisions = 1;
         let position = 0;
         let measurePosition = 0;
-        let measureDuration = getDurationOfFirstMeasure(score);
+        let measureDuration = getMeasureDuration(
+          score.timeSignatures[0].beats,
+          score.timeSignatures[0].beatType
+        );
         let tieStartNote: Note | null = null;
 
         const getChild = (element: Element | null, tagName: string) => {
@@ -307,9 +306,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const parseDirection = (directionElement: Element) => {
-          const soundElements = directionElement.getElementsByTagName("sound");
-          for (const soundElement of soundElements) {
-            parseSound(soundElement);
+          for (const childElement of directionElement.children) {
+            if (childElement.tagName === "sound") {
+              parseSound(childElement);
+            }
           }
         };
 
@@ -328,9 +328,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
           const beats = getValueAsNumber(beatsElement);
           const beatType = getValueAsNumber(beatTypeElement);
-          measureDuration = Math.round(
-            (score.resolution * 4 * beats) / beatType
-          );
+          measureDuration = getMeasureDuration(beats, beatType);
           if (score.timeSignatures.length !== 0) {
             const lastTimeSignature =
               score.timeSignatures[score.timeSignatures.length - 1];
@@ -358,6 +356,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         const parseNote = (noteElement: Element) => {
+          // TODO: ノートの重なり・和音を考慮していないので、
+          //       それらが存在する場合でも読み込めるようにする
+
           const durationElement = getChild(noteElement, "duration");
           if (durationElement === null) {
             throw new Error("duration element does not exist.");
