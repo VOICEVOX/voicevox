@@ -714,13 +714,21 @@ export type SingingStoreTypes = {
     action(payload: { engineId?: string; styleId?: number }): void;
   };
 
-  GET_DEFAULT_SCORE: {
+  GET_EMPTY_SCORE: {
     action(): Promise<Score>;
   };
 
   SET_SCORE: {
     mutation: { score: Score };
     action(payload: { score: Score }): void;
+  };
+
+  IMPORT_MIDI_FILE: {
+    action(payload: { filePath?: string }): void;
+  };
+
+  IMPORT_MUSICXML_FILE: {
+    action(payload: { filePath?: string }): void;
   };
 };
 
