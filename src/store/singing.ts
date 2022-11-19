@@ -144,38 +144,42 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .sort((a, b) => a.position - b.position);
 
         // ノートの重なりを考慮して、一番上の声部のノートのみインポートする
+        let topNote: Note | null = null; // 一番上の声部のノート
         let ignoreNotes: Note[] = []; // 一番上の声部ではないので無視するノート
         notes.forEach((note) => {
-          if (score.notes.length === 0) {
-            score.notes.push(note);
+          if (topNote === null) {
+            topNote = note;
+            score.notes.push(topNote);
             return;
           }
-          const topNote = score.notes[score.notes.length - 1];
           const topNoteEnd = topNote.position + topNote.duration;
           if (note.position < topNoteEnd) {
             if (note.midi > topNote.midi) {
               ignoreNotes.push(topNote);
               score.notes.pop();
-              score.notes.push(note);
+              topNote = note;
+              score.notes.push(topNote);
             } else {
               ignoreNotes.push(note);
             }
             return;
           }
-          const duplicateNotes = ignoreNotes.filter((value) => {
+          const overlappingNotes = ignoreNotes.filter((value) => {
             const ignoreNoteEnd = value.position + value.duration;
             return note.position < ignoreNoteEnd;
           });
-          if (duplicateNotes.length === 0) {
+          if (overlappingNotes.length === 0) {
             ignoreNotes = [];
-            score.notes.push(note);
+            topNote = note;
+            score.notes.push(topNote);
             return;
           }
-          const isTopNote = duplicateNotes.every(
+          const isTopNote = overlappingNotes.every(
             (value) => note.midi > value.midi
           );
           if (isTopNote) {
-            score.notes.push(note);
+            topNote = note;
+            score.notes.push(topNote);
           } else {
             ignoreNotes.push(note);
           }
