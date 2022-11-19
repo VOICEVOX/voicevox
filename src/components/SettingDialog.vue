@@ -816,7 +816,7 @@ export default defineComponent({
           data: { ...savingSetting.value, [key]: data },
         });
       };
-      if (key === "outputSamplingRate" && data !== 24000) {
+      if (key === "outputSamplingRate" && data !== "default") {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
