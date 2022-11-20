@@ -34,6 +34,7 @@ export const storeKey: InjectionKey<
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
   userCharacterOrder: [],
+  isSafeMode: false,
 };
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
@@ -284,6 +285,15 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       await Promise.all(promises).then(() => {
         dispatch("ON_VUEX_READY");
       });
+    },
+  },
+
+  SET_IS_SAFE_MODE: {
+    mutation(state, { isSafeMode }) {
+      state.isSafeMode = isSafeMode;
+    },
+    action({ commit }, isSafeMode) {
+      commit("SET_IS_SAFE_MODE", { isSafeMode });
     },
   },
 });
