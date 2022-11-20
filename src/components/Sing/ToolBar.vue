@@ -11,9 +11,46 @@
       <button type="button" class="sing-button-temp">戻る</button>
       <button type="button" class="sing-button-temp">再生</button>
       <div class="sing-player-position">00:00</div>
-      <input type="number" value="120" class="sing-bpm" />
-      <input type="number" value="4" class="sing-tempo" />/
-      <input type="number" value="4" class="sing-tempo" />
+      <q-input
+        type="number"
+        :model-value="tempoInputBuffer"
+        dense
+        hide-bottom-space
+        class="sing-tempo"
+        @update:model-value="setTempoInputBuffer"
+        @change="setTempo()"
+      >
+        <template v-slot:prepend>
+          <div />
+        </template>
+      </q-input>
+      <q-input
+        type="number"
+        :model-value="beatsInputBuffer"
+        dense
+        hide-bottom-space
+        class="sing-time-signature"
+        @update:model-value="setBeatsInputBuffer"
+        @change="setTimeSignature()"
+      >
+        <template v-slot:prepend>
+          <div />
+        </template>
+      </q-input>
+      /
+      <q-input
+        type="number"
+        :model-value="beatTypeInputBuffer"
+        dense
+        hide-bottom-space
+        class="sing-time-signature"
+        @update:model-value="setBeatTypeInputBuffer"
+        @change="setTimeSignature()"
+      >
+        <template v-slot:prepend>
+          <div />
+        </template>
+      </q-input>
     </div>
     <div class="sing-setting">
       <input type="range" min="0" max="100" class="sing-volume" />
@@ -25,7 +62,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, watch, ref } from "vue";
 import { useStore } from "@/store";
 
 export default defineComponent({
@@ -62,12 +99,82 @@ export default defineComponent({
         )?.iconPath
     );
 
+    const tempoInputBuffer = ref(0);
+    const beatsInputBuffer = ref(0);
+    const beatTypeInputBuffer = ref(0);
+
+    const setTempoInputBuffer = (tempoStr: string) => {
+      const tempo = Number(tempoStr);
+      if (Number.isNaN(tempo) || tempo <= 0) return;
+      tempoInputBuffer.value = tempo;
+    };
+    const setBeatsInputBuffer = (beatsStr: string) => {
+      const beats = Number(beatsStr);
+      if (!Number.isInteger(beats) || beats <= 0) return;
+      beatsInputBuffer.value = beats;
+    };
+    const setBeatTypeInputBuffer = (beatTypeStr: string) => {
+      const beatType = Number(beatTypeStr);
+      if (!Number.isInteger(beatType) || beatType <= 0) return;
+      beatTypeInputBuffer.value = beatType;
+    };
+
+    const tempos = computed(() => store.state.score?.tempos);
+    const timeSignatures = computed(() => store.state.score?.timeSignatures);
+
+    watch(
+      tempos,
+      () => {
+        tempoInputBuffer.value = tempos.value?.[0].tempo ?? 0;
+      },
+      { deep: true }
+    );
+    watch(
+      timeSignatures,
+      () => {
+        beatsInputBuffer.value = timeSignatures.value?.[0].beats ?? 0;
+      },
+      { deep: true }
+    );
+    watch(
+      timeSignatures,
+      () => {
+        beatTypeInputBuffer.value = timeSignatures.value?.[0].beatType ?? 0;
+      },
+      { deep: true }
+    );
+
+    const setTempo = async () => {
+      await store.dispatch("ADD_TEMPO", {
+        tempo: {
+          position: 0,
+          tempo: tempoInputBuffer.value,
+        },
+      });
+    };
+
+    const setTimeSignature = async () => {
+      await store.dispatch("ADD_TIME_SIGNATURE", {
+        timeSignature: {
+          position: 0,
+          beats: beatsInputBuffer.value,
+          beatType: beatTypeInputBuffer.value,
+        },
+      });
+    };
+
     return {
       isShowSinger,
       toggleShowSinger,
-      userOrderedCharacterInfos,
-      selectedCharacterInfo,
       selectedStyleIconPath,
+      tempoInputBuffer,
+      beatsInputBuffer,
+      beatTypeInputBuffer,
+      setTempoInputBuffer,
+      setBeatsInputBuffer,
+      setBeatTypeInputBuffer,
+      setTempo,
+      setTimeSignature,
     };
   },
 });
@@ -120,14 +227,14 @@ export default defineComponent({
   margin: 0 4px;
 }
 
-.sing-bpm {
+.sing-tempo {
   margin: 0 4px;
   width: 56px;
 }
 
-.sing-tempo {
+.sing-time-signature {
   margin: 0 4px;
-  width: 32px;
+  width: 36px;
 }
 
 .sing-player-position {

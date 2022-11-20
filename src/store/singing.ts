@@ -1,4 +1,11 @@
-import { Note, Score, SingingStoreState, SingingStoreTypes } from "./type";
+import {
+  Score,
+  Tempo,
+  TimeSignature,
+  Note,
+  SingingStoreState,
+  SingingStoreTypes,
+} from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { Midi } from "@tonejs/midi";
@@ -80,6 +87,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         timeSignatures: [{ position: 0, beats: 4, beatType: 4 }],
         notes: [],
       };
+      if (score.tempos.length !== 1 || score.tempos[0].position !== 0) {
+        throw new Error("Tempo does not exist at the beginning of the score.");
+      }
+      if (
+        score.timeSignatures.length !== 1 ||
+        score.timeSignatures[0].position !== 0
+      ) {
+        throw new Error(
+          "Time signature does not exist at the beginning of the score."
+        );
+      }
       return score;
     },
   },
@@ -90,6 +108,135 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ commit }, { score }: { score: Score }) {
       commit("SET_SCORE", { score });
+    },
+  },
+
+  ADD_TEMPO: {
+    mutation(state, { index, tempo }: { index: number; tempo: Tempo }) {
+      state.score?.tempos.splice(index, 0, tempo);
+    },
+    async action({ state, commit }, { tempo }: { tempo: Tempo }) {
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (tempo.position < 0 || Number.isNaN(tempo.tempo) || tempo.tempo <= 0) {
+        throw new Error("The value is invalid.");
+      }
+      const duplicate = score.tempos.some((value) => {
+        return value.position === tempo.position;
+      });
+      const index = score.tempos.findIndex((value) => {
+        return value.position >= tempo.position;
+      });
+      if (index === -1) return;
+
+      if (duplicate) {
+        commit("REMOVE_TEMPO", { index });
+      }
+      commit("ADD_TEMPO", { index, tempo });
+    },
+  },
+
+  REMOVE_TEMPO: {
+    mutation(state, { index }: { index: number }) {
+      state.score?.tempos.splice(index, 1);
+    },
+    async action(
+      { state, commit, dispatch },
+      { position }: { position: number }
+    ) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTempo = emptyScore.tempos[0];
+
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (position < 0) {
+        throw new Error("The value is invalid.");
+      }
+      const index = score.tempos.findIndex((value) => {
+        return value.position === position;
+      });
+      if (index === -1) return;
+
+      commit("REMOVE_TEMPO", { index });
+      if (score.tempos.length === 0) {
+        commit("ADD_TEMPO", { index, tempo: defaultTempo });
+      }
+    },
+  },
+
+  ADD_TIME_SIGNATURE: {
+    mutation(
+      state,
+      { index, timeSignature }: { index: number; timeSignature: TimeSignature }
+    ) {
+      state.score?.timeSignatures.splice(index, 0, timeSignature);
+    },
+    async action(
+      { state, commit },
+      { timeSignature }: { timeSignature: TimeSignature }
+    ) {
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (
+        timeSignature.position < 0 ||
+        !Number.isInteger(timeSignature.beats) ||
+        !Number.isInteger(timeSignature.beatType) ||
+        timeSignature.beats <= 0 ||
+        timeSignature.beatType <= 0
+      ) {
+        throw new Error("The value is invalid.");
+      }
+      const duplicate = score.timeSignatures.some((value) => {
+        return value.position === timeSignature.position;
+      });
+      const index = score.timeSignatures.findIndex((value) => {
+        return value.position >= timeSignature.position;
+      });
+      if (index === -1) return;
+
+      if (duplicate) {
+        commit("REMOVE_TIME_SIGNATURE", { index });
+      }
+      commit("ADD_TIME_SIGNATURE", { index, timeSignature });
+    },
+  },
+
+  REMOVE_TIME_SIGNATURE: {
+    mutation(state, { index }: { index: number }) {
+      state.score?.timeSignatures.splice(index, 1);
+    },
+    async action(
+      { state, commit, dispatch },
+      { position }: { position: number }
+    ) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTimeSignature = emptyScore.timeSignatures[0];
+
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (position < 0) {
+        throw new Error("The value is invalid.");
+      }
+      const index = score.timeSignatures.findIndex((value) => {
+        return value.position === position;
+      });
+      if (index === -1) return;
+
+      commit("REMOVE_TIME_SIGNATURE", { index });
+      if (score.timeSignatures.length === 0) {
+        commit("ADD_TIME_SIGNATURE", {
+          index,
+          timeSignature: defaultTimeSignature,
+        });
+      }
     },
   },
 
