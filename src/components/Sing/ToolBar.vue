@@ -229,7 +229,7 @@ export default defineComponent({
 
 .sing-tempo {
   margin: 0 4px;
-  width: 56px;
+  width: 64px;
 }
 
 .sing-time-signature {

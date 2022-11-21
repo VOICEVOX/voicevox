@@ -120,7 +120,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (score === undefined || score.tempos.length === 0) {
         throw new Error("Score is not initialized.");
       }
-      if (tempo.position < 0 || Number.isNaN(tempo.tempo) || tempo.tempo <= 0) {
+      if (Number.isNaN(tempo.tempo) || tempo.tempo <= 0) {
         throw new Error("The value is invalid.");
       }
       const duplicate = score.tempos.some((value) => {
@@ -130,6 +130,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return value.position >= tempo.position;
       });
       if (index === -1) return;
+
+      const round = (value: number, digits: number) => {
+        const powerOf10 = 10 ** digits;
+        return Math.round(value * powerOf10) / powerOf10;
+      };
+
+      tempo.tempo = round(tempo.tempo, 2);
 
       if (duplicate) {
         commit("REMOVE_TEMPO", { index });
@@ -152,9 +159,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const score = state.score;
       if (score === undefined || score.tempos.length === 0) {
         throw new Error("Score is not initialized.");
-      }
-      if (position < 0) {
-        throw new Error("The value is invalid.");
       }
       const index = score.tempos.findIndex((value) => {
         return value.position === position;
@@ -184,7 +188,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("Score is not initialized.");
       }
       if (
-        timeSignature.position < 0 ||
         !Number.isInteger(timeSignature.beats) ||
         !Number.isInteger(timeSignature.beatType) ||
         timeSignature.beats <= 0 ||
@@ -221,9 +224,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const score = state.score;
       if (score === undefined || score.timeSignatures.length === 0) {
         throw new Error("Score is not initialized.");
-      }
-      if (position < 0) {
-        throw new Error("The value is invalid.");
       }
       const index = score.timeSignatures.findIndex((value) => {
         return value.position === position;
