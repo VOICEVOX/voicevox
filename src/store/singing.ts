@@ -120,7 +120,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (score === undefined || score.tempos.length === 0) {
         throw new Error("Score is not initialized.");
       }
-      if (Number.isNaN(tempo.tempo) || tempo.tempo <= 0) {
+      if (
+        Number.isNaN(tempo.position) ||
+        tempo.position < 0 ||
+        Number.isNaN(tempo.tempo) ||
+        tempo.tempo <= 0
+      ) {
         throw new Error("The value is invalid.");
       }
       const duplicate = score.tempos.some((value) => {
@@ -188,6 +193,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("Score is not initialized.");
       }
       if (
+        Number.isNaN(timeSignature.position) ||
+        timeSignature.position < 0 ||
         !Number.isInteger(timeSignature.beats) ||
         !Number.isInteger(timeSignature.beatType) ||
         timeSignature.beats <= 0 ||
