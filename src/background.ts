@@ -39,7 +39,7 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
-import VvppManager from "./helpers/vvppManager";
+import VvppManager from "./background/vvppManager";
 
 type EngineManifest = {
   name: string;
