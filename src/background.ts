@@ -807,7 +807,7 @@ async function loadVvpp(vvppPath: string) {
     const dirName = vvppManager.toValidDirName(manifest);
     const engineDirectory = path.join(vvppEngineDir, dirName);
     for (const dir of await fs.promises.readdir(vvppEngineDir)) {
-      if (!dir.endsWith("+" + manifest.uuid)) {
+      if (!vvppManager.isEngineDirName(dir, manifest)) {
         continue;
       }
       vvppManager.willMove(outputDir, dirName);

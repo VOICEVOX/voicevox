@@ -50,6 +50,10 @@ export class VvppManager {
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
   }
 
+  isEngineDirName(dir: string, manifest: EngineManifest) {
+    return dir.endsWith(`+${manifest.uuid}`);
+  }
+
   async extractVvpp(
     vvppPath: string
   ): Promise<{ outputDir: string; manifest: EngineManifest }> {
