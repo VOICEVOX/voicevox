@@ -104,7 +104,7 @@ export interface Sandbox {
   loadVvpp(path: string): Promise<boolean>;
   deleteVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(): void;
+  restartApp(obj: { isSafeMode: boolean }): void;
 }
 
 export type AppInfos = {
