@@ -45,6 +45,11 @@ export class VvppManager {
     this.willDeleteEngines.add(engineId);
   }
 
+  toValidDirName(manifest: EngineManifest) {
+    // フォルダに使用できない文字が含まれている場合は置換する
+    return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
+  }
+
   async extractVvpp(
     vvppPath: string
   ): Promise<{ outputDir: string; manifest: EngineManifest }> {

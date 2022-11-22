@@ -808,11 +808,7 @@ async function loadVvpp(vvppPath: string) {
   try {
     const { outputDir, manifest } = await vvppManager.extractVvpp(vvppPath);
     let willMove = false;
-    // フォルダに使用できない文字が含まれている場合は置換する
-    const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
-      manifest.uuid
-    }`;
-
+    const dirName = vvppManager.toValidDirName(manifest);
     const engineDirectory = path.join(vvppEngineDir, dirName);
     for (const dir of await fs.promises.readdir(vvppEngineDir)) {
       if (!dir.endsWith("+" + manifest.uuid)) {
