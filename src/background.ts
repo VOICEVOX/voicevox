@@ -207,10 +207,6 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
       log.log(`${engineDir} is not directory`);
       continue;
     }
-    if (engineDir.endsWith("+tmp")) {
-      log.log(`Skip temporary engine: ${engineDir}`);
-      continue;
-    }
     const result = addEngine(engineDir, "vvpp");
     if (result !== "ok") {
       log.log(`Failed to load engine: ${result}, ${engineDir}`);
