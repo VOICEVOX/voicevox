@@ -39,7 +39,7 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
-import { extractVvpp } from "./helpers/vvpp";
+import VvppManager from "./helpers/vvppManager";
 
 type EngineManifest = {
   name: string;
@@ -101,6 +101,10 @@ if (isDevelopment) {
   dotenv.config({ path: envPath });
 }
 
+const vvppManager = new VvppManager({
+  baseDir: app.getPath("userData"),
+});
+
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
@@ -146,9 +150,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
   });
 })();
 
-const userEngineDir = path.join(app.getPath("userData"), "engines");
-const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
-const tmpVvppEngineDir = path.join(app.getPath("userData"), "tmp-engines");
+const { userEngineDir, vvppEngineDir } = vvppManager.getEngineDirPaths();
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
@@ -804,34 +806,32 @@ function openEngineDirectory(engineId: string) {
 
 async function loadVvpp(vvppPath: string) {
   try {
-    const tmpDir = path.join(tmpVvppEngineDir, new Date().getTime().toString());
-    await fs.promises.mkdir(tmpDir, { recursive: true });
-    const manifest = await extractVvpp(vvppPath, tmpDir);
-    let willRename = false;
+    const { outputDir, manifest } = await vvppManager.extractVvpp(vvppPath);
+    let willMove = false;
+    // フォルダに使用できない文字が含まれている場合は置換する
     const dirName = `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${
       manifest.uuid
     }`;
-    let engineDirectory = path.join(vvppEngineDir, dirName);
 
+    const engineDirectory = path.join(vvppEngineDir, dirName);
     for (const dir of await fs.promises.readdir(vvppEngineDir)) {
       if (!dir.endsWith("+" + manifest.uuid)) {
         continue;
       }
-      willRenameEngineIds.add(dirName);
-      willRename = true;
+      vvppManager.willMove(outputDir, dirName);
+      willMove = true;
     }
-    if (willRename) {
-      engineDirectory += "+tmp";
+    if (!willMove) {
+      await moveFile(outputDir, engineDirectory);
     }
 
-    await moveFile(tmpDir, engineDirectory);
     return true;
   } catch (e) {
     dialog.showErrorBox(
       "読み込みエラー",
       `${vvppPath} を読み込めませんでした。`
     );
-    log.error(`Failed to read ${vvppPath}, ${e}`);
+    log.error(`Failed to load ${vvppPath}, ${e}`);
     return false;
   }
 }
@@ -856,7 +856,7 @@ async function deleteVvppEngine(engineId: string) {
 
   // Windows環境だとエンジンを終了してから削除する必要がある。
   // そのため、アプリの終了時に削除するようにする。
-  willDeleteEngineIds.add(engineId);
+  vvppManager.willDelete(engineId);
   return true;
 }
 
@@ -986,21 +986,6 @@ migrateHotkeySettings();
 
 let willQuit = false;
 let willRestart = false;
-
-// # エンジン削除・エンジン上書き時の処理について
-//
-// 削除：
-// * アプリ終了時にVVPPディレクトリを消去するように予約
-// * アプリ終了時、予約されていた処理を行う
-// 上書き：
-// * VVPPをインストール先にtmpとして展開、失敗したら停止
-// * アプリ終了時に古いVVPPディレクトリを消去するように予約
-// * アプリ終了時に新しいVVPPディレクトリをリネームするように予約
-// * アプリ終了時、予約されていた処理を行う
-//
-// エンジンを停止してからではないとディレクトリを削除できないため、このような実装になっている。
-const willDeleteEngineIds: Set<string> = new Set();
-const willRenameEngineIds: Set<string> = new Set();
 
 let filePathOnMac: string | null = null;
 // create window
@@ -1448,54 +1433,7 @@ app.on("before-quit", (event) => {
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   const runPostEngineKill = async () => {
-    const engineInfos = fetchEngineInfos();
-    await Promise.all(
-      [...willDeleteEngineIds].map(async (engineId) => {
-        const engineInfo = engineInfos.find((info) => info.uuid === engineId);
-        if (engineInfo === undefined) {
-          log.error(`Engine ${engineId} not found`);
-          return;
-        }
-        if (engineInfo.path === undefined) {
-          log.error(`Engine ${engineId} path is undefined`);
-          return;
-        }
-        await fs.promises
-          .rm(engineInfo.path, { recursive: true })
-          .catch((e) => {
-            dialog.showErrorBox(
-              "エンジン削除エラー",
-              `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${engineInfo.path}\nエラー内容: ${e}`
-            );
-          });
-      })
-    );
-    willDeleteEngineIds.clear();
-    await Promise.all(
-      [...willRenameEngineIds].map(async (dirName) => {
-        const engineDirectory = path.join(vvppEngineDir, dirName);
-        for (let i = 0; i < 5; i++) {
-          try {
-            await fs.promises.rm(engineDirectory, { recursive: true });
-            await moveFile(engineDirectory + "+tmp", engineDirectory);
-            log.info(`Renamed ${dirName}+tmp to ${dirName}`);
-            break;
-          } catch (e) {
-            if (i === 4) {
-              log.error(e);
-              dialog.showErrorBox(
-                "エンジン追加エラー",
-                `エンジンの追加に失敗しました。エンジンのフォルダを手動でリネームしてください。\n${engineDirectory}+tmp\nエラー内容: ${e}`
-              );
-            } else {
-              log.error(`Failed to rename engine directory: ${e}, retrying`);
-              await new Promise((resolve) => setTimeout(resolve, 1000));
-            }
-          }
-        }
-      })
-    );
-    willRenameEngineIds.clear();
+    await vvppManager.processDeferredProcesses();
   };
 
   const restartApp = async () => {
