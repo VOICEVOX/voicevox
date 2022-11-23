@@ -145,20 +145,25 @@ export default defineComponent({
     );
 
     const setTempo = async () => {
+      const tempo = tempoInputBuffer.value;
+      if (tempo === 0) return;
       await store.dispatch("ADD_TEMPO", {
         tempo: {
           position: 0,
-          tempo: tempoInputBuffer.value,
+          tempo: tempo,
         },
       });
     };
 
     const setTimeSignature = async () => {
+      const beats = beatsInputBuffer.value;
+      const beatType = beatTypeInputBuffer.value;
+      if (beats === 0 || beatType === 0) return;
       await store.dispatch("ADD_TIME_SIGNATURE", {
         timeSignature: {
           position: 0,
-          beats: beatsInputBuffer.value,
-          beatType: beatTypeInputBuffer.value,
+          beats: beats,
+          beatType: beatType,
         },
       });
     };
