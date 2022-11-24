@@ -177,6 +177,7 @@
           disabled: speedScaleSlider.qSliderProps.disable.value,
         }"
         :model-value="speedScaleSlider.qSliderProps.modelValue.value"
+        :disable="speedScaleSlider.qSliderProps.disable.value"
         auto-save
         transition-show="none"
         transition-hide="none"
@@ -359,7 +360,6 @@ import { Preset } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
-import { number } from "yargs";
 
 export default defineComponent({
   name: "AudioInfo",
@@ -736,15 +736,38 @@ export default defineComponent({
       closeAllDialog();
     };
 
-    // プリセットの編集
-    const showsPresetEditDialog = ref(false);
-
     const handleChangeSlider = (textInput: string) => {
-      const speedScale = Number(textInput);
+      const speedScale = adjustSliderValue(
+        textInput,
+        speedScaleSlider.qSliderProps.min.value,
+        speedScaleSlider.qSliderProps.max.value
+      );
       store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
         audioKey: props.activeAudioKey,
         speedScale,
       });
+    };
+
+    // プリセットの編集
+    const showsPresetEditDialog = ref(false);
+
+    const adjustSliderValue = (
+      value: string,
+      minimalVal: number,
+      maximamVal: number
+    ) => {
+      const num = Number(value);
+      if (isNaN(num)) {
+        return minimalVal;
+      }
+      if (num < minimalVal) {
+        return minimalVal;
+      }
+      if (maximamVal < num) {
+        return maximamVal;
+      }
+
+      return num;
     };
 
     return {
