@@ -723,6 +723,26 @@ export type SingingStoreTypes = {
     action(payload: { score: Score }): void;
   };
 
+  SET_TEMPO: {
+    mutation: { index: number; tempo: Tempo };
+    action(payload: { tempo: Tempo }): void;
+  };
+
+  REMOVE_TEMPO: {
+    mutation: { index: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_TIME_SIGNATURE: {
+    mutation: { index: number; timeSignature: TimeSignature };
+    action(payload: { timeSignature: TimeSignature }): void;
+  };
+
+  REMOVE_TIME_SIGNATURE: {
+    mutation: { index: number };
+    action(payload: { position: number }): void;
+  };
+
   IMPORT_MIDI_FILE: {
     action(payload: { filePath?: string }): void;
   };

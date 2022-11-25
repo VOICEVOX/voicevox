@@ -1,4 +1,11 @@
-import { Note, Score, SingingStoreState, SingingStoreTypes } from "./type";
+import {
+  Score,
+  Tempo,
+  TimeSignature,
+  Note,
+  SingingStoreState,
+  SingingStoreTypes,
+} from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { Midi } from "@tonejs/midi";
@@ -80,6 +87,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         timeSignatures: [{ position: 0, beats: 4, beatType: 4 }],
         notes: [],
       };
+      if (score.tempos.length !== 1 || score.tempos[0].position !== 0) {
+        throw new Error("Tempo does not exist at the beginning of the score.");
+      }
+      if (
+        score.timeSignatures.length !== 1 ||
+        score.timeSignatures[0].position !== 0
+      ) {
+        throw new Error(
+          "Time signature does not exist at the beginning of the score."
+        );
+      }
       return score;
     },
   },
@@ -90,6 +108,146 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ commit }, { score }: { score: Score }) {
       commit("SET_SCORE", { score });
+    },
+  },
+
+  SET_TEMPO: {
+    mutation(state, { index, tempo }: { index: number; tempo: Tempo }) {
+      state.score?.tempos.splice(index, 0, tempo);
+    },
+    // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
+    async action({ state, commit }, { tempo }: { tempo: Tempo }) {
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (
+        Number.isNaN(tempo.position) ||
+        tempo.position < 0 ||
+        Number.isNaN(tempo.tempo) ||
+        tempo.tempo <= 0
+      ) {
+        throw new Error("The value is invalid.");
+      }
+      const duplicate = score.tempos.some((value) => {
+        return value.position === tempo.position;
+      });
+      const index = score.tempos.findIndex((value) => {
+        return value.position >= tempo.position;
+      });
+      if (index === -1) return;
+
+      const round = (value: number, digits: number) => {
+        const powerOf10 = 10 ** digits;
+        return Math.round(value * powerOf10) / powerOf10;
+      };
+
+      tempo.tempo = round(tempo.tempo, 2);
+
+      if (duplicate) {
+        commit("REMOVE_TEMPO", { index });
+      }
+      commit("SET_TEMPO", { index, tempo });
+    },
+  },
+
+  REMOVE_TEMPO: {
+    mutation(state, { index }: { index: number }) {
+      state.score?.tempos.splice(index, 1);
+    },
+    // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
+    async action(
+      { state, commit, dispatch },
+      { position }: { position: number }
+    ) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTempo = emptyScore.tempos[0];
+
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      const index = score.tempos.findIndex((value) => {
+        return value.position === position;
+      });
+      if (index === -1) return;
+
+      commit("REMOVE_TEMPO", { index });
+      if (score.tempos.length === 0) {
+        commit("SET_TEMPO", { index, tempo: defaultTempo });
+      }
+    },
+  },
+
+  SET_TIME_SIGNATURE: {
+    mutation(
+      state,
+      { index, timeSignature }: { index: number; timeSignature: TimeSignature }
+    ) {
+      state.score?.timeSignatures.splice(index, 0, timeSignature);
+    },
+    // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
+    async action(
+      { state, commit },
+      { timeSignature }: { timeSignature: TimeSignature }
+    ) {
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      if (
+        Number.isNaN(timeSignature.position) ||
+        timeSignature.position < 0 ||
+        !Number.isInteger(timeSignature.beats) ||
+        !Number.isInteger(timeSignature.beatType) ||
+        timeSignature.beats <= 0 ||
+        timeSignature.beatType <= 0
+      ) {
+        throw new Error("The value is invalid.");
+      }
+      const duplicate = score.timeSignatures.some((value) => {
+        return value.position === timeSignature.position;
+      });
+      const index = score.timeSignatures.findIndex((value) => {
+        return value.position >= timeSignature.position;
+      });
+      if (index === -1) return;
+
+      if (duplicate) {
+        commit("REMOVE_TIME_SIGNATURE", { index });
+      }
+      commit("SET_TIME_SIGNATURE", { index, timeSignature });
+    },
+  },
+
+  REMOVE_TIME_SIGNATURE: {
+    mutation(state, { index }: { index: number }) {
+      state.score?.timeSignatures.splice(index, 1);
+    },
+    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
+    async action(
+      { state, commit, dispatch },
+      { position }: { position: number }
+    ) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTimeSignature = emptyScore.timeSignatures[0];
+
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
+      const index = score.timeSignatures.findIndex((value) => {
+        return value.position === position;
+      });
+      if (index === -1) return;
+
+      commit("REMOVE_TIME_SIGNATURE", { index });
+      if (score.timeSignatures.length === 0) {
+        commit("SET_TIME_SIGNATURE", {
+          index,
+          timeSignature: defaultTimeSignature,
+        });
+      }
     },
   },
 
