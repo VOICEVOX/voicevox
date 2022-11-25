@@ -111,10 +111,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  ADD_TEMPO: {
+  SET_TEMPO: {
     mutation(state, { index, tempo }: { index: number; tempo: Tempo }) {
       state.score?.tempos.splice(index, 0, tempo);
     },
+    // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
     async action({ state, commit }, { tempo }: { tempo: Tempo }) {
       const score = state.score;
       if (score === undefined || score.tempos.length === 0) {
@@ -146,7 +147,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (duplicate) {
         commit("REMOVE_TEMPO", { index });
       }
-      commit("ADD_TEMPO", { index, tempo });
+      commit("SET_TEMPO", { index, tempo });
     },
   },
 
@@ -154,6 +155,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { index }: { index: number }) {
       state.score?.tempos.splice(index, 1);
     },
+    // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
     async action(
       { state, commit, dispatch },
       { position }: { position: number }
@@ -172,18 +174,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("REMOVE_TEMPO", { index });
       if (score.tempos.length === 0) {
-        commit("ADD_TEMPO", { index, tempo: defaultTempo });
+        commit("SET_TEMPO", { index, tempo: defaultTempo });
       }
     },
   },
 
-  ADD_TIME_SIGNATURE: {
+  SET_TIME_SIGNATURE: {
     mutation(
       state,
       { index, timeSignature }: { index: number; timeSignature: TimeSignature }
     ) {
       state.score?.timeSignatures.splice(index, 0, timeSignature);
     },
+    // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
     async action(
       { state, commit },
       { timeSignature }: { timeSignature: TimeSignature }
@@ -213,7 +216,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (duplicate) {
         commit("REMOVE_TIME_SIGNATURE", { index });
       }
-      commit("ADD_TIME_SIGNATURE", { index, timeSignature });
+      commit("SET_TIME_SIGNATURE", { index, timeSignature });
     },
   },
 
@@ -221,6 +224,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { index }: { index: number }) {
       state.score?.timeSignatures.splice(index, 1);
     },
+    // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
     async action(
       { state, commit, dispatch },
       { position }: { position: number }
@@ -239,7 +243,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("REMOVE_TIME_SIGNATURE", { index });
       if (score.timeSignatures.length === 0) {
-        commit("ADD_TIME_SIGNATURE", {
+        commit("SET_TIME_SIGNATURE", {
           index,
           timeSignature: defaultTimeSignature,
         });

@@ -723,7 +723,7 @@ export type SingingStoreTypes = {
     action(payload: { score: Score }): void;
   };
 
-  ADD_TEMPO: {
+  SET_TEMPO: {
     mutation: { index: number; tempo: Tempo };
     action(payload: { tempo: Tempo }): void;
   };
@@ -733,7 +733,7 @@ export type SingingStoreTypes = {
     action(payload: { position: number }): void;
   };
 
-  ADD_TIME_SIGNATURE: {
+  SET_TIME_SIGNATURE: {
     mutation: { index: number; timeSignature: TimeSignature };
     action(payload: { timeSignature: TimeSignature }): void;
   };

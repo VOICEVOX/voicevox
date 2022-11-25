@@ -147,7 +147,7 @@ export default defineComponent({
     const setTempo = async () => {
       const tempo = tempoInputBuffer.value;
       if (tempo === 0) return;
-      await store.dispatch("ADD_TEMPO", {
+      await store.dispatch("SET_TEMPO", {
         tempo: {
           position: 0,
           tempo: tempo,
@@ -159,7 +159,7 @@ export default defineComponent({
       const beats = beatsInputBuffer.value;
       const beatType = beatTypeInputBuffer.value;
       if (beats === 0 || beatType === 0) return;
-      await store.dispatch("ADD_TIME_SIGNATURE", {
+      await store.dispatch("SET_TIME_SIGNATURE", {
         timeSignature: {
           position: 0,
           beats: beats,
