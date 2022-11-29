@@ -245,7 +245,7 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { AccentPhrase, AudioQuery, UserDictWord } from "@/openapi";
+import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -253,7 +253,6 @@ import {
 } from "@/store/utility";
 import AudioAccent from "@/components/AudioAccent.vue";
 import { QInput, useQuasar } from "quasar";
-import { AudioItem } from "@/store/type";
 
 const defaultDictPriority = 5;
 
@@ -461,25 +460,18 @@ export default defineComponent({
         throw new Error(`assert engineId !== undefined`);
 
       if (!accentPhrase.value) return;
-      nowGenerating.value = true;
-      const query: AudioQuery = {
-        accentPhrases: [accentPhrase.value],
-        speedScale: 1.0,
-        pitchScale: 0,
-        intonationScale: 1.0,
-        volumeScale: 1.0,
-        prePhonemeLength: 0.1,
-        postPhonemeLength: 0.1,
-        outputSamplingRate: store.state.savingSetting.outputSamplingRate,
-        outputStereo: store.state.savingSetting.outputStereo,
-      };
 
-      const audioItem: AudioItem = {
+      nowGenerating.value = true;
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         text: yomi.value,
         engineId,
         styleId: styleId.value,
-        query,
-      };
+      });
+
+      if (audioItem.query == undefined)
+        throw new Error(`assert audioItem.query !== undefined`);
+
+      audioItem.query.accentPhrases = [accentPhrase.value];
 
       let blob = await store.dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", {
         audioItem,

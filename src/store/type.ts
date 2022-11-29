@@ -39,12 +39,19 @@ import {
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
 
+/**
+ * エディタ用のAudioQuery
+ */
+export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+  outputSamplingRate: number | "default";
+};
+
 // FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
   engineId?: string;
   styleId?: number;
-  query?: AudioQuery;
+  query?: EditorAudioQuery;
   presetKey?: string;
 };
 
