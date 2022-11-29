@@ -4,7 +4,6 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
-import { moveFile } from "move-file";
 import shlex from "shlex";
 
 import {
