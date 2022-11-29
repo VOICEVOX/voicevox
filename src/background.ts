@@ -810,7 +810,7 @@ async function loadVvpp(vvppPath: string) {
       if (!vvppManager.isEngineDirName(dir, manifest)) {
         continue;
       }
-      vvppManager.willMove(outputDir, dirName);
+      vvppManager.markWillMove(outputDir, dirName);
       willMove = true;
     }
     if (!willMove) {
@@ -848,7 +848,7 @@ async function deleteVvppEngine(engineId: string) {
 
   // Windows環境だとエンジンを終了してから削除する必要がある。
   // そのため、アプリの終了時に削除するようにする。
-  vvppManager.willDelete(engineId);
+  vvppManager.markWillDelete(engineId);
   return true;
 }
 

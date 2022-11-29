@@ -37,11 +37,11 @@ export class VvppManager {
     };
   }
 
-  willMove(from: string, to: string) {
+  markWillMove(from: string, to: string) {
     this.willRenameEngines.push({ from, to });
   }
 
-  willDelete(engineId: string) {
+  markWillDelete(engineId: string) {
     this.willDeleteEngines.add(engineId);
   }
 
