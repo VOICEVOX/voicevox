@@ -551,6 +551,7 @@ export default defineComponent({
       projectName,
       titleText,
       isEdited,
+      isSafeMode,
       isFullscreen,
       subMenuOpenFlags,
       reassignSubMenuOpen,
