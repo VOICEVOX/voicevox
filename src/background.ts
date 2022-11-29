@@ -148,6 +148,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
+  // FIXME: ディレクトリ作成処理がここにあるのは変かも？
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
@@ -1413,7 +1414,7 @@ app.on("before-quit", (event) => {
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   const runPostEngineKill = async () => {
-    await vvppManager.processDeferredProcesses();
+    await vvppManager.handleEngineDirs();
   };
 
   const restartApp = async () => {
