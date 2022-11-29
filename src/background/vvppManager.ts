@@ -122,14 +122,13 @@ export class VvppManager {
     let willMove = false;
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
-    for (const dir of await fs.promises.readdir(this.vvppEngineDir)) {
-      if (!this.isEngineDirName(dir, manifest)) {
-        continue;
-      }
+    const oldEngineDirName = await fs.promises.readdir(this.vvppEngineDir).find((dir) => {
+      return this.isEngineDirName(dir, manifest);
+    })
+    if (oldEngineDirName) {
       this.markWillMove(outputDir, dirName);
-      willMove = true;
     }
-    if (!willMove) {
+    else {
       await moveFile(outputDir, engineDirectory);
     }
   }
