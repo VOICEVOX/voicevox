@@ -30,11 +30,13 @@ module.exports = {
           {
             ext: "vvproj",
             name: "VOICEVOX Project file",
+            description: "VOICEVOX Project file",
             role: "Editor",
           },
           {
             ext: "vvpp",
             name: "VOICEVOX Plugin package",
+            description: "VOICEVOX Plugin package",
             role: "Editor",
           },
         ],

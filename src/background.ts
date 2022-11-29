@@ -70,12 +70,6 @@ if (isDevelopment) {
 
 let win: BrowserWindow;
 
-// 多重起動防止
-if (!isDevelopment && !app.requestSingleInstanceLock()) {
-  log.info("VOICEVOX already running. Cancelling launch");
-  app.quit();
-}
-
 process.on("uncaughtException", (error) => {
   log.error(error);
 });
@@ -1545,10 +1539,42 @@ app.on("ready", async () => {
     await loadVvpp(vvppFilePath);
   }
 
+  // 多重起動防止
+  if (
+    !isDevelopment &&
+    !app.requestSingleInstanceLock({
+      vvppLoaded: !!vvppFilePath,
+    })
+  ) {
+    log.info("VOICEVOX already running. Cancelling launch");
+    app.quit();
+    return;
+  }
+
   createWindow().then(() => runEngineAll());
 });
 
-app.on("second-instance", () => {
+app.on("second-instance", (event, argv, workDir, rawData) => {
+  const data = rawData as { vvppLoaded: boolean };
+  if (data.vvppLoaded) {
+    log.info("Second instance launched with vvpp file");
+    dialog
+      .showMessageBox(win, {
+        type: "info",
+        title: "再起動が必要です",
+        message:
+          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
+        buttons: ["再起動", "キャンセル"],
+        noLink: true,
+        cancelId: 1,
+      })
+      .then((result) => {
+        if (result.response === 0) {
+          appState.willRestart = true;
+          app.quit();
+        }
+      });
+  }
   if (win) {
     if (win.isMinimized()) win.restore();
     win.focus();
