@@ -134,7 +134,7 @@ export class VvppManager {
     }
   }
 
-  async processDeferredProcesses() {
+  async handleEngineDirs() {
     await Promise.all(
       [...this.willDeleteEngineIds].map(async (engineId) => {
         let deletingEngineDir: string | undefined = undefined;
