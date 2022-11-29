@@ -398,6 +398,7 @@ export default defineComponent({
       [engineInfos, engineStates],
       async () => {
         for (const id of Object.keys(engineInfos.value)) {
+          if (engineStates.value[id] !== "READY") return;
           if (engineVersions.value[id]) return;
           const version = await store
             .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })

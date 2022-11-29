@@ -95,8 +95,10 @@ if (isDevelopment) {
   dotenv.config({ path: envPath });
 }
 
+const userEngineDir = path.join(app.getPath("userData"), "engines");
+const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 const vvppManager = new VvppManager({
-  baseDir: app.getPath("userData"),
+  vvppEngineDir,
 });
 
 protocol.registerSchemesAsPrivileged([
@@ -143,8 +145,6 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     };
   });
 })();
-
-const { userEngineDir, vvppEngineDir } = vvppManager.getEngineDirPaths();
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
@@ -199,6 +199,9 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     const engineDir = path.join(vvppEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
       log.log(`${engineDir} is not directory`);
+      continue;
+    }
+    if (dirName === ".tmp") {
       continue;
     }
     const result = addEngine(engineDir, "vvpp");
@@ -796,21 +799,7 @@ function openEngineDirectory(engineId: string) {
 
 async function loadVvpp(vvppPath: string) {
   try {
-    const { outputDir, manifest } = await vvppManager.extractVvpp(vvppPath);
-    let willMove = false;
-    const dirName = vvppManager.toValidDirName(manifest);
-    const engineDirectory = path.join(vvppEngineDir, dirName);
-    for (const dir of await fs.promises.readdir(vvppEngineDir)) {
-      if (!vvppManager.isEngineDirName(dir, manifest)) {
-        continue;
-      }
-      vvppManager.markWillMove(outputDir, dirName);
-      willMove = true;
-    }
-    if (!willMove) {
-      await moveFile(outputDir, engineDirectory);
-    }
-
+    await vvppManager.load(vvppPath);
     return true;
   } catch (e) {
     dialog.showErrorBox(
@@ -1534,7 +1523,7 @@ app.on("ready", async () => {
       vvppFilePath = process.argv[1];
     }
   }
-  if (vvppFilePath) {
+  if (vvppFilePath && vvppFilePath.match(/\.vvpp$/)) {
     log.info(`vvpp file path: ${vvppFilePath}`);
     await loadVvpp(vvppFilePath);
   }

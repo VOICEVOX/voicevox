@@ -7,7 +7,7 @@ import { moveFile } from "move-file";
 import { dialog } from "electron";
 
 export class VvppManager {
-  baseDir: string;
+  vvppEngineDir: string;
 
   // # エンジン削除・エンジン上書き時の処理について
   //
@@ -21,28 +21,21 @@ export class VvppManager {
   // * アプリ終了時、予約されていた処理を行う
   //
   // エンジンを停止してからではないとディレクトリを削除できないため、このような実装になっている。
-  willDeleteEngines: Set<string>;
-  willRenameEngines: Array<{ from: string; to: string }>;
+  willDeleteEngineIds: Set<string>;
+  willReplaceEngineDirs: Array<{ from: string; to: string }>;
 
-  constructor({ baseDir }: { baseDir: string }) {
-    this.baseDir = baseDir;
-    this.willDeleteEngines = new Set();
-    this.willRenameEngines = [];
-  }
-
-  getEngineDirPaths(): { userEngineDir: string; vvppEngineDir: string } {
-    return {
-      userEngineDir: path.join(this.baseDir, "engines"),
-      vvppEngineDir: path.join(this.baseDir, "vvpp-engines"),
-    };
+  constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
+    this.vvppEngineDir = vvppEngineDir;
+    this.willDeleteEngineIds = new Set();
+    this.willReplaceEngineDirs = [];
   }
 
   markWillMove(from: string, to: string) {
-    this.willRenameEngines.push({ from, to });
+    this.willReplaceEngineDirs.push({ from, to });
   }
 
   markWillDelete(engineId: string) {
-    this.willDeleteEngines.add(engineId);
+    this.willDeleteEngineIds.add(engineId);
   }
 
   toValidDirName(manifest: EngineManifest) {
@@ -67,7 +60,7 @@ export class VvppManager {
       });
     });
     const nonce = new Date().getTime().toString();
-    const outputDir = path.join(this.baseDir, "temp-engines", nonce);
+    const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
     await fs.promises.mkdir(outputDir, { recursive: true });
     await new Promise<void>((resolve, reject) => {
       const promises: Promise<void>[] = [];
@@ -120,14 +113,30 @@ export class VvppManager {
     };
   }
 
+  async load(vvppPath: string) {
+    const { outputDir, manifest } = await this.extractVvpp(vvppPath);
+    let willMove = false;
+    const dirName = this.toValidDirName(manifest);
+    const engineDirectory = path.join(this.vvppEngineDir, dirName);
+    for (const dir of await fs.promises.readdir(this.vvppEngineDir)) {
+      if (!this.isEngineDirName(dir, manifest)) {
+        continue;
+      }
+      this.markWillMove(outputDir, dirName);
+      willMove = true;
+    }
+    if (!willMove) {
+      await moveFile(outputDir, engineDirectory);
+    }
+  }
+
   async processDeferredProcesses() {
-    const { vvppEngineDir } = this.getEngineDirPaths();
     await Promise.all(
-      [...this.willDeleteEngines].map(async (engineId) => {
+      [...this.willDeleteEngineIds].map(async (engineId) => {
         let deletingEngineDir: string | undefined = undefined;
-        for (const engineDir of await fs.promises.readdir(vvppEngineDir)) {
+        for (const engineDir of await fs.promises.readdir(this.vvppEngineDir)) {
           if (engineDir.endsWith("+" + engineId)) {
-            deletingEngineDir = path.join(vvppEngineDir, engineDir);
+            deletingEngineDir = path.join(this.vvppEngineDir, engineDir);
             break;
           }
         }
@@ -157,9 +166,9 @@ export class VvppManager {
         }
       })
     );
-    this.willDeleteEngines.clear();
+    this.willDeleteEngineIds.clear();
     await Promise.all(
-      [...this.willRenameEngines].map(async ({ from, to }) => {
+      [...this.willReplaceEngineDirs].map(async ({ from, to }) => {
         for (let i = 0; i < 5; i++) {
           try {
             await fs.promises.rm(to, { recursive: true });
@@ -181,7 +190,7 @@ export class VvppManager {
         }
       })
     );
-    this.willRenameEngines = [];
+    this.willReplaceEngineDirs = [];
   }
 }
 
