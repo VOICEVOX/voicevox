@@ -31,7 +31,10 @@ export class VvppManager {
   }
 
   markWillMove(from: string, to: string) {
-    this.willReplaceEngineDirs.push({ from, to });
+    this.willReplaceEngineDirs.push({
+      from,
+      to: path.join(this.vvppEngineDir, to),
+    });
   }
 
   markWillDelete(engineId: string) {
@@ -62,6 +65,7 @@ export class VvppManager {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
     await fs.promises.mkdir(outputDir, { recursive: true });
+    log.log("Extracting vvpp to", outputDir);
     await new Promise<void>((resolve, reject) => {
       const promises: Promise<void>[] = [];
       zipFile.on("entry", async (entry: yauzl.Entry) => {
