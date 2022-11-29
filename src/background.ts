@@ -1517,10 +1517,6 @@ app.once("will-finish-launching", () => {
   app.once("open-file", (event, filePath) => {
     event.preventDefault();
     filePathOnMac = filePath;
-
-    if (filePath.endsWith(".vvpp")) {
-      loadVvpp(filePath);
-    }
   });
 });
 
@@ -1535,13 +1531,18 @@ app.on("ready", async () => {
     }
   }
 
-  if (process.platform !== "darwin") {
+  // runEngineAllの前にVVPPを読み込む
+  let vvppFilePath: string | undefined | null = null;
+  if (process.platform === "darwin") {
+    vvppFilePath = filePathOnMac;
+  } else {
     if (process.argv.length > 1) {
-      const filePath = process.argv[1];
-      if (filePath.endsWith(".vvpp")) {
-        await loadVvpp(filePath);
-      }
+      vvppFilePath = process.argv[1];
     }
+  }
+  if (vvppFilePath) {
+    log.info(`vvpp file path: ${vvppFilePath}`);
+    await loadVvpp(vvppFilePath);
   }
 
   createWindow().then(() => runEngineAll());
