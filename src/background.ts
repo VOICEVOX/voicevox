@@ -961,6 +961,7 @@ migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
+  didPostEngineKillRun: false,
   willRestart: false,
   isSafeMode: false,
 };
@@ -1412,7 +1413,9 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
+  // エンジン終了後の処理
   const runPostEngineKill = async () => {
+    log.info("Running post engine kill process");
     await vvppManager.handleEngineDirs();
   };
 
@@ -1420,25 +1423,38 @@ app.on("before-quit", (event) => {
     appState.willRestart = false;
     appState.willQuit = false;
 
-    await runPostEngineKill();
     await createWindow();
     await runEngineAll();
   };
 
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
-    if (appState.willRestart) {
-      // 再起動フラグが立っている場合はフラグを戻して再起動する
-      log.info(
-        "All ENGINE processes killed. Now restarting app because of willRestart flag"
-      );
+    // 既にpostEngineKillが実行されている
+    if (appState.didPostEngineKillRun) {
+      log.info("Post engine kill process done. Now quit app");
+    } else {
+      const runPostEngineKillPromise = runPostEngineKill();
 
       event.preventDefault();
-      restartApp();
-      return;
+      if (appState.willRestart) {
+        runPostEngineKillPromise.then(() => {
+          // 再起動フラグが立っている場合はフラグを戻して再起動する
+          log.info(
+            "All ENGINE processes killed. Now restarting app because of willRestart flag"
+          );
+
+          restartApp();
+        });
+      } else {
+        log.info(
+          "All ENGINE processes killed. Running post engine kill process"
+        );
+        runPostEngineKillPromise.then(() => {
+          appState.didPostEngineKillRun = true;
+          app.quit();
+        });
+      }
     }
-    log.info("All ENGINE processes killed. Now quit app");
-    runPostEngineKill();
     return;
   }
 
@@ -1474,14 +1490,6 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
-    if (appState.willRestart) {
-      // 再起動フラグが立っている場合はフラグを戻して再起動する
-      log.info(
-        "All ENGINE process kill operations done. Attempting to restart app"
-      );
-      restartApp();
-      return;
-    }
     // アプリケーションの終了を再試行する
     log.info(
       "All ENGINE process kill operations done. Attempting to quit app again"
