@@ -1417,47 +1417,32 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
-  // エンジン終了後の処理
-  const runPostEngineKill = async () => {
-    log.info("Running post engine kill process");
-    await vvppManager.handleEngineDirs();
-  };
-
-  const restartApp = async () => {
-    appState.willRestart = false;
-    appState.willQuit = false;
-
-    await createWindow();
-    await runEngineAll();
-  };
-
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
     // 既にpostEngineKillが実行されている
     if (appState.didPostEngineKillRun) {
-      log.info("Post engine kill process done. Now quit app");
+      if (appState.willRestart) {
+        // 再起動フラグが立っている場合はフラグを戻して再起動する
+        log.info(
+          "All ENGINE processes killed. Now restarting app because of willRestart flag"
+        );
+        event.preventDefault();
+
+        appState.willRestart = false;
+        appState.willQuit = false;
+
+        createWindow().then(() => runEngineAll());
+      } else {
+        log.info("Post engine kill process done. Now quit app");
+      }
     } else {
-      const runPostEngineKillPromise = runPostEngineKill();
+      log.info("Running post engine kill process");
 
       event.preventDefault();
-      if (appState.willRestart) {
-        runPostEngineKillPromise.then(() => {
-          // 再起動フラグが立っている場合はフラグを戻して再起動する
-          log.info(
-            "All ENGINE processes killed. Now restarting app because of willRestart flag"
-          );
-
-          restartApp();
-        });
-      } else {
-        log.info(
-          "All ENGINE processes killed. Running post engine kill process"
-        );
-        runPostEngineKillPromise.then(() => {
-          appState.didPostEngineKillRun = true;
-          app.quit();
-        });
-      }
+      vvppManager.handleEngineDirs().then(() => {
+        appState.didPostEngineKillRun = true;
+        app.quit();
+      });
     }
     return;
   }
