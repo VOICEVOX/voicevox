@@ -1424,12 +1424,13 @@ app.on("before-quit", (event) => {
       if (appState.willRestart) {
         // 再起動フラグが立っている場合はフラグを戻して再起動する
         log.info(
-          "All ENGINE processes killed. Now restarting app because of willRestart flag"
+          "Post engine kill process done. Now restarting app because of willRestart flag"
         );
         event.preventDefault();
 
         appState.willRestart = false;
         appState.willQuit = false;
+        appState.didPostEngineKillRun = false;
 
         createWindow().then(() => runEngineAll());
       } else {

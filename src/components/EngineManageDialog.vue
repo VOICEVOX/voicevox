@@ -107,7 +107,7 @@
                 <q-btn-toggle
                   :options="[
                     { value: 'dir', label: 'フォルダ' },
-                    { value: 'VVPP', label: 'VVPPファイル' },
+                    { value: 'vvpp', label: 'VVPPファイル' },
                   ]"
                   v-model="engineLoaderType"
                   color="surface"
