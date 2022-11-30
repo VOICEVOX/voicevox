@@ -107,7 +107,7 @@
                 <q-btn-toggle
                   :options="[
                     { value: 'dir', label: 'フォルダ' },
-                    { value: 'vvpp', label: 'vvppファイル' },
+                    { value: 'VVPP', label: 'VVPPファイル' },
                   ]"
                   v-model="engineLoaderType"
                   color="surface"
@@ -159,7 +159,7 @@
               </div>
             </div>
             <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
-              <div class="text-h6 q-ma-sm">vvppファイルの場所</div>
+              <div class="text-h6 q-ma-sm">VVPPファイルの場所</div>
               <div class="q-ma-sm">
                 <q-input
                   ref="vvppFilePathInput"
@@ -189,7 +189,7 @@
                 </q-input>
               </div>
               <div class="q-ma-sm">
-                vvppファイルとして配布されているエンジンを追加します。FIXME:
+                VVPPファイルとして配布されているエンジンを追加します。FIXME:
                 説明を良い感じにする
               </div>
             </div>
