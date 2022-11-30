@@ -48,6 +48,10 @@ type EngineManifest = {
   icon: string;
 };
 
+type SingleInstanceLockData = {
+  filePath: string | null;
+};
+
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.console.level = "silly";
@@ -1523,27 +1527,24 @@ app.on("ready", async () => {
   }
 
   // runEngineAllの前にVVPPを読み込む
-  let vvppFilePath: string | undefined | null = null;
+  let filePath: string | undefined | null = null;
   if (process.platform === "darwin") {
-    vvppFilePath = filePathOnMac;
+    filePath = filePathOnMac;
   } else {
     if (process.argv.length > 1) {
-      vvppFilePath = process.argv[1];
+      filePath = process.argv[1];
     }
-  }
-  if (vvppFilePath && vvppFilePath.match(/\.vvpp$/)) {
-    log.info(`vvpp file path: ${vvppFilePath}`);
-    await loadVvpp(vvppFilePath);
   }
 
   // 多重起動防止
   if (
-    !isDevelopment &&
+    // !isDevelopment &&
     !app.requestSingleInstanceLock({
-      vvppLoaded: !!vvppFilePath,
-    })
+      filePath,
+    } as SingleInstanceLockData)
   ) {
-    log.info("VOICEVOX already running. Cancelling launch");
+    log.info("VOICEVOX already running. Cancelling launch.");
+    log.info(`File path sent: ${filePath}`);
     app.quit();
     return;
   }
@@ -1551,10 +1552,13 @@ app.on("ready", async () => {
   createWindow().then(() => runEngineAll());
 });
 
-app.on("second-instance", (event, argv, workDir, rawData) => {
-  const data = rawData as { vvppLoaded: boolean };
-  if (data.vvppLoaded) {
+app.on("second-instance", async (event, argv, workDir, rawData) => {
+  const data = rawData as SingleInstanceLockData;
+  if (!data.filePath) {
+    log.info("No file path sent");
+  } else if (data.filePath.endsWith(".vvpp")) {
     log.info("Second instance launched with vvpp file");
+    await loadVvpp(data.filePath);
     dialog
       .showMessageBox(win, {
         type: "info",
@@ -1571,6 +1575,12 @@ app.on("second-instance", (event, argv, workDir, rawData) => {
           app.quit();
         }
       });
+  } else if (data.filePath.endsWith(".vvproj")) {
+    log.info("Second instance launched with vvproj file");
+    ipcMainSend(win, "LOAD_PROJECT_FILE", {
+      filePath: data.filePath,
+      confirm: true,
+    });
   }
   if (win) {
     if (win.isMinimized()) win.restore();
