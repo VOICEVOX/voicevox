@@ -112,6 +112,7 @@ describe("store/vuex.js test", () => {
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
+          enableMorphing: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {

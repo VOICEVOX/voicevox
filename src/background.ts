@@ -430,6 +430,23 @@ const store = new Store<ElectronStoreType>({
                 volumeScale: { type: "number" },
                 prePhonemeLength: { type: "number" },
                 postPhonemeLength: { type: "number" },
+                morphingInfo: {
+                  type: "object",
+                  properties: {
+                    rate: { type: "number" },
+                    targetEngineId: {
+                      type: "string",
+                      pattern:
+                        "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+                    },
+                    targetSpeakerId: {
+                      type: "string",
+                      pattern:
+                        "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+                    },
+                    targetStyleId: { type: "number" },
+                  },
+                },
               },
             },
           },
@@ -458,10 +475,12 @@ const store = new Store<ElectronStoreType>({
           type: "boolean",
           default: false,
         },
+        enableMorphing: { type: "boolean", default: false },
       },
       default: {
         enablePreset: false,
         enableInterrogativeUpspeak: false,
+        enableMorphing: false,
       },
     },
     acceptRetrieveTelemetry: {

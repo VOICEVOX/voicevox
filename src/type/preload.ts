@@ -303,6 +303,7 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+  enableMorphing: boolean;
 };
 
 export type SplitterPosition = {

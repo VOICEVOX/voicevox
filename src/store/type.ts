@@ -273,6 +273,14 @@ export type AudioStoreTypes = {
     };
   };
 
+  SELECTABLE_MOPHING_TARGET_ENGINES: {
+    getter: string[];
+  };
+
+  VALID_MOPHING_INFO: {
+    getter(audioItem: AudioItem): boolean;
+  };
+
   SET_AUDIO_QUERY: {
     mutation: { audioKey: string; audioQuery: AudioQuery };
     action(payload: { audioKey: string; audioQuery: AudioQuery }): void;

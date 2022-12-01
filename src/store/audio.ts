@@ -52,7 +52,7 @@ async function generateUniqueIdAndQuery(
       audioQuery,
       audioItem.engineId,
       audioItem.styleId,
-      audioItem.morphingInfo,
+      audioItem.morphingInfo, // FIXME: モーフィング非対応エンジンの場合morphingInfoが異なっていても同じ音声が出力されるが異なるIDが生成されてしまう
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
   );
@@ -478,11 +478,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
-      }
-      if (
-        baseAudioItem &&
-        audioItem.engineId === baseAudioItem.morphingInfo?.targetEngineId
-      ) {
         audioItem.morphingInfo = baseAudioItem.morphingInfo;
       }
       return audioItem;
@@ -691,6 +686,30 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SELECTABLE_MOPHING_TARGET_ENGINES: {
+    getter: (state) =>
+      state.engineIds.filter(
+        (engineId) =>
+          state.engineManifests[engineId].supportedFeatures?.synthesisMorphing
+      ),
+  },
+
+  VALID_MOPHING_INFO: {
+    getter: (state, getters) => (audioItem: AudioItem) => {
+      if (
+        !state.experimentalSetting.enableMorphing ||
+        audioItem.morphingInfo == undefined ||
+        audioItem.engineId == undefined
+      )
+        return false;
+      return (
+        getters.SELECTABLE_MOPHING_TARGET_ENGINES.includes(
+          audioItem.engineId
+        ) && audioItem.engineId === audioItem.morphingInfo.targetEngineId
+      );
+    },
+  },
+
   SET_AUDIO_QUERY: {
     mutation(
       state,
@@ -742,11 +761,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ) {
       state.audioItems[audioKey].engineId = engineId;
       state.audioItems[audioKey].styleId = styleId;
-      if (
-        state.audioItems[audioKey].morphingInfo?.targetEngineId !== engineId
-      ) {
-        state.audioItems[audioKey].morphingInfo = undefined;
-      }
     },
   },
 
@@ -888,7 +902,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (presetItem == undefined) return;
 
       // Filter name property from presetItem in order to extract audioInfos.
-      const { name: _, ...presetAudioInfos } = presetItem;
+      const { name: _, morphingInfo, ...presetAudioInfos } = presetItem;
 
       // Type Assertion
       const audioInfos: Omit<
@@ -897,6 +911,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       > = presetAudioInfos;
 
       audioItem.query = { ...audioItem.query, ...audioInfos };
+
+      audioItem.morphingInfo = morphingInfo;
     },
   },
 
@@ -1061,7 +1077,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
     action: createUILockAction(
-      async ({ dispatch, state }, { audioItem }: { audioItem: AudioItem }) => {
+      async (
+        { dispatch, getters, state },
+        { audioItem }: { audioItem: AudioItem }
+      ) => {
         const engineId = audioItem.engineId;
         if (engineId === undefined)
           throw new Error(`engineId is not defined for audioItem`);
@@ -1079,7 +1098,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         })
           .then((instance) => {
-            if (audioItem.morphingInfo) {
+            if (
+              audioItem.morphingInfo != undefined &&
+              getters.VALID_MOPHING_INFO(audioItem)
+            ) {
               return instance.invoke("synthesisMorphingSynthesisMorphingPost")({
                 audioQuery: convertAudioQueryFromEditorToEngine(
                   audioQuery,

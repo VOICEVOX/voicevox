@@ -24,9 +24,9 @@
       transition-show="none"
       transition-hide="none"
     >
-      <q-list>
+      <q-list style="min-width: max-content">
         <q-item
-          v-if="selectedStyleInfo == undefined"
+          v-if="selectedStyleInfo == undefined && !emptiable"
           class="row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
@@ -123,7 +123,7 @@
                   class="character-menu"
                   v-model="subMenuOpenFlags[characterIndex]"
                 >
-                  <q-list>
+                  <q-list style="min-width: max-content">
                     <q-item
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
@@ -221,6 +221,7 @@ export default defineComponent({
 
     const selectedCharacter = computed(() => {
       const selectedVoice = props.selectedVoice;
+      if (selectedVoice == undefined) return undefined;
       const character = props.characterInfos.find(
         (characterInfo) =>
           characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
@@ -261,9 +262,10 @@ export default defineComponent({
         (x) => x.speakerUuid === speakerUuid
       )?.defaultStyleId;
 
-      const defaultStyle = characterInfo?.metas.styles.find(
-        (style) => style.styleId === defaultStyleId
-      );
+      const defaultStyle =
+        characterInfo?.metas.styles.find(
+          (style) => style.styleId === defaultStyleId
+        ) ?? characterInfo?.metas.styles[0]; // FIXME: デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
 
       if (defaultStyle == undefined)
         throw new Error("defaultStyle == undefined");
