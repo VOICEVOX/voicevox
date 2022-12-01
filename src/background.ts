@@ -346,7 +346,10 @@ const store = new Store<ElectronStoreType>({
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: { type: "number", default: 24000 },
+        outputSamplingRate: {
+          oneOf: [{ type: "number" }, { const: "default" }],
+          default: "default",
+        },
         audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
@@ -358,7 +361,7 @@ const store = new Store<ElectronStoreType>({
         exportLab: false,
         exportText: false,
         outputStereo: false,
-        outputSamplingRate: 24000,
+        outputSamplingRate: "default",
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
@@ -496,7 +499,7 @@ const store = new Store<ElectronStoreType>({
     },
   },
   migrations: {
-    "0.13": (store) => {
+    ">=0.13": (store) => {
       // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
       const prevValue = store.get(prevIdentifier, undefined) as
@@ -506,6 +509,12 @@ const store = new Store<ElectronStoreType>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         store.delete(prevIdentifier as any);
         store.set("acceptTerms", prevValue);
+      }
+    },
+    ">=0.14": (store) => {
+      // 24000 Hz -> "default"
+      if (store.get("savingSetting").outputSamplingRate == 24000) {
+        store.set("savingSetting.outputSamplingRate", "default");
       }
     },
   },
