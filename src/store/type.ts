@@ -29,6 +29,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
@@ -53,6 +54,7 @@ export type AudioItem = {
   styleId?: number;
   query?: EditorAudioQuery;
   presetKey?: string;
+  morphingInfo?: MorphingInfo;
 };
 
 export type AudioState = {
@@ -262,6 +264,13 @@ export type AudioStoreTypes = {
 
   SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKey: string; postPhonemeLength: number };
+  };
+
+  SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo;
+    };
   };
 
   SET_AUDIO_QUERY: {
@@ -576,6 +585,14 @@ export type AudioCommandStoreTypes = {
   COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKey: string; postPhonemeLength: number };
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
+  };
+
+  COMMAND_SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo;
+    };
+    action(payload: { audioKey: string; morphingInfo: MorphingInfo }): void;
   };
 
   COMMAND_SET_AUDIO_PRESET: {

@@ -18,6 +18,7 @@ import {
   DefaultStyleId,
   Encoding as EncodingType,
   MoraDataType,
+  MorphingInfo,
   StyleInfo,
   WriteFileErrorResult,
 } from "@/type/preload";
@@ -51,6 +52,7 @@ async function generateUniqueIdAndQuery(
       audioQuery,
       audioItem.engineId,
       audioItem.styleId,
+      audioItem.morphingInfo,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
   );
@@ -477,6 +479,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           baseAudioItem.query.outputSamplingRate;
         audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
       }
+      if (
+        baseAudioItem &&
+        audioItem.engineId === baseAudioItem.morphingInfo?.targetEngineId
+      ) {
+        audioItem.morphingInfo = baseAudioItem.morphingInfo;
+      }
       return audioItem;
     },
   },
@@ -670,6 +678,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SET_MORPHING_INFO: {
+    mutation(
+      state,
+      {
+        audioKey,
+        morphingInfo,
+      }: { audioKey: string; morphingInfo: MorphingInfo }
+    ) {
+      const item = state.audioItems[audioKey];
+      item.morphingInfo = morphingInfo;
+    },
+  },
+
   SET_AUDIO_QUERY: {
     mutation(
       state,
@@ -721,6 +742,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ) {
       state.audioItems[audioKey].engineId = engineId;
       state.audioItems[audioKey].styleId = styleId;
+      if (
+        state.audioItems[audioKey].morphingInfo?.targetEngineId !== engineId
+      ) {
+        state.audioItems[audioKey].morphingInfo = undefined;
+      }
     },
   },
 
@@ -1052,8 +1078,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         })
-          .then((instance) =>
-            instance.invoke("synthesisSynthesisPost")({
+          .then((instance) => {
+            if (audioItem.morphingInfo) {
+              return instance.invoke("synthesisMorphingSynthesisMorphingPost")({
+                audioQuery: convertAudioQueryFromEditorToEngine(
+                  audioQuery,
+                  state.engineManifests[engineId].defaultSamplingRate
+                ),
+                baseSpeaker: speaker,
+                targetSpeaker: audioItem.morphingInfo.targetStyleId,
+                morphRate: audioItem.morphingInfo.rate,
+              });
+            }
+            return instance.invoke("synthesisSynthesisPost")({
               audioQuery: convertAudioQueryFromEditorToEngine(
                 audioQuery,
                 state.engineManifests[engineId].defaultSamplingRate
@@ -1061,8 +1098,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
-            })
-          )
+            });
+          })
           .then(async (blob) => {
             audioBlobCache[id] = blob;
             return blob;
@@ -2490,6 +2527,27 @@ export const audioCommandStore = transformCommandStore(
         payload: { audioKey: string; postPhonemeLength: number }
       ) {
         commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
+      },
+    },
+
+    COMMAND_SET_MORPHING_INFO: {
+      mutation(
+        draft,
+        payload: {
+          audioKey: string;
+          morphingInfo: MorphingInfo;
+        }
+      ) {
+        audioStore.mutations.SET_MORPHING_INFO(draft, payload);
+      },
+      action(
+        { commit },
+        payload: {
+          audioKey: string;
+          morphingInfo: MorphingInfo;
+        }
+      ) {
+        commit("COMMAND_SET_MORPHING_INFO", payload);
       },
     },
 

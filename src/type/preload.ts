@@ -208,6 +208,15 @@ export type Preset = {
   postPhonemeLength: number;
 };
 
+export type MorphingInfo =
+  | {
+      rate: number;
+      targetEngineId: string;
+      targetSpeakerId: string;
+      targetStyleId: number;
+    }
+  | undefined;
+
 export type PresetConfig = {
   items: Record<string, Preset>;
   keys: string[];
