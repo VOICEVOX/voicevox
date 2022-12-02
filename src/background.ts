@@ -965,7 +965,6 @@ migrateHotkeySettings();
 
 const appState = {
   willQuit: false,
-  didPostEngineKillRun: false,
   willRestart: false,
   isSafeMode: false,
 };
@@ -1405,7 +1404,7 @@ app.on("window-all-closed", () => {
 });
 
 // Called before window closing
-app.on("before-quit", (event) => {
+app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
@@ -1419,31 +1418,29 @@ app.on("before-quit", (event) => {
 
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
-    // 既にpostEngineKillが実行されている
-    if (appState.didPostEngineKillRun) {
-      if (appState.willRestart) {
-        // 再起動フラグが立っている場合はフラグを戻して再起動する
-        log.info(
-          "Post engine kill process done. Now restarting app because of willRestart flag"
-        );
-        event.preventDefault();
-
-        appState.willRestart = false;
-        appState.willQuit = false;
-        appState.didPostEngineKillRun = false;
-
-        createWindow().then(() => runEngineAll());
-      } else {
-        log.info("Post engine kill process done. Now quit app");
-      }
-    } else {
-      log.info("Running post engine kill process");
-
+    log.info(
+      "All ENGINE processes are killed, running post engine kill process"
+    );
+    if (appState.willRestart) {
+      // awaitする前にevent.preventDefault()を呼び出さないとアプリがそのまま終了してしまう
       event.preventDefault();
-      vvppManager.handleEngineDirs().then(() => {
-        appState.didPostEngineKillRun = true;
-        app.quit();
-      });
+    }
+
+    // エンジン終了後の処理を実行
+    await vvppManager.handleEngineDirs();
+
+    if (appState.willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "Post engine kill process done. Now restarting app because of willRestart flag"
+      );
+
+      appState.willRestart = false;
+      appState.willQuit = false;
+
+      createWindow().then(() => runEngineAll());
+    } else {
+      log.info("Post engine kill process done. Now quit app");
     }
     return;
   }
@@ -1457,36 +1454,32 @@ app.on("before-quit", (event) => {
   let numEngineProcessKilled = 0;
 
   // 非同期的にすべてのエンジンプロセスをキル
-  (async () => {
-    const waitingKilledPromises: Array<Promise<void>> = Object.entries(
-      killingProcessPromises
-    ).map(([engineId, promise]) => {
-      return promise
-        .catch((error) => {
-          // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-          log.error(
-            `ENGINE ${engineId}: Error during killing process: ${error}`
-          );
-          // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
-        })
-        .finally(() => {
-          numEngineProcessKilled++;
-          log.info(
-            `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
-          );
-        });
-    });
+  const waitingKilledPromises: Array<Promise<void>> = Object.entries(
+    killingProcessPromises
+  ).map(([engineId, promise]) => {
+    return promise
+      .catch((error) => {
+        // TODO: 各エンジンプロセスキルの失敗をUIに通知する
+        log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
+        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
+      })
+      .finally(() => {
+        numEngineProcessKilled++;
+        log.info(
+          `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`
+        );
+      });
+  });
 
-    // すべてのエンジンプロセスキル処理が完了するまで待機
-    await Promise.all(waitingKilledPromises);
+  // すべてのエンジンプロセスキル処理が完了するまで待機
+  await Promise.all(waitingKilledPromises);
 
-    // アプリケーションの終了を再試行する
-    log.info(
-      "All ENGINE process kill operations done. Attempting to quit app again"
-    );
-    app.quit();
-    return;
-  })();
+  // アプリケーションの終了を再試行する
+  log.info(
+    "All ENGINE process kill operations done. Attempting to quit app again"
+  );
+  app.quit();
+  return;
 });
 
 app.on("activate", () => {
