@@ -8,6 +8,7 @@
       class="absolute active-arrow"
     />
     <character-button
+      v-if="userOrderedCharacterInfos"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
