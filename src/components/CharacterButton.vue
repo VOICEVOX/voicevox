@@ -72,9 +72,7 @@
                   />
                 </q-avatar>
               </q-avatar>
-              <div>
-                {{ characterInfo ? characterInfo.metas.speakerName : "未選択" }}
-              </div>
+              <div>{{ characterInfo.metas.speakerName }}</div>
             </q-btn>
             <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
             <template
