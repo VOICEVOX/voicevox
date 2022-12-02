@@ -13,8 +13,8 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      :selected-style="selectedStyle"
-      @update:selected-style="changeStyle"
+      :selected-voice="selectedVoice"
+      @update:selected-voice="changeStyle"
     />
     <q-input
       ref="textfield"
@@ -56,6 +56,7 @@
 import { computed, watch, defineComponent, ref } from "vue";
 import { useStore } from "@/store";
 import { AudioItem } from "@/store/type";
+import { Voice } from "@/type/preload";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
 
@@ -73,7 +74,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS ?? []
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
     const isInitializingSpeaker = computed(
       () => store.state.audioKeyInitializingSpeaker === props.audioKey
@@ -88,28 +89,20 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const selectedCharacterInfo = computed(() =>
-      userOrderedCharacterInfos.value !== undefined &&
-      audioItem.value.engineId !== undefined &&
-      audioItem.value.styleId !== undefined
-        ? store.getters.CHARACTER_INFO(
-            audioItem.value.engineId,
-            audioItem.value.styleId
-          )
-        : undefined
-    );
-    const selectedStyle = computed(() => {
+    const selectedVoice = computed<Voice>(() => {
       const engineId = audioItem.value.engineId;
-      const speakerId = selectedCharacterInfo.value?.metas.speakerUuid;
       const styleId = audioItem.value.styleId;
-      if (
-        engineId == undefined ||
-        speakerId == undefined ||
-        styleId == undefined
-      ) {
-        return undefined;
-      }
-      return { engineId, speakerId, styleId };
+
+      if (engineId == undefined || styleId == undefined)
+        throw new Error("engineId or styleId == undefined");
+
+      const speakerInfo =
+        userOrderedCharacterInfos.value != undefined
+          ? store.getters.CHARACTER_INFO(engineId, styleId)
+          : undefined;
+
+      if (speakerInfo == undefined) throw new Error("speakerInfo == undefined");
+      return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
     });
 
     const isActiveAudioCell = computed(
@@ -143,11 +136,7 @@ export default defineComponent({
       }
     };
 
-    const changeStyle = (style: {
-      engineId: string;
-      speakerId: string;
-      styleId: number;
-    }) => {
+    const changeStyle = (style: Voice) => {
       if (style == undefined) throw new Error("style == undefined");
       store.dispatch("COMMAND_CHANGE_STYLE_ID", {
         audioKey: props.audioKey,
@@ -307,7 +296,7 @@ export default defineComponent({
       uiLocked,
       nowPlaying,
       nowGenerating,
-      selectedStyle,
+      selectedVoice,
       isActiveAudioCell,
       audioTextBuffer,
       isMultipleEngine,
@@ -341,35 +330,44 @@ export default defineComponent({
   display: flex;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+
   &:first-child {
     margin-top: 0.6rem;
   }
+
   &:last-child {
     margin-bottom: 0.6rem;
   }
+
   gap: 0px 1rem;
+
   .active-arrow {
     left: -5px;
     height: 2rem;
   }
+
   .q-input {
     :deep(.q-field__control) {
       height: 2rem;
       background: none;
       border-bottom: 1px solid colors.$primary-light;
+
       &::before {
         border-bottom: none;
       }
     }
+
     :deep(.q-field__after) {
       height: 2rem;
       padding-left: 5px;
       display: none;
     }
+
     &.q-field--filled.q-field--highlighted :deep(.q-field__control):before {
       background-color: rgba(colors.$display-rgb, 0.08);
     }
   }
+
   &:hover > .q-input > :deep(.q-field__after) {
     display: flex;
   }

@@ -6,12 +6,7 @@
     :class="{ opaque: loading }"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
-    <img
-      v-if="selectedStyleInfo"
-      class="q-pa-none q-ma-none"
-      :src="selectedStyleInfo.iconPath"
-    />
-    <div v-else class="dummy-image"></div>
+    <img class="q-pa-none q-ma-none" :src="selectedStyleInfo.iconPath" />
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
     </div>
@@ -33,8 +28,6 @@
               v-close-popup
               class="col-grow"
               :class="
-                characterInfo &&
-                selectedCharacter &&
                 characterInfo.metas.speakerUuid ===
                   selectedCharacter.metas.speakerUuid &&
                 'selected-character-item'
@@ -56,11 +49,7 @@
                 <q-avatar
                   class="engine-icon"
                   rounded
-                  v-if="
-                    showEngineInfo &&
-                    characterInfo &&
-                    characterInfo.metas.styles.length < 2
-                  "
+                  v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
                 >
                   <img
                     :src="
@@ -75,9 +64,7 @@
               <div>{{ characterInfo.metas.speakerName }}</div>
             </q-btn>
             <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
-            <template
-              v-if="characterInfo && characterInfo.metas.styles.length >= 2"
-            >
+            <template v-if="characterInfo.metas.styles.length >= 2">
               <q-separator vertical />
 
               <div
@@ -105,11 +92,9 @@
                       clickable
                       v-close-popup
                       active-class="selected-character-item"
-                      :active="
-                        selectedStyle && style.styleId === selectedStyle.styleId
-                      "
+                      :active="style.styleId === selectedVoice.styleId"
                       @click="
-                        $emit('update:selectedStyle', {
+                        $emit('update:selectedVoice', {
                           engineId: style.engineId,
                           speakerId: characterInfo.metas.speakerUuid,
                           styleId: style.styleId,
@@ -160,7 +145,7 @@
 <script lang="ts">
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
-import { CharacterInfo } from "@/type/preload";
+import { CharacterInfo, Voice } from "@/type/preload";
 import { debounce } from "quasar";
 import { computed, defineComponent, PropType, ref } from "vue";
 
@@ -168,29 +153,21 @@ export default defineComponent({
   name: "CharacterButton",
 
   props: {
-    characterInfos: { type: Array<CharacterInfo | undefined>, required: true },
+    characterInfos: { type: Array<CharacterInfo>, required: true },
     loading: { type: Boolean, default: false },
-    selectedStyle: {
-      type: Object as PropType<{ engineId: string, speakerId: string, styleId: number } | undefined>
-    },
+    selectedVoice: { type: Object as PropType<Voice>, required: true },
     showEngineInfo: { type: Boolean, default: false },
     uiLocked: { type: Boolean, required: true },
   },
 
   emits: {
-    "update:selectedStyle"(
-      selectedStyle: {
-        engineId: string,
-        speakerId: string,
-        styleId: number
-      } | undefined
+    "update:selectedVoice"(
+      selectedStyle: Voice
     ) {
       return (
-        selectedStyle == undefined || (
-          typeof selectedStyle.engineId === "string" &&
-          typeof selectedStyle.speakerId === "string" &&
-          typeof selectedStyle?.styleId === "number"
-        )
+        typeof selectedStyle.engineId === "string" &&
+        typeof selectedStyle.speakerId === "string" &&
+        typeof selectedStyle.styleId === "number"
       );
     }
   },
@@ -199,24 +176,25 @@ export default defineComponent({
     const store = useStore();
 
     const selectedCharacter = computed(() => {
-      const selectedStyle = props.selectedStyle;
-      return selectedStyle != undefined
-        ? props.characterInfos.find(info =>
-          info?.metas.speakerUuid === selectedStyle.speakerId
-          && info?.metas.styles.some(style =>
-            style.engineId === selectedStyle.engineId
-            && style.styleId === selectedStyle.styleId
-          )
+      const selectedVoice = props.selectedVoice;
+      const character = props.characterInfos.find(characterInfo =>
+        characterInfo.metas.speakerUuid === selectedVoice.speakerId
+        && characterInfo.metas.styles.some(style =>
+          style.engineId === selectedVoice.engineId
+          && style.styleId === selectedVoice.styleId
         )
-        : undefined
+      );
+      if (character == undefined) throw new Error("selectedVoiceのIDと一致するキャラクターが見つかりません");
+      return character
     });
 
     const selectedStyleInfo = computed(() => {
-      const selectedStyle = props.selectedStyle;
-      return selectedStyle != undefined ? selectedCharacter.value?.metas.styles.find(style =>
-        style.engineId === selectedStyle.engineId && style.styleId === selectedStyle?.styleId
-      )
-        : undefined
+      const selectedVoice = props.selectedVoice;
+      const style = selectedCharacter.value.metas.styles.find(style =>
+        style.engineId === selectedVoice.engineId && style.styleId === selectedVoice.styleId
+      );
+      if (style == undefined) throw new Error("selectedVoiceのIDと一致するスタイルが見つかりません");
+      return style
     });
 
     const engineIcons = computed(() =>
@@ -231,7 +209,7 @@ export default defineComponent({
     const getDefaultStyle = (speakerUuid: string) => {
       // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = props.characterInfos.find(
-        (info) => info?.metas.speakerUuid === speakerUuid
+        (info) => info.metas.speakerUuid === speakerUuid
       );
       const defaultStyleId = store.state.defaultStyleIds.find(
         (x) => x.speakerUuid === speakerUuid
@@ -249,7 +227,7 @@ export default defineComponent({
     const onSelectSpeaker = (speakerUuid: string) => {
       const style = getDefaultStyle(speakerUuid);
       emit(
-        "update:selectedStyle",
+        "update:selectedVoice",
         {
           engineId: style.engineId,
           speakerId: speakerUuid,
@@ -292,7 +270,6 @@ export default defineComponent({
   border-color: colors.$primary-light;
   font-size: 0;
 
-  .dummy-image,
   img {
     height: 2rem;
     width: 2rem;
