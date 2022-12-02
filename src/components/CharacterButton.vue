@@ -39,11 +39,7 @@
                   selectedCharacter.metas.speakerUuid &&
                 'selected-character-item'
               "
-              @click="
-                characterInfo
-                  ? onSelectSpeaker(characterInfo.metas.speakerUuid)
-                  : $emit('update:selectedStyle', undefined)
-              "
+              @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
