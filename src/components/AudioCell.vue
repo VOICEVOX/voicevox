@@ -13,8 +13,7 @@
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
-      :selected-voice="selectedVoice"
-      @update:selected-voice="changeStyle"
+      v-model:selected-voice="selectedVoice"
     />
     <q-input
       ref="textfield"
@@ -89,20 +88,31 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const selectedVoice = computed<Voice>(() => {
-      const engineId = audioItem.value.engineId;
-      const styleId = audioItem.value.styleId;
+    const selectedVoice = computed<Voice>({
+      get() {
+        const engineId = audioItem.value.engineId;
+        const styleId = audioItem.value.styleId;
 
-      if (engineId == undefined || styleId == undefined)
-        throw new Error("engineId or styleId == undefined");
+        if (engineId == undefined || styleId == undefined)
+          throw new Error("engineId or styleId == undefined");
 
-      const speakerInfo =
-        userOrderedCharacterInfos.value != undefined
-          ? store.getters.CHARACTER_INFO(engineId, styleId)
-          : undefined;
+        const speakerInfo =
+          userOrderedCharacterInfos.value != undefined
+            ? store.getters.CHARACTER_INFO(engineId, styleId)
+            : undefined;
 
-      if (speakerInfo == undefined) throw new Error("speakerInfo == undefined");
-      return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
+        if (speakerInfo == undefined)
+          throw new Error("speakerInfo == undefined");
+        return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
+      },
+      set(voice: Voice) {
+        if (voice == undefined) throw new Error("voice == undefined");
+        store.dispatch("COMMAND_CHANGE_STYLE_ID", {
+          audioKey: props.audioKey,
+          engineId: voice.engineId,
+          styleId: voice.styleId,
+        });
+      },
     });
 
     const isActiveAudioCell = computed(
@@ -134,15 +144,6 @@ export default defineComponent({
           text: audioTextBuffer.value,
         });
       }
-    };
-
-    const changeStyle = (style: Voice) => {
-      if (style == undefined) throw new Error("style == undefined");
-      store.dispatch("COMMAND_CHANGE_STYLE_ID", {
-        audioKey: props.audioKey,
-        engineId: style.engineId,
-        styleId: style.styleId,
-      });
     };
 
     const setActiveAudioKey = () => {
@@ -302,7 +303,6 @@ export default defineComponent({
       isMultipleEngine,
       setAudioTextBuffer,
       pushAudioText,
-      changeStyle,
       setActiveAudioKey,
       save,
       play,
