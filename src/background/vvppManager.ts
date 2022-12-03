@@ -1,9 +1,9 @@
 import { EngineManifest } from "@/openapi";
 import fs from "fs";
 import path from "path";
-import yauzl from "yauzl";
 import log from "electron-log";
 import { moveFile } from "move-file";
+import { Extract } from "unzipper";
 import { dialog } from "electron";
 
 // # 軽い概要
@@ -64,56 +64,14 @@ export class VvppManager {
   async extractVvpp(
     vvppPath: string
   ): Promise<{ outputDir: string; manifest: EngineManifest }> {
-    const zipFile = await new Promise<yauzl.ZipFile>((resolve, reject) => {
-      yauzl.open(vvppPath, { lazyEntries: true }, (error, zipFile) => {
-        if (error != null) {
-          reject(error);
-          return;
-        }
-        resolve(zipFile);
-      });
-    });
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
-    await fs.promises.mkdir(outputDir, { recursive: true });
     log.log("Extracting vvpp to", outputDir);
-    await new Promise<void>((resolve, reject) => {
-      const promises: Promise<void>[] = [];
-      zipFile.on("entry", async (entry: yauzl.Entry) => {
-        zipFile.openReadStream(entry, (error, readStream) => {
-          if (error != null) {
-            reject(error);
-            return;
-          }
-          if (entry.fileName.endsWith("/")) {
-            fs.mkdirSync(path.join(outputDir, entry.fileName));
-            zipFile.readEntry();
-            return;
-          }
-          promises.push(
-            new Promise<void>((resolve2) => {
-              readStream.on("end", () => {
-                zipFile.readEntry();
-                resolve2();
-              });
-              readStream.pipe(
-                fs.createWriteStream(path.join(outputDir, entry.fileName))
-              );
-            })
-          );
-        });
-      });
-      promises.push(
-        new Promise<void>((resolve2) => {
-          zipFile.on("end", () => {
-            resolve2();
-          });
-        })
-      );
-      zipFile.readEntry();
-      Promise.all(promises).then(() => {
-        resolve();
-      });
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(vvppPath)
+        .pipe(Extract({ path: outputDir }))
+        .on("close", resolve)
+        .on("error", reject);
     });
     // FIXME: バリデーションをかける
     const manifest = JSON.parse(

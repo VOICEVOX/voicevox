@@ -47,12 +47,12 @@
     "source-map-support": "0.5.19",
     "systeminformation": "5.8.0",
     "tree-kill": "1.2.2",
+    "unzipper": "0.10.11",
     "uuid": "9.0.0",
     "vue": "3.0.11",
     "vue-router": "4.0.8",
     "vuedraggable": "4.1.0",
-    "vuex": "4.0.2",
-    "yauzl": "2.10.0"
+    "vuex": "4.0.2"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "2.3.3",
@@ -64,7 +64,7 @@
     "@types/mocha": "5.2.7",
     "@types/mousetrap": "1.6.8",
     "@types/semver": "7.3.9",
-    "@types/yauzl": "2.10.0",
+    "@types/unzipper": "0.10.5",
     "@types/uuid": "8.3.4",
     "@typescript-eslint/eslint-plugin": "5.38.1",
     "@typescript-eslint/parser": "5.38.1",
