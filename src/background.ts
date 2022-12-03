@@ -49,7 +49,7 @@ type EngineManifest = {
 };
 
 type SingleInstanceLockData = {
-  filePath: string | null;
+  filePath: string | undefined;
 };
 
 // silly以上のログをコンソールに出力
@@ -968,7 +968,7 @@ const appState = {
   willRestart: false,
   isSafeMode: false,
 };
-let filePathOnMac: string | null = null;
+let filePathOnMac: string | undefined = undefined;
 // create window
 async function createWindow() {
   const mainWindowState = windowStateKeeper({
@@ -1040,12 +1040,12 @@ async function createWindow() {
 
   win.webContents.once("did-finish-load", () => {
     if (isMac) {
-      if (filePathOnMac != null) {
+      if (filePathOnMac) {
         ipcMainSend(win, "LOAD_PROJECT_FILE", {
           filePath: filePathOnMac,
           confirm: false,
         });
-        filePathOnMac = null;
+        filePathOnMac = undefined;
       }
     } else {
       if (process.argv.length >= 2) {
@@ -1506,7 +1506,7 @@ app.on("ready", async () => {
   }
 
   // runEngineAllの前にVVPPを読み込む
-  let filePath: string | undefined | null = null;
+  let filePath: string | undefined;
   if (process.platform === "darwin") {
     filePath = filePathOnMac;
   } else {
