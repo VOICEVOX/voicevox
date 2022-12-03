@@ -222,6 +222,7 @@
               :class="[
                 'splitter-cell',
                 {
+                  'splitter-cell-accent': selectedDetail == 'accent',
                   'splitter-cell-be-split':
                     moraIndex == accentPhrase.moras.length - 1,
                   'splitter-cell-be-split-pause': accentPhrase.pauseMora,
@@ -923,6 +924,10 @@ $pitch-label-height: 24px;
           max-width: 20px;
           grid-row: 3 / span 1;
           z-index: vars.$detail-view-splitter-cell-z-index;
+        }
+        &.splitter-cell-accent {
+          @extend.splitter-cell;
+          grid-row: 2 / 4;
         }
         &.splitter-cell:hover {
           background-color: colors.$text-splitter-hover;

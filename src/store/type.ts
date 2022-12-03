@@ -39,12 +39,19 @@ import {
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
 
+/**
+ * エディタ用のAudioQuery
+ */
+export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+  outputSamplingRate: number | "default";
+};
+
 // FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
   engineId?: string;
   styleId?: number;
-  query?: AudioQuery;
+  query?: EditorAudioQuery;
   presetKey?: string;
 };
 
@@ -121,10 +128,6 @@ export type AudioStoreTypes = {
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
-  };
-
-  LOAD_CHARACTER_ALL: {
-    action(): void;
   };
 
   LOAD_CHARACTER: {
@@ -658,16 +661,24 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
+
   IS_ALL_ENGINE_READY: {
     getter: boolean;
   };
 
   IS_ENGINE_READY: {
     getter(engineId: string): boolean;
-  };
-
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
   };
 
   START_WAITING_ENGINE: {
@@ -708,6 +719,18 @@ export type EngineStoreTypes = {
   INITIALIZE_ENGINE_SPEAKER: {
     action(payload: { engineId: string; styleId: number }): void;
   };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFEST: {
+    mutation: { engineId: string; engineManifest: EngineManifest };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): void;
+  };
 };
 
 /*
@@ -717,6 +740,7 @@ export type EngineStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
+  isSafeMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -792,6 +816,11 @@ export type IndexStoreTypes = {
 
   INIT_VUEX: {
     action(): void;
+  };
+
+  SET_IS_SAFE_MODE: {
+    mutation: { isSafeMode: boolean };
+    action(payload: boolean): void;
   };
 };
 
@@ -1052,22 +1081,6 @@ export type UiStoreTypes = {
     action(payload: { useGpu: boolean }): void;
   };
 
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
-  SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
-  };
-
-  SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    action(): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
@@ -1117,7 +1130,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(): void;
+    action(obj: { isSafeMode?: boolean }): void;
   };
 };
 

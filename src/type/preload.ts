@@ -98,7 +98,7 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(): void;
+  restartApp(obj: { isSafeMode: boolean }): void;
 }
 
 export type AppInfos = {
@@ -158,7 +158,7 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number;
+  outputSamplingRate: number | "default";
   audioOutputDevice: string;
 };
 
