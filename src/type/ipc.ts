@@ -253,12 +253,12 @@ export type IpcIHData = {
     return: unknown;
   };
 
-  LOAD_VVPP: {
+  INSTALL_VVPP_ENGINE: {
     args: [path: string];
     return: Promise<boolean>;
   };
 
-  DELETE_VVPP_ENGINE: {
+  UNINSTALL_VVPP_ENGINE: {
     args: [engineId: string];
     return: Promise<boolean>;
   };

@@ -86,7 +86,7 @@ export class VvppManager {
     };
   }
 
-  async load(vvppPath: string) {
+  async install(vvppPath: string) {
     const { outputDir, manifest } = await this.extractVvpp(vvppPath);
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);

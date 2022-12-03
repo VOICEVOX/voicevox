@@ -473,14 +473,16 @@ export default defineComponent({
           "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
         );
       } else {
-        store.dispatch("LOAD_VVPP", vvppFilePath.value).then((success) => {
-          uiLockedState.value = null;
-          if (success) {
-            requireRestart(
-              "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
-            );
-          }
-        });
+        store
+          .dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
+          .then((success) => {
+            uiLockedState.value = null;
+            if (success) {
+              requireRestart(
+                "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+              );
+            }
+          });
       }
     };
     const deleteEngine = () => {
@@ -512,7 +514,7 @@ export default defineComponent({
             break;
           }
           case "vvpp":
-            store.dispatch("DELETE_VVPP_ENGINE", selectedId.value);
+            store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value);
             requireRestart(
               "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
             );

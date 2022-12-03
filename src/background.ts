@@ -801,9 +801,9 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
-async function loadVvpp(vvppPath: string) {
+async function installVvppEngine(vvppPath: string) {
   try {
-    await vvppManager.load(vvppPath);
+    await vvppManager.install(vvppPath);
     return true;
   } catch (e) {
     dialog.showErrorBox(
@@ -815,7 +815,7 @@ async function loadVvpp(vvppPath: string) {
   }
 }
 
-async function deleteVvppEngine(engineId: string) {
+async function uninstallVvppEngine(engineId: string) {
   const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
@@ -1368,12 +1368,12 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
-ipcMainHandle("LOAD_VVPP", async (_, path: string) => {
-  return await loadVvpp(path);
+ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
+  return await installVvppEngine(path);
 });
 
-ipcMainHandle("DELETE_VVPP_ENGINE", async (_, engineId: string) => {
-  return await deleteVvppEngine(engineId);
+ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: string) => {
+  return await uninstallVvppEngine(engineId);
 });
 
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
@@ -1538,7 +1538,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     log.info("No file path sent");
   } else if (data.filePath.endsWith(".vvpp")) {
     log.info("Second instance launched with vvpp file");
-    await loadVvpp(data.filePath);
+    await installVvppEngine(data.filePath);
     dialog
       .showMessageBox(win, {
         type: "info",

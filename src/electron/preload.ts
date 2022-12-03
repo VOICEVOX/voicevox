@@ -253,12 +253,12 @@ const api: Sandbox = {
     )) as typeof newValue;
   },
 
-  loadVvpp: async (filePath) => {
-    return await ipcRendererInvoke("LOAD_VVPP", filePath);
+  installVvppEngine: async (filePath) => {
+    return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
   },
 
-  deleteVvppEngine: async (engineId) => {
-    return await ipcRendererInvoke("DELETE_VVPP_ENGINE", engineId);
+  uninstallVvppEngine: async (engineId) => {
+    return await ipcRendererInvoke("UNINSTALL_VVPP_ENGINE", engineId);
   },
 
   validateEngineDir: async (engineDir) => {

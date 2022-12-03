@@ -288,14 +288,14 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       );
     },
   },
-  LOAD_VVPP: {
+  INSTALL_VVPP_ENGINE: {
     action: async (_, path) => {
-      return window.electron.loadVvpp(path);
+      return window.electron.installVvppEngine(path);
     },
   },
-  DELETE_VVPP_ENGINE: {
+  UNINSTALL_VVPP_ENGINE: {
     action: async (_, engineId) => {
-      return window.electron.deleteVvppEngine(engineId);
+      return window.electron.uninstallVvppEngine(engineId);
     },
   },
   SET_ENGINE_MANIFEST: {

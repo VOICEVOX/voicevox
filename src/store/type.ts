@@ -725,11 +725,11 @@ export type EngineStoreTypes = {
     action(payload: { engineDir: string }): Promise<void>;
   };
 
-  LOAD_VVPP: {
+  INSTALL_VVPP_ENGINE: {
     action: (path: string) => Promise<boolean>;
   };
 
-  DELETE_VVPP_ENGINE: {
+  UNINSTALL_VVPP_ENGINE: {
     action: (engineId: string) => Promise<boolean>;
   };
 
