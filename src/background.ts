@@ -1531,6 +1531,7 @@ app.on("ready", async () => {
   createWindow().then(() => runEngineAll());
 });
 
+// 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
 app.on("second-instance", async (event, argv, workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   if (!data.filePath) {
