@@ -1427,7 +1427,7 @@ app.on("before-quit", async (event) => {
     }
 
     // エンジン終了後の処理を実行
-    await vvppManager.handleEngineDirs();
+    await vvppManager.handleMarkedEngineDirs();
 
     if (appState.willRestart) {
       // 再起動フラグが立っている場合はフラグを戻して再起動する

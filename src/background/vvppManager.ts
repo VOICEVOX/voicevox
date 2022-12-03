@@ -102,7 +102,7 @@ export class VvppManager {
     }
   }
 
-  async handleEngineDirs() {
+  async handleMarkedEngineDirs() {
     await Promise.all(
       [...this.willDeleteEngineIds].map(async (engineId) => {
         let deletingEngineDir: string | undefined = undefined;
