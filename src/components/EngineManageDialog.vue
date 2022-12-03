@@ -33,6 +33,9 @@
                 <template v-if="uiLockedState === 'addingEngine'"
                   >追加中・・・</template
                 >
+                <template v-if="uiLockedState === 'deletingEngine'"
+                  >削除中・・・</template
+                >
               </div>
             </div>
           </div>
@@ -352,7 +355,7 @@ export default defineComponent({
       get: () => props.modelValue,
       set: (val) => emit("update:modelValue", val),
     });
-    const uiLockedState = ref<null | "addingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
+    const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const uiLocked = computed(() => uiLockedState.value !== null);
     const isAddingEngine = ref(false);
     const engineLoaderType = ref<EngineLoaderType>("dir");
@@ -461,10 +464,10 @@ export default defineComponent({
       return messageMap[result];
     };
 
-    const addEngine = () => {
+    const addEngine = async () => {
       uiLockedState.value = "addingEngine";
       if (engineLoaderType.value === "dir") {
-        store.dispatch("ADD_ENGINE_DIR", {
+        await store.dispatch("ADD_ENGINE_DIR", {
           engineDir: newEngineDir.value,
         });
 
@@ -473,16 +476,16 @@ export default defineComponent({
           "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
         );
       } else {
-        store
-          .dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
-          .then((success) => {
-            uiLockedState.value = null;
-            if (success) {
-              requireRestart(
-                "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
-              );
-            }
-          });
+        const success = await store.dispatch(
+          "INSTALL_VVPP_ENGINE",
+          vvppFilePath.value
+        );
+        uiLockedState.value = null;
+        if (success) {
+          requireRestart(
+            "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+          );
+        }
       }
     };
     const deleteEngine = () => {
@@ -499,22 +502,24 @@ export default defineComponent({
           flat: true,
           textColor: "warning",
         },
-      }).onOk(() => {
+      }).onOk(async () => {
         switch (engineInfos.value[selectedId.value].type) {
           case "path": {
             const engineDir = store.state.engineInfos[selectedId.value].path;
             if (!engineDir)
               throw new Error("assert engineInfos[selectedId.value].path");
-            store.dispatch("REMOVE_ENGINE_DIR", {
+            uiLockedState.value = "deletingEngine";
+            await store.dispatch("REMOVE_ENGINE_DIR", {
               engineDir,
             });
+            uiLockedState.value = null;
             requireRestart(
               "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
             );
             break;
           }
           case "vvpp":
-            store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value);
+            await store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value);
             requireRestart(
               "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
             );
