@@ -106,7 +106,6 @@ export default defineComponent({
         return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
       },
       set(voice: Voice) {
-        if (voice == undefined) throw new Error("voice == undefined");
         store.dispatch("COMMAND_CHANGE_STYLE_ID", {
           audioKey: props.audioKey,
           engineId: voice.engineId,
