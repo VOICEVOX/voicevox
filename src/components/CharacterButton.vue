@@ -269,6 +269,7 @@ export default defineComponent({
   border: solid 1px;
   border-color: colors.$primary-light;
   font-size: 0;
+  height: fit-content;
 
   img {
     height: 2rem;
