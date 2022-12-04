@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: 不具合の報告
-labels: bug
+labels: バグ
 ---
 
 ## 不具合の内容

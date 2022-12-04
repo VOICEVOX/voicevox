@@ -25,6 +25,7 @@ import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { DefaultStyleId } from "@/type/preload";
+import { engineStoreState, engineStore } from "./engine";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
@@ -33,6 +34,7 @@ export const storeKey: InjectionKey<
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
   userCharacterOrder: [],
+  isSafeMode: false,
 };
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
@@ -285,6 +287,15 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       });
     },
   },
+
+  SET_IS_SAFE_MODE: {
+    mutation(state, { isSafeMode }) {
+      state.isSafeMode = isSafeMode;
+    },
+    action({ commit }, isSafeMode) {
+      commit("SET_IS_SAFE_MODE", { isSafeMode });
+    },
+  },
 });
 
 export const store = createStore<State, AllGetters, AllActions, AllMutations>({
@@ -292,6 +303,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStoreState,
     ...audioStoreState,
     ...commandStoreState,
+    ...engineStoreState,
     ...projectStoreState,
     ...settingStoreState,
     ...audioCommandStoreState,
@@ -305,6 +317,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStore.getters,
     ...audioStore.getters,
     ...commandStore.getters,
+    ...engineStore.getters,
     ...projectStore.getters,
     ...settingStore.getters,
     ...presetStore.getters,
@@ -318,6 +331,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...uiStore.mutations,
     ...audioStore.mutations,
     ...commandStore.mutations,
+    ...engineStore.mutations,
     ...projectStore.mutations,
     ...settingStore.mutations,
     ...audioCommandStore.mutations,
@@ -330,6 +344,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   actions: {
     ...uiStore.actions,
     ...audioStore.actions,
+    ...engineStore.actions,
     ...commandStore.actions,
     ...projectStore.actions,
     ...settingStore.actions,

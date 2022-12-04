@@ -18,6 +18,7 @@ export interface ElectronStoreType {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineDirs: string[];
 }
 
 export interface Sandbox {
@@ -96,6 +97,8 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
+  restartApp(obj: { isSafeMode: boolean }): void;
 }
 
 export type AppInfos = {
@@ -155,7 +158,7 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number;
+  outputSamplingRate: number | "default";
   audioOutputDevice: string;
 };
 
@@ -177,6 +180,13 @@ export type EngineInfo = {
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
+  executionArgs: string[];
+  // エンジンの種類。
+  // main: メインエンジン
+  // sub: .envで指定されたその他のエンジン
+  // userDir: ユーザーディレクトリにあるエンジン
+  // path: パスを指定して追加したエンジン
+  type: "main" | "sub" | "userDir" | "path";
 };
 
 export type Preset = {
@@ -307,3 +317,11 @@ export type WriteFileErrorResult = {
   code: string | undefined;
   message: string;
 };
+
+export type EngineDirValidationResult =
+  | "ok"
+  | "directoryNotFound"
+  | "manifestNotFound"
+  | "invalidManifest"
+  | "notADirectory"
+  | "alreadyExists";

@@ -22,15 +22,15 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.13.1
-  VOICEVOX_RESOURCE_VERSION: 0.13.1
+  VOICEVOX_ENGINE_VERSION: 0.13.2
+  VOICEVOX_RESOURCE_VERSION: 0.13.2
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
   build-noengine-prepackage:
-    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
@@ -93,7 +93,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -137,12 +137,12 @@ jobs:
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -150,7 +150,7 @@ jobs:
             ${{ env.cache-version }}-node-
 
       - name: Cache Electron
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -158,7 +158,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -175,7 +175,7 @@ jobs:
           df -h
 
       - name: Checkout Product Version Resource
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
@@ -285,7 +285,7 @@ jobs:
           echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
 
       - name: Upload NoEngine Prepackage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -355,7 +355,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - name: Set output Node version
         id: node-version
@@ -363,12 +363,12 @@ jobs:
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -389,7 +389,7 @@ jobs:
           df -h
 
       - name: Download and extract noengine-prepackage artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.noengine_artifact_name }}
           path: ./prepackage
@@ -408,7 +408,7 @@ jobs:
       #   run: |
       #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
       # - name: Cache VOICEVOX ENGINE
-      #   uses: actions/cache@master
+      #   uses: actions/cache@v3
       #   id: voicevox-engine-cache
       #   with:
       #     path: voicevox_engine/download
@@ -472,7 +472,7 @@ jobs:
           df -h
 
       - name: Upload prepackage artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -496,7 +496,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.artifact_name, 'macos-')
@@ -512,7 +512,7 @@ jobs:
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-targz
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz"
@@ -526,7 +526,7 @@ jobs:
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
@@ -534,7 +534,7 @@ jobs:
   build-distributable:
     if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
     needs: [build-engine-prepackage]
-    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' }} # コード署名用のenvironment
+    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment
     env:
       ELECTRON_CACHE: .cache/electron
       ELECTRON_BUILDER_CACHE: .cache/electron-builder
@@ -598,7 +598,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -624,7 +624,7 @@ jobs:
           "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.engine_artifact_name }}
           path: ./prepackage
@@ -647,7 +647,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: endsWith(matrix.artifact_name, '-dmg')
@@ -665,12 +665,12 @@ jobs:
         run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -678,7 +678,7 @@ jobs:
             ${{ env.cache-version }}-node-
 
       - name: Cache Electron
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -686,7 +686,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -746,7 +746,7 @@ jobs:
 
       - name: Upload Linux AppImage artifact
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -754,7 +754,7 @@ jobs:
 
       - name: Upload macOS dmg artifact
         if: endsWith(matrix.artifact_name, '-dmg')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -781,7 +781,7 @@ jobs:
 
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -815,10 +815,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - name: Download and extract distributable artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: ./artifact
@@ -866,7 +866,7 @@ jobs:
 
       - name: Upload Linux AppImage Release artifact
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-release
           path: |
@@ -874,64 +874,55 @@ jobs:
 
       - name: Upload Linux AppImage splitted archives to Release assets
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.7z.*
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.7z.*
+          target_commitish: ${{ github.sha }}
 
       # Windows NSIS Web
       - name: Upload Windows nsis-web archives to Release assets
         if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.7z.*
-
-      - name: Upload Windows nsis-web installer to Release assets
-        if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.exe
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.7z.*
+            artifact/*.exe
+          target_commitish: ${{ github.sha }}
 
       # macOS dmg
       - name: Upload macOS dmg to Release assets
         if: endsWith(matrix.artifact_name, '-dmg')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.dmg
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.dmg
+          target_commitish: ${{ github.sha }}
 
       # targz
       - name: Upload targz to Release assets
         if: endsWith(matrix.artifact_name, '-targz')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.tar.gz
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.tar.gz
+          target_commitish: ${{ github.sha }}
 
       # zip
       - name: Upload zip to Release assets
         if: endsWith(matrix.artifact_name, '-zip')
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ env.VOICEVOX_EDITOR_VERSION }}
           prerelease: ${{ github.event.inputs.prerelease }}
-          file_glob: true
-          file: artifact/*.zip
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            artifact/*.zip
+          target_commitish: ${{ github.sha }}

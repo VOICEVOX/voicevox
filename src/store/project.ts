@@ -326,6 +326,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
           filePath = ret;
         }
+        if (
+          context.state.projectFilePath &&
+          context.state.projectFilePath != filePath
+        ) {
+          window.electron.showMessageDialog({
+            type: "info",
+            title: "保存",
+            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+          });
+        }
+
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = context.state;
         const projectData: ProjectType = {
@@ -337,9 +348,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           JSON.stringify(projectData)
         ).buffer;
         window.electron.writeFile({ filePath, buffer: buf });
-        if (!context.state.projectFilePath) {
-          context.commit("SET_PROJECT_FILEPATH", { filePath });
-        }
+        context.commit("SET_PROJECT_FILEPATH", { filePath });
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
           context.getters.LAST_COMMAND_UNIX_MILLISEC
