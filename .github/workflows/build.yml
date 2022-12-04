@@ -134,7 +134,7 @@ jobs:
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -360,7 +360,7 @@ jobs:
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -662,7 +662,7 @@ jobs:
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
         uses: actions/setup-node@v3
