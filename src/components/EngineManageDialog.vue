@@ -316,7 +316,7 @@ export default defineComponent({
     const engineVersions = ref<Record<string, string>>({});
 
     watch(
-      [engineInfos, engineStates],
+      [engineInfos, engineStates, engineManifests],
       async () => {
         for (const id of Object.keys(engineInfos.value)) {
           if (engineVersions.value[id]) return;
