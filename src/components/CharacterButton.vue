@@ -153,7 +153,10 @@ export default defineComponent({
   name: "CharacterButton",
 
   props: {
-    characterInfos: { type: Array as PropType<CharacterInfo[]>, required: true },
+    characterInfos: {
+      type: Array as PropType<CharacterInfo[]>,
+      required: true,
+    },
     loading: { type: Boolean, default: false },
     selectedVoice: { type: Object as PropType<Voice>, required: true },
     showEngineInfo: { type: Boolean, default: false },
@@ -161,15 +164,13 @@ export default defineComponent({
   },
 
   emits: {
-    "update:selectedVoice"(
-      selectedStyle: Voice
-    ) {
+    "update:selectedVoice"(selectedStyle: Voice) {
       return (
         typeof selectedStyle.engineId === "string" &&
         typeof selectedStyle.speakerId === "string" &&
         typeof selectedStyle.styleId === "number"
       );
-    }
+    },
   },
 
   setup(props, { emit }) {
@@ -177,24 +178,32 @@ export default defineComponent({
 
     const selectedCharacter = computed(() => {
       const selectedVoice = props.selectedVoice;
-      const character = props.characterInfos.find(characterInfo =>
-        characterInfo.metas.speakerUuid === selectedVoice.speakerId
-        && characterInfo.metas.styles.some(style =>
-          style.engineId === selectedVoice.engineId
-          && style.styleId === selectedVoice.styleId
-        )
+      const character = props.characterInfos.find(
+        (characterInfo) =>
+          characterInfo.metas.speakerUuid === selectedVoice.speakerId &&
+          characterInfo.metas.styles.some(
+            (style) =>
+              style.engineId === selectedVoice.engineId &&
+              style.styleId === selectedVoice.styleId
+          )
       );
-      if (character == undefined) throw new Error("selectedVoiceのIDと一致するキャラクターが見つかりません");
-      return character
+      if (character == undefined)
+        throw new Error(
+          "selectedVoiceのIDと一致するキャラクターが見つかりません"
+        );
+      return character;
     });
 
     const selectedStyleInfo = computed(() => {
       const selectedVoice = props.selectedVoice;
-      const style = selectedCharacter.value.metas.styles.find(style =>
-        style.engineId === selectedVoice.engineId && style.styleId === selectedVoice.styleId
+      const style = selectedCharacter.value.metas.styles.find(
+        (style) =>
+          style.engineId === selectedVoice.engineId &&
+          style.styleId === selectedVoice.styleId
       );
-      if (style == undefined) throw new Error("selectedVoiceのIDと一致するスタイルが見つかりません");
-      return style
+      if (style == undefined)
+        throw new Error("selectedVoiceのIDと一致するスタイルが見つかりません");
+      return style;
     });
 
     const engineIcons = computed(() =>
@@ -219,22 +228,20 @@ export default defineComponent({
         (style) => style.styleId === defaultStyleId
       );
 
-      if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
+      if (defaultStyle == undefined)
+        throw new Error("defaultStyle == undefined");
 
-      return defaultStyle
+      return defaultStyle;
     };
 
     const onSelectSpeaker = (speakerUuid: string) => {
       const style = getDefaultStyle(speakerUuid);
-      emit(
-        "update:selectedVoice",
-        {
-          engineId: style.engineId,
-          speakerId: speakerUuid,
-          styleId: style.styleId
-        }
-      );
-    }
+      emit("update:selectedVoice", {
+        engineId: style.engineId,
+        speakerId: speakerUuid,
+        styleId: style.styleId,
+      });
+    };
 
     const subMenuOpenFlags = ref(
       [...Array(props.characterInfos.length)].map(() => false)
@@ -242,9 +249,7 @@ export default defineComponent({
 
     const reassignSubMenuOpen = debounce((idx: number) => {
       if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(props.characterInfos.length)].map(
-        () => false
-      );
+      const arr = [...Array(props.characterInfos.length)].map(() => false);
       arr[idx] = true;
       subMenuOpenFlags.value = arr;
     }, 100);
