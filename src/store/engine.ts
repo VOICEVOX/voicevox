@@ -1,15 +1,85 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import type { EngineManifest } from "@/openapi";
+import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
+  GET_ENGINE_INFOS: {
+    async action({ state, commit }) {
+      const engineInfos = await window.electron.engineInfos();
+
+      // セーフモード時はengineIdsをメインエンジンのIDだけにする。
+      let engineIds: string[];
+      if (state.isSafeMode) {
+        engineIds = engineInfos
+          .filter((engineInfo) => engineInfo.type === "main")
+          .map((info) => info.uuid);
+      } else {
+        engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+      }
+
+      commit("SET_ENGINE_INFOS", {
+        engineIds,
+        engineInfos,
+      });
+    },
+  },
+
+  SET_ENGINE_INFOS: {
+    mutation(
+      state,
+      {
+        engineIds,
+        engineInfos,
+      }: { engineIds: string[]; engineInfos: EngineInfo[] }
+    ) {
+      state.engineIds = engineIds;
+      state.engineInfos = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, engineInfo])
+      );
+      state.engineStates = Object.fromEntries(
+        engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
+      );
+    },
+  },
+
+  SET_ENGINE_MANIFESTS: {
+    mutation(
+      state,
+      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+    ) {
+      state.engineManifests = engineManifests;
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    async action({ state, commit }) {
+      commit("SET_ENGINE_MANIFESTS", {
+        engineManifests: Object.fromEntries(
+          await Promise.all(
+            state.engineIds.map(
+              async (engineId) =>
+                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                  engineId,
+                }).then(async (instance) => [
+                  engineId,
+                  await instance.invoke("engineManifestEngineManifestGet")({}),
+                ])
+            )
+          )
+        ),
+      });
+    },
+  },
+
   IS_ALL_ENGINE_READY: {
     getter: (state, getters) => {
-      // NOTE: 1つもエンジンが登録されていない場合、準備完了していないことにする
+      // 1つもエンジンが登録されていない場合、準備完了していないことにする
       // レンダラープロセスがメインプロセスからエンジンリストを取得完了する前にレンダリングが行われるため、
       // IS_ALL_ENGINE_READYがエンジンリスト未初期化の状態で呼び出される可能性がある
       // この場合の意図しない挙動を抑制するためfalseを返す
@@ -33,18 +103,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       return engineState === "READY";
     },
-  },
-
-  START_WAITING_ENGINE_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      const engineIds = state.engineIds;
-
-      for (const engineId of engineIds) {
-        await dispatch("START_WAITING_ENGINE", {
-          engineId,
-        });
-      }
-    }),
   },
 
   START_WAITING_ENGINE: {
@@ -204,6 +262,34 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
               speaker: styleId,
             })
           ),
+      });
+    },
+  },
+
+  SET_ENGINE_MANIFEST: {
+    mutation(
+      state,
+      {
+        engineId,
+        engineManifest,
+      }: { engineId: string; engineManifest: EngineManifest }
+    ) {
+      state.engineManifests = {
+        ...state.engineManifests,
+        [engineId]: engineManifest,
+      };
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    async action({ commit }, { engineId }) {
+      commit("SET_ENGINE_MANIFEST", {
+        engineId,
+        engineManifest: await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          engineId,
+        }).then((instance) =>
+          instance.invoke("engineManifestEngineManifestGet")({})
+        ),
       });
     },
   },

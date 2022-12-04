@@ -237,15 +237,17 @@ export type IpcIHData = {
     return: void;
   };
 
-  // TODO: genericsが使用できないため、unknownで型宣言して実装時に型を付ける
   GET_SETTING: {
     args: [key: keyof ElectronStoreType];
-    return: unknown;
+    return: ElectronStoreType[keyof ElectronStoreType];
   };
 
   SET_SETTING: {
-    args: [key: keyof ElectronStoreType, newValue: unknown];
-    return: unknown;
+    args: [
+      key: keyof ElectronStoreType,
+      newValue: ElectronStoreType[keyof ElectronStoreType]
+    ];
+    return: ElectronStoreType[keyof ElectronStoreType];
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -254,7 +256,7 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [];
+    args: [obj: { isSafeMode: boolean }];
     return: void;
   };
 };

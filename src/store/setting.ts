@@ -27,7 +27,7 @@ export const settingStoreState: SettingStoreState = {
     exportLab: false,
     exportText: false,
     outputStereo: false,
-    outputSamplingRate: 24000,
+    outputSamplingRate: "default",
     audioOutputDevice: "default",
   },
   hotkeySettings: [],

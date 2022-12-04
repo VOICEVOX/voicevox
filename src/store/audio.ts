@@ -7,6 +7,7 @@ import {
   State,
   AudioStoreState,
   AudioCommandStoreState,
+  EditorAudioQuery,
   AudioStoreTypes,
   AudioCommandStoreTypes,
   transformCommandStore,
@@ -29,13 +30,14 @@ import {
   createKanaRegex,
   currentDateString,
 } from "./utility";
+import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
-): Promise<[string, AudioQuery | undefined]> {
+): Promise<[string, EditorAudioQuery | undefined]> {
   audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
   const audioQuery = audioItem.query;
   if (audioQuery != undefined) {
@@ -218,15 +220,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         ? audioElements[state._activeAudioKey]?.currentTime
         : undefined;
     },
-  },
-
-  LOAD_CHARACTER_ALL: {
-    action: createUILockAction(async ({ state, dispatch }) => {
-      for (const engineId of state.engineIds) {
-        window.electron.logInfo(`Load CharacterInfo from engine ${engineId}`);
-        await dispatch("LOAD_CHARACTER", { engineId });
-      }
-    }),
   },
 
   LOAD_CHARACTER: {
@@ -1061,7 +1054,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         })
           .then((instance) =>
             instance.invoke("synthesisSynthesisPost")({
-              audioQuery,
+              audioQuery: convertAudioQueryFromEditorToEngine(
+                audioQuery,
+                state.engineManifests[engineId].defaultSamplingRate
+              ),
               speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
@@ -1786,7 +1782,7 @@ export const audioCommandStore = transformCommandStore(
         if (styleId === undefined)
           throw new Error("assert styleId !== undefined");
 
-        const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+        const query = state.audioItems[audioKey].query;
         try {
           if (query !== undefined) {
             const accentPhrases: AccentPhrase[] = await dispatch(
@@ -1992,7 +1988,7 @@ export const audioCommandStore = transformCommandStore(
         } & ({ isPause: false; moraIndex: number } | { isPause: true })
       ) {
         const { audioKey, accentPhraseIndex } = payload;
-        const query: AudioQuery | undefined = state.audioItems[audioKey].query;
+        const query = state.audioItems[audioKey].query;
 
         const engineId = state.audioItems[audioKey].engineId;
         if (engineId === undefined)
