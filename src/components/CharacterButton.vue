@@ -153,7 +153,7 @@ export default defineComponent({
   name: "CharacterButton",
 
   props: {
-    characterInfos: { type: Array<CharacterInfo>, required: true },
+    characterInfos: { type: Array as PropType<CharacterInfo[]>, required: true },
     loading: { type: Boolean, default: false },
     selectedVoice: { type: Object as PropType<Voice>, required: true },
     showEngineInfo: { type: Boolean, default: false },
