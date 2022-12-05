@@ -600,7 +600,7 @@ export default defineComponent({
     };
 
     const canAddEngine = computed(() => {
-      if (uiLockedState.value) return false;
+      if (uiLocked.value) return false;
       if (engineLoaderType.value === "dir") {
         return (
           newEngineDir.value !== "" &&
