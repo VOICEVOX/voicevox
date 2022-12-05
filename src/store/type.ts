@@ -269,7 +269,7 @@ export type AudioStoreTypes = {
   SET_MORPHING_INFO: {
     mutation: {
       audioKey: string;
-      morphingInfo: MorphingInfo;
+      morphingInfo: MorphingInfo | undefined;
     };
   };
 
@@ -590,9 +590,12 @@ export type AudioCommandStoreTypes = {
   COMMAND_SET_MORPHING_INFO: {
     mutation: {
       audioKey: string;
-      morphingInfo: MorphingInfo;
+      morphingInfo: MorphingInfo | undefined;
     };
-    action(payload: { audioKey: string; morphingInfo: MorphingInfo }): void;
+    action(payload: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    }): void;
   };
 
   COMMAND_SET_AUDIO_PRESET: {

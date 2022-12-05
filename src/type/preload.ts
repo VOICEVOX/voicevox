@@ -206,16 +206,15 @@ export type Preset = {
   volumeScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
+  morphingInfo?: MorphingInfo;
 };
 
-export type MorphingInfo =
-  | {
-      rate: number;
-      targetEngineId: string;
-      targetSpeakerId: string;
-      targetStyleId: number;
-    }
-  | undefined;
+export type MorphingInfo = {
+  rate: number;
+  targetEngineId: string;
+  targetSpeakerId: string;
+  targetStyleId: number;
+};
 
 export type PresetConfig = {
   items: Record<string, Preset>;

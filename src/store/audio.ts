@@ -684,7 +684,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         morphingInfo,
-      }: { audioKey: string; morphingInfo: MorphingInfo }
+      }: { audioKey: string; morphingInfo: MorphingInfo | undefined }
     ) {
       const item = state.audioItems[audioKey];
       item.morphingInfo = morphingInfo;
@@ -2535,7 +2535,7 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: {
           audioKey: string;
-          morphingInfo: MorphingInfo;
+          morphingInfo: MorphingInfo | undefined;
         }
       ) {
         audioStore.mutations.SET_MORPHING_INFO(draft, payload);
@@ -2544,7 +2544,7 @@ export const audioCommandStore = transformCommandStore(
         { commit },
         payload: {
           audioKey: string;
-          morphingInfo: MorphingInfo;
+          morphingInfo: MorphingInfo | undefined;
         }
       ) {
         commit("COMMAND_SET_MORPHING_INFO", payload);
