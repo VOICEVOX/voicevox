@@ -17,16 +17,19 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: node-version
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
+
       - uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+
       - uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ env.cache-version }}-node-
+
       - name: Cache Electron
         uses: actions/cache@v3
         with:
@@ -42,6 +45,7 @@ jobs:
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
+
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint

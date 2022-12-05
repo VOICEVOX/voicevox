@@ -316,7 +316,7 @@ export default defineComponent({
     const engineVersions = ref<Record<string, string>>({});
 
     watch(
-      [engineInfos, engineStates],
+      [engineInfos, engineStates, engineManifests],
       async () => {
         for (const id of Object.keys(engineInfos.value)) {
           if (engineVersions.value[id]) return;
@@ -364,6 +364,7 @@ export default defineComponent({
         adjustIntonationScale: "全体の抑揚の調整",
         adjustVolumeScale: "全体の音量の調整",
         interrogativeUpspeak: "疑問文の自動調整",
+        synthesisMorphing: "2人の話者でモーフィングした音声を合成",
       };
       return featureNameMap[name];
     };

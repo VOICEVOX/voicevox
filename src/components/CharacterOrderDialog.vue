@@ -72,7 +72,9 @@
                   <img
                     :src="
                       characterInfosMap[speakerUuid].metas.styles[
-                        selectedStyleIndexes[speakerUuid] ?? 0
+                        selectedStyleIndexes[speakerUuid]
+                          ? selectedStyleIndexes[speakerUuid]
+                          : 0
                       ].iconPath
                     "
                     class="style-icon"

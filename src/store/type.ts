@@ -1018,58 +1018,35 @@ export type UiStoreTypes = {
     getter: boolean;
   };
 
-  IS_HELP_DIALOG_OPEN: {
-    mutation: { isHelpDialogOpen: boolean };
-    action(payload: { isHelpDialogOpen: boolean }): void;
-  };
-
-  IS_SETTING_DIALOG_OPEN: {
-    mutation: { isSettingDialogOpen: boolean };
-    action(payload: { isSettingDialogOpen: boolean }): void;
-  };
-
-  IS_HOTKEY_SETTING_DIALOG_OPEN: {
-    mutation: { isHotkeySettingDialogOpen: boolean };
-    action(payload: { isHotkeySettingDialogOpen: boolean }): void;
-  };
-
-  IS_TOOLBAR_SETTING_DIALOG_OPEN: {
-    mutation: { isToolbarSettingDialogOpen: boolean };
-    action(payload: { isToolbarSettingDialogOpen: boolean }): void;
-  };
-
-  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
-    mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
-    action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
-  };
-
-  IS_ACCEPT_TERMS_DIALOG_OPEN: {
-    mutation: { isAcceptTermsDialogOpen: boolean };
-    action(payload: { isAcceptTermsDialogOpen: boolean }): void;
-  };
-
-  IS_ENGINE_MANAGE_DIALOG_OPEN: {
-    mutation: { isEngineManageDialogOpen: boolean };
-    action(payload: { isEngineManageDialogOpen: boolean }): void;
-  };
-
-  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
-    mutation: { isDictionaryManageDialogOpen: boolean };
-    action(payload: { isDictionaryManageDialogOpen: boolean }): void;
+  SET_DIALOG_OPEN: {
+    mutation: {
+      isDefaultStyleSelectDialogOpen?: boolean;
+      isAcceptRetrieveTelemetryDialogOpen?: boolean;
+      isAcceptTermsDialogOpen?: boolean;
+      isDictionaryManageDialogOpen?: boolean;
+      isHelpDialogOpen?: boolean;
+      isSettingDialogOpen?: boolean;
+      isHotkeySettingDialogOpen?: boolean;
+      isToolbarSettingDialogOpen?: boolean;
+      isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
+    };
+    action(payload: {
+      isDefaultStyleSelectDialogOpen?: boolean;
+      isAcceptRetrieveTelemetryDialogOpen?: boolean;
+      isAcceptTermsDialogOpen?: boolean;
+      isDictionaryManageDialogOpen?: boolean;
+      isHelpDialogOpen?: boolean;
+      isSettingDialogOpen?: boolean;
+      isHotkeySettingDialogOpen?: boolean;
+      isToolbarSettingDialogOpen?: boolean;
+      isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
+    }): void;
   };
 
   ON_VUEX_READY: {
     action(): void;
-  };
-
-  IS_CHARACTER_ORDER_DIALOG_OPEN: {
-    mutation: { isCharacterOrderDialogOpen: boolean };
-    action(payload: { isCharacterOrderDialogOpen: boolean }): void;
-  };
-
-  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
-    mutation: { isDefaultStyleSelectDialogOpen: boolean };
-    action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
   };
 
   HYDRATE_UI_STORE: {

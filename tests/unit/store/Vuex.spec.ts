@@ -105,6 +105,7 @@ describe("store/vuex.js test", () => {
               adjustIntonationScale: true,
               adjustVolumeScale: true,
               interrogativeUpspeak: true,
+              synthesisMorphing: true,
             },
           },
         },
