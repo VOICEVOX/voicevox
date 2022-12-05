@@ -100,6 +100,14 @@ if (isDevelopment) {
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
+
+if (!fs.existsSync(userEngineDir)) {
+  fs.mkdirSync(userEngineDir);
+}
+if (!fs.existsSync(vvppEngineDir)) {
+  fs.mkdirSync(vvppEngineDir);
+}
+
 const vvppManager = new VvppManager({
   vvppEngineDir,
 });
@@ -151,14 +159,6 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
-  // FIXME: ディレクトリ作成処理がここにあるのは変かも？
-  if (!fs.existsSync(userEngineDir)) {
-    fs.mkdirSync(userEngineDir);
-  }
-  if (!fs.existsSync(vvppEngineDir)) {
-    fs.mkdirSync(vvppEngineDir);
-  }
-
   const engines: EngineInfo[] = [];
   const addEngine = (engineDir: string, type: "userDir" | "vvpp" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
