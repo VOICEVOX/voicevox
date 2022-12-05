@@ -136,6 +136,12 @@ export type UpdateInfo = {
   contributors: string[];
 };
 
+export type Voice = {
+  engineId: string;
+  speakerId: string;
+  styleId: number;
+};
+
 export type Encoding = "UTF-8" | "Shift_JIS";
 
 export type AcceptRetrieveTelemetryStatus =
