@@ -360,6 +360,16 @@ export default defineComponent({
     const isAddingEngine = ref(false);
     const engineLoaderType = ref<EngineLoaderType>("dir");
 
+    const lockUi = function <T>(
+      lockType: "addingEngine" | "deletingEngine",
+      action: Promise<T>
+    ): Promise<T> {
+      uiLockedState.value = lockType;
+      return action.finally(() => {
+        uiLockedState.value = null;
+      });
+    };
+
     const categorizedEngineIds = computed(() => {
       const result = {
         main: Object.values(engineInfos.value)
@@ -465,20 +475,21 @@ export default defineComponent({
     };
 
     const addEngine = async () => {
-      uiLockedState.value = "addingEngine";
       if (engineLoaderType.value === "dir") {
-        await store.dispatch("ADD_ENGINE_DIR", {
-          engineDir: newEngineDir.value,
-        });
+        await lockUi(
+          "addingEngine",
+          store.dispatch("ADD_ENGINE_DIR", {
+            engineDir: newEngineDir.value,
+          })
+        );
 
-        uiLockedState.value = null;
         requireRestart(
           "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
         );
       } else {
-        const success = await store.dispatch(
-          "INSTALL_VVPP_ENGINE",
-          vvppFilePath.value
+        const success = await lockUi(
+          "addingEngine",
+          store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
         );
         uiLockedState.value = null;
         if (success) {
@@ -508,18 +519,22 @@ export default defineComponent({
             const engineDir = store.state.engineInfos[selectedId.value].path;
             if (!engineDir)
               throw new Error("assert engineInfos[selectedId.value].path");
-            uiLockedState.value = "deletingEngine";
-            await store.dispatch("REMOVE_ENGINE_DIR", {
-              engineDir,
-            });
-            uiLockedState.value = null;
+            await lockUi(
+              "deletingEngine",
+              store.dispatch("REMOVE_ENGINE_DIR", {
+                engineDir,
+              })
+            );
             requireRestart(
               "エンジンを削除しました。反映には再起動が必要です。今すぐ再起動しますか？"
             );
             break;
           }
           case "vvpp":
-            await store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value);
+            await lockUi(
+              "deletingEngine",
+              store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
+            );
             requireRestart(
               "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
             );
