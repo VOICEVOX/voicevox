@@ -1,4 +1,4 @@
-function getPitchFromMidi(midi: number): string {
+export function getPitchFromMidi(midi: number): string {
   const mapPitches: Array<string> = [
     "C",
     "C#",
@@ -17,17 +17,17 @@ function getPitchFromMidi(midi: number): string {
   return mapPitches[pitchPos];
 }
 
-function getOctaveFromMidi(midi: number): number {
+export function getOctaveFromMidi(midi: number): number {
   return Math.floor(midi / 12) - 1;
 }
 
-function getKeyColorFromMidi(midi: number): string {
+export function getKeyColorFromMidi(midi: number): string {
   const mapWhiteKeys: Array<string> = ["C", "D", "E", "F", "G", "A", "B"];
   const pitch = getPitchFromMidi(midi);
   return mapWhiteKeys.includes(pitch) ? "white" : "black";
 }
 
-export const midiNotes = [...Array(128)].map((_, midi) => {
+export const midiKeys = [...Array(128)].map((_, midi) => {
   const pitch = getPitchFromMidi(midi);
   const octave = getOctaveFromMidi(midi);
   const name = `${pitch}${octave}`;
@@ -41,6 +41,6 @@ export const midiNotes = [...Array(128)].map((_, midi) => {
   };
 });
 
-export function getDisplayNote(midi: number): object {
-  return midiNotes[midi];
+export function getDisplayKey(midi: number): object {
+  return midiKeys[midi];
 }

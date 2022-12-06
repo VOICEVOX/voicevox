@@ -2,40 +2,63 @@
   <div class="score-sequencer">
     <div class="sequencer-keys">
       <div
-        v-for="note in displayNotes"
-        :key="note.midi"
-        :class="`sequencer-key sequencer-key-${note.color} ${
-          note.pitch === 'C' ? 'sequencer-key-octave' : ''
-        } ${note.pitch === 'F' ? 'sequencer-key-f' : ''}`"
-        :id="`sequencer-key-${note.midi}`"
+        v-for="key in displayKeys"
+        :key="key.midi"
+        :class="`sequencer-key sequencer-key-${key.color} ${
+          key.pitch === 'C' ? 'sequencer-key-octave' : ''
+        } ${key.pitch === 'F' || key.pitch === 'D' ? 'sequencer-key-f' : ''}`"
+        :id="`sequencer-key-${key.midi}`"
+        :title="key.name"
       >
-        {{ note.pitch === "C" ? note.name : "" }}
+        {{ key.pitch === "C" ? key.name : "" }}
       </div>
     </div>
     <div class="sequencer-grid-y">
       <div
-        v-for="note in displayNotes"
-        :key="note.midi"
-        :class="`sequencer-y sequencer-y-${note.color} ${
-          note.pitch === 'C' ? 'sequencer-y-octave' : ''
-        } ${note.pitch === 'F' ? 'sequencer-y-f' : ''}`"
-        :id="`sequencer-y-${note.midi}`"
+        v-for="key in displayKeys"
+        :key="key.midi"
+        :class="`sequencer-y sequencer-y-${key.color} ${
+          key.pitch === 'C' ? 'sequencer-y-octave' : ''
+        } ${key.pitch === 'F' ? 'sequencer-y-f' : ''}`"
+        :id="`sequencer-y-${key.midi}`"
       />
     </div>
+    <div
+      v-for="(note, index) in notes"
+      :key="index"
+      v-bind:style="{
+        background: '#ddd',
+        position: 'relative',
+        left: `${note.position}px`,
+        bottom: `${(note.midi + 1) * 24}px`,
+        width: `${note.duration}px`,
+        height: '24px',
+        zIndex: 100,
+      }"
+    >
+      {{ note.midi }}
+    </div>
+    <div class="sequencer-grid-x" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import { midiNotes } from "@/helpers/singHelper";
+import { defineComponent, computed } from "vue";
+import { useStore } from "@/store";
+import { midiKeys } from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingScoreSequencer",
 
   setup() {
-    const displayNotes = midiNotes.reverse();
+    const store = useStore();
+    const displayKeys = midiKeys.reverse();
+    const notes = computed(() => store.state.score?.notes);
+    const timeSignatures = computed(() => store.state.score?.timeSignatures);
     return {
-      displayNotes,
+      displayKeys,
+      timeSignatures,
+      notes,
     };
   },
 });
@@ -48,13 +71,16 @@ export default defineComponent({
 .score-sequencer {
   display: block;
   overflow: auto;
+  margin-left: 0;
+  padding-left: 64px;
   position: relative;
-  height: 640px; // 仮
+  height: 100%;
+  width: auto;
 }
 .sequencer-keys {
   background: white;
   border-right: 1px solid #ccc;
-  position: sticky;
+  position: absolute;
   top: 0;
   left: 0;
   width: 64px;
@@ -116,7 +142,7 @@ export default defineComponent({
 
 .sequencer-grid-y {
   min-width: 100%;
-  position: absolute;
+  position: relative;
   top: 0;
 }
 

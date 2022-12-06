@@ -701,6 +701,8 @@ export type SingingStoreState = {
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
+  sequencerZoomX: number;
+  sequencerZoomY: number;
 };
 
 export type SingingStoreTypes = {

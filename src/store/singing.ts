@@ -17,6 +17,8 @@ export const singingStoreState: SingingStoreState = {
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
+  sequencerZoomX: 1,
+  sequencerZoomY: 1,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -107,6 +109,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.score = score;
     },
     async action({ commit }, { score }: { score: Score }) {
+      console.log(score);
       commit("SET_SCORE", { score });
     },
   },
