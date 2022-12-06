@@ -262,6 +262,10 @@ const api: Sandbox = {
   restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
     ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
+
+  setProgressBar: ({ progress }: { progress: number }) => {
+    ipcRendererInvoke("SET_PROGRESS_BAR", { progress });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

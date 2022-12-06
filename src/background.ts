@@ -1318,6 +1318,10 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   win.close();
 });
 
+ipcMainHandle("SET_PROGRESS_BAR", (_, { progress }) => {
+  win.setProgressBar(progress);
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
