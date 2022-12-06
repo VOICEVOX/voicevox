@@ -172,7 +172,7 @@
         }"
         >話速
         {{
-          speedScaleSlider.state.currentValue.value
+          speedScaleSlider.state.currentValue.value != undefined
             ? speedScaleSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
@@ -203,7 +203,7 @@
         }"
         >音高
         {{
-          pitchScaleSlider.state.currentValue.value
+          pitchScaleSlider.state.currentValue.value != undefined
             ? pitchScaleSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
@@ -234,7 +234,7 @@
         }"
         >抑揚
         {{
-          intonationScaleSlider.state.currentValue.value
+          intonationScaleSlider.state.currentValue.value != undefined
             ? intonationScaleSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
@@ -265,7 +265,7 @@
         }"
         >音量
         {{
-          volumeScaleSlider.state.currentValue.value
+          volumeScaleSlider.state.currentValue.value != undefined
             ? volumeScaleSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
@@ -296,7 +296,7 @@
         }"
         >開始無音
         {{
-          prePhonemeLengthSlider.state.currentValue.value
+          prePhonemeLengthSlider.state.currentValue.value != undefined
             ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
@@ -327,7 +327,7 @@
         }"
         >終了無音
         {{
-          postPhonemeLengthSlider.state.currentValue.value
+          postPhonemeLengthSlider.state.currentValue.value != undefined
             ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
             : undefined
         }}</span
