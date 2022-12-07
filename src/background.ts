@@ -841,11 +841,6 @@ async function createWindow() {
     alwaysOnTop: true,
     resizable: false,
     show: false,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
-      contextIsolation: true,
-    },
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -854,7 +849,6 @@ async function createWindow() {
     win.loadURL(base_url + "#/home");
   } else {
     createProtocol("app");
-    splash.loadURL("app://./index.html#/splash");
     win.loadURL("app://./index.html#/home");
   }
   if (isDevelopment) win.webContents.openDevTools();
@@ -1164,22 +1158,43 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return store.get("hotkeySettings");
 });
 
+let currentThemeMemo: ThemeConf | null = null; // ugly workaround for splash
+
 ipcMainHandle("THEME", (_, { newData }) => {
   if (newData !== undefined) {
     store.set("currentTheme", newData);
     return;
   }
+  const currentTheme = store.get("currentTheme");
   const dir = path.join(__static, "themes");
   const themes: ThemeConf[] = [];
   const files = fs.readdirSync(dir);
   files.forEach((file) => {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    const theme = JSON.parse(
+      fs.readFileSync(path.join(dir, file)).toString()
+    ) as ThemeConf;
+    if (theme.name == currentTheme) {
+      currentThemeMemo = theme;
+    }
     themes.push(theme);
   });
-  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+  return { currentTheme, availableThemes: themes };
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
+  if (currentThemeMemo !== null) {
+    const splashURL = path.join(__static, "SplashScreen.html");
+
+    const primary = currentThemeMemo.colors.primary.substring(1);
+    const display = currentThemeMemo.colors.display.substring(1);
+    const background = currentThemeMemo.colors.background.substring(1);
+
+    const version = app.getVersion();
+
+    const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
+
+    splash.loadURL(fullURL);
+  }
   splash.show();
 });
 

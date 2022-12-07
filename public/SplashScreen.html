@@ -1,0 +1,138 @@
+<!-- Splash screen built upon vanilla html, js and css -->
+<html>
+  <head>
+    <script defer type="text/javascript">
+      // defer is for executing js before the page shows up
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+
+      const primary = urlParams.get("primary");
+      const background = urlParams.get("background");
+      const display = urlParams.get("display");
+      const version = urlParams.get("version");
+
+      const root = document.documentElement;
+
+      // Notice: when passing url parameters, `#` is rstriped for unicode issues
+      root.style.setProperty("--primary", `#${primary}`);
+      root.style.setProperty("--background", `#${background}`);
+      root.style.setProperty("--display", `#${display}`);
+
+      window.onload = function () {
+        document.getElementById("version").innerHTML = `version ${version}`;
+      };
+    </script>
+    <style>
+      * {
+        user-select: none;
+      }
+      body {
+        background-color: var(--background);
+        overflow: hidden;
+      }
+      .root {
+        position: absolute;
+        width: 80%;
+        transform: translate(-50%, -66%);
+        left: 50%;
+        top: 50%;
+        display: flex;
+        flex-direction: column;
+      }
+      .title {
+        font-family: monospace;
+        font-weight: 1000;
+        font-size: 3rem;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1rem;
+        color: var(--primary);
+      }
+
+      /* Copied from quasar's Linear Progress Component, MIT Licence */
+      /* https://github.com/quasarframework/quasar */
+      .progress {
+        width: 100%;
+        margin: auto;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 10px;
+      }
+      @keyframes slide {
+        0% {
+          transform: translate3d(-35%, 0, 0) scale3d(0.35, 1, 1);
+        }
+        60% {
+          transform: translate3d(100%, 0, 0) scale3d(0.9, 1, 1);
+        }
+        100% {
+          transform: translate3d(100%, 0, 0) scale3d(0.9, 1, 1);
+        }
+      }
+      @keyframes slide-short {
+        0% {
+          transform: translate3d(-101%, 0, 0) scale3d(1, 1, 1);
+        }
+        60% {
+          transform: translate3d(107%, 0, 0) scale3d(0.01, 1, 1);
+        }
+        100% {
+          transform: translate3d(107%, 0, 0) scale3d(0.01, 1, 1);
+        }
+      }
+      .progressbar {
+        animation-duration: 1s;
+        width: 100%;
+        background-color: var(--background);
+        height: 0.3em;
+        transition: none;
+        position: relative;
+      }
+
+      .progressbar::before {
+        animation: slide 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      }
+
+      .progressbar::after {
+        transform: translate3d(-101%, 0, 0) scale3d(1, 1, 1);
+        animation: slide-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+        animation-delay: 1.15s;
+      }
+
+      .progressbar::before,
+      .progressbar::after {
+        background: var(--primary);
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        transform-origin: 0 0;
+      }
+      /* End of Linear Progress Component */
+
+      .footer {
+        color: var(--display);
+        text-transform: lowercase;
+        position: absolute;
+        opacity: 50%;
+        font-family: monospace;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="root">
+      <div class="title">VOICEVOX</div>
+
+      <div class="progress">
+        <div class="progressbar"></div>
+      </div>
+    </div>
+    <!-- the nbsp is a placeholder -->
+    <div class="footer" id="version">&nbsp;</div>
+  </body>
+</html>
