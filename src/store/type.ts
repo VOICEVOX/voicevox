@@ -365,6 +365,7 @@ export type AudioStoreTypes = {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
+      callback?: () => void;
     }): SaveResultObject[] | undefined;
   };
 
@@ -372,6 +373,7 @@ export type AudioStoreTypes = {
     action(payload: {
       filePath?: string;
       encoding?: EncodingType;
+      callback?: () => void;
     }): SaveResultObject | undefined;
   };
 

@@ -1232,7 +1232,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async (
         { state, dispatch },
-        { dirPath, encoding }: { dirPath?: string; encoding?: EncodingType }
+        {
+          dirPath,
+          encoding,
+          callback,
+        }: { dirPath?: string; encoding?: EncodingType; callback?: () => void }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
@@ -1249,6 +1253,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               audioKey,
               filePath: path.join(_dirPath, name),
               encoding,
+            }).then((value) => {
+              callback?.();
+              return value;
             });
           });
           return Promise.all(promises);
@@ -1261,7 +1268,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async (
         { state, dispatch },
-        { filePath, encoding }: { filePath?: string; encoding?: EncodingType }
+        {
+          filePath,
+          encoding,
+          callback,
+        }: { filePath?: string; encoding?: EncodingType; callback?: () => void }
       ): Promise<SaveResultObject> => {
         const defaultFileName = buildProjectFileName(state, "wav");
 
@@ -1317,6 +1328,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
             blob = await dispatch("GENERATE_AUDIO", { audioKey });
+            callback?.();
           }
           if (blob === null) {
             return { result: "ENGINE_ERROR", path: filePath };
@@ -1517,11 +1529,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
+          dispatch("START_INDETERMINATE_PROGRESS");
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
             nowGenerating: true,
           });
-          blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          blob = await dispatch("GENERATE_AUDIO", { audioKey }).finally(() =>
+            dispatch("RESET_PROGRESS")
+          );
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
             nowGenerating: false,
