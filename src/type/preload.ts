@@ -99,7 +99,6 @@ export interface Sandbox {
   ): Promise<ElectronStoreType[Key]>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isSafeMode: boolean }): void;
-  setProgressBar(obj: { progress: number }): void;
 }
 
 export type AppInfos = {

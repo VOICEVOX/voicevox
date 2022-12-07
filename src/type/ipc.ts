@@ -259,11 +259,6 @@ export type IpcIHData = {
     args: [obj: { isSafeMode: boolean }];
     return: void;
   };
-
-  SET_PROGRESS_BAR: {
-    args: [obj: { progress: number }];
-    return: void;
-  };
 };
 
 /**
