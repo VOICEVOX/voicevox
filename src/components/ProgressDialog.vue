@@ -31,7 +31,7 @@
 
 <script lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref, watch } from "vue";
+import { computed, defineComponent, onUnmounted, ref, watch } from "vue";
 
 export default defineComponent({
   name: "ProgressDialog",
@@ -43,17 +43,28 @@ export default defineComponent({
     const isShowProgress = ref<boolean>(false);
     const isDeterminate = ref<boolean>(false);
 
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const deferredProgressStart = () => {
+      timeoutId = setTimeout(() => {
+        isShowProgress.value = true;
+      }, 3000);
+    };
+
     watch(progress, (newValue, oldValue) => {
       if (newValue === -1) {
+        clearTimeout(timeoutId);
         isShowProgress.value = false;
       } else if (oldValue === -1 && newValue <= 1) {
-        isShowProgress.value = true;
+        deferredProgressStart();
         isDeterminate.value = true;
       } else if (newValue === 1.1) {
-        isShowProgress.value = true;
+        deferredProgressStart();
         isDeterminate.value = false;
       }
     });
+
+    onUnmounted(() => clearTimeout(timeoutId));
 
     const formattedProgress = computed(() =>
       (store.getters.PROGRESS * 100).toFixed()
