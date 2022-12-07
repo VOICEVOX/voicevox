@@ -8,13 +8,23 @@
       class="absolute active-arrow"
     />
     <character-button
-      v-if="userOrderedCharacterInfos"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
       v-model:selected-voice="selectedVoice"
-    />
+      ><template #unset-icon
+        ><q-avatar rounded size="2rem" color="warning">?</q-avatar></template
+      ><template #unset-item
+        ><span class="text-warning"
+          >{{
+            userOrderedCharacterInfos.length > 0
+              ? "有効なスタイルが選択されていません"
+              : "選択できるスタイルがありません"
+          }}
+        </span></template
+      ></character-button
+    >
     <q-input
       ref="textfield"
       filled
@@ -73,7 +83,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS ?? []
     );
     const isInitializingSpeaker = computed(
       () => store.state.audioKeyInitializingSpeaker === props.audioKey
@@ -88,24 +98,30 @@ export default defineComponent({
 
     const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-    const selectedVoice = computed<Voice>({
+    const selectedVoice = computed<Voice | undefined>({
       get() {
         const engineId = audioItem.value.engineId;
         const styleId = audioItem.value.styleId;
 
-        if (engineId == undefined || styleId == undefined)
-          throw new Error("engineId or styleId == undefined");
+        if (
+          engineId == undefined ||
+          styleId == undefined ||
+          !store.state.engineIds.some(
+            (storeEngineId) => storeEngineId === engineId
+          )
+        )
+          return undefined;
 
         const speakerInfo =
           userOrderedCharacterInfos.value != undefined
             ? store.getters.CHARACTER_INFO(engineId, styleId)
             : undefined;
 
-        if (speakerInfo == undefined)
-          throw new Error("speakerInfo == undefined");
+        if (speakerInfo == undefined) return undefined;
         return { engineId, speakerId: speakerInfo.metas.speakerUuid, styleId };
       },
-      set(voice: Voice) {
+      set(voice: Voice | undefined) {
+        if (voice == undefined) return;
         store.dispatch("COMMAND_CHANGE_STYLE_ID", {
           audioKey: props.audioKey,
           engineId: voice.engineId,

@@ -6,7 +6,14 @@
     :class="{ opaque: loading }"
   >
     <!-- q-imgだとdisableのタイミングで点滅する -->
-    <img class="q-pa-none q-ma-none" :src="selectedStyleInfo.iconPath" />
+    <div class="icon-container">
+      <img
+        v-if="selectedStyleInfo != undefined"
+        class="q-pa-none q-ma-none"
+        :src="selectedStyleInfo.iconPath"
+      />
+      <slot v-else name="unset-icon"></slot>
+    </div>
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
     </div>
@@ -16,6 +23,21 @@
       transition-hide="none"
     >
       <q-list>
+        <q-item
+          v-if="selectedStyleInfo == undefined || showUnset"
+          class="q-pa-none"
+        >
+          <q-btn
+            flat
+            no-caps
+            v-close-popup
+            class="full-width"
+            :class="selectedCharacter == undefined && 'selected-character-item'"
+            @click="$emit('update:selectedVoice', undefined)"
+          >
+            <slot name="unset-item"></slot>
+          </q-btn>
+        </q-item>
         <q-item
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
@@ -28,6 +50,7 @@
               v-close-popup
               class="col-grow"
               :class="
+                selectedCharacter != undefined &&
                 characterInfo.metas.speakerUuid ===
                   selectedCharacter.metas.speakerUuid &&
                 'selected-character-item'
@@ -92,7 +115,10 @@
                       clickable
                       v-close-popup
                       active-class="selected-character-item"
-                      :active="style.styleId === selectedVoice.styleId"
+                      :active="
+                        selectedVoice != undefined &&
+                        style.styleId === selectedVoice.styleId
+                      "
                       @click="
                         $emit('update:selectedVoice', {
                           engineId: style.engineId,
@@ -158,17 +184,19 @@ export default defineComponent({
       required: true,
     },
     loading: { type: Boolean, default: false },
-    selectedVoice: { type: Object as PropType<Voice>, required: true },
+    selectedVoice: { type: Object as PropType<Voice> },
     showEngineInfo: { type: Boolean, default: false },
+    showUnset: { type: Boolean, default: false },
     uiLocked: { type: Boolean, required: true },
   },
 
   emits: {
-    "update:selectedVoice"(selectedStyle: Voice) {
+    "update:selectedVoice"(selectedVoice: Voice | undefined) {
       return (
-        typeof selectedStyle.engineId === "string" &&
-        typeof selectedStyle.speakerId === "string" &&
-        typeof selectedStyle.styleId === "number"
+        selectedVoice == undefined ||
+        (typeof selectedVoice.engineId === "string" &&
+          typeof selectedVoice.speakerId === "string" &&
+          typeof selectedVoice.styleId === "number")
       );
     },
   },
@@ -180,29 +208,23 @@ export default defineComponent({
       const selectedVoice = props.selectedVoice;
       const character = props.characterInfos.find(
         (characterInfo) =>
-          characterInfo.metas.speakerUuid === selectedVoice.speakerId &&
+          characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
           characterInfo.metas.styles.some(
             (style) =>
               style.engineId === selectedVoice.engineId &&
               style.styleId === selectedVoice.styleId
           )
       );
-      if (character == undefined)
-        throw new Error(
-          "selectedVoiceのIDと一致するキャラクターが見つかりません"
-        );
       return character;
     });
 
     const selectedStyleInfo = computed(() => {
       const selectedVoice = props.selectedVoice;
-      const style = selectedCharacter.value.metas.styles.find(
+      const style = selectedCharacter.value?.metas.styles.find(
         (style) =>
-          style.engineId === selectedVoice.engineId &&
+          style.engineId === selectedVoice?.engineId &&
           style.styleId === selectedVoice.styleId
       );
-      if (style == undefined)
-        throw new Error("selectedVoiceのIDと一致するスタイルが見つかりません");
       return style;
     });
 
@@ -276,10 +298,15 @@ export default defineComponent({
   font-size: 0;
   height: fit-content;
 
-  img {
+  .icon-container {
     height: 2rem;
     width: 2rem;
-    object-fit: scale-down;
+
+    img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: scale-down;
+    }
   }
 
   .loading {
