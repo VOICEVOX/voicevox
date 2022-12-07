@@ -994,6 +994,10 @@ export type UiStoreTypes = {
     getter: boolean;
   };
 
+  PROGRESS: {
+    getter: number;
+  };
+
   ASYNC_UI_LOCK: {
     action(payload: { callback: () => Promise<void> }): void;
   };

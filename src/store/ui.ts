@@ -64,6 +64,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  PROGRESS: {
+    getter(state) {
+      return state.progress;
+    },
+  },
+
   ASYNC_UI_LOCK: {
     action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
