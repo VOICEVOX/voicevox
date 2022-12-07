@@ -46,6 +46,7 @@ export default defineComponent({
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const deferredProgressStart = () => {
+      // 3秒待ってから表示する
       timeoutId = setTimeout(() => {
         isShowProgress.value = true;
       }, 3000);
