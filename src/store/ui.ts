@@ -9,6 +9,9 @@ import {
 import { ActivePointScrollMode } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
+// electron.setProgressBarに1より大きい値を渡すとindeterminateなプログレスバーになる
+const INDETERMINATE_PROGRESS_NUMBER = 1.1;
+
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
     context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
@@ -346,8 +349,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   START_INDETERMINATE_PROGRESS: {
     action({ dispatch }) {
-      // electron.setProgressBarに1より大きい値を渡すとindeterminateなプログレスバーになる
-      dispatch("SET_PROGRESS", { progress: 1.1 });
+      dispatch("SET_PROGRESS", { progress: INDETERMINATE_PROGRESS_NUMBER });
     },
   },
 
