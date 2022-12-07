@@ -53,14 +53,19 @@ export default defineComponent({
 
     watch(progress, (newValue, oldValue) => {
       if (newValue === -1) {
+        // → 非表示
         clearTimeout(timeoutId);
         isShowProgress.value = false;
       } else if (oldValue === -1 && newValue <= 1) {
+        // 非表示 → 処理中
         deferredProgressStart();
-        isDeterminate.value = true;
-      } else if (newValue === 1.1) {
-        deferredProgressStart();
-        isDeterminate.value = false;
+
+        if (0 < newValue) {
+          // 0 < value <= 1の間のみ進捗を%で表示する
+          isDeterminate.value = true;
+        } else {
+          isDeterminate.value = false;
+        }
       }
     });
 
