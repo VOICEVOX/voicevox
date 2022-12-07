@@ -941,6 +941,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
       contextIsolation: true,
+      sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
