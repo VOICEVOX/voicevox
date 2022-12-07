@@ -59,13 +59,11 @@ export default defineComponent({
       } else if (oldValue === -1 && newValue <= 1) {
         // 非表示 → 処理中
         deferredProgressStart();
-
-        if (0 < newValue) {
-          // 0 < value <= 1の間のみ進捗を%で表示する
-          isDeterminate.value = true;
-        } else {
-          isDeterminate.value = false;
-        }
+        isDeterminate.value = false;
+      } else if (oldValue !== -1 && 0 < newValue) {
+        // 処理中 → 処理中(0%より大きな値)
+        // 0 < value <= 1の間のみ進捗を%で表示する
+        isDeterminate.value = true;
       }
     });
 
