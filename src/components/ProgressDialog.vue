@@ -6,8 +6,8 @@
         :value="progress"
         :min="0"
         :max="1"
-        font-size="12px"
         rounded
+        font-size="12px"
         color="primary"
         size="xl"
         :thickness="0.3"
