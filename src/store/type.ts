@@ -979,6 +979,8 @@ export type UiStoreState = {
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
+  progress: number;
+  progressCount: number;
 };
 
 export type UiStoreTypes = {
@@ -1108,6 +1110,31 @@ export type UiStoreTypes = {
 
   RESTART_APP: {
     action(obj: { isSafeMode?: boolean }): void;
+  };
+
+  START_PROGRESS: {
+    action(payload: { count: number }): void;
+  };
+
+  START_AUDIO_ITEMS_PROGRESS: {
+    action(): void;
+  };
+
+  START_INDETERMINATE_PROGRESS: {
+    action(): void;
+  };
+
+  INCREMENT_PROGRESS: {
+    action(): void;
+  };
+
+  SET_PROGRESS: {
+    mutation: { progress: number; count?: number };
+    action(payload: { progress: number; count?: number }): void;
+  };
+
+  RESET_PROGRESS: {
+    action(): void;
   };
 };
 

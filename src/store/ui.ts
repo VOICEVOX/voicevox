@@ -44,6 +44,8 @@ export const uiStoreState: UiStoreState = {
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
+  progress: -1,
+  progressCount: 0,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -320,6 +322,51 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   RESTART_APP: {
     action(_, { isSafeMode }: { isSafeMode?: boolean }) {
       window.electron.restartApp({ isSafeMode: !!isSafeMode });
+    },
+  },
+
+  START_PROGRESS: {
+    action({ dispatch }, { count }) {
+      dispatch("SET_PROGRESS", { progress: 0, count });
+    },
+  },
+
+  START_AUDIO_ITEMS_PROGRESS: {
+    action({ dispatch, state }) {
+      dispatch("START_PROGRESS", { count: state.audioKeys.length });
+    },
+  },
+
+  INCREMENT_PROGRESS: {
+    action({ dispatch, state }) {
+      const step = 1.0 / state.progressCount;
+      dispatch("SET_PROGRESS", { progress: state.progress + step });
+    },
+  },
+
+  START_INDETERMINATE_PROGRESS: {
+    action({ dispatch }) {
+      // electron.setProgressBarに1より大きい値を渡すとindeterminateなプログレスバーになる
+      dispatch("SET_PROGRESS", { progress: 1.1 });
+    },
+  },
+
+  SET_PROGRESS: {
+    mutation(state, { progress, count }) {
+      state.progress = progress;
+      if (count != null) {
+        state.progressCount = count;
+      }
+    },
+    action({ commit }, { progress, count }) {
+      window.electron.setProgressBar({ progress });
+      commit("SET_PROGRESS", { progress, count });
+    },
+  },
+
+  RESET_PROGRESS: {
+    action({ dispatch }) {
+      dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
 });
