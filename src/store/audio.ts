@@ -1550,8 +1550,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           blob = await withProgress(
             dispatch("GENERATE_AUDIO", { audioKey }),
-            dispatch,
-            "START_INDETERMINATE_PROGRESS"
+            dispatch
           );
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,

@@ -30,12 +30,12 @@ export async function generateAndSaveOneAudioWithDialog({
       filePath,
       encoding,
     }),
-    dispatch,
-    "START_INDETERMINATE_PROGRESS"
+    dispatch
   );
 
   if (result.result === "SUCCESS" || result.result === "CANCELED") return;
   let msg = "";
+
   switch (result.result) {
     case "WRITE_ERROR":
       if (result.errorMessage) {

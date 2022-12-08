@@ -27,12 +27,9 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 
 export function withProgress<T>(
   action: Promise<T>,
-  dispatch: Dispatch<AllActions>,
-  startAction:
-    | "START_PROGRESS"
-    | "START_INDETERMINATE_PROGRESS" = "START_PROGRESS"
+  dispatch: Dispatch<AllActions>
 ): Promise<T> {
-  dispatch(startAction);
+  dispatch("START_PROGRESS");
   return action.finally(() => dispatch("RESET_PROGRESS"));
 }
 
@@ -343,12 +340,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   START_PROGRESS: {
-    action({ dispatch }) {
-      dispatch("SET_PROGRESS", { progress: 0 });
-    },
-  },
-
-  START_INDETERMINATE_PROGRESS: {
     action({ dispatch }) {
       dispatch("SET_PROGRESS", { progress: 0 });
     },

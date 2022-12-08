@@ -1122,10 +1122,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  START_INDETERMINATE_PROGRESS: {
-    action(): void;
-  };
-
   SET_PROGRESS: {
     mutation: { progress: number };
     action(payload: { progress: number }): void;
