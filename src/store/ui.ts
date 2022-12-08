@@ -349,6 +349,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     mutation(state, { progress }) {
       state.progress = progress;
     },
+    // progressは-1(非表示)と[0, 1]の範囲を取る
     action({ commit }, { progress }) {
       commit("SET_PROGRESS", { progress });
     },
