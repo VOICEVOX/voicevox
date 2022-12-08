@@ -365,7 +365,7 @@ export type AudioStoreTypes = {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
-      callback?: () => void;
+      callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
 
@@ -373,7 +373,7 @@ export type AudioStoreTypes = {
     action(payload: {
       filePath?: string;
       encoding?: EncodingType;
-      callback?: () => void;
+      callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject | undefined;
   };
 
@@ -1119,10 +1119,6 @@ export type UiStoreTypes = {
   };
 
   START_PROGRESS: {
-    action(payload: { count: number }): void;
-  };
-
-  START_AUDIO_ITEMS_PROGRESS: {
     action(): void;
   };
 
@@ -1130,13 +1126,13 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  INCREMENT_PROGRESS: {
-    action(): void;
+  SET_PROGRESS: {
+    mutation: { progress: number };
+    action(payload: { progress: number }): void;
   };
 
-  SET_PROGRESS: {
-    mutation: { progress: number; count?: number };
-    action(payload: { progress: number; count?: number }): void;
+  SET_PROGRESS_FROM_COUNT: {
+    action(payload: { finishedCount: number; totalCount: number }): void;
   };
 
   RESET_PROGRESS: {

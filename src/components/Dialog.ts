@@ -7,6 +7,7 @@ import {
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
 import { Dispatch } from "@/store/vuex";
+import { withProgress } from "@/store/ui";
 
 type QuasarDialog = QVueGlobals["dialog"];
 
@@ -23,12 +24,15 @@ export async function generateAndSaveOneAudioWithDialog({
   filePath?: string;
   encoding?: EncodingType;
 }): Promise<void> {
-  await dispatch("START_INDETERMINATE_PROGRESS");
-  const result: SaveResultObject = await dispatch("GENERATE_AND_SAVE_AUDIO", {
-    audioKey,
-    filePath,
-    encoding,
-  }).finally(() => dispatch("RESET_PROGRESS"));
+  const result: SaveResultObject = await withProgress(
+    dispatch("GENERATE_AND_SAVE_AUDIO", {
+      audioKey,
+      filePath,
+      encoding,
+    }),
+    dispatch,
+    "START_INDETERMINATE_PROGRESS"
+  );
 
   if (result.result === "SUCCESS" || result.result === "CANCELED") return;
   let msg = "";
@@ -67,12 +71,15 @@ export async function generateAndSaveAllAudioWithDialog({
   dirPath?: string;
   encoding?: EncodingType;
 }): Promise<void> {
-  await dispatch("START_AUDIO_ITEMS_PROGRESS");
-  const result = await dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
-    dirPath,
-    encoding,
-    callback: () => dispatch("INCREMENT_PROGRESS"),
-  }).finally(() => dispatch("RESET_PROGRESS"));
+  const result = await withProgress(
+    dispatch("GENERATE_AND_SAVE_ALL_AUDIO", {
+      dirPath,
+      encoding,
+      callback: (finishedCount, totalCount) =>
+        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+    }),
+    dispatch
+  );
 
   const successArray: Array<string | undefined> = [];
   const writeErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
@@ -127,12 +134,15 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   filePath?: string;
   encoding?: EncodingType;
 }): Promise<void> {
-  await dispatch("START_AUDIO_ITEMS_PROGRESS");
-  const result = await dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
-    filePath,
-    encoding,
-    callback: () => dispatch("INCREMENT_PROGRESS"),
-  }).finally(() => dispatch("RESET_PROGRESS"));
+  const result = await withProgress(
+    dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
+      filePath,
+      encoding,
+      callback: (finishedCount, totalCount) =>
+        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+    }),
+    dispatch
+  );
 
   if (
     result === undefined ||

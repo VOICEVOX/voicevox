@@ -12,7 +12,7 @@ import {
   AudioCommandStoreTypes,
   transformCommandStore,
 } from "./type";
-import { createUILockAction } from "./ui";
+import { createUILockAction, withProgress } from "./ui";
 import {
   CharacterInfo,
   DefaultStyleId,
@@ -1236,7 +1236,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           dirPath,
           encoding,
           callback,
-        }: { dirPath?: string; encoding?: EncodingType; callback?: () => void }
+        }: {
+          dirPath?: string;
+          encoding?: EncodingType;
+          callback?: (finishedCount: number, totalCount: number) => void;
+        }
       ) => {
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
@@ -1247,6 +1251,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
         if (dirPath) {
           const _dirPath = dirPath;
+
+          const totalCount = state.audioKeys.length;
+          let finishedCount = 0;
+
           const promises = state.audioKeys.map((audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
@@ -1254,7 +1262,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               filePath: path.join(_dirPath, name),
               encoding,
             }).then((value) => {
-              callback?.();
+              callback?.(++finishedCount, totalCount);
               return value;
             });
           });
@@ -1272,7 +1280,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath,
           encoding,
           callback,
-        }: { filePath?: string; encoding?: EncodingType; callback?: () => void }
+        }: {
+          filePath?: string;
+          encoding?: EncodingType;
+          callback?: (finishedCount: number, totalCount: number) => void;
+        }
       ): Promise<SaveResultObject> => {
         const defaultFileName = buildProjectFileName(state, "wav");
 
@@ -1324,11 +1336,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
         };
 
+        const totalCount = state.audioKeys.length;
+        let finishedCount = 0;
+
         for (const audioKey of state.audioKeys) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
             blob = await dispatch("GENERATE_AUDIO", { audioKey });
-            callback?.();
+            callback?.(++finishedCount, totalCount);
           }
           if (blob === null) {
             return { result: "ENGINE_ERROR", path: filePath };
@@ -1529,13 +1544,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         // 音声用意
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
-          dispatch("START_INDETERMINATE_PROGRESS");
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,
             nowGenerating: true,
           });
-          blob = await dispatch("GENERATE_AUDIO", { audioKey }).finally(() =>
-            dispatch("RESET_PROGRESS")
+          blob = await withProgress(
+            dispatch("GENERATE_AUDIO", { audioKey }),
+            dispatch,
+            "START_INDETERMINATE_PROGRESS"
           );
           commit("SET_AUDIO_NOW_GENERATING", {
             audioKey,

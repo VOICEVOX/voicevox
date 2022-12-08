@@ -1,4 +1,4 @@
-import { Action, ActionContext, ActionsBase } from "./vuex";
+import { Action, ActionContext, ActionsBase, Dispatch } from "./vuex";
 import {
   AllActions,
   AllGetters,
@@ -23,6 +23,17 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
       context.commit("UNLOCK_UI");
     });
   };
+}
+
+export function withProgress<T>(
+  action: Promise<T>,
+  dispatch: Dispatch<AllActions>,
+  startAction:
+    | "START_PROGRESS"
+    | "START_INDETERMINATE_PROGRESS" = "START_PROGRESS"
+): Promise<T> {
+  dispatch(startAction);
+  return action.finally(() => dispatch("RESET_PROGRESS"));
 }
 
 export const uiStoreState: UiStoreState = {
@@ -332,21 +343,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   START_PROGRESS: {
-    action({ dispatch }, { count }) {
-      dispatch("SET_PROGRESS", { progress: 0, count });
-    },
-  },
-
-  START_AUDIO_ITEMS_PROGRESS: {
-    action({ dispatch, state }) {
-      dispatch("START_PROGRESS", { count: state.audioKeys.length });
-    },
-  },
-
-  INCREMENT_PROGRESS: {
-    action({ dispatch, state }) {
-      const step = 1.0 / state.progressCount;
-      dispatch("SET_PROGRESS", { progress: state.progress + step });
+    action({ dispatch }) {
+      dispatch("SET_PROGRESS", { progress: 0 });
     },
   },
 
@@ -357,19 +355,23 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SET_PROGRESS: {
-    mutation(state, { progress, count }) {
+    mutation(state, { progress }) {
       state.progress = progress;
-      if (count != null) {
-        state.progressCount = count;
-      }
     },
-    action({ commit }, { progress, count }) {
-      commit("SET_PROGRESS", { progress, count });
+    action({ commit }, { progress }) {
+      commit("SET_PROGRESS", { progress });
+    },
+  },
+
+  SET_PROGRESS_FROM_COUNT: {
+    action({ commit }, { finishedCount, totalCount }) {
+      commit("SET_PROGRESS", { progress: finishedCount / totalCount });
     },
   },
 
   RESET_PROGRESS: {
     action({ dispatch }) {
+      // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
