@@ -1,7 +1,8 @@
 <template>
   <div v-if="isShowProgress" class="progress">
-    <div v-if="isDeterminate">
+    <div>
       <q-circular-progress
+        v-if="isDeterminate"
         show-value
         :value="progress"
         :min="0"
@@ -14,10 +15,8 @@
       >
         {{ formattedProgress }}%
       </q-circular-progress>
-      <div class="q-mt-md">生成中です...</div>
-    </div>
-    <div v-if="!isDeterminate">
       <q-circular-progress
+        v-if="!isDeterminate"
         indeterminate
         color="primary"
         rounded
