@@ -622,10 +622,11 @@ async function runEngine(engineId: string) {
 
     if (!engineProcessContainer.willQuitEngine) {
       ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-      dialog.showErrorBox(
-        "音声合成エンジンエラー",
-        "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-      );
+      const dialogMessage =
+        engineInfos.length === 1
+          ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+          : `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`;
+      dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
     }
   });
 }
@@ -940,6 +941,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: true,
       contextIsolation: true,
+      sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
