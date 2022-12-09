@@ -77,7 +77,6 @@ const api: Sandbox = {
       filePath: tempFilePath,
       buffer: buffer,
     });
-    // fs.writeFileSync(path.join(tempDir, relativePath), new DataView(buffer));
   },
 
   loadTempFile: async () => {
@@ -100,7 +99,6 @@ const api: Sandbox = {
      * その中のbasename関数は上手く動作しない（POSIX pathとして処理される）。
      * この関数を呼び出せばWindows pathが正しく処理される。
      */
-    // return path.basename(filePath);
     return await ipcRendererInvoke("GET_BASE_NAME", { filePath });
   },
 
@@ -147,22 +145,10 @@ const api: Sandbox = {
 
   writeFile: async ({ filePath, buffer }) => {
     return await ipcRendererInvoke("WRITE_FILE", { filePath, buffer });
-    /*
-    try {
-      // throwだと`.code`の情報が消えるのでreturn
-      fs.writeFileSync(filePath, new DataView(buffer));
-    } catch (e) {
-      const a = e as SystemError;
-      return { code: a.code, message: a.message };
-    }
-
-    return undefined;
-    */
   },
 
   readFile: async ({ filePath }) => {
     return await ipcRendererInvoke("READ_FILE", { filePath });
-    // return fs.promises.readFile(filePath);
   },
 
   openTextEditContextMenu: () => {

@@ -1333,6 +1333,7 @@ ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
   } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
     const a = e as SystemError;
     return { code: a.code, message: a.message };
   }
