@@ -1,5 +1,4 @@
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
@@ -1119,10 +1118,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
       ): Promise<SaveResultObject> => {
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = path.join(
+          filePath = await window.electron.joinPath([
             state.savingSetting.fixedExportDir,
-            buildFileName(state, audioKey)
-          );
+            buildFileName(state, audioKey),
+          ]);
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を保存",
@@ -1151,7 +1150,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        let writeFileResult = window.electron.writeFile({
+        let writeFileResult = await window.electron.writeFile({
           filePath,
           buffer: await blob.arrayBuffer(),
         }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
@@ -1178,7 +1177,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             type: "text/plain;charset=UTF-8",
           });
 
-          writeFileResult = window.electron.writeFile({
+          writeFileResult = await window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".lab"),
             buffer: await labBlob.arrayBuffer(),
           });
@@ -1209,7 +1208,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             });
           })();
 
-          writeFileResult = window.electron.writeFile({
+          writeFileResult = await window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
           });
@@ -1243,11 +1242,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
         if (dirPath) {
           const _dirPath = dirPath;
-          const promises = state.audioKeys.map((audioKey) => {
+          const promises = state.audioKeys.map(async (audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
-              filePath: path.join(_dirPath, name),
+              filePath: await window.electron.joinPath([_dirPath, name]),
               encoding,
             });
           });
@@ -1266,10 +1265,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const defaultFileName = buildProjectFileName(state, "wav");
 
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = path.join(
+          filePath = await window.electron.joinPath([
             state.savingSetting.fixedExportDir,
-            defaultFileName
-          );
+            defaultFileName,
+          ]);
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
@@ -1421,10 +1420,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       ): Promise<SaveResultObject> => {
         const defaultFileName = buildProjectFileName(state, "txt");
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = path.join(
+          filePath = await window.electron.joinPath([
             state.savingSetting.fixedExportDir,
-            defaultFileName
-          );
+            defaultFileName,
+          ]);
         } else {
           filePath ??= await window.electron.showTextSaveDialog({
             title: "文章を全て繋げてテキストファイルに保存",

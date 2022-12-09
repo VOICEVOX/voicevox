@@ -347,7 +347,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const buf = new TextEncoder().encode(
           JSON.stringify(projectData)
         ).buffer;
-        window.electron.writeFile({ filePath, buffer: buf });
+        await window.electron.writeFile({ filePath, buffer: buf });
         context.commit("SET_PROJECT_FILEPATH", { filePath });
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",

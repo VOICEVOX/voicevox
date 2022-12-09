@@ -32,6 +32,7 @@ import {
   EngineInfo,
   ElectronStoreType,
   EngineDirValidationResult,
+  SystemError,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -939,9 +940,9 @@ async function createWindow() {
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false, // TODO: 外しても問題ないか検証して外す
+      sandbox: true, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -1318,6 +1319,33 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   appState.willRestart = true;
   appState.isSafeMode = isSafeMode;
   win.close();
+});
+
+ipcMainHandle("GET_EXTNAME", (_, { fileName }) => {
+  return path.extname(fileName);
+});
+
+ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
+  return path.join(...pathArray);
+});
+
+ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
+  try {
+    fs.writeFileSync(filePath, new DataView(buffer));
+  } catch (e) {
+    const a = e as SystemError;
+    return { code: a.code, message: a.message };
+  }
+
+  return undefined;
+});
+
+ipcMainHandle("READ_FILE", (_, { filePath }) => {
+  return fs.promises.readFile(filePath);
+});
+
+ipcMainHandle("GET_BASE_NAME", (_, { filePath }) => {
+  return path.basename(filePath);
 });
 
 // app callback

@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, ComputedRef, watch } from "vue";
+import { defineComponent, ref, computed, ComputedRef, watch, Ref } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
@@ -100,10 +100,21 @@ export default defineComponent({
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
+    const projectNameSynced: Ref<string | undefined> = ref(undefined);
+    watch(projectName, (newValue) => {
+      if (newValue) {
+        newValue.then((v) => {
+          projectNameSynced.value = v;
+        });
+      }
+    });
+
     const titleText = computed(
       () =>
         (isEdited.value ? "*" : "") +
-        (projectName.value !== undefined ? projectName.value + " - " : "") +
+        (projectNameSynced.value !== undefined
+          ? projectNameSynced.value + " - "
+          : "") +
         "VOICEVOX" +
         (currentVersion.value
           ? " - Ver. " + currentVersion.value + " - "

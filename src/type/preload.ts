@@ -33,7 +33,7 @@ export interface Sandbox {
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
-  getBaseName(obj: { filePath: string }): string;
+  getBaseName(obj: { filePath: string }): Promise<string>;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -64,7 +64,7 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): WriteFileErrorResult | undefined;
+  }): Promise<WriteFileErrorResult | undefined>;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
@@ -99,6 +99,8 @@ export interface Sandbox {
   ): Promise<ElectronStoreType[Key]>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isSafeMode: boolean }): void;
+  getExtName(fileName: string): Promise<string>;
+  joinPath(target: string[]): Promise<string>;
 }
 
 export type AppInfos = {

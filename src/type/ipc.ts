@@ -7,7 +7,9 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
+  WriteFileErrorResult,
 } from "@/type/preload";
+import { string } from "yargs";
 
 /**
  * invoke, handle
@@ -258,6 +260,31 @@ export type IpcIHData = {
   RESTART_APP: {
     args: [obj: { isSafeMode: boolean }];
     return: void;
+  };
+
+  GET_EXTNAME: {
+    args: [obj: { fileName: string }];
+    return: string;
+  };
+
+  JOIN_PATH: {
+    args: [obj: { pathArray: string[] }];
+    return: string;
+  };
+
+  WRITE_FILE: {
+    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    return: WriteFileErrorResult | undefined;
+  };
+
+  READ_FILE: {
+    args: [obj: { filePath: string }];
+    return: ArrayBuffer;
+  };
+
+  GET_BASE_NAME: {
+    args: [obj: { filePath: string }];
+    return: string;
   };
 };
 
