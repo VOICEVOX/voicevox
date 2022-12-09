@@ -99,12 +99,12 @@ export default defineComponent({
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
-    const projectName = computed(() => store.getters.PROJECT_NAME);
-    const projectNameSync: Ref<string | undefined> = ref(undefined);
-    watch(projectName, (newValue) => {
+    const projectNameSync = computed(() => store.getters.PROJECT_NAME);
+    const projectName: Ref<string | undefined> = ref(undefined);
+    watch(projectNameSync, (newValue) => {
       if (newValue) {
         newValue.then((v) => {
-          projectNameSync.value = v;
+          projectName.value = v;
         });
       }
     });
@@ -112,9 +112,7 @@ export default defineComponent({
     const titleText = computed(
       () =>
         (isEdited.value ? "*" : "") +
-        (projectNameSync.value !== undefined
-          ? projectNameSync.value + " - "
-          : "") +
+        (projectName.value !== undefined ? projectName.value + " - " : "") +
         "VOICEVOX" +
         (currentVersion.value
           ? " - Ver. " + currentVersion.value + " - "
