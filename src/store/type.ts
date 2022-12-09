@@ -982,7 +982,6 @@ export type UiStoreState = {
   isPinned: boolean;
   isFullscreen: boolean;
   progress: number;
-  progressCount: number;
 };
 
 export type UiStoreTypes = {

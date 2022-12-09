@@ -53,7 +53,6 @@ export const uiStoreState: UiStoreState = {
   isPinned: false,
   isFullscreen: false,
   progress: -1,
-  progressCount: 0,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({

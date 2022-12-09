@@ -123,7 +123,6 @@ describe("store/vuex.js test", () => {
           tweakableSliderByScroll: false,
         },
         progress: -1,
-        progressCount: 0,
       },
       getters: {
         ...uiStore.getters,
