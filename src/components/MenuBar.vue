@@ -93,18 +93,18 @@ export default defineComponent({
     const isSafeMode = computed(() => store.state.isSafeMode);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
-    const projectName = computed(() => store.getters.PROJECT_NAME);
     const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
-    const projectNameSynced: Ref<string | undefined> = ref(undefined);
+    const projectName = computed(() => store.getters.PROJECT_NAME);
+    const projectNameSync: Ref<string | undefined> = ref(undefined);
     watch(projectName, (newValue) => {
       if (newValue) {
         newValue.then((v) => {
-          projectNameSynced.value = v;
+          projectNameSync.value = v;
         });
       }
     });
@@ -112,8 +112,8 @@ export default defineComponent({
     const titleText = computed(
       () =>
         (isEdited.value ? "*" : "") +
-        (projectNameSynced.value !== undefined
-          ? projectNameSynced.value + " - "
+        (projectNameSync.value !== undefined
+          ? projectNameSync.value + " - "
           : "") +
         "VOICEVOX" +
         (currentVersion.value
