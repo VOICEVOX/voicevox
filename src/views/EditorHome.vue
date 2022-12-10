@@ -516,6 +516,8 @@ export default defineComponent({
         store.state.acceptTerms !== "Accepted";
 
       isCompletedInitialStartup.value = true;
+      // Engine started, close splash
+      store.dispatch("ON_CLOSE_SPLASH");
     });
 
     // エンジン待機
