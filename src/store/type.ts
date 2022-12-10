@@ -1005,7 +1005,7 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  ON_INIT_FINISHED: {
+  ON_CLOSE_SPLASH: {
     action(): void;
   };
 

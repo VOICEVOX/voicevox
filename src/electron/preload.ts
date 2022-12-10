@@ -235,7 +235,7 @@ const api: Sandbox = {
   },
 
   initFinished: () => {
-    ipcRenderer.invoke("ON_INIT_FINISHED");
+    ipcRenderer.invoke("ON_CLOSE_SPLASH");
   },
 
   getSetting: async (key) => {

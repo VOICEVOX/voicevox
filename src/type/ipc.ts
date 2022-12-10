@@ -236,7 +236,7 @@ export type IpcIHData = {
     return: void;
   };
 
-  ON_INIT_FINISHED: {
+  ON_CLOSE_SPLASH: {
     args: [];
     return: void;
   };

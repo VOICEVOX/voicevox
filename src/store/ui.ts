@@ -275,7 +275,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  ON_INIT_FINISHED: {
+  ON_CLOSE_SPLASH: {
     action() {
       window.electron.initFinished();
     },

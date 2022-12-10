@@ -1198,7 +1198,7 @@ ipcMainHandle("ON_VUEX_READY", () => {
   splash.show();
 });
 
-ipcMainHandle("ON_INIT_FINISHED", () => {
+ipcMainHandle("ON_CLOSE_SPLASH", () => {
   splash.close();
   win.show();
 });
