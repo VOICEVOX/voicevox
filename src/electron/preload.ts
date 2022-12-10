@@ -234,7 +234,7 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
-  initFinished: () => {
+  closeSplash: () => {
     ipcRenderer.invoke("ON_CLOSE_SPLASH");
   },
 
