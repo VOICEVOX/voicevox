@@ -14,10 +14,10 @@ export const projectStoreState: ProjectStoreState = {
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
-  PROJECT_NAME: {
-    getter(state) {
-      return state.projectFilePath !== undefined
-        ? window.electron.getBaseName({ filePath: state.projectFilePath })
+  GET_PROJECT_NAME: {
+    action: async ({ state }) => {
+      return state.projectFilePath != undefined
+        ? await window.electron.getBaseName({ filePath: state.projectFilePath })
         : undefined;
     },
   },

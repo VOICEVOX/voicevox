@@ -834,8 +834,8 @@ export type ProjectStoreState = {
 };
 
 export type ProjectStoreTypes = {
-  PROJECT_NAME: {
-    getter: Promise<string> | undefined;
+  GET_PROJECT_NAME: {
+    action(): Promise<string | undefined>;
   };
 
   SET_PROJECT_FILEPATH: {
