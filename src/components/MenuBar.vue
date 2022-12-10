@@ -99,7 +99,7 @@ export default defineComponent({
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
-    const projectNameSync = computed(() => store.dispatch("PROJECT_NAME"));
+    const projectNameSync = computed(() => store.dispatch("GET_PROJECT_NAME"));
     const projectName: Ref<string | undefined> = ref(undefined);
     watch(projectNameSync, (newValue) => {
       newValue.then((v) => {
