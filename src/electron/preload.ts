@@ -238,6 +238,9 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_CLOSE_SPLASH");
   },
 
+  /**
+   * 設定情報を取得する
+   */
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",
@@ -245,12 +248,23 @@ const api: Sandbox = {
     )) as ElectronStoreType[typeof key];
   },
 
+  /**
+   * 設定情報を保存する
+   */
   setSetting: async (key, newValue) => {
     return (await ipcRendererInvoke(
       "SET_SETTING",
       key,
       newValue
     )) as typeof newValue;
+  },
+
+  validateEngineDir: async (engineDir) => {
+    return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
+  },
+
+  restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
+    ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
 };
 

@@ -170,7 +170,12 @@
         :class="{
           disabled: speedScaleSlider.qSliderProps.disable.value,
         }"
-        >話速 {{ speedScaleSlider.state.currentValue.value?.toFixed(2) }}</span
+        >話速
+        {{
+          speedScaleSlider.state.currentValue.value != undefined
+            ? speedScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense
@@ -196,7 +201,12 @@
         :class="{
           disabled: pitchScaleSlider.qSliderProps.disable.value,
         }"
-        >音高 {{ pitchScaleSlider.state.currentValue.value?.toFixed(2) }}</span
+        >音高
+        {{
+          pitchScaleSlider.state.currentValue.value != undefined
+            ? pitchScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense
@@ -223,7 +233,11 @@
           disabled: intonationScaleSlider.qSliderProps.disable.value,
         }"
         >抑揚
-        {{ intonationScaleSlider.state.currentValue.value?.toFixed(2) }}</span
+        {{
+          intonationScaleSlider.state.currentValue.value != undefined
+            ? intonationScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense
@@ -249,7 +263,12 @@
         :class="{
           disabled: volumeScaleSlider.qSliderProps.disable.value,
         }"
-        >音量 {{ volumeScaleSlider.state.currentValue.value?.toFixed(2) }}</span
+        >音量
+        {{
+          volumeScaleSlider.state.currentValue.value != undefined
+            ? volumeScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense
@@ -276,7 +295,11 @@
           disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
         }"
         >開始無音
-        {{ prePhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
+        {{
+          prePhonemeLengthSlider.state.currentValue.value != undefined
+            ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense
@@ -303,7 +326,11 @@
           disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
         }"
         >終了無音
-        {{ postPhonemeLengthSlider.state.currentValue.value?.toFixed(2) }}</span
+        {{
+          postPhonemeLengthSlider.state.currentValue.value != undefined
+            ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
       >
       <q-slider
         dense

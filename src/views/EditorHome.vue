@@ -20,6 +20,14 @@
                   : "データ準備中・・・"
               }}
             </div>
+
+            <template v-if="isEngineWaitingLong">
+              <q-separator spaced />
+              エンジン起動に時間がかかっています。<br />
+              <q-btn outline @click="restartAppWithSafeMode">
+                セーフモードで起動する</q-btn
+              >
+            </template>
           </div>
         </div>
         <q-splitter
@@ -142,6 +150,7 @@
     v-model="isDefaultStyleSelectDialogOpenComputed"
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
+  <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
@@ -174,6 +183,7 @@ import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
+import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
@@ -204,6 +214,7 @@ export default defineComponent({
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
     DictionaryManageDialog,
+    EngineManageDialog,
   },
 
   setup() {
@@ -470,13 +481,33 @@ export default defineComponent({
       // store.dispatch("INIT_VUEX");
       await store.dispatch("GET_ENGINE_INFOS");
 
-      await store.dispatch("START_WAITING_ENGINE_ALL");
+      let engineIds: string[];
+      if (store.state.isSafeMode) {
+        // メインエンジンだけを含める
+        const main = Object.values(store.state.engineInfos).find(
+          (engine) => engine.type === "main"
+        );
+        if (!main) {
+          throw new Error("No main engine found");
+        }
+        engineIds = [main.uuid];
+      } else {
+        engineIds = store.state.engineIds;
+      }
+      await Promise.all(
+        engineIds.map(async (engineId) => {
+          await store.dispatch("START_WAITING_ENGINE", { engineId });
 
-      await store.dispatch("FETCH_AND_SET_ENGINE_MANIFESTS");
+          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
 
-      await store.dispatch("LOAD_CHARACTER_ALL");
+          await store.dispatch("LOAD_CHARACTER", { engineId });
+        })
+      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+
+      // 辞書を同期
+      await store.dispatch("SYNC_ALL_USER_DICT");
 
       // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
@@ -544,25 +575,45 @@ export default defineComponent({
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
+    const isEngineWaitingLong = ref<boolean>(false);
+    let engineTimer: number | undefined = undefined;
+    watch(allEngineState, (newEngineState) => {
+      if (engineTimer !== undefined) {
+        clearTimeout(engineTimer);
+        engineTimer = undefined;
+      }
+      if (newEngineState === "STARTING") {
+        isEngineWaitingLong.value = false;
+        engineTimer = window.setTimeout(() => {
+          isEngineWaitingLong.value = true;
+        }, 10000);
+      } else {
+        isEngineWaitingLong.value = false;
+      }
+    });
+    const restartAppWithSafeMode = () => {
+      store.dispatch("RESTART_APP", { isSafeMode: true });
+    };
+
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
       get: () => store.state.isHelpDialogOpen,
       set: (val) =>
-        store.dispatch("IS_HELP_DIALOG_OPEN", { isHelpDialogOpen: val }),
+        store.dispatch("SET_DIALOG_OPEN", { isHelpDialogOpen: val }),
     });
 
     // 設定
     const isSettingDialogOpenComputed = computed({
       get: () => store.state.isSettingDialogOpen,
       set: (val) =>
-        store.dispatch("IS_SETTING_DIALOG_OPEN", { isSettingDialogOpen: val }),
+        store.dispatch("SET_DIALOG_OPEN", { isSettingDialogOpen: val }),
     });
 
     // ショートカットキー設定
     const isHotkeySettingDialogOpenComputed = computed({
       get: () => store.state.isHotkeySettingDialogOpen,
       set: (val) =>
-        store.dispatch("IS_HOTKEY_SETTING_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isHotkeySettingDialogOpen: val,
         }),
     });
@@ -571,7 +622,7 @@ export default defineComponent({
     const isToolbarSettingDialogOpenComputed = computed({
       get: () => store.state.isToolbarSettingDialogOpen,
       set: (val) =>
-        store.dispatch("IS_TOOLBAR_SETTING_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isToolbarSettingDialogOpen: val,
         }),
     });
@@ -580,7 +631,7 @@ export default defineComponent({
     const isAcceptTermsDialogOpenComputed = computed({
       get: () => store.state.isAcceptTermsDialogOpen,
       set: (val) =>
-        store.dispatch("IS_ACCEPT_TERMS_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isAcceptTermsDialogOpen: val,
         }),
     });
@@ -594,7 +645,7 @@ export default defineComponent({
         !store.state.isAcceptTermsDialogOpen &&
         store.state.isCharacterOrderDialogOpen,
       set: (val) =>
-        store.dispatch("IS_CHARACTER_ORDER_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: val,
         }),
     });
@@ -606,8 +657,17 @@ export default defineComponent({
         !store.state.isCharacterOrderDialogOpen &&
         store.state.isDefaultStyleSelectDialogOpen,
       set: (val) =>
-        store.dispatch("IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isDefaultStyleSelectDialogOpen: val,
+        }),
+    });
+
+    // エンジン管理
+    const isEngineManageDialogOpenComputed = computed({
+      get: () => store.state.isEngineManageDialogOpen,
+      set: (val) =>
+        store.dispatch("SET_DIALOG_OPEN", {
+          isEngineManageDialogOpen: val,
         }),
     });
 
@@ -615,7 +675,7 @@ export default defineComponent({
     const isDictionaryManageDialogOpenComputed = computed({
       get: () => store.state.isDictionaryManageDialogOpen,
       set: (val) =>
-        store.dispatch("IS_DICTIONARY_MANAGE_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isDictionaryManageDialogOpen: val,
         }),
     });
@@ -627,7 +687,7 @@ export default defineComponent({
         !store.state.isDefaultStyleSelectDialogOpen &&
         store.state.isAcceptRetrieveTelemetryDialogOpen,
       set: (val) =>
-        store.dispatch("IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN", {
+        store.dispatch("SET_DIALOG_OPEN", {
           isAcceptRetrieveTelemetryDialogOpen: val,
         }),
     });
@@ -685,6 +745,8 @@ export default defineComponent({
       updateAudioDetailPane,
       isCompletedInitialStartup,
       allEngineState,
+      isEngineWaitingLong,
+      restartAppWithSafeMode,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
@@ -692,6 +754,7 @@ export default defineComponent({
       orderedAllCharacterInfos,
       isCharacterOrderDialogOpenComputed,
       isDefaultStyleSelectDialogOpenComputed,
+      isEngineManageDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
       isAcceptTermsDialogOpenComputed,

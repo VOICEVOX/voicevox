@@ -27,7 +27,7 @@ export const settingStoreState: SettingStoreState = {
     exportLab: false,
     exportText: false,
     outputStereo: false,
-    outputSamplingRate: 24000,
+    outputSamplingRate: "default",
     audioOutputDevice: "default",
   },
   hotkeySettings: [],
@@ -341,6 +341,29 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         return;
       }
     }),
+  },
+  VALIDATE_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      return window.electron.validateEngineDir(engineDir);
+    },
+  },
+  ADD_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
+      await window.electron.setSetting("engineDirs", [
+        ...engineDirs,
+        engineDir,
+      ]);
+    },
+  },
+  REMOVE_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
+      await window.electron.setSetting(
+        "engineDirs",
+        engineDirs.filter((path) => path !== engineDir)
+      );
+    },
   },
 });
 

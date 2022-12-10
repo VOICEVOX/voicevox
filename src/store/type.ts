@@ -34,16 +34,24 @@ import {
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
+  EngineDirValidationResult,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
+
+/**
+ * エディタ用のAudioQuery
+ */
+export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+  outputSamplingRate: number | "default";
+};
 
 // FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
   engineId?: string;
   styleId?: number;
-  query?: AudioQuery;
+  query?: EditorAudioQuery;
   presetKey?: string;
 };
 
@@ -95,7 +103,6 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  engineStates: Record<string, EngineState>;
   characterInfos: Record<string, CharacterInfo[]>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
@@ -119,55 +126,8 @@ export type AudioStoreTypes = {
     getter(audioKey: string): boolean;
   };
 
-  IS_ALL_ENGINE_READY: {
-    getter: boolean;
-  };
-
-  IS_ENGINE_READY: {
-    getter(engineId: string): boolean;
-  };
-
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
     getter: number | undefined;
-  };
-
-  START_WAITING_ENGINE_ALL: {
-    action(): void;
-  };
-
-  START_WAITING_ENGINE: {
-    action(payload: { engineId: string }): void;
-  };
-
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
-  };
-
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
-  };
-
-  DETECTED_ENGINE_ERROR: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_ENGINE_DIRECTORY: {
-    action(payload: { engineId: string }): void;
-  };
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action(): void;
-  };
-
-  SET_ENGINE_STATE: {
-    mutation: { engineId: string; engineState: EngineState };
-  };
-
-  LOAD_CHARACTER_ALL: {
-    action(): void;
   };
 
   LOAD_CHARACTER: {
@@ -188,14 +148,6 @@ export type AudioStoreTypes = {
 
   GENERATE_AUDIO_KEY: {
     action(): string;
-  };
-
-  IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
-  };
-
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): void;
   };
 
   SETUP_SPEAKER: {
@@ -701,12 +653,94 @@ export type CommandStoreTypes = {
 };
 
 /*
+ * Engine Store Types
+ */
+
+export type EngineStoreState = {
+  engineStates: Record<string, EngineState>;
+};
+
+export type EngineStoreTypes = {
+  GET_ENGINE_INFOS: {
+    action(): void;
+  };
+
+  SET_ENGINE_MANIFESTS: {
+    mutation: { engineManifests: Record<string, EngineManifest> };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFESTS: {
+    action(): void;
+  };
+
+  IS_ALL_ENGINE_READY: {
+    getter: boolean;
+  };
+
+  IS_ENGINE_READY: {
+    getter(engineId: string): boolean;
+  };
+
+  START_WAITING_ENGINE: {
+    action(payload: { engineId: string }): void;
+  };
+
+  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
+  // NOTE: 個別にエンジンの状態を確認できるようにする？
+  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
+  RESTART_ENGINE_ALL: {
+    action(): Promise<boolean>;
+  };
+
+  RESTART_ENGINE: {
+    action(payload: { engineId: string }): Promise<boolean>;
+  };
+
+  DETECTED_ENGINE_ERROR: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_ENGINE_DIRECTORY: {
+    action(payload: { engineId: string }): void;
+  };
+
+  OPEN_USER_ENGINE_DIRECTORY: {
+    action(): void;
+  };
+
+  SET_ENGINE_STATE: {
+    mutation: { engineId: string; engineState: EngineState };
+  };
+
+  IS_INITIALIZED_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
+  };
+
+  INITIALIZE_ENGINE_SPEAKER: {
+    action(payload: { engineId: string; styleId: number }): void;
+  };
+
+  SET_ENGINE_INFOS: {
+    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
+  };
+
+  SET_ENGINE_MANIFEST: {
+    mutation: { engineId: string; engineManifest: EngineManifest };
+  };
+
+  FETCH_AND_SET_ENGINE_MANIFEST: {
+    action(payload: { engineId: string }): void;
+  };
+};
+
+/*
  * Index Store Types
  */
 
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
+  isSafeMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -782,6 +816,11 @@ export type IndexStoreTypes = {
 
   INIT_VUEX: {
     action(): void;
+  };
+
+  SET_IS_SAFE_MODE: {
+    mutation: { isSafeMode: boolean };
+    action(payload: boolean): void;
   };
 };
 
@@ -903,6 +942,18 @@ export type SettingStoreTypes = {
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
   };
+
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
 };
 
 /*
@@ -924,6 +975,7 @@ export type UiStoreState = {
   isAcceptRetrieveTelemetryDialogOpen: boolean;
   isAcceptTermsDialogOpen: boolean;
   isDictionaryManageDialogOpen: boolean;
+  isEngineManageDialogOpen: boolean;
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
@@ -966,39 +1018,31 @@ export type UiStoreTypes = {
     getter: boolean;
   };
 
-  IS_HELP_DIALOG_OPEN: {
-    mutation: { isHelpDialogOpen: boolean };
-    action(payload: { isHelpDialogOpen: boolean }): void;
-  };
-
-  IS_SETTING_DIALOG_OPEN: {
-    mutation: { isSettingDialogOpen: boolean };
-    action(payload: { isSettingDialogOpen: boolean }): void;
-  };
-
-  IS_HOTKEY_SETTING_DIALOG_OPEN: {
-    mutation: { isHotkeySettingDialogOpen: boolean };
-    action(payload: { isHotkeySettingDialogOpen: boolean }): void;
-  };
-
-  IS_TOOLBAR_SETTING_DIALOG_OPEN: {
-    mutation: { isToolbarSettingDialogOpen: boolean };
-    action(payload: { isToolbarSettingDialogOpen: boolean }): void;
-  };
-
-  IS_ACCEPT_RETRIEVE_TELEMETRY_DIALOG_OPEN: {
-    mutation: { isAcceptRetrieveTelemetryDialogOpen: boolean };
-    action(payload: { isAcceptRetrieveTelemetryDialogOpen: boolean }): void;
-  };
-
-  IS_ACCEPT_TERMS_DIALOG_OPEN: {
-    mutation: { isAcceptTermsDialogOpen: boolean };
-    action(payload: { isAcceptTermsDialogOpen: boolean }): void;
-  };
-
-  IS_DICTIONARY_MANAGE_DIALOG_OPEN: {
-    mutation: { isDictionaryManageDialogOpen: boolean };
-    action(payload: { isDictionaryManageDialogOpen: boolean }): void;
+  SET_DIALOG_OPEN: {
+    mutation: {
+      isDefaultStyleSelectDialogOpen?: boolean;
+      isAcceptRetrieveTelemetryDialogOpen?: boolean;
+      isAcceptTermsDialogOpen?: boolean;
+      isDictionaryManageDialogOpen?: boolean;
+      isHelpDialogOpen?: boolean;
+      isSettingDialogOpen?: boolean;
+      isHotkeySettingDialogOpen?: boolean;
+      isToolbarSettingDialogOpen?: boolean;
+      isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
+    };
+    action(payload: {
+      isDefaultStyleSelectDialogOpen?: boolean;
+      isAcceptRetrieveTelemetryDialogOpen?: boolean;
+      isAcceptTermsDialogOpen?: boolean;
+      isDictionaryManageDialogOpen?: boolean;
+      isHelpDialogOpen?: boolean;
+      isSettingDialogOpen?: boolean;
+      isHotkeySettingDialogOpen?: boolean;
+      isToolbarSettingDialogOpen?: boolean;
+      isCharacterOrderDialogOpen?: boolean;
+      isEngineManageDialogOpen?: boolean;
+    }): void;
   };
 
   ON_VUEX_READY: {
@@ -1009,16 +1053,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  IS_CHARACTER_ORDER_DIALOG_OPEN: {
-    mutation: { isCharacterOrderDialogOpen: boolean };
-    action(payload: { isCharacterOrderDialogOpen: boolean }): void;
-  };
-
-  IS_DEFAULT_STYLE_SELECT_DIALOG_OPEN: {
-    mutation: { isDefaultStyleSelectDialogOpen: boolean };
-    action(payload: { isDefaultStyleSelectDialogOpen: boolean }): void;
-  };
-
   HYDRATE_UI_STORE: {
     action(): void;
   };
@@ -1026,22 +1060,6 @@ export type UiStoreTypes = {
   SET_USE_GPU: {
     mutation: { useGpu: boolean };
     action(payload: { useGpu: boolean }): void;
-  };
-
-  GET_ENGINE_INFOS: {
-    action(): void;
-  };
-
-  SET_ENGINE_INFOS: {
-    mutation: { engineInfos: EngineInfo[] };
-  };
-
-  SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
-  };
-
-  FETCH_AND_SET_ENGINE_MANIFESTS: {
-    action(): void;
   };
 
   SET_INHERIT_AUDIOINFO: {
@@ -1090,6 +1108,10 @@ export type UiStoreTypes = {
 
   CHECK_EDITED_AND_NOT_SAVE: {
     action(): Promise<void>;
+  };
+
+  RESTART_APP: {
+    action(obj: { isSafeMode?: boolean }): void;
   };
 };
 
@@ -1148,6 +1170,9 @@ export type DictionaryStoreTypes = {
       engineId: string;
     }): Promise<Record<string, UserDictWord>>;
   };
+  LOAD_ALL_USER_DICT: {
+    action(): Promise<Record<string, UserDictWord>>;
+  };
   ADD_WORD: {
     action(payload: {
       surface: string;
@@ -1167,6 +1192,9 @@ export type DictionaryStoreTypes = {
   };
   DELETE_WORD: {
     action(payload: { wordUuid: string }): Promise<void>;
+  };
+  SYNC_ALL_USER_DICT: {
+    action(): Promise<void>;
   };
 };
 
@@ -1203,6 +1231,7 @@ export type ProxyStoreTypes = {
 export type State = AudioStoreState &
   AudioCommandStoreState &
   CommandStoreState &
+  EngineStoreState &
   IndexStoreState &
   ProjectStoreState &
   SettingStoreState &
@@ -1214,6 +1243,7 @@ export type State = AudioStoreState &
 type AllStoreTypes = AudioStoreTypes &
   AudioCommandStoreTypes &
   CommandStoreTypes &
+  EngineStoreTypes &
   IndexStoreTypes &
   ProjectStoreTypes &
   SettingStoreTypes &

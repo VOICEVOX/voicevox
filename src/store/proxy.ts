@@ -2,8 +2,9 @@ import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
+import { AudioQuery } from "@/openapi";
 import { EngineInfo } from "@/type/preload";
-import { ProxyStoreState, ProxyStoreTypes } from "./type";
+import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
 
 export const proxyStoreState: ProxyStoreState = {};
@@ -30,6 +31,19 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
     },
   });
   return proxyStore;
+};
+
+export const convertAudioQueryFromEditorToEngine = (
+  editorAudioQuery: EditorAudioQuery,
+  defaultOutputSamplingRate: number
+): AudioQuery => {
+  return {
+    ...editorAudioQuery,
+    outputSamplingRate:
+      editorAudioQuery.outputSamplingRate == "default"
+        ? defaultOutputSamplingRate
+        : editorAudioQuery.outputSamplingRate,
+  };
 };
 
 export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);

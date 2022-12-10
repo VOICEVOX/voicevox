@@ -4,6 +4,7 @@ import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
 import treeKill from "tree-kill";
 import Store from "electron-store";
+import shlex from "shlex";
 
 import {
   app,
@@ -30,11 +31,13 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
+  EngineDirValidationResult,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+import Ajv from "ajv/dist/jtd";
 
 type EngineManifest = {
   name: string;
@@ -79,7 +82,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 // .envから設定をprocess.envに読み込み
-const appDirPath = path.dirname(app.getPath("exe"));
+let appDirPath: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -87,8 +90,11 @@ const appDirPath = path.dirname(app.getPath("exe"));
 //       パスを明示的に指定する必要がある。Windows の配布パッケージ版でもこの設定で起動できるため、
 //       全 OS で共通の条件分岐とした。
 if (isDevelopment) {
+  // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+  appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
 } else {
+  appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
 }
@@ -101,16 +107,35 @@ const isMac = process.platform === "darwin";
 
 const defaultEngineInfos: EngineInfo[] = (() => {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS;
-  let engines: EngineInfo[] = [];
+  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
-  if (defaultEngineInfosEnv) {
-    engines = JSON.parse(defaultEngineInfosEnv) as EngineInfo[];
+  const envSchema = {
+    elements: {
+      properties: {
+        uuid: { type: "string" },
+        host: { type: "string" },
+        name: { type: "string" },
+        executionEnabled: { type: "boolean" },
+        executionFilePath: { type: "string" },
+        executionArgs: { elements: { type: "string" } },
+      },
+      optionalProperties: {
+        path: { type: "string" },
+      },
+    },
+  } as const;
+  const ajv = new Ajv();
+  const validate = ajv.compile(envSchema);
+
+  const engines = JSON.parse(defaultEngineInfosEnv);
+  if (!validate(engines)) {
+    throw validate.errors;
   }
 
-  return engines.map((engineInfo) => {
+  return engines.map((engineInfo, i) => {
     return {
       ...engineInfo,
+      type: i === 0 ? "main" : "sub",
       path:
         engineInfo.path === undefined
           ? undefined
@@ -121,29 +146,28 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 
 const userEngineDir = path.join(app.getPath("userData"), "engines");
 
-// ユーザーディレクトリにあるエンジンを取得する
-function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
+// 追加エンジンの一覧を取得する
+function fetchAdditionalEngineInfos(): EngineInfo[] {
   if (!fs.existsSync(userEngineDir)) {
     fs.mkdirSync(userEngineDir);
   }
 
   const engines: EngineInfo[] = [];
-  for (const dirName of fs.readdirSync(userEngineDir)) {
-    const engineDir = path.join(userEngineDir, dirName);
-    if (!fs.statSync(engineDir).isDirectory()) {
-      console.log(`${engineDir} is not directory`);
-      continue;
-    }
-
+  const addEngine = (engineDir: string, type: "userDir" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
     if (!fs.existsSync(manifestPath)) {
-      console.log(`${manifestPath} is not found`);
-      continue;
+      return "manifestNotFound";
+    }
+    let manifest: EngineManifest;
+    try {
+      manifest = JSON.parse(
+        fs.readFileSync(manifestPath, { encoding: "utf8" })
+      );
+    } catch (e) {
+      return "manifestParseError";
     }
 
-    const manifest: EngineManifest = JSON.parse(
-      fs.readFileSync(manifestPath, { encoding: "utf8" })
-    );
+    const [command, ...args] = shlex.split(manifest.command);
 
     engines.push({
       uuid: manifest.uuid,
@@ -151,14 +175,44 @@ function fetchEngineInfosFromUserDirectory(): EngineInfo[] {
       name: manifest.name,
       path: engineDir,
       executionEnabled: true,
-      executionFilePath: path.join(engineDir, manifest.command),
+      executionFilePath: path.join(engineDir, command),
+      executionArgs: args,
+      type,
     });
+    return "ok";
+  };
+  for (const dirName of fs.readdirSync(userEngineDir)) {
+    const engineDir = path.join(userEngineDir, dirName);
+    if (!fs.statSync(engineDir).isDirectory()) {
+      console.log(`${engineDir} is not directory`);
+      continue;
+    }
+    const result = addEngine(engineDir, "userDir");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+    }
+  }
+  for (const engineDir of store.get("engineDirs")) {
+    const result = addEngine(engineDir, "path");
+    if (result !== "ok") {
+      console.log(`Failed to load engine: ${result}, ${engineDir}`);
+      // 動かないエンジンは追加できないので削除
+      // FIXME: エンジン管理UIで削除可能にする
+      dialog.showErrorBox(
+        "エンジンの読み込みに失敗しました。",
+        `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
+      );
+      store.set(
+        "engineDirs",
+        store.get("engineDirs").filter((p) => p !== engineDir)
+      );
+    }
   }
   return engines;
 }
 
 function fetchEngineInfos(): EngineInfo[] {
-  const userEngineInfos = fetchEngineInfosFromUserDirectory();
+  const userEngineInfos = fetchAdditionalEngineInfos();
   return [...defaultEngineInfos, ...userEngineInfos];
 }
 
@@ -292,7 +346,10 @@ const store = new Store<ElectronStoreType>({
         exportLab: { type: "boolean", default: false },
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: { type: "number", default: 24000 },
+        outputSamplingRate: {
+          oneOf: [{ type: "number" }, { const: "default" }],
+          default: "default",
+        },
         audioOutputDevice: { type: "string", default: "default" },
       },
       default: {
@@ -304,7 +361,7 @@ const store = new Store<ElectronStoreType>({
         exportLab: false,
         exportText: false,
         outputStereo: false,
-        outputSamplingRate: 24000,
+        outputSamplingRate: "default",
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
@@ -433,9 +490,16 @@ const store = new Store<ElectronStoreType>({
         tweakableSliderByScroll: false,
       },
     },
+    engineDirs: {
+      type: "array",
+      items: {
+        type: "string",
+      },
+      default: [],
+    },
   },
   migrations: {
-    "0.13": (store) => {
+    ">=0.13": (store) => {
       // acceptTems -> acceptTerms
       const prevIdentifier = "acceptTems";
       const prevValue = store.get(prevIdentifier, undefined) as
@@ -445,6 +509,12 @@ const store = new Store<ElectronStoreType>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         store.delete(prevIdentifier as any);
         store.set("acceptTerms", prevValue);
+      }
+    },
+    ">=0.14": (store) => {
+      // 24000 Hz -> "default"
+      if (store.get("savingSetting").outputSamplingRate == 24000) {
+        store.set("savingSetting.outputSamplingRate", "default");
       }
     },
   },
@@ -526,7 +596,7 @@ async function runEngine(engineId: string) {
     appDirPath,
     engineInfo.executionFilePath ?? "run.exe"
   );
-  const args = useGpu ? ["--use_gpu"] : [];
+  const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : []);
 
   log.info(`ENGINE ${engineId} path: ${enginePath}`);
   log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
@@ -719,6 +789,43 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
+// ディレクトリがエンジンとして正しいかどうかを判定する
+function validateEngineDir(engineDir: string): EngineDirValidationResult {
+  if (!fs.existsSync(engineDir)) {
+    return "directoryNotFound";
+  } else if (!fs.statSync(engineDir).isDirectory()) {
+    return "notADirectory";
+  } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
+    return "manifestNotFound";
+  }
+  const manifest = fs.readFileSync(
+    path.join(engineDir, "engine_manifest.json"),
+    "utf-8"
+  );
+  let manifestContent: EngineManifest;
+  try {
+    manifestContent = JSON.parse(manifest);
+  } catch (e) {
+    return "invalidManifest";
+  }
+
+  if (
+    ["name", "uuid", "port", "command", "icon"].some(
+      (key) => !(key in manifestContent)
+    )
+  ) {
+    return "invalidManifest";
+  }
+
+  const engineInfos = fetchEngineInfos();
+  if (
+    engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
+  ) {
+    return "alreadyExists";
+  }
+  return "ok";
+}
+
 // temp dir
 const tempDir = path.join(app.getPath("temp"), "VOICEVOX");
 if (!fs.existsSync(tempDir)) {
@@ -806,7 +913,11 @@ function migrateHotkeySettings() {
 }
 migrateHotkeySettings();
 
-let willQuit = false;
+const appState = {
+  willQuit: false,
+  willRestart: false,
+  isSafeMode: false,
+};
 let filePathOnMac: string | null = null;
 // create window
 async function createWindow() {
@@ -844,12 +955,14 @@ async function createWindow() {
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
-    const base_url = process.env.WEBPACK_DEV_SERVER_URL as string;
-    splash.loadURL(base_url + "#/splash");
-    win.loadURL(base_url + "#/home");
+    await win.loadURL(
+      (process.env.WEBPACK_DEV_SERVER_URL as string) +
+        "#/home?isSafeMode=" +
+        appState.isSafeMode
+    );
   } else {
     createProtocol("app");
-    win.loadURL("app://./index.html#/home");
+    win.loadURL("app://./index.html#/home?isSafeMode=" + appState.isSafeMode);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -870,7 +983,7 @@ async function createWindow() {
     );
   });
   win.on("close", (event) => {
-    if (!willQuit) {
+    if (!appState.willQuit) {
       event.preventDefault();
       ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
       return;
@@ -1097,7 +1210,7 @@ ipcMainHandle("IS_MAXIMIZED_WINDOW", () => {
 });
 
 ipcMainHandle("CLOSE_WINDOW", () => {
-  willQuit = true;
+  appState.willQuit = true;
   win.destroy();
 });
 ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
@@ -1231,6 +1344,16 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
+ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
+  return validateEngineDir(engineDir);
+});
+
+ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
+  appState.willRestart = true;
+  appState.isSafeMode = isSafeMode;
+  win.close();
+});
+
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く
@@ -1250,7 +1373,7 @@ app.on("window-all-closed", () => {
 
 // Called before window closing
 app.on("before-quit", (event) => {
-  if (!willQuit) {
+  if (!appState.willQuit) {
     event.preventDefault();
     ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
     return;
@@ -1261,8 +1384,25 @@ app.on("before-quit", (event) => {
   const killingProcessPromises = killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
+  const restartApp = async () => {
+    appState.willRestart = false;
+    appState.willQuit = false;
+    await createWindow();
+    await runEngineAll();
+  };
+
   // すべてのエンジンプロセスが停止している
   if (numLivingEngineProcess === 0) {
+    if (appState.willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "All ENGINE processes killed. Now restarting app because of willRestart flag"
+      );
+
+      event.preventDefault();
+      restartApp();
+      return;
+    }
     log.info("All ENGINE processes killed. Now quit app");
     return;
   }
@@ -1299,11 +1439,19 @@ app.on("before-quit", (event) => {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     await Promise.all(waitingKilledPromises);
 
+    if (appState.willRestart) {
+      // 再起動フラグが立っている場合はフラグを戻して再起動する
+      log.info(
+        "All ENGINE process kill operations done. Attempting to restart app"
+      );
+      restartApp();
+    }
     // アプリケーションの終了を再試行する
     log.info(
       "All ENGINE process kill operations done. Attempting to quit app again"
     );
     app.quit();
+    return;
   })();
 });
 
