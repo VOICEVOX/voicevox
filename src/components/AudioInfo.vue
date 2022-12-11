@@ -177,7 +177,7 @@
           :model-value="
             speedScaleSlider.state.currentValue.value != undefined
               ? speedScaleSlider.state.currentValue.value.toFixed(2)
-              : speedScaleSlider.qSliderProps.min.value
+              : speedScaleSlider.qSliderProps.min.value.toFixed(2)
           "
           @change="handleChangeSpeedScaleInput"
         >
@@ -217,7 +217,7 @@
           :model-value="
             pitchScaleSlider.state.currentValue.value != undefined
               ? pitchScaleSlider.state.currentValue.value.toFixed(2)
-              : pitchScaleSlider.qSliderProps.min.value
+              : pitchScaleSlider.qSliderProps.min.value.toFixed(2)
           "
           @change="handleChangePitchScaleInput"
         >
@@ -256,7 +256,7 @@
           :model-value="
             intonationScaleSlider.state.currentValue.value != undefined
               ? intonationScaleSlider.state.currentValue.value.toFixed(2)
-              : intonationScaleSlider.qSliderProps.min.value
+              : intonationScaleSlider.qSliderProps.min.value.toFixed(2)
           "
           :disable="intonationScaleSlider.qSliderProps.disable.value"
           @change="handleChangeIntonationInput"
@@ -297,7 +297,7 @@
           :model-value="
             volumeScaleSlider.state.currentValue.value != undefined
               ? volumeScaleSlider.state.currentValue.value.toFixed(2)
-              : volumeScaleSlider.qSliderProps.min.value
+              : volumeScaleSlider.qSliderProps.min.value.toFixed(2)
           "
           @change="handleChangeVolumeInput"
         >
@@ -337,7 +337,7 @@
           :model-value="
             prePhonemeLengthSlider.state.currentValue.value != undefined
               ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
-              : prePhonemeLengthSlider.qSliderProps.min.value
+              : prePhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
           "
           @change="handleChangePrePhonemeLengthInput"
         >
@@ -377,7 +377,7 @@
           :model-value="
             postPhonemeLengthSlider.state.currentValue.value != undefined
               ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
-              : postPhonemeLengthSlider.qSliderProps.min.value
+              : postPhonemeLengthSlider.qSliderProps.min.value.toFixed(2)
           "
           @change="handleChangePostPhonemeLengthInput"
         >
