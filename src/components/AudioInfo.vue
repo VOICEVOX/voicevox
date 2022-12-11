@@ -169,11 +169,16 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: speedScaleSlider.qSliderProps.disable.value,
           }"
           :disable="speedScaleSlider.qSliderProps.disable.value"
-          :model-value="speedScaleSlider.state.currentValue.value?.toFixed(2)"
+          :model-value="
+            speedScaleSlider.state.currentValue.value != undefined
+              ? speedScaleSlider.state.currentValue.value.toFixed(2)
+              : speedScaleSlider.qSliderProps.min.value
+          "
           @change="handleChangeSpeedScaleInput"
         >
           <template v-slot:before
@@ -181,7 +186,6 @@
           >
         </q-input>
       </span>
-
       <q-slider
         dense
         snap
@@ -205,11 +209,16 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: pitchScaleSlider.qSliderProps.disable.value,
           }"
           :disable="pitchScaleSlider.qSliderProps.disable.value"
-          :model-value="pitchScaleSlider.state.currentValue.value?.toFixed(2)"
+          :model-value="
+            pitchScaleSlider.state.currentValue.value != undefined
+              ? pitchScaleSlider.state.currentValue.value.toFixed(2)
+              : pitchScaleSlider.qSliderProps.min.value
+          "
           @change="handleChangePitchScaleInput"
         >
           <template v-slot:before
@@ -240,11 +249,14 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: intonationScaleSlider.qSliderProps.disable.value,
           }"
           :model-value="
-            intonationScaleSlider.state.currentValue.value?.toFixed(2)
+            intonationScaleSlider.state.currentValue.value != undefined
+              ? intonationScaleSlider.state.currentValue.value.toFixed(2)
+              : intonationScaleSlider.qSliderProps.min.value
           "
           :disable="intonationScaleSlider.qSliderProps.disable.value"
           @change="handleChangeIntonationInput"
@@ -277,11 +289,16 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: volumeScaleSlider.qSliderProps.disable.value,
           }"
           :disable="volumeScaleSlider.qSliderProps.disable.value"
-          :model-value="volumeScaleSlider.state.currentValue.value?.toFixed(2)"
+          :model-value="
+            volumeScaleSlider.state.currentValue.value != undefined
+              ? volumeScaleSlider.state.currentValue.value.toFixed(2)
+              : volumeScaleSlider.qSliderProps.min.value
+          "
           @change="handleChangeVolumeInput"
         >
           <template v-slot:before
@@ -312,12 +329,15 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
           }"
           :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
           :model-value="
-            prePhonemeLengthSlider.state.currentValue.value?.toFixed(2)
+            prePhonemeLengthSlider.state.currentValue.value != undefined
+              ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
+              : prePhonemeLengthSlider.qSliderProps.min.value
           "
           @change="handleChangePrePhonemeLengthInput"
         >
@@ -349,12 +369,15 @@
         <q-input
           dense
           borderless
+          maxlength="5"
           :class="{
             disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
           }"
           :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
           :model-value="
-            postPhonemeLengthSlider.state.currentValue.value?.toFixed(2)
+            postPhonemeLengthSlider.state.currentValue.value != undefined
+              ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
+              : postPhonemeLengthSlider.qSliderProps.min.value
           "
           @change="handleChangePostPhonemeLengthInput"
         >
@@ -769,9 +792,9 @@ export default defineComponent({
       closeAllDialog();
     };
 
-    const handleChangeSpeedScaleInput = (textInput: string) => {
+    const handleChangeSpeedScaleInput = (inputValue: string) => {
       const speedScale = adjustSliderValue(
-        textInput,
+        inputValue,
         speedScaleSlider.qSliderProps.min.value,
         speedScaleSlider.qSliderProps.max.value
       );
@@ -781,9 +804,9 @@ export default defineComponent({
       });
     };
 
-    const handleChangePitchScaleInput = (textInput: string) => {
+    const handleChangePitchScaleInput = (inputValue: string) => {
       const pitchScale = adjustSliderValue(
-        textInput,
+        inputValue,
         pitchScaleSlider.qSliderProps.min.value,
         pitchScaleSlider.qSliderProps.max.value
       );
@@ -793,9 +816,9 @@ export default defineComponent({
       });
     };
 
-    const handleChangeIntonationInput = (textInput: string) => {
+    const handleChangeIntonationInput = (inputValue: string) => {
       const intonationScale = adjustSliderValue(
-        textInput,
+        inputValue,
         intonationScaleSlider.qSliderProps.min.value,
         intonationScaleSlider.qSliderProps.max.value
       );
@@ -805,9 +828,9 @@ export default defineComponent({
       });
     };
 
-    const handleChangeVolumeInput = (textInput: string) => {
+    const handleChangeVolumeInput = (inputValue: string) => {
       const volumeScale = adjustSliderValue(
-        textInput,
+        inputValue,
         volumeScaleSlider.qSliderProps.min.value,
         volumeScaleSlider.qSliderProps.max.value
       );
@@ -817,9 +840,9 @@ export default defineComponent({
       });
     };
 
-    const handleChangePrePhonemeLengthInput = (textInput: string) => {
+    const handleChangePrePhonemeLengthInput = (inputValue: string) => {
       const prePhonemeLength = adjustSliderValue(
-        textInput,
+        inputValue,
         prePhonemeLengthSlider.qSliderProps.min.value,
         prePhonemeLengthSlider.qSliderProps.max.value
       );
@@ -829,9 +852,9 @@ export default defineComponent({
       });
     };
 
-    const handleChangePostPhonemeLengthInput = (textInput: string) => {
+    const handleChangePostPhonemeLengthInput = (inputValue: string) => {
       const postPhonemeLength = adjustSliderValue(
-        textInput,
+        inputValue,
         postPhonemeLengthSlider.qSliderProps.min.value,
         postPhonemeLengthSlider.qSliderProps.max.value
       );
@@ -845,22 +868,23 @@ export default defineComponent({
     const showsPresetEditDialog = ref(false);
 
     const adjustSliderValue = (
-      value: string,
+      inputStr: string,
       minimalVal: number,
       maximamVal: number
     ) => {
-      const num = Number(value);
-      if (isNaN(num)) {
+      const inputNum = Number(inputStr);
+
+      if (isNaN(inputNum)) {
         return minimalVal;
       }
-      if (num < minimalVal) {
+      if (inputNum < minimalVal) {
         return minimalVal;
       }
-      if (maximamVal < num) {
+      if (maximamVal < inputNum) {
         return maximamVal;
       }
 
-      return num;
+      return inputNum;
     };
 
     return {

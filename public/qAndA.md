@@ -6,8 +6,8 @@
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
-※Windows：Windows 10・Windows 11
-※Mac：macOS Catalina 以降
+※Windows：Windows 10・Windows 11  
+※Mac：macOS Catalina 以降  
 ※Linux：Ubuntu 18.04・Ubuntu 20.04
 
 #### GPU 版
@@ -118,6 +118,15 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 ### Q. 「、」で区切った短い文節が読まれないことがあります。
 
 現状の音声合成エンジンの仕様になります。前後の無音の長さを長くすると改善することがあるのでお試しください。
+
+### `ubuntu 22.04`で動きません。
+
+`libfuse2`をインストールすることで解決するかもしれません。
+
+```sh
+sudo add-apt-repository universe
+sudo apt install libfuse2
+```
 
 ## その他
 

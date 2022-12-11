@@ -234,6 +234,9 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
+  /**
+   * 設定情報を取得する
+   */
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",
@@ -241,6 +244,9 @@ const api: Sandbox = {
     )) as ElectronStoreType[typeof key];
   },
 
+  /**
+   * 設定情報を保存する
+   */
   setSetting: async (key, newValue) => {
     return (await ipcRendererInvoke(
       "SET_SETTING",
@@ -253,8 +259,8 @@ const api: Sandbox = {
     return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
   },
 
-  restartApp: () => {
-    ipcRendererInvoke("RESTART_APP");
+  restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
+    ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
 };
 

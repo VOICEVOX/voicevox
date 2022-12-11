@@ -11,7 +11,11 @@
         !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
       "
     >
-      {{ previewSlider.state.currentValue.value?.toFixed(precisionComputed) }}
+      {{
+        previewSlider.state.currentValue.value
+          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
+          : undefined
+      }}
     </q-badge>
     <q-slider
       vertical
