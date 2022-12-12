@@ -12,7 +12,9 @@
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
       />
-      <slot v-else name="unset-icon"></slot>
+      <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
+        ><span color="text-display-on-primary">?</span></q-avatar
+      >
     </div>
     <div v-if="loading" class="loading">
       <q-spinner color="primary" size="1.6rem" :thickness="7" />
@@ -24,9 +26,16 @@
     >
       <q-list>
         <q-item
-          v-if="selectedStyleInfo == undefined || showUnset"
-          class="q-pa-none"
+          v-if="selectedStyleInfo == undefined"
+          class="row no-wrap items-center"
         >
+          <span class="text-warning vertical-middle">{{
+            characterInfos.length === 0
+              ? "選択可能なスタイルがありません"
+              : "有効なスタイルが選択されていません"
+          }}</span>
+        </q-item>
+        <q-item v-if="emptiable" class="q-pa-none">
           <q-btn
             flat
             no-caps
@@ -35,7 +44,7 @@
             :class="selectedCharacter == undefined && 'selected-character-item'"
             @click="$emit('update:selectedVoice', undefined)"
           >
-            <slot name="unset-item"></slot>
+            <span>選択解除</span>
           </q-btn>
         </q-item>
         <q-item
@@ -186,7 +195,7 @@ export default defineComponent({
     loading: { type: Boolean, default: false },
     selectedVoice: { type: Object as PropType<Voice> },
     showEngineInfo: { type: Boolean, default: false },
-    showUnset: { type: Boolean, default: false },
+    emptiable: { type: Boolean, default: false },
     uiLocked: { type: Boolean, required: true },
   },
 

@@ -8,23 +8,13 @@
       class="absolute active-arrow"
     />
     <character-button
+      v-if="userOrderedCharacterInfos != undefined"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
       :ui-locked="uiLocked"
       v-model:selected-voice="selectedVoice"
-      ><template #unset-icon
-        ><q-avatar rounded size="2rem" color="warning">?</q-avatar></template
-      ><template #unset-item
-        ><span class="text-warning"
-          >{{
-            userOrderedCharacterInfos.length > 0
-              ? "有効なスタイルが選択されていません"
-              : "選択できるスタイルがありません"
-          }}
-        </span></template
-      ></character-button
-    >
+    />
     <q-input
       ref="textfield"
       filled
@@ -83,7 +73,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
     const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS ?? []
+      () => store.getters.USER_ORDERED_CHARACTER_INFOS
     );
     const isInitializingSpeaker = computed(
       () => store.state.audioKeyInitializingSpeaker === props.audioKey
