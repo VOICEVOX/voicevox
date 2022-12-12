@@ -1,4 +1,4 @@
-import { Action, ActionContext, ActionsBase } from "./vuex";
+import { Action, ActionContext, ActionsBase, Dispatch } from "./vuex";
 import {
   AllActions,
   AllGetters,
@@ -25,6 +25,14 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   };
 }
 
+export function withProgress<T>(
+  action: Promise<T>,
+  dispatch: Dispatch<AllActions>
+): Promise<T> {
+  dispatch("START_PROGRESS");
+  return action.finally(() => dispatch("RESET_PROGRESS"));
+}
+
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
@@ -44,6 +52,7 @@ export const uiStoreState: UiStoreState = {
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
+  progress: -1,
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -56,6 +65,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   MENUBAR_LOCKED: {
     getter(state) {
       return state.dialogLockCount > 0;
+    },
+  },
+
+  PROGRESS: {
+    getter(state) {
+      return state.progress;
     },
   },
 
@@ -320,6 +335,35 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   RESTART_APP: {
     action(_, { isSafeMode }: { isSafeMode?: boolean }) {
       window.electron.restartApp({ isSafeMode: !!isSafeMode });
+    },
+  },
+
+  START_PROGRESS: {
+    action({ dispatch }) {
+      dispatch("SET_PROGRESS", { progress: 0 });
+    },
+  },
+
+  SET_PROGRESS: {
+    mutation(state, { progress }) {
+      state.progress = progress;
+    },
+    // progressは-1(非表示)と[0, 1]の範囲を取る
+    action({ commit }, { progress }) {
+      commit("SET_PROGRESS", { progress });
+    },
+  },
+
+  SET_PROGRESS_FROM_COUNT: {
+    action({ commit }, { finishedCount, totalCount }) {
+      commit("SET_PROGRESS", { progress: finishedCount / totalCount });
+    },
+  },
+
+  RESET_PROGRESS: {
+    action({ dispatch }) {
+      // -1で非表示
+      dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
 });
