@@ -8,7 +8,6 @@
       class="absolute active-arrow"
     />
     <character-button
-      v-if="userOrderedCharacterInfos != undefined"
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :show-engine-info="isMultipleEngine"
@@ -72,9 +71,12 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const store = useStore();
-    const userOrderedCharacterInfos = computed(
-      () => store.getters.USER_ORDERED_CHARACTER_INFOS
-    );
+    const userOrderedCharacterInfos = computed(() => {
+      const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+      if (infos == undefined)
+        throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+      return infos;
+    });
     const isInitializingSpeaker = computed(
       () => store.state.audioKeyInitializingSpeaker === props.audioKey
     );
