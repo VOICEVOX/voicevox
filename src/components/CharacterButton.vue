@@ -29,11 +29,13 @@
           v-if="selectedStyleInfo == undefined"
           class="row no-wrap items-center"
         >
-          <span class="text-warning vertical-middle">{{
-            characterInfos.length === 0
-              ? "選択可能なスタイルがありません"
-              : "有効なスタイルが選択されていません"
-          }}</span>
+          <span class="text-warning vertical-middle">有効なスタイルが選択されていません</span>
+        </q-item>
+        <q-item
+          v-if="characterInfos.length === 0"
+          class="row no-wrap items-center"
+        >
+          <span class="text-warning vertical-middle">選択可能なスタイルがありません</span>
         </q-item>
         <q-item v-if="emptiable" class="q-pa-none">
           <q-btn
