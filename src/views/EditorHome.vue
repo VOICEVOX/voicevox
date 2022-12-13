@@ -478,7 +478,6 @@ export default defineComponent({
     // ソフトウェアを初期化
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
-      // store.dispatch("INIT_VUEX");
       await store.dispatch("GET_ENGINE_INFOS");
 
       let engineIds: string[];
