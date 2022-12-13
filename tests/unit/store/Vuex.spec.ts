@@ -122,6 +122,7 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
         },
+        progress: -1,
       },
       getters: {
         ...uiStore.getters,
