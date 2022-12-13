@@ -1254,7 +1254,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           const totalCount = state.audioKeys.length;
           let finishedCount = 0;
 
-          const promises = state.audioKeys.map((audioKey) => {
+          const promises = state.audioKeys.map(async (audioKey) => {
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
