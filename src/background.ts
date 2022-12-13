@@ -1296,7 +1296,7 @@ ipcMainHandle("THEME", (_, { newData }) => {
 
 ipcMainHandle("ON_VUEX_READY", () => {
   if (currentThemeMemo !== null) {
-    const splashURL = path.join(__static, "SplashScreen.html");
+    const splashURL = path.join(__static, "splash.html");
 
     const primary = currentThemeMemo.colors.primary.substring(1);
     const display = currentThemeMemo.colors.display.substring(1);
