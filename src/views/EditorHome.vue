@@ -6,6 +6,8 @@
 
     <q-page-container>
       <q-page class="main-row-panes">
+        <progress-dialog />
+
         <!-- TODO: 複数エンジン対応 -->
         <div
           v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
@@ -184,6 +186,7 @@ import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryD
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
+import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import {
@@ -214,6 +217,7 @@ export default defineComponent({
     AcceptTermsDialog,
     DictionaryManageDialog,
     EngineManageDialog,
+    ProgressDialog,
   },
 
   setup() {
