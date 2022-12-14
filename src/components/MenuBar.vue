@@ -93,24 +93,12 @@ export default defineComponent({
     const isSafeMode = computed(() => store.state.isSafeMode);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
     const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
+    const projectName = computed(() => store.getters.PROJECT_NAME);
     const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
-
-    const projectFilePath = computed(() => store.state.projectFilePath);
-    const projectName: Ref<string | undefined> = ref(undefined);
-    watch(projectFilePath, async (newValue) => {
-      if (newValue) {
-        /*
-        FIXME:
-          projectFilePathを監視してGET_PROJECT_NAMEを投げるという実装になっているが、例えば大文字化するなどの設定が追加された場合、GET_PROJECT_NAMEの実装も変わり、
-          それを判定するためのstateなどをwatch対象に含める必要があるので、それを忘れてしまいバグる可能性がある。
-        */
-        projectName.value = await store.dispatch("GET_PROJECT_NAME");
-      }
-    });
 
     const titleText = computed(
       () =>

@@ -852,16 +852,21 @@ export type IndexStoreTypes = {
 
 export type ProjectStoreState = {
   projectFilePath?: string;
+  projectFileName?: string;
   savedLastCommandUnixMillisec: number | null;
 };
 
 export type ProjectStoreTypes = {
-  GET_PROJECT_NAME: {
-    action(): Promise<string | undefined>;
+  PROJECT_NAME: {
+    getter: string | undefined;
   };
 
   SET_PROJECT_FILEPATH: {
     mutation: { filePath?: string };
+  };
+
+  SET_PROJECT_FILENAME: {
+    mutation: { fileName?: string };
   };
 
   CREATE_NEW_PROJECT: {

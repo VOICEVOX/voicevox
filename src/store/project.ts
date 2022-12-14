@@ -16,17 +16,21 @@ export const projectStoreState: ProjectStoreState = {
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   // GET_PROJECT_NAMEはMenuBar.vue内でstate.projectFilePathを監視してから呼ばれるている箇所があるのでロジック変更時、別のstateも使用する場合、現状そちらも変更が必要です。
   // FIXME: getterで実装し直す。
-  GET_PROJECT_NAME: {
-    action: async ({ state }) => {
-      return state.projectFilePath != undefined
-        ? await window.electron.getBaseName({ filePath: state.projectFilePath })
-        : undefined;
+  PROJECT_NAME: {
+    getter(state) {
+      return state.projectFileName;
     },
   },
 
   SET_PROJECT_FILEPATH: {
     mutation(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
+    },
+  },
+
+  SET_PROJECT_FILENAME: {
+    mutation(state, { fileName }: { fileName?: string }) {
+      state.projectFileName = fileName;
     },
   },
 
@@ -282,6 +286,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             });
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
+          if (filePath) {
+            const fileName = await window.electron.getBaseName({ filePath });
+            context.commit("SET_PROJECT_FILENAME", { fileName });
+          }
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
         } catch (err) {
