@@ -177,11 +177,16 @@ const getBaseNameForWin = (filePath: string) => {
     /^([\s\S]*?)((?:\.{1,2}|[^\\/]+?|)(\.[^./\\]*|))(?:[\\/]*)$/;
 
   const resultOfSplitDeviceRegex = splitDeviceRegex.exec(filePath);
-  if (resultOfSplitDeviceRegex == undefined) return "";
+  if (
+    resultOfSplitDeviceRegex == undefined ||
+    resultOfSplitDeviceRegex.length < 3
+  )
+    return "";
   const tail = resultOfSplitDeviceRegex[3] || "";
 
   const resultOfSplitTailRegex = splitTailRegex.exec(tail);
-  if (resultOfSplitTailRegex == undefined) return "";
+  if (resultOfSplitTailRegex == undefined || resultOfSplitTailRegex.length < 2)
+    return "";
   const basename = resultOfSplitTailRegex[2] || "";
 
   return basename;
