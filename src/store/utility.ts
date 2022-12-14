@@ -170,7 +170,9 @@ export const convertLongVowel = (text: string): string => {
 };
 
 // based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
-const getBaseNameForWin = (filePath: string) => {
+export const getBaseName = (filePath: string) => {
+  if (!Platform.is.win) return path.basename(filePath);
+
   const splitDeviceRegex =
     /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
   const splitTailRegex =
@@ -190,10 +192,4 @@ const getBaseNameForWin = (filePath: string) => {
   const basename = resultOfSplitTailRegex[2] || "";
 
   return basename;
-};
-
-export const getBaseName = (filePath: string) => {
-  if (Platform.is.win) return getBaseNameForWin(filePath);
-
-  return path.basename(filePath);
 };
