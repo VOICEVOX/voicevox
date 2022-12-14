@@ -99,16 +99,17 @@ export default defineComponent({
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
-    const projectNamePromise = computed(() =>
-      store.dispatch("GET_PROJECT_NAME")
-    );
+    const projectFilePath = computed(() => store.state.projectFilePath);
     const projectName: Ref<string | undefined> = ref(undefined);
-    watch(projectNamePromise, (newValue) => {
-      newValue.then((v) => {
-        if (v) {
-          projectName.value = v;
-        }
-      });
+    watch(projectFilePath, async (newValue) => {
+      if (newValue) {
+        /*
+        FIXME:
+          projectFilePathを監視してGET_PROJECT_NAMEを投げるという実装になっているが、例えば大文字化するなどの設定が追加された場合、GET_PROJECT_NAMEの実装も変わり、
+          それを判定するためのstateなどをwatch対象に含める必要があるので、それを忘れてしまいバグる可能性がある。
+        */
+        projectName.value = await store.dispatch("GET_PROJECT_NAME");
+      }
     });
 
     const titleText = computed(

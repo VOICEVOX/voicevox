@@ -9,7 +9,6 @@ import {
   UpdateInfo,
   WriteFileErrorResult,
 } from "@/type/preload";
-import { string } from "yargs";
 
 /**
  * invoke, handle
