@@ -1418,11 +1418,6 @@ ipcMainHandle("READ_FILE", (_, { filePath }) => {
   return fs.promises.readFile(filePath);
 });
 
-ipcMainHandle("GET_BASE_NAME", (_, { filePath }) => {
-  // FIXME: path周りのみをレンダラーから扱えるライブラリがあればそちらで実装する
-  return path.basename(filePath);
-});
-
 // app callback
 app.on("web-contents-created", (e, contents) => {
   // リンククリック時はブラウザを開く

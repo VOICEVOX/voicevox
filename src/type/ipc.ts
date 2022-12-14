@@ -290,11 +290,6 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: ArrayBuffer;
   };
-
-  GET_BASE_NAME: {
-    args: [obj: { filePath: string }];
-    return: string;
-  };
 };
 
 /**

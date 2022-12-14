@@ -33,7 +33,6 @@ export interface Sandbox {
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
-  getBaseName(obj: { filePath: string }): Promise<string>;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
