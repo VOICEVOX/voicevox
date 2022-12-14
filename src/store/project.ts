@@ -1,7 +1,7 @@
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
-import { buildProjectFileName, basename } from "./utility";
+import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -17,7 +17,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
       return state.projectFilePath
-        ? basename(state.projectFilePath)
+        ? getBaseName(state.projectFilePath)
         : undefined;
     },
   },
