@@ -189,6 +189,7 @@ import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
+import path from "path";
 import {
   HotkeyAction,
   HotkeyReturnType,
@@ -697,27 +698,25 @@ export default defineComponent({
     const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
       if (!event || event.dataTransfer.files.length === 0) return;
       const file = event.dataTransfer.files[0];
-      window.electron.getExtName(file.name).then((ext) => {
-        switch (ext) {
-          case ".txt":
-            store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
-            break;
-          case ".vvproj":
-            store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
-            break;
-          default:
-            $q.dialog({
-              title: "対応していないファイルです",
-              message:
-                "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
-              ok: {
-                label: "閉じる",
-                flat: true,
-                textColor: "display",
-              },
-            });
-        }
-      });
+      switch (path.extname(file.name)) {
+        case ".txt":
+          store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
+          break;
+        case ".vvproj":
+          store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
+          break;
+        default:
+          $q.dialog({
+            title: "対応していないファイルです",
+            message:
+              "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
+            ok: {
+              label: "閉じる",
+              flat: true,
+              textColor: "display",
+            },
+          });
+      }
     };
 
     return {
