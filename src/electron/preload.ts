@@ -275,10 +275,6 @@ const api: Sandbox = {
   restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
     ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
-
-  joinPath: async (pathArray: string[]) => {
-    return await ipcRendererInvoke("JOIN_PATH", { pathArray });
-  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);

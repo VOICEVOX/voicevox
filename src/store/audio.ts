@@ -1,4 +1,5 @@
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
   AudioItem,
@@ -1118,10 +1119,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
       ): Promise<SaveResultObject> => {
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = await window.electron.joinPath([
+          filePath = path.join(
             state.savingSetting.fixedExportDir,
-            buildFileName(state, audioKey),
-          ]);
+            buildFileName(state, audioKey)
+          );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を保存",
@@ -1258,7 +1259,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             const name = buildFileName(state, audioKey);
             return dispatch("GENERATE_AND_SAVE_AUDIO", {
               audioKey,
-              filePath: await window.electron.joinPath([_dirPath, name]),
+              filePath: path.join(_dirPath, name),
               encoding,
             }).then((value) => {
               callback?.(++finishedCount, totalCount);
@@ -1288,10 +1289,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const defaultFileName = buildProjectFileName(state, "wav");
 
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = await window.electron.joinPath([
+          filePath = path.join(
             state.savingSetting.fixedExportDir,
-            defaultFileName,
-          ]);
+            defaultFileName
+          );
         } else {
           filePath ??= await window.electron.showAudioSaveDialog({
             title: "音声を全て繋げて保存",
@@ -1447,10 +1448,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       ): Promise<SaveResultObject> => {
         const defaultFileName = buildProjectFileName(state, "txt");
         if (state.savingSetting.fixedExportEnabled) {
-          filePath = await window.electron.joinPath([
+          filePath = path.join(
             state.savingSetting.fixedExportDir,
-            defaultFileName,
-          ]);
+            defaultFileName
+          );
         } else {
           filePath ??= await window.electron.showTextSaveDialog({
             title: "文章を全て繋げてテキストファイルに保存",

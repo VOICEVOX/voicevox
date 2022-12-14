@@ -1001,7 +1001,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.js"),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false, // TODO: 外しても問題ないか検証して外す
+      sandbox: true, // TODO: 外しても問題ないか検証して外す
     },
     icon: path.join(__static, "icon.png"),
   });
@@ -1396,11 +1396,6 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   appState.willRestart = true;
   appState.isSafeMode = isSafeMode;
   win.close();
-});
-
-ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
-  // FIXME: path周りのみをレンダラーから扱えるライブラリがあればそちらで実装する
-  return path.join(...pathArray);
 });
 
 ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
