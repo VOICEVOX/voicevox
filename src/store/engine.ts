@@ -265,7 +265,39 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       });
     },
   },
-
+  VALIDATE_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      return window.electron.validateEngineDir(engineDir);
+    },
+  },
+  ADD_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
+      await window.electron.setSetting("engineDirs", [
+        ...engineDirs,
+        engineDir,
+      ]);
+    },
+  },
+  REMOVE_ENGINE_DIR: {
+    action: async (_, { engineDir }) => {
+      const engineDirs = await window.electron.getSetting("engineDirs");
+      await window.electron.setSetting(
+        "engineDirs",
+        engineDirs.filter((path) => path !== engineDir)
+      );
+    },
+  },
+  INSTALL_VVPP_ENGINE: {
+    action: async (_, path) => {
+      return window.electron.installVvppEngine(path);
+    },
+  },
+  UNINSTALL_VVPP_ENGINE: {
+    action: async (_, engineId) => {
+      return window.electron.uninstallVvppEngine(engineId);
+    },
+  },
   SET_ENGINE_MANIFEST: {
     mutation(
       state,
