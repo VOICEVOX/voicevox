@@ -852,7 +852,6 @@ export type IndexStoreTypes = {
 
 export type ProjectStoreState = {
   projectFilePath?: string;
-  projectFileName?: string;
   savedLastCommandUnixMillisec: number | null;
 };
 
