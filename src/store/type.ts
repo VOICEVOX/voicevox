@@ -722,6 +722,26 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string; styleId: number }): void;
   };
 
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  INSTALL_VVPP_ENGINE: {
+    action: (path: string) => Promise<boolean>;
+  };
+
+  UNINSTALL_VVPP_ENGINE: {
+    action: (engineId: string) => Promise<boolean>;
+  };
+
   SET_ENGINE_INFOS: {
     mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
   };
@@ -943,18 +963,6 @@ export type SettingStoreTypes = {
 
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
-  };
-
-  VALIDATE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
-  };
-
-  ADD_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
-  };
-
-  REMOVE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
   };
 };
 

@@ -74,6 +74,11 @@ export type IpcIHData = {
     return?: string;
   };
 
+  SHOW_VVPP_OPEN_DIALOG: {
+    args: [obj: { title: string; defaultPath?: string }];
+    return?: string;
+  };
+
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
@@ -249,6 +254,16 @@ export type IpcIHData = {
       newValue: ElectronStoreType[keyof ElectronStoreType]
     ];
     return: ElectronStoreType[keyof ElectronStoreType];
+  };
+
+  INSTALL_VVPP_ENGINE: {
+    args: [path: string];
+    return: Promise<boolean>;
+  };
+
+  UNINSTALL_VVPP_ENGINE: {
+    args: [engineId: string];
+    return: Promise<boolean>;
   };
 
   VALIDATE_ENGINE_DIR: {

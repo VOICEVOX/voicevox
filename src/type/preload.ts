@@ -42,6 +42,10 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
+  showVvppOpenDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
@@ -97,6 +101,8 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  installVvppEngine(path: string): Promise<boolean>;
+  uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isSafeMode: boolean }): void;
   getExtName(fileName: string): Promise<string>;
@@ -193,8 +199,9 @@ export type EngineInfo = {
   // main: メインエンジン
   // sub: .envで指定されたその他のエンジン
   // userDir: ユーザーディレクトリにあるエンジン
+  // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "main" | "sub" | "userDir" | "path";
+  type: "main" | "sub" | "userDir" | "vvpp" | "path";
 };
 
 export type Preset = {
@@ -333,3 +340,5 @@ export type EngineDirValidationResult =
   | "invalidManifest"
   | "notADirectory"
   | "alreadyExists";
+
+export type VvppFilePathValidationResult = "ok" | "fileNotFound";
