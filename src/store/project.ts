@@ -14,9 +14,8 @@ export const projectStoreState: ProjectStoreState = {
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
-  /*
-    GET_PROJECT_NAMEはMenuBar.vue内でstate.projectFilePathを監視してから呼ばれるている箇所があるのでロジック変更時、別のstateも使用する場合、現状そちらも変更が必要です。
-  */
+  // GET_PROJECT_NAMEはMenuBar.vue内でstate.projectFilePathを監視してから呼ばれるている箇所があるのでロジック変更時、別のstateも使用する場合、現状そちらも変更が必要です。
+  // FIXME: getterで実装し直す。
   GET_PROJECT_NAME: {
     action: async ({ state }) => {
       return state.projectFilePath != undefined
