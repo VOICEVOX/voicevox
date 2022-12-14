@@ -365,6 +365,7 @@ export type AudioStoreTypes = {
     action(payload: {
       dirPath?: string;
       encoding?: EncodingType;
+      callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject[] | undefined;
   };
 
@@ -372,6 +373,7 @@ export type AudioStoreTypes = {
     action(payload: {
       filePath?: string;
       encoding?: EncodingType;
+      callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject | undefined;
   };
 
@@ -720,6 +722,26 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string; styleId: number }): void;
   };
 
+  VALIDATE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
+  };
+
+  ADD_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  REMOVE_ENGINE_DIR: {
+    action(payload: { engineDir: string }): Promise<void>;
+  };
+
+  INSTALL_VVPP_ENGINE: {
+    action: (path: string) => Promise<boolean>;
+  };
+
+  UNINSTALL_VVPP_ENGINE: {
+    action: (engineId: string) => Promise<boolean>;
+  };
+
   SET_ENGINE_INFOS: {
     mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
   };
@@ -942,18 +964,6 @@ export type SettingStoreTypes = {
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean }): void;
   };
-
-  VALIDATE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<EngineDirValidationResult>;
-  };
-
-  ADD_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
-  };
-
-  REMOVE_ENGINE_DIR: {
-    action(payload: { engineDir: string }): Promise<void>;
-  };
 };
 
 /*
@@ -979,6 +989,7 @@ export type UiStoreState = {
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
+  progress: number;
 };
 
 export type UiStoreTypes = {
@@ -988,6 +999,10 @@ export type UiStoreTypes = {
 
   MENUBAR_LOCKED: {
     getter: boolean;
+  };
+
+  PROGRESS: {
+    getter: number;
   };
 
   ASYNC_UI_LOCK: {
@@ -1108,6 +1123,23 @@ export type UiStoreTypes = {
 
   RESTART_APP: {
     action(obj: { isSafeMode?: boolean }): void;
+  };
+
+  START_PROGRESS: {
+    action(): void;
+  };
+
+  SET_PROGRESS: {
+    mutation: { progress: number };
+    action(payload: { progress: number }): void;
+  };
+
+  SET_PROGRESS_FROM_COUNT: {
+    action(payload: { finishedCount: number; totalCount: number }): void;
+  };
+
+  RESET_PROGRESS: {
+    action(): void;
   };
 };
 
