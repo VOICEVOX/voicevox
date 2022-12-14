@@ -1410,6 +1410,10 @@ ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   return undefined;
 });
 
+ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
+  return path.join(...pathArray);
+});
+
 ipcMainHandle("READ_FILE", (_, { filePath }) => {
   return fs.promises.readFile(filePath);
 });
