@@ -276,10 +276,6 @@ const api: Sandbox = {
     ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
 
-  getExtName: async (fileName: string) => {
-    return await ipcRendererInvoke("GET_EXTNAME", { fileName });
-  },
-
   joinPath: async (pathArray: string[]) => {
     return await ipcRendererInvoke("JOIN_PATH", { pathArray });
   },

@@ -1398,11 +1398,6 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   win.close();
 });
 
-ipcMainHandle("GET_EXTNAME", (_, { fileName }) => {
-  // FIXME: path周りのみをレンダラーから扱えるライブラリがあればそちらで実装する
-  return path.extname(fileName);
-});
-
 ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
   // FIXME: path周りのみをレンダラーから扱えるライブラリがあればそちらで実装する
   return path.join(...pathArray);

@@ -276,11 +276,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  GET_EXTNAME: {
-    args: [obj: { fileName: string }];
-    return: string;
-  };
-
   JOIN_PATH: {
     args: [obj: { pathArray: string[] }];
     return: string;
