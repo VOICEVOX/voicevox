@@ -865,10 +865,6 @@ export type ProjectStoreTypes = {
     mutation: { filePath?: string };
   };
 
-  SET_PROJECT_FILENAME: {
-    mutation: { fileName?: string };
-  };
-
   CREATE_NEW_PROJECT: {
     action(payload: { confirm?: boolean }): void;
   };

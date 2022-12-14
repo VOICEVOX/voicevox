@@ -1,7 +1,7 @@
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
-import { buildProjectFileName } from "./utility";
+import { buildProjectFileName, basename } from "./utility";
 import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -16,19 +16,15 @@ export const projectStoreState: ProjectStoreState = {
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
-      return state.projectFileName;
+      return state.projectFilePath
+        ? basename(state.projectFilePath)
+        : undefined;
     },
   },
 
   SET_PROJECT_FILEPATH: {
     mutation(state, { filePath }: { filePath?: string }) {
       state.projectFilePath = filePath;
-    },
-  },
-
-  SET_PROJECT_FILENAME: {
-    mutation(state, { fileName }: { fileName?: string }) {
-      state.projectFileName = fileName;
     },
   },
 
@@ -284,10 +280,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             });
           }
           context.commit("SET_PROJECT_FILEPATH", { filePath });
-          if (filePath) {
-            const fileName = await window.electron.getBaseName({ filePath });
-            context.commit("SET_PROJECT_FILENAME", { fileName });
-          }
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
         } catch (err) {
@@ -357,10 +349,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ).buffer;
         await window.electron.writeFile({ filePath, buffer: buf });
         context.commit("SET_PROJECT_FILEPATH", { filePath });
-        if (filePath) {
-          const fileName = await window.electron.getBaseName({ filePath });
-          context.commit("SET_PROJECT_FILENAME", { fileName });
-        }
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
           context.getters.LAST_COMMAND_UNIX_MILLISEC
