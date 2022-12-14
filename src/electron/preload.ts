@@ -101,6 +101,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
   },
 
+  showVvppOpenDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_VVPP_OPEN_DIALOG", { title, defaultPath });
+  },
+
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
   },
@@ -253,6 +257,14 @@ const api: Sandbox = {
       key,
       newValue
     )) as typeof newValue;
+  },
+
+  installVvppEngine: async (filePath) => {
+    return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
+  },
+
+  uninstallVvppEngine: async (engineId) => {
+    return await ipcRendererInvoke("UNINSTALL_VVPP_ENGINE", engineId);
   },
 
   validateEngineDir: async (engineDir) => {
