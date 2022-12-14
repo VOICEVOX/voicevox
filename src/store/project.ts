@@ -357,6 +357,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ).buffer;
         await window.electron.writeFile({ filePath, buffer: buf });
         context.commit("SET_PROJECT_FILEPATH", { filePath });
+        if (filePath) {
+          const fileName = await window.electron.getBaseName({ filePath });
+          context.commit("SET_PROJECT_FILENAME", { fileName });
+        }
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
           context.getters.LAST_COMMAND_UNIX_MILLISEC
