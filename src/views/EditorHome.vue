@@ -188,7 +188,7 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
-import { QResizeObserver, useQuasar } from "quasar";
+import { QResizeObserver, useQuasar, Platform } from "quasar";
 import path from "path";
 import {
   HotkeyAction,

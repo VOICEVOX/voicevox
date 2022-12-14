@@ -1,6 +1,7 @@
 import { State } from "@/store/type";
 import { ToolbarButtonTagType } from "@/type/preload";
 import path from "path";
+import { Platform } from "quasar";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -186,8 +187,8 @@ const basenameWin = (filePath: string) => {
   return basename;
 };
 
-export const basename = (filePath: string, isWindows: boolean) => {
-  if (isWindows) return basenameWin(filePath);
+export const basename = (filePath: string) => {
+  if (Platform.is.win) return basenameWin(filePath);
 
   return path.basename(filePath);
 };
