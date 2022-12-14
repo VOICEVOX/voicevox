@@ -230,10 +230,6 @@ const api: Sandbox = {
     return ipcRenderer.invoke("THEME", { newData });
   },
 
-  vuexReady: () => {
-    ipcRenderer.invoke("ON_VUEX_READY");
-  },
-
   closeSplash: () => {
     ipcRenderer.invoke("ON_CLOSE_SPLASH");
   },

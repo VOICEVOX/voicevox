@@ -1045,10 +1045,6 @@ export type UiStoreTypes = {
     }): void;
   };
 
-  ON_VUEX_READY: {
-    action(): void;
-  };
-
   ON_CLOSE_SPLASH: {
     action(): void;
   };

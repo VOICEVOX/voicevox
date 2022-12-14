@@ -89,7 +89,6 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   theme(newData?: string): Promise<ThemeSetting | void>;
-  vuexReady(): void;
   closeSplash(): void;
   getSetting<Key extends keyof ElectronStoreType>(
     key: Key

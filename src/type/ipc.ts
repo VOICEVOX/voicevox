@@ -232,11 +232,6 @@ export type IpcIHData = {
     return: ThemeSetting | void;
   };
 
-  ON_VUEX_READY: {
-    args: [];
-    return: void;
-  };
-
   ON_CLOSE_SPLASH: {
     args: [];
     return: void;

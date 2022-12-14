@@ -954,6 +954,23 @@ async function createWindow() {
     show: false,
   });
 
+  // load and show splash
+  const currentTheme = getCurrentTheme();
+  if (currentTheme !== null) {
+    const splashURL = path.join(__static, "splash.html");
+
+    const primary = currentTheme.colors.primary.substring(1);
+    const display = currentTheme.colors.display.substring(1);
+    const background = currentTheme.colors.background.substring(1);
+
+    const version = app.getVersion();
+
+    const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
+
+    splash.loadURL(fullURL);
+  }
+  splash.once("ready-to-show", splash.show);
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
       (process.env.WEBPACK_DEV_SERVER_URL as string) +
@@ -1271,47 +1288,41 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return store.get("hotkeySettings");
 });
 
-let currentThemeMemo: ThemeConf | null = null; // ugly workaround for splash
-
 ipcMainHandle("THEME", (_, { newData }) => {
   if (newData !== undefined) {
     store.set("currentTheme", newData);
     return;
+  } else {
+    return getThemes();
   }
+});
+
+const getThemes = () => {
   const currentTheme = store.get("currentTheme");
   const dir = path.join(__static, "themes");
-  const themes: ThemeConf[] = [];
   const files = fs.readdirSync(dir);
+  const themes: ThemeConf[] = [];
   files.forEach((file) => {
     const theme = JSON.parse(
       fs.readFileSync(path.join(dir, file)).toString()
     ) as ThemeConf;
-    if (theme.name == currentTheme) {
-      currentThemeMemo = theme;
-    }
     themes.push(theme);
   });
-  return { currentTheme, availableThemes: themes };
-});
+  return { currentTheme: currentTheme, availableThemes: themes };
+};
 
-ipcMainHandle("ON_VUEX_READY", () => {
-  if (currentThemeMemo !== null) {
-    const splashURL = path.join(__static, "splash.html");
+const getCurrentTheme = (): ThemeConf | null => {
+  const { currentTheme, availableThemes } = getThemes();
+  let currentThemeRef = null;
+  availableThemes.forEach((theme) => {
+    if (theme.name == currentTheme) {
+      currentThemeRef = theme;
+    }
+  });
+  return currentThemeRef;
+};
 
-    const primary = currentThemeMemo.colors.primary.substring(1);
-    const display = currentThemeMemo.colors.display.substring(1);
-    const background = currentThemeMemo.colors.background.substring(1);
-
-    const version = app.getVersion();
-
-    const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
-
-    splash.loadURL(fullURL);
-  }
-  splash.show();
-});
-
-ipcMainHandle("ON_CLOSE_SPLASH", () => {
+ipcMainHandle("ON_CLOSE_SPLASH", async () => {
   splash.close();
   win.show();
 });

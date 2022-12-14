@@ -178,12 +178,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  ON_VUEX_READY: {
-    action() {
-      window.electron.vuexReady();
-    },
-  },
-
   ON_CLOSE_SPLASH: {
     action() {
       window.electron.closeSplash();
