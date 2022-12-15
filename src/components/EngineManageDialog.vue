@@ -408,8 +408,8 @@ export default defineComponent({
       [engineInfos, engineStates, engineManifests],
       async () => {
         for (const id of Object.keys(engineInfos.value)) {
-          if (engineStates.value[id] !== "READY") return;
-          if (engineVersions.value[id]) return;
+          if (engineStates.value[id] !== "READY") continue;
+          if (engineVersions.value[id]) continue;
           const version = await store
             .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
             .then((instance) => instance.invoke("versionVersionGet")({}))
