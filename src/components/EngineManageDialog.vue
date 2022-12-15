@@ -475,30 +475,46 @@ export default defineComponent({
       return messageMap[result];
     };
 
-    const addEngine = async () => {
-      if (engineLoaderType.value === "dir") {
-        await lockUi(
-          "addingEngine",
-          store.dispatch("ADD_ENGINE_DIR", {
-            engineDir: newEngineDir.value,
-          })
-        );
+    const addEngine = () => {
+      $q.dialog({
+        title: "エンジン追加の確認",
+        message:
+          "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
+        cancel: {
+          label: "キャンセル",
+          color: "display",
+          flat: true,
+        },
+        ok: {
+          label: "追加",
+          flat: true,
+          textColor: "warning",
+        },
+      }).onOk(async () => {
+        if (engineLoaderType.value === "dir") {
+          await lockUi(
+            "addingEngine",
+            store.dispatch("ADD_ENGINE_DIR", {
+              engineDir: newEngineDir.value,
+            })
+          );
 
-        requireRestart(
-          "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
-        );
-      } else {
-        const success = await lockUi(
-          "addingEngine",
-          store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
-        );
-        uiLockedState.value = null;
-        if (success) {
           requireRestart(
             "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
           );
+        } else {
+          const success = await lockUi(
+            "addingEngine",
+            store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
+          );
+          uiLockedState.value = null;
+          if (success) {
+            requireRestart(
+              "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
+            );
+          }
         }
-      }
+      });
     };
     const deleteEngine = () => {
       $q.dialog({
