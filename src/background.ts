@@ -803,7 +803,7 @@ function openEngineDirectory(engineId: string) {
 
   const engineDirectory = engineInfo.path;
   if (engineDirectory == null) {
-    return;
+    throw new Error(`engineDirectory is null: engineId == ${engineId}`);
   }
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
@@ -817,10 +817,10 @@ async function installVvppEngine(vvppPath: string) {
     return true;
   } catch (e) {
     dialog.showErrorBox(
-      "読み込みエラー",
-      `${vvppPath} を読み込めませんでした。`
+      "インストールエラー",
+      `${vvppPath} をインストールできませんでした。`
     );
-    log.error(`Failed to load ${vvppPath}, ${e}`);
+    log.error(`Failed to install ${vvppPath}, ${e}`);
     return false;
   }
 }
@@ -830,23 +830,33 @@ async function uninstallVvppEngine(engineId: string) {
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
-  if (!engineInfo) {
-    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-  }
+  try {
+    if (!engineInfo) {
+      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+    }
 
-  if (engineInfo.type !== "vvpp") {
-    throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
-  }
+    if (engineInfo.type !== "vvpp") {
+      throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
+    }
 
-  const engineDirectory = engineInfo.path;
-  if (engineDirectory == null) {
-    throw new Error("engineDirectory == null");
-  }
+    const engineDirectory = engineInfo.path;
+    if (engineDirectory == null) {
+      throw new Error("engineDirectory == null");
+    }
 
-  // Windows環境だとエンジンを終了してから削除する必要がある。
-  // そのため、アプリの終了時に削除するようにする。
-  vvppManager.markWillDelete(engineId);
-  return true;
+    // Windows環境だとエンジンを終了してから削除する必要がある。
+    // そのため、アプリの終了時に削除するようにする。
+    vvppManager.markWillDelete(engineId);
+    return true;
+  } catch (e) {
+    const engineName = engineInfo?.name ?? engineId;
+    dialog.showErrorBox(
+      "アンインストールエラー",
+      `${engineName} をアンインストールできませんでした。`
+    );
+    log.error(`Failed to uninstall ${engineId}, ${e}`);
+    return false;
+  }
 }
 
 // ディレクトリがエンジンとして正しいかどうかを判定する
