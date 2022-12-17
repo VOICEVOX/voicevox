@@ -86,7 +86,6 @@ export interface Sandbox {
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
   openEngineDirectory(engineId: string): void;
-  openUserEngineDirectory(): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -195,11 +194,9 @@ export type EngineInfo = {
   executionArgs: string[];
   // エンジンの種類。
   // main: メインエンジン
-  // sub: .envで指定されたその他のエンジン
-  // userDir: ユーザーディレクトリにあるエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "main" | "sub" | "userDir" | "vvpp" | "path";
+  type: "main" | "vvpp" | "path";
 };
 
 export type Preset = {

@@ -208,12 +208,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action() {
-      return window.electron.openUserEngineDirectory();
-    },
-  },
-
   SET_ENGINE_STATE: {
     mutation(
       state,
