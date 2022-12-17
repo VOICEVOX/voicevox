@@ -98,12 +98,8 @@ if (isDevelopment) {
   dotenv.config({ path: envPath });
 }
 
-const userEngineDir = path.join(app.getPath("userData"), "engines");
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
-if (!fs.existsSync(userEngineDir)) {
-  fs.mkdirSync(userEngineDir);
-}
 if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
@@ -145,10 +141,10 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     throw validate.errors;
   }
 
-  return engines.map((engineInfo, i) => {
+  return engines.map((engineInfo) => {
     return {
       ...engineInfo,
-      type: i === 0 ? "main" : "sub",
+      type: "default",
       path:
         engineInfo.path === undefined
           ? undefined
@@ -160,7 +156,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
   const engines: EngineInfo[] = [];
-  const addEngine = (engineDir: string, type: "userDir" | "vvpp" | "path") => {
+  const addEngine = (engineDir: string, type: "vvpp" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
     if (!fs.existsSync(manifestPath)) {
       return "manifestNotFound";
@@ -188,17 +184,6 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     });
     return "ok";
   };
-  for (const dirName of fs.readdirSync(userEngineDir)) {
-    const engineDir = path.join(userEngineDir, dirName);
-    if (!fs.statSync(engineDir).isDirectory()) {
-      log.log(`${engineDir} is not directory`);
-      continue;
-    }
-    const result = addEngine(engineDir, "userDir");
-    if (result !== "ok") {
-      log.log(`Failed to load engine: ${result}, ${engineDir}`);
-    }
-  }
   for (const dirName of fs.readdirSync(vvppEngineDir)) {
     const engineDir = path.join(vvppEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
@@ -1327,12 +1312,6 @@ ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
-});
-
-ipcMainHandle("OPEN_USER_ENGINE_DIRECTORY", () => {
-  // Windows環境だとスラッシュ区切りのパスが動かない。
-  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  shell.openPath(path.resolve(userEngineDir));
 });
 
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {

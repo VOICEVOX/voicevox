@@ -202,11 +202,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  OPEN_USER_ENGINE_DIRECTORY: {
-    args: [];
-    return: void;
-  };
-
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;

@@ -372,19 +372,11 @@ export default defineComponent({
 
     const categorizedEngineIds = computed(() => {
       const result = {
-        main: Object.values(engineInfos.value)
-          .filter((info) => info.type === "main")
-          .map((info) => info.uuid),
-        sub: Object.values(engineInfos.value)
-          .filter((info) => info.type === "sub")
+        default: Object.values(engineInfos.value)
+          .filter((info) => info.type === "default")
           .map((info) => info.uuid),
         plugin: Object.values(engineInfos.value)
-          .filter(
-            (info) =>
-              info.type === "userDir" ||
-              info.type === "path" ||
-              info.type === "vvpp"
-          )
+          .filter((info) => info.type === "path" || info.type === "vvpp")
           .map((info) => info.uuid),
       };
       return Object.fromEntries(
@@ -438,8 +430,7 @@ export default defineComponent({
 
     const getEngineTypeName = (name: string) => {
       const engineTypeMap = {
-        main: "メインエンジン",
-        sub: "サブエンジン",
+        default: "デフォルトエンジン",
         plugin: "追加エンジン",
       };
       return engineTypeMap[name as keyof typeof engineTypeMap];
