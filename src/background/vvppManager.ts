@@ -6,12 +6,12 @@ import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
 import MultiStream from "multistream";
-import { glob as callbackGlob } from "glob";
+import glob, { glob as callbackGlob } from "glob";
 
 // globのPromise化
-const glob = (pattern: string, options?: any) => {
+const globAsync = (pattern: string, options?: glob.IOptions) => {
   return new Promise<string[]>((resolve, reject) => {
-    callbackGlob(pattern, options, (err, matches) => {
+    callbackGlob(pattern, options || {}, (err, matches) => {
       if (err) {
         reject(err);
       } else {
@@ -88,11 +88,23 @@ export class VvppManager {
       const vvppPathGlob = vvppPath
         .replace(/\.[0-9]+\.vvpp$/, ".*.vvpp")
         .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
-      for (const p of await glob(vvppPathGlob)) {
+      const filePaths: string[] = [];
+      for (const p of await globAsync(vvppPathGlob)) {
         if (!p.match(/\.[0-9]+\.vvpp$/)) {
           continue;
         }
         log.log(`found ${p}`);
+        filePaths.push(p);
+      }
+      filePaths.sort((a, b) => {
+        const aMatch = a.match(/\.([0-9]+)\.vvpp$/);
+        const bMatch = b.match(/\.([0-9]+)\.vvpp$/);
+        if (aMatch === null || bMatch === null) {
+          throw new Error(`match is null: a=${a}, b=${b}`);
+        }
+        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+      });
+      for (const p of filePaths) {
         streams.push(fs.createReadStream(p));
       }
     } else {
