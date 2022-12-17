@@ -83,6 +83,7 @@ export class VvppManager {
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     const streams: fs.ReadStream[] = [];
+    // 名前.数値.vvppの場合は分割されているとみなす
     if (vvppPath.match(/\.[0-9]+\.vvpp$/)) {
       log.log("vvpp is split, finding other parts...");
       const vvppPathGlob = vvppPath
