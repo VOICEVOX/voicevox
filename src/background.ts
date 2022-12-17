@@ -811,6 +811,9 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
+/**
+ * VVPPエンジンをインストールする。
+ */
 async function installVvppEngine(vvppPath: string) {
   try {
     await vvppManager.install(vvppPath);
@@ -825,6 +828,10 @@ async function installVvppEngine(vvppPath: string) {
   }
 }
 
+/**
+ * VVPPエンジンをアンインストールする。
+ * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
+ */
 async function uninstallVvppEngine(engineId: string) {
   const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
