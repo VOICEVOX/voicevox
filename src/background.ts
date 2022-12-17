@@ -144,7 +144,7 @@ const defaultEngineInfos: EngineInfo[] = (() => {
   return engines.map((engineInfo) => {
     return {
       ...engineInfo,
-      type: "main",
+      type: "default",
       path:
         engineInfo.path === undefined
           ? undefined

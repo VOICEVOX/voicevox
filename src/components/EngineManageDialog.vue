@@ -372,8 +372,8 @@ export default defineComponent({
 
     const categorizedEngineIds = computed(() => {
       const result = {
-        main: Object.values(engineInfos.value)
-          .filter((info) => info.type === "main")
+        default: Object.values(engineInfos.value)
+          .filter((info) => info.type === "default")
           .map((info) => info.uuid),
         plugin: Object.values(engineInfos.value)
           .filter((info) => info.type === "path" || info.type === "vvpp")
@@ -430,7 +430,7 @@ export default defineComponent({
 
     const getEngineTypeName = (name: string) => {
       const engineTypeMap = {
-        main: "ビルトインエンジン",
+        default: "デフォルトエンジン",
         plugin: "追加エンジン",
       };
       return engineTypeMap[name as keyof typeof engineTypeMap];

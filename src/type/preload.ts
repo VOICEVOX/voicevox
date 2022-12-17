@@ -193,10 +193,10 @@ export type EngineInfo = {
   executionFilePath: string;
   executionArgs: string[];
   // エンジンの種類。
-  // main: メインエンジン
+  // default: デフォルトエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "main" | "vvpp" | "path";
+  type: "default" | "vvpp" | "path";
 };
 
 export type Preset = {

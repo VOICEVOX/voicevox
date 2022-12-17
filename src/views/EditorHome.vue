@@ -486,9 +486,9 @@ export default defineComponent({
 
       let engineIds: string[];
       if (store.state.isSafeMode) {
-        // メインエンジンだけを含める
+        // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(
-          (engine) => engine.type === "main"
+          (engine) => engine.type === "default"
         );
         if (!main) {
           throw new Error("No main engine found");
