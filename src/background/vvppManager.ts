@@ -5,6 +5,7 @@ import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
+import { EngineInfo } from "@/type/preload";
 
 // # 軽い概要
 //
@@ -59,6 +60,19 @@ export class VvppManager {
 
   isEngineDirName(dir: string, manifest: EngineManifest) {
     return dir.endsWith(`+${manifest.uuid}`);
+  }
+
+  canUninstall(engineInfo: EngineInfo) {
+    if (engineInfo.type !== "vvpp") {
+      return false;
+    }
+
+    const engineDirectory = engineInfo.path;
+    if (engineDirectory == null) {
+      return false;
+    }
+
+    return true;
   }
 
   async extractVvpp(
