@@ -73,7 +73,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   });
 }
 
-export class VvppManager {
+export class EngineManager {
   store: Store<ElectronStoreType>;
   defaultEngineDir: string;
   vvppEngineDir: string;
@@ -498,4 +498,4 @@ export class VvppManager {
   }
 }
 
-export default VvppManager;
+export default EngineManager;
