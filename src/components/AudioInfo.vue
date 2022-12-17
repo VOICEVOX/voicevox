@@ -388,6 +388,7 @@ export default defineComponent({
     const supportedFeatures = computed(
       () =>
         (audioItem.value?.engineId &&
+          store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
           store.state.engineManifests[audioItem.value?.engineId]
             .supportedFeatures) as
           | EngineManifest["supportedFeatures"]
