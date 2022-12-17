@@ -90,6 +90,7 @@ export class VvppManager {
     const { outputDir, manifest } = await this.extractVvpp(vvppPath);
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
+    // FIXME: ディレクトリをvalidateする
     const oldEngineDirName = (
       await fs.promises.readdir(this.vvppEngineDir)
     ).find((dir) => {
