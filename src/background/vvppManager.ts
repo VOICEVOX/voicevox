@@ -5,6 +5,21 @@ import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
+import MultiStream from "multistream";
+import { glob as callbackGlob } from "glob";
+
+// globのPromise化
+const glob = (pattern: string, options?: any) => {
+  return new Promise<string[]>((resolve, reject) => {
+    callbackGlob(pattern, options, (err, matches) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(matches);
+      }
+    });
+  });
+};
 
 // # 軽い概要
 //
@@ -66,9 +81,28 @@ export class VvppManager {
   ): Promise<{ outputDir: string; manifest: EngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
+
+    const streams: fs.ReadStream[] = [];
+    if (vvppPath.match(/\.[0-9]+\.vvpp$/)) {
+      log.log("vvpp is split, finding other parts...");
+      const vvppPathGlob = vvppPath
+        .replace(/\.[0-9]+\.vvpp$/, ".*.vvpp")
+        .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
+      for (const p of await glob(vvppPathGlob)) {
+        if (!p.match(/\.[0-9]+\.vvpp$/)) {
+          continue;
+        }
+        log.log(`found ${p}`);
+        streams.push(fs.createReadStream(p));
+      }
+    } else {
+      log.log("Not a split file");
+      streams.push(fs.createReadStream(vvppPath));
+    }
+
     log.log("Extracting vvpp to", outputDir);
     await new Promise((resolve, reject) => {
-      fs.createReadStream(vvppPath)
+      new MultiStream(streams)
         .pipe(Extract({ path: outputDir }))
         .on("close", resolve)
         .on("error", reject);
