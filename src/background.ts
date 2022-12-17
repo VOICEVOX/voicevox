@@ -40,7 +40,7 @@ import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
 import VvppManager from "./background/vvppManager";
 
-type EngineManifest = {
+type MinimumEngineManifest = {
   name: string;
   uuid: string;
   command: string;
@@ -161,7 +161,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     if (!fs.existsSync(manifestPath)) {
       return "manifestNotFound";
     }
-    let manifest: EngineManifest;
+    let manifest: MinimumEngineManifest;
     try {
       manifest = JSON.parse(
         fs.readFileSync(manifestPath, { encoding: "utf8" })
@@ -851,7 +851,7 @@ function validateEngineDir(engineDir: string): EngineDirValidationResult {
     path.join(engineDir, "engine_manifest.json"),
     "utf-8"
   );
-  let manifestContent: EngineManifest;
+  let manifestContent: MinimumEngineManifest;
   try {
     manifestContent = JSON.parse(manifest);
   } catch (e) {
