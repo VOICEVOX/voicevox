@@ -819,13 +819,8 @@ async function uninstallVvppEngine(engineId: string) {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
 
-    if (engineInfo.type !== "vvpp") {
-      throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
-    }
-
-    const engineDirectory = engineInfo.path;
-    if (engineDirectory == null) {
-      throw new Error("engineDirectory == null");
+    if (!vvppManager.canUninstall(engineInfo)) {
+      throw new Error(`Cannot uninstall: engineId == ${engineId}`);
     }
 
     // Windows環境だとエンジンを終了してから削除する必要がある。
