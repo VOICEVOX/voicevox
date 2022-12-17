@@ -507,7 +507,6 @@ export default defineComponent({
             "addingEngine",
             store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
           );
-          uiLockedState.value = null;
           if (success) {
             requireRestart(
               "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
@@ -547,15 +546,18 @@ export default defineComponent({
             );
             break;
           }
-          case "vvpp":
-            await lockUi(
+          case "vvpp": {
+            const success = await lockUi(
               "deletingEngine",
               store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
             );
-            requireRestart(
-              "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
-            );
+            if (success) {
+              requireRestart(
+                "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+              );
+            }
             break;
+          }
           default:
             throw new Error("assert engineInfos[selectedId.value].type");
         }
