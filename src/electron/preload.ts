@@ -4,10 +4,8 @@ import {
   IpcRenderer,
   IpcRendererEvent,
 } from "electron";
-import fs from "fs";
-import path from "path";
 
-import { Sandbox, SystemError, ElectronStoreType } from "@/type/preload";
+import { Sandbox, ElectronStoreType } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -72,25 +70,26 @@ const api: Sandbox = {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
     }
-    fs.writeFileSync(path.join(tempDir, relativePath), new DataView(buffer));
+    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
+      pathArray: [tempDir, relativePath],
+    });
+    await ipcRendererInvoke("WRITE_FILE", {
+      filePath: tempFilePath,
+      buffer: buffer,
+    });
   },
 
   loadTempFile: async () => {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
     }
-    const buf = fs.readFileSync(path.join(tempDir, "hoge.txt"));
+    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
+      pathArray: [tempDir, "hoge.txt"],
+    });
+    const buf = await ipcRendererInvoke("READ_FILE", {
+      filePath: tempFilePath,
+    });
     return new TextDecoder().decode(buf);
-  },
-
-  getBaseName: ({ filePath }) => {
-    /**
-     * filePathから拡張子を含むファイル名を取り出す。
-     * vueファイルから直接pathモジュールを読み込むことは出来るが、
-     * その中のbasename関数は上手く動作しない（POSIX pathとして処理される）。
-     * この関数を呼び出せばWindows pathが正しく処理される。
-     */
-    return path.basename(filePath);
   },
 
   showAudioSaveDialog: ({ title, defaultPath }) => {
@@ -138,20 +137,12 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", { title });
   },
 
-  writeFile: ({ filePath, buffer }) => {
-    try {
-      // throwだと`.code`の情報が消えるのでreturn
-      fs.writeFileSync(filePath, new DataView(buffer));
-    } catch (e) {
-      const a = e as SystemError;
-      return { code: a.code, message: a.message };
-    }
-
-    return undefined;
+  writeFile: async ({ filePath, buffer }) => {
+    return await ipcRendererInvoke("WRITE_FILE", { filePath, buffer });
   },
 
-  readFile: ({ filePath }) => {
-    return fs.promises.readFile(filePath);
+  readFile: async ({ filePath }) => {
+    return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
   openTextEditContextMenu: () => {
