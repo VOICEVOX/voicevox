@@ -5,6 +5,21 @@ import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
+import MultiStream from "multistream";
+import glob, { glob as callbackGlob } from "glob";
+
+// globのPromise化
+const globAsync = (pattern: string, options?: glob.IOptions) => {
+  return new Promise<string[]>((resolve, reject) => {
+    callbackGlob(pattern, options || {}, (err, matches) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(matches);
+      }
+    });
+  });
+};
 
 // # 軽い概要
 //
@@ -66,9 +81,41 @@ export class VvppManager {
   ): Promise<{ outputDir: string; manifest: EngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
+
+    const streams: fs.ReadStream[] = [];
+    // 名前.数値.vvppの場合は分割されているとみなして連結する
+    if (vvppPath.match(/\.[0-9]+\.vvpp$/)) {
+      log.log("vvpp is split, finding other parts...");
+      const vvppPathGlob = vvppPath
+        .replace(/\.[0-9]+\.vvpp$/, ".*.vvpp")
+        .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
+      const filePaths: string[] = [];
+      for (const p of await globAsync(vvppPathGlob)) {
+        if (!p.match(/\.[0-9]+\.vvpp$/)) {
+          continue;
+        }
+        log.log(`found ${p}`);
+        filePaths.push(p);
+      }
+      filePaths.sort((a, b) => {
+        const aMatch = a.match(/\.([0-9]+)\.vvpp$/);
+        const bMatch = b.match(/\.([0-9]+)\.vvpp$/);
+        if (aMatch === null || bMatch === null) {
+          throw new Error(`match is null: a=${a}, b=${b}`);
+        }
+        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+      });
+      for (const p of filePaths) {
+        streams.push(fs.createReadStream(p));
+      }
+    } else {
+      log.log("Not a split file");
+      streams.push(fs.createReadStream(vvppPath));
+    }
+
     log.log("Extracting vvpp to", outputDir);
     await new Promise((resolve, reject) => {
-      fs.createReadStream(vvppPath)
+      new MultiStream(streams)
         .pipe(Extract({ path: outputDir }))
         .on("close", resolve)
         .on("error", reject);
