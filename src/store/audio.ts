@@ -1151,7 +1151,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
 
-        let writeFileResult = window.electron.writeFile({
+        let writeFileResult = await window.electron.writeFile({
           filePath,
           buffer: await blob.arrayBuffer(),
         }); // 失敗した場合、WriteFileErrorResultオブジェクトが返り、成功時はundefinedが反る
@@ -1178,7 +1178,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             type: "text/plain;charset=UTF-8",
           });
 
-          writeFileResult = window.electron.writeFile({
+          writeFileResult = await window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".lab"),
             buffer: await labBlob.arrayBuffer(),
           });
@@ -1209,7 +1209,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             });
           })();
 
-          writeFileResult = window.electron.writeFile({
+          writeFileResult = await window.electron.writeFile({
             filePath: filePath.replace(/\.wav$/, ".txt"),
             buffer: await textBlob.arrayBuffer(),
           });

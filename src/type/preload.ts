@@ -33,7 +33,6 @@ export interface Sandbox {
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
-  getBaseName(obj: { filePath: string }): string;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
@@ -68,7 +67,7 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): WriteFileErrorResult | undefined;
+  }): Promise<WriteFileErrorResult | undefined>;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
