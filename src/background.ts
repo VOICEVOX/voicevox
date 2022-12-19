@@ -28,6 +28,7 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
+  SystemError,
 } from "./type/preload";
 
 import log from "electron-log";
