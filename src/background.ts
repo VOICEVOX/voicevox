@@ -444,6 +444,10 @@ async function uninstallVvppEngine(engineId: string) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
     engineInfo = engineManager.fetchEngineInfo(engineId);
+    if (!engineInfo) {
+      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+    }
+
     if (!vvppManager.canUninstall(engineInfo)) {
       throw new Error(`Cannot uninstall: engineId == ${engineId}`);
     }
@@ -575,7 +579,7 @@ async function createWindow() {
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
@@ -966,6 +970,26 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   appState.willRestart = true;
   appState.isSafeMode = isSafeMode;
   win.close();
+});
+
+ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
+  try {
+    fs.writeFileSync(filePath, new DataView(buffer));
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return { code: a.code, message: a.message };
+  }
+
+  return undefined;
+});
+
+ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
+  return path.join(...pathArray);
+});
+
+ipcMainHandle("READ_FILE", (_, { filePath }) => {
+  return fs.promises.readFile(filePath);
 });
 
 // app callback
