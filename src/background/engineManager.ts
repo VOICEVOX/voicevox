@@ -277,6 +277,7 @@ export class EngineManager {
     engineProcess.on("error", (err) => {
       log.error(`ENGINE ${engineId} ERROR: ${err}`);
       // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
+      // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
       dialog.showErrorBox(
         "音声合成エンジンエラー",
         `音声合成エンジンが異常終了しました。${err}`
