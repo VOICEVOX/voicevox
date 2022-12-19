@@ -41,7 +41,7 @@ import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
 import VvppManager from "./background/vvppManager";
 
-type EngineManifest = {
+type MinimumEngineManifest = {
   name: string;
   uuid: string;
   command: string;
@@ -162,7 +162,7 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     if (!fs.existsSync(manifestPath)) {
       return "manifestNotFound";
     }
-    let manifest: EngineManifest;
+    let manifest: MinimumEngineManifest;
     try {
       manifest = JSON.parse(
         fs.readFileSync(manifestPath, { encoding: "utf8" })
@@ -576,24 +576,6 @@ async function runEngine(engineId: string) {
   const engineProcessContainer = engineProcessContainers[engineId];
   engineProcessContainer.willQuitEngine = false;
 
-  // 最初のエンジンモード
-  if (!store.has("useGpu")) {
-    const hasGpu = await hasSupportedGpu(process.platform);
-    store.set("useGpu", hasGpu);
-
-    dialog.showMessageBox(win, {
-      message: `音声合成エンジンを${
-        hasGpu ? "GPU" : "CPU"
-      }モードで起動しました`,
-      detail:
-        "エンジンの起動モードは、画面上部の「エンジン」メニューから変更できます。",
-      title: "エンジンの起動モード",
-      type: "info",
-    });
-  }
-  if (!store.has("inheritAudioInfo")) {
-    store.set("inheritAudioInfo", true);
-  }
   const useGpu = store.get("useGpu");
 
   log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
@@ -619,6 +601,16 @@ async function runEngine(engineId: string) {
 
   engineProcess.stderr?.on("data", (data) => {
     log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
+  });
+
+  engineProcess.on("error", (err) => {
+    log.error(`ENGINE ${engineId} ERROR: ${err}`);
+    // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
+    // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
+    dialog.showErrorBox(
+      "音声合成エンジンエラー",
+      `音声合成エンジンが異常終了しました。${err}`
+    );
   });
 
   engineProcess.on("close", (code, signal) => {
@@ -714,6 +706,7 @@ async function restartEngineAll() {
 }
 
 async function restartEngine(engineId: string) {
+  // FIXME: killEngine関数を使い回すようにする
   await new Promise<void>((resolve, reject) => {
     const engineProcessContainer: EngineProcessContainer | undefined =
       engineProcessContainers[engineId];
@@ -828,13 +821,8 @@ async function uninstallVvppEngine(engineId: string) {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
 
-    if (engineInfo.type !== "vvpp") {
-      throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
-    }
-
-    const engineDirectory = engineInfo.path;
-    if (engineDirectory == null) {
-      throw new Error("engineDirectory == null");
+    if (!vvppManager.canUninstall(engineInfo)) {
+      throw new Error(`Cannot uninstall: engineId == ${engineId}`);
     }
 
     // Windows環境だとエンジンを終了してから削除する必要がある。
@@ -865,7 +853,7 @@ function validateEngineDir(engineDir: string): EngineDirValidationResult {
     path.join(engineDir, "engine_manifest.json"),
     "utf-8"
   );
-  let manifestContent: EngineManifest;
+  let manifestContent: MinimumEngineManifest;
   try {
     manifestContent = JSON.parse(manifest);
   } catch (e) {
