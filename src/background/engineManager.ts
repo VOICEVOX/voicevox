@@ -170,8 +170,8 @@ export class EngineManager {
    * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
    */
   fetchEngineInfos(): EngineInfo[] {
-    const userEngineInfos = this.fetchAdditionalEngineInfos();
-    return [...this.defaultEngineInfos, ...userEngineInfos];
+    const additionalEngineInfos = this.fetchAdditionalEngineInfos();
+    return [...this.defaultEngineInfos, ...additionalEngineInfos];
   }
 
   /**
