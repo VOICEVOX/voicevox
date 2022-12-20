@@ -579,6 +579,9 @@ export default defineComponent({
     const isEngineWaitingLong = ref<boolean>(false);
     let engineTimer: number | undefined = undefined;
     watch(allEngineState, (newEngineState) => {
+      if (Object.keys(store.state.engineInfos).length === 1) {
+        return;
+      }
       if (engineTimer !== undefined) {
         clearTimeout(engineTimer);
         engineTimer = undefined;
@@ -587,7 +590,7 @@ export default defineComponent({
         isEngineWaitingLong.value = false;
         engineTimer = window.setTimeout(() => {
           isEngineWaitingLong.value = true;
-        }, 10000);
+        }, 60000);
       } else {
         isEngineWaitingLong.value = false;
       }
