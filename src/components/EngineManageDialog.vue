@@ -372,19 +372,11 @@ export default defineComponent({
 
     const categorizedEngineIds = computed(() => {
       const result = {
-        main: Object.values(engineInfos.value)
-          .filter((info) => info.type === "main")
-          .map((info) => info.uuid),
-        sub: Object.values(engineInfos.value)
-          .filter((info) => info.type === "sub")
+        default: Object.values(engineInfos.value)
+          .filter((info) => info.type === "default")
           .map((info) => info.uuid),
         plugin: Object.values(engineInfos.value)
-          .filter(
-            (info) =>
-              info.type === "userDir" ||
-              info.type === "path" ||
-              info.type === "vvpp"
-          )
+          .filter((info) => info.type === "path" || info.type === "vvpp")
           .map((info) => info.uuid),
       };
       return Object.fromEntries(
@@ -438,8 +430,7 @@ export default defineComponent({
 
     const getEngineTypeName = (name: string) => {
       const engineTypeMap = {
-        main: "メインエンジン",
-        sub: "サブエンジン",
+        default: "デフォルトエンジン",
         plugin: "追加エンジン",
       };
       return engineTypeMap[name as keyof typeof engineTypeMap];
@@ -507,7 +498,6 @@ export default defineComponent({
             "addingEngine",
             store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value)
           );
-          uiLockedState.value = null;
           if (success) {
             requireRestart(
               "エンジンを追加しました。反映には再起動が必要です。今すぐ再起動しますか？"
@@ -547,15 +537,18 @@ export default defineComponent({
             );
             break;
           }
-          case "vvpp":
-            await lockUi(
+          case "vvpp": {
+            const success = await lockUi(
               "deletingEngine",
               store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value)
             );
-            requireRestart(
-              "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
-            );
+            if (success) {
+              requireRestart(
+                "エンジンの削除には再起動が必要です。今すぐ再起動しますか？"
+              );
+            }
             break;
+          }
           default:
             throw new Error("assert engineInfos[selectedId.value].type");
         }

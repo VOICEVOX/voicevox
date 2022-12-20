@@ -32,6 +32,7 @@ import {
   EngineInfo,
   ElectronStoreType,
   EngineDirValidationResult,
+  SystemError,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -40,7 +41,7 @@ import windowStateKeeper from "electron-window-state";
 import Ajv from "ajv/dist/jtd";
 import VvppManager from "./background/vvppManager";
 
-type EngineManifest = {
+type MinimumEngineManifest = {
   name: string;
   uuid: string;
   command: string;
@@ -98,12 +99,8 @@ if (isDevelopment) {
   dotenv.config({ path: envPath });
 }
 
-const userEngineDir = path.join(app.getPath("userData"), "engines");
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
-if (!fs.existsSync(userEngineDir)) {
-  fs.mkdirSync(userEngineDir);
-}
 if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
@@ -145,10 +142,10 @@ const defaultEngineInfos: EngineInfo[] = (() => {
     throw validate.errors;
   }
 
-  return engines.map((engineInfo, i) => {
+  return engines.map((engineInfo) => {
     return {
       ...engineInfo,
-      type: i === 0 ? "main" : "sub",
+      type: "default",
       path:
         engineInfo.path === undefined
           ? undefined
@@ -160,12 +157,12 @@ const defaultEngineInfos: EngineInfo[] = (() => {
 // 追加エンジンの一覧を取得する
 function fetchAdditionalEngineInfos(): EngineInfo[] {
   const engines: EngineInfo[] = [];
-  const addEngine = (engineDir: string, type: "userDir" | "vvpp" | "path") => {
+  const addEngine = (engineDir: string, type: "vvpp" | "path") => {
     const manifestPath = path.join(engineDir, "engine_manifest.json");
     if (!fs.existsSync(manifestPath)) {
       return "manifestNotFound";
     }
-    let manifest: EngineManifest;
+    let manifest: MinimumEngineManifest;
     try {
       manifest = JSON.parse(
         fs.readFileSync(manifestPath, { encoding: "utf8" })
@@ -188,17 +185,6 @@ function fetchAdditionalEngineInfos(): EngineInfo[] {
     });
     return "ok";
   };
-  for (const dirName of fs.readdirSync(userEngineDir)) {
-    const engineDir = path.join(userEngineDir, dirName);
-    if (!fs.statSync(engineDir).isDirectory()) {
-      log.log(`${engineDir} is not directory`);
-      continue;
-    }
-    const result = addEngine(engineDir, "userDir");
-    if (result !== "ok") {
-      log.log(`Failed to load engine: ${result}, ${engineDir}`);
-    }
-  }
   for (const dirName of fs.readdirSync(vvppEngineDir)) {
     const engineDir = path.join(vvppEngineDir, dirName);
     if (!fs.statSync(engineDir).isDirectory()) {
@@ -590,24 +576,6 @@ async function runEngine(engineId: string) {
   const engineProcessContainer = engineProcessContainers[engineId];
   engineProcessContainer.willQuitEngine = false;
 
-  // 最初のエンジンモード
-  if (!store.has("useGpu")) {
-    const hasGpu = await hasSupportedGpu(process.platform);
-    store.set("useGpu", hasGpu);
-
-    dialog.showMessageBox(win, {
-      message: `音声合成エンジンを${
-        hasGpu ? "GPU" : "CPU"
-      }モードで起動しました`,
-      detail:
-        "エンジンの起動モードは、画面上部の「エンジン」メニューから変更できます。",
-      title: "エンジンの起動モード",
-      type: "info",
-    });
-  }
-  if (!store.has("inheritAudioInfo")) {
-    store.set("inheritAudioInfo", true);
-  }
   const useGpu = store.get("useGpu");
 
   log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
@@ -633,6 +601,16 @@ async function runEngine(engineId: string) {
 
   engineProcess.stderr?.on("data", (data) => {
     log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
+  });
+
+  engineProcess.on("error", (err) => {
+    log.error(`ENGINE ${engineId} ERROR: ${err}`);
+    // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
+    // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
+    dialog.showErrorBox(
+      "音声合成エンジンエラー",
+      `音声合成エンジンが異常終了しました。${err}`
+    );
   });
 
   engineProcess.on("close", (code, signal) => {
@@ -728,6 +706,7 @@ async function restartEngineAll() {
 }
 
 async function restartEngine(engineId: string) {
+  // FIXME: killEngine関数を使い回すようにする
   await new Promise<void>((resolve, reject) => {
     const engineProcessContainer: EngineProcessContainer | undefined =
       engineProcessContainers[engineId];
@@ -803,7 +782,7 @@ function openEngineDirectory(engineId: string) {
 
   const engineDirectory = engineInfo.path;
   if (engineDirectory == null) {
-    return;
+    throw new Error(`engineDirectory is null: engineId == ${engineId}`);
   }
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
@@ -811,42 +790,54 @@ function openEngineDirectory(engineId: string) {
   shell.openPath(path.resolve(engineDirectory));
 }
 
+/**
+ * VVPPエンジンをインストールする。
+ */
 async function installVvppEngine(vvppPath: string) {
   try {
     await vvppManager.install(vvppPath);
     return true;
   } catch (e) {
     dialog.showErrorBox(
-      "読み込みエラー",
-      `${vvppPath} を読み込めませんでした。`
+      "インストールエラー",
+      `${vvppPath} をインストールできませんでした。`
     );
-    log.error(`Failed to load ${vvppPath}, ${e}`);
+    log.error(`Failed to install ${vvppPath}, ${e}`);
     return false;
   }
 }
 
+/**
+ * VVPPエンジンをアンインストールする。
+ * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
+ */
 async function uninstallVvppEngine(engineId: string) {
   const engineInfos = fetchEngineInfos();
   const engineInfo = engineInfos.find(
     (engineInfo) => engineInfo.uuid === engineId
   );
-  if (!engineInfo) {
-    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-  }
+  try {
+    if (!engineInfo) {
+      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+    }
 
-  if (engineInfo.type !== "vvpp") {
-    throw new Error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
-  }
+    if (!vvppManager.canUninstall(engineInfo)) {
+      throw new Error(`Cannot uninstall: engineId == ${engineId}`);
+    }
 
-  const engineDirectory = engineInfo.path;
-  if (engineDirectory == null) {
-    throw new Error("engineDirectory == null");
+    // Windows環境だとエンジンを終了してから削除する必要がある。
+    // そのため、アプリの終了時に削除するようにする。
+    vvppManager.markWillDelete(engineId);
+    return true;
+  } catch (e) {
+    const engineName = engineInfo?.name ?? engineId;
+    dialog.showErrorBox(
+      "アンインストールエラー",
+      `${engineName} をアンインストールできませんでした。`
+    );
+    log.error(`Failed to uninstall ${engineId}, ${e}`);
+    return false;
   }
-
-  // Windows環境だとエンジンを終了してから削除する必要がある。
-  // そのため、アプリの終了時に削除するようにする。
-  vvppManager.markWillDelete(engineId);
-  return true;
 }
 
 // ディレクトリがエンジンとして正しいかどうかを判定する
@@ -862,7 +853,7 @@ function validateEngineDir(engineDir: string): EngineDirValidationResult {
     path.join(engineDir, "engine_manifest.json"),
     "utf-8"
   );
-  let manifestContent: EngineManifest;
+  let manifestContent: MinimumEngineManifest;
   try {
     manifestContent = JSON.parse(manifest);
   } catch (e) {
@@ -998,7 +989,7 @@ async function createWindow() {
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
+      nodeIntegration: false,
       contextIsolation: true,
       sandbox: false, // TODO: 外しても問題ないか検証して外す
     },
@@ -1312,12 +1303,6 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
 });
 
-ipcMainHandle("OPEN_USER_ENGINE_DIRECTORY", () => {
-  // Windows環境だとスラッシュ区切りのパスが動かない。
-  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  shell.openPath(path.resolve(userEngineDir));
-});
-
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");
@@ -1395,6 +1380,26 @@ ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
   appState.willRestart = true;
   appState.isSafeMode = isSafeMode;
   win.close();
+});
+
+ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
+  try {
+    fs.writeFileSync(filePath, new DataView(buffer));
+  } catch (e) {
+    // throwだと`.code`の情報が消えるのでreturn
+    const a = e as SystemError;
+    return { code: a.code, message: a.message };
+  }
+
+  return undefined;
+});
+
+ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
+  return path.join(...pathArray);
+});
+
+ipcMainHandle("READ_FILE", (_, { filePath }) => {
+  return fs.promises.readFile(filePath);
 });
 
 // app callback

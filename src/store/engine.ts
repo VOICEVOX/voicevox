@@ -13,11 +13,11 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ state, commit }) {
       const engineInfos = await window.electron.engineInfos();
 
-      // セーフモード時はengineIdsをメインエンジンのIDだけにする。
+      // セーフモード時はengineIdsをデフォルトエンジンのIDだけにする。
       let engineIds: string[];
       if (state.isSafeMode) {
         engineIds = engineInfos
-          .filter((engineInfo) => engineInfo.type === "main")
+          .filter((engineInfo) => engineInfo.type === "default")
           .map((info) => info.uuid);
       } else {
         engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
@@ -205,12 +205,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   OPEN_ENGINE_DIRECTORY: {
     action(_, { engineId }) {
       return window.electron.openEngineDirectory(engineId);
-    },
-  },
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action() {
-      return window.electron.openUserEngineDirectory();
     },
   },
 

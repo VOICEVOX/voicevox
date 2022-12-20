@@ -1,7 +1,7 @@
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
-import { buildProjectFileName } from "./utility";
+import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 
 import Ajv, { JTDDataType } from "ajv/dist/jtd";
@@ -16,8 +16,8 @@ export const projectStoreState: ProjectStoreState = {
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
-      return state.projectFilePath !== undefined
-        ? window.electron.getBaseName({ filePath: state.projectFilePath })
+      return state.projectFilePath
+        ? getBaseName(state.projectFilePath)
         : undefined;
     },
   },
@@ -347,7 +347,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const buf = new TextEncoder().encode(
           JSON.stringify(projectData)
         ).buffer;
-        window.electron.writeFile({ filePath, buffer: buf });
+        await window.electron.writeFile({ filePath, buffer: buf });
         context.commit("SET_PROJECT_FILEPATH", { filePath });
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",

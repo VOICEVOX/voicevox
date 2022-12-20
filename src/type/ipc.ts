@@ -7,6 +7,7 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
+  WriteFileErrorResult,
 } from "@/type/preload";
 
 /**
@@ -202,11 +203,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  OPEN_USER_ENGINE_DIRECTORY: {
-    args: [];
-    return: void;
-  };
-
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;
@@ -273,6 +269,21 @@ export type IpcIHData = {
   RESTART_APP: {
     args: [obj: { isSafeMode: boolean }];
     return: void;
+  };
+
+  JOIN_PATH: {
+    args: [obj: { pathArray: string[] }];
+    return: string;
+  };
+
+  WRITE_FILE: {
+    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    return: WriteFileErrorResult | undefined;
+  };
+
+  READ_FILE: {
+    args: [obj: { filePath: string }];
+    return: ArrayBuffer;
   };
 };
 
