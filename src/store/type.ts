@@ -43,7 +43,7 @@ import { QVueGlobals } from "quasar";
  * エディタ用のAudioQuery
  */
 export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
-  outputSamplingRate: number | "default";
+  outputSamplingRate: number | "engineDefault";
 };
 
 // FIXME: SpeakerIdを追加する

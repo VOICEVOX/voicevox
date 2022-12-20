@@ -491,10 +491,19 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="['default', 24000, 44100, 48000, 88200, 96000]"
+                  :options="[
+                    'engineDefault',
+                    24000,
+                    44100,
+                    48000,
+                    88200,
+                    96000,
+                  ]"
                   :option-label="
                     (item) =>
-                      item === 'default' ? 'デフォルト' : `${item / 1000} kHz`
+                      item === 'engineDefault'
+                        ? 'デフォルト'
+                        : `${item / 1000} kHz`
                   "
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
@@ -816,7 +825,7 @@ export default defineComponent({
           data: { ...savingSetting.value, [key]: data },
         });
       };
-      if (key === "outputSamplingRate" && data !== "default") {
+      if (key === "outputSamplingRate" && data !== "engineDefault") {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
