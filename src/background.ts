@@ -749,7 +749,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
-    properties: [],
+    properties: ["openFile"],
   });
   return result.filePaths[0];
 });
