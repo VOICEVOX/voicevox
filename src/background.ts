@@ -44,10 +44,14 @@ type SingleInstanceLockData = {
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Electronの設定ファイルの保存場所を変更
-app.setPath(
-  "userData",
-  path.join(app.getPath("appData"), `voicevox${isDevelopment ? "-dev" : ""}`)
+const fixedUserDataDir = path.join(
+  app.getPath("appData"),
+  `voicevox${isDevelopment ? "-dev" : ""}`
 );
+if (!fs.existsSync(fixedUserDataDir)) {
+  fs.mkdirSync(fixedUserDataDir);
+}
+app.setPath("userData", fixedUserDataDir);
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
