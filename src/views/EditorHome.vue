@@ -23,7 +23,7 @@
               }}
             </div>
 
-            <template v-if="isEngineWaitingLong">
+            <template v-if="isEngineWaitingLong && isMultipleEngine">
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
               <q-btn outline @click="restartAppWithSafeMode">
@@ -228,6 +228,8 @@ export default defineComponent({
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
     // hotkeys handled by Mousetrap
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
@@ -579,9 +581,6 @@ export default defineComponent({
     const isEngineWaitingLong = ref<boolean>(false);
     let engineTimer: number | undefined = undefined;
     watch(allEngineState, (newEngineState) => {
-      if (Object.keys(store.state.engineInfos).length === 1) {
-        return;
-      }
       if (engineTimer !== undefined) {
         clearTimeout(engineTimer);
         engineTimer = undefined;
@@ -750,6 +749,7 @@ export default defineComponent({
       isCompletedInitialStartup,
       allEngineState,
       isEngineWaitingLong,
+      isMultipleEngine,
       restartAppWithSafeMode,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
