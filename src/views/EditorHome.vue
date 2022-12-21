@@ -23,12 +23,17 @@
               }}
             </div>
 
-            <template v-if="isEngineWaitingLong && isMultipleEngine">
+            <template v-if="isEngineWaitingLong">
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
-              <q-btn outline @click="restartAppWithSafeMode">
+              <q-btn
+                outline
+                @click="restartAppWithSafeMode"
+                v-if="isMultipleEngine"
+              >
                 セーフモードで起動する</q-btn
               >
+              <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
             </template>
           </div>
         </div>
@@ -598,6 +603,10 @@ export default defineComponent({
       store.dispatch("RESTART_APP", { isSafeMode: true });
     };
 
+    const openFaq = () => {
+      window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
+    };
+
     // ライセンス表示
     const isHelpDialogOpenComputed = computed({
       get: () => store.state.isHelpDialogOpen,
@@ -751,6 +760,7 @@ export default defineComponent({
       isEngineWaitingLong,
       isMultipleEngine,
       restartAppWithSafeMode,
+      openFaq,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,
