@@ -85,6 +85,7 @@ if (isDevelopment) {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
+  process.chdir(appDirPath);
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -634,16 +635,22 @@ async function createWindow() {
   win.webContents.once("did-finish-load", () => {
     if (isMac) {
       if (filePathOnMac) {
-        ipcMainSend(win, "LOAD_PROJECT_FILE", {
-          filePath: filePathOnMac,
-          confirm: false,
-        });
+        if (filePathOnMac.endsWith(".vvproj")) {
+          ipcMainSend(win, "LOAD_PROJECT_FILE", {
+            filePath: filePathOnMac,
+            confirm: false,
+          });
+        }
         filePathOnMac = undefined;
       }
     } else {
       if (process.argv.length >= 2) {
         const filePath = process.argv[1];
-        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        if (
+          fs.existsSync(filePath) &&
+          fs.statSync(filePath).isFile() &&
+          filePath.endsWith(".vvproj")
+        ) {
           ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
         }
       }
@@ -1131,8 +1138,13 @@ app.on("ready", async () => {
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
     log.info(`File path sent: ${filePath}`);
+    appState.willQuit = true;
     app.quit();
     return;
+  }
+
+  if (filePath?.endsWith(".vvpp")) {
+    await installVvppEngine(filePath);
   }
 
   createWindow().then(() => engineManager.runEngineAll(win));
