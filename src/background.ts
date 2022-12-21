@@ -1141,7 +1141,9 @@ app.on("ready", async () => {
     appState.willQuit = true;
     app.quit();
     return;
-  } else if (filePath?.endsWith(".vvpp")) {
+  }
+
+  if (filePath?.endsWith(".vvpp")) {
     await installVvppEngine(filePath);
   }
 
