@@ -1,10 +1,7 @@
 "use strict";
 
-import { spawn, ChildProcess } from "child_process";
 import dotenv from "dotenv";
-import treeKill from "tree-kill";
 import Store from "electron-store";
-import shlex from "shlex";
 
 import {
   app,
@@ -31,23 +28,14 @@ import {
   ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
-  EngineDirValidationResult,
   SystemError,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import Ajv from "ajv/dist/jtd";
+import EngineManager from "./background/engineManager";
 import VvppManager from "./background/vvppManager";
-
-type MinimumEngineManifest = {
-  name: string;
-  uuid: string;
-  command: string;
-  port: string;
-  icon: string;
-};
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -97,131 +85,14 @@ if (isDevelopment) {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
+  process.chdir(appDirPath);
 }
-
-const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
-
-if (!fs.existsSync(vvppEngineDir)) {
-  fs.mkdirSync(vvppEngineDir);
-}
-
-const vvppManager = new VvppManager({
-  vvppEngineDir,
-});
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 const isMac = process.platform === "darwin";
-
-const defaultEngineInfos: EngineInfo[] = (() => {
-  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = {
-    elements: {
-      properties: {
-        uuid: { type: "string" },
-        host: { type: "string" },
-        name: { type: "string" },
-        executionEnabled: { type: "boolean" },
-        executionFilePath: { type: "string" },
-        executionArgs: { elements: { type: "string" } },
-      },
-      optionalProperties: {
-        path: { type: "string" },
-      },
-    },
-  } as const;
-  const ajv = new Ajv();
-  const validate = ajv.compile(envSchema);
-
-  const engines = JSON.parse(defaultEngineInfosEnv);
-  if (!validate(engines)) {
-    throw validate.errors;
-  }
-
-  return engines.map((engineInfo) => {
-    return {
-      ...engineInfo,
-      type: "default",
-      path:
-        engineInfo.path === undefined
-          ? undefined
-          : path.resolve(appDirPath, engineInfo.path),
-    };
-  });
-})();
-
-// 追加エンジンの一覧を取得する
-function fetchAdditionalEngineInfos(): EngineInfo[] {
-  const engines: EngineInfo[] = [];
-  const addEngine = (engineDir: string, type: "vvpp" | "path") => {
-    const manifestPath = path.join(engineDir, "engine_manifest.json");
-    if (!fs.existsSync(manifestPath)) {
-      return "manifestNotFound";
-    }
-    let manifest: MinimumEngineManifest;
-    try {
-      manifest = JSON.parse(
-        fs.readFileSync(manifestPath, { encoding: "utf8" })
-      );
-    } catch (e) {
-      return "manifestParseError";
-    }
-
-    const [command, ...args] = shlex.split(manifest.command);
-
-    engines.push({
-      uuid: manifest.uuid,
-      host: `http://127.0.0.1:${manifest.port}`,
-      name: manifest.name,
-      path: engineDir,
-      executionEnabled: true,
-      executionFilePath: path.join(engineDir, command),
-      executionArgs: args,
-      type,
-    });
-    return "ok";
-  };
-  for (const dirName of fs.readdirSync(vvppEngineDir)) {
-    const engineDir = path.join(vvppEngineDir, dirName);
-    if (!fs.statSync(engineDir).isDirectory()) {
-      log.log(`${engineDir} is not directory`);
-      continue;
-    }
-    if (dirName === ".tmp") {
-      continue;
-    }
-    const result = addEngine(engineDir, "vvpp");
-    if (result !== "ok") {
-      log.log(`Failed to load engine: ${result}, ${engineDir}`);
-    }
-  }
-  for (const engineDir of store.get("engineDirs")) {
-    const result = addEngine(engineDir, "path");
-    if (result !== "ok") {
-      log.log(`Failed to load engine: ${result}, ${engineDir}`);
-      // 動かないエンジンは追加できないので削除
-      // FIXME: エンジン管理UIで削除可能にする
-      dialog.showErrorBox(
-        "エンジンの読み込みに失敗しました。",
-        `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
-      );
-      store.set(
-        "engineDirs",
-        store.get("engineDirs").filter((p) => p !== engineDir)
-      );
-    }
-  }
-  return engines;
-}
-
-function fetchEngineInfos(): EngineInfo[] {
-  const userEngineInfos = fetchAdditionalEngineInfos();
-  return [...defaultEngineInfos, ...userEngineInfos];
-}
 
 const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -528,262 +399,22 @@ const store = new Store<ElectronStoreType>({
 });
 
 // engine
-type EngineProcessContainer = {
-  willQuitEngine: boolean;
-  engineProcess?: ChildProcess;
-};
+const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
-const engineProcessContainers: Record<string, EngineProcessContainer> = {};
-
-async function runEngineAll() {
-  const engineInfos = fetchEngineInfos();
-  log.info(`Starting ${engineInfos.length} engine/s...`);
-
-  for (const engineInfo of engineInfos) {
-    log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
-    await runEngine(engineInfo.uuid);
-  }
+if (!fs.existsSync(vvppEngineDir)) {
+  fs.mkdirSync(vvppEngineDir);
 }
 
-async function runEngine(engineId: string) {
-  const engineInfos = fetchEngineInfos();
-  const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.uuid === engineId
-  );
-  if (!engineInfo)
-    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-
-  if (!engineInfo.executionEnabled) {
-    log.info(`ENGINE ${engineId}: Skipped engineInfo execution: disabled`);
-    return;
-  }
-
-  if (!engineInfo.executionFilePath) {
-    log.info(
-      `ENGINE ${engineId}: Skipped engineInfo execution: empty executionFilePath`
-    );
-    return;
-  }
-
-  log.info(`ENGINE ${engineId}: Starting process`);
-
-  if (!(engineId in engineProcessContainers)) {
-    engineProcessContainers[engineId] = {
-      willQuitEngine: false,
-    };
-  }
-
-  const engineProcessContainer = engineProcessContainers[engineId];
-  engineProcessContainer.willQuitEngine = false;
-
-  const useGpu = store.get("useGpu");
-
-  log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
-
-  // エンジンプロセスの起動
-  const enginePath = path.resolve(
-    appDirPath,
-    engineInfo.executionFilePath ?? "run.exe"
-  );
-  const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : []);
-
-  log.info(`ENGINE ${engineId} path: ${enginePath}`);
-  log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
-
-  const engineProcess = spawn(enginePath, args, {
-    cwd: path.dirname(enginePath),
-  });
-  engineProcessContainer.engineProcess = engineProcess;
-
-  engineProcess.stdout?.on("data", (data) => {
-    log.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
-  });
-
-  engineProcess.stderr?.on("data", (data) => {
-    log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
-  });
-
-  engineProcess.on("error", (err) => {
-    log.error(`ENGINE ${engineId} ERROR: ${err}`);
-    // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
-    // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
-    dialog.showErrorBox(
-      "音声合成エンジンエラー",
-      `音声合成エンジンが異常終了しました。${err}`
-    );
-  });
-
-  engineProcess.on("close", (code, signal) => {
-    log.info(
-      `ENGINE ${engineId}: Process terminated due to receipt of signal ${signal}`
-    );
-    log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
-
-    if (!engineProcessContainer.willQuitEngine) {
-      ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-      const dialogMessage =
-        engineInfos.length === 1
-          ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-          : `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`;
-      dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
-    }
-  });
-}
-
-function killEngineAll(): Record<string, Promise<void>> {
-  const killingProcessPromises: Record<string, Promise<void>> = {};
-
-  for (const engineId of Object.keys(engineProcessContainers)) {
-    const promise = killEngine(engineId);
-    if (promise === undefined) continue;
-
-    killingProcessPromises[engineId] = promise;
-  }
-
-  return killingProcessPromises;
-}
-
-// Promise<void> | undefined
-// Promise.resolve: エンジンプロセスのキルに成功した（非同期）
-// Promise.reject: エンジンプロセスのキルに失敗した（非同期）
-// undefined: エンジンプロセスのキルが開始されなかった＝エンジンプロセスがすでに停止している（同期）
-function killEngine(engineId: string): Promise<void> | undefined {
-  const engineProcessContainer = engineProcessContainers[engineId];
-  if (!engineProcessContainer) {
-    log.error(`No such engineProcessContainer: engineId == ${engineId}`);
-
-    return undefined;
-  }
-
-  const engineProcess = engineProcessContainer.engineProcess;
-  if (engineProcess === undefined) {
-    // nop if no process started (already killed or not started yet)
-    log.info(`ENGINE ${engineId}: Process not started`);
-
-    return undefined;
-  }
-
-  const engineNotExited = engineProcess.exitCode === null;
-  const engineNotKilled = engineProcess.signalCode === null;
-
-  log.info(
-    `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`
-  );
-
-  const isAlive = engineNotExited && engineNotKilled;
-  if (!isAlive) {
-    log.info(`ENGINE ${engineId}: Process already closed`);
-
-    return undefined;
-  }
-
-  return new Promise<void>((resolve, reject) => {
-    log.info(`ENGINE ${engineId}: Killing process (PID=${engineProcess.pid})`);
-
-    // エラーダイアログを抑制
-    engineProcessContainer.willQuitEngine = true;
-
-    // プロセス終了時のイベントハンドラ
-    engineProcess.once("close", () => {
-      log.info(`ENGINE ${engineId}: Process closed`);
-      resolve();
-    });
-
-    try {
-      engineProcess.pid != undefined && treeKill(engineProcess.pid);
-    } catch (error: unknown) {
-      log.error(`ENGINE ${engineId}: Error during killing process`);
-      reject(error);
-    }
-  });
-}
-
-async function restartEngineAll() {
-  const engineInfos = fetchEngineInfos();
-  for (const engineInfo of engineInfos) {
-    await restartEngine(engineInfo.uuid);
-  }
-}
-
-async function restartEngine(engineId: string) {
-  // FIXME: killEngine関数を使い回すようにする
-  await new Promise<void>((resolve, reject) => {
-    const engineProcessContainer: EngineProcessContainer | undefined =
-      engineProcessContainers[engineId];
-    const engineProcess = engineProcessContainer?.engineProcess;
-
-    log.info(
-      `ENGINE ${engineId}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`
-    );
-
-    // エンジンのプロセスがすでに終了している、またはkillされている場合
-    const engineExited = engineProcess?.exitCode !== null;
-    const engineKilled = engineProcess?.signalCode !== null;
-
-    // engineProcess === undefinedの場合true
-    if (engineExited || engineKilled) {
-      log.info(
-        `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
-      );
-
-      runEngine(engineId);
-      resolve();
-      return;
-    }
-
-    // エンジンエラー時のエラーウィンドウ抑制用。
-    engineProcessContainer.willQuitEngine = true;
-
-    // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
-    // closeイベントはexitイベントよりも後に発火します。
-    const restartEngineOnProcessClosedCallback = () => {
-      log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
-
-      runEngine(engineId);
-      resolve();
-    };
-
-    if (engineProcess === undefined) throw Error("engineProcess === undefined");
-
-    engineProcess.once("close", restartEngineOnProcessClosedCallback);
-
-    // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-    log.info(
-      `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
-    );
-    treeKill(engineProcess.pid, (error) => {
-      // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
-      if (error != null) {
-        log.error(`ENGINE ${engineId}: Failed to kill process`);
-        log.error(error);
-
-        // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
-        // listenerを削除してENGINEの意図しない再起動を防止
-        engineProcess.removeListener(
-          "close",
-          restartEngineOnProcessClosedCallback
-        );
-
-        reject();
-      }
-    });
-  });
-}
+const engineManager = new EngineManager({
+  store,
+  defaultEngineDir: appDirPath,
+  vvppEngineDir,
+});
+const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: string) {
-  const engineInfos = fetchEngineInfos();
-  const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.uuid === engineId
-  );
-  if (!engineInfo) {
-    throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-  }
-
-  const engineDirectory = engineInfo.path;
-  if (engineDirectory == null) {
-    throw new Error(`engineDirectory is null: engineId == ${engineId}`);
-  }
+  const engineDirectory = engineManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
@@ -812,11 +443,9 @@ async function installVvppEngine(vvppPath: string) {
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
 async function uninstallVvppEngine(engineId: string) {
-  const engineInfos = fetchEngineInfos();
-  const engineInfo = engineInfos.find(
-    (engineInfo) => engineInfo.uuid === engineId
-  );
+  let engineInfo: EngineInfo | undefined = undefined;
   try {
+    engineInfo = engineManager.fetchEngineInfo(engineId);
     if (!engineInfo) {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
@@ -838,43 +467,6 @@ async function uninstallVvppEngine(engineId: string) {
     log.error(`Failed to uninstall ${engineId}, ${e}`);
     return false;
   }
-}
-
-// ディレクトリがエンジンとして正しいかどうかを判定する
-function validateEngineDir(engineDir: string): EngineDirValidationResult {
-  if (!fs.existsSync(engineDir)) {
-    return "directoryNotFound";
-  } else if (!fs.statSync(engineDir).isDirectory()) {
-    return "notADirectory";
-  } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
-    return "manifestNotFound";
-  }
-  const manifest = fs.readFileSync(
-    path.join(engineDir, "engine_manifest.json"),
-    "utf-8"
-  );
-  let manifestContent: MinimumEngineManifest;
-  try {
-    manifestContent = JSON.parse(manifest);
-  } catch (e) {
-    return "invalidManifest";
-  }
-
-  if (
-    ["name", "uuid", "port", "command", "icon"].some(
-      (key) => !(key in manifestContent)
-    )
-  ) {
-    return "invalidManifest";
-  }
-
-  const engineInfos = fetchEngineInfos();
-  if (
-    engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
-  ) {
-    return "alreadyExists";
-  }
-  return "ok";
 }
 
 // temp dir
@@ -1043,16 +635,22 @@ async function createWindow() {
   win.webContents.once("did-finish-load", () => {
     if (isMac) {
       if (filePathOnMac) {
-        ipcMainSend(win, "LOAD_PROJECT_FILE", {
-          filePath: filePathOnMac,
-          confirm: false,
-        });
+        if (filePathOnMac.endsWith(".vvproj")) {
+          ipcMainSend(win, "LOAD_PROJECT_FILE", {
+            filePath: filePathOnMac,
+            confirm: false,
+          });
+        }
         filePathOnMac = undefined;
       }
     } else {
       if (process.argv.length >= 2) {
         const filePath = process.argv[1];
-        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        if (
+          fs.existsSync(filePath) &&
+          fs.statSync(filePath).isFile() &&
+          filePath.endsWith(".vvproj")
+        ) {
           ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
         }
       }
@@ -1158,7 +756,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
-    properties: [],
+    properties: ["openFile"],
   });
   return result.filePaths[0];
 });
@@ -1284,7 +882,7 @@ ipcMainHandle("LOG_INFO", (_, ...params) => {
 
 ipcMainHandle("ENGINE_INFOS", () => {
   // エンジン情報を設定ファイルに保存しないためにstoreは使わない
-  return fetchEngineInfos();
+  return engineManager.fetchEngineInfos();
 });
 
 /**
@@ -1292,11 +890,11 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
 ipcMainHandle("RESTART_ENGINE_ALL", async () => {
-  await restartEngineAll();
+  await engineManager.restartEngineAll(win);
 });
 
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
-  await restartEngine(engineId);
+  await engineManager.restartEngine(engineId, win);
 });
 
 ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
@@ -1373,7 +971,7 @@ ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: string) => {
 });
 
 ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
-  return validateEngineDir(engineDir);
+  return engineManager.validateEngineDir(engineDir);
 });
 
 ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
@@ -1429,7 +1027,7 @@ app.on("before-quit", async (event) => {
 
   log.info("Checking ENGINE status before app quit");
 
-  const killingProcessPromises = killEngineAll();
+  const killingProcessPromises = engineManager.killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // すべてのエンジンプロセスが停止している
@@ -1454,7 +1052,7 @@ app.on("before-quit", async (event) => {
       appState.willRestart = false;
       appState.willQuit = false;
 
-      createWindow().then(() => runEngineAll());
+      createWindow().then(() => engineManager.runEngineAll(win));
     } else {
       log.info("Post engine kill process done. Now quit app");
     }
@@ -1540,11 +1138,16 @@ app.on("ready", async () => {
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
     log.info(`File path sent: ${filePath}`);
+    appState.willQuit = true;
     app.quit();
     return;
   }
 
-  createWindow().then(() => runEngineAll());
+  if (filePath?.endsWith(".vvpp")) {
+    await installVvppEngine(filePath);
+  }
+
+  createWindow().then(() => engineManager.runEngineAll(win));
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
