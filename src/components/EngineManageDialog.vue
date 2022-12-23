@@ -335,6 +335,7 @@ import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import type { EngineDirValidationResult } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
+import { sortEngineInfos } from "@/helpers/engineHelper";
 
 type EngineLoaderType = "dir" | "vvpp";
 
@@ -371,11 +372,14 @@ export default defineComponent({
     };
 
     const categorizedEngineIds = computed(() => {
+      const sortedEngineInfos = sortEngineInfos(
+        Object.values(store.state.engineInfos)
+      );
       const result = {
-        default: Object.values(engineInfos.value)
+        default: Object.values(sortedEngineInfos)
           .filter((info) => info.type === "default")
           .map((info) => info.uuid),
-        plugin: Object.values(engineInfos.value)
+        plugin: Object.values(sortedEngineInfos)
           .filter((info) => info.type === "path" || info.type === "vvpp")
           .map((info) => info.uuid),
       };

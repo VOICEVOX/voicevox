@@ -6,18 +6,22 @@
     <div class="q-pa-md markdown-body">
       <q-list v-if="selectedInfo === undefined">
         <template
-          v-for="([engineId, engineInfo], engineIndex) in engineInfos.entries()"
+          v-for="(engineId, engineIndex) in sortedEngineInfos.map(
+            (engineInfo) => engineInfo.uuid
+          )"
           :key="engineIndex"
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
             <q-separator spaced v-if="engineIndex > 0" />
-            <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
+            <q-item-label header>{{
+              engineInfos.get(engineId).name
+            }}</q-item-label>
           </template>
           <template
-            v-for="(
-              [, characterInfo], characterIndex
-            ) in engineInfo.characterInfos"
+            v-for="([, characterInfo], characterIndex) in engineInfos.get(
+              engineId
+            ).characterInfos"
             :key="characterIndex"
           >
             <q-item
@@ -72,6 +76,7 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { sortEngineInfos } from "@/helpers/engineHelper";
 
 type DetailKey = { engine: string; character: string };
 
@@ -84,6 +89,10 @@ export default defineComponent({
       () => store.getters.GET_ALL_CHARACTER_INFOS
     );
 
+    const sortedEngineInfos = computed(() =>
+      sortEngineInfos(Object.values(store.state.engineInfos))
+    );
+
     const engineInfos = computed(
       () =>
         new Map(
@@ -92,7 +101,7 @@ export default defineComponent({
               engineId,
               {
                 engineId,
-                engineName: store.state.engineManifests[engineId].name,
+                name: store.state.engineManifests[engineId].name,
                 characterInfos: new Map(
                   characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
                 ),
@@ -120,6 +129,7 @@ export default defineComponent({
       characterInfos: allCharacterInfos,
       engineInfos,
       convertMarkdown,
+      sortedEngineInfos,
       selectCharacterInfo,
       selectedInfo,
       scroller,
