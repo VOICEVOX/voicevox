@@ -18,9 +18,19 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+const GoogleFontsPlugin = require("@beyonk/google-fonts-webpack-plugin");
+
 module.exports = {
   configureWebpack: {
     devtool: "source-map",
+    plugins: [
+      new GoogleFontsPlugin({
+        fonts: [
+          { family: "M PLUS Rounded 1c", variants: [300, 400, 500, 700] },
+        ],
+        apiUrl: "https://gwfh.mranftl.com/api/fonts",
+      }),
+    ],
   },
   pluginOptions: {
     electronBuilder: {

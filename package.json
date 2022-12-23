@@ -57,6 +57,7 @@
     "vuex": "4.0.2"
   },
   "devDependencies": {
+    "@beyonk/google-fonts-webpack-plugin": "1.7.0",
     "@openapitools/openapi-generator-cli": "2.3.3",
     "@playwright/test": "1.23.3",
     "@types/chai": "4.2.18",

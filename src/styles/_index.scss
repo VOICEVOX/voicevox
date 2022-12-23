@@ -9,6 +9,8 @@ body:not(#dummy) {
   border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
+
+  font-family: "M PLUS Rounded 1c", sans-serif;
 }
 
 img {
