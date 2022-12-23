@@ -228,6 +228,10 @@ const store = new Store<ElectronStoreType>({
           default: "default",
         },
         audioOutputDevice: { type: "string", default: "default" },
+        editorFont: {
+          oneOf: [{ const: "default" }, { const: "os" }],
+          default: "default",
+        },
       },
       default: {
         fileEncoding: "UTF-8",
@@ -241,6 +245,7 @@ const store = new Store<ElectronStoreType>({
         outputSamplingRate: "default",
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
+        editorFont: "default",
       },
     },
     // To future developers: if you are to modify the store schema with array type,

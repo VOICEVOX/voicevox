@@ -11,7 +11,7 @@ body:not(#dummy) {
   background: colors.$background;
 }
 
-* {
+body[data-editor-font="default"] {
   font-family: "M PLUS Rounded 1c", sans-serif;
 }
 
