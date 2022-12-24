@@ -157,26 +157,42 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         })
       );
 
-      return await Promise.all(promises).then((results) =>
-        results.every((result) => result)
-      );
+      return await Promise.all(promises).then((results) => ({
+        success: results.every((r) => r.success),
+        anyNewCharacters: results.some((r) => r.anyNewCharacters),
+      }));
     },
   },
 
   RESTART_ENGINE: {
-    async action({ dispatch, commit, state }, { engineId }) {
+    async action({ dispatch, commit, state }, { engineId, openDialog }) {
       commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
-      const success = await window.electron
+      const result = await window.electron
         .restartEngine(engineId)
         .then(async () => {
           await dispatch("START_WAITING_ENGINE", { engineId });
-          return state.engineStates[engineId] === "READY";
+          await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+          await dispatch("LOAD_CHARACTER", { engineId });
+
+          const newCharacters = await dispatch("GET_NEW_CHARACTERS");
+          return {
+            success: state.engineStates[engineId] === "READY",
+            anyNewCharacters: newCharacters.length > 0,
+          };
         })
         .catch(async () => {
           await dispatch("DETECTED_ENGINE_ERROR", { engineId });
-          return false;
+          return {
+            success: false,
+            anyNewCharacters: false,
+          };
         });
-      return success;
+      if (result.anyNewCharacters) {
+        dispatch("SET_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen: true,
+        });
+      }
+      return result;
     },
   },
 
