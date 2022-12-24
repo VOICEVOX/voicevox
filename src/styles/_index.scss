@@ -1,5 +1,6 @@
 @use './variables' as vars;
 @use './colors' as colors;
+@import './fonts';
 
 // 優先度を強引に上げる
 body:not(#dummy) {
@@ -12,7 +13,7 @@ body:not(#dummy) {
 }
 
 body[data-editor-font="default"] {
-  font-family: "M PLUS Rounded 1c", sans-serif;
+  font-family: "Rounded M+ 1p", sans-serif;
 }
 
 img {

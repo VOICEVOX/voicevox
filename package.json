@@ -28,7 +28,6 @@
     "license:merge": "node build/mergeLicenses.js"
   },
   "dependencies": {
-    "@fontsource/m-plus-rounded-1c": "4.5.10",
     "@gtm-support/vue-gtm": "1.2.3",
     "@quasar/extras": "1.10.10",
     "ajv": "8.6.2",
