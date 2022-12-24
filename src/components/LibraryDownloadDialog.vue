@@ -39,17 +39,7 @@
       >
         <div class="library-portrait-wrapper">
           <img
-            :src="
-              downloadableLibrariesMap[selectedEngineId]
-                ? downloadableLibrariesMap[selectedEngineId][selectedLibrary]
-                  ? base64ImageToUri(
-                      downloadableLibrariesMap[selectedEngineId][
-                        selectedLibrary
-                      ].downloadableModel.speakerInfo.portrait
-                    )
-                  : ''
-                : ''
-            "
+            :src="getPortraitUri(selectedEngineId, selectedLibrary)"
             class="library-portrait"
           />
         </div>
@@ -116,18 +106,12 @@
                 <div class="library-item-inner">
                   <img
                     :src="
-                      base64ImageToUri(
-                        downloadableLibrariesMap[engineId][
+                      getIconUri(
+                        engineId,
+                        library.downloadableModel.speaker.speakerUuid,
+                        selectedStyleIndexes[engineId][
                           library.downloadableModel.speaker.speakerUuid
-                        ].downloadableModel.speakerInfo.styleInfos[
-                          selectedStyleIndexes[engineId][
-                            library.downloadableModel.speaker.speakerUuid
-                          ]
-                            ? selectedStyleIndexes[engineId][
-                                library.downloadableModel.speaker.speakerUuid
-                              ]
-                            : 0
-                        ].icon
+                        ] || 0
                       )
                     "
                     class="style-icon"
@@ -565,11 +549,50 @@ export default defineComponent({
     const isInstallingLibrary = ref(false);
 
     const installLibrary = (engineId: string, library: DownloadableLibrary) => {
-      console.log("TODO: installLibrary", engineId, library);
       isInstallingLibrary.value = true;
+
+      selectLibrary(engineId, library.downloadableModel.speaker.speakerUuid);
+      stop();
       setTimeout(() => {
         isInstallingLibrary.value = false;
       }, 10000);
+    };
+
+    const portraitCache = ref<Record<string, string>>({});
+    const getPortraitUri = (engineId: string, speakerUuid: string) => {
+      const cached = portraitCache.value[`${engineId}:${speakerUuid}`];
+      if (cached) return cached;
+
+      const portraitBase64 =
+        downloadableLibrariesMap.value[engineId][speakerUuid]?.downloadableModel
+          .speakerInfo.portrait;
+      if (portraitBase64 === undefined) return undefined;
+      const uri = base64ImageToUri(portraitBase64);
+
+      portraitCache.value[`${engineId}:${speakerUuid}`] = uri;
+
+      return uri;
+    };
+
+    const iconCache = ref<Record<string, string>>({});
+    const getIconUri = (
+      engineId: string,
+      speakerUuid: string,
+      styleIndex: number
+    ) => {
+      const cached =
+        iconCache.value[`${engineId}:${speakerUuid}:${styleIndex}`];
+      if (cached) return cached;
+
+      const iconBase64 =
+        downloadableLibrariesMap.value[engineId][speakerUuid]?.downloadableModel
+          .speakerInfo.styleInfos[styleIndex]?.icon;
+      if (iconBase64 === undefined) return undefined;
+      const uri = base64ImageToUri(iconBase64);
+
+      iconCache.value[`${engineId}:${speakerUuid}:${styleIndex}`] = uri;
+
+      return uri;
     };
 
     return {
@@ -595,7 +618,8 @@ export default defineComponent({
       isInstallingLibrary,
       installLibrary,
       closeDialog,
-      base64ImageToUri,
+      getPortraitUri,
+      getIconUri,
     };
   },
 });

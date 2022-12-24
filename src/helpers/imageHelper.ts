@@ -13,12 +13,7 @@ function detectImageTypeFromBase64(data: string): string {
   }
 }
 
-const base64ImageCache = new Map<string, string>();
-
 export function base64ImageToUri(image: string): string {
-  if (base64ImageCache.has(image)) {
-    return base64ImageCache.get(image) as string;
-  }
   const mimeType = detectImageTypeFromBase64(image);
   const buffer = Buffer.from(image, "base64");
   const url = URL.createObjectURL(
@@ -26,6 +21,5 @@ export function base64ImageToUri(image: string): string {
       type: mimeType,
     })
   );
-  base64ImageCache.set(image, url);
   return url;
 }
