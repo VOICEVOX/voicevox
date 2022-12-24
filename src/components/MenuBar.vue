@@ -522,6 +522,22 @@ export default defineComponent({
         },
         disableWhenUiLocked: false,
       });
+      if (
+        Object.values(engineManifests.value).some(
+          (e) => e.downloadableLibrariesUrl
+        )
+      ) {
+        engineMenu.subMenu.push({
+          type: "button",
+          label: "音声ライブラリのダウンロード",
+          onClick: () => {
+            store.dispatch("SET_DIALOG_OPEN", {
+              isLibraryDownloadDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: true,
+        });
+      }
     }
     watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 

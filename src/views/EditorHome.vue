@@ -153,6 +153,7 @@
   />
   <dictionary-manage-dialog v-model="isDictionaryManageDialogOpenComputed" />
   <engine-manage-dialog v-model="isEngineManageDialogOpenComputed" />
+  <library-download-dialog v-model="isLibraryDownloadDialogOpenComputed" />
   <accept-retrieve-telemetry-dialog
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
@@ -187,6 +188,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import LibraryDownloadDialog from "@/components/LibraryDownloadDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
@@ -218,6 +220,7 @@ export default defineComponent({
     AcceptTermsDialog,
     DictionaryManageDialog,
     EngineManageDialog,
+    LibraryDownloadDialog,
     ProgressDialog,
   },
 
@@ -681,6 +684,15 @@ export default defineComponent({
         }),
     });
 
+    // ライブラリのダウンロード
+    const isLibraryDownloadDialogOpenComputed = computed({
+      get: () => store.state.isLibraryDownloadDialogOpen,
+      set: (val) =>
+        store.dispatch("SET_DIALOG_OPEN", {
+          isLibraryDownloadDialogOpen: val,
+        }),
+    });
+
     const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
       get: () =>
         !store.state.isAcceptTermsDialogOpen &&
@@ -757,6 +769,7 @@ export default defineComponent({
       isDefaultStyleSelectDialogOpenComputed,
       isEngineManageDialogOpenComputed,
       isDictionaryManageDialogOpenComputed,
+      isLibraryDownloadDialogOpenComputed,
       isAcceptRetrieveTelemetryDialogOpenComputed,
       isAcceptTermsDialogOpenComputed,
       dragEventCounter,
