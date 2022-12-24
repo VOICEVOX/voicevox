@@ -149,17 +149,17 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   RESTART_ENGINE_ALL: {
     async action({ state, dispatch }) {
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
-      let allSuccess = true;
       const engineIds = state.engineIds;
 
-      for (const engineId of engineIds) {
-        const success = await dispatch("RESTART_ENGINE", {
+      const promises = engineIds.map((engineId) =>
+        dispatch("RESTART_ENGINE", {
           engineId,
-        });
-        allSuccess = allSuccess && success;
-      }
+        })
+      );
 
-      return allSuccess;
+      return await Promise.all(promises).then((results) =>
+        results.every((result) => result)
+      );
     },
   },
 
