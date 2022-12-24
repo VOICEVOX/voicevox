@@ -233,7 +233,7 @@
                     :disable="
                       downloadableLibrariesMap[engineId][
                         library.downloadableModel.speaker.speakerUuid
-                      ].latestModelExists
+                      ].latestModelExists || isInstallingLibrary
                     "
                     @click.stop="installLibrary(engineId, library)"
                   >
