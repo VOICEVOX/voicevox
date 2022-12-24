@@ -228,10 +228,6 @@ const store = new Store<ElectronStoreType>({
           default: "default",
         },
         audioOutputDevice: { type: "string", default: "default" },
-        editorFont: {
-          oneOf: [{ const: "default" }, { const: "os" }],
-          default: "default",
-        },
       },
       default: {
         fileEncoding: "UTF-8",
