@@ -76,7 +76,6 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import { sortEngineInfos } from "@/helpers/engineHelper";
 
 type DetailKey = { engine: string; character: string };
 
@@ -89,8 +88,8 @@ export default defineComponent({
       () => store.getters.GET_ALL_CHARACTER_INFOS
     );
 
-    const sortedEngineInfos = computed(() =>
-      sortEngineInfos(Object.values(store.state.engineInfos))
+    const sortedEngineInfos = computed(
+      () => store.getters.GET_SORTED_ENGINE_INFOS
     );
 
     const engineInfos = computed(

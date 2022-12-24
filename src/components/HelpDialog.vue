@@ -86,7 +86,6 @@ import ContactInfo from "@/components/ContactInfo.vue";
 import semver from "semver";
 import { UpdateInfo as UpdateInfoObject } from "../type/preload";
 import { useStore } from "@/store";
-import { sortEngineInfos } from "@/helpers/engineHelper";
 type PageItem = {
   type: "item";
   name: string;
@@ -232,9 +231,9 @@ export default defineComponent({
       ] as PageData[];
       // エンジンが一つだけの場合は従来の表示のみ
       if (store.state.engineIds.length > 1) {
-        for (const id of sortEngineInfos(
-          Object.values(store.state.engineInfos)
-        ).map((m) => m.uuid)) {
+        for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map(
+          (m) => m.uuid
+        )) {
           const manifest = store.state.engineManifests[id];
 
           data.push(

@@ -335,7 +335,6 @@ import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import type { EngineDirValidationResult } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
-import { sortEngineInfos } from "@/helpers/engineHelper";
 
 type EngineLoaderType = "dir" | "vvpp";
 
@@ -372,9 +371,7 @@ export default defineComponent({
     };
 
     const categorizedEngineIds = computed(() => {
-      const sortedEngineInfos = sortEngineInfos(
-        Object.values(store.state.engineInfos)
-      );
+      const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
       const result = {
         default: Object.values(sortedEngineInfos)
           .filter((info) => info.type === "default")

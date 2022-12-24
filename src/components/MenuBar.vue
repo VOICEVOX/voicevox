@@ -40,7 +40,6 @@ import {
   connectAndExportTextWithDialog,
 } from "@/components/Dialog";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { sortEngineInfos } from "@/helpers/engineHelper";
 
 type MenuItemBase<T extends string> = {
   type: T;
@@ -468,7 +467,7 @@ export default defineComponent({
         ].filter((x) => x) as MenuItemData[];
       } else {
         engineMenu.subMenu = [
-          ...sortEngineInfos(Object.values(engineInfos.value)).map(
+          ...store.getters.GET_SORTED_ENGINE_INFOS.map(
             (engineInfo) =>
               ({
                 type: "root",

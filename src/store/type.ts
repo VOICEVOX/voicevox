@@ -667,6 +667,10 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
+  GET_SORTED_ENGINE_INFOS: {
+    getter: EngineInfo[];
+  };
+
   SET_ENGINE_MANIFESTS: {
     mutation: { engineManifests: Record<string, EngineManifest> };
   };
