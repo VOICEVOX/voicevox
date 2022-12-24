@@ -928,8 +928,8 @@ export type SettingStoreTypes = {
   };
 
   SET_EDITOR_FONT: {
-    mutation: { editorFont: EditorFontType  };
-    action(payload: { editorFont: EditorFontType  }): void;
+    mutation: { editorFont: EditorFontType };
+    action(payload: { editorFont: EditorFontType }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
