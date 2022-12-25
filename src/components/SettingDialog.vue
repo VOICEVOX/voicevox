@@ -494,7 +494,7 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="samplingRateOptions as unknown[]"
+                  :options="samplingRateOptions"
                   :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
