@@ -56,5 +56,12 @@ export const ipcMessageReceiver: Plugin = {
         300
       )
     );
+
+    window.electron.onReceivedIPCMsg(
+      "UPDATE_LIBRARY_INSTALLATION_STATE",
+      (_, { state }) => {
+        console.log("UPDATE_LIBRARY_INSTALLATION_STATE", state);
+      }
+    );
   },
 };

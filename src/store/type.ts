@@ -35,6 +35,7 @@ import {
   SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
+  LibraryInstallationState,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -660,6 +661,7 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
+  libraryInstallationState: LibraryInstallationState;
 };
 
 export type EngineStoreTypes = {

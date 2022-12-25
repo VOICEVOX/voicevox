@@ -261,6 +261,8 @@ const api: Sandbox = {
   restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
     ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
+
+  startLibraryInstall: async (engineId, libraryId) => {},
 };
 
 contextBridge.exposeInMainWorld("electron", api);

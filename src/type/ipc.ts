@@ -8,6 +8,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   WriteFileErrorResult,
+  LibraryInstallationState,
 } from "@/type/preload";
 
 /**
@@ -285,6 +286,11 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: ArrayBuffer;
   };
+
+  START_LIBRARY_INSTALL: {
+    args: [obj: { engineId: string; url: string }];
+    return: void;
+  };
 };
 
 /**
@@ -338,6 +344,11 @@ export type IpcSOData = {
 
   DETECT_RESIZED: {
     args: [obj: { width: number; height: number }];
+    return: void;
+  };
+
+  UPDATE_LIBRARY_INSTALLATION_STATE: {
+    args: [obj: { state: LibraryInstallationState }];
     return: void;
   };
 };

@@ -1,3 +1,4 @@
+import { Speaker, SpeakerInfo } from "@/openapi";
 import { IpcRenderer, IpcRendererEvent } from "electron";
 import { IpcSOData } from "./ipc";
 
@@ -103,6 +104,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isSafeMode: boolean }): void;
+  startLibraryInstall(engineId: string, libraryId: string): Promise<void>;
 }
 
 export type AppInfos = {
@@ -336,3 +338,30 @@ export type EngineDirValidationResult =
   | "alreadyExists";
 
 export type VvppFilePathValidationResult = "ok" | "fileNotFound";
+
+export type LibraryInstallationState =
+  | {
+      status: "idle";
+    }
+  | {
+      status: "installing";
+      progress: number;
+    }
+  | {
+      state: "success";
+    }
+  | {
+      state: "error";
+    };
+
+export type DownloadableLibrary = {
+  downloadableModel: {
+    downloadPath: string;
+    volume: string;
+    speaker: Speaker;
+    speakerInfo: SpeakerInfo;
+  };
+  currentVersion: string;
+  characterExists: boolean;
+  latestModelExists: boolean;
+};

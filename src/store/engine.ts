@@ -6,6 +6,9 @@ import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
+  libraryInstallationState: {
+    status: "idle",
+  },
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({

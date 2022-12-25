@@ -39,7 +39,7 @@
       >
         <div class="library-portrait-wrapper">
           <img
-            :src="getPortraitUri(selectedEngineId, selectedLibrary)"
+            :src="portraitUris[`${selectedEngineId}:${selectedLibrary}`]"
             class="library-portrait"
           />
         </div>
@@ -106,13 +106,15 @@
                 <div class="library-item-inner">
                   <img
                     :src="
-                      getIconUri(
-                        engineId,
-                        library.downloadableModel.speaker.speakerUuid,
-                        selectedStyleIndexes[engineId][
+                      iconUris[
+                        `${engineId}:${
                           library.downloadableModel.speaker.speakerUuid
-                        ] || 0
-                      )
+                        }:${
+                          selectedStyleIndexes[engineId][
+                            library.downloadableModel.speaker.speakerUuid
+                          ] || 0
+                        }`
+                      ]
                     "
                     class="style-icon"
                   />
@@ -229,8 +231,8 @@
                         : downloadableLibrariesMap[engineId][
                             library.downloadableModel.speaker.speakerUuid
                           ].characterExists
-                        ? "アップデート"
-                        : "インストール"
+                        ? `アップデート：${library.downloadableModel.volume}`
+                        : `インストール：${library.downloadableModel.volume}`
                     }}
                   </q-btn>
                 </div>
@@ -255,26 +257,9 @@
 <script lang="ts">
 import { defineComponent, computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import {
-  Speaker,
-  SpeakerFromJSON,
-  SpeakerInfo,
-  SpeakerInfoFromJSON,
-  StyleInfo,
-} from "@/openapi";
+import { SpeakerFromJSON, SpeakerInfoFromJSON, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-
-type DownloadableLibrary = {
-  downloadableModel: {
-    downloadPath: string;
-    volume: string;
-    speaker: Speaker;
-    speakerInfo: SpeakerInfo;
-  };
-  currentVersion: string;
-  characterExists: boolean;
-  latestModelExists: boolean;
-};
+import { DownloadableLibrary } from "@/type/preload";
 
 export default defineComponent({
   name: "LibraryDownloadDialog",
@@ -389,6 +374,9 @@ export default defineComponent({
     };
 
     // ダイアログが開かれたときに初期値を求める
+
+    const iconUris = ref<Record<string, string>>({});
+    const portraitUris = ref<Record<string, string>>({});
     watch(
       [engineIdsWithDownloadableLibraries, engineInfos, engineManifests],
       () => {
@@ -452,6 +440,23 @@ export default defineComponent({
                 };
                 return toPrimaryOrder(a) - toPrimaryOrder(b);
               });
+
+              for (const library of libraries) {
+                const portraitUri = base64ImageToUri(
+                  library.downloadableModel.speakerInfo.portrait
+                );
+                portraitUris.value[
+                  `${engineId}:${library.downloadableModel.speaker.speakerUuid}`
+                ] = portraitUri;
+                for (const [index, style] of Object.entries(
+                  library.downloadableModel.speakerInfo.styleInfos
+                )) {
+                  const iconUri = base64ImageToUri(style.icon);
+                  iconUris.value[
+                    `${engineId}:${library.downloadableModel.speaker.speakerUuid}:${index}`
+                  ] = iconUri;
+                }
+              }
 
               return libraries;
             });
@@ -558,43 +563,6 @@ export default defineComponent({
       }, 10000);
     };
 
-    const portraitCache = ref<Record<string, string>>({});
-    const getPortraitUri = (engineId: string, speakerUuid: string) => {
-      const cached = portraitCache.value[`${engineId}:${speakerUuid}`];
-      if (cached) return cached;
-
-      const portraitBase64 =
-        downloadableLibrariesMap.value[engineId][speakerUuid]?.downloadableModel
-          .speakerInfo.portrait;
-      if (portraitBase64 === undefined) return undefined;
-      const uri = base64ImageToUri(portraitBase64);
-
-      portraitCache.value[`${engineId}:${speakerUuid}`] = uri;
-
-      return uri;
-    };
-
-    const iconCache = ref<Record<string, string>>({});
-    const getIconUri = (
-      engineId: string,
-      speakerUuid: string,
-      styleIndex: number
-    ) => {
-      const cached =
-        iconCache.value[`${engineId}:${speakerUuid}:${styleIndex}`];
-      if (cached) return cached;
-
-      const iconBase64 =
-        downloadableLibrariesMap.value[engineId][speakerUuid]?.downloadableModel
-          .speakerInfo.styleInfos[styleIndex]?.icon;
-      if (iconBase64 === undefined) return undefined;
-      const uri = base64ImageToUri(iconBase64);
-
-      iconCache.value[`${engineId}:${speakerUuid}:${styleIndex}`] = uri;
-
-      return uri;
-    };
-
     return {
       modelValueComputed,
       engineIds,
@@ -618,8 +586,8 @@ export default defineComponent({
       isInstallingLibrary,
       installLibrary,
       closeDialog,
-      getPortraitUri,
-      getIconUri,
+      portraitUris,
+      iconUris,
     };
   },
 });
@@ -679,7 +647,7 @@ export default defineComponent({
     row-gap: 10px;
     align-content: center;
     justify-content: center;
-    // そのままだとdisableになったときにUIが崩壊する
+    // deepをつけないとdisableになったときにUIが崩壊する
     :deep(.library-item) {
       box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
       border-radius: 10px;
