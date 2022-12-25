@@ -283,7 +283,10 @@
                     maxWidth: '450px',
                   }"
                   @update:model-value="
-                    handleSavingSettingChange('fixedExportDir', $event)
+                    (event) => {
+                      if (event == null) throw 'event is null';
+                      handleSavingSettingChange('fixedExportDir', event);
+                    }
                   "
                 >
                   <template v-slot:append>
@@ -491,7 +494,7 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="(samplingRateOptions as unknown[])"
+                  :options="samplingRateOptions as unknown[]"
                   :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
