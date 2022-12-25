@@ -21,6 +21,12 @@ const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 module.exports = {
   configureWebpack: {
     devtool: "source-map",
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src"),
+        vue$: "vue/dist/vue.esm-bundler.js",
+      },
+    },
   },
   pluginOptions: {
     electronBuilder: {

@@ -1,9 +1,10 @@
-import { shallowMount } from "@vue/test-utils";
+import { mount } from "@vue/test-utils";
 import HowToUse from "@/components/HowToUse.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { createStore } from "vuex";
 import { storeKey } from "@/store";
-import { QPage } from "quasar";
+import { wrapQPage } from "../utils";
+import { Quasar } from "quasar";
 
 const store = createStore({
   actions: {
@@ -15,12 +16,9 @@ const store = createStore({
 
 describe("HowToUse.vue", () => {
   it("can mount", () => {
-    shallowMount(HowToUse, {
+    mount(wrapQPage(HowToUse), {
       global: {
-        plugins: [markdownItPlugin, [store, storeKey]],
-        components: {
-          QPage: QPage,
-        },
+        plugins: [markdownItPlugin, [store, storeKey], Quasar],
       },
     });
   });
