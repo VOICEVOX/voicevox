@@ -47,6 +47,7 @@ describe("store/vuex.js test", () => {
         isEngineManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
+        isLibraryDownloadDialogOpen: false,
         isMaximized: false,
         isSafeMode: false,
         savedLastCommandUnixMillisec: null,
