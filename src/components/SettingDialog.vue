@@ -491,20 +491,8 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="[
-                    'engineDefault',
-                    24000,
-                    44100,
-                    48000,
-                    88200,
-                    96000,
-                  ]"
-                  :option-label="
-                    (item) =>
-                      item === 'engineDefault'
-                        ? 'デフォルト'
-                        : `${item / 1000} kHz`
-                  "
+                  :options="(samplingRateOptions as unknown[])"
+                  :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
@@ -816,6 +804,19 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
+    const samplingRateOptions: ReadonlyArray<
+      SavingSetting["outputSamplingRate"]
+    > = ["engineDefault", 24000, 44100, 48000, 88200, 96000] as const;
+    const renderSamplingRateLabel = (
+      value: typeof samplingRateOptions[number]
+    ) => {
+      if (value === "engineDefault") {
+        return "デフォルト";
+      } else {
+        return `${value / 1000} kHz`;
+      }
+    };
+
     const handleSavingSettingChange = (
       key: keyof SavingSetting,
       data: string | boolean | number
@@ -881,6 +882,8 @@ export default defineComponent({
       changeExperimentalSetting,
       restartAllEngineProcess,
       savingSetting,
+      samplingRateOptions,
+      renderSamplingRateLabel,
       handleSavingSettingChange,
       openFileExplore,
       currentThemeNameComputed,
