@@ -1,4 +1,5 @@
-import { Component } from "vue";
+import { VueWrapper } from "@vue/test-utils";
+import { Component, ComponentPublicInstance } from "vue";
 
 export const wrapQPage = (page: Component) => {
   return {
@@ -13,4 +14,13 @@ export const wrapQPage = (page: Component) => {
       page,
     },
   };
+};
+
+export const waitTicks = async (
+  wrapper: VueWrapper<ComponentPublicInstance>,
+  ticks: number
+) => {
+  for (let i = 0; i < ticks; i++) {
+    await wrapper.vm.$nextTick();
+  }
 };
