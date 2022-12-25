@@ -807,11 +807,16 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
-    const samplingRateOptions: ReadonlyArray<
-      SavingSetting["outputSamplingRate"]
-    > = ["engineDefault", 24000, 44100, 48000, 88200, 96000] as const;
+    const samplingRateOptions: SavingSetting["outputSamplingRate"][] = [
+      "engineDefault",
+      24000,
+      44100,
+      48000,
+      88200,
+      96000,
+    ];
     const renderSamplingRateLabel = (
-      value: typeof samplingRateOptions[number]
+      value: SavingSetting["outputSamplingRate"]
     ) => {
       if (value === "engineDefault") {
         return "デフォルト";
