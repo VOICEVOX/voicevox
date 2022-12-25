@@ -104,7 +104,10 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isSafeMode: boolean }): void;
-  startLibraryInstall(engineId: string, libraryId: string): Promise<void>;
+  startLibraryInstall(obj: {
+    engineId: string;
+    libraryId: string;
+  }): Promise<void>;
 }
 
 export type AppInfos = {

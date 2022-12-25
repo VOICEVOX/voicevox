@@ -262,7 +262,9 @@ const api: Sandbox = {
     ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
 
-  startLibraryInstall: async (engineId, libraryId) => {},
+  startLibraryInstall: async (engineId, libraryId) => {
+    ipcRendererInvoke("START_LIBRARY_INSTALL", { engineId, libraryId });
+  },
 };
 
 contextBridge.exposeInMainWorld("electron", api);
