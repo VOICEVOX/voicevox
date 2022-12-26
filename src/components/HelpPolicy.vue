@@ -1,35 +1,24 @@
-<template>
-  <q-page class="relative-absolute-wrapper scroller bg-background">
-    <div class="q-pa-md markdown markdown-body" v-html="policyHtml"></div>
-  </q-page>
-</template>
-
-<script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+const props =
+  defineProps<{
+    policy: string;
+  }>();
+const policyHtml = ref("");
 
-export default defineComponent({
-  props: {
-    policy: {
-      type: String,
-      required: true,
-    },
-  },
-  setup(props) {
-    const policyHtml = ref("");
+const md = useMarkdownIt();
 
-    const md = useMarkdownIt();
-
-    onMounted(async () => {
-      policyHtml.value = md.render(props.policy);
-    });
-
-    return {
-      policyHtml,
-    };
-  },
+onMounted(async () => {
+  policyHtml.value = md.render(props.policy);
 });
 </script>
+
+<template>
+  <QPage class="relative-absolute-wrapper scroller bg-background">
+    <div class="q-pa-md markdown markdown-body" v-html="policyHtml"></div>
+  </QPage>
+</template>
 
 <style scoped lang="scss">
 .root {

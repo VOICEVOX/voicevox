@@ -1,5 +1,100 @@
+<script setup lang="ts">
+import { base64ImageToUri } from "@/helpers/imageHelper";
+import { useStore } from "@/store";
+import { CharacterInfo, Voice } from "@/type/preload";
+import { debounce } from "quasar";
+import { computed, ref } from "vue";
+
+const props =
+  defineProps<{
+    characterInfos: CharacterInfo[];
+    loading: boolean;
+    selectedVoice: Voice;
+    showEngineInfo: boolean;
+    emptiable: boolean;
+    uiLocked: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:selectedVoice", value: Voice | undefined): void;
+  }>();
+
+const store = useStore();
+
+const selectedCharacter = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  const character = props.characterInfos.find(
+    (characterInfo) =>
+      characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
+      characterInfo.metas.styles.some(
+        (style) =>
+          style.engineId === selectedVoice.engineId &&
+          style.styleId === selectedVoice.styleId
+      )
+  );
+  return character;
+});
+
+const selectedStyleInfo = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  const style = selectedCharacter.value?.metas.styles.find(
+    (style) =>
+      style.engineId === selectedVoice?.engineId &&
+      style.styleId === selectedVoice.styleId
+  );
+  return style;
+});
+
+const engineIcons = computed(() =>
+  Object.fromEntries(
+    store.state.engineIds.map((engineId) => [
+      engineId,
+      base64ImageToUri(store.state.engineManifests[engineId].icon),
+    ])
+  )
+);
+
+const getDefaultStyle = (speakerUuid: string) => {
+  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+  const characterInfo = props.characterInfos.find(
+    (info) => info.metas.speakerUuid === speakerUuid
+  );
+  const defaultStyleId = store.state.defaultStyleIds.find(
+    (x) => x.speakerUuid === speakerUuid
+  )?.defaultStyleId;
+
+  const defaultStyle = characterInfo?.metas.styles.find(
+    (style) => style.styleId === defaultStyleId
+  );
+
+  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
+
+  return defaultStyle;
+};
+
+const onSelectSpeaker = (speakerUuid: string) => {
+  const style = getDefaultStyle(speakerUuid);
+  emit("update:selectedVoice", {
+    engineId: style.engineId,
+    speakerId: speakerUuid,
+    styleId: style.styleId,
+  });
+};
+
+const subMenuOpenFlags = ref(
+  [...Array(props.characterInfos.length)].map(() => false)
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  const arr = [...Array(props.characterInfos.length)].map(() => false);
+  arr[idx] = true;
+  subMenuOpenFlags.value = arr;
+}, 100);
+</script>
+
 <template>
-  <q-btn
+  <QBtn
     flat
     class="q-pa-none character-button"
     :disable="uiLocked"
@@ -12,37 +107,33 @@
         class="q-pa-none q-ma-none"
         :src="selectedStyleInfo.iconPath"
       />
-      <q-avatar v-else-if="!emptiable" rounded size="2rem" color="primary"
-        ><span color="text-display-on-primary">?</span></q-avatar
+      <QAvatar v-else-if="!emptiable" rounded size="2rem" color="primary"
+        ><span color="text-display-on-primary">?</span></QAvatar
       >
     </div>
     <div v-if="loading" class="loading">
-      <q-spinner color="primary" size="1.6rem" :thickness="7" />
+      <QSpinner color="primary" size="1.6rem" :thickness="7" />
     </div>
-    <q-menu
-      class="character-menu"
-      transition-show="none"
-      transition-hide="none"
-    >
-      <q-list>
-        <q-item
+    <QMenu class="character-menu" transition-show="none" transition-hide="none">
+      <QList>
+        <QItem
           v-if="selectedStyleInfo == undefined"
           class="row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >有効なスタイルが選択されていません</span
           >
-        </q-item>
-        <q-item
+        </QItem>
+        <QItem
           v-if="characterInfos.length === 0"
           class="row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >選択可能なスタイルがありません</span
           >
-        </q-item>
-        <q-item v-if="emptiable" class="q-pa-none">
-          <q-btn
+        </QItem>
+        <QItem v-if="emptiable" class="q-pa-none">
+          <QBtn
             flat
             no-caps
             v-close-popup
@@ -51,15 +142,15 @@
             @click="$emit('update:selectedVoice', undefined)"
           >
             <span>選択解除</span>
-          </q-btn>
-        </q-item>
-        <q-item
+          </QBtn>
+        </QItem>
+        <QItem
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
         >
-          <q-btn-group flat class="col full-width">
-            <q-btn
+          <QBtnGroup flat class="col full-width">
+            <QBtn
               flat
               no-caps
               v-close-popup
@@ -74,8 +165,8 @@
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
             >
-              <q-avatar rounded size="2rem" class="q-mr-md">
-                <q-img
+              <QAvatar rounded size="2rem" class="q-mr-md">
+                <QImg
                   v-if="characterInfo"
                   no-spinner
                   no-transition
@@ -84,7 +175,7 @@
                     getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
                   "
                 />
-                <q-avatar
+                <QAvatar
                   class="engine-icon"
                   rounded
                   v-if="showEngineInfo && characterInfo.metas.styles.length < 2"
@@ -97,13 +188,13 @@
                       ]
                     "
                   />
-                </q-avatar>
-              </q-avatar>
+                </QAvatar>
+              </QAvatar>
               <div>{{ characterInfo.metas.speakerName }}</div>
-            </q-btn>
+            </QBtn>
             <!-- スタイルが2つ以上あるものだけ、スタイル選択ボタンを表示する-->
             <template v-if="characterInfo.metas.styles.length >= 2">
-              <q-separator vertical />
+              <QSeparator vertical />
 
               <div
                 class="flex items-center q-px-sm q-py-none cursor-pointer"
@@ -113,8 +204,8 @@
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
               >
-                <q-icon name="keyboard_arrow_right" color="grey-6" size="sm" />
-                <q-menu
+                <QIcon name="keyboard_arrow_right" color="grey-6" size="sm" />
+                <QMenu
                   no-parent-event
                   anchor="top end"
                   self="top start"
@@ -123,8 +214,8 @@
                   class="character-menu"
                   v-model="subMenuOpenFlags[characterIndex]"
                 >
-                  <q-list>
-                    <q-item
+                  <QList>
+                    <QItem
                       v-for="(style, styleIndex) in characterInfo.metas.styles"
                       :key="styleIndex"
                       clickable
@@ -142,14 +233,14 @@
                         })
                       "
                     >
-                      <q-avatar rounded size="2rem" class="q-mr-md">
-                        <q-img
+                      <QAvatar rounded size="2rem" class="q-mr-md">
+                        <QImg
                           no-spinner
                           no-transition
                           :ratio="1"
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
-                        <q-avatar
+                        <QAvatar
                           rounded
                           class="engine-icon"
                           v-if="showEngineInfo"
@@ -161,148 +252,27 @@
                               ]
                             "
                           />
-                        </q-avatar>
-                      </q-avatar>
-                      <q-item-section v-if="style.styleName"
+                        </QAvatar>
+                      </QAvatar>
+                      <QItemSection v-if="style.styleName"
                         >{{ characterInfo.metas.speakerName }} ({{
                           style.styleName
-                        }})</q-item-section
+                        }})</QItemSection
                       >
-                      <q-item-section v-else>{{
+                      <QItemSection v-else>{{
                         characterInfo.metas.speakerName
-                      }}</q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-menu>
+                      }}</QItemSection>
+                    </QItem>
+                  </QList>
+                </QMenu>
               </div>
             </template>
-          </q-btn-group>
-        </q-item>
-      </q-list>
-    </q-menu>
-  </q-btn>
+          </QBtnGroup>
+        </QItem>
+      </QList>
+    </QMenu>
+  </QBtn>
 </template>
-
-<script lang="ts">
-import { base64ImageToUri } from "@/helpers/imageHelper";
-import { useStore } from "@/store";
-import { CharacterInfo, Voice } from "@/type/preload";
-import { debounce } from "quasar";
-import { computed, defineComponent, PropType, ref } from "vue";
-
-export default defineComponent({
-  name: "CharacterButton",
-
-  props: {
-    characterInfos: {
-      type: Array as PropType<CharacterInfo[]>,
-      required: true,
-    },
-    loading: { type: Boolean, default: false },
-    selectedVoice: { type: Object as PropType<Voice> },
-    showEngineInfo: { type: Boolean, default: false },
-    emptiable: { type: Boolean, default: false },
-    uiLocked: { type: Boolean, required: true },
-  },
-
-  emits: {
-    "update:selectedVoice"(selectedVoice: Voice | undefined) {
-      return (
-        selectedVoice == undefined ||
-        (typeof selectedVoice.engineId === "string" &&
-          typeof selectedVoice.speakerId === "string" &&
-          typeof selectedVoice.styleId === "number")
-      );
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-
-    const selectedCharacter = computed(() => {
-      const selectedVoice = props.selectedVoice;
-      const character = props.characterInfos.find(
-        (characterInfo) =>
-          characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
-          characterInfo.metas.styles.some(
-            (style) =>
-              style.engineId === selectedVoice.engineId &&
-              style.styleId === selectedVoice.styleId
-          )
-      );
-      return character;
-    });
-
-    const selectedStyleInfo = computed(() => {
-      const selectedVoice = props.selectedVoice;
-      const style = selectedCharacter.value?.metas.styles.find(
-        (style) =>
-          style.engineId === selectedVoice?.engineId &&
-          style.styleId === selectedVoice.styleId
-      );
-      return style;
-    });
-
-    const engineIcons = computed(() =>
-      Object.fromEntries(
-        store.state.engineIds.map((engineId) => [
-          engineId,
-          base64ImageToUri(store.state.engineManifests[engineId].icon),
-        ])
-      )
-    );
-
-    const getDefaultStyle = (speakerUuid: string) => {
-      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-      const characterInfo = props.characterInfos.find(
-        (info) => info.metas.speakerUuid === speakerUuid
-      );
-      const defaultStyleId = store.state.defaultStyleIds.find(
-        (x) => x.speakerUuid === speakerUuid
-      )?.defaultStyleId;
-
-      const defaultStyle = characterInfo?.metas.styles.find(
-        (style) => style.styleId === defaultStyleId
-      );
-
-      if (defaultStyle == undefined)
-        throw new Error("defaultStyle == undefined");
-
-      return defaultStyle;
-    };
-
-    const onSelectSpeaker = (speakerUuid: string) => {
-      const style = getDefaultStyle(speakerUuid);
-      emit("update:selectedVoice", {
-        engineId: style.engineId,
-        speakerId: speakerUuid,
-        styleId: style.styleId,
-      });
-    };
-
-    const subMenuOpenFlags = ref(
-      [...Array(props.characterInfos.length)].map(() => false)
-    );
-
-    const reassignSubMenuOpen = debounce((idx: number) => {
-      if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(props.characterInfos.length)].map(() => false);
-      arr[idx] = true;
-      subMenuOpenFlags.value = arr;
-    }, 100);
-
-    return {
-      selectedCharacter,
-      selectedStyleInfo,
-      engineIcons,
-      getDefaultStyle,
-      onSelectSpeaker,
-      subMenuOpenFlags,
-      reassignSubMenuOpen,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

@@ -1,3 +1,62 @@
+<script setup lang="ts">
+import { computed } from "vue";
+import { useStore } from "@/store";
+
+const store = useStore();
+
+const characterInfo = computed(() => {
+  const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
+
+  const engineId = audioItem?.engineId;
+  const styleId = audioItem?.styleId;
+
+  if (
+    engineId === undefined ||
+    styleId === undefined ||
+    !store.state.engineIds.some((id) => id === engineId)
+  )
+    return undefined;
+
+  return store.getters.CHARACTER_INFO(engineId, styleId);
+});
+
+const characterName = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
+  const styleId = audioItem?.styleId;
+  const style = characterInfo.value?.metas.styles.find(
+    (style) => style.styleId === styleId
+  );
+  return style?.styleName
+    ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
+    : characterInfo.value?.metas.speakerName;
+});
+
+const engineName = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
+  const engineId = audioItem?.engineId ?? store.state.engineIds[0];
+  const engineInfo = store.state.engineInfos[engineId];
+  return engineInfo?.name;
+});
+
+const portraitPath = computed(() => characterInfo.value?.portraitPath);
+
+const isInitializingSpeaker = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+});
+
+const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+</script>
+
 <template>
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
@@ -6,83 +65,10 @@
     }}</span>
     <img :src="portraitPath" class="character-portrait" />
     <div v-if="isInitializingSpeaker" class="loading">
-      <q-spinner color="primary" size="5rem" :thickness="4" />
+      <QSpinner color="primary" size="5rem" :thickness="4" />
     </div>
   </div>
 </template>
-
-<script lang="ts">
-import { defineComponent, computed } from "vue";
-import { useStore } from "@/store";
-
-export default defineComponent({
-  name: "CharacterPortrait",
-
-  setup() {
-    const store = useStore();
-
-    const characterInfo = computed(() => {
-      const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
-
-      const engineId = audioItem?.engineId;
-      const styleId = audioItem?.styleId;
-
-      if (
-        engineId === undefined ||
-        styleId === undefined ||
-        !store.state.engineIds.some((id) => id === engineId)
-      )
-        return undefined;
-
-      return store.getters.CHARACTER_INFO(engineId, styleId);
-    });
-
-    const characterName = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
-      const styleId = audioItem?.styleId;
-      const style = characterInfo.value?.metas.styles.find(
-        (style) => style.styleId === styleId
-      );
-      return style?.styleName
-        ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
-        : characterInfo.value?.metas.speakerName;
-    });
-
-    const engineName = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
-      const engineId = audioItem?.engineId ?? store.state.engineIds[0];
-      const engineInfo = store.state.engineInfos[engineId];
-      return engineInfo?.name;
-    });
-
-    const portraitPath = computed(() => characterInfo.value?.portraitPath);
-
-    const isInitializingSpeaker = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-      return store.state.audioKeyInitializingSpeaker === activeAudioKey;
-    });
-
-    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
-
-    return {
-      characterName,
-      engineName,
-      portraitPath,
-      isInitializingSpeaker,
-      isMultipleEngine,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

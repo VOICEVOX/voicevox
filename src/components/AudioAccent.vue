@@ -1,3 +1,44 @@
+<script setup lang="ts">
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import { AccentPhrase } from "@/openapi";
+import { computed } from "vue";
+
+const props =
+  defineProps<{
+    accentPhrase: AccentPhrase;
+    accentPhraseIndex: number;
+    uiLocked: boolean;
+    shiftKeyFlag: boolean;
+    onChangeAccent: (
+      accentPhraseIndex: number,
+      accent: number
+    ) => Promise<void>;
+  }>();
+
+const changeAccent = (accent: number) =>
+  props.onChangeAccent(props.accentPhraseIndex, accent);
+
+const previewAccentSlider = previewSliderHelper({
+  onChange: changeAccent,
+  modelValue: () => props.accentPhrase.accent,
+  disable: () => props.uiLocked,
+  disableScroll: () => props.shiftKeyFlag,
+  max: () => props.accentPhrase.moras.length,
+  min: () => 1,
+  step: () => 1,
+});
+
+const accentLine = computed(() => {
+  const accent = previewAccentSlider.state.currentValue.value ?? 0;
+  return [...Array(props.accentPhrase.moras.length).keys()].map(
+    (index) =>
+      `${index * 40 + 10} ${
+        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+      }`
+  );
+});
+</script>
+
 <template>
   <div
     class="accent-slider-cell"
@@ -8,7 +49,7 @@
     <!-- div for input width -->
     <div>
       <div>
-        <q-slider
+        <QSlider
           v-if="accentPhrase.moras.length > 1"
           snap
           dense
@@ -60,60 +101,6 @@
     </div>
   </template>
 </template>
-
-<script lang="ts">
-import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import { AccentPhrase } from "@/openapi";
-import { defineComponent, computed, PropType } from "vue";
-
-export default defineComponent({
-  name: "AudioAccent",
-
-  props: {
-    accentPhrase: { type: Object as PropType<AccentPhrase>, required: true },
-    accentPhraseIndex: { type: Number, required: true },
-    uiLocked: { type: Boolean, required: true },
-    shiftKeyFlag: { type: Boolean, default: false },
-    onChangeAccent: {
-      type: Function as PropType<
-        (accentPhraseIndex: number, accent: number) => Promise<void>
-      >,
-      required: true,
-    },
-  },
-
-  setup(props) {
-    const changeAccent = (accent: number) =>
-      props.onChangeAccent(props.accentPhraseIndex, accent);
-
-    const previewAccentSlider = previewSliderHelper({
-      onChange: changeAccent,
-      modelValue: () => props.accentPhrase.accent,
-      disable: () => props.uiLocked,
-      disableScroll: () => props.shiftKeyFlag,
-      max: () => props.accentPhrase.moras.length,
-      min: () => 1,
-      step: () => 1,
-    });
-
-    const accentLine = computed(() => {
-      const accent = previewAccentSlider.state.currentValue.value ?? 0;
-      return [...Array(props.accentPhrase.moras.length).keys()].map(
-        (index) =>
-          `${index * 40 + 10} ${
-            index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-          }`
-      );
-    });
-
-    return {
-      previewAccentSlider,
-      changeAccent,
-      accentLine,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

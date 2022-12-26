@@ -1,18 +1,61 @@
+<script setup lang="ts">
+import { useStore } from "@/store";
+import { computed, ref } from "vue";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+type DetailKey = { engine: string; character: string };
+
+const store = useStore();
+const md = useMarkdownIt();
+
+const engineInfos = computed(
+  () =>
+    new Map(
+      Object.entries(store.state.characterInfos).map(
+        ([engineId, characterInfos]) => [
+          engineId,
+          {
+            engineId,
+            engineName: store.state.engineManifests[engineId].name,
+            characterInfos: new Map(
+              characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+            ),
+          },
+        ]
+      )
+    )
+);
+
+const convertMarkdown = (text: string) => {
+  return md.render(text);
+};
+
+const selectedInfo = ref<DetailKey | undefined>(undefined);
+
+const scroller = ref<HTMLElement>();
+const selectCharacterInfo = (index: DetailKey | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  selectedInfo.value = index;
+};
+</script>
+
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="selectedInfo === undefined">
+      <QList v-if="selectedInfo === undefined">
         <template
           v-for="([engineId, engineInfo], engineIndex) in engineInfos.entries()"
           :key="engineIndex"
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
-            <q-separator spaced v-if="engineIndex > 0" />
-            <q-item-label header>{{ engineInfo.engineName }}</q-item-label>
+            <QSeparator spaced v-if="engineIndex > 0" />
+            <QItemLabel header>{{ engineInfo.engineName }}</QItemLabel>
           </template>
           <template
             v-for="(
@@ -20,7 +63,7 @@
             ) in engineInfo.characterInfos"
             :key="characterIndex"
           >
-            <q-item
+            <QItem
               clickable
               @click="
                 selectCharacterInfo({
@@ -29,16 +72,14 @@
                 })
               "
             >
-              <q-item-section>{{
-                characterInfo.metas.speakerName
-              }}</q-item-section>
-            </q-item>
+              <QItemSection>{{ characterInfo.metas.speakerName }}</QItemSection>
+            </QItem>
           </template>
         </template>
-      </q-list>
+      </QList>
       <div v-else>
         <div class="q-mb-md">
-          <q-btn
+          <QBtn
             outline
             color="primary-light"
             icon="keyboard_arrow_left"
@@ -65,68 +106,8 @@
         ></div>
       </div>
     </div>
-  </q-page>
+  </QPage>
 </template>
-
-<script lang="ts">
-import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "vue";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
-type DetailKey = { engine: string; character: string };
-
-export default defineComponent({
-  setup() {
-    const store = useStore();
-    const md = useMarkdownIt();
-
-    const allCharacterInfos = computed(
-      () => store.getters.GET_ALL_CHARACTER_INFOS
-    );
-
-    const engineInfos = computed(
-      () =>
-        new Map(
-          Object.entries(store.state.characterInfos).map(
-            ([engineId, characterInfos]) => [
-              engineId,
-              {
-                engineId,
-                engineName: store.state.engineManifests[engineId].name,
-                characterInfos: new Map(
-                  characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
-                ),
-              },
-            ]
-          )
-        )
-    );
-
-    const convertMarkdown = (text: string) => {
-      return md.render(text);
-    };
-
-    const selectedInfo = ref<DetailKey | undefined>(undefined);
-
-    const scroller = ref<HTMLElement>();
-    const selectCharacterInfo = (index: DetailKey | undefined) => {
-      if (scroller.value == undefined)
-        throw new Error("scroller.value == undefined");
-      scroller.value.scrollTop = 0;
-      selectedInfo.value = index;
-    };
-
-    return {
-      characterInfos: allCharacterInfos,
-      engineInfos,
-      convertMarkdown,
-      selectCharacterInfo,
-      selectedInfo,
-      scroller,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 .root {

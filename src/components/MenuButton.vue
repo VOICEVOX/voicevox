@@ -1,5 +1,60 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { debounce } from "quasar";
+import MenuItem from "@/components/MenuItem.vue";
+import { MenuItemData } from "@/components/MenuBar.vue";
+import { useStore } from "@/store";
+
+const props =
+  defineProps<{
+    selected: boolean;
+    disable: boolean;
+    menudata: MenuItemData;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:selected", value: boolean): void;
+  }>();
+
+const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const selectedComputed = computed({
+  get: () => props.selected,
+  set: (val) => emit("update:selected", val),
+});
+
+const subMenuOpenFlags = ref(
+  props.menudata.type === "root"
+    ? [...Array(props.menudata.subMenu.length)].map(() => false)
+    : []
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  if (props.menudata.type !== "root") return;
+
+  const len = props.menudata.subMenu.length;
+  const arr = [...Array(len)].map(() => false);
+  arr[idx] = true;
+
+  subMenuOpenFlags.value = arr;
+}, 100);
+
+watch(
+  () => props.selected,
+  () => {
+    // 何もしないと自分の選択状態が変わっても子の選択状態は変わらないため、
+    // 選択状態でなくなった時に子の選択状態をリセットします
+    if (props.menudata.type === "root" && !props.selected) {
+      const len = props.menudata.subMenu.length;
+      subMenuOpenFlags.value = [...Array(len)].map(() => false);
+    }
+  }
+);
+</script>
+
 <template>
-  <q-btn
+  <QBtn
     flat
     text-color="display"
     class="
@@ -17,103 +72,29 @@
     "
   >
     {{ menudata.label }}
-    <q-menu
-      v-if="menudata.subMenu"
+    <QMenu
+      v-if="menudata.type === 'root'"
       transition-show="none"
       transition-hide="none"
       :fit="true"
       v-model="selectedComputed"
     >
-      <q-list dense>
-        <menu-item
+      <QList dense>
+        <MenuItem
           v-for="(menu, index) of menudata.subMenu"
           :key="index"
           :menudata="menu"
-          :disable="uiLocked && menu.disableWhenUiLocked"
+          :disable="
+            menu.type !== 'separator' && uiLocked && menu.disableWhenUiLocked
+          "
           v-model:selected="subMenuOpenFlags[index]"
           @mouseenter="reassignSubMenuOpen(index)"
           @mouseleave="reassignSubMenuOpen.cancel()"
         />
-      </q-list>
-    </q-menu>
-  </q-btn>
+      </QList>
+    </QMenu>
+  </QBtn>
 </template>
-
-<script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
-import { debounce } from "quasar";
-import MenuItem from "@/components/MenuItem.vue";
-import { MenuItemData } from "@/components/MenuBar.vue";
-import { useStore } from "@/store";
-
-export default defineComponent({
-  name: "MenuButton",
-
-  components: {
-    MenuItem,
-  },
-
-  props: {
-    selected: {
-      type: Boolean,
-      required: true,
-    },
-    disable: {
-      type: Boolean,
-      required: false,
-    },
-    menudata: {
-      type: Object as PropType<MenuItemData>,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
-    if (props.menudata.type === "root") {
-      const selectedComputed = computed({
-        get: () => props.selected,
-        set: (val) => emit("update:selected", val),
-      });
-
-      const subMenuOpenFlags = ref(
-        [...Array(props.menudata.subMenu.length)].map(() => false)
-      );
-
-      const reassignSubMenuOpen = debounce((idx: number) => {
-        if (subMenuOpenFlags.value[idx]) return;
-        if (props.menudata.type !== "root") return;
-
-        const len = props.menudata.subMenu.length;
-        const arr = [...Array(len)].map(() => false);
-        arr[idx] = true;
-
-        subMenuOpenFlags.value = arr;
-      }, 100);
-
-      watch(
-        () => props.selected,
-        () => {
-          // 何もしないと自分の選択状態が変わっても子の選択状態は変わらないため、
-          // 選択状態でなくなった時に子の選択状態をリセットします
-          if (props.menudata.type === "root" && !props.selected) {
-            const len = props.menudata.subMenu.length;
-            subMenuOpenFlags.value = [...Array(len)].map(() => false);
-          }
-        }
-      );
-
-      return {
-        uiLocked,
-        selectedComputed,
-        subMenuOpenFlags,
-        reassignSubMenuOpen,
-      };
-    }
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;

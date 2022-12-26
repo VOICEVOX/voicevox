@@ -1,18 +1,175 @@
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useStore } from "@/store";
+import { parseCombo } from "@/store/setting";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { useQuasar } from "quasar";
+
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
+
+const store = useStore();
+const $q = useQuasar();
+
+const hotkeySettingDialogOpenComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const isHotkeyDialogOpened = ref(false);
+
+const hotkeyPagination = ref({ rowsPerPage: 0 });
+const hotkeyFilter = ref("");
+
+const hotkeySettings = computed(() => store.state.hotkeySettings);
+
+const hotkeyColumns = ref([
+  {
+    name: "action",
+    align: "left",
+    label: "操作",
+    field: "action",
+  },
+  {
+    name: "combination",
+    align: "left",
+    label: "ショートカットキー",
+    field: "combination",
+  },
+]);
+
+const lastAction = ref("");
+const lastRecord = ref("");
+
+const recordCombination = (event: KeyboardEvent) => {
+  if (!isHotkeyDialogOpened.value) {
+    return;
+  } else {
+    const recordedCombo = parseCombo(event);
+    lastRecord.value = recordedCombo;
+    event.preventDefault();
+  }
+};
+
+const changeHotkeySettings = (action: string, combo: string) => {
+  return store.dispatch("SET_HOTKEY_SETTINGS", {
+    data: {
+      action: action as HotkeyAction,
+      combination: combo,
+    },
+  });
+};
+
+const duplicatedHotkey = computed(() => {
+  if (lastRecord.value == "") return undefined;
+  return hotkeySettings.value.find(
+    (item) =>
+      item.combination == lastRecord.value && item.action != lastAction.value
+  );
+});
+
+const deleteHotkey = (action: HotkeyAction) => {
+  changeHotkeySettings(action, "");
+};
+
+const getHotkeyText = (action: string, combo: string) => {
+  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
+  if (combo == "") return "未設定";
+  else return combo;
+};
+
+// for later developers, in case anyone wants to add a readonly hotkey
+const readonlyHotkeyKeys: string[] = [];
+
+const checkHotkeyReadonly = (action: string) => {
+  let flag = false;
+  readonlyHotkeyKeys.forEach((key) => {
+    if (key == action) {
+      flag = true;
+    }
+  });
+  return flag;
+};
+
+const openHotkeyDialog = (action: string) => {
+  lastAction.value = action;
+  lastRecord.value = "";
+  isHotkeyDialogOpened.value = true;
+  document.addEventListener("keydown", recordCombination);
+};
+
+const closeHotkeyDialog = () => {
+  lastAction.value = "";
+  lastRecord.value = "";
+  isHotkeyDialogOpened.value = false;
+  document.removeEventListener("keydown", recordCombination);
+};
+
+const solveDuplicated = () => {
+  if (duplicatedHotkey.value == undefined)
+    throw new Error("duplicatedHotkey.value == undefined");
+  deleteHotkey(duplicatedHotkey.value.action);
+  return changeHotkeySettings(lastAction.value, lastRecord.value);
+};
+
+const confirmBtnEnabled = computed(() => {
+  return (
+    lastRecord.value == "" ||
+    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
+      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
+    ) > -1
+  );
+});
+
+const resetHotkey = (action: string) => {
+  $q.dialog({
+    title: "ショートカットキーを初期値に戻します",
+    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+    html: true,
+    ok: {
+      label: "初期値に戻す",
+      flat: true,
+      textColor: "secondary",
+    },
+    cancel: {
+      label: "初期値に戻さない",
+      flat: true,
+      textColor: "secondary",
+    },
+  }).onOk(() => {
+    window.electron
+      .getDefaultHotkeySettings()
+      .then((defaultSettings: HotkeySetting[]) => {
+        const setting = defaultSettings.find((value) => value.action == action);
+        if (setting) {
+          changeHotkeySettings(action, setting.combination);
+        }
+      });
+  });
+};
+</script>
+
 <template>
-  <q-dialog
+  <QDialog
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="hotkey-setting-dialog transparent-backdrop"
     v-model="hotkeySettingDialogOpenComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
-          <q-toolbar-title class="text-display"
-            >設定 / キー割り当て</q-toolbar-title
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
+          <QToolbarTitle class="text-display"
+            >設定 / キー割り当て</QToolbarTitle
           >
-          <q-input
+          <QInput
             hide-bottom-space
             dense
             placeholder="検索"
@@ -21,31 +178,31 @@
             v-model="hotkeyFilter"
           >
             <template #prepend>
-              <q-icon name="search" />
+              <QIcon name="search" />
             </template>
             <template #append>
-              <q-icon
+              <QIcon
                 v-if="hotkeyFilter !== ''"
                 name="close"
                 class="cursor-pointer"
                 @click="hotkeyFilter = ''"
               />
-              <q-icon v-else />
+              <QIcon v-else />
             </template>
-          </q-input>
-          <q-btn
+          </QInput>
+          <QBtn
             round
             flat
             icon="close"
             color="display"
             @click="hotkeySettingDialogOpenComputed = false"
           />
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-page-container>
-        <q-page>
-          <q-table
+      <QPageContainer>
+        <QPage>
+          <QTable
             flat
             dense
             hide-bottom
@@ -59,20 +216,20 @@
             v-model:pagination="hotkeyPagination"
           >
             <template #header="props">
-              <q-tr :props="props">
-                <q-th v-for="col of props.cols" :key="col.name" :props="props">
+              <QTr :props="props">
+                <QTh v-for="col of props.cols" :key="col.name" :props="props">
                   {{ col.label }}
-                </q-th>
-              </q-tr>
+                </QTh>
+              </QTr>
             </template>
 
             <template #body="props">
-              <q-tr :props="props">
-                <q-td no-hover :key="props.cols[0].name" :props="props">
+              <QTr :props="props">
+                <QTd no-hover :key="props.cols[0].name" :props="props">
                   {{ props.row.action }}
-                </q-td>
-                <q-td no-hover :key="props.cols[1].name" :props="props">
-                  <q-btn
+                </QTd>
+                <QTd no-hover :key="props.cols[1].name" :props="props">
+                  <QBtn
                     dense
                     text-color="display"
                     padding="none sm"
@@ -91,7 +248,7 @@
                     "
                     @click="openHotkeyDialog(props.row.action)"
                   />
-                  <q-btn
+                  <QBtn
                     rounded
                     flat
                     icon="settings_backup_restore"
@@ -100,18 +257,18 @@
                     :disable="checkHotkeyReadonly(props.row.action)"
                     @click="resetHotkey(props.row.action)"
                   >
-                    <q-tooltip :delay="500">デフォルトに戻す</q-tooltip>
-                  </q-btn>
-                </q-td>
-              </q-tr>
+                    <QTooltip :delay="500">デフォルトに戻す</QTooltip>
+                  </QBtn>
+                </QTd>
+              </QTr>
             </template>
-          </q-table>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+          </QTable>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 
-  <q-dialog
+  <QDialog
     no-esc-dismiss
     no-shake
     transition-show="none"
@@ -119,20 +276,20 @@
     :model-value="isHotkeyDialogOpened"
     @update:model-value="closeHotkeyDialog"
   >
-    <q-card class="q-py-sm q-px-md">
-      <q-card-section align="center">
+    <QCard class="q-py-sm q-px-md">
+      <QCardSection align="center">
         <div class="text-h6">ショートカットキーを入力してください</div>
-      </q-card-section>
-      <q-card-section align="center">
+      </QCardSection>
+      <QCardSection align="center">
         <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
           <span v-if="index !== 0"> + </span>
           <!--
           Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
           Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
           -->
-          <q-chip :ripple="false" color="surface">
+          <QChip :ripple="false" color="surface">
             {{ hotkey === "Meta" ? "Cmd" : hotkey }}
-          </q-chip>
+          </QChip>
         </template>
         <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
         <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
@@ -143,9 +300,9 @@
             「{{ duplicatedHotkey.action }}」
           </div>
         </div>
-      </q-card-section>
-      <q-card-actions align="center">
-        <q-btn
+      </QCardSection>
+      <QCardActions align="center">
+        <QBtn
           padding="xs md"
           label="キャンセル"
           unelevated
@@ -154,7 +311,7 @@
           class="q-mt-sm"
           @click="closeHotkeyDialog"
         />
-        <q-btn
+        <QBtn
           padding="xs md"
           label="ショートカットキーを未設定にする"
           unelevated
@@ -166,7 +323,7 @@
             closeHotkeyDialog();
           "
         />
-        <q-btn
+        <QBtn
           v-if="duplicatedHotkey == undefined"
           padding="xs md"
           label="OK"
@@ -181,7 +338,7 @@
           "
           :disabled="confirmBtnEnabled"
         />
-        <q-btn
+        <QBtn
           v-else
           padding="xs md"
           label="上書きする"
@@ -192,195 +349,10 @@
           @click="solveDuplicated().then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
         />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </QCardActions>
+    </QCard>
+  </QDialog>
 </template>
-
-<script lang="ts">
-import { defineComponent, computed, ref } from "vue";
-import { useStore } from "@/store";
-import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
-import { useQuasar } from "quasar";
-
-export default defineComponent({
-  name: "HotkeySettingDialog",
-
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-    const $q = useQuasar();
-
-    const hotkeySettingDialogOpenComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-
-    const isHotkeyDialogOpened = ref(false);
-
-    const hotkeyPagination = ref({ rowsPerPage: 0 });
-    const hotkeyFilter = ref("");
-
-    const hotkeySettings = computed(() => store.state.hotkeySettings);
-
-    const hotkeyColumns = ref([
-      {
-        name: "action",
-        align: "left",
-        label: "操作",
-        field: "action",
-      },
-      {
-        name: "combination",
-        align: "left",
-        label: "ショートカットキー",
-        field: "combination",
-      },
-    ]);
-
-    const lastAction = ref("");
-    const lastRecord = ref("");
-
-    const recordCombination = (event: KeyboardEvent) => {
-      if (!isHotkeyDialogOpened.value) {
-        return;
-      } else {
-        const recordedCombo = parseCombo(event);
-        lastRecord.value = recordedCombo;
-        event.preventDefault();
-      }
-    };
-
-    const changeHotkeySettings = (action: string, combo: string) => {
-      return store.dispatch("SET_HOTKEY_SETTINGS", {
-        data: {
-          action: action as HotkeyAction,
-          combination: combo,
-        },
-      });
-    };
-
-    const duplicatedHotkey = computed(() => {
-      if (lastRecord.value == "") return undefined;
-      return hotkeySettings.value.find(
-        (item) =>
-          item.combination == lastRecord.value &&
-          item.action != lastAction.value
-      );
-    });
-
-    const deleteHotkey = (action: HotkeyAction) => {
-      changeHotkeySettings(action, "");
-    };
-
-    const getHotkeyText = (action: string, combo: string) => {
-      if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
-      if (combo == "") return "未設定";
-      else return combo;
-    };
-
-    // for later developers, in case anyone wants to add a readonly hotkey
-    const readonlyHotkeyKeys: string[] = [];
-
-    const checkHotkeyReadonly = (action: string) => {
-      let flag = false;
-      readonlyHotkeyKeys.forEach((key) => {
-        if (key == action) {
-          flag = true;
-        }
-      });
-      return flag;
-    };
-
-    const openHotkeyDialog = (action: string) => {
-      lastAction.value = action;
-      lastRecord.value = "";
-      isHotkeyDialogOpened.value = true;
-      document.addEventListener("keydown", recordCombination);
-    };
-
-    const closeHotkeyDialog = () => {
-      lastAction.value = "";
-      lastRecord.value = "";
-      isHotkeyDialogOpened.value = false;
-      document.removeEventListener("keydown", recordCombination);
-    };
-
-    const solveDuplicated = () => {
-      if (duplicatedHotkey.value == undefined)
-        throw new Error("duplicatedHotkey.value == undefined");
-      deleteHotkey(duplicatedHotkey.value.action);
-      return changeHotkeySettings(lastAction.value, lastRecord.value);
-    };
-
-    const confirmBtnEnabled = computed(() => {
-      return (
-        lastRecord.value == "" ||
-        ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
-          lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-        ) > -1
-      );
-    });
-
-    const resetHotkey = (action: string) => {
-      $q.dialog({
-        title: "ショートカットキーを初期値に戻します",
-        message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-        html: true,
-        ok: {
-          label: "初期値に戻す",
-          flat: true,
-          textColor: "secondary",
-        },
-        cancel: {
-          label: "初期値に戻さない",
-          flat: true,
-          textColor: "secondary",
-        },
-      }).onOk(() => {
-        window.electron
-          .getDefaultHotkeySettings()
-          .then((defaultSettings: HotkeySetting[]) => {
-            const setting = defaultSettings.find(
-              (value) => value.action == action
-            );
-            if (setting) {
-              changeHotkeySettings(action, setting.combination);
-            }
-          });
-      });
-    };
-
-    return {
-      hotkeySettingDialogOpenComputed,
-      isHotkeyDialogOpened,
-      hotkeySettings,
-      hotkeyColumns,
-      hotkeyPagination,
-      hotkeyFilter,
-      duplicatedHotkey,
-      deleteHotkey,
-      getHotkeyText,
-      openHotkeyDialog,
-      closeHotkeyDialog,
-      lastAction,
-      lastRecord,
-      solveDuplicated,
-      changeHotkeySettings,
-      confirmBtnEnabled,
-      checkHotkeyReadonly,
-      resetHotkey,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;

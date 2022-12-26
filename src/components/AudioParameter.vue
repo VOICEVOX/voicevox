@@ -1,9 +1,101 @@
+<script setup lang="ts">
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import { MoraDataType } from "@/type/preload";
+import { computed, reactive } from "vue";
+
+const props =
+  defineProps<{
+    value: number;
+    accentPhraseIndex: number;
+    moraIndex: number;
+    uiLocked: boolean;
+    min: number;
+    max: number;
+    step: number;
+    disable: boolean;
+    type: MoraDataType;
+    clip: boolean;
+    shiftKeyFlag: boolean;
+  }>();
+
+const emit =
+  defineEmits<{
+    (
+      e: "changeValue",
+      accentPhraseIndex: number,
+      moraIndex: number,
+      newValue: number,
+      type: MoraDataType
+    ): void;
+    (
+      e: "mouseOver",
+      isOver: boolean,
+      accentPhraseIndex: number,
+      moraIndex: number,
+      type: MoraDataType
+    ): void;
+  }>();
+
+const changeValue = (newValue: number, type: MoraDataType = props.type) => {
+  emit("changeValue", props.accentPhraseIndex, props.moraIndex, newValue, type);
+};
+
+const previewSlider = previewSliderHelper({
+  modelValue: () => props.value,
+  disable: () => props.disable || props.uiLocked,
+  onChange: changeValue,
+  max: () => props.max,
+  min: () => props.min,
+  step: () => props.step,
+  scrollStep: () => props.step * 10,
+  scrollMinStep: () => props.step,
+  disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
+});
+
+const valueLabel = reactive({
+  visible: false,
+});
+
+const clipPathComputed = computed((): string => {
+  if (!props.clip) {
+    return "";
+  } else {
+    if (props.type == "vowel") {
+      return "clip-path: inset(-50% -50% -50% 50%)";
+    } else {
+      return "clip-path: inset(-50% 50% -50% -50%)";
+    }
+  }
+});
+
+const handleMouseHover = (isOver: boolean) => {
+  valueLabel.visible = isOver;
+  if (props.type == "consonant" || props.type == "vowel") {
+    emit(
+      "mouseOver",
+      isOver,
+      props.accentPhraseIndex,
+      props.moraIndex,
+      props.type
+    );
+  }
+};
+
+const precisionComputed = computed(() => {
+  if (props.type == "pause" || props.type == "pitch") {
+    return 2;
+  } else {
+    return 3;
+  }
+});
+</script>
+
 <template>
   <div
     @mouseenter="handleMouseHover(true)"
     @mouseleave="handleMouseHover(false)"
   >
-    <q-badge
+    <QBadge
       class="value-label"
       color="primary-light"
       text-color="display-on-primary"
@@ -16,8 +108,8 @@
           ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
           : undefined
       }}
-    </q-badge>
-    <q-slider
+    </QBadge>
+    <QSlider
       vertical
       reverse
       snap
@@ -39,103 +131,6 @@
     />
   </div>
 </template>
-
-<script lang="ts">
-import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import { MoraDataType } from "@/type/preload";
-import { computed, defineComponent, reactive } from "vue";
-
-export default defineComponent({
-  name: "AudioParameter",
-
-  props: {
-    value: { type: Number, required: true },
-    accentPhraseIndex: { type: Number, required: true },
-    moraIndex: { type: Number, required: true },
-    uiLocked: { type: Boolean, required: true },
-    min: { type: Number, default: 0.0 },
-    max: { type: Number, default: 10.0 },
-    step: { type: Number, default: 0.01 },
-    disable: { type: Boolean, default: false },
-    type: { type: String as () => MoraDataType, default: "vowel" },
-    clip: { type: Boolean, default: false },
-    shiftKeyFlag: { type: Boolean, default: false },
-  },
-
-  emits: ["changeValue", "mouseOver"],
-
-  setup(props, { emit }) {
-    const changeValue = (newValue: number, type: MoraDataType = props.type) => {
-      emit(
-        "changeValue",
-        props.accentPhraseIndex,
-        props.moraIndex,
-        newValue,
-        type
-      );
-    };
-
-    const previewSlider = previewSliderHelper({
-      modelValue: () => props.value,
-      disable: () => props.disable || props.uiLocked,
-      onChange: changeValue,
-      max: () => props.max,
-      min: () => props.min,
-      step: () => props.step,
-      scrollStep: () => props.step * 10,
-      scrollMinStep: () => props.step,
-      disableScroll: () => props.shiftKeyFlag, // shift+ホイール操作の横方向スクロール中にスライダー操作を無視するため
-    });
-
-    const valueLabel = reactive({
-      visible: false,
-    });
-
-    const clipPathComputed = computed((): string => {
-      if (!props.clip) {
-        return "";
-      } else {
-        if (props.type == "vowel") {
-          return "clip-path: inset(-50% -50% -50% 50%)";
-        } else {
-          return "clip-path: inset(-50% 50% -50% -50%)";
-        }
-      }
-    });
-
-    const handleMouseHover = (isOver: boolean) => {
-      valueLabel.visible = isOver;
-      if (props.type == "consonant" || props.type == "vowel") {
-        emit(
-          "mouseOver",
-          isOver,
-          props.type,
-          props.accentPhraseIndex,
-          props.moraIndex
-        );
-      }
-    };
-
-    const precisionComputed = computed(() => {
-      if (props.type == "pause" || props.type == "pitch") {
-        return 2;
-      } else {
-        return 3;
-      }
-    });
-
-    return {
-      previewSlider,
-      changeValue,
-      valueLabel,
-      clipPathComputed,
-      handleMouseHover,
-      precisionComputed,
-    };
-  },
-});
-</script>
-
 <style scoped lang="scss">
 $value-label-height: 24px;
 

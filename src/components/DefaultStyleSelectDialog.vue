@@ -1,24 +1,164 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useStore } from "@/store";
+import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
+
+const props =
+  defineProps<{
+    modelValue: boolean;
+    characterInfos: CharacterInfo[];
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
+
+const store = useStore();
+
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+// 複数スタイルあるキャラクター
+const multiStyleCharacterInfos = computed(() => {
+  return props.characterInfos.filter(
+    (characterInfo) => characterInfo.metas.styles.length > 1
+  );
+});
+
+const selectedStyleIndexes = ref<(number | undefined)[]>([]);
+
+// ダイアログが開かれたときに初期値を求める
+watch(
+  () => props.modelValue,
+  async (newValue, oldValue) => {
+    if (!oldValue && newValue) {
+      selectedStyleIndexes.value = await Promise.all(
+        multiStyleCharacterInfos.value.map(async (info) => {
+          const defaultStyleId = store.state.defaultStyleIds.find(
+            (x) => x.speakerUuid === info.metas.speakerUuid
+          )?.defaultStyleId;
+
+          const index = info.metas.styles.findIndex(
+            (style) => style.styleId === defaultStyleId
+          );
+          return index === -1 ? undefined : index;
+        })
+      );
+    }
+  }
+);
+
+const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
+  selectedStyleIndexes.value[characterIndex] = styleIndex;
+
+  // 音声を再生する。同じ話者/styleIndexだったら停止する。
+  const selectedCharacter = multiStyleCharacterInfos.value[characterIndex];
+  const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
+  if (
+    playing.value !== undefined &&
+    playing.value.speakerUuid === selectedCharacter.metas.speakerUuid &&
+    playing.value.styleId === selectedStyleInfo.styleId
+  ) {
+    stop();
+  } else {
+    play(selectedCharacter.metas.speakerUuid, selectedStyleInfo, 0);
+  }
+};
+
+const pageIndex = ref(0);
+
+const isHoverableStyleItem = ref(true);
+
+const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+
+const audio = new Audio();
+audio.volume = 0.5;
+audio.onended = () => stop();
+
+const canNext = computed(() => {
+  const selectedStyleIndex = selectedStyleIndexes.value[pageIndex.value];
+  return selectedStyleIndex !== undefined;
+});
+
+const play = (
+  speakerUuid: string,
+  { styleId, voiceSamplePaths }: StyleInfo,
+  index: number
+) => {
+  if (audio.src !== "") stop();
+
+  audio.src = voiceSamplePaths[index];
+  audio.play();
+  playing.value = { speakerUuid, styleId, index };
+};
+const stop = () => {
+  if (audio.src === "") return;
+
+  audio.pause();
+  audio.removeAttribute("src");
+  playing.value = undefined;
+};
+
+const prevPage = () => {
+  stop();
+  pageIndex.value--;
+};
+const nextPage = () => {
+  stop();
+  pageIndex.value++;
+};
+
+// 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
+const closeDialog = () => {
+  const defaultStyleIds = JSON.parse(
+    JSON.stringify(store.state.defaultStyleIds)
+  ) as DefaultStyleId[];
+  multiStyleCharacterInfos.value.forEach((info, idx) => {
+    const defaultStyleInfo = {
+      speakerUuid: info.metas.speakerUuid,
+      defaultStyleId:
+        info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
+    };
+    const nowSettingIndex = defaultStyleIds.findIndex(
+      (s) => s.speakerUuid === info.metas.speakerUuid
+    );
+    if (nowSettingIndex !== -1) {
+      defaultStyleIds[nowSettingIndex] = defaultStyleInfo;
+    } else {
+      defaultStyleIds.push(defaultStyleInfo);
+    }
+  });
+  store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
+
+  stop();
+  modelValueComputed.value = false;
+  pageIndex.value = 0;
+};
+</script>
+
 <template>
-  <q-dialog
+  <QDialog
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
     class="default-style-select-dialog transparent-backdrop"
     v-model="modelValueComputed"
   >
-    <q-layout container view="hHh Lpr lff" class="bg-background">
-      <q-header class="q-py-sm">
-        <q-toolbar>
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
           <div class="column">
-            <q-toolbar-title class="text-display"
-              >設定 / デフォルトスタイル・試聴</q-toolbar-title
+            <QToolbarTitle class="text-display"
+              >設定 / デフォルトスタイル・試聴</QToolbarTitle
             >
           </div>
 
-          <q-space />
+          <QSpace />
 
           <div class="row items-center no-wrap">
-            <q-btn
+            <QBtn
               v-show="pageIndex >= 1"
               unelevated
               label="戻る"
@@ -32,7 +172,7 @@
               {{ pageIndex + 1 }} / {{ multiStyleCharacterInfos.length }}
             </div>
 
-            <q-btn
+            <QBtn
               v-if="pageIndex + 1 < multiStyleCharacterInfos.length"
               v-show="canNext"
               unelevated
@@ -42,7 +182,7 @@
               class="text-no-wrap"
               @click="nextPage"
             />
-            <q-btn
+            <QBtn
               v-else
               v-show="canNext"
               unelevated
@@ -53,10 +193,10 @@
               @click="closeDialog"
             />
           </div>
-        </q-toolbar>
-      </q-header>
+        </QToolbar>
+      </QHeader>
 
-      <q-drawer
+      <QDrawer
         bordered
         show-if-above
         :model-value="true"
@@ -70,12 +210,12 @@
             class="character-portrait"
           />
         </div>
-      </q-drawer>
+      </QDrawer>
 
-      <q-page-container>
-        <q-page v-if="multiStyleCharacterInfos && selectedStyleIndexes">
-          <q-tab-panels v-model="pageIndex">
-            <q-tab-panel
+      <QPageContainer>
+        <QPage v-if="multiStyleCharacterInfos && selectedStyleIndexes">
+          <QTabPanels v-model="pageIndex">
+            <QTabPanel
               v-for="(
                 characterInfo, characterIndex
               ) of multiStyleCharacterInfos"
@@ -88,7 +228,7 @@
 
               <div class="style-items-container">
                 <div class="q-pb-md">
-                  <q-item
+                  <QItem
                     v-for="(style, styleIndex) of characterInfo.metas.styles"
                     :key="styleIndex"
                     clickable
@@ -107,7 +247,7 @@
                         style.styleName || "ノーマル"
                       }}</span>
                       <div class="voice-samples">
-                        <q-btn
+                        <QBtn
                           v-for="voiceSampleIndex of [...Array(3).keys()]"
                           :key="voiceSampleIndex"
                           round
@@ -139,7 +279,7 @@
                                 )
                           "
                         />
-                        <q-radio
+                        <QRadio
                           class="
                             absolute-top-right
                             no-pointer-events
@@ -153,180 +293,16 @@
                         />
                       </div>
                     </div>
-                  </q-item>
+                  </QItem>
                 </div>
               </div>
-            </q-tab-panel>
-          </q-tab-panels>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
+            </QTabPanel>
+          </QTabPanels>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
 </template>
-
-<script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
-import { useStore } from "@/store";
-import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
-
-export default defineComponent({
-  name: "DefaultStyleSelectDialog",
-
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-    characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-
-    // 複数スタイルあるキャラクター
-    const multiStyleCharacterInfos = computed(() => {
-      return props.characterInfos.filter(
-        (characterInfo) => characterInfo.metas.styles.length > 1
-      );
-    });
-
-    const selectedStyleIndexes = ref<(number | undefined)[]>([]);
-
-    // ダイアログが開かれたときに初期値を求める
-    watch(
-      () => props.modelValue,
-      async (newValue, oldValue) => {
-        if (!oldValue && newValue) {
-          selectedStyleIndexes.value = await Promise.all(
-            multiStyleCharacterInfos.value.map(async (info) => {
-              const defaultStyleId = store.state.defaultStyleIds.find(
-                (x) => x.speakerUuid === info.metas.speakerUuid
-              )?.defaultStyleId;
-
-              const index = info.metas.styles.findIndex(
-                (style) => style.styleId === defaultStyleId
-              );
-              return index === -1 ? undefined : index;
-            })
-          );
-        }
-      }
-    );
-
-    const selectStyleIndex = (characterIndex: number, styleIndex: number) => {
-      selectedStyleIndexes.value[characterIndex] = styleIndex;
-
-      // 音声を再生する。同じ話者/styleIndexだったら停止する。
-      const selectedCharacter = multiStyleCharacterInfos.value[characterIndex];
-      const selectedStyleInfo = selectedCharacter.metas.styles[styleIndex];
-      if (
-        playing.value !== undefined &&
-        playing.value.speakerUuid === selectedCharacter.metas.speakerUuid &&
-        playing.value.styleId === selectedStyleInfo.styleId
-      ) {
-        stop();
-      } else {
-        play(selectedCharacter.metas.speakerUuid, selectedStyleInfo, 0);
-      }
-    };
-
-    const pageIndex = ref(0);
-
-    const isHoverableStyleItem = ref(true);
-
-    const playing =
-      ref<{ speakerUuid: string; styleId: number; index: number }>();
-
-    const audio = new Audio();
-    audio.volume = 0.5;
-    audio.onended = () => stop();
-
-    const canNext = computed(() => {
-      const selectedStyleIndex = selectedStyleIndexes.value[pageIndex.value];
-      return selectedStyleIndex !== undefined;
-    });
-
-    const play = (
-      speakerUuid: string,
-      { styleId, voiceSamplePaths }: StyleInfo,
-      index: number
-    ) => {
-      if (audio.src !== "") stop();
-
-      audio.src = voiceSamplePaths[index];
-      audio.play();
-      playing.value = { speakerUuid, styleId, index };
-    };
-    const stop = () => {
-      if (audio.src === "") return;
-
-      audio.pause();
-      audio.removeAttribute("src");
-      playing.value = undefined;
-    };
-
-    const prevPage = () => {
-      stop();
-      pageIndex.value--;
-    };
-    const nextPage = () => {
-      stop();
-      pageIndex.value++;
-    };
-
-    // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
-    const closeDialog = () => {
-      const defaultStyleIds = JSON.parse(
-        JSON.stringify(store.state.defaultStyleIds)
-      ) as DefaultStyleId[];
-      multiStyleCharacterInfos.value.forEach((info, idx) => {
-        const defaultStyleInfo = {
-          speakerUuid: info.metas.speakerUuid,
-          defaultStyleId:
-            info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
-        };
-        const nowSettingIndex = defaultStyleIds.findIndex(
-          (s) => s.speakerUuid === info.metas.speakerUuid
-        );
-        if (nowSettingIndex !== -1) {
-          defaultStyleIds[nowSettingIndex] = defaultStyleInfo;
-        } else {
-          defaultStyleIds.push(defaultStyleInfo);
-        }
-      });
-      store.dispatch("SET_DEFAULT_STYLE_IDS", defaultStyleIds);
-
-      stop();
-      modelValueComputed.value = false;
-      pageIndex.value = 0;
-    };
-
-    return {
-      modelValueComputed,
-      multiStyleCharacterInfos,
-      selectedStyleIndexes,
-      selectStyleIndex,
-      pageIndex,
-      isHoverableStyleItem,
-      playing,
-      canNext,
-      play,
-      stop,
-      prevPage,
-      nextPage,
-      closeDialog,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;
