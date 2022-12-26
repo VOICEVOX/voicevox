@@ -691,14 +691,17 @@ export type EngineStoreTypes = {
   // NOTE: 個別にエンジンの状態を確認できるようにする？
   // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
   RESTART_ENGINE_ALL: {
-    action(payload: { openDialog?: boolean }): Promise<{
+    action(payload: { preventOpeningDialog?: boolean }): Promise<{
       success: boolean;
       anyNewCharacters: boolean;
     }>;
   };
 
   RESTART_ENGINE: {
-    action(payload: { engineId: string; openDialog?: boolean }): Promise<{
+    action(payload: {
+      engineId: string;
+      preventOpeningDialog?: boolean;
+    }): Promise<{
       success: boolean;
       anyNewCharacters: boolean;
     }>;

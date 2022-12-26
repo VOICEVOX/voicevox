@@ -147,7 +147,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE_ALL: {
-    async action({ state, dispatch }, { openDialog }) {
+    async action({ state, dispatch }, { preventOpeningDialog }) {
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
       const engineIds = state.engineIds;
 
@@ -161,7 +161,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         success: results.every((r) => r.success),
         anyNewCharacters: results.some((r) => r.anyNewCharacters),
       }));
-      if (openDialog && result.anyNewCharacters) {
+      if (!preventOpeningDialog && result.anyNewCharacters) {
         dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });
@@ -172,7 +172,10 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE: {
-    async action({ dispatch, commit, state }, { engineId, openDialog }) {
+    async action(
+      { dispatch, commit, state },
+      { engineId, preventOpeningDialog }
+    ) {
       commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
       const result = await window.electron
         .restartEngine(engineId)
@@ -194,7 +197,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             anyNewCharacters: false,
           };
         });
-      if (openDialog && result.anyNewCharacters) {
+      if (!preventOpeningDialog && result.anyNewCharacters) {
         dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });

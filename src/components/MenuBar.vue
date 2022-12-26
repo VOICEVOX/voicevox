@@ -492,7 +492,6 @@ export default defineComponent({
                     onClick: () => {
                       store.dispatch("RESTART_ENGINE", {
                         engineId: engineInfo.uuid,
-                        openDialog: true,
                       });
                     },
                     disableWhenUiLocked: false,
@@ -507,7 +506,7 @@ export default defineComponent({
             type: "button",
             label: "全てのエンジンを再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE_ALL", { openDialog: true });
+              store.dispatch("RESTART_ENGINE_ALL", {});
             },
             disableWhenUiLocked: false,
           },
