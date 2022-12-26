@@ -1,6 +1,10 @@
 <template>
   <character-default-style-select-dialog
-    v-if="selectedCharacterInfo"
+    v-if="
+      selectedCharacterInfo &&
+      selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
+        undefined
+    "
     v-model:isOpen="showStyleSelectDialog"
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]

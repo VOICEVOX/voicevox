@@ -153,7 +153,6 @@ export default defineComponent({
     const selectedStyleIndexComputed = computed({
       get: () => props.selectedStyleIndex,
       set: (val) => {
-        console.log("selectedStyleIndexComputed", val);
         emit("update:selectedStyleIndex", val);
       },
     });
