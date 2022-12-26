@@ -1,5 +1,5 @@
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller markdown-body"
   >
@@ -34,33 +34,18 @@
         </p>
       </template>
     </div>
-  </q-page>
+  </QPage>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from "vue";
+<script setup lang="ts">
 import { UpdateInfo } from "../type/preload";
 
-export default defineComponent({
-  props: {
-    latestVersion: {
-      type: String,
-      required: false,
-    },
-    downloadLink: {
-      type: String,
-      required: false,
-    },
-    updateInfos: {
-      type: Array as PropType<UpdateInfo[]>,
-      required: false,
-    },
-    isUpdateAvailable: {
-      type: Boolean,
-      required: false,
-    },
-  },
-});
+defineProps<{
+  latestVersion: string;
+  downloadLink: string;
+  updateInfos: UpdateInfo[];
+  isUpdateAvailable: boolean;
+}>();
 </script>
 
 <style scoped lang="scss">

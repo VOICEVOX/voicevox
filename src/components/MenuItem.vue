@@ -68,41 +68,41 @@ watch(
 </script>
 
 <template>
-  <q-separator class="bg-surface" v-if="menudata.type === 'separator'" />
-  <q-item
+  <QSeparator class="bg-surface" v-if="menudata.type === 'separator'" />
+  <QItem
     class="bg-background"
     v-else-if="menudata.type === 'root'"
     clickable
     dense
     :class="selected && 'active-menu'"
   >
-    <q-item-section side class="q-py-2" v-if="menudata.icon">
+    <QItemSection side class="q-py-2" v-if="menudata.icon">
       <img :src="menudata.icon" class="engine-icon" />
-    </q-item-section>
+    </QItemSection>
 
-    <q-item-section>{{ menudata.label }}</q-item-section>
+    <QItemSection>{{ menudata.label }}</QItemSection>
 
-    <q-item-section side>
-      <q-icon name="keyboard_arrow_right" />
-    </q-item-section>
+    <QItemSection side>
+      <QIcon name="keyboard_arrow_right" />
+    </QItemSection>
 
-    <q-menu
+    <QMenu
       anchor="top end"
       transition-show="none"
       transition-hide="none"
       v-model="selectedComputed"
       :target="!uiLocked"
     >
-      <menu-item
+      <MenuItem
         v-for="(menu, i) of menudata.subMenu"
         :key="i"
         :menudata="menu"
         v-model:selected="subMenuOpenFlags[i]"
         @mouseover="reassignSubMenuOpen(i)"
       />
-    </q-menu>
-  </q-item>
-  <q-item
+    </QMenu>
+  </QItem>
+  <QItem
     v-else
     dense
     clickable
@@ -111,22 +111,22 @@ watch(
     class="bg-background"
     @click="menudata.onClick"
   >
-    <q-item-section v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
-      <q-icon v-if="menudata.checked" name="check" />
-      <q-icon v-else />
-    </q-item-section>
+    <QItemSection v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
+      <QIcon v-if="menudata.checked" name="check" />
+      <QIcon v-else />
+    </QItemSection>
 
-    <q-item-section avatar v-if="menudata.icon">
-      <q-avatar>
+    <QItemSection avatar v-if="menudata.icon">
+      <QAvatar>
         <img :src="menudata.icon" />
-      </q-avatar>
-    </q-item-section>
+      </QAvatar>
+    </QItemSection>
 
-    <q-item-section>{{ menudata.label }}</q-item-section>
-    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+    <QItemSection>{{ menudata.label }}</QItemSection>
+    <QItemSection side v-if="getMenuBarHotkey(menudata.label)">
       {{ getMenuBarHotkey(menudata.label) }}
-    </q-item-section>
-  </q-item>
+    </QItemSection>
+  </QItem>
 </template>
 
 <style lang="scss" scoped>

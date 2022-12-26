@@ -1,25 +1,43 @@
+<script setup lang="ts">
+import { ref } from "vue";
+
+defineProps<{
+  licenses: Record<string, string>[];
+}>();
+const detailIndex = ref<number | undefined>(undefined);
+
+const scroller = ref<HTMLElement>();
+
+const selectLicenseIndex = (index: number | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  detailIndex.value = index;
+};
+</script>
+
 <template>
-  <q-page
+  <QPage
     ref="scroller"
     class="relative-absolute-wrapper scroller bg-background"
   >
     <div class="q-pa-md markdown-body">
-      <q-list v-if="detailIndex === undefined">
-        <q-item
+      <QList v-if="detailIndex === undefined">
+        <QItem
           v-for="(license, index) in licenses"
           :key="index"
           clickable
           dense
           @click="selectLicenseIndex(index)"
         >
-          <q-item-section>{{
+          <QItemSection>{{
             license.name + (license.version ? " | " + license.version : "")
-          }}</q-item-section>
-        </q-item>
-      </q-list>
+          }}</QItemSection>
+        </QItem>
+      </QList>
       <div v-else>
         <div class="q-mb-md">
-          <q-btn
+          <QBtn
             outline
             color="primary-light"
             icon="keyboard_arrow_left"
@@ -31,41 +49,8 @@
         <pre>{{ licenses[detailIndex].text }}</pre>
       </div>
     </div>
-  </q-page>
+  </QPage>
 </template>
-
-<script lang="ts">
-import { defineComponent, PropType, ref } from "vue";
-
-export default defineComponent({
-  name: "OssLicense",
-
-  props: {
-    licenses: {
-      type: Array as PropType<Record<string, string>[]>,
-      required: true,
-    },
-  },
-  setup() {
-    const detailIndex = ref<number | undefined>(undefined);
-
-    const scroller = ref<HTMLElement>();
-
-    const selectLicenseIndex = (index: number | undefined) => {
-      if (scroller.value == undefined)
-        throw new Error("scroller.value == undefined");
-      scroller.value.scrollTop = 0;
-      detailIndex.value = index;
-    };
-
-    return {
-      selectLicenseIndex,
-      detailIndex,
-      scroller,
-    };
-  },
-});
-</script>
 
 <style scoped lang="scss">
 .root {

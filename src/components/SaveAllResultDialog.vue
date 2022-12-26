@@ -1,79 +1,71 @@
 <template>
-  <q-dialog persistent ref="dialogRef">
+  <QDialog persistent ref="dialogRef">
     <!-- 仮デザイン -->
-    <q-layout container class="q-dialog-plugin bg-background">
-      <q-header>
-        <q-toolbar>
-          <q-toolbar-title class="text-display"
-            >音声書き出し結果</q-toolbar-title
-          >
-        </q-toolbar>
-        <q-space />
-      </q-header>
-      <q-page-container>
-        <q-page>
-          <q-list separator v-if="writeErrorArray.length > 0">
+    <QLayout container class="q-dialog-plugin bg-background">
+      <QHeader>
+        <QToolbar>
+          <QToolbarTitle class="text-display">音声書き出し結果</QToolbarTitle>
+        </QToolbar>
+        <QSpace />
+      </QHeader>
+      <QPageContainer>
+        <QPage>
+          <QList separator v-if="writeErrorArray.length > 0">
             <div class="error">失敗（書き込みエラー）:</div>
-            <q-item v-for="(value, index) in writeErrorArray" :key="index">
-              <q-item-section>
-                <q-item-label>{{ value.path }}</q-item-label>
-                <q-item-label>詳細：{{ value.message }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-          <q-list separator v-if="engineErrorArray.length > 0">
+            <QItem v-for="(value, index) in writeErrorArray" :key="index">
+              <QItemSection>
+                <QItemLabel>{{ value.path }}</QItemLabel>
+                <QItemLabel>詳細：{{ value.message }}</QItemLabel>
+              </QItemSection>
+            </QItem>
+          </QList>
+          <QList separator v-if="engineErrorArray.length > 0">
             <div class="error">失敗（エンジンエラー）:</div>
-            <q-item v-for="(value, index) in engineErrorArray" :key="index">
-              <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-          <q-list separator v-if="successArray.length > 0">
+            <QItem v-for="(value, index) in engineErrorArray" :key="index">
+              <QItemSection>
+                <QItemLabel>{{ value }}</QItemLabel>
+              </QItemSection>
+            </QItem>
+          </QList>
+          <QList separator v-if="successArray.length > 0">
             <div class="success">成功:</div>
-            <q-item v-for="(value, index) in successArray" :key="index">
-              <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-page>
-      </q-page-container>
-      <q-footer>
-        <q-toolbar>
-          <q-space />
-          <q-btn flat dense align="right" @click="close" label="閉じる" />
-        </q-toolbar>
-      </q-footer>
-    </q-layout>
-  </q-dialog>
+            <QItem v-for="(value, index) in successArray" :key="index">
+              <QItemSection>
+                <QItemLabel>{{ value }}</QItemLabel>
+              </QItemSection>
+            </QItem>
+          </QList>
+        </QPage>
+      </QPageContainer>
+      <QFooter>
+        <QToolbar>
+          <QSpace />
+          <QBtn flat dense align="right" @click="close" label="閉じる" />
+        </QToolbar>
+      </QFooter>
+    </QLayout>
+  </QDialog>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script setup lang="ts">
+import { WriteErrorTypeForSaveAllResultDialog } from "@/store/type";
 import { useDialogPluginComponent } from "quasar";
 
-export default defineComponent({
-  name: "SaveAllResultDialog",
-  props: {
-    successArray: Array,
-    writeErrorArray: Array,
-    engineErrorArray: Array,
-  },
-  emits: {
-    ...useDialogPluginComponent.emits,
-  },
-  setup() {
-    const { dialogRef, onDialogOK } = useDialogPluginComponent();
-    const close = () => onDialogOK();
-    return {
-      dialogRef,
-      close,
-    };
-  },
-});
+withDefaults(
+  defineProps<{
+    successArray: (string | undefined)[];
+    writeErrorArray: WriteErrorTypeForSaveAllResultDialog[];
+    engineErrorArray: (string | undefined)[];
+  }>(),
+  {
+    successArray: () => [],
+    writeErrorArray: () => [],
+    engineErrorArray: () => [],
+  }
+);
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
+const close = () => onDialogOK();
 </script>
-
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
 
