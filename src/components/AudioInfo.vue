@@ -902,7 +902,7 @@ export default defineComponent({
         morphingInfo:
           morphingTargetStyleInfo.value &&
           morphingTargetCharacterInfo.value &&
-          morphingRateSlider.state.currentValue.value
+          morphingRateSlider.state.currentValue.value != undefined // FIXME: ifでチェックしてthrowする
             ? {
                 rate: morphingRateSlider.state.currentValue.value,
                 targetEngineId: morphingTargetStyleInfo.value.engineId,
