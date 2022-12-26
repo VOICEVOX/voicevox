@@ -6,18 +6,20 @@
     <div class="q-pa-md markdown-body">
       <QList v-if="selectedInfo === undefined">
         <template
-          v-for="([engineId, engineInfo], engineIndex) in engineInfos.entries()"
+          v-for="(engineId, engineIndex) in sortedEngineInfos.map(
+            (engineInfo) => engineInfo.uuid
+          )"
           :key="engineIndex"
         >
           <!-- エンジンが一つだけの場合は名前を表示しない -->
           <template v-if="engineInfos.size > 1">
             <QSeparator spaced v-if="engineIndex > 0" />
-            <QItemLabel header>{{ engineInfo.engineName }}</QItemLabel>
+            <QItemLabel header>{{ engineInfos.get(engineId).name }}</QItemLabel>
           </template>
           <template
-            v-for="(
-              [, characterInfo], characterIndex
-            ) in engineInfo.characterInfos"
+            v-for="([, characterInfo], characterIndex) in engineInfos.get(
+              engineId
+            ).characterInfos"
             :key="characterIndex"
           >
             <QItem
@@ -75,7 +77,7 @@ type DetailKey = { engine: string; character: string };
 
 const store = useStore();
 const md = useMarkdownIt();
-
+const sortedEngineInfos = computed(() => store.getters.GET_SORTED_ENGINE_INFOS);
 const engineInfos = computed(
   () =>
     new Map(
@@ -84,7 +86,7 @@ const engineInfos = computed(
           engineId,
           {
             engineId,
-            engineName: store.state.engineManifests[engineId].name,
+            name: store.state.engineManifests[engineId].name,
             characterInfos: new Map(
               characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
             ),
@@ -93,13 +95,10 @@ const engineInfos = computed(
       )
     )
 );
-
 const convertMarkdown = (text: string) => {
   return md.render(text);
 };
-
 const selectedInfo = ref<DetailKey | undefined>(undefined);
-
 const scroller = ref<HTMLElement>();
 const selectCharacterInfo = (index: DetailKey | undefined) => {
   if (scroller.value == undefined)

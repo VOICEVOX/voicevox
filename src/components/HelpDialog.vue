@@ -104,22 +104,18 @@ const props =
   }>();
 const emit =
   defineEmits<{
-    "update:modelValue": (value: boolean) => void;
+    (e: "update:modelValue", value: boolean): void;
   }>();
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
   set: (val) => emit("update:modelValue", val),
 });
-
 // エディタのアップデート確認
 const store = useStore();
-
 const updateInfos = ref<UpdateInfoObject[]>();
 store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
-
 const isCheckingFinished = ref<boolean>(false);
-
 // 最新版があるか調べる
 const currentVersion = ref("");
 const latestVersion = ref("");
@@ -160,117 +156,112 @@ window.electron
         throw new Error(err);
       });
   });
-
 const isUpdateAvailable = computed(() => {
   return isCheckingFinished.value && latestVersion.value !== "";
 });
-
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
 store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
-
 const policy = ref<string>();
 store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
-
-const pagedata = computed(() =>
-  (
-    [
-      {
-        type: "item",
-        name: "ソフトウェアの利用規約",
-        component: HelpPolicy,
-        props: {
-          policy: policy.value,
+const pagedata = computed(() => {
+  const data = [
+    {
+      type: "item",
+      name: "ソフトウェアの利用規約",
+      component: HelpPolicy,
+      props: {
+        policy: policy.value,
+      },
+    },
+    {
+      type: "item",
+      name: "音声ライブラリの利用規約",
+      component: LibraryPolicy,
+    },
+    {
+      type: "item",
+      name: "使い方",
+      component: HowToUse,
+    },
+    {
+      type: "item",
+      name: "開発コミュニティ",
+      component: OssCommunityInfo,
+    },
+    {
+      type: "item",
+      name: "ライセンス情報",
+      component: OssLicense,
+      props: {
+        licenses: licenses.value,
+      },
+    },
+    {
+      type: "item",
+      name: "アップデート情報",
+      component: UpdateInfo,
+      props: {
+        updateInfos: updateInfos.value,
+        isUpdateAvailable: isUpdateAvailable.value,
+        latestVersion: latestVersion.value,
+      },
+    },
+    {
+      type: "item",
+      name: "よくあるご質問",
+      component: QAndA,
+    },
+    {
+      type: "item",
+      name: "お問い合わせ",
+      component: ContactInfo,
+    },
+  ] as PageData[];
+  // エンジンが一つだけの場合は従来の表示のみ
+  if (store.state.engineIds.length > 1) {
+    for (const id of store.getters.GET_SORTED_ENGINE_INFOS.map((m) => m.uuid)) {
+      const manifest = store.state.engineManifests[id];
+      data.push(
+        {
+          type: "separator",
+          name: manifest.name,
         },
-      },
-      {
-        type: "item",
-        name: "音声ライブラリの利用規約",
-        component: LibraryPolicy,
-      },
-      {
-        type: "item",
-        name: "使い方",
-        component: HowToUse,
-      },
-      {
-        type: "item",
-        name: "開発コミュニティ",
-        component: OssCommunityInfo,
-      },
-      {
-        type: "item",
-        name: "ライセンス情報",
-        component: OssLicense,
-        props: {
-          licenses: licenses.value,
+        {
+          type: "item",
+          name: "利用規約",
+          parent: manifest.name,
+          component: HelpPolicy,
+          props: {
+            policy: manifest.termsOfService,
+          },
         },
-      },
-      {
-        type: "item",
-        name: "アップデート情報",
-        component: UpdateInfo,
-        props: {
-          updateInfos: updateInfos.value,
-          isUpdateAvailable: isUpdateAvailable.value,
-          latestVersion: latestVersion.value,
+        {
+          type: "item",
+          name: "ライセンス情報",
+          parent: manifest.name,
+          component: OssLicense,
+          props: {
+            licenses: manifest.dependencyLicenses,
+          },
         },
-      },
-      {
-        type: "item",
-        name: "よくあるご質問",
-        component: QAndA,
-      },
-      {
-        type: "item",
-        name: "お問い合わせ",
-        component: ContactInfo,
-      },
-    ] as PageData[]
-  ).concat(
-    // エンジンが一つだけの場合は従来の表示のみ
-    (store.state.engineIds.length > 1
-      ? Object.values(store.state.engineManifests)
-      : []
-    ).flatMap((manifest) => [
-      {
-        type: "separator",
-        name: manifest.name,
-      },
-      {
-        type: "item",
-        name: "利用規約",
-        parent: manifest.name,
-        component: HelpPolicy,
-        props: {
-          policy: manifest.termsOfService,
-        },
-      },
-      {
-        type: "item",
-        name: "ライセンス情報",
-        parent: manifest.name,
-        component: OssLicense,
-        props: {
-          licenses: manifest.dependencyLicenses,
-        },
-      },
-      {
-        type: "item",
-        name: "アップデート情報",
-        parent: manifest.name,
-        component: UpdateInfo,
-        props: {
-          updateInfos: manifest.updateInfos,
-          // TODO: エンジン側で最新バージョンチェックAPIが出来たら実装する。
-          //       https://github.com/VOICEVOX/voicevox_engine/issues/476
-          isUpdateAvailable: false,
-        },
-      },
-    ])
-  )
-);
-
+        {
+          type: "item",
+          name: "アップデート情報",
+          parent: manifest.name,
+          component: UpdateInfo,
+          props: {
+            updateInfos: manifest.updateInfos,
+            // TODO: エンジン側で最新バージョンチェックAPIが出来たら実装する。
+            //       https://github.com/VOICEVOX/voicevox_engine/issues/476
+            isUpdateAvailable: false,
+          },
+        }
+      );
+    }
+  }
+  return data;
+});
 const selectedPageIndex = ref(0);
 </script>
 

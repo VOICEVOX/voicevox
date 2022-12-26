@@ -458,7 +458,7 @@ async function updateEngines() {
     ].filter((x) => x) as MenuItemData[];
   } else {
     engineMenu.subMenu = [
-      ...Object.values(engineInfos.value).map(
+      ...store.getters.GET_SORTED_ENGINE_INFOS.map(
         (engineInfo) =>
           ({
             type: "root",

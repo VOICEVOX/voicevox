@@ -365,11 +365,12 @@ const lockUi = function <T>(
 };
 
 const categorizedEngineIds = computed(() => {
+  const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
   const result = {
-    default: Object.values(engineInfos.value)
+    default: Object.values(sortedEngineInfos)
       .filter((info) => info.type === "default")
       .map((info) => info.uuid),
-    plugin: Object.values(engineInfos.value)
+    plugin: Object.values(sortedEngineInfos)
       .filter((info) => info.type === "path" || info.type === "vvpp")
       .map((info) => info.uuid),
   };
