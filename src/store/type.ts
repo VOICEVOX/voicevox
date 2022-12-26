@@ -273,7 +273,7 @@ export type AudioStoreTypes = {
     };
   };
 
-  SELECTABLE_MOPHING_TARGET_ENGINES: {
+  MORPHING_SUPPORTED_ENGINES: {
     getter: string[];
   };
 

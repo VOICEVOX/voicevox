@@ -351,7 +351,7 @@
       />
     </div>
     <div
-      v-if="showMorphing"
+      v-if="shouldShowMorphing"
       class="q-px-md"
       :class="{
         disabled: uiLocked,
@@ -362,8 +362,8 @@
       <div class="row no-wrap items-center">
         <character-button
           class="q-my-xs"
-          :character-infos="selectableCharacters"
-          :show-engine-info="selectableEngines.length >= 2"
+          :character-infos="mophingTargetCharacters"
+          :show-engine-info="mophingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"
           v-model:selected-voice="morphingTargetVoice"
@@ -392,18 +392,18 @@
         </div>
       </div>
       <div
-        v-if="!supportMorphing"
+        v-if="!isSupportedMorphing"
         class="text-warning"
         style="font-size: 0.7rem"
       >
         非対応エンジンです
       </div>
       <div
-        v-else-if="warnMorphing"
+        v-else-if="isValidMorphingInfo"
         class="text-warning"
         style="font-size: 0.7rem"
       >
-        エンジンが異なります
+        無効な設定です
       </div>
       <div :class="{ disabled: morphingTargetStyleInfo == undefined }">
         <span class="text-body1 q-mb-xs"
@@ -613,27 +613,27 @@ export default defineComponent({
     });
 
     // モーフィング
-    const showMorphing = computed(
+    const shouldShowMorphing = computed(
       () => store.state.experimentalSetting.enableMorphing
     );
 
-    const supportMorphing = computed(
+    const isSupportedMorphing = computed(
       () => supportedFeatures.value?.synthesisMorphing
     );
 
-    const warnMorphing = computed(() => {
+    const isValidMorphingInfo = computed(() => {
       if (audioItem.value.morphingInfo == undefined) return false;
       return !store.getters.VALID_MOPHING_INFO(audioItem.value);
     });
 
-    const selectableEngines = store.getters.SELECTABLE_MOPHING_TARGET_ENGINES;
+    const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
-    const selectableCharacters = computed(() => {
+    const mophingTargetCharacters = computed(() => {
       const allCharacters = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS;
       return allCharacters
         .map((character) => {
           const targetStyles = character.metas.styles.filter((style) =>
-            selectableEngines.includes(style.engineId)
+            mophingTargetEngines.includes(style.engineId)
           );
           character.metas.styles = targetStyles;
           return character;
@@ -669,7 +669,7 @@ export default defineComponent({
     });
 
     const morphingTargetCharacterInfo = computed(() =>
-      selectableCharacters.value.find(
+      mophingTargetCharacters.value.find(
         (character) =>
           character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
       )
@@ -994,11 +994,11 @@ export default defineComponent({
       volumeScaleSlider,
       prePhonemeLengthSlider,
       postPhonemeLengthSlider,
-      selectableEngines,
-      showMorphing,
-      supportMorphing,
-      warnMorphing,
-      selectableCharacters,
+      mophingTargetEngines,
+      shouldShowMorphing,
+      isSupportedMorphing,
+      isValidMorphingInfo,
+      mophingTargetCharacters,
       morphingTargetVoice,
       morphingTargetCharacterInfo,
       morphingTargetStyleInfo,

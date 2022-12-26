@@ -686,7 +686,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SELECTABLE_MOPHING_TARGET_ENGINES: {
+  MORPHING_SUPPORTED_ENGINES: {
     getter: (state) =>
       state.engineIds.filter(
         (engineId) =>
@@ -703,9 +703,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       )
         return false;
       return (
-        getters.SELECTABLE_MOPHING_TARGET_ENGINES.includes(
-          audioItem.engineId
-        ) && audioItem.engineId === audioItem.morphingInfo.targetEngineId
+        getters.MORPHING_SUPPORTED_ENGINES.includes(audioItem.engineId) &&
+        audioItem.engineId === audioItem.morphingInfo.targetEngineId
       );
     },
   },

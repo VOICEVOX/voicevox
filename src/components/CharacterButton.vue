@@ -265,7 +265,7 @@ export default defineComponent({
       const defaultStyle =
         characterInfo?.metas.styles.find(
           (style) => style.styleId === defaultStyleId
-        ) ?? characterInfo?.metas.styles[0]; // FIXME: デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
+        ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
 
       if (defaultStyle == undefined)
         throw new Error("defaultStyle == undefined");
