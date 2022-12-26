@@ -612,6 +612,7 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
 
+    // モーフィング
     const showMorphing = computed(
       () => store.state.experimentalSetting.enableMorphing
     );
