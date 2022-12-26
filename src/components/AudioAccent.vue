@@ -1,44 +1,3 @@
-<script setup lang="ts">
-import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import { AccentPhrase } from "@/openapi";
-import { computed } from "vue";
-
-const props =
-  defineProps<{
-    accentPhrase: AccentPhrase;
-    accentPhraseIndex: number;
-    uiLocked: boolean;
-    shiftKeyFlag: boolean;
-    onChangeAccent: (
-      accentPhraseIndex: number,
-      accent: number
-    ) => Promise<void>;
-  }>();
-
-const changeAccent = (accent: number) =>
-  props.onChangeAccent(props.accentPhraseIndex, accent);
-
-const previewAccentSlider = previewSliderHelper({
-  onChange: changeAccent,
-  modelValue: () => props.accentPhrase.accent,
-  disable: () => props.uiLocked,
-  disableScroll: () => props.shiftKeyFlag,
-  max: () => props.accentPhrase.moras.length,
-  min: () => 1,
-  step: () => 1,
-});
-
-const accentLine = computed(() => {
-  const accent = previewAccentSlider.state.currentValue.value ?? 0;
-  return [...Array(props.accentPhrase.moras.length).keys()].map(
-    (index) =>
-      `${index * 40 + 10} ${
-        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-      }`
-  );
-});
-</script>
-
 <template>
   <div
     class="accent-slider-cell"
@@ -101,6 +60,47 @@ const accentLine = computed(() => {
     </div>
   </template>
 </template>
+
+<script setup lang="ts">
+import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import { AccentPhrase } from "@/openapi";
+import { computed } from "vue";
+
+const props =
+  defineProps<{
+    accentPhrase: AccentPhrase;
+    accentPhraseIndex: number;
+    uiLocked: boolean;
+    shiftKeyFlag: boolean;
+    onChangeAccent: (
+      accentPhraseIndex: number,
+      accent: number
+    ) => Promise<void>;
+  }>();
+
+const changeAccent = (accent: number) =>
+  props.onChangeAccent(props.accentPhraseIndex, accent);
+
+const previewAccentSlider = previewSliderHelper({
+  onChange: changeAccent,
+  modelValue: () => props.accentPhrase.accent,
+  disable: () => props.uiLocked,
+  disableScroll: () => props.shiftKeyFlag,
+  max: () => props.accentPhrase.moras.length,
+  min: () => 1,
+  step: () => 1,
+});
+
+const accentLine = computed(() => {
+  const accent = previewAccentSlider.state.currentValue.value ?? 0;
+  return [...Array(props.accentPhrase.moras.length).keys()].map(
+    (index) =>
+      `${index * 40 + 10} ${
+        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+      }`
+  );
+});
+</script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

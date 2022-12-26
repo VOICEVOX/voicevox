@@ -1,3 +1,44 @@
+<template>
+  <QDialog :model-value="openDialog" @update:model-value="updateOpenDialog">
+    <QCard class="setting-card q-pa-md dialog-card">
+      <QCardSection>
+        <div class="text-h5">プリセット管理</div>
+      </QCardSection>
+      <QCardActions class="q-px-md q-py-sm">
+        <div class="full-width row wrap justify-between">
+          <QList bordered separator class="col-sm-grow">
+            <draggable
+              :modelValue="previewPresetList"
+              @update:modelValue="reorderPreset"
+              item-key="key"
+            >
+              <template v-slot:item="{ element: item }">
+                <QItem>
+                  <QItemSection>{{ item.name }}</QItemSection>
+                  <QSpace />
+                  <QItemSection avatar>
+                    <QBtn
+                      icon="delete"
+                      flat
+                      color="display"
+                      @click="deletePreset(item.key)"
+                    ></QBtn>
+                  </QItemSection>
+                </QItem>
+              </template>
+            </draggable>
+            <QItem v-if="presetList.length === 0">
+              <QItemSection class="display">
+                プリセットがありません
+              </QItemSection>
+            </QItem>
+          </QList>
+        </div>
+      </QCardActions>
+    </QCard>
+  </QDialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
@@ -67,47 +108,6 @@ const deletePreset = (key: string) => {
   });
 };
 </script>
-
-<template>
-  <QDialog :model-value="openDialog" @update:model-value="updateOpenDialog">
-    <QCard class="setting-card q-pa-md dialog-card">
-      <QCardSection>
-        <div class="text-h5">プリセット管理</div>
-      </QCardSection>
-      <QCardActions class="q-px-md q-py-sm">
-        <div class="full-width row wrap justify-between">
-          <QList bordered separator class="col-sm-grow">
-            <draggable
-              :modelValue="previewPresetList"
-              @update:modelValue="reorderPreset"
-              item-key="key"
-            >
-              <template v-slot:item="{ element: item }">
-                <QItem>
-                  <QItemSection>{{ item.name }}</QItemSection>
-                  <QSpace />
-                  <QItemSection avatar>
-                    <QBtn
-                      icon="delete"
-                      flat
-                      color="display"
-                      @click="deletePreset(item.key)"
-                    ></QBtn>
-                  </QItemSection>
-                </QItem>
-              </template>
-            </draggable>
-            <QItem v-if="presetList.length === 0">
-              <QItemSection class="display">
-                プリセットがありません
-              </QItemSection>
-            </QItem>
-          </QList>
-        </div>
-      </QCardActions>
-    </QCard>
-  </QDialog>
-</template>
 
 <style>
 .dialog-card {

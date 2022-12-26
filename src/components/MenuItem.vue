@@ -1,3 +1,65 @@
+<template>
+  <QSeparator class="bg-surface" v-if="menudata.type === 'separator'" />
+  <QItem
+    class="bg-background"
+    v-else-if="menudata.type === 'root'"
+    clickable
+    dense
+    :class="selected && 'active-menu'"
+  >
+    <QItemSection side class="q-py-2" v-if="menudata.icon">
+      <img :src="menudata.icon" class="engine-icon" />
+    </QItemSection>
+
+    <QItemSection>{{ menudata.label }}</QItemSection>
+
+    <QItemSection side>
+      <QIcon name="keyboard_arrow_right" />
+    </QItemSection>
+
+    <QMenu
+      anchor="top end"
+      transition-show="none"
+      transition-hide="none"
+      v-model="selectedComputed"
+      :target="!uiLocked"
+    >
+      <MenuItem
+        v-for="(menu, i) of menudata.subMenu"
+        :key="i"
+        :menudata="menu"
+        v-model:selected="subMenuOpenFlags[i]"
+        @mouseover="reassignSubMenuOpen(i)"
+      />
+    </QMenu>
+  </QItem>
+  <QItem
+    v-else
+    dense
+    clickable
+    v-ripple
+    v-close-popup
+    class="bg-background"
+    @click="menudata.onClick"
+  >
+    <QItemSection v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
+      <QIcon v-if="menudata.checked" name="check" />
+      <QIcon v-else />
+    </QItemSection>
+
+    <QItemSection avatar v-if="menudata.icon">
+      <QAvatar>
+        <img :src="menudata.icon" />
+      </QAvatar>
+    </QItemSection>
+
+    <QItemSection>{{ menudata.label }}</QItemSection>
+    <QItemSection side v-if="getMenuBarHotkey(menudata.label)">
+      {{ getMenuBarHotkey(menudata.label) }}
+    </QItemSection>
+  </QItem>
+</template>
+
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import type { MenuItemData } from "@/components/MenuBar.vue";
@@ -66,68 +128,6 @@ watch(
   }
 );
 </script>
-
-<template>
-  <QSeparator class="bg-surface" v-if="menudata.type === 'separator'" />
-  <QItem
-    class="bg-background"
-    v-else-if="menudata.type === 'root'"
-    clickable
-    dense
-    :class="selected && 'active-menu'"
-  >
-    <QItemSection side class="q-py-2" v-if="menudata.icon">
-      <img :src="menudata.icon" class="engine-icon" />
-    </QItemSection>
-
-    <QItemSection>{{ menudata.label }}</QItemSection>
-
-    <QItemSection side>
-      <QIcon name="keyboard_arrow_right" />
-    </QItemSection>
-
-    <QMenu
-      anchor="top end"
-      transition-show="none"
-      transition-hide="none"
-      v-model="selectedComputed"
-      :target="!uiLocked"
-    >
-      <MenuItem
-        v-for="(menu, i) of menudata.subMenu"
-        :key="i"
-        :menudata="menu"
-        v-model:selected="subMenuOpenFlags[i]"
-        @mouseover="reassignSubMenuOpen(i)"
-      />
-    </QMenu>
-  </QItem>
-  <QItem
-    v-else
-    dense
-    clickable
-    v-ripple
-    v-close-popup
-    class="bg-background"
-    @click="menudata.onClick"
-  >
-    <QItemSection v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
-      <QIcon v-if="menudata.checked" name="check" />
-      <QIcon v-else />
-    </QItemSection>
-
-    <QItemSection avatar v-if="menudata.icon">
-      <QAvatar>
-        <img :src="menudata.icon" />
-      </QAvatar>
-    </QItemSection>
-
-    <QItemSection>{{ menudata.label }}</QItemSection>
-    <QItemSection side v-if="getMenuBarHotkey(menudata.label)">
-      {{ getMenuBarHotkey(menudata.label) }}
-    </QItemSection>
-  </QItem>
-</template>
 
 <style lang="scss" scoped>
 .engine-icon {

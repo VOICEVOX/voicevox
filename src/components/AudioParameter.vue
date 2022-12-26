@@ -1,3 +1,45 @@
+<template>
+  <div
+    @mouseenter="handleMouseHover(true)"
+    @mouseleave="handleMouseHover(false)"
+  >
+    <QBadge
+      class="value-label"
+      color="primary-light"
+      text-color="display-on-primary"
+      v-if="
+        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
+      "
+    >
+      {{
+        previewSlider.state.currentValue.value
+          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
+          : undefined
+      }}
+    </QBadge>
+    <QSlider
+      vertical
+      reverse
+      snap
+      color="primary-light"
+      trackSize="2.5px"
+      :style="clipPathComputed"
+      :min="previewSlider.qSliderProps.min.value"
+      :max="previewSlider.qSliderProps.max.value"
+      :step="previewSlider.qSliderProps.step.value"
+      :disable="previewSlider.qSliderProps.disable.value"
+      :model-value="previewSlider.qSliderProps.modelValue.value"
+      @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
+      @click.stop="
+        undefined; // クリックでアクセント句が選択されないように
+      "
+      @change="previewSlider.qSliderProps.onChange"
+      @wheel="previewSlider.qSliderProps.onWheel"
+      @pan="previewSlider.qSliderProps.onPan"
+    />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
@@ -89,48 +131,6 @@ const precisionComputed = computed(() => {
   }
 });
 </script>
-
-<template>
-  <div
-    @mouseenter="handleMouseHover(true)"
-    @mouseleave="handleMouseHover(false)"
-  >
-    <QBadge
-      class="value-label"
-      color="primary-light"
-      text-color="display-on-primary"
-      v-if="
-        !disable && (valueLabel.visible || previewSlider.state.isPanning.value)
-      "
-    >
-      {{
-        previewSlider.state.currentValue.value
-          ? previewSlider.state.currentValue.value.toFixed(precisionComputed)
-          : undefined
-      }}
-    </QBadge>
-    <QSlider
-      vertical
-      reverse
-      snap
-      color="primary-light"
-      trackSize="2.5px"
-      :style="clipPathComputed"
-      :min="previewSlider.qSliderProps.min.value"
-      :max="previewSlider.qSliderProps.max.value"
-      :step="previewSlider.qSliderProps.step.value"
-      :disable="previewSlider.qSliderProps.disable.value"
-      :model-value="previewSlider.qSliderProps.modelValue.value"
-      @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
-      @click.stop="
-        undefined; // クリックでアクセント句が選択されないように
-      "
-      @change="previewSlider.qSliderProps.onChange"
-      @wheel="previewSlider.qSliderProps.onWheel"
-      @pan="previewSlider.qSliderProps.onPan"
-    />
-  </div>
-</template>
 <style scoped lang="scss">
 $value-label-height: 24px;
 

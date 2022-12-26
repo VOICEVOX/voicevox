@@ -1,3 +1,169 @@
+<template>
+  <MenuBar />
+
+  <QLayout reveal elevated container class="layout-container">
+    <HeaderBar />
+
+    <QPageContainer>
+      <QPage class="main-row-panes">
+        <ProgressDialog />
+
+        <!-- TODO: 複数エンジン対応 -->
+        <div
+          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
+          class="waiting-engine"
+        >
+          <div>
+            <QSpinner color="primary" size="2.5rem" />
+            <div class="q-mt-xs">
+              {{
+                allEngineState === "STARTING"
+                  ? "エンジン起動中・・・"
+                  : "データ準備中・・・"
+              }}
+            </div>
+
+            <template v-if="isEngineWaitingLong">
+              <QSeparator spaced />
+              エンジン起動に時間がかかっています。<br />
+              <QBtn
+                outline
+                @click="restartAppWithSafeMode"
+                v-if="isMultipleEngine"
+              >
+                セーフモードで起動する</QBtn
+              >
+              <QBtn outline @click="openFaq" v-else>FAQを見る</QBtn>
+            </template>
+          </div>
+        </div>
+        <QSplitter
+          horizontal
+          reverse
+          unit="px"
+          :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
+          separator-class="home-splitter"
+          :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
+          class="full-width"
+          before-class="overflow-hidden"
+          :disable="!shouldShowPanes"
+          :model-value="audioDetailPaneHeight"
+          @update:model-value="updateAudioDetailPane"
+        >
+          <template #before>
+            <QSplitter
+              :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
+              separator-class="home-splitter"
+              :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
+              before-class="overflow-hidden"
+              :disable="!shouldShowPanes"
+              :model-value="portraitPaneWidth"
+              @update:model-value="updatePortraitPane"
+            >
+              <template #before>
+                <CharacterPortrait />
+              </template>
+              <template #after>
+                <QSplitter
+                  reverse
+                  unit="px"
+                  :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
+                  separator-class="home-splitter"
+                  :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
+                  class="full-width overflow-hidden"
+                  :disable="!shouldShowPanes"
+                  :model-value="audioInfoPaneWidth"
+                  @update:model-value="updateAudioInfoPane"
+                >
+                  <template #before>
+                    <div
+                      class="audio-cell-pane"
+                      :class="{ 'is-dragging': dragEventCounter > 0 }"
+                      @dragenter="dragEventCounter++"
+                      @dragleave="dragEventCounter--"
+                      @dragover.prevent
+                      @drop.prevent="
+                        dragEventCounter = 0;
+                        loadDraggedFile($event);
+                      "
+                    >
+                      <draggable
+                        class="audio-cells"
+                        :modelValue="audioKeys"
+                        @update:modelValue="updateAudioKeys"
+                        :itemKey="itemKey"
+                        ghost-class="ghost"
+                        filter="input"
+                        :preventOnFilter="false"
+                      >
+                        <template v-slot:item="{ element }">
+                          <AudioCell
+                            class="draggable-cursor"
+                            :audioKey="element"
+                            :ref="addAudioCellRef"
+                            @focusCell="focusCell"
+                          />
+                        </template>
+                      </draggable>
+                      <div class="add-button-wrapper">
+                        <QBtn
+                          fab
+                          icon="add"
+                          color="primary-light"
+                          text-color="display-on-primary"
+                          :disable="uiLocked"
+                          @click="addAudioItem"
+                        ></QBtn>
+                      </div>
+                    </div>
+                  </template>
+                  <template #after>
+                    <AudioInfo
+                      v-if="activeAudioKey != undefined"
+                      :activeAudioKey="activeAudioKey"
+                    />
+                  </template>
+                </QSplitter>
+              </template>
+            </QSplitter>
+          </template>
+          <template #after>
+            <AudioDetail
+              v-if="activeAudioKey != undefined"
+              :activeAudioKey="activeAudioKey"
+            />
+          </template>
+        </QSplitter>
+
+        <QResizeObserver
+          ref="resizeObserverRef"
+          @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
+        />
+      </QPage>
+    </QPageContainer>
+  </QLayout>
+  <HelpDialog v-model="isHelpDialogOpenComputed" />
+  <SettingDialog v-model="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
+  <HeaderBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <CharacterOrderDialog
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
+    v-model="isCharacterOrderDialogOpenComputed"
+  />
+  <DefaultStyleSelectDialog
+    v-if="orderedAllCharacterInfos.length > 0"
+    :characterInfos="orderedAllCharacterInfos"
+    v-model="isDefaultStyleSelectDialogOpenComputed"
+  />
+  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
+  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <AcceptRetrieveTelemetryDialog
+    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+  />
+  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
+</template>
+
 <script setup lang="ts">
 import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
 import { useStore } from "@/store";
@@ -524,172 +690,6 @@ const loadDraggedFile = (event?: { dataTransfer: DataTransfer }) => {
   }
 };
 </script>
-
-<template>
-  <MenuBar />
-
-  <QLayout reveal elevated container class="layout-container">
-    <HeaderBar />
-
-    <QPageContainer>
-      <QPage class="main-row-panes">
-        <ProgressDialog />
-
-        <!-- TODO: 複数エンジン対応 -->
-        <div
-          v-if="!isCompletedInitialStartup || allEngineState === 'STARTING'"
-          class="waiting-engine"
-        >
-          <div>
-            <QSpinner color="primary" size="2.5rem" />
-            <div class="q-mt-xs">
-              {{
-                allEngineState === "STARTING"
-                  ? "エンジン起動中・・・"
-                  : "データ準備中・・・"
-              }}
-            </div>
-
-            <template v-if="isEngineWaitingLong">
-              <QSeparator spaced />
-              エンジン起動に時間がかかっています。<br />
-              <QBtn
-                outline
-                @click="restartAppWithSafeMode"
-                v-if="isMultipleEngine"
-              >
-                セーフモードで起動する</QBtn
-              >
-              <QBtn outline @click="openFaq" v-else>FAQを見る</QBtn>
-            </template>
-          </div>
-        </div>
-        <QSplitter
-          horizontal
-          reverse
-          unit="px"
-          :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="home-splitter"
-          :separator-style="{ height: shouldShowPanes ? '3px' : 0 }"
-          class="full-width"
-          before-class="overflow-hidden"
-          :disable="!shouldShowPanes"
-          :model-value="audioDetailPaneHeight"
-          @update:model-value="updateAudioDetailPane"
-        >
-          <template #before>
-            <QSplitter
-              :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="home-splitter"
-              :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
-              before-class="overflow-hidden"
-              :disable="!shouldShowPanes"
-              :model-value="portraitPaneWidth"
-              @update:model-value="updatePortraitPane"
-            >
-              <template #before>
-                <CharacterPortrait />
-              </template>
-              <template #after>
-                <QSplitter
-                  reverse
-                  unit="px"
-                  :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="home-splitter"
-                  :separator-style="{ width: shouldShowPanes ? '3px' : 0 }"
-                  class="full-width overflow-hidden"
-                  :disable="!shouldShowPanes"
-                  :model-value="audioInfoPaneWidth"
-                  @update:model-value="updateAudioInfoPane"
-                >
-                  <template #before>
-                    <div
-                      class="audio-cell-pane"
-                      :class="{ 'is-dragging': dragEventCounter > 0 }"
-                      @dragenter="dragEventCounter++"
-                      @dragleave="dragEventCounter--"
-                      @dragover.prevent
-                      @drop.prevent="
-                        dragEventCounter = 0;
-                        loadDraggedFile($event);
-                      "
-                    >
-                      <draggable
-                        class="audio-cells"
-                        :modelValue="audioKeys"
-                        @update:modelValue="updateAudioKeys"
-                        :itemKey="itemKey"
-                        ghost-class="ghost"
-                        filter="input"
-                        :preventOnFilter="false"
-                      >
-                        <template v-slot:item="{ element }">
-                          <AudioCell
-                            class="draggable-cursor"
-                            :audioKey="element"
-                            :ref="addAudioCellRef"
-                            @focusCell="focusCell"
-                          />
-                        </template>
-                      </draggable>
-                      <div class="add-button-wrapper">
-                        <QBtn
-                          fab
-                          icon="add"
-                          color="primary-light"
-                          text-color="display-on-primary"
-                          :disable="uiLocked"
-                          @click="addAudioItem"
-                        ></QBtn>
-                      </div>
-                    </div>
-                  </template>
-                  <template #after>
-                    <AudioInfo
-                      v-if="activeAudioKey != undefined"
-                      :activeAudioKey="activeAudioKey"
-                    />
-                  </template>
-                </QSplitter>
-              </template>
-            </QSplitter>
-          </template>
-          <template #after>
-            <AudioDetail
-              v-if="activeAudioKey != undefined"
-              :activeAudioKey="activeAudioKey"
-            />
-          </template>
-        </QSplitter>
-
-        <QResizeObserver
-          ref="resizeObserverRef"
-          @resize="({ height }) => changeAudioDetailPaneMaxHeight(height)"
-        />
-      </QPage>
-    </QPageContainer>
-  </QLayout>
-  <HelpDialog v-model="isHelpDialogOpenComputed" />
-  <SettingDialog v-model="isSettingDialogOpenComputed" />
-  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
-  <HeaderBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
-  <CharacterOrderDialog
-    v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
-    v-model="isCharacterOrderDialogOpenComputed"
-  />
-  <DefaultStyleSelectDialog
-    v-if="orderedAllCharacterInfos.length > 0"
-    :characterInfos="orderedAllCharacterInfos"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
-  />
-  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
-  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
-  <AcceptRetrieveTelemetryDialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
-  />
-  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;

@@ -1,3 +1,9 @@
+<template>
+  <QPage class="relative-absolute-wrapper scroller markdown-body">
+    <div class="q-pa-md markdown" v-html="howToUse"></div>
+  </QPage>
+</template>
+
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useStore } from "@/store";
@@ -10,12 +16,6 @@ onMounted(async () => {
   howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
 });
 </script>
-
-<template>
-  <QPage class="relative-absolute-wrapper scroller markdown-body">
-    <div class="q-pa-md markdown" v-html="howToUse"></div>
-  </QPage>
-</template>
 
 <style scoped lang="scss">
 .root {

@@ -1,3 +1,16 @@
+<template>
+  <div class="character-portrait-wrapper">
+    <span class="character-name">{{ characterName }}</span>
+    <span class="character-engine-name" v-if="isMultipleEngine">{{
+      engineName
+    }}</span>
+    <img :src="portraitPath" class="character-portrait" />
+    <div v-if="isInitializingSpeaker" class="loading">
+      <QSpinner color="primary" size="5rem" :thickness="4" />
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { computed } from "vue";
 import { useStore } from "@/store";
@@ -56,19 +69,6 @@ const isInitializingSpeaker = computed(() => {
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
-
-<template>
-  <div class="character-portrait-wrapper">
-    <span class="character-name">{{ characterName }}</span>
-    <span class="character-engine-name" v-if="isMultipleEngine">{{
-      engineName
-    }}</span>
-    <img :src="portraitPath" class="character-portrait" />
-    <div v-if="isInitializingSpeaker" class="loading">
-      <QSpinner color="primary" size="5rem" :thickness="4" />
-    </div>
-  </div>
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

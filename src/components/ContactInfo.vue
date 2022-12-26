@@ -1,3 +1,9 @@
+<template>
+  <QPage class="relative-absolute-wrapper scroller bg-background">
+    <div class="q-pa-md markdown markdown-body" v-html="contact"></div>
+  </QPage>
+</template>
+
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useStore } from "@/store";
@@ -12,12 +18,6 @@ onMounted(async () => {
   contact.value = md.render(await store.dispatch("GET_CONTACT_TEXT"));
 });
 </script>
-
-<template>
-  <QPage class="relative-absolute-wrapper scroller bg-background">
-    <div class="q-pa-md markdown markdown-body" v-html="contact"></div>
-  </QPage>
-</template>
 
 <style scoped lang="scss">
 .root {

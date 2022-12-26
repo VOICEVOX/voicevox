@@ -1,3 +1,33 @@
+<template>
+  <div v-if="isShowProgress" class="progress">
+    <div>
+      <QCircularProgress
+        v-if="isDeterminate"
+        show-value
+        :value="progress"
+        :min="0"
+        :max="1"
+        rounded
+        font-size="12px"
+        color="primary"
+        size="xl"
+        :thickness="0.3"
+      >
+        {{ formattedProgress }}%
+      </QCircularProgress>
+      <QCircularProgress
+        v-if="!isDeterminate"
+        indeterminate
+        color="primary"
+        rounded
+        :thickness="0.3"
+        size="xl"
+      />
+      <div class="q-mt-md">生成中です...</div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useStore } from "@/store";
 import { computed, onUnmounted, ref, watch } from "vue";
@@ -39,36 +69,6 @@ const formattedProgress = computed(() =>
   (store.getters.PROGRESS * 100).toFixed()
 );
 </script>
-
-<template>
-  <div v-if="isShowProgress" class="progress">
-    <div>
-      <QCircularProgress
-        v-if="isDeterminate"
-        show-value
-        :value="progress"
-        :min="0"
-        :max="1"
-        rounded
-        font-size="12px"
-        color="primary"
-        size="xl"
-        :thickness="0.3"
-      >
-        {{ formattedProgress }}%
-      </QCircularProgress>
-      <QCircularProgress
-        v-if="!isDeterminate"
-        indeterminate
-        color="primary"
-        rounded
-        :thickness="0.3"
-        size="xl"
-      />
-      <div class="q-mt-md">生成中です...</div>
-    </div>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 @use '@/styles/colors' as colors;

@@ -1,3 +1,114 @@
+<template>
+  <QDialog
+    maximized
+    transition-show="jump-up"
+    transition-hide="jump-down"
+    class="header-bar-custom-dialog transparent-backdrop"
+    v-model="headerBarCustomDialogOpenComputed"
+  >
+    <QLayout container view="hHh Lpr fFf" class="bg-background">
+      <QPageContainer class="root">
+        <QHeader class="q-py-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display"
+              >ツールバーのカスタマイズ</QToolbarTitle
+            >
+            <QSpace />
+            <QBtn
+              unelevated
+              color="toolbar-button"
+              text-color="toolbar-button-display"
+              class="text-no-wrap text-bold q-mr-sm"
+              @click="applyDefaultSetting"
+              :disable="isDefault"
+              >デフォルトに戻す</QBtn
+            >
+            <QBtn
+              unelevated
+              color="toolbar-button"
+              text-color="toolbar-button-display"
+              class="text-no-wrap text-bold q-mr-sm"
+              @click="saveCustomToolbar"
+              :disable="!isChanged"
+              >保存</QBtn
+            >
+            <!-- close button -->
+            <QBtn
+              round
+              flat
+              icon="close"
+              color="display"
+              @click="finishOrNotDialog"
+            />
+          </QToolbar>
+        </QHeader>
+        <QPage>
+          <QCard flat square class="preview-card">
+            <QToolbar class="bg-toolbar preview-toolbar">
+              <draggable
+                v-model="toolbarButtons"
+                :item-key="toolbarButtonKey"
+                @start="toolbarButtonDragging = true"
+                @end="toolbarButtonDragging = false"
+              >
+                <template v-slot:item="{ element: button }">
+                  <QBtn
+                    unelevated
+                    color="toolbar-button"
+                    text-color="toolbar-button-display"
+                    :class="
+                      (button === 'EMPTY' ? ' radio-space' : ' radio') +
+                      ' text-no-wrap text-bold q-mr-sm'
+                    "
+                  >
+                    {{ getToolbarButtonName(button) }}
+                    <QTooltip
+                      :delay="800"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                      :style="{
+                        display: toolbarButtonDragging ? 'none' : 'block',
+                      }"
+                      >{{ usableButtonsDesc[button] }}</QTooltip
+                    >
+                  </QBtn>
+                </template>
+              </draggable>
+              <div class="preview-toolbar-drag-hint">
+                ドラッグでボタンの並びを変更できます。
+              </div>
+            </QToolbar>
+
+            <QCardActions>
+              <div class="text-h5">表示するボタンの選択</div>
+            </QCardActions>
+            <QCardActions class="no-padding">
+              <QList class="usable-button-list bg-surface">
+                <QItem
+                  v-for="(desc, key) in usableButtonsDesc"
+                  :key="key"
+                  tag="label"
+                  v-ripple
+                >
+                  <QItemSection>
+                    <QItemLabel>{{ getToolbarButtonName(key) }}</QItemLabel>
+                    <QItemLabel caption>{{ desc }}</QItemLabel>
+                  </QItemSection>
+                  <QItemSection avatar>
+                    <QToggle v-model="toolbarButtons" :val="key" />
+                  </QItemSection>
+                </QItem>
+              </QList>
+            </QCardActions>
+          </QCard>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
 import { useStore } from "@/store";
@@ -150,117 +261,6 @@ const finishOrNotDialog = () => {
   }
 };
 </script>
-<template>
-  <QDialog
-    maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
-    class="header-bar-custom-dialog transparent-backdrop"
-    v-model="headerBarCustomDialogOpenComputed"
-  >
-    <QLayout container view="hHh Lpr fFf" class="bg-background">
-      <QPageContainer class="root">
-        <QHeader class="q-py-sm">
-          <QToolbar>
-            <QToolbarTitle class="text-display"
-              >ツールバーのカスタマイズ</QToolbarTitle
-            >
-            <QSpace />
-            <QBtn
-              unelevated
-              color="toolbar-button"
-              text-color="toolbar-button-display"
-              class="text-no-wrap text-bold q-mr-sm"
-              @click="applyDefaultSetting"
-              :disable="isDefault"
-              >デフォルトに戻す</QBtn
-            >
-            <QBtn
-              unelevated
-              color="toolbar-button"
-              text-color="toolbar-button-display"
-              class="text-no-wrap text-bold q-mr-sm"
-              @click="saveCustomToolbar"
-              :disable="!isChanged"
-              >保存</QBtn
-            >
-            <!-- close button -->
-            <QBtn
-              round
-              flat
-              icon="close"
-              color="display"
-              @click="finishOrNotDialog"
-            />
-          </QToolbar>
-        </QHeader>
-        <QPage>
-          <QCard flat square class="preview-card">
-            <QToolbar class="bg-toolbar preview-toolbar">
-              <draggable
-                v-model="toolbarButtons"
-                :item-key="toolbarButtonKey"
-                @start="toolbarButtonDragging = true"
-                @end="toolbarButtonDragging = false"
-              >
-                <template v-slot:item="{ element: button }">
-                  <QBtn
-                    unelevated
-                    color="toolbar-button"
-                    text-color="toolbar-button-display"
-                    :class="
-                      (button === 'EMPTY' ? ' radio-space' : ' radio') +
-                      ' text-no-wrap text-bold q-mr-sm'
-                    "
-                  >
-                    {{ getToolbarButtonName(button) }}
-                    <QTooltip
-                      :delay="800"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                      :style="{
-                        display: toolbarButtonDragging ? 'none' : 'block',
-                      }"
-                      >{{ usableButtonsDesc[button] }}</QTooltip
-                    >
-                  </QBtn>
-                </template>
-              </draggable>
-              <div class="preview-toolbar-drag-hint">
-                ドラッグでボタンの並びを変更できます。
-              </div>
-            </QToolbar>
-
-            <QCardActions>
-              <div class="text-h5">表示するボタンの選択</div>
-            </QCardActions>
-            <QCardActions class="no-padding">
-              <QList class="usable-button-list bg-surface">
-                <QItem
-                  v-for="(desc, key) in usableButtonsDesc"
-                  :key="key"
-                  tag="label"
-                  v-ripple
-                >
-                  <QItemSection>
-                    <QItemLabel>{{ getToolbarButtonName(key) }}</QItemLabel>
-                    <QItemLabel caption>{{ desc }}</QItemLabel>
-                  </QItemSection>
-                  <QItemSection avatar>
-                    <QToggle v-model="toolbarButtons" :val="key" />
-                  </QItemSection>
-                </QItem>
-              </QList>
-            </QCardActions>
-          </QCard>
-        </QPage>
-      </QPageContainer>
-    </QLayout>
-  </QDialog>
-</template>
-
 <style lang="scss" scoped>
 @use '@/styles/variables' as vars;
 @use '@/styles/colors' as colors;

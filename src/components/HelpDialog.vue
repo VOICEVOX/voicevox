@@ -1,3 +1,78 @@
+<template>
+  <QDialog
+    maximized
+    transition-show="jump-up"
+    transition-hide="jump-down"
+    class="help-dialog transparent-backdrop"
+    v-model="modelValueComputed"
+  >
+    <QLayout container view="hHh Lpr lff">
+      <QDrawer
+        bordered
+        show-if-above
+        class="bg-background"
+        :model-value="true"
+        :width="250"
+        :breakpoint="0"
+      >
+        <div class="column full-height">
+          <QList>
+            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
+              <QItem
+                v-if="page.type === 'item'"
+                clickable
+                v-ripple
+                active-class="selected-item"
+                :active="selectedPageIndex === pageIndex"
+                @click="selectedPageIndex = pageIndex"
+              >
+                <QItemSection> {{ page.name }} </QItemSection>
+              </QItem>
+              <template v-else-if="page.type === 'separator'">
+                <QSeparator />
+                <QItemLabel header>{{ page.name }}</QItemLabel>
+              </template>
+            </template>
+          </QList>
+        </div>
+      </QDrawer>
+
+      <QPageContainer>
+        <QPage>
+          <QTabPanels v-model="selectedPageIndex">
+            <QTabPanel
+              v-for="(page, pageIndex) of pagedata"
+              :key="pageIndex"
+              :name="pageIndex"
+              class="q-pa-none"
+            >
+              <div class="root">
+                <QHeader class="q-pa-sm">
+                  <QToolbar>
+                    <QToolbarTitle class="text-display">
+                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
+                      }}{{ page.name }}
+                    </QToolbarTitle>
+                    <!-- close button -->
+                    <QBtn
+                      round
+                      flat
+                      icon="close"
+                      color="display"
+                      @click="modelValueComputed = false"
+                    />
+                  </QToolbar>
+                </QHeader>
+                <component :is="page.component" v-bind="page.props" />
+              </div>
+            </QTabPanel>
+          </QTabPanels>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
+  </QDialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, Component } from "vue";
 import HelpPolicy from "@/components/HelpPolicy.vue";
@@ -198,81 +273,6 @@ const pagedata = computed(() =>
 
 const selectedPageIndex = ref(0);
 </script>
-
-<template>
-  <QDialog
-    maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
-    class="help-dialog transparent-backdrop"
-    v-model="modelValueComputed"
-  >
-    <QLayout container view="hHh Lpr lff">
-      <QDrawer
-        bordered
-        show-if-above
-        class="bg-background"
-        :model-value="true"
-        :width="250"
-        :breakpoint="0"
-      >
-        <div class="column full-height">
-          <QList>
-            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <QItem
-                v-if="page.type === 'item'"
-                clickable
-                v-ripple
-                active-class="selected-item"
-                :active="selectedPageIndex === pageIndex"
-                @click="selectedPageIndex = pageIndex"
-              >
-                <QItemSection> {{ page.name }} </QItemSection>
-              </QItem>
-              <template v-else-if="page.type === 'separator'">
-                <QSeparator />
-                <QItemLabel header>{{ page.name }}</QItemLabel>
-              </template>
-            </template>
-          </QList>
-        </div>
-      </QDrawer>
-
-      <QPageContainer>
-        <QPage>
-          <QTabPanels v-model="selectedPageIndex">
-            <QTabPanel
-              v-for="(page, pageIndex) of pagedata"
-              :key="pageIndex"
-              :name="pageIndex"
-              class="q-pa-none"
-            >
-              <div class="root">
-                <QHeader class="q-pa-sm">
-                  <QToolbar>
-                    <QToolbarTitle class="text-display">
-                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
-                      }}{{ page.name }}
-                    </QToolbarTitle>
-                    <!-- close button -->
-                    <QBtn
-                      round
-                      flat
-                      icon="close"
-                      color="display"
-                      @click="modelValueComputed = false"
-                    />
-                  </QToolbar>
-                </QHeader>
-                <component :is="page.component" v-bind="page.props" />
-              </div>
-            </QTabPanel>
-          </QTabPanels>
-        </QPage>
-      </QPageContainer>
-    </QLayout>
-  </QDialog>
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

@@ -1,3 +1,23 @@
+<template>
+  <QHeader class="q-py-sm">
+    <QToolbar>
+      <template v-for="button in headerButtons" :key="button.text">
+        <QSpace v-if="button.text === null" />
+        <QBtn
+          v-else
+          unelevated
+          color="toolbar-button"
+          text-color="toolbar-button-display"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disable="button.disable.value"
+          @click="button.click"
+          >{{ button.text }}</QBtn
+        >
+      </template>
+    </QToolbar>
+  </QHeader>
+</template>
+
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
@@ -190,23 +210,3 @@ const headerButtons = computed(() =>
   })
 );
 </script>
-
-<template>
-  <QHeader class="q-py-sm">
-    <QToolbar>
-      <template v-for="button in headerButtons" :key="button.text">
-        <QSpace v-if="button.text === null" />
-        <QBtn
-          v-else
-          unelevated
-          color="toolbar-button"
-          text-color="toolbar-button-display"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="button.disable.value"
-          @click="button.click"
-          >{{ button.text }}</QBtn
-        >
-      </template>
-    </QToolbar>
-  </QHeader>
-</template>

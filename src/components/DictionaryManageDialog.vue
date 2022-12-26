@@ -1,3 +1,247 @@
+<template>
+  <q-dialog
+    maximized
+    transition-show="jump-up"
+    transition-hide="jump-down"
+    class="setting-dialog transparent-backdrop"
+    v-model="dictionaryManageDialogOpenedComputed"
+  >
+    <q-layout container view="hHh Lpr fFf" class="bg-background">
+      <q-page-container>
+        <q-header class="q-pa-sm">
+          <q-toolbar>
+            <q-toolbar-title class="text-display"
+              >読み方＆アクセント辞書</q-toolbar-title
+            >
+            <q-space />
+            <!-- close button -->
+            <q-btn
+              round
+              flat
+              icon="close"
+              color="display"
+              @click="discardOrNotDialog(closeDialog)"
+            />
+          </q-toolbar>
+        </q-header>
+        <q-page class="row">
+          <div v-if="loadingDictState" class="loading-dict">
+            <div>
+              <q-spinner color="primary" size="2.5rem" />
+              <div class="q-mt-xs">
+                <template v-if="loadingDictState === 'loading'"
+                  >読み込み中・・・</template
+                >
+                <template v-if="loadingDictState === 'synchronizing'"
+                  >同期中・・・</template
+                >
+              </div>
+            </div>
+          </div>
+          <div class="col-4 word-list-col">
+            <div v-if="wordEditing" class="word-list-disable-overlay" />
+            <div class="word-list-header text-no-wrap">
+              <div class="row word-list-title text-h5">単語一覧</div>
+              <div class="row no-wrap">
+                <q-btn
+                  outline
+                  text-color="warning"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
+                  @click="deleteWord"
+                  :disable="uiLocked || !isDeletable"
+                  >削除</q-btn
+                >
+                <q-btn
+                  outline
+                  text-color="display"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
+                  @click="editWord"
+                  :disable="uiLocked || !selectedId"
+                  >編集</q-btn
+                >
+                <q-btn
+                  outline
+                  text-color="display"
+                  class="text-no-wrap text-bold col-sm q-ma-sm"
+                  @click="newWord"
+                  :disable="uiLocked"
+                  >追加</q-btn
+                >
+              </div>
+            </div>
+            <q-list class="word-list">
+              <q-item
+                v-for="(value, key) in userDict"
+                :key="key"
+                tag="label"
+                v-ripple
+                clickable
+                @click="selectWord(key)"
+                :active="selectedId === key"
+                active-class="active-word"
+              >
+                <q-item-section>
+                  <q-item-label class="text-display">{{
+                    value.surface
+                  }}</q-item-label>
+                  <q-item-label caption>{{ value.yomi }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <!-- 右側のpane -->
+          <div
+            v-if="wordEditing"
+            class="col-8 no-wrap text-no-wrap word-editor"
+          >
+            <div class="row q-pl-md q-mt-md">
+              <div class="text-h6">単語</div>
+              <q-input
+                ref="surfaceInput"
+                class="word-input"
+                v-model="surface"
+                @blur="setSurface(surface)"
+                @keydown="yomiFocusWhenEnter"
+                dense
+                :disable="uiLocked"
+              />
+            </div>
+            <div class="row q-pl-md q-pt-sm">
+              <div class="text-h6">読み</div>
+              <q-input
+                ref="yomiInput"
+                class="word-input q-pb-none"
+                v-model="yomi"
+                @blur="setYomi(yomi)"
+                @keydown="setYomiWhenEnter"
+                dense
+                :error="!isOnlyHiraOrKana"
+                :disable="uiLocked"
+              >
+                <template v-slot:error>
+                  読みに使える文字はひらがなとカタカナのみです。
+                </template>
+              </q-input>
+            </div>
+            <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
+            <div class="row q-pl-md desc-row">
+              語尾のアクセントを考慮するため、「が」が自動で挿入されます。
+            </div>
+            <div class="row q-px-md" style="height: 130px">
+              <div class="play-button">
+                <q-btn
+                  v-if="!nowPlaying && !nowGenerating"
+                  fab
+                  color="primary-light"
+                  text-color="display-on-primary"
+                  icon="play_arrow"
+                  @click="play"
+                />
+                <q-btn
+                  v-else
+                  fab
+                  color="primary-light"
+                  text-color="display-on-primary"
+                  icon="stop"
+                  @click="stop"
+                  :disable="nowGenerating"
+                />
+              </div>
+              <div
+                ref="accentPhraseTable"
+                class="accent-phrase-table overflow-hidden-y"
+              >
+                <div v-if="accentPhrase" class="mora-table">
+                  <audio-accent
+                    :accent-phrase="accentPhrase"
+                    :accent-phrase-index="0"
+                    :ui-locked="uiLocked"
+                    @changeAccent="changeAccent"
+                  />
+                  <template
+                    v-for="(mora, moraIndex) in accentPhrase.moras"
+                    :key="moraIndex"
+                  >
+                    <div
+                      class="text-cell"
+                      :style="{
+                        gridColumn: `${moraIndex * 2 + 1} / span 1`,
+                      }"
+                    >
+                      {{ mora.text }}
+                    </div>
+                    <div
+                      v-if="moraIndex < accentPhrase.moras.length - 1"
+                      class="splitter-cell"
+                      :style="{
+                        gridColumn: `${moraIndex * 2 + 2} / span 1`,
+                      }"
+                    />
+                  </template>
+                </div>
+              </div>
+            </div>
+            <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
+            <div class="row q-pl-md desc-row">
+              単語を登録しても反映されないと感じた場合、優先度を上げてみてください。
+            </div>
+            <div
+              class="row q-px-md"
+              :style="{
+                justifyContent: 'center',
+              }"
+            >
+              <q-slider
+                v-model="wordPriority"
+                snap
+                dense
+                color="primary-light"
+                markers
+                :min="0"
+                :max="10"
+                :step="1"
+                :marker-labels="wordPriorityLabels"
+                :style="{
+                  width: '80%',
+                }"
+              />
+            </div>
+            <div class="row q-px-md save-delete-reset-buttons">
+              <q-space />
+              <q-btn
+                v-show="!!selectedId"
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="resetWord"
+                :disable="uiLocked || !isWordChanged"
+                >リセット</q-btn
+              >
+              <q-btn
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                :disable="uiLocked"
+                >キャンセル</q-btn
+              >
+              <q-btn
+                outline
+                text-color="display"
+                class="text-no-wrap text-bold q-mr-sm"
+                @click="saveWord"
+                :disable="uiLocked || !isWordChanged"
+                >保存</q-btn
+              >
+            </div>
+          </div>
+        </q-page>
+      </q-page-container>
+    </q-layout>
+  </q-dialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
@@ -474,250 +718,6 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 </script>
-
-<template>
-  <q-dialog
-    maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
-    class="setting-dialog transparent-backdrop"
-    v-model="dictionaryManageDialogOpenedComputed"
-  >
-    <q-layout container view="hHh Lpr fFf" class="bg-background">
-      <q-page-container>
-        <q-header class="q-pa-sm">
-          <q-toolbar>
-            <q-toolbar-title class="text-display"
-              >読み方＆アクセント辞書</q-toolbar-title
-            >
-            <q-space />
-            <!-- close button -->
-            <q-btn
-              round
-              flat
-              icon="close"
-              color="display"
-              @click="discardOrNotDialog(closeDialog)"
-            />
-          </q-toolbar>
-        </q-header>
-        <q-page class="row">
-          <div v-if="loadingDictState" class="loading-dict">
-            <div>
-              <q-spinner color="primary" size="2.5rem" />
-              <div class="q-mt-xs">
-                <template v-if="loadingDictState === 'loading'"
-                  >読み込み中・・・</template
-                >
-                <template v-if="loadingDictState === 'synchronizing'"
-                  >同期中・・・</template
-                >
-              </div>
-            </div>
-          </div>
-          <div class="col-4 word-list-col">
-            <div v-if="wordEditing" class="word-list-disable-overlay" />
-            <div class="word-list-header text-no-wrap">
-              <div class="row word-list-title text-h5">単語一覧</div>
-              <div class="row no-wrap">
-                <q-btn
-                  outline
-                  text-color="warning"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="deleteWord"
-                  :disable="uiLocked || !isDeletable"
-                  >削除</q-btn
-                >
-                <q-btn
-                  outline
-                  text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="editWord"
-                  :disable="uiLocked || !selectedId"
-                  >編集</q-btn
-                >
-                <q-btn
-                  outline
-                  text-color="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  @click="newWord"
-                  :disable="uiLocked"
-                  >追加</q-btn
-                >
-              </div>
-            </div>
-            <q-list class="word-list">
-              <q-item
-                v-for="(value, key) in userDict"
-                :key="key"
-                tag="label"
-                v-ripple
-                clickable
-                @click="selectWord(key)"
-                :active="selectedId === key"
-                active-class="active-word"
-              >
-                <q-item-section>
-                  <q-item-label class="text-display">{{
-                    value.surface
-                  }}</q-item-label>
-                  <q-item-label caption>{{ value.yomi }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-
-          <!-- 右側のpane -->
-          <div
-            v-if="wordEditing"
-            class="col-8 no-wrap text-no-wrap word-editor"
-          >
-            <div class="row q-pl-md q-mt-md">
-              <div class="text-h6">単語</div>
-              <q-input
-                ref="surfaceInput"
-                class="word-input"
-                v-model="surface"
-                @blur="setSurface(surface)"
-                @keydown="yomiFocusWhenEnter"
-                dense
-                :disable="uiLocked"
-              />
-            </div>
-            <div class="row q-pl-md q-pt-sm">
-              <div class="text-h6">読み</div>
-              <q-input
-                ref="yomiInput"
-                class="word-input q-pb-none"
-                v-model="yomi"
-                @blur="setYomi(yomi)"
-                @keydown="setYomiWhenEnter"
-                dense
-                :error="!isOnlyHiraOrKana"
-                :disable="uiLocked"
-              >
-                <template v-slot:error>
-                  読みに使える文字はひらがなとカタカナのみです。
-                </template>
-              </q-input>
-            </div>
-            <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
-            <div class="row q-pl-md desc-row">
-              語尾のアクセントを考慮するため、「が」が自動で挿入されます。
-            </div>
-            <div class="row q-px-md" style="height: 130px">
-              <div class="play-button">
-                <q-btn
-                  v-if="!nowPlaying && !nowGenerating"
-                  fab
-                  color="primary-light"
-                  text-color="display-on-primary"
-                  icon="play_arrow"
-                  @click="play"
-                />
-                <q-btn
-                  v-else
-                  fab
-                  color="primary-light"
-                  text-color="display-on-primary"
-                  icon="stop"
-                  @click="stop"
-                  :disable="nowGenerating"
-                />
-              </div>
-              <div
-                ref="accentPhraseTable"
-                class="accent-phrase-table overflow-hidden-y"
-              >
-                <div v-if="accentPhrase" class="mora-table">
-                  <audio-accent
-                    :accent-phrase="accentPhrase"
-                    :accent-phrase-index="0"
-                    :ui-locked="uiLocked"
-                    @changeAccent="changeAccent"
-                  />
-                  <template
-                    v-for="(mora, moraIndex) in accentPhrase.moras"
-                    :key="moraIndex"
-                  >
-                    <div
-                      class="text-cell"
-                      :style="{
-                        gridColumn: `${moraIndex * 2 + 1} / span 1`,
-                      }"
-                    >
-                      {{ mora.text }}
-                    </div>
-                    <div
-                      v-if="moraIndex < accentPhrase.moras.length - 1"
-                      class="splitter-cell"
-                      :style="{
-                        gridColumn: `${moraIndex * 2 + 2} / span 1`,
-                      }"
-                    />
-                  </template>
-                </div>
-              </div>
-            </div>
-            <div class="row q-pl-md q-pt-lg text-h6">単語優先度</div>
-            <div class="row q-pl-md desc-row">
-              単語を登録しても反映されないと感じた場合、優先度を上げてみてください。
-            </div>
-            <div
-              class="row q-px-md"
-              :style="{
-                justifyContent: 'center',
-              }"
-            >
-              <q-slider
-                v-model="wordPriority"
-                snap
-                dense
-                color="primary-light"
-                markers
-                :min="0"
-                :max="10"
-                :step="1"
-                :marker-labels="wordPriorityLabels"
-                :style="{
-                  width: '80%',
-                }"
-              />
-            </div>
-            <div class="row q-px-md save-delete-reset-buttons">
-              <q-space />
-              <q-btn
-                v-show="!!selectedId"
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                @click="resetWord"
-                :disable="uiLocked || !isWordChanged"
-                >リセット</q-btn
-              >
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
-                :disable="uiLocked"
-                >キャンセル</q-btn
-              >
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                @click="saveWord"
-                :disable="uiLocked || !isWordChanged"
-                >保存</q-btn
-              >
-            </div>
-          </div>
-        </q-page>
-      </q-page-container>
-    </q-layout>
-  </q-dialog>
-</template>
 
 <style lang="scss" scoped>
 @use '@/styles/colors' as colors;

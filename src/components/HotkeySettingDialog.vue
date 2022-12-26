@@ -1,160 +1,3 @@
-<script setup lang="ts">
-import { computed, ref } from "vue";
-import { useStore } from "@/store";
-import { parseCombo } from "@/store/setting";
-import { HotkeyAction, HotkeySetting } from "@/type/preload";
-import { useQuasar } from "quasar";
-
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", val: boolean): void;
-  }>();
-
-const store = useStore();
-const $q = useQuasar();
-
-const hotkeySettingDialogOpenComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
-const isHotkeyDialogOpened = ref(false);
-
-const hotkeyPagination = ref({ rowsPerPage: 0 });
-const hotkeyFilter = ref("");
-
-const hotkeySettings = computed(() => store.state.hotkeySettings);
-
-const hotkeyColumns = ref([
-  {
-    name: "action",
-    align: "left",
-    label: "操作",
-    field: "action",
-  },
-  {
-    name: "combination",
-    align: "left",
-    label: "ショートカットキー",
-    field: "combination",
-  },
-]);
-
-const lastAction = ref("");
-const lastRecord = ref("");
-
-const recordCombination = (event: KeyboardEvent) => {
-  if (!isHotkeyDialogOpened.value) {
-    return;
-  } else {
-    const recordedCombo = parseCombo(event);
-    lastRecord.value = recordedCombo;
-    event.preventDefault();
-  }
-};
-
-const changeHotkeySettings = (action: string, combo: string) => {
-  return store.dispatch("SET_HOTKEY_SETTINGS", {
-    data: {
-      action: action as HotkeyAction,
-      combination: combo,
-    },
-  });
-};
-
-const duplicatedHotkey = computed(() => {
-  if (lastRecord.value == "") return undefined;
-  return hotkeySettings.value.find(
-    (item) =>
-      item.combination == lastRecord.value && item.action != lastAction.value
-  );
-});
-
-const deleteHotkey = (action: HotkeyAction) => {
-  changeHotkeySettings(action, "");
-};
-
-const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
-  if (combo == "") return "未設定";
-  else return combo;
-};
-
-// for later developers, in case anyone wants to add a readonly hotkey
-const readonlyHotkeyKeys: string[] = [];
-
-const checkHotkeyReadonly = (action: string) => {
-  let flag = false;
-  readonlyHotkeyKeys.forEach((key) => {
-    if (key == action) {
-      flag = true;
-    }
-  });
-  return flag;
-};
-
-const openHotkeyDialog = (action: string) => {
-  lastAction.value = action;
-  lastRecord.value = "";
-  isHotkeyDialogOpened.value = true;
-  document.addEventListener("keydown", recordCombination);
-};
-
-const closeHotkeyDialog = () => {
-  lastAction.value = "";
-  lastRecord.value = "";
-  isHotkeyDialogOpened.value = false;
-  document.removeEventListener("keydown", recordCombination);
-};
-
-const solveDuplicated = () => {
-  if (duplicatedHotkey.value == undefined)
-    throw new Error("duplicatedHotkey.value == undefined");
-  deleteHotkey(duplicatedHotkey.value.action);
-  return changeHotkeySettings(lastAction.value, lastRecord.value);
-};
-
-const confirmBtnEnabled = computed(() => {
-  return (
-    lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
-      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
-    ) > -1
-  );
-});
-
-const resetHotkey = (action: string) => {
-  $q.dialog({
-    title: "ショートカットキーを初期値に戻します",
-    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-    html: true,
-    ok: {
-      label: "初期値に戻す",
-      flat: true,
-      textColor: "secondary",
-    },
-    cancel: {
-      label: "初期値に戻さない",
-      flat: true,
-      textColor: "secondary",
-    },
-  }).onOk(() => {
-    window.electron
-      .getDefaultHotkeySettings()
-      .then((defaultSettings: HotkeySetting[]) => {
-        const setting = defaultSettings.find((value) => value.action == action);
-        if (setting) {
-          changeHotkeySettings(action, setting.combination);
-        }
-      });
-  });
-};
-</script>
-
 <template>
   <QDialog
     maximized
@@ -353,6 +196,163 @@ const resetHotkey = (action: string) => {
     </QCard>
   </QDialog>
 </template>
+
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useStore } from "@/store";
+import { parseCombo } from "@/store/setting";
+import { HotkeyAction, HotkeySetting } from "@/type/preload";
+import { useQuasar } from "quasar";
+
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
+
+const store = useStore();
+const $q = useQuasar();
+
+const hotkeySettingDialogOpenComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const isHotkeyDialogOpened = ref(false);
+
+const hotkeyPagination = ref({ rowsPerPage: 0 });
+const hotkeyFilter = ref("");
+
+const hotkeySettings = computed(() => store.state.hotkeySettings);
+
+const hotkeyColumns = ref([
+  {
+    name: "action",
+    align: "left",
+    label: "操作",
+    field: "action",
+  },
+  {
+    name: "combination",
+    align: "left",
+    label: "ショートカットキー",
+    field: "combination",
+  },
+]);
+
+const lastAction = ref("");
+const lastRecord = ref("");
+
+const recordCombination = (event: KeyboardEvent) => {
+  if (!isHotkeyDialogOpened.value) {
+    return;
+  } else {
+    const recordedCombo = parseCombo(event);
+    lastRecord.value = recordedCombo;
+    event.preventDefault();
+  }
+};
+
+const changeHotkeySettings = (action: string, combo: string) => {
+  return store.dispatch("SET_HOTKEY_SETTINGS", {
+    data: {
+      action: action as HotkeyAction,
+      combination: combo,
+    },
+  });
+};
+
+const duplicatedHotkey = computed(() => {
+  if (lastRecord.value == "") return undefined;
+  return hotkeySettings.value.find(
+    (item) =>
+      item.combination == lastRecord.value && item.action != lastAction.value
+  );
+});
+
+const deleteHotkey = (action: HotkeyAction) => {
+  changeHotkeySettings(action, "");
+};
+
+const getHotkeyText = (action: string, combo: string) => {
+  if (checkHotkeyReadonly(action)) combo = "(読み取り専用) " + combo;
+  if (combo == "") return "未設定";
+  else return combo;
+};
+
+// for later developers, in case anyone wants to add a readonly hotkey
+const readonlyHotkeyKeys: string[] = [];
+
+const checkHotkeyReadonly = (action: string) => {
+  let flag = false;
+  readonlyHotkeyKeys.forEach((key) => {
+    if (key == action) {
+      flag = true;
+    }
+  });
+  return flag;
+};
+
+const openHotkeyDialog = (action: string) => {
+  lastAction.value = action;
+  lastRecord.value = "";
+  isHotkeyDialogOpened.value = true;
+  document.addEventListener("keydown", recordCombination);
+};
+
+const closeHotkeyDialog = () => {
+  lastAction.value = "";
+  lastRecord.value = "";
+  isHotkeyDialogOpened.value = false;
+  document.removeEventListener("keydown", recordCombination);
+};
+
+const solveDuplicated = () => {
+  if (duplicatedHotkey.value == undefined)
+    throw new Error("duplicatedHotkey.value == undefined");
+  deleteHotkey(duplicatedHotkey.value.action);
+  return changeHotkeySettings(lastAction.value, lastRecord.value);
+};
+
+const confirmBtnEnabled = computed(() => {
+  return (
+    lastRecord.value == "" ||
+    ["Ctrl", "Shift", "Alt", "Meta"].indexOf(
+      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1]
+    ) > -1
+  );
+});
+
+const resetHotkey = (action: string) => {
+  $q.dialog({
+    title: "ショートカットキーを初期値に戻します",
+    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
+    html: true,
+    ok: {
+      label: "初期値に戻す",
+      flat: true,
+      textColor: "secondary",
+    },
+    cancel: {
+      label: "初期値に戻さない",
+      flat: true,
+      textColor: "secondary",
+    },
+  }).onOk(() => {
+    window.electron
+      .getDefaultHotkeySettings()
+      .then((defaultSettings: HotkeySetting[]) => {
+        const setting = defaultSettings.find((value) => value.action == action);
+        if (setting) {
+          changeHotkeySettings(action, setting.combination);
+        }
+      });
+  });
+};
+</script>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;

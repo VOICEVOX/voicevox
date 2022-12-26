@@ -1,3 +1,55 @@
+<template>
+  <div class="audio-cell">
+    <QIcon
+      v-if="isActiveAudioCell"
+      name="arrow_right"
+      color="primary-light"
+      size="sm"
+      class="absolute active-arrow"
+    />
+    <CharacterButton
+      :character-infos="userOrderedCharacterInfos"
+      :loading="isInitializingSpeaker"
+      :show-engine-info="isMultipleEngine"
+      :ui-locked="uiLocked"
+      v-model:selected-voice="selectedVoice"
+    />
+    <QInput
+      ref="textfield"
+      filled
+      dense
+      hide-bottom-space
+      class="full-width"
+      color="primary-light"
+      :disable="uiLocked"
+      :error="audioTextBuffer.length >= 80"
+      :model-value="audioTextBuffer"
+      @update:model-value="setAudioTextBuffer"
+      @change="willRemove || pushAudioText()"
+      @paste="pasteOnAudioCell"
+      @focus="setActiveAudioKey()"
+      @keydown.prevent.up.exact="moveUpCell"
+      @keydown.prevent.down.exact="moveDownCell"
+      @mouseup.right="onRightClickTextField"
+    >
+      <template v-slot:error>
+        文章が長いと正常に動作しない可能性があります。
+        句読点の位置で文章を分割してください。
+      </template>
+      <template #after v-if="deleteButtonEnable">
+        <QBtn
+          round
+          flat
+          icon="delete_outline"
+          size="0.8rem"
+          :disable="uiLocked"
+          @click="removeCell"
+        />
+      </template>
+    </QInput>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
 import { useStore } from "@/store";
@@ -204,58 +256,6 @@ const textfield = ref<QInput>();
 // 複数エンジン
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
-
-<template>
-  <div class="audio-cell">
-    <QIcon
-      v-if="isActiveAudioCell"
-      name="arrow_right"
-      color="primary-light"
-      size="sm"
-      class="absolute active-arrow"
-    />
-    <CharacterButton
-      :character-infos="userOrderedCharacterInfos"
-      :loading="isInitializingSpeaker"
-      :show-engine-info="isMultipleEngine"
-      :ui-locked="uiLocked"
-      v-model:selected-voice="selectedVoice"
-    />
-    <QInput
-      ref="textfield"
-      filled
-      dense
-      hide-bottom-space
-      class="full-width"
-      color="primary-light"
-      :disable="uiLocked"
-      :error="audioTextBuffer.length >= 80"
-      :model-value="audioTextBuffer"
-      @update:model-value="setAudioTextBuffer"
-      @change="willRemove || pushAudioText()"
-      @paste="pasteOnAudioCell"
-      @focus="setActiveAudioKey()"
-      @keydown.prevent.up.exact="moveUpCell"
-      @keydown.prevent.down.exact="moveDownCell"
-      @mouseup.right="onRightClickTextField"
-    >
-      <template v-slot:error>
-        文章が長いと正常に動作しない可能性があります。
-        句読点の位置で文章を分割してください。
-      </template>
-      <template #after v-if="deleteButtonEnable">
-        <QBtn
-          round
-          flat
-          icon="delete_outline"
-          size="0.8rem"
-          :disable="uiLocked"
-          @click="removeCell"
-        />
-      </template>
-    </QInput>
-  </div>
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

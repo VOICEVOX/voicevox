@@ -1,46 +1,3 @@
-<script setup lang="ts">
-import { useStore } from "@/store";
-import { computed, ref } from "vue";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
-type DetailKey = { engine: string; character: string };
-
-const store = useStore();
-const md = useMarkdownIt();
-
-const engineInfos = computed(
-  () =>
-    new Map(
-      Object.entries(store.state.characterInfos).map(
-        ([engineId, characterInfos]) => [
-          engineId,
-          {
-            engineId,
-            engineName: store.state.engineManifests[engineId].name,
-            characterInfos: new Map(
-              characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
-            ),
-          },
-        ]
-      )
-    )
-);
-
-const convertMarkdown = (text: string) => {
-  return md.render(text);
-};
-
-const selectedInfo = ref<DetailKey | undefined>(undefined);
-
-const scroller = ref<HTMLElement>();
-const selectCharacterInfo = (index: DetailKey | undefined) => {
-  if (scroller.value == undefined)
-    throw new Error("scroller.value == undefined");
-  scroller.value.scrollTop = 0;
-  selectedInfo.value = index;
-};
-</script>
-
 <template>
   <QPage
     ref="scroller"
@@ -109,6 +66,48 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
   </QPage>
 </template>
 
+<script setup lang="ts">
+import { useStore } from "@/store";
+import { computed, ref } from "vue";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+type DetailKey = { engine: string; character: string };
+
+const store = useStore();
+const md = useMarkdownIt();
+
+const engineInfos = computed(
+  () =>
+    new Map(
+      Object.entries(store.state.characterInfos).map(
+        ([engineId, characterInfos]) => [
+          engineId,
+          {
+            engineId,
+            engineName: store.state.engineManifests[engineId].name,
+            characterInfos: new Map(
+              characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+            ),
+          },
+        ]
+      )
+    )
+);
+
+const convertMarkdown = (text: string) => {
+  return md.render(text);
+};
+
+const selectedInfo = ref<DetailKey | undefined>(undefined);
+
+const scroller = ref<HTMLElement>();
+const selectCharacterInfo = (index: DetailKey | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  selectedInfo.value = index;
+};
+</script>
 <style scoped lang="scss">
 .root {
   .scroller {

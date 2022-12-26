@@ -1,3 +1,355 @@
+<template>
+  <div class="root full-height q-py-md" v-if="query">
+    <div v-if="enablePreset" class="q-px-md">
+      <div class="row items-center no-wrap q-mb-xs">
+        <div class="text-body1">プリセット</div>
+        <QBtn dense flat icon="more_vert">
+          <QMenu transition-duration="100">
+            <QList>
+              <QItem
+                clickable
+                v-close-popup
+                @click="registerPreset({ overwrite: false })"
+              >
+                <QItemSection avatar>
+                  <QAvatar
+                    icon="add_circle_outline"
+                    color="primary-light"
+                    text-color="display-on-primary"
+                  ></QAvatar>
+                </QItemSection>
+                <QItemSection>
+                  <QItemLabel>プリセット新規登録</QItemLabel>
+                </QItemSection>
+              </QItem>
+              <QItem
+                clickable
+                v-close-popup
+                @click="showsPresetEditDialog = true"
+              >
+                <QItemSection avatar>
+                  <QAvatar
+                    icon="edit_note"
+                    color="primary-light"
+                    text-color="display-on-primary"
+                  ></QAvatar>
+                </QItemSection>
+                <QItemSection>
+                  <QItemLabel>プリセット管理</QItemLabel>
+                </QItemSection>
+              </QItem>
+            </QList>
+          </QMenu>
+        </QBtn>
+      </div>
+
+      <div class="full-width row" @wheel="setPresetByScroll($event)">
+        <QSelect
+          v-model="presetSelectModel"
+          :options="selectablePresetList"
+          class="col overflow-hidden"
+          color="primary-light"
+          text-color="display-on-primary"
+          outlined
+          dense
+          transition-show="none"
+          transition-hide="none"
+        >
+          <template v-slot:selected-item="scope">
+            <div class="preset-select-label">
+              {{ scope.opt.label }}
+            </div>
+          </template>
+          <template v-slot:no-option>
+            <QItem>
+              <QItemSection class="text-grey">
+                プリセットはありません
+              </QItemSection>
+            </QItem>
+          </template>
+        </QSelect>
+
+        <QBtn
+          dense
+          outline
+          class="col-auto q-ml-xs"
+          size="sm"
+          text-color="display"
+          :label="isRegisteredPreset ? '再登録' : '登録'"
+          v-show="!isRegisteredPreset || isChangedPreset"
+          @click="registerPreset({ overwrite: isRegisteredPreset })"
+        />
+      </div>
+      <!-- プリセット管理ダイアログ -->
+      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
+
+      <!-- プリセット登録ダイアログ -->
+      <QDialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
+        <QCard style="min-width: 350px">
+          <QCardSection>
+            <div class="text-h6">プリセット登録</div>
+          </QCardSection>
+
+          <QForm @submit.prevent="checkRewritePreset">
+            <QCardSection class="q-pt-none">
+              <QSelect
+                fill-input
+                autofocus
+                hide-selected
+                label="タイトル"
+                color="primary-light"
+                use-input
+                input-debounce="0"
+                :model-value="presetName"
+                :options="presetOptionsList"
+                @input-value="setPresetName"
+                @filter="filterPresetOptionsList"
+              />
+            </QCardSection>
+
+            <QCardActions align="right">
+              <QBtn
+                flat
+                label="キャンセル"
+                @click="closeAllDialog"
+                v-close-popup
+              />
+              <QBtn flat type="submit" label="確定" />
+            </QCardActions>
+          </QForm>
+        </QCard>
+      </QDialog>
+
+      <!-- プリセット再登録ダイアログ -->
+      <QDialog v-model="showsPresetRewriteDialog" @before-hide="closeAllDialog">
+        <QCard>
+          <QCardSection>
+            <div class="text-h6">プリセットの再登録</div>
+          </QCardSection>
+          <QCardSection>
+            <QList>
+              <QItem clickable class="no-margin" @click="updatePreset(true)">
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection>
+                  プリセットを再登録し、このプリセットが設定されたテキスト欄全てに再適用する
+                </QItemSection>
+              </QItem>
+              <QItem clickable class="no-margin" @click="updatePreset(false)">
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection> プリセットの再登録のみ行う </QItemSection>
+              </QItem>
+              <QItem
+                clickable
+                class="no-margin"
+                @click="closeAllDialog"
+                v-close-popup
+              >
+                <QItemSection avatar>
+                  <QAvatar icon="arrow_forward" text-color="blue" />
+                </QItemSection>
+                <QItemSection>キャンセル</QItemSection>
+              </QItem>
+            </QList>
+          </QCardSection>
+        </QCard>
+      </QDialog>
+
+      <QSeparator class="q-mt-md" />
+    </div>
+
+    <div class="q-mx-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: speedScaleSlider.qSliderProps.disable.value,
+        }"
+        >話速
+        {{
+          speedScaleSlider.state.currentValue.value != undefined
+            ? speedScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="speedScaleSlider.qSliderProps.min.value"
+        :max="speedScaleSlider.qSliderProps.max.value"
+        :step="speedScaleSlider.qSliderProps.step.value"
+        :disable="speedScaleSlider.qSliderProps.disable.value"
+        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          speedScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="speedScaleSlider.qSliderProps.onChange"
+        @wheel="speedScaleSlider.qSliderProps.onWheel"
+        @pan="speedScaleSlider.qSliderProps.onPan"
+      />
+    </div>
+    <div class="q-px-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: pitchScaleSlider.qSliderProps.disable.value,
+        }"
+        >音高
+        {{
+          pitchScaleSlider.state.currentValue.value != undefined
+            ? pitchScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="pitchScaleSlider.qSliderProps.min.value"
+        :max="pitchScaleSlider.qSliderProps.max.value"
+        :step="pitchScaleSlider.qSliderProps.step.value"
+        :disable="pitchScaleSlider.qSliderProps.disable.value"
+        :model-value="pitchScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          pitchScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="pitchScaleSlider.qSliderProps.onChange"
+        @wheel="pitchScaleSlider.qSliderProps.onWheel"
+        @pan="pitchScaleSlider.qSliderProps.onPan"
+      />
+    </div>
+    <div class="q-px-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: intonationScaleSlider.qSliderProps.disable.value,
+        }"
+        >抑揚
+        {{
+          intonationScaleSlider.state.currentValue.value != undefined
+            ? intonationScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="intonationScaleSlider.qSliderProps.min.value"
+        :max="intonationScaleSlider.qSliderProps.max.value"
+        :step="intonationScaleSlider.qSliderProps.step.value"
+        :disable="intonationScaleSlider.qSliderProps.disable.value"
+        :model-value="intonationScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          intonationScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="intonationScaleSlider.qSliderProps.onChange"
+        @wheel="intonationScaleSlider.qSliderProps.onWheel"
+        @pan="intonationScaleSlider.qSliderProps.onPan"
+      />
+    </div>
+    <div class="q-px-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: volumeScaleSlider.qSliderProps.disable.value,
+        }"
+        >音量
+        {{
+          volumeScaleSlider.state.currentValue.value != undefined
+            ? volumeScaleSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="volumeScaleSlider.qSliderProps.min.value"
+        :max="volumeScaleSlider.qSliderProps.max.value"
+        :step="volumeScaleSlider.qSliderProps.step.value"
+        :disable="volumeScaleSlider.qSliderProps.disable.value"
+        :model-value="volumeScaleSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          volumeScaleSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="volumeScaleSlider.qSliderProps.onChange"
+        @wheel="volumeScaleSlider.qSliderProps.onWheel"
+        @pan="volumeScaleSlider.qSliderProps.onPan"
+      />
+    </div>
+    <div class="q-px-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
+        }"
+        >開始無音
+        {{
+          prePhonemeLengthSlider.state.currentValue.value != undefined
+            ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="prePhonemeLengthSlider.qSliderProps.min.value"
+        :max="prePhonemeLengthSlider.qSliderProps.max.value"
+        :step="prePhonemeLengthSlider.qSliderProps.step.value"
+        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="prePhonemeLengthSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          prePhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="prePhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="prePhonemeLengthSlider.qSliderProps.onPan"
+      />
+    </div>
+    <div class="q-px-md">
+      <span
+        class="text-body1 q-mb-xs"
+        :class="{
+          disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
+        }"
+        >終了無音
+        {{
+          postPhonemeLengthSlider.state.currentValue.value != undefined
+            ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
+            : undefined
+        }}</span
+      >
+      <QSlider
+        dense
+        snap
+        color="primary-light"
+        trackSize="2px"
+        :min="postPhonemeLengthSlider.qSliderProps.min.value"
+        :max="postPhonemeLengthSlider.qSliderProps.max.value"
+        :step="postPhonemeLengthSlider.qSliderProps.step.value"
+        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
+        :model-value="postPhonemeLengthSlider.qSliderProps.modelValue.value"
+        @update:model-value="
+          postPhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
+        "
+        @change="postPhonemeLengthSlider.qSliderProps.onChange"
+        @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
+        @pan="postPhonemeLengthSlider.qSliderProps.onPan"
+      />
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { QSelectProps } from "quasar";
@@ -369,358 +721,6 @@ const updatePreset = async (fullApply: boolean) => {
 // プリセットの編集
 const showsPresetEditDialog = ref(false);
 </script>
-
-<template>
-  <div class="root full-height q-py-md" v-if="query">
-    <div v-if="enablePreset" class="q-px-md">
-      <div class="row items-center no-wrap q-mb-xs">
-        <div class="text-body1">プリセット</div>
-        <QBtn dense flat icon="more_vert">
-          <QMenu transition-duration="100">
-            <QList>
-              <QItem
-                clickable
-                v-close-popup
-                @click="registerPreset({ overwrite: false })"
-              >
-                <QItemSection avatar>
-                  <QAvatar
-                    icon="add_circle_outline"
-                    color="primary-light"
-                    text-color="display-on-primary"
-                  ></QAvatar>
-                </QItemSection>
-                <QItemSection>
-                  <QItemLabel>プリセット新規登録</QItemLabel>
-                </QItemSection>
-              </QItem>
-              <QItem
-                clickable
-                v-close-popup
-                @click="showsPresetEditDialog = true"
-              >
-                <QItemSection avatar>
-                  <QAvatar
-                    icon="edit_note"
-                    color="primary-light"
-                    text-color="display-on-primary"
-                  ></QAvatar>
-                </QItemSection>
-                <QItemSection>
-                  <QItemLabel>プリセット管理</QItemLabel>
-                </QItemSection>
-              </QItem>
-            </QList>
-          </QMenu>
-        </QBtn>
-      </div>
-
-      <div class="full-width row" @wheel="setPresetByScroll($event)">
-        <QSelect
-          v-model="presetSelectModel"
-          :options="selectablePresetList"
-          class="col overflow-hidden"
-          color="primary-light"
-          text-color="display-on-primary"
-          outlined
-          dense
-          transition-show="none"
-          transition-hide="none"
-        >
-          <template v-slot:selected-item="scope">
-            <div class="preset-select-label">
-              {{ scope.opt.label }}
-            </div>
-          </template>
-          <template v-slot:no-option>
-            <QItem>
-              <QItemSection class="text-grey">
-                プリセットはありません
-              </QItemSection>
-            </QItem>
-          </template>
-        </QSelect>
-
-        <QBtn
-          dense
-          outline
-          class="col-auto q-ml-xs"
-          size="sm"
-          text-color="display"
-          :label="isRegisteredPreset ? '再登録' : '登録'"
-          v-show="!isRegisteredPreset || isChangedPreset"
-          @click="registerPreset({ overwrite: isRegisteredPreset })"
-        />
-      </div>
-      <!-- プリセット管理ダイアログ -->
-      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
-
-      <!-- プリセット登録ダイアログ -->
-      <QDialog v-model="showsPresetNameDialog" @before-hide="closeAllDialog">
-        <QCard style="min-width: 350px">
-          <QCardSection>
-            <div class="text-h6">プリセット登録</div>
-          </QCardSection>
-
-          <QForm @submit.prevent="checkRewritePreset">
-            <QCardSection class="q-pt-none">
-              <QSelect
-                fill-input
-                autofocus
-                hide-selected
-                label="タイトル"
-                color="primary-light"
-                use-input
-                input-debounce="0"
-                :model-value="presetName"
-                :options="presetOptionsList"
-                @input-value="setPresetName"
-                @filter="filterPresetOptionsList"
-              />
-            </QCardSection>
-
-            <QCardActions align="right">
-              <QBtn
-                flat
-                label="キャンセル"
-                @click="closeAllDialog"
-                v-close-popup
-              />
-              <QBtn flat type="submit" label="確定" />
-            </QCardActions>
-          </QForm>
-        </QCard>
-      </QDialog>
-
-      <!-- プリセット再登録ダイアログ -->
-      <QDialog v-model="showsPresetRewriteDialog" @before-hide="closeAllDialog">
-        <QCard>
-          <QCardSection>
-            <div class="text-h6">プリセットの再登録</div>
-          </QCardSection>
-          <QCardSection>
-            <QList>
-              <QItem clickable class="no-margin" @click="updatePreset(true)">
-                <QItemSection avatar>
-                  <QAvatar icon="arrow_forward" text-color="blue" />
-                </QItemSection>
-                <QItemSection>
-                  プリセットを再登録し、このプリセットが設定されたテキスト欄全てに再適用する
-                </QItemSection>
-              </QItem>
-              <QItem clickable class="no-margin" @click="updatePreset(false)">
-                <QItemSection avatar>
-                  <QAvatar icon="arrow_forward" text-color="blue" />
-                </QItemSection>
-                <QItemSection> プリセットの再登録のみ行う </QItemSection>
-              </QItem>
-              <QItem
-                clickable
-                class="no-margin"
-                @click="closeAllDialog"
-                v-close-popup
-              >
-                <QItemSection avatar>
-                  <QAvatar icon="arrow_forward" text-color="blue" />
-                </QItemSection>
-                <QItemSection>キャンセル</QItemSection>
-              </QItem>
-            </QList>
-          </QCardSection>
-        </QCard>
-      </QDialog>
-
-      <QSeparator class="q-mt-md" />
-    </div>
-
-    <div class="q-mx-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: speedScaleSlider.qSliderProps.disable.value,
-        }"
-        >話速
-        {{
-          speedScaleSlider.state.currentValue.value != undefined
-            ? speedScaleSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="speedScaleSlider.qSliderProps.min.value"
-        :max="speedScaleSlider.qSliderProps.max.value"
-        :step="speedScaleSlider.qSliderProps.step.value"
-        :disable="speedScaleSlider.qSliderProps.disable.value"
-        :model-value="speedScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          speedScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="speedScaleSlider.qSliderProps.onChange"
-        @wheel="speedScaleSlider.qSliderProps.onWheel"
-        @pan="speedScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: pitchScaleSlider.qSliderProps.disable.value,
-        }"
-        >音高
-        {{
-          pitchScaleSlider.state.currentValue.value != undefined
-            ? pitchScaleSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="pitchScaleSlider.qSliderProps.min.value"
-        :max="pitchScaleSlider.qSliderProps.max.value"
-        :step="pitchScaleSlider.qSliderProps.step.value"
-        :disable="pitchScaleSlider.qSliderProps.disable.value"
-        :model-value="pitchScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          pitchScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="pitchScaleSlider.qSliderProps.onChange"
-        @wheel="pitchScaleSlider.qSliderProps.onWheel"
-        @pan="pitchScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: intonationScaleSlider.qSliderProps.disable.value,
-        }"
-        >抑揚
-        {{
-          intonationScaleSlider.state.currentValue.value != undefined
-            ? intonationScaleSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="intonationScaleSlider.qSliderProps.min.value"
-        :max="intonationScaleSlider.qSliderProps.max.value"
-        :step="intonationScaleSlider.qSliderProps.step.value"
-        :disable="intonationScaleSlider.qSliderProps.disable.value"
-        :model-value="intonationScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          intonationScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="intonationScaleSlider.qSliderProps.onChange"
-        @wheel="intonationScaleSlider.qSliderProps.onWheel"
-        @pan="intonationScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: volumeScaleSlider.qSliderProps.disable.value,
-        }"
-        >音量
-        {{
-          volumeScaleSlider.state.currentValue.value != undefined
-            ? volumeScaleSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="volumeScaleSlider.qSliderProps.min.value"
-        :max="volumeScaleSlider.qSliderProps.max.value"
-        :step="volumeScaleSlider.qSliderProps.step.value"
-        :disable="volumeScaleSlider.qSliderProps.disable.value"
-        :model-value="volumeScaleSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          volumeScaleSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="volumeScaleSlider.qSliderProps.onChange"
-        @wheel="volumeScaleSlider.qSliderProps.onWheel"
-        @pan="volumeScaleSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: prePhonemeLengthSlider.qSliderProps.disable.value,
-        }"
-        >開始無音
-        {{
-          prePhonemeLengthSlider.state.currentValue.value != undefined
-            ? prePhonemeLengthSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="prePhonemeLengthSlider.qSliderProps.min.value"
-        :max="prePhonemeLengthSlider.qSliderProps.max.value"
-        :step="prePhonemeLengthSlider.qSliderProps.step.value"
-        :disable="prePhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="prePhonemeLengthSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          prePhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="prePhonemeLengthSlider.qSliderProps.onChange"
-        @wheel="prePhonemeLengthSlider.qSliderProps.onWheel"
-        @pan="prePhonemeLengthSlider.qSliderProps.onPan"
-      />
-    </div>
-    <div class="q-px-md">
-      <span
-        class="text-body1 q-mb-xs"
-        :class="{
-          disabled: postPhonemeLengthSlider.qSliderProps.disable.value,
-        }"
-        >終了無音
-        {{
-          postPhonemeLengthSlider.state.currentValue.value != undefined
-            ? postPhonemeLengthSlider.state.currentValue.value.toFixed(2)
-            : undefined
-        }}</span
-      >
-      <QSlider
-        dense
-        snap
-        color="primary-light"
-        trackSize="2px"
-        :min="postPhonemeLengthSlider.qSliderProps.min.value"
-        :max="postPhonemeLengthSlider.qSliderProps.max.value"
-        :step="postPhonemeLengthSlider.qSliderProps.step.value"
-        :disable="postPhonemeLengthSlider.qSliderProps.disable.value"
-        :model-value="postPhonemeLengthSlider.qSliderProps.modelValue.value"
-        @update:model-value="
-          postPhonemeLengthSlider.qSliderProps['onUpdate:modelValue']
-        "
-        @change="postPhonemeLengthSlider.qSliderProps.onChange"
-        @wheel="postPhonemeLengthSlider.qSliderProps.onWheel"
-        @pan="postPhonemeLengthSlider.qSliderProps.onPan"
-      />
-    </div>
-  </div>
-</template>
 
 <style scoped lang="scss">
 .root {

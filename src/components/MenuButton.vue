@@ -1,3 +1,46 @@
+<template>
+  <QBtn
+    flat
+    text-color="display"
+    class="
+      full-height
+      cursor-pointer
+      no-border-radius
+      text-no-wrap
+      q-py-none q-px-sm
+    "
+    :class="selected ? 'active-menu' : 'bg-transparent'"
+    :disable="disable"
+    @click="
+      (menudata.type === 'button' || menudata.type === 'root') &&
+        menudata.onClick()
+    "
+  >
+    {{ menudata.label }}
+    <QMenu
+      v-if="menudata.type === 'root'"
+      transition-show="none"
+      transition-hide="none"
+      :fit="true"
+      v-model="selectedComputed"
+    >
+      <QList dense>
+        <MenuItem
+          v-for="(menu, index) of menudata.subMenu"
+          :key="index"
+          :menudata="menu"
+          :disable="
+            menu.type !== 'separator' && uiLocked && menu.disableWhenUiLocked
+          "
+          v-model:selected="subMenuOpenFlags[index]"
+          @mouseenter="reassignSubMenuOpen(index)"
+          @mouseleave="reassignSubMenuOpen.cancel()"
+        />
+      </QList>
+    </QMenu>
+  </QBtn>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { debounce } from "quasar";
@@ -52,49 +95,6 @@ watch(
   }
 );
 </script>
-
-<template>
-  <QBtn
-    flat
-    text-color="display"
-    class="
-      full-height
-      cursor-pointer
-      no-border-radius
-      text-no-wrap
-      q-py-none q-px-sm
-    "
-    :class="selected ? 'active-menu' : 'bg-transparent'"
-    :disable="disable"
-    @click="
-      (menudata.type === 'button' || menudata.type === 'root') &&
-        menudata.onClick()
-    "
-  >
-    {{ menudata.label }}
-    <QMenu
-      v-if="menudata.type === 'root'"
-      transition-show="none"
-      transition-hide="none"
-      :fit="true"
-      v-model="selectedComputed"
-    >
-      <QList dense>
-        <MenuItem
-          v-for="(menu, index) of menudata.subMenu"
-          :key="index"
-          :menudata="menu"
-          :disable="
-            menu.type !== 'separator' && uiLocked && menu.disableWhenUiLocked
-          "
-          v-model:selected="subMenuOpenFlags[index]"
-          @mouseenter="reassignSubMenuOpen(index)"
-          @mouseleave="reassignSubMenuOpen.cancel()"
-        />
-      </QList>
-    </QMenu>
-  </QBtn>
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/variables' as vars;

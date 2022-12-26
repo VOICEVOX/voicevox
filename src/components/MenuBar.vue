@@ -1,3 +1,30 @@
+<template>
+  <q-bar class="bg-background q-pa-none relative-position">
+    <div
+      v-if="$q.platform.is.mac && !isFullscreen"
+      class="mac-traffic-light-space"
+    ></div>
+    <img v-else src="icon.png" class="window-logo" alt="application logo" />
+    <menu-button
+      v-for="(root, index) of menudata"
+      :key="index"
+      :menudata="root"
+      v-model:selected="subMenuOpenFlags[index]"
+      :disable="menubarLocked"
+      @mouseover="reassignSubMenuOpen(index)"
+      @mouseleave="
+        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
+      "
+    />
+    <q-space />
+    <div class="window-title" :class="{ 'text-warning': isSafeMode }">
+      {{ titleText }}
+    </div>
+    <q-space />
+    <title-bar-buttons />
+  </q-bar>
+</template>
+
 <script lang="ts">
 import { ComputedRef } from "vue";
 type MenuItemBase<T extends string> = {
@@ -497,32 +524,6 @@ watch(uiLocked, () => {
 });
 </script>
 
-<template>
-  <q-bar class="bg-background q-pa-none relative-position">
-    <div
-      v-if="$q.platform.is.mac && !isFullscreen"
-      class="mac-traffic-light-space"
-    ></div>
-    <img v-else src="icon.png" class="window-logo" alt="application logo" />
-    <menu-button
-      v-for="(root, index) of menudata"
-      :key="index"
-      :menudata="root"
-      v-model:selected="subMenuOpenFlags[index]"
-      :disable="menubarLocked"
-      @mouseover="reassignSubMenuOpen(index)"
-      @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
-      "
-    />
-    <q-space />
-    <div class="window-title" :class="{ 'text-warning': isSafeMode }">
-      {{ titleText }}
-    </div>
-    <q-space />
-    <title-bar-buttons />
-  </q-bar>
-</template>
 <style lang="scss">
 @use '@/styles/colors' as colors;
 

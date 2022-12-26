@@ -1,41 +1,3 @@
-<script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
-import { useStore } from "@/store";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", value: boolean): void;
-  }>();
-
-const store = useStore();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
-const handler = (acceptRetrieveTelemetry: boolean) => {
-  store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-    acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
-  });
-
-  modelValueComputed.value = false;
-};
-
-const md = useMarkdownIt();
-const privacyPolicy = ref("");
-onMounted(async () => {
-  privacyPolicy.value = md.render(
-    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
-  );
-});
-</script>
-
 <template>
   <q-dialog
     maximized
@@ -100,6 +62,44 @@ onMounted(async () => {
     </q-layout>
   </q-dialog>
 </template>
+
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
+import { useStore } from "@/store";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
+
+const store = useStore();
+
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const handler = (acceptRetrieveTelemetry: boolean) => {
+  store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
+  });
+
+  modelValueComputed.value = false;
+};
+
+const md = useMarkdownIt();
+const privacyPolicy = ref("");
+onMounted(async () => {
+  privacyPolicy.value = md.render(
+    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+  );
+});
+</script>
 
 <style scoped lang="scss">
 .q-page {

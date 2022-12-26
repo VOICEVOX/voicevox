@@ -1,3 +1,80 @@
+<template>
+  <QDialog
+    :model-value="props.openDialog"
+    @update:model-value="updateOpenDialog"
+    @before-show="initializeInput"
+  >
+    <QCard class="q-pa-md dialog-card">
+      <QCardSection>
+        <div class="text-h5">書き出しファイル名パターン</div>
+        <div class="text-body2 text-grey-8">
+          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
+        </div>
+      </QCardSection>
+      <QCardActions class="setting-card q-px-md q-py-sm">
+        <div class="row full-width justify-between">
+          <div class="col">
+            <QInput
+              dense
+              outlined
+              bg-color="background"
+              label="ファイル名パターン"
+              suffix=".wav"
+              :maxlength="maxLength"
+              :error="hasError"
+              :error-message="errorMessage"
+              v-model="currentFileNamePattern"
+              ref="patternInput"
+            >
+              <template v-slot:after>
+                <QBtn
+                  label="デフォルトにリセット"
+                  outline
+                  text-color="display"
+                  class="text-no-wrap q-mr-sm"
+                  @click="resetToDefault"
+                />
+              </template>
+            </QInput>
+          </div>
+        </div>
+        <div class="text-body2 text-ellipsis">
+          出力例）{{ previewFileName }}
+        </div>
+        <div class="row full-width q-my-md">
+          <QBtn
+            v-for="tagString in tagStrings"
+            :key="tagString"
+            :label="`$${tagString}$`"
+            outline
+            text-color="display"
+            class="text-no-wrap q-mr-sm"
+            @click="insertTagToCurrentPosition(`$${tagString}$`)"
+          />
+        </div>
+        <div class="row full-width justify-end">
+          <QBtn
+            label="キャンセル"
+            outline
+            text-color="display"
+            class="text-no-wrap text-bold q-mr-sm col-2"
+            @click="updateOpenDialog(false)"
+          />
+          <QBtn
+            label="確定"
+            unelevated
+            color="primary"
+            text-color="display-on-primary"
+            class="text-no-wrap text-bold q-mr-sm col-2"
+            :disable="hasError"
+            @click="submit"
+          />
+        </div>
+      </QCardActions>
+    </QCard>
+  </QDialog>
+</template>
+
 <script setup lang="ts">
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
@@ -128,83 +205,6 @@ const submit = async () => {
   updateOpenDialog(false);
 };
 </script>
-
-<template>
-  <QDialog
-    :model-value="props.openDialog"
-    @update:model-value="updateOpenDialog"
-    @before-show="initializeInput"
-  >
-    <QCard class="q-pa-md dialog-card">
-      <QCardSection>
-        <div class="text-h5">書き出しファイル名パターン</div>
-        <div class="text-body2 text-grey-8">
-          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
-        </div>
-      </QCardSection>
-      <QCardActions class="setting-card q-px-md q-py-sm">
-        <div class="row full-width justify-between">
-          <div class="col">
-            <QInput
-              dense
-              outlined
-              bg-color="background"
-              label="ファイル名パターン"
-              suffix=".wav"
-              :maxlength="maxLength"
-              :error="hasError"
-              :error-message="errorMessage"
-              v-model="currentFileNamePattern"
-              ref="patternInput"
-            >
-              <template v-slot:after>
-                <QBtn
-                  label="デフォルトにリセット"
-                  outline
-                  text-color="display"
-                  class="text-no-wrap q-mr-sm"
-                  @click="resetToDefault"
-                />
-              </template>
-            </QInput>
-          </div>
-        </div>
-        <div class="text-body2 text-ellipsis">
-          出力例）{{ previewFileName }}
-        </div>
-        <div class="row full-width q-my-md">
-          <QBtn
-            v-for="tagString in tagStrings"
-            :key="tagString"
-            :label="`$${tagString}$`"
-            outline
-            text-color="display"
-            class="text-no-wrap q-mr-sm"
-            @click="insertTagToCurrentPosition(`$${tagString}$`)"
-          />
-        </div>
-        <div class="row full-width justify-end">
-          <QBtn
-            label="キャンセル"
-            outline
-            text-color="display"
-            class="text-no-wrap text-bold q-mr-sm col-2"
-            @click="updateOpenDialog(false)"
-          />
-          <QBtn
-            label="確定"
-            unelevated
-            color="primary"
-            text-color="display-on-primary"
-            class="text-no-wrap text-bold q-mr-sm col-2"
-            :disable="hasError"
-            @click="submit"
-          />
-        </div>
-      </QCardActions>
-    </QCard>
-  </QDialog>
-</template>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

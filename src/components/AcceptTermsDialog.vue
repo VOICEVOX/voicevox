@@ -1,39 +1,3 @@
-<script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
-import { useStore } from "@/store";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-
-const props =
-  defineProps<{
-    modelValue: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:modelValue", value: boolean): void;
-  }>();
-const store = useStore();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
-const handler = (acceptTerms: boolean) => {
-  store.dispatch("SET_ACCEPT_TERMS", {
-    acceptTerms: acceptTerms ? "Accepted" : "Rejected",
-  });
-  !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
-
-  modelValueComputed.value = false;
-};
-
-const md = useMarkdownIt();
-const terms = ref("");
-onMounted(async () => {
-  terms.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
-});
-</script>
-
 <template>
   <QDialog
     maximized
@@ -95,6 +59,42 @@ onMounted(async () => {
     </QLayout>
   </QDialog>
 </template>
+
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
+import { useStore } from "@/store";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
+const store = useStore();
+
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const handler = (acceptTerms: boolean) => {
+  store.dispatch("SET_ACCEPT_TERMS", {
+    acceptTerms: acceptTerms ? "Accepted" : "Rejected",
+  });
+  !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
+
+  modelValueComputed.value = false;
+};
+
+const md = useMarkdownIt();
+const terms = ref("");
+onMounted(async () => {
+  terms.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
+});
+</script>
 
 <style scoped lang="scss">
 .q-page {

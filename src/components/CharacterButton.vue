@@ -1,98 +1,3 @@
-<script setup lang="ts">
-import { base64ImageToUri } from "@/helpers/imageHelper";
-import { useStore } from "@/store";
-import { CharacterInfo, Voice } from "@/type/preload";
-import { debounce } from "quasar";
-import { computed, ref } from "vue";
-
-const props =
-  defineProps<{
-    characterInfos: CharacterInfo[];
-    loading: boolean;
-    selectedVoice: Voice;
-    showEngineInfo: boolean;
-    emptiable: boolean;
-    uiLocked: boolean;
-  }>();
-const emit =
-  defineEmits<{
-    (e: "update:selectedVoice", value: Voice | undefined): void;
-  }>();
-
-const store = useStore();
-
-const selectedCharacter = computed(() => {
-  const selectedVoice = props.selectedVoice;
-  const character = props.characterInfos.find(
-    (characterInfo) =>
-      characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
-      characterInfo.metas.styles.some(
-        (style) =>
-          style.engineId === selectedVoice.engineId &&
-          style.styleId === selectedVoice.styleId
-      )
-  );
-  return character;
-});
-
-const selectedStyleInfo = computed(() => {
-  const selectedVoice = props.selectedVoice;
-  const style = selectedCharacter.value?.metas.styles.find(
-    (style) =>
-      style.engineId === selectedVoice?.engineId &&
-      style.styleId === selectedVoice.styleId
-  );
-  return style;
-});
-
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ])
-  )
-);
-
-const getDefaultStyle = (speakerUuid: string) => {
-  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-  const characterInfo = props.characterInfos.find(
-    (info) => info.metas.speakerUuid === speakerUuid
-  );
-  const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid
-  )?.defaultStyleId;
-
-  const defaultStyle = characterInfo?.metas.styles.find(
-    (style) => style.styleId === defaultStyleId
-  );
-
-  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
-
-  return defaultStyle;
-};
-
-const onSelectSpeaker = (speakerUuid: string) => {
-  const style = getDefaultStyle(speakerUuid);
-  emit("update:selectedVoice", {
-    engineId: style.engineId,
-    speakerId: speakerUuid,
-    styleId: style.styleId,
-  });
-};
-
-const subMenuOpenFlags = ref(
-  [...Array(props.characterInfos.length)].map(() => false)
-);
-
-const reassignSubMenuOpen = debounce((idx: number) => {
-  if (subMenuOpenFlags.value[idx]) return;
-  const arr = [...Array(props.characterInfos.length)].map(() => false);
-  arr[idx] = true;
-  subMenuOpenFlags.value = arr;
-}, 100);
-</script>
-
 <template>
   <QBtn
     flat
@@ -273,6 +178,101 @@ const reassignSubMenuOpen = debounce((idx: number) => {
     </QMenu>
   </QBtn>
 </template>
+
+<script setup lang="ts">
+import { base64ImageToUri } from "@/helpers/imageHelper";
+import { useStore } from "@/store";
+import { CharacterInfo, Voice } from "@/type/preload";
+import { debounce } from "quasar";
+import { computed, ref } from "vue";
+
+const props =
+  defineProps<{
+    characterInfos: CharacterInfo[];
+    loading: boolean;
+    selectedVoice: Voice;
+    showEngineInfo: boolean;
+    emptiable: boolean;
+    uiLocked: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:selectedVoice", value: Voice | undefined): void;
+  }>();
+
+const store = useStore();
+
+const selectedCharacter = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  const character = props.characterInfos.find(
+    (characterInfo) =>
+      characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
+      characterInfo.metas.styles.some(
+        (style) =>
+          style.engineId === selectedVoice.engineId &&
+          style.styleId === selectedVoice.styleId
+      )
+  );
+  return character;
+});
+
+const selectedStyleInfo = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  const style = selectedCharacter.value?.metas.styles.find(
+    (style) =>
+      style.engineId === selectedVoice?.engineId &&
+      style.styleId === selectedVoice.styleId
+  );
+  return style;
+});
+
+const engineIcons = computed(() =>
+  Object.fromEntries(
+    store.state.engineIds.map((engineId) => [
+      engineId,
+      base64ImageToUri(store.state.engineManifests[engineId].icon),
+    ])
+  )
+);
+
+const getDefaultStyle = (speakerUuid: string) => {
+  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+  const characterInfo = props.characterInfos.find(
+    (info) => info.metas.speakerUuid === speakerUuid
+  );
+  const defaultStyleId = store.state.defaultStyleIds.find(
+    (x) => x.speakerUuid === speakerUuid
+  )?.defaultStyleId;
+
+  const defaultStyle = characterInfo?.metas.styles.find(
+    (style) => style.styleId === defaultStyleId
+  );
+
+  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
+
+  return defaultStyle;
+};
+
+const onSelectSpeaker = (speakerUuid: string) => {
+  const style = getDefaultStyle(speakerUuid);
+  emit("update:selectedVoice", {
+    engineId: style.engineId,
+    speakerId: speakerUuid,
+    styleId: style.styleId,
+  });
+};
+
+const subMenuOpenFlags = ref(
+  [...Array(props.characterInfos.length)].map(() => false)
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  const arr = [...Array(props.characterInfos.length)].map(() => false);
+  arr[idx] = true;
+  subMenuOpenFlags.value = arr;
+}, 100);
+</script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;

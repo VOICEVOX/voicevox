@@ -1,21 +1,3 @@
-<script setup lang="ts">
-import { ref } from "vue";
-
-defineProps<{
-  licenses: Record<string, string>[];
-}>();
-const detailIndex = ref<number | undefined>(undefined);
-
-const scroller = ref<HTMLElement>();
-
-const selectLicenseIndex = (index: number | undefined) => {
-  if (scroller.value == undefined)
-    throw new Error("scroller.value == undefined");
-  scroller.value.scrollTop = 0;
-  detailIndex.value = index;
-};
-</script>
-
 <template>
   <QPage
     ref="scroller"
@@ -51,6 +33,24 @@ const selectLicenseIndex = (index: number | undefined) => {
     </div>
   </QPage>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+
+defineProps<{
+  licenses: Record<string, string>[];
+}>();
+const detailIndex = ref<number | undefined>(undefined);
+
+const scroller = ref<HTMLElement>();
+
+const selectLicenseIndex = (index: number | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  detailIndex.value = index;
+};
+</script>
 
 <style scoped lang="scss">
 .root {
