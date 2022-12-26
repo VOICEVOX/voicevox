@@ -695,9 +695,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   VALID_MOPHING_INFO: {
-    getter: (state, getters) => (audioItem: AudioItem) => {
+    getter: (_, getters) => (audioItem: AudioItem) => {
       if (
-        !state.experimentalSetting.enableMorphing ||
         audioItem.morphingInfo == undefined ||
         audioItem.engineId == undefined
       )
@@ -1092,6 +1091,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (audioQuery == undefined || speaker == undefined) {
           return null;
         }
+        const engineAudioQuery = convertAudioQueryFromEditorToEngine(
+          audioQuery,
+          state.engineManifests[engineId].defaultSamplingRate
+        );
 
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
@@ -1099,23 +1102,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           .then((instance) => {
             if (
               audioItem.morphingInfo != undefined &&
+              state.experimentalSetting.enableMorphing &&
               getters.VALID_MOPHING_INFO(audioItem)
             ) {
               return instance.invoke("synthesisMorphingSynthesisMorphingPost")({
-                audioQuery: convertAudioQueryFromEditorToEngine(
-                  audioQuery,
-                  state.engineManifests[engineId].defaultSamplingRate
-                ),
+                audioQuery: engineAudioQuery,
                 baseSpeaker: speaker,
                 targetSpeaker: audioItem.morphingInfo.targetStyleId,
                 morphRate: audioItem.morphingInfo.rate,
               });
             }
             return instance.invoke("synthesisSynthesisPost")({
-              audioQuery: convertAudioQueryFromEditorToEngine(
-                audioQuery,
-                state.engineManifests[engineId].defaultSamplingRate
-              ),
+              audioQuery: engineAudioQuery,
               speaker,
               enableInterrogativeUpspeak:
                 state.experimentalSetting.enableInterrogativeUpspeak,
