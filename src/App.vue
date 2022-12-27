@@ -1,3 +1,9 @@
+<template>
+  <ErrorBoundary>
+    <RouterView />
+  </ErrorBoundary>
+</template>
+
 <script setup lang="ts">
 import { useStore } from "@/store";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
@@ -26,9 +32,3 @@ watch(
   { immediate: true }
 );
 </script>
-
-<template>
-  <error-boundary>
-    <router-view />
-  </error-boundary>
-</template>
