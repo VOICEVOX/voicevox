@@ -64,6 +64,12 @@ const emit =
   defineEmits<{
     (e: "focusCell", value: { audioKey: string }): void;
   }>();
+defineExpose({
+  audioKey: computed(() => props.audioKey),
+  focusTextField: () => {
+    textfield.value?.focus();
+  },
+});
 
 const store = useStore();
 const userOrderedCharacterInfos = computed(() => {
