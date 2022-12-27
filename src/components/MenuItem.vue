@@ -68,7 +68,7 @@ import { HotkeyAction } from "@/type/preload";
 
 const props =
   defineProps<{
-    selected: boolean;
+    selected?: boolean;
     menudata: MenuItemData;
   }>();
 const emit =
