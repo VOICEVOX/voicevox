@@ -181,42 +181,6 @@ jobs:
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
 
-      - name: Replace Character Info
-        shell: bash
-        run: |
-          cp -r resource/character_info public/characters
-          cd public/characters
-          # Explore characters directory.
-          # Character directory name is uuid, but this script can automatically detect character directory name.
-          # We don't need to change this code when add more characters.
-          # FILEPATH example: "./35b2c544-660e-401e-b503-0e14c635303a"
-          for FILEPATH in ./*
-            do
-            # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME="$(jq -r '.speakerName' "$FILEPATH/metas.json")"
-            pushd "$FILEPATH/icons"
-            # Explore character icons directory.
-            # ICONPATH example: "./0.png"
-            for ICONPATH in ./*.png
-              do
-              # ":2" part is python slice like, can remove "./" part from ICONPATH
-              # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
-              # If don't use ":2": "${SPEAKER_NAME}_${ICONPATH}" is "AAA_./0.png"
-              #       If use ":2": "${SPEAKER_NAME}_${ICONPATH:2}" is "AAA_0.png"
-              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
-            done
-            popd
-            pushd "$FILEPATH/voice_samples"
-            # Explore character voice_samples directory.
-            # VOICEPATH example: "./0_000.wav"
-            for VOICEPATH in ./*.wav
-              do
-              # Same as for ICONPATH
-              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
-            done
-            popd
-          done
-
       - name: Create and replace software resources
         shell: bash
         run: |
