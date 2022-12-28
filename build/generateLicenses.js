@@ -38,6 +38,7 @@ const disallowLicenses = [
   "LGPL",
   "LGPL-3.0",
   "NGPL",
+  "MIT",
 ];
 
 // https://github.com/davglass/license-checker
