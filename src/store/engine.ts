@@ -154,6 +154,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       const promises = engineIds.map((engineId) =>
         dispatch("RESTART_ENGINE", {
           engineId,
+          preventOpeningDialog,
         })
       );
 
@@ -161,11 +162,11 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         success: results.every((r) => r.success),
         anyNewCharacters: results.some((r) => r.anyNewCharacters),
       }));
-      if (!preventOpeningDialog && result.anyNewCharacters) {
-        dispatch("SET_DIALOG_OPEN", {
-          isCharacterOrderDialogOpen: true,
-        });
-      }
+
+      await dispatch("POST_ENGINE_START", {
+        preventOpeningDialog: !!preventOpeningDialog,
+        result,
+      });
 
       return result;
     },
@@ -197,12 +198,21 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             anyNewCharacters: false,
           };
         });
-      if (!preventOpeningDialog && result.anyNewCharacters) {
+      await dispatch("POST_ENGINE_START", {
+        preventOpeningDialog: !!preventOpeningDialog,
+        result,
+      });
+      return result;
+    },
+  },
+
+  POST_ENGINE_START: {
+    async action({ dispatch }, { result, preventOpeningDialog }) {
+      if (!preventOpeningDialog && result) {
         dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });
       }
-      return result;
     },
   },
 

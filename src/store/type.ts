@@ -707,6 +707,16 @@ export type EngineStoreTypes = {
     }>;
   };
 
+  POST_ENGINE_START: {
+    action(payload: {
+      preventOpeningDialog: boolean;
+      result: {
+        success: boolean;
+        anyNewCharacters: boolean;
+      };
+    }): Promise<void>;
+  };
+
   DETECTED_ENGINE_ERROR: {
     action(payload: { engineId: string }): void;
   };
