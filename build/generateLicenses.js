@@ -4,27 +4,27 @@ const process = require("process");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
 const argv = yargs(hideBin(process.argv))
-    .option("output_path", {
-        alias: "o",
-        demandOption: true,
-        type: "string",
-    })
-    .help()
-    .parse();
+  .option("output_path", {
+    alias: "o",
+    demandOption: true,
+    type: "string",
+  })
+  .help()
+  .parse();
 
 const { execSync } = require("child_process");
 const fs = require("fs");
 const tmp = require("tmp");
 
 const customFormat = {
-    name: "",
-    version: "",
-    description: "",
-    licenses: "",
-    copyright: "",
-    licenseFile: "none",
-    licenseText: "none",
-    licenseModified: "no",
+  name: "",
+  version: "",
+  description: "",
+  licenses: "",
+  copyright: "",
+  licenseFile: "none",
+  licenseText: "none",
+  licenseModified: "no",
 };
 
 const customFormatFile = tmp.fileSync();
@@ -57,12 +57,12 @@ const licenseJson = execSync(
 const checkerLicenses = JSON.parse(licenseJson);
 
 const licenses = Object.entries(checkerLicenses).map(
-    ([packageName, license]) => ({
-        name: license.name,
-        version: license.version,
-        license: license.licenses,
-        text: license.licenseText,
-    }),
+  ([packageName, license]) => ({
+    name: license.name,
+    version: license.version,
+    license: license.licenses,
+    text: license.licenseText,
+  })
 );
 
 const outputPath = argv.output_path;
