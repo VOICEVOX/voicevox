@@ -32,7 +32,7 @@ const customFormat = {
 const customFormatFile = tmp.fileSync();
 fs.writeFileSync(customFormatFile.name, JSON.stringify(customFormat));
 
-const disallowLicenses = [
+const disallowedLicenses = [
   "GPL",
   "GPL-2.0",
   "GPL-3.0",
@@ -45,7 +45,7 @@ const disallowLicenses = [
 
 // If it runs on Windows, the arg DO NOT be enclosed with single quotes.
 // If it run on Linux (bash), the arg SHOULD be enclosed with single quotes.
-const failOnArg = isWindows ? disallowLicenses : `'${disallowLicenses}'`;
+const failOnArg = isWindows ? disallowedLicenses : `'${disallowedLicenses}'`;
 
 // https://github.com/davglass/license-checker
 // npm install -g license-checker

@@ -47,7 +47,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
       - run: npm ci
-      - name: Disallow licenses check
+      - name: Disallowed licenses check
         shell: bash
         run: npm run license:generate -- -o voicevox_licenses.json
       - run: npm run typecheck
