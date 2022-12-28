@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 
 jobs:
@@ -47,6 +47,8 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
       - run: npm ci
+      - name: Disallow licenses check
+        run: npm run license:generate -- -o null
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run markdownlint
