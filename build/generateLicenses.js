@@ -16,6 +16,8 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const tmp = require("tmp");
 
+const isWindows = process.platform === "win32";
+
 const customFormat = {
   name: "",
   version: "",
@@ -39,7 +41,11 @@ const disallowLicenses = [
   "LGPL-3.0",
   "NGPL",
   "MIT",
-];
+].join(";");
+
+// If it runs on Windows, the arg DO NOT be enclosed with single quotes.
+// If it run on Linux (bash), the arg SHOULD be enclosed with single quotes.
+const failOnArg = isWindows ? disallowLicenses : `'${disallowLicenses}'`;
 
 // https://github.com/davglass/license-checker
 // npm install -g license-checker
@@ -49,7 +55,7 @@ const licenseJson = execSync(
   --excludePrivatePackages \
   --json \
   --customPath ${customFormatFile.name} \
-  --failOn '${disallowLicenses.join(";")}'`,
+  --failOn ${failOnArg}`,
   {
     encoding: "utf-8",
   }
