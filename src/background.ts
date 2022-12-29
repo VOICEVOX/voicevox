@@ -1,7 +1,7 @@
 "use strict";
 
 import dotenv from "dotenv";
-import Store from "electron-store";
+import Store, { Schema } from "electron-store";
 
 import {
   app,
@@ -19,6 +19,7 @@ import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
+import { z } from "zod";
 
 import fs from "fs";
 import {
@@ -36,6 +37,7 @@ import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import EngineManager from "./background/engineManager";
 import VvppManager from "./background/vvppManager";
+import zodToJsonSchema from "zod-to-json-schema";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -189,193 +191,86 @@ const defaultToolbarButtonSetting: ToolbarSetting = [
   "UNDO",
   "REDO",
 ];
-
 // 設定ファイル
 const store = new Store<ElectronStoreType>({
-  schema: {
-    useGpu: {
-      type: "boolean",
-      default: false,
-    },
-    inheritAudioInfo: {
-      type: "boolean",
-      default: true,
-    },
-    activePointScrollMode: {
-      type: "string",
-      enum: ["CONTINUOUSLY", "PAGE", "OFF"],
-      default: "OFF",
-    },
-    savingSetting: {
-      type: "object",
-      properties: {
-        fileEncoding: {
-          type: "string",
-          enum: ["UTF-8", "Shift_JIS"],
-          default: "UTF-8",
-        },
-        fileNamePattern: {
-          type: "string",
-          default: "",
-        },
-        fixedExportEnabled: { type: "boolean", default: false },
-        avoidOverwrite: { type: "boolean", default: false },
-        fixedExportDir: { type: "string", default: "" },
-        exportLab: { type: "boolean", default: false },
-        exportText: { type: "boolean", default: false },
-        outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: {
-          oneOf: [{ type: "number" }, { const: "default" }],
-          default: "default",
-        },
-        audioOutputDevice: { type: "string", default: "default" },
-      },
-      default: {
-        fileEncoding: "UTF-8",
-        fileNamePattern: "",
-        fixedExportEnabled: false,
-        avoidOverwrite: false,
-        fixedExportDir: "",
-        exportLab: false,
-        exportText: false,
-        outputStereo: false,
-        outputSamplingRate: "default",
-        audioOutputDevice: "default",
-        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
-      },
-    },
-    // To future developers: if you are to modify the store schema with array type,
-    // for example, the hotkeySettings below,
-    // please remember to add a corresponding migration
-    // Learn more: https://github.com/sindresorhus/electron-store#migrations
-    hotkeySettings: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          action: { type: "string" },
-          combination: { type: "string" },
-        },
-      },
-      default: defaultHotkeySettings,
-    },
-    toolbarSetting: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: defaultToolbarButtonSetting,
-    },
-    userCharacterOrder: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: [],
-    },
-    defaultStyleIds: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          speakerUuid: { type: "string" },
-          defaultStyleId: { type: "number" },
-        },
-      },
-      default: [],
-    },
-    presets: {
-      type: "object",
-      properties: {
-        items: {
-          type: "object",
-          patternProperties: {
-            // uuid
-            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                speedScale: { type: "number" },
-                pitchScale: { type: "number" },
-                intonationScale: { type: "number" },
-                volumeScale: { type: "number" },
-                prePhonemeLength: { type: "number" },
-                postPhonemeLength: { type: "number" },
-              },
-            },
-          },
-          additionalProperties: false,
-        },
-        keys: {
-          type: "array",
-          items: {
-            type: "string",
-            pattern:
-              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-          },
-        },
-      },
-      default: { items: {}, keys: [] },
-    },
-    currentTheme: {
-      type: "string",
-      default: "Default",
-    },
-    experimentalSetting: {
-      type: "object",
-      properties: {
-        enablePreset: { type: "boolean", default: false },
-        enableInterrogativeUpspeak: {
-          type: "boolean",
-          default: false,
-        },
-      },
-      default: {
-        enablePreset: false,
-        enableInterrogativeUpspeak: false,
-      },
-    },
-    acceptRetrieveTelemetry: {
-      type: "string",
-      enum: ["Unconfirmed", "Accepted", "Refused"],
-      default: "Unconfirmed",
-    },
-    acceptTerms: {
-      type: "string",
-      enum: ["Unconfirmed", "Accepted", "Rejected"],
-      default: "Unconfirmed",
-    },
-    splitTextWhenPaste: {
-      type: "string",
-      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
-      default: "PERIOD_AND_NEW_LINE",
-    },
-    splitterPosition: {
-      type: "object",
-      properties: {
-        portraitPaneWidth: { type: "number" },
-        audioInfoPaneWidth: { type: "number" },
-        audioDetailPaneHeight: { type: "number" },
-      },
-      default: {},
-    },
-    confirmedTips: {
-      type: "object",
-      properties: {
-        tweakableSliderByScroll: { type: "boolean", default: false },
-      },
-      default: {
-        tweakableSliderByScroll: false,
-      },
-    },
-    engineDirs: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: [],
-    },
-  },
+  schema: zodToJsonSchema(
+    z
+      .object({
+        useGpu: z.boolean().default(false),
+        inheritAudioInfo: z.boolean().default(true),
+        activePointScrollMode: z
+          .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+          .default("OFF"),
+        savingSetting: z
+          .object({
+            fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+            fileNamePattern: z.string().default(""),
+            fixedExportEnabled: z.boolean().default(false),
+            avoidOverwrite: z.boolean().default(false),
+            fixedExportDir: z.string().default(""),
+            exportLab: z.boolean().default(false),
+            exportText: z.boolean().default(false),
+            outputStereo: z.boolean().default(false),
+            outputSamplingRate: z
+              .union([z.number(), z.literal("engineDefault")])
+              .default("engineDefault"),
+            audioOutputDevice: z.string().default(""),
+          })
+          .passthrough(), // 別のブランチでの開発中の設定項目があるコンフィグが死ぬのを防ぐ
+        hotkeySettings: z
+          .object({
+            action: z.string(),
+            combination: z.string(),
+          })
+          .array()
+          .default(defaultHotkeySettings),
+        toolbarSetting: z.string().array().default(defaultToolbarButtonSetting),
+        userCharacterOrder: z.string().array(),
+        defaultStyleIds: z
+          .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
+          .array(),
+        presets: z.object({
+          items: z.record(
+            z.string().uuid(),
+            z.object({
+              name: z.string(),
+              speedScale: z.number(),
+              pitchScale: z.number(),
+              intonationScale: z.number(),
+              volumeScale: z.number(),
+              prePhonemeLength: z.number(),
+              postPhonemeLength: z.number(),
+            })
+          ),
+          keys: z.string().uuid().array(),
+        }),
+        currentTheme: z.string().default("Default"),
+        experimentalSetting: z.object({
+          enablePreset: z.boolean().default(false),
+          enableInterrogativeUpspeak: z.boolean().default(false),
+        }),
+        acceptRetrieveTelemetry: z
+          .enum(["Unconfirmed", "Accepted", "Refused"])
+          .default("Unconfirmed"),
+        acceptTerms: z
+          .enum(["Unconfirmed", "Accepted", "Refused"])
+          .default("Unconfirmed"),
+        splitTextWhenPaste: z
+          .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
+          .default("PERIOD_AND_NEW_LINE"),
+        splitterPosition: z.object({
+          portraitPaneWidth: z.number().optional(),
+          audioInfoPaneWidth: z.number().optional(),
+          audioDetailPaneHeight: z.number().optional(),
+        }),
+        confirmedTips: z.object({
+          tweakableSliderByScroll: z.boolean().default(false),
+        }),
+        engineDirs: z.string().array(),
+      })
+      .passthrough()
+    // @ts-expect-error type: 'object'であることは確定している
+  ).properties as Schema<ElectronStoreType>,
   migrations: {
     ">=0.13": (store) => {
       // acceptTems -> acceptTerms
@@ -392,7 +287,7 @@ const store = new Store<ElectronStoreType>({
     ">=0.14": (store) => {
       // 24000 Hz -> "default"
       if (store.get("savingSetting").outputSamplingRate == 24000) {
-        store.set("savingSetting.outputSamplingRate", "default");
+        store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
     },
   },
