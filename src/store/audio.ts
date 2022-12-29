@@ -11,6 +11,7 @@ import {
   AudioStoreTypes,
   AudioCommandStoreTypes,
   transformCommandStore,
+  GenerateAudioResultObject,
 } from "./type";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -1078,10 +1079,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       async (
         { dispatch, getters, state },
         { audioItem }: { audioItem: AudioItem }
-      ) => {
+      ): Promise<GenerateAudioResultObject> => {
         const engineId = audioItem.engineId;
-        if (engineId === undefined)
-          throw new Error(`engineId is not defined for audioItem`);
+        if (engineId === undefined) {
+          window.electron.logError("engineId is not defined for audioItem");
+          return {
+            result: "EDITOR_ERROR",
+          };
+        }
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1089,7 +1094,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         );
         const speaker = audioItem.styleId;
         if (audioQuery == undefined || speaker == undefined) {
-          return null;
+          window.electron.logError(
+            "audioQuery == undefined || speaker == undefined"
+          );
+          return {
+            result: "EDITOR_ERROR",
+          };
         }
         const engineAudioQuery = convertAudioQueryFromEditorToEngine(
           audioQuery,
@@ -1099,33 +1109,40 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
         })
-          .then((instance) => {
+          .then(async (instance): Promise<GenerateAudioResultObject> => {
+            let blob: Blob;
             if (
               audioItem.morphingInfo != undefined &&
-              state.experimentalSetting.enableMorphing &&
-              getters.VALID_MOPHING_INFO(audioItem)
+              state.experimentalSetting.enableMorphing
             ) {
-              return instance.invoke("synthesisMorphingSynthesisMorphingPost")({
+              if (!getters.VALID_MOPHING_INFO(audioItem)) {
+                return {
+                  result: "VALID_MOPHING_ERROR",
+                  errorMessage: "モーフィングの設定が無効です。",
+                };
+              }
+              blob = await instance.invoke(
+                "synthesisMorphingSynthesisMorphingPost"
+              )({
                 audioQuery: engineAudioQuery,
                 baseSpeaker: speaker,
                 targetSpeaker: audioItem.morphingInfo.targetStyleId,
                 morphRate: audioItem.morphingInfo.rate,
               });
+            } else {
+              blob = await instance.invoke("synthesisSynthesisPost")({
+                audioQuery: engineAudioQuery,
+                speaker,
+                enableInterrogativeUpspeak:
+                  state.experimentalSetting.enableInterrogativeUpspeak,
+              });
             }
-            return instance.invoke("synthesisSynthesisPost")({
-              audioQuery: engineAudioQuery,
-              speaker,
-              enableInterrogativeUpspeak:
-                state.experimentalSetting.enableInterrogativeUpspeak,
-            });
-          })
-          .then(async (blob) => {
             audioBlobCache[id] = blob;
-            return blob;
+            return { result: "SUCCESS", blob };
           })
           .catch((e) => {
             window.electron.logError(e);
-            return null;
+            return { result: "ENGINE_ERROR" };
           });
       }
     ),
@@ -1201,10 +1218,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
-          blob = await dispatch("GENERATE_AUDIO", { audioKey });
-          if (!blob) {
-            return { result: "ENGINE_ERROR", path: filePath };
+          const audioResult = await dispatch("GENERATE_AUDIO", { audioKey });
+          if (audioResult.result !== "SUCCESS") {
+            return {
+              result: "ENGINE_ERROR",
+              path: filePath,
+              errorMessage: audioResult.errorMessage,
+            };
           }
+          blob = audioResult.blob;
         }
 
         let writeFileResult = await window.electron.writeFile({
@@ -1398,11 +1420,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         for (const audioKey of state.audioKeys) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
-            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+            const audioResult = await dispatch("GENERATE_AUDIO", { audioKey });
             callback?.(++finishedCount, totalCount);
-          }
-          if (blob === null) {
-            return { result: "ENGINE_ERROR", path: filePath };
+            if (audioResult.result !== "SUCCESS") {
+              return {
+                result: "ENGINE_ERROR",
+                path: filePath,
+                errorMessage: audioResult.errorMessage,
+              };
+            }
+            blob = audioResult.blob;
           }
           const encodedBlob = await base64Encoder(blob);
           if (encodedBlob === undefined) {
@@ -1604,7 +1631,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
             nowGenerating: true,
           });
-          blob = await withProgress(
+          const audioResult = await withProgress(
             dispatch("GENERATE_AUDIO", { audioKey }),
             dispatch
           );
@@ -1612,9 +1639,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
             nowGenerating: false,
           });
-          if (!blob) {
-            throw new Error();
+          if (audioResult.result !== "SUCCESS") {
+            throw new Error(audioResult.errorMessage);
           }
+          blob = audioResult.blob;
         }
 
         return dispatch("PLAY_AUDIO_BLOB", {

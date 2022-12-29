@@ -502,9 +502,13 @@ export default defineComponent({
           audioKey: props.activeAudioKey,
         });
       } catch (e) {
+        let msg: string | undefined;
+        if (e instanceof Error && e.message !== "") {
+          msg = e.message;
+        }
         $q.dialog({
           title: "再生に失敗しました",
-          message: "エンジンの再起動をお試しください。",
+          message: msg ?? "エンジンの再起動をお試しください。",
           ok: {
             label: "閉じる",
             flat: true,
