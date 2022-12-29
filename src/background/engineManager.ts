@@ -16,7 +16,19 @@ import {
 } from "@/type/preload";
 
 import log from "electron-log";
-import Ajv from "ajv/dist/jtd";
+import { z } from "zod";
+
+const envSchema = z
+  .object({
+    uuid: z.string().uuid(),
+    host: z.string(),
+    name: z.string(),
+    executionEnabled: z.boolean(),
+    executionFilePath: z.string(),
+    executionArgs: z.array(z.string()),
+    path: z.string().optional(),
+  })
+  .array();
 
 type MinimumEngineManifest = {
   name: string;
@@ -38,28 +50,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
-  const envSchema = {
-    elements: {
-      properties: {
-        uuid: { type: "string" },
-        host: { type: "string" },
-        name: { type: "string" },
-        executionEnabled: { type: "boolean" },
-        executionFilePath: { type: "string" },
-        executionArgs: { elements: { type: "string" } },
-      },
-      optionalProperties: {
-        path: { type: "string" },
-      },
-    },
-  } as const;
-  const ajv = new Ajv();
-  const validate = ajv.compile(envSchema);
-
-  const engines = JSON.parse(defaultEngineInfosEnv);
-  if (!validate(engines)) {
-    throw validate.errors;
-  }
+  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
     return {
