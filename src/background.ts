@@ -216,7 +216,7 @@ const store = new Store<ElectronStoreType>({
               .default("engineDefault"),
             audioOutputDevice: z.string().default(""),
           })
-          .passthrough(), // 別のブランチでの開発中の設定項目があるコンフィグが死ぬのを防ぐ
+          .passthrough(), // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
         hotkeySettings: z
           .object({
             action: z.string(),
