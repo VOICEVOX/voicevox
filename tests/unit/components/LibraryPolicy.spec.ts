@@ -13,13 +13,23 @@ const actions = {};
 const getters = {};
 
 const singleStore = createStore({
-  actions,
+  actions: {
+    ...actions,
+    GET_SORTED_ENGINE_INFOS: async () => {
+      return singleEngineState.engineInfos;
+    },
+  },
   state: singleEngineState,
   getters,
 });
 
 const multipleEngineStore = createStore({
-  actions,
+  actions: {
+    ...actions,
+    GET_SORTED_ENGINE_INFOS: async () => {
+      return multipleEngineState.engineInfos;
+    },
+  },
   state: multipleEngineState,
   getters,
 });
