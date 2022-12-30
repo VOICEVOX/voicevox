@@ -1,25 +1,184 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
 import { IpcSOData } from "./ipc";
+import { z } from "zod";
 
-export interface ElectronStoreType {
-  useGpu: boolean;
-  inheritAudioInfo: boolean;
-  activePointScrollMode: ActivePointScrollMode;
-  savingSetting: SavingSetting;
-  presets: PresetConfig;
+export const isMac = process.platform === "darwin";
+export const defaultHotkeySettings: HotkeySetting[] = [
+  {
+    action: "音声書き出し",
+    combination: !isMac ? "Ctrl E" : "Meta E",
+  },
+  {
+    action: "一つだけ書き出し",
+    combination: "E",
+  },
+  {
+    action: "音声を繋げて書き出し",
+    combination: "",
+  },
+  {
+    action: "再生/停止",
+    combination: "Space",
+  },
+  {
+    action: "連続再生/停止",
+    combination: "Shift Space",
+  },
+  {
+    action: "ｱｸｾﾝﾄ欄を表示",
+    combination: "1",
+  },
+  {
+    action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    combination: "2",
+  },
+  {
+    action: "長さ欄を表示",
+    combination: "3",
+  },
+  {
+    action: "テキスト欄を追加",
+    combination: "Shift Enter",
+  },
+  {
+    action: "テキスト欄を削除",
+    combination: "Shift Delete",
+  },
+  {
+    action: "テキスト欄からフォーカスを外す",
+    combination: "Escape",
+  },
+  {
+    action: "テキスト欄にフォーカスを戻す",
+    combination: "Enter",
+  },
+  {
+    action: "元に戻す",
+    combination: !isMac ? "Ctrl Z" : "Meta Z",
+  },
+  {
+    action: "やり直す",
+    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
+  },
+  {
+    action: "新規プロジェクト",
+    combination: !isMac ? "Ctrl N" : "Meta N",
+  },
+  {
+    action: "プロジェクトを名前を付けて保存",
+    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
+  },
+  {
+    action: "プロジェクトを上書き保存",
+    combination: !isMac ? "Ctrl S" : "Meta S",
+  },
+  {
+    action: "プロジェクト読み込み",
+    combination: !isMac ? "Ctrl O" : "Meta O",
+  },
+  {
+    action: "テキスト読み込む",
+    combination: "",
+  },
+  {
+    action: "全体のイントネーションをリセット",
+    combination: !isMac ? "Ctrl G" : "Meta G",
+  },
+  {
+    action: "選択中のアクセント句のイントネーションをリセット",
+    combination: "R",
+  },
+];
+
+export const defaultToolbarButtonSetting: ToolbarSetting = [
+  "PLAY_CONTINUOUSLY",
+  "STOP",
+  "EXPORT_AUDIO_ONE",
+  "EMPTY",
+  "UNDO",
+  "REDO",
+];
+export const electronStoreSchema = z
+  .object({
+    useGpu: z.boolean().default(false),
+    inheritAudioInfo: z.boolean().default(true),
+    activePointScrollMode: z
+      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+      .default("OFF"),
+    savingSetting: z
+      .object({
+        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        fileNamePattern: z.string().default(""),
+        fixedExportEnabled: z.boolean().default(false),
+        avoidOverwrite: z.boolean().default(false),
+        fixedExportDir: z.string().default(""),
+        exportLab: z.boolean().default(false),
+        exportText: z.boolean().default(false),
+        outputStereo: z.boolean().default(false),
+        outputSamplingRate: z
+          .union([z.number(), z.literal("engineDefault")])
+          .default("engineDefault"),
+        audioOutputDevice: z.string().default(""),
+      })
+      .passthrough(), // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+    hotkeySettings: z
+      .object({
+        action: z.string(),
+        combination: z.string(),
+      })
+      .array()
+      .default(defaultHotkeySettings),
+    toolbarSetting: z.string().array().default(defaultToolbarButtonSetting),
+    userCharacterOrder: z.string().array(),
+    defaultStyleIds: z
+      .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
+      .array(),
+    presets: z.object({
+      items: z.record(
+        z.string().uuid(),
+        z.object({
+          name: z.string(),
+          speedScale: z.number(),
+          pitchScale: z.number(),
+          intonationScale: z.number(),
+          volumeScale: z.number(),
+          prePhonemeLength: z.number(),
+          postPhonemeLength: z.number(),
+        })
+      ),
+      keys: z.string().uuid().array(),
+    }),
+    currentTheme: z.string().default("Default"),
+    experimentalSetting: z.object({
+      enablePreset: z.boolean().default(false),
+      enableInterrogativeUpspeak: z.boolean().default(false),
+    }),
+    acceptRetrieveTelemetry: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    acceptTerms: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    splitTextWhenPaste: z
+      .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
+      .default("PERIOD_AND_NEW_LINE"),
+    splitterPosition: z.object({
+      portraitPaneWidth: z.number().optional(),
+      audioInfoPaneWidth: z.number().optional(),
+      audioDetailPaneHeight: z.number().optional(),
+    }),
+    confirmedTips: z.object({
+      tweakableSliderByScroll: z.boolean().default(false),
+    }),
+    engineDirs: z.string().array(),
+  })
+  .passthrough();
+export type ElectronStoreType = Omit<
+  z.infer<typeof electronStoreSchema>,
+  "hotkeySettings"
+> & {
   hotkeySettings: HotkeySetting[];
-  toolbarSetting: ToolbarSetting;
-  userCharacterOrder: string[];
-  defaultStyleIds: DefaultStyleId[];
-  currentTheme: string;
-  experimentalSetting: ExperimentalSetting;
-  acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  acceptTerms: AcceptTermsStatus;
-  splitTextWhenPaste: SplitTextWhenPasteType;
-  splitterPosition: SplitterPosition;
-  confirmedTips: ConfirmedTips;
-  engineDirs: string[];
-}
+};
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
