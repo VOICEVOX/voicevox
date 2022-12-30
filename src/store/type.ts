@@ -709,12 +709,12 @@ export type EngineStoreTypes = {
 
   POST_ENGINE_START: {
     action(payload: {
+      engineIds: string[];
       preventOpeningDialog: boolean;
-      result: {
-        success: boolean;
-        anyNewCharacters: boolean;
-      };
-    }): Promise<void>;
+    }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
   DETECTED_ENGINE_ERROR: {

@@ -151,21 +151,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
       const engineIds = state.engineIds;
 
-      const promises = engineIds.map((engineId) =>
+      engineIds.map((engineId) =>
         dispatch("RESTART_ENGINE", {
           engineId,
           preventOpeningDialog,
         })
       );
-
-      const result = await Promise.all(promises).then((results) => ({
-        success: results.every((r) => r.success),
-        anyNewCharacters: results.some((r) => r.anyNewCharacters),
-      }));
-
-      await dispatch("POST_ENGINE_START", {
-        preventOpeningDialog: !!preventOpeningDialog,
-        result,
+      const result = await dispatch("POST_ENGINE_START", {
+        engineIds,
+        preventOpeningDialog: false,
       });
 
       return result;
@@ -173,23 +167,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE: {
-    async action(
-      { dispatch, commit, state },
-      { engineId, preventOpeningDialog }
-    ) {
+    async action({ dispatch, commit }, { engineId, preventOpeningDialog }) {
       commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
       const result = await window.electron
         .restartEngine(engineId)
         .then(async () => {
-          await dispatch("START_WAITING_ENGINE", { engineId });
-          await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
-          await dispatch("LOAD_CHARACTER", { engineId });
-
-          const newCharacters = await dispatch("GET_NEW_CHARACTERS");
-          return {
-            success: state.engineStates[engineId] === "READY",
-            anyNewCharacters: newCharacters.length > 0,
-          };
+          return await dispatch("POST_ENGINE_START", {
+            preventOpeningDialog: !!preventOpeningDialog,
+            engineIds: [engineId],
+          });
         })
         .catch(async () => {
           await dispatch("DETECTED_ENGINE_ERROR", { engineId });
@@ -198,21 +184,37 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             anyNewCharacters: false,
           };
         });
-      await dispatch("POST_ENGINE_START", {
-        preventOpeningDialog: !!preventOpeningDialog,
-        result,
-      });
       return result;
     },
   },
 
   POST_ENGINE_START: {
-    async action({ dispatch }, { result, preventOpeningDialog }) {
-      if (!preventOpeningDialog && result) {
-        dispatch("SET_DIALOG_OPEN", {
-          isCharacterOrderDialogOpen: true,
-        });
-      }
+    async action({ state, dispatch }, { engineIds, preventOpeningDialog }) {
+      const result = await Promise.all(
+        engineIds.map(async (engineId) => {
+          if (state.engineStates[engineId] === "STARTING") {
+            await dispatch("START_WAITING_ENGINE", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+            await dispatch("LOAD_CHARACTER", { engineId });
+          }
+
+          const newCharacters = await dispatch("GET_NEW_CHARACTERS");
+          const result = {
+            success: state.engineStates[engineId] === "READY",
+            anyNewCharacters: newCharacters.length > 0,
+          };
+          if (!preventOpeningDialog && result.anyNewCharacters) {
+            dispatch("SET_DIALOG_OPEN", {
+              isCharacterOrderDialogOpen: true,
+            });
+          }
+          return result;
+        })
+      );
+      return {
+        success: result.every((r) => r.success),
+        anyNewCharacters: result.some((r) => r.anyNewCharacters),
+      };
     },
   },
 
