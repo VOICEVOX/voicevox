@@ -20,6 +20,7 @@
               flat
               icon="close"
               color="display"
+              :disable="wordEditing"
               @click="discardOrNotDialog(closeDialog)"
             />
           </q-toolbar>
@@ -39,7 +40,11 @@
             </div>
           </div>
           <div class="col-4 word-list-col">
-            <div v-if="wordEditing" class="word-list-disable-overlay" />
+            <div
+              v-if="wordEditing"
+              class="word-list-disable-overlay"
+              @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+            />
             <div class="word-list-header text-no-wrap">
               <div class="row word-list-title text-h5">単語一覧</div>
               <div class="row no-wrap">
@@ -77,6 +82,7 @@
                 v-ripple
                 clickable
                 @click="selectWord(key)"
+                @dblclick="editWord"
                 :active="selectedId === key"
                 active-class="active-word"
               >
