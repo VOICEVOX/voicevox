@@ -157,15 +157,15 @@ export const electronStoreSchema = z
       .enum(["Unconfirmed", "Accepted", "Refused"])
       .default("Unconfirmed"),
     acceptTerms: z
-      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .enum(["Unconfirmed", "Accepted", "Rejected"])
       .default("Unconfirmed"),
     splitTextWhenPaste: z
       .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
       .default("PERIOD_AND_NEW_LINE"),
     splitterPosition: z.object({
-      portraitPaneWidth: z.number().optional(),
-      audioInfoPaneWidth: z.number().optional(),
-      audioDetailPaneHeight: z.number().optional(),
+      portraitPaneWidth: z.number().nullish(),
+      audioInfoPaneWidth: z.number().nullish(),
+      audioDetailPaneHeight: z.number().nullish(),
     }),
     confirmedTips: z.object({
       tweakableSliderByScroll: z.boolean().default(false),
@@ -173,11 +173,10 @@ export const electronStoreSchema = z
     engineDirs: z.string().array(),
   })
   .passthrough();
-export type ElectronStoreType = Omit<
-  z.infer<typeof electronStoreSchema>,
-  "hotkeySettings"
-> & {
+export type ElectronStoreType = z.infer<typeof electronStoreSchema> & {
   hotkeySettings: HotkeySetting[];
+  toolbarSetting: ToolbarSetting;
+  splitterPosition: SplitterPosition;
 };
 
 export interface Sandbox {
