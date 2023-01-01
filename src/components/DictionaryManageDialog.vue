@@ -43,7 +43,7 @@
             <div
               v-if="wordEditing"
               class="word-list-disable-overlay"
-              @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+              @click="discardOrNotDialog(cancel)"
             />
             <div class="word-list-header text-no-wrap">
               <div class="row word-list-title text-h5">単語一覧</div>
@@ -228,7 +228,7 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                @click="discardOrNotDialog(cancel)"
                 :disable="uiLocked"
                 >キャンセル</q-btn
               >
