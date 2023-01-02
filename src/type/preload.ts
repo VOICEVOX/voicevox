@@ -129,24 +129,27 @@ export const electronStoreSchema = z
       .array()
       .default(defaultHotkeySettings),
     toolbarSetting: z.string().array().default(defaultToolbarButtonSetting),
-    userCharacterOrder: z.string().array(),
+    userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
-      .array(),
+      .array()
+      .default([]),
     presets: z.object({
-      items: z.record(
-        z.string().uuid(),
-        z.object({
-          name: z.string(),
-          speedScale: z.number(),
-          pitchScale: z.number(),
-          intonationScale: z.number(),
-          volumeScale: z.number(),
-          prePhonemeLength: z.number(),
-          postPhonemeLength: z.number(),
-        })
-      ),
-      keys: z.string().uuid().array(),
+      items: z
+        .record(
+          z.string().uuid(),
+          z.object({
+            name: z.string(),
+            speedScale: z.number(),
+            pitchScale: z.number(),
+            intonationScale: z.number(),
+            volumeScale: z.number(),
+            prePhonemeLength: z.number(),
+            postPhonemeLength: z.number(),
+          })
+        )
+        .default({}),
+      keys: z.string().uuid().array().default([]),
     }),
     currentTheme: z.string().default("Default"),
     experimentalSetting: z.object({
@@ -162,15 +165,17 @@ export const electronStoreSchema = z
     splitTextWhenPaste: z
       .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
       .default("PERIOD_AND_NEW_LINE"),
-    splitterPosition: z.object({
-      portraitPaneWidth: z.number().nullish(),
-      audioInfoPaneWidth: z.number().nullish(),
-      audioDetailPaneHeight: z.number().nullish(),
-    }),
+    splitterPosition: z
+      .object({
+        portraitPaneWidth: z.number().nullish(),
+        audioInfoPaneWidth: z.number().nullish(),
+        audioDetailPaneHeight: z.number().nullish(),
+      })
+      .default({}),
     confirmedTips: z.object({
       tweakableSliderByScroll: z.boolean().default(false),
     }),
-    engineDirs: z.string().array(),
+    engineDirs: z.string().array().default([]),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema> & {
@@ -316,6 +321,8 @@ export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
+
+export type EditorFontType = "default" | "os";
 
 export type SavingSetting = {
   exportLab: boolean;
