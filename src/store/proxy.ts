@@ -23,8 +23,9 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         const instance = _engineFactory.instance(engineInfo.host);
         return Promise.resolve({
           invoke: (v) => (arg) =>
-            // @ts-expect-error なんか型が合わない
-            instance[v](arg) as Promise<any> | any,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            instance[v](arg) as any,
         });
       },
     },
@@ -39,7 +40,7 @@ export const convertAudioQueryFromEditorToEngine = (
   return {
     ...editorAudioQuery,
     outputSamplingRate:
-      editorAudioQuery.outputSamplingRate == "default"
+      editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
   };
