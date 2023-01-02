@@ -118,7 +118,6 @@ const store = new Store<ElectronStoreType>({
       }
     },
     ">=0.14": (store) => {
-      // 24000 Hz -> "default"
       if (store.get("savingSetting").outputSamplingRate == 24000) {
         store.set("savingSetting.outputSamplingRate", "engineDefault");
       }

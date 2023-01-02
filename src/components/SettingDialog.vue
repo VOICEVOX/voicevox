@@ -283,7 +283,10 @@
                     maxWidth: '450px',
                   }"
                   @update:model-value="
-                    handleSavingSettingChange('fixedExportDir', $event)
+                    (event) => {
+                      if (event == null) throw 'event is null';
+                      handleSavingSettingChange('fixedExportDir', event);
+                    }
                   "
                 >
                   <template v-slot:append>
@@ -491,11 +494,8 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="['default', 24000, 44100, 48000, 88200, 96000]"
-                  :option-label="
-                    (item) =>
-                      item === 'default' ? 'デフォルト' : `${item / 1000} kHz`
-                  "
+                  :options="samplingRateOptions"
+                  :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
@@ -807,6 +807,24 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
+    const samplingRateOptions: SavingSetting["outputSamplingRate"][] = [
+      "engineDefault",
+      24000,
+      44100,
+      48000,
+      88200,
+      96000,
+    ];
+    const renderSamplingRateLabel = (
+      value: SavingSetting["outputSamplingRate"]
+    ) => {
+      if (value === "engineDefault") {
+        return "デフォルト";
+      } else {
+        return `${value / 1000} kHz`;
+      }
+    };
+
     const handleSavingSettingChange = (
       key: keyof SavingSetting,
       data: string | boolean | number
@@ -816,7 +834,7 @@ export default defineComponent({
           data: { ...savingSetting.value, [key]: data },
         });
       };
-      if (key === "outputSamplingRate" && data !== "default") {
+      if (key === "outputSamplingRate" && data !== "engineDefault") {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
@@ -872,6 +890,8 @@ export default defineComponent({
       changeExperimentalSetting,
       restartAllEngineProcess,
       savingSetting,
+      samplingRateOptions,
+      renderSamplingRateLabel,
       handleSavingSettingChange,
       openFileExplore,
       currentThemeNameComputed,
