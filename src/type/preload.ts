@@ -114,6 +114,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  portraitPath: string | undefined;
   engineId: string;
   voiceSamplePaths: string[];
 };

@@ -255,6 +255,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             styleId: style.id,
             engineId,
             iconPath: base64ImageToUri(styleInfo.icon),
+            portraitPath:
+              styleInfo.portrait && base64ImageToUri(styleInfo.portrait),
             voiceSamplePaths: voiceSamples,
           };
         });
@@ -279,7 +281,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           metas: {
             speakerUuid: speaker.speakerUuid,
             speakerName: speaker.name,
-            styles: styles,
+            styles,
             policy: speakerInfo.policy,
           },
         };
