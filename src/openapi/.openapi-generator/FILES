@@ -1,4 +1,5 @@
 apis/DefaultApi.ts
+apis/DefaultApi.ts
 apis/index.ts
 index.ts
 models/AccentPhrase.ts
