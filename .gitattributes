@@ -1,1 +1,3 @@
 src/openapi/**/* linguist-generated=true
+openapi.json linguist-generated=true
+openapi-mod.json linguist-generated=true
