@@ -1,1 +1,1 @@
-src/openapi/**/* linguist-generated=true
+src/openapi/**/*.ts linguist-generated=true
