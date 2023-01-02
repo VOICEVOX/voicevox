@@ -18,18 +18,6 @@ import {
 import log from "electron-log";
 import { z } from "zod";
 
-const envSchema = z
-  .object({
-    uuid: z.string().uuid(),
-    host: z.string(),
-    name: z.string(),
-    executionEnabled: z.boolean(),
-    executionFilePath: z.string(),
-    executionArgs: z.array(z.string()),
-    path: z.string().optional(),
-  })
-  .array();
-
 type MinimumEngineManifest = {
   name: string;
   uuid: string;
@@ -50,6 +38,17 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
+  const envSchema = z
+    .object({
+      uuid: z.string().uuid(),
+      host: z.string(),
+      name: z.string(),
+      executionEnabled: z.boolean(),
+      executionFilePath: z.string(),
+      executionArgs: z.array(z.string()),
+      path: z.string().optional(),
+    })
+    .array();
   const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
