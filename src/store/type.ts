@@ -35,6 +35,7 @@ import {
   SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
+  EditorFontType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -897,6 +898,7 @@ export type SettingStoreState = {
   engineInfos: Record<string, EngineInfo>;
   engineManifests: Record<string, EngineManifest>;
   themeSetting: ThemeSetting;
+  editorFont: EditorFontType;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -927,6 +929,11 @@ export type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  SET_EDITOR_FONT: {
+    mutation: { editorFont: EditorFontType };
+    action(payload: { editorFont: EditorFontType }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
