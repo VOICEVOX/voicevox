@@ -23,9 +23,8 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         const instance = _engineFactory.instance(engineInfo.host);
         return Promise.resolve({
           invoke: (v) => (arg) =>
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            instance[v](arg) as any,
+            // @ts-expect-error なんか型が合わない
+            instance[v](arg) as Promise<any> | any,
         });
       },
     },
