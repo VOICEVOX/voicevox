@@ -120,7 +120,10 @@ export const electronStoreSchema = z
           .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
-      .passthrough(), // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+      .passthrough()
+      .default({}), // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+    editorFont: z.enum(["default", "os"]).default("default"),
+
     hotkeySettings: z
       .object({
         action: z.string(),
