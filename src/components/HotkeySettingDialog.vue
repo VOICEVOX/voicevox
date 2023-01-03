@@ -175,7 +175,7 @@
           text-color="display-on-primary"
           class="q-mt-sm"
           @click="
-            changeHotkeySettings(lastAction, lastRecord)?.then(() =>
+            changeHotkeySettings(lastAction, lastRecord).then(() =>
               closeHotkeyDialog()
             )
           "
@@ -189,7 +189,7 @@
           color="primary"
           text-color="display-on-primary"
           class="q-mt-sm"
-          @click="solveDuplicated()?.then(() => closeHotkeyDialog())"
+          @click="solveDuplicated().then(() => closeHotkeyDialog())"
           :disabled="confirmBtnEnabled"
         />
       </q-card-actions>

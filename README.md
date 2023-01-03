@@ -12,6 +12,9 @@
 
 ## 貢献者の方へ
 
+VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用されており、全体構成がわかりにくくなっています。  
+[コードの歩き方](./docs/コードの歩き方.md)で構成を紹介しているので、開発の一助になれば幸いです。
+
 Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
 Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
 
@@ -128,11 +131,11 @@ shellcheck ./build/*.sh
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json
 
-$(npm bin)/openapi-generator-cli generate \
+npx openapi-generator-cli generate \
     -i openapi.json \
     -g typescript-fetch \
     -o src/openapi/ \
-    --additional-properties=modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true
+    --additional-properties "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true"
 
 npm run fmt
 ```

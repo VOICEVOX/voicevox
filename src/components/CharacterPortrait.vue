@@ -30,7 +30,12 @@ export default defineComponent({
       const engineId = audioItem?.engineId;
       const styleId = audioItem?.styleId;
 
-      if (engineId === undefined || styleId === undefined) return undefined;
+      if (
+        engineId === undefined ||
+        styleId === undefined ||
+        !store.state.engineIds.some((id) => id === engineId)
+      )
+        return undefined;
 
       return store.getters.CHARACTER_INFO(engineId, styleId);
     });

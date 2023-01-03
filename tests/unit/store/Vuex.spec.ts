@@ -11,6 +11,7 @@ import { presetStore } from "@/store/preset";
 import { assert } from "chai";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
+import { engineStore } from "@/store/engine";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
@@ -43,9 +44,11 @@ describe("store/vuex.js test", () => {
         isCharacterOrderDialogOpen: false,
         isDefaultStyleSelectDialogOpen: false,
         isDictionaryManageDialogOpen: false,
+        isEngineManageDialogOpen: false,
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
+        isSafeMode: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
@@ -63,6 +66,7 @@ describe("store/vuex.js test", () => {
           currentTheme: "Default",
           availableThemes: [],
         },
+        editorFont: "default",
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -78,7 +82,9 @@ describe("store/vuex.js test", () => {
             name: "Engine 1",
             executionEnabled: false,
             executionFilePath: "",
+            executionArgs: [],
             host: "http://127.0.0.1",
+            type: "default",
           },
         },
         engineManifests: {
@@ -100,6 +106,7 @@ describe("store/vuex.js test", () => {
               adjustIntonationScale: true,
               adjustVolumeScale: true,
               interrogativeUpspeak: true,
+              synthesisMorphing: true,
             },
           },
         },
@@ -116,11 +123,13 @@ describe("store/vuex.js test", () => {
         confirmedTips: {
           tweakableSliderByScroll: false,
         },
+        progress: -1,
       },
       getters: {
         ...uiStore.getters,
         ...audioStore.getters,
         ...commandStore.getters,
+        ...engineStore.getters,
         ...projectStore.getters,
         ...settingStore.getters,
         ...audioCommandStore.getters,
@@ -133,6 +142,7 @@ describe("store/vuex.js test", () => {
         ...uiStore.mutations,
         ...audioStore.mutations,
         ...commandStore.mutations,
+        ...engineStore.mutations,
         ...projectStore.mutations,
         ...settingStore.mutations,
         ...audioCommandStore.mutations,
@@ -145,6 +155,7 @@ describe("store/vuex.js test", () => {
         ...uiStore.actions,
         ...audioStore.actions,
         ...commandStore.actions,
+        ...engineStore.actions,
         ...projectStore.actions,
         ...settingStore.actions,
         ...audioCommandStore.actions,

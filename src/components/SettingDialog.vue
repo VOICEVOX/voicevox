@@ -283,7 +283,10 @@
                     maxWidth: '450px',
                   }"
                   @update:model-value="
-                    handleSavingSettingChange('fixedExportDir', $event)
+                    (event) => {
+                      if (event == null) throw 'event is null';
+                      handleSavingSettingChange('fixedExportDir', event);
+                    }
                   "
                 >
                   <template v-slot:append>
@@ -417,6 +420,70 @@
                 </q-toggle>
               </q-card-actions>
             </q-card>
+            <!-- Theme Card -->
+            <q-card flat class="setting-card">
+              <q-card-actions>
+                <div class="text-h5">外観</div>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>テーマ</div>
+                <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                  <q-tooltip
+                    :delay="500"
+                    anchor="center left"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                  >
+                    エディタの色を変更します
+                  </q-tooltip>
+                </q-icon>
+                <q-space />
+                <q-btn-toggle
+                  unelevated
+                  padding="xs md"
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  v-model="currentThemeNameComputed"
+                  :options="availableThemeNameComputed"
+                />
+              </q-card-actions>
+
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>フォント</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      エディタのフォントを変更します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-btn-toggle
+                  padding="xs md"
+                  unelevated
+                  :model-value="editorFont"
+                  @update:model-value="changeEditorFont($event)"
+                  color="background"
+                  text-color="display"
+                  toggle-color="primary"
+                  toggle-text-color="display-on-primary"
+                  :options="[
+                    { label: 'デフォルト', value: 'default' },
+                    { label: 'OS標準', value: 'os' },
+                  ]"
+                />
+              </q-card-actions>
+            </q-card>
+
             <!-- Experimental Card -->
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -491,13 +558,8 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="[24000, 44100, 48000, 88200, 96000]"
-                  :option-label="
-                    (item) =>
-                      `${item / 1000} kHz${
-                        item === 24000 ? '(デフォルト)' : ''
-                      }`
-                  "
+                  :options="samplingRateOptions"
+                  :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
@@ -510,31 +572,6 @@
                 <div class="text-h5">実験的機能</div>
               </q-card-actions>
               <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>テーマ</div>
-                <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                  <q-tooltip
-                    :delay="500"
-                    anchor="center left"
-                    self="center right"
-                    transition-show="jump-left"
-                    transition-hide="jump-right"
-                  >
-                    エディタの外観を変更します
-                  </q-tooltip>
-                </q-icon>
-                <q-space />
-                <q-btn-toggle
-                  unelevated
-                  padding="xs md"
-                  color="background"
-                  text-color="display"
-                  toggle-color="primary"
-                  toggle-text-color="display-on-primary"
-                  v-model="currentThemeNameComputed"
-                  :options="availableThemeNameComputed"
-                />
-              </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
                 <div>プリセット機能</div>
                 <div>
@@ -626,6 +663,7 @@ import {
   ExperimentalSetting,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
+  EditorFontType,
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
@@ -809,6 +847,24 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
+    const samplingRateOptions: SavingSetting["outputSamplingRate"][] = [
+      "engineDefault",
+      24000,
+      44100,
+      48000,
+      88200,
+      96000,
+    ];
+    const renderSamplingRateLabel = (
+      value: SavingSetting["outputSamplingRate"]
+    ) => {
+      if (value === "engineDefault") {
+        return "デフォルト";
+      } else {
+        return `${value / 1000} kHz`;
+      }
+    };
+
     const handleSavingSettingChange = (
       key: keyof SavingSetting,
       data: string | boolean | number
@@ -818,7 +874,7 @@ export default defineComponent({
           data: { ...savingSetting.value, [key]: data },
         });
       };
-      if (key === "outputSamplingRate" && data !== 24000) {
+      if (key === "outputSamplingRate" && data !== "engineDefault") {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
@@ -859,6 +915,11 @@ export default defineComponent({
       store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
     };
 
+    const editorFont = computed(() => store.state.editorFont);
+    const changeEditorFont = (editorFont: EditorFontType) => {
+      store.dispatch("SET_EDITOR_FONT", { editorFont });
+    };
+
     const showsFilePatternEditDialog = ref(false);
 
     return {
@@ -874,6 +935,8 @@ export default defineComponent({
       changeExperimentalSetting,
       restartAllEngineProcess,
       savingSetting,
+      samplingRateOptions,
+      renderSamplingRateLabel,
       handleSavingSettingChange,
       openFileExplore,
       currentThemeNameComputed,
@@ -882,6 +945,8 @@ export default defineComponent({
       acceptRetrieveTelemetryComputed,
       splitTextWhenPaste,
       changeSplitTextWhenPaste,
+      editorFont,
+      changeEditorFont,
       showsFilePatternEditDialog,
     };
   },

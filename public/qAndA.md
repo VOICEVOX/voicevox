@@ -6,8 +6,8 @@
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
-※Windows：Windows 10・Windows 11
-※Mac：macOS Catalina 以降
+※Windows：Windows 10・Windows 11  
+※Mac：macOS Catalina 以降  
 ※Linux：Ubuntu 18.04・Ubuntu 20.04
 
 #### GPU 版
@@ -61,6 +61,10 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 
 ## 使い方に関する質問
 
+### Q. 読み方が想定と異なります。
+
+単語の読み方は辞書登録で変更できます。設定 → 読み方＆アクセント辞書から単語を登録してみてください。
+
 ### Q. 使い方がわかりません。
 
 [使い方](https://voicevox.hiroshiba.jp/how_to_use) Web ページか、ソフトウェアのヘルプからご確認ください。  
@@ -93,6 +97,8 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 対応する GPU が搭載されていない PC で GPU モードとして起動するとエラーが表示されます。  
 設定 → エンジンから CPU モードを選んでください。
+
+また、以前起動したエンジンが正常に停止されずに残っているかもしれません。その場合は PC の再起動をお試しください。
 
 ### Q. GPU モードで起動するとエラーが表示されます。
 
@@ -131,6 +137,15 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 `/Users/(ユーザー名)/Library/Application Support/voicevox-cpu/logs`
 
+### `ubuntu 22.04`で動きません。
+
+`libfuse2`をインストールすることで解決するかもしれません。
+
+```sh
+sudo add-apt-repository universe
+sudo apt install libfuse2
+```
+
 ## その他
 
 ### Q. 公式イラストや立ち絵はどこからダウンロードできますか？
@@ -148,9 +163,14 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 キャラクターに関することを VOICEVOX からお答えすることはできません。
 キャラクター権利者の方にお問い合わせください。
 
+### Q. 動画で音声を用いた場合のクレジット表記はどうすれば良いですか？
+
+動画の概要欄や動画内などに記載してください。  
+概要欄に記載いただければ検索などで見つけやすくなるため、VOICEVOX 開発の励みになります。
+
 ### Q. 電話音声など、音声のみを使いたい場合のクレジット記載はどうすれば良いですか？
 
-音声の最初か最後に音声クレジットを挿入してください。  
+音声の最初や最後に音声クレジットを挿入してください。  
 キャラクターの利用規約に案内がある場合はそちらを優先してください。
 
 ### Q. クレジット記載を省くにはどうすれば良いですか？

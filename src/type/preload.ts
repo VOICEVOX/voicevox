@@ -12,12 +12,14 @@ export interface ElectronStoreType {
   userCharacterOrder: string[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  editorFont: EditorFontType;
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineDirs: string[];
 }
 
 export interface Sandbox {
@@ -32,12 +34,15 @@ export interface Sandbox {
   getPrivacyPolicyText(): Promise<string>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
-  getBaseName(obj: { filePath: string }): string;
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
   showTextSaveDialog(obj: {
+    title: string;
+    defaultPath?: string;
+  }): Promise<string | undefined>;
+  showVvppOpenDialog(obj: {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
@@ -63,7 +68,7 @@ export interface Sandbox {
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer;
-  }): WriteFileErrorResult | undefined;
+  }): Promise<WriteFileErrorResult | undefined>;
   readFile(obj: { filePath: string }): Promise<ArrayBuffer>;
   openTextEditContextMenu(): Promise<void>;
   isAvailableGPUMode(): Promise<boolean>;
@@ -81,7 +86,6 @@ export interface Sandbox {
   restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
   openEngineDirectory(engineId: string): void;
-  openUserEngineDirectory(): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -96,6 +100,10 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  installVvppEngine(path: string): Promise<boolean>;
+  uninstallVvppEngine(engineId: string): Promise<boolean>;
+  validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
+  restartApp(obj: { isSafeMode: boolean }): void;
 }
 
 export type AppInfos = {
@@ -133,6 +141,12 @@ export type UpdateInfo = {
   contributors: string[];
 };
 
+export type Voice = {
+  engineId: string;
+  speakerId: string;
+  styleId: number;
+};
+
 export type Encoding = "UTF-8" | "Shift_JIS";
 
 export type AcceptRetrieveTelemetryStatus =
@@ -146,6 +160,8 @@ export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
+export type EditorFontType = "default" | "os";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
@@ -155,7 +171,7 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number;
+  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
 
@@ -177,6 +193,12 @@ export type EngineInfo = {
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;
+  executionArgs: string[];
+  // エンジンの種類。
+  // default: デフォルトエンジン
+  // vvpp: vvppファイルから読み込んだエンジン
+  // path: パスを指定して追加したエンジン
+  type: "default" | "vvpp" | "path";
 };
 
 export type Preset = {
@@ -307,3 +329,13 @@ export type WriteFileErrorResult = {
   code: string | undefined;
   message: string;
 };
+
+export type EngineDirValidationResult =
+  | "ok"
+  | "directoryNotFound"
+  | "manifestNotFound"
+  | "invalidManifest"
+  | "notADirectory"
+  | "alreadyExists";
+
+export type VvppFilePathValidationResult = "ok" | "fileNotFound";

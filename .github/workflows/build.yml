@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.13.1
-  VOICEVOX_RESOURCE_VERSION: 0.13.1
+  VOICEVOX_ENGINE_VERSION: 0.13.3
+  VOICEVOX_RESOURCE_VERSION: 0.13.3
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
@@ -93,7 +93,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -134,15 +134,15 @@ jobs:
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -150,7 +150,7 @@ jobs:
             ${{ env.cache-version }}-node-
 
       - name: Cache Electron
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -158,7 +158,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -175,47 +175,11 @@ jobs:
           df -h
 
       - name: Checkout Product Version Resource
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
-
-      - name: Replace Character Info
-        shell: bash
-        run: |
-          cp -r resource/character_info public/characters
-          cd public/characters
-          # Explore characters directory.
-          # Character directory name is uuid, but this script can automatically detect character directory name.
-          # We don't need to change this code when add more characters.
-          # FILEPATH example: "./35b2c544-660e-401e-b503-0e14c635303a"
-          for FILEPATH in ./*
-            do
-            # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME="$(jq -r '.speakerName' "$FILEPATH/metas.json")"
-            pushd "$FILEPATH/icons"
-            # Explore character icons directory.
-            # ICONPATH example: "./0.png"
-            for ICONPATH in ./*.png
-              do
-              # ":2" part is python slice like, can remove "./" part from ICONPATH
-              # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
-              # If don't use ":2": "${SPEAKER_NAME}_${ICONPATH}" is "AAA_./0.png"
-              #       If use ":2": "${SPEAKER_NAME}_${ICONPATH:2}" is "AAA_0.png"
-              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
-            done
-            popd
-            pushd "$FILEPATH/voice_samples"
-            # Explore character voice_samples directory.
-            # VOICEPATH example: "./0_000.wav"
-            for VOICEPATH in ./*.wav
-              do
-              # Same as for ICONPATH
-              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
-            done
-            popd
-          done
 
       - name: Create and replace software resources
         shell: bash
@@ -285,7 +249,7 @@ jobs:
           echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
 
       - name: Upload NoEngine Prepackage
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -355,20 +319,20 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -389,7 +353,7 @@ jobs:
           df -h
 
       - name: Download and extract noengine-prepackage artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.noengine_artifact_name }}
           path: ./prepackage
@@ -408,7 +372,7 @@ jobs:
       #   run: |
       #     echo "${{ env.VOICEVOX_ENGINE_REPO_URL }}" > voicevox_engine/repo_url.txt
       # - name: Cache VOICEVOX ENGINE
-      #   uses: actions/cache@master
+      #   uses: actions/cache@v3
       #   id: voicevox-engine-cache
       #   with:
       #     path: voicevox_engine/download
@@ -472,7 +436,7 @@ jobs:
           df -h
 
       - name: Upload prepackage artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -496,7 +460,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: startsWith(matrix.artifact_name, 'macos-')
@@ -512,7 +476,7 @@ jobs:
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-targz
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz"
@@ -526,7 +490,7 @@ jobs:
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
@@ -598,7 +562,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -624,7 +588,7 @@ jobs:
           "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Download and extract engine-prepackage artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.engine_artifact_name }}
           path: ./prepackage
@@ -647,7 +611,7 @@ jobs:
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
           chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
 
-      # NOTE: actions/upload-artifact@v2 does not upload `**.lproj` directories, which are an empty directory.
+      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
       #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
       - name: Make .lproj directories in Resources directory of VOICEVOX.app
         if: endsWith(matrix.artifact_name, '-dmg')
@@ -662,15 +626,15 @@ jobs:
       - name: Set output Node version
         id: node-version
         shell: bash
-        run: echo "::set-output name=NODE_VERSION::$(cat .node-version)"
+        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
 
       - name: Setup Node
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v3
         with:
           node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
 
       - name: Cache Node packages
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -678,7 +642,7 @@ jobs:
             ${{ env.cache-version }}-node-
 
       - name: Cache Electron
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
@@ -686,7 +650,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@master
+        uses: actions/cache@v3
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
           key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
@@ -746,7 +710,7 @@ jobs:
 
       - name: Upload Linux AppImage artifact
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -754,7 +718,7 @@ jobs:
 
       - name: Upload macOS dmg artifact
         if: endsWith(matrix.artifact_name, '-dmg')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -781,7 +745,7 @@ jobs:
 
       - name: Upload Windows NSIS Web artifact
         if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: |
@@ -815,10 +779,10 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
 
       - name: Download and extract distributable artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
           path: ./artifact
@@ -866,7 +830,7 @@ jobs:
 
       - name: Upload Linux AppImage Release artifact
         if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-release
           path: |

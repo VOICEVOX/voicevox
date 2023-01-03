@@ -307,10 +307,10 @@ done
 # Extract archives
 echo "[+] Extracting archive..."
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
-${COMMAND_7Z} x "${FIRST_ARCHIVE}" -y
+"${COMMAND_7Z}" x "${FIRST_ARCHIVE}" -y
 
 # Get AppImage filename from 7z archive
-APPIMAGE=$(${COMMAND_7Z} l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+APPIMAGE=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
 chmod +x "${APPIMAGE}"
 
 # Dump version
@@ -336,14 +336,14 @@ cat << 'BANNER'
 BANNER
 
 VOICEVOX_INSTALLED_FILES=(
-    ${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop
-    ${ICON_INSTALL_DIR}/voicevox.png
-    ${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png
-    ${MIME_INSTALL_DIR}/packages/voicevox.xml
+    "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
+    "${ICON_INSTALL_DIR}/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
 VOICEVOX_INSTALLED_DIR=(
-    ${APP_DIR}
+    "${APP_DIR}"
 )
 
 echo "[+] Uninstalling VOICEVOX..."
@@ -428,6 +428,13 @@ cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
         <glob pattern="*.vvproj" />
         <icon name="voicevox" />
     </mime-type>
+    <mime-type type="application/x-voicevox-plugin-package">
+        <comment>VOICEVOX Plugin package</comment>
+        <comment xml:lang="ja">VOICEVOX プラグインパッケージ</comment>
+        <sub-class-of type="application/zip" />
+        <glob pattern="*.vvpp" />
+        <icon name="voicevox" />
+    </mime-type>
 </mime-info>
 EOS
 
@@ -442,7 +449,7 @@ fi
 # Update desktop file database
 echo "[+] Updating desktop file database..."
 if command -v update-desktop-database &> /dev/null; then
-    update-desktop-database
+    update-desktop-database "${DESKTOP_ENTRY_INSTALL_DIR}"
 else
     echo "[-] Skipped: Command 'update-desktop-database' not found"
 fi

@@ -4,10 +4,8 @@ import {
   IpcRenderer,
   IpcRendererEvent,
 } from "electron";
-import fs from "fs";
-import path from "path";
 
-import { Sandbox, SystemError, ElectronStoreType } from "@/type/preload";
+import { Sandbox, ElectronStoreType } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -72,25 +70,26 @@ const api: Sandbox = {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
     }
-    fs.writeFileSync(path.join(tempDir, relativePath), new DataView(buffer));
+    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
+      pathArray: [tempDir, relativePath],
+    });
+    await ipcRendererInvoke("WRITE_FILE", {
+      filePath: tempFilePath,
+      buffer: buffer,
+    });
   },
 
   loadTempFile: async () => {
     if (!tempDir) {
       tempDir = await ipcRendererInvoke("GET_TEMP_DIR");
     }
-    const buf = fs.readFileSync(path.join(tempDir, "hoge.txt"));
+    const tempFilePath = await ipcRendererInvoke("JOIN_PATH", {
+      pathArray: [tempDir, "hoge.txt"],
+    });
+    const buf = await ipcRendererInvoke("READ_FILE", {
+      filePath: tempFilePath,
+    });
     return new TextDecoder().decode(buf);
-  },
-
-  getBaseName: ({ filePath }) => {
-    /**
-     * filePathから拡張子を含むファイル名を取り出す。
-     * vueファイルから直接pathモジュールを読み込むことは出来るが、
-     * その中のbasename関数は上手く動作しない（POSIX pathとして処理される）。
-     * この関数を呼び出せばWindows pathが正しく処理される。
-     */
-    return path.basename(filePath);
   },
 
   showAudioSaveDialog: ({ title, defaultPath }) => {
@@ -99,6 +98,10 @@ const api: Sandbox = {
 
   showTextSaveDialog: ({ title, defaultPath }) => {
     return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
+  },
+
+  showVvppOpenDialog: ({ title, defaultPath }) => {
+    return ipcRendererInvoke("SHOW_VVPP_OPEN_DIALOG", { title, defaultPath });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
@@ -134,20 +137,12 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", { title });
   },
 
-  writeFile: ({ filePath, buffer }) => {
-    try {
-      // throwだと`.code`の情報が消えるのでreturn
-      fs.writeFileSync(filePath, new DataView(buffer));
-    } catch (e) {
-      const a = e as SystemError;
-      return { code: a.code, message: a.message };
-    }
-
-    return undefined;
+  writeFile: async ({ filePath, buffer }) => {
+    return await ipcRendererInvoke("WRITE_FILE", { filePath, buffer });
   },
 
-  readFile: ({ filePath }) => {
-    return fs.promises.readFile(filePath);
+  readFile: async ({ filePath }) => {
+    return await ipcRendererInvoke("READ_FILE", { filePath });
   },
 
   openTextEditContextMenu: () => {
@@ -202,10 +197,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
   },
 
-  openUserEngineDirectory: () => {
-    return ipcRendererInvoke("OPEN_USER_ENGINE_DIRECTORY");
-  },
-
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },
@@ -234,6 +225,9 @@ const api: Sandbox = {
     ipcRenderer.invoke("ON_VUEX_READY");
   },
 
+  /**
+   * 設定情報を取得する
+   */
   getSetting: async (key) => {
     return (await ipcRendererInvoke(
       "GET_SETTING",
@@ -241,12 +235,31 @@ const api: Sandbox = {
     )) as ElectronStoreType[typeof key];
   },
 
+  /**
+   * 設定情報を保存する
+   */
   setSetting: async (key, newValue) => {
     return (await ipcRendererInvoke(
       "SET_SETTING",
       key,
       newValue
     )) as typeof newValue;
+  },
+
+  installVvppEngine: async (filePath) => {
+    return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
+  },
+
+  uninstallVvppEngine: async (engineId) => {
+    return await ipcRendererInvoke("UNINSTALL_VVPP_ENGINE", engineId);
+  },
+
+  validateEngineDir: async (engineDir) => {
+    return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
+  },
+
+  restartApp: ({ isSafeMode }: { isSafeMode: boolean }) => {
+    ipcRendererInvoke("RESTART_APP", { isSafeMode });
   },
 };
 

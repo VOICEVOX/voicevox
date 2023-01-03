@@ -1,5 +1,6 @@
 @use './variables' as vars;
 @use './colors' as colors;
+@import './fonts';
 
 // 優先度を強引に上げる
 body:not(#dummy) {
@@ -9,6 +10,10 @@ body:not(#dummy) {
   border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
+}
+
+body[data-editor-font="default"] {
+  font-family: "Rounded M+ 1p", sans-serif;
 }
 
 img {
@@ -170,6 +175,13 @@ img {
 }
 .bg-display {
   background: colors.$display;
+}
+
+.text-display-hyperlink {
+  color: colors.$display-hyperlink;
+}
+.bg-display-hyperlink {
+  background: colors.$display-hyperlink;
 }
 
 .text-display-on-primary {
