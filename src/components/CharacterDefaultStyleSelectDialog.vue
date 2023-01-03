@@ -59,6 +59,7 @@
                   isHoverableStyleItem && 'hoverable-style-item',
                 ]"
                 @click="selectStyleIndex(styleIndex)"
+                @dblclick="closeDialog"
               >
                 <div class="style-item-inner">
                   <img :src="style.iconPath" class="style-icon" />
