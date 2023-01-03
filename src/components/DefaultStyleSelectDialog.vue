@@ -42,21 +42,6 @@
         </q-toolbar>
       </q-header>
 
-      <q-drawer
-        bordered
-        show-if-above
-        :model-value="true"
-        :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
-        :breakpoint="0"
-      >
-        <div class="character-portrait-wrapper">
-          <img
-            :src="characterInfosMap[selectedCharacter].portraitPath"
-            class="character-portrait"
-          />
-        </div>
-      </q-drawer>
-
       <q-page-container>
         <q-page class="main">
           <div class="character-items-container">
@@ -67,19 +52,8 @@
                 clickable
                 v-ripple="isHoverableItem"
                 class="q-pa-none character-item"
-                :class="[
-                  isHoverableItem && 'hoverable-character-item',
-                  selectedCharacter === speaker.metas.speakerUuid &&
-                    'selected-character-item',
-                ]"
-                @click="
-                  selectCharacter(speaker.metas.speakerUuid);
-                  togglePlayOrStop(
-                    speaker.metas.speakerUuid,
-                    selectedStyles[speaker.metas.speakerUuid],
-                    0
-                  );
-                "
+                :class="[isHoverableItem && 'hoverable-character-item']"
+                @dblclick="openStyleSelectDialog(speaker)"
               >
                 <div class="character-item-inner">
                   <img
@@ -101,66 +75,16 @@
                     "
                     class="style-select-container"
                   >
-                    <q-btn
-                      flat
-                      dense
-                      icon="chevron_left"
-                      text-color="display"
-                      class="style-select-button"
-                      @mouseenter="isHoverableItem = false"
-                      @mouseleave="isHoverableItem = true"
-                      @click.stop="
-                        selectCharacter(speaker.metas.speakerUuid);
-                        rollStyleIndex(speaker.metas.speakerUuid, -1);
-                      "
-                    />
-                    <span>{{
-                      selectedStyles[speaker.metas.speakerUuid]
-                        ? selectedStyles[speaker.metas.speakerUuid].styleName
-                        : "ノーマル"
-                    }}</span>
-                    <q-btn
-                      flat
-                      dense
-                      icon="chevron_right"
-                      text-color="display"
-                      class="style-select-button"
-                      @mouseenter="isHoverableItem = false"
-                      @mouseleave="isHoverableItem = true"
-                      @click.stop="
-                        selectCharacter(speaker.metas.speakerUuid);
-                        rollStyleIndex(speaker.metas.speakerUuid, 1);
-                      "
-                    />
-                  </div>
-                  <div class="voice-samples">
-                    <q-btn
-                      v-for="voiceSampleIndex of [...Array(3).keys()]"
-                      :key="voiceSampleIndex"
-                      round
-                      outline
-                      :icon="
-                        playing != undefined &&
-                        speaker.metas.speakerUuid === playing.speakerUuid &&
-                        selectedStyles[speaker.metas.speakerUuid].styleId ===
-                          playing.styleId &&
-                        voiceSampleIndex === playing.index
-                          ? 'stop'
-                          : 'play_arrow'
-                      "
-                      color="primary-light"
-                      class="voice-sample-btn"
-                      @mouseenter="isHoverableItem = false"
-                      @mouseleave="isHoverableItem = true"
-                      @click.stop="
-                        selectCharacter(speaker.metas.speakerUuid);
-                        togglePlayOrStop(
-                          speaker.metas.speakerUuid,
-                          selectedStyles[speaker.metas.speakerUuid],
-                          voiceSampleIndex
-                        );
-                      "
-                    />
+                    <span
+                      >{{
+                        selectedStyles[speaker.metas.speakerUuid]
+                          ? selectedStyles[speaker.metas.speakerUuid].styleName
+                          : "ノーマル"
+                      }}（{{
+                        characterInfosMap[speaker.metas.speakerUuid].metas
+                          .styles.length
+                      }}スタイル）</span
+                    >
                   </div>
                   <q-btn
                     outline
@@ -285,68 +209,6 @@ export default defineComponent({
     // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
     const isHoverableItem = ref(true);
 
-    // 音声再生
-    const playing =
-      ref<{ speakerUuid: string; styleId: number; index: number }>();
-
-    const audio = new Audio();
-    audio.volume = 0.5;
-    audio.onended = () => stop();
-
-    const play = (
-      speakerUuid: string,
-      { styleId, voiceSamplePaths }: StyleInfo,
-      index: number
-    ) => {
-      if (audio.src !== "") stop();
-
-      audio.src = voiceSamplePaths[index];
-      audio.play();
-      playing.value = { speakerUuid, styleId, index };
-    };
-    const stop = () => {
-      if (audio.src === "") return;
-
-      audio.pause();
-      audio.removeAttribute("src");
-      playing.value = undefined;
-    };
-
-    // 再生していたら停止、再生していなかったら再生
-    const togglePlayOrStop = (
-      speakerUuid: string,
-      styleInfo: StyleInfo,
-      index: number
-    ) => {
-      if (
-        playing.value === undefined ||
-        speakerUuid !== playing.value.speakerUuid ||
-        styleInfo.styleId !== playing.value.styleId ||
-        index !== playing.value.index
-      ) {
-        play(speakerUuid, styleInfo, index);
-      } else {
-        stop();
-      }
-    };
-
-    // スタイル番号をずらす
-    const rollStyleIndex = (speakerUuid: string, diff: number) => {
-      // 0 <= index <= length に収める
-      const length = characterInfosMap.value[speakerUuid].metas.styles.length;
-      const selectedStyleIndex: number | undefined =
-        selectedStyleIndexes.value[speakerUuid];
-
-      let styleIndex = (selectedStyleIndex ?? 0) + diff;
-      styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
-      selectedStyleIndexes.value[speakerUuid] = styleIndex;
-
-      // 音声を再生する。同じstyleIndexだったら停止する。
-      const selectedStyleInfo =
-        characterInfosMap.value[speakerUuid].metas.styles[styleIndex];
-      togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
-    };
-
     const closeDialog = () => {
       store.dispatch(
         "SET_DEFAULT_STYLE_IDS",
@@ -380,9 +242,6 @@ export default defineComponent({
       selectCharacter,
       characterOrder,
       isHoverableItem,
-      playing,
-      togglePlayOrStop,
-      rollStyleIndex,
       closeDialog,
       openStyleSelectDialog,
     };
@@ -432,7 +291,7 @@ export default defineComponent({
     $character-item-size: 215px;
     display: grid;
     grid-template-columns: repeat(auto-fit, $character-item-size);
-    grid-auto-rows: 270px;
+    grid-auto-rows: 230px;
     column-gap: 10px;
     row-gap: 10px;
     align-content: center;
@@ -469,12 +328,6 @@ export default defineComponent({
           justify-content: center;
           align-items: center;
           margin-top: -1rem;
-        }
-        .voice-samples {
-          display: flex;
-          column-gap: 5px;
-          align-items: center;
-          justify-content: center;
         }
         .new-character-item {
           color: colors.$primary-light;
