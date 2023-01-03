@@ -177,10 +177,14 @@ export const electronStoreSchema = z
         audioInfoPaneWidth: z.number().nullish(),
         audioDetailPaneHeight: z.number().nullish(),
       })
+      .passthrough()
       .default({}),
-    confirmedTips: z.object({
-      tweakableSliderByScroll: z.boolean().default(false),
-    }),
+    confirmedTips: z
+      .object({
+        tweakableSliderByScroll: z.boolean().default(false),
+      })
+      .passthrough()
+      .default({}),
     engineDirs: z.string().array().default([]),
   })
   .passthrough();
