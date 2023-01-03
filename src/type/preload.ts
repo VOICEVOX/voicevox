@@ -12,6 +12,7 @@ export interface ElectronStoreType {
   userCharacterOrder: string[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  editorFont: EditorFontType;
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
@@ -158,6 +159,8 @@ export type AcceptTermsStatus = "Unconfirmed" | "Accepted" | "Rejected";
 export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
+
+export type EditorFontType = "default" | "os";
 
 export type SavingSetting = {
   exportLab: boolean;

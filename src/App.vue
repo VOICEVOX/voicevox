@@ -40,6 +40,15 @@ export default defineComponent({
       },
       { immediate: true }
     );
+
+    // フォントの制御用パラメータを変更する
+    watch(
+      () => store.state.editorFont,
+      (editorFont) => {
+        document.body.setAttribute("data-editor-font", editorFont);
+      },
+      { immediate: true }
+    );
   },
 });
 </script>
