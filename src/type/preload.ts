@@ -155,10 +155,13 @@ export const electronStoreSchema = z
       keys: z.string().uuid().array().default([]),
     }),
     currentTheme: z.string().default("Default"),
-    experimentalSetting: z.object({
-      enablePreset: z.boolean().default(false),
-      enableInterrogativeUpspeak: z.boolean().default(false),
-    }),
+    experimentalSetting: z
+      .object({
+        enablePreset: z.boolean().default(false),
+        enableInterrogativeUpspeak: z.boolean().default(false),
+      })
+      .passthrough()
+      .default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
       .default("Unconfirmed"),
