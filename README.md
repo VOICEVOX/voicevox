@@ -131,9 +131,8 @@ shellcheck ./build/*.sh
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json
 
-node openapi-mod.js
 npx openapi-generator-cli generate \
-    -i openapi-mod.json \
+    -i openapi.json \
     -g typescript-fetch \
     -o src/openapi/ \
     --additional-properties "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true"
