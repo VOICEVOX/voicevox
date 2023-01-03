@@ -66,6 +66,7 @@ describe("store/vuex.js test", () => {
           currentTheme: "Default",
           availableThemes: [],
         },
+        editorFont: "default",
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
