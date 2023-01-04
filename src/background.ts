@@ -96,12 +96,11 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
+// 設定ファイル
 const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
 if (!("properties" in electronStoreJsonSchema)) {
   throw new Error("electronStoreJsonSchema must be object");
 }
-
-// 設定ファイル
 const store = new Store<ElectronStoreType>({
   schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
   migrations: {
