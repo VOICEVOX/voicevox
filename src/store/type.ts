@@ -36,6 +36,7 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  Voice,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -47,10 +48,10 @@ export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
   outputSamplingRate: number | "engineDefault";
 };
 
-// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
   engineId?: string;
+  speakerId?: string;
   styleId?: number;
   query?: EditorAudioQuery;
   presetKey?: string;
@@ -189,6 +190,7 @@ export type AudioStoreTypes = {
     action(payload: {
       text?: string;
       engineId?: string;
+      speakerId?: string;
       styleId?: number;
       presetKey?: string;
       baseAudioItem?: AudioItem;
@@ -279,7 +281,7 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; engineId: string; styleId: number };
+    mutation: { audioKey: string; voice: Voice };
   };
 
   SET_ACCENT_PHRASES: {
@@ -466,16 +468,12 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineId: string; styleId: number; audioKey: string } & (
+    mutation: { audioKey: string; voice: Voice } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: {
-      audioKey: string;
-      engineId: string;
-      styleId: number;
-    }): void;
+    action(payload: { audioKey: string; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -613,6 +611,7 @@ export type AudioCommandStoreTypes = {
       prevAudioKey: string;
       texts: string[];
       engineId: string;
+      speakerId: string;
       styleId: number;
     }): string[];
   };

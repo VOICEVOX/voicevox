@@ -116,8 +116,7 @@ export default defineComponent({
         if (voice == undefined) return;
         store.dispatch("COMMAND_CHANGE_STYLE_ID", {
           audioKey: props.audioKey,
-          engineId: voice.engineId,
-          styleId: voice.styleId,
+          voice,
         });
       },
     });
@@ -199,6 +198,10 @@ export default defineComponent({
           if (engineId === undefined)
             throw new Error("assert engineId !== undefined");
 
+          const speakerId = audioItem.value.speakerId;
+          if (speakerId === undefined)
+            throw new Error("assert speakerId !== undefined");
+
           const styleId = audioItem.value.styleId;
           if (styleId === undefined)
             throw new Error("assert styleId !== undefined");
@@ -206,6 +209,7 @@ export default defineComponent({
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
             engineId,
+            speakerId,
             styleId,
             prevAudioKey,
           });

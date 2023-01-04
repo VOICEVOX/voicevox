@@ -375,6 +375,11 @@ export default defineComponent({
       return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0]
         .engineId;
     });
+    const speakerIdComputed = computed(() => {
+      if (!store.getters.USER_ORDERED_CHARACTER_INFOS)
+        throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
+      return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+    });
 
     const kanaRegex = createKanaRegex();
     const isOnlyHiraOrKana = ref(true);
@@ -464,6 +469,9 @@ export default defineComponent({
       const engineId = engineIdComputed.value;
       if (engineId === undefined)
         throw new Error(`assert engineId !== undefined`);
+      const speakerId = speakerIdComputed.value;
+      if (speakerId == undefined)
+        throw new Error("assert speakerId != undefined");
 
       if (!accentPhrase.value) return;
 
@@ -471,6 +479,7 @@ export default defineComponent({
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
         text: yomi.value,
         engineId,
+        speakerId,
         styleId: styleId.value,
       });
 
