@@ -766,7 +766,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
-    properties: ["openDirectory", "createDirectory"],
+    properties: ["openDirectory", "createDirectory", "treatPackageAsDirectory"],
   });
   if (result.canceled) {
     return undefined;
