@@ -3,6 +3,7 @@ import { IpcSOData } from "./ipc";
 import { z } from "zod";
 
 export const isMac = process.platform === "darwin";
+// ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
     action: "音声書き出し",
