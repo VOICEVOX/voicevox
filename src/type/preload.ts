@@ -417,8 +417,8 @@ export const electronStoreSchema = z
           .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
-      .passthrough()
-      .default({}), // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+      .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+      .default({}),
     editorFont: z.enum(["default", "os"]).default("default"),
 
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
