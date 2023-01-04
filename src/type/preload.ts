@@ -430,23 +430,25 @@ export const electronStoreSchema = z
       .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
       .array()
       .default([]),
-    presets: z.object({
-      items: z
-        .record(
-          z.string().uuid(),
-          z.object({
-            name: z.string(),
-            speedScale: z.number(),
-            pitchScale: z.number(),
-            intonationScale: z.number(),
-            volumeScale: z.number(),
-            prePhonemeLength: z.number(),
-            postPhonemeLength: z.number(),
-          })
-        )
-        .default({}),
-      keys: z.string().uuid().array().default([]),
-    }),
+    presets: z
+      .object({
+        items: z
+          .record(
+            z.string().uuid(),
+            z.object({
+              name: z.string(),
+              speedScale: z.number(),
+              pitchScale: z.number(),
+              intonationScale: z.number(),
+              volumeScale: z.number(),
+              prePhonemeLength: z.number(),
+              postPhonemeLength: z.number(),
+            })
+          )
+          .default({}),
+        keys: z.string().uuid().array().default([]),
+      })
+      .default({}),
     currentTheme: z.string().default("Default"),
     experimentalSetting: z
       .object({
