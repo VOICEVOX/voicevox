@@ -342,8 +342,8 @@ export const toolbarButtonTagSchema = z.enum([
 ]);
 export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 
-export const toolbarSettingSchema = toolbarButtonTagSchema.array();
-export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>;
+export const toolbarSettingSchema = toolbarButtonTagSchema;
+export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
 
 export type MoraDataType =
   | "consonant"
@@ -422,7 +422,9 @@ export const electronStoreSchema = z
     editorFont: z.enum(["default", "os"]).default("default"),
 
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
-    toolbarSetting: toolbarSettingSchema.default(defaultToolbarButtonSetting),
+    toolbarSetting: toolbarSettingSchema
+      .array()
+      .default(defaultToolbarButtonSetting),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
