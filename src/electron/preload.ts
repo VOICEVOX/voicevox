@@ -185,10 +185,6 @@ const api: Sandbox = {
     return ipcRendererInvoke("ENGINE_INFOS");
   },
 
-  restartEngineAll: () => {
-    return ipcRendererInvoke("RESTART_ENGINE_ALL");
-  },
-
   restartEngine: (engineId: string) => {
     return ipcRendererInvoke("RESTART_ENGINE", { engineId });
   },
