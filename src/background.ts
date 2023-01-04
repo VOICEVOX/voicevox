@@ -321,6 +321,9 @@ const store = new Store<ElectronStoreType>({
       type: "string",
       default: "Default",
     },
+    editorFont: {
+      anyOf: [{ const: "default" }, { const: "os" }],
+    },
     experimentalSetting: {
       type: "object",
       properties: {

@@ -39,6 +39,7 @@ export const settingStoreState: SettingStoreState = {
     currentTheme: "Default",
     availableThemes: [],
   },
+  editorFont: "default",
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -218,6 +219,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });
+    },
+  },
+
+  SET_EDITOR_FONT: {
+    mutation(state, { editorFont }) {
+      state.editorFont = editorFont;
+    },
+    action({ commit }, { editorFont }) {
+      window.electron.setSetting("editorFont", editorFont);
+      commit("SET_EDITOR_FONT", { editorFont });
     },
   },
 
