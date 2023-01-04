@@ -419,8 +419,6 @@ export const electronStoreSchema = z
       })
       .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
       .default({}),
-    editorFont: z.enum(["default", "os"]).default("default"),
-
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
     toolbarSetting: toolbarSettingSchema
       .array()
@@ -450,6 +448,7 @@ export const electronStoreSchema = z
       })
       .default({}),
     currentTheme: z.string().default("Default"),
+    editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: z
       .object({
         enablePreset: z.boolean().default(false),
