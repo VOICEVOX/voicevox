@@ -184,7 +184,7 @@ const api: Sandbox = {
   },
 
   logInfo: (...params) => {
-    console.log(...params);
+    console.info(...params);
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
