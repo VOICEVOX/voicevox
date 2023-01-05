@@ -886,6 +886,10 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
 
+ipcMainHandle("LOG_WARN", (_, ...params) => {
+  log.warn(...params);
+});
+
 ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });

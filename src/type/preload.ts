@@ -81,6 +81,7 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
+  logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
   restartEngine(engineId: string): Promise<void>;

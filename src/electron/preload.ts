@@ -174,10 +174,17 @@ const api: Sandbox = {
   },
 
   logError: (...params) => {
+    console.error(...params);
     return ipcRenderer.invoke("LOG_ERROR", ...params);
   },
 
+  logWarn: (...params) => {
+    console.warn(...params);
+    return ipcRenderer.invoke("LOG_WARN", ...params);
+  },
+
   logInfo: (...params) => {
+    console.info(...params);
     return ipcRenderer.invoke("LOG_INFO", ...params);
   },
 
