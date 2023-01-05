@@ -97,7 +97,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.uiLockCount--;
       } else {
         // eslint-disable-next-line no-console
-        console.warn("UNLOCK_UI is called when state.uiLockCount == 0");
+        window.electron.logWarn(
+          "UNLOCK_UI is called when state.uiLockCount == 0"
+        );
       }
     },
     action({ commit }) {
