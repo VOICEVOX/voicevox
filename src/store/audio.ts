@@ -11,7 +11,6 @@ import {
   AudioStoreTypes,
   AudioCommandStoreTypes,
   transformCommandStore,
-  GenerateAudioResultObject,
 } from "./type";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -1079,28 +1078,22 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       async (
         { dispatch, getters, state },
         { audioItem }: { audioItem: AudioItem }
-      ): Promise<GenerateAudioResultObject> => {
+      ) => {
         const engineId = audioItem.engineId;
-        if (engineId === undefined) {
-          window.electron.logError("engineId is not defined for audioItem");
-          return {
-            result: "EDITOR_ERROR",
-          };
-        }
+        if (engineId === undefined)
+          throw new Error("engineId is not defined for audioItem");
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
           audioItem
         );
+        if (audioQuery == undefined)
+          throw new Error("audioQuery is not defined for audioItem");
+
         const speaker = audioItem.styleId;
-        if (audioQuery == undefined || speaker == undefined) {
-          window.electron.logError(
-            "audioQuery == undefined || speaker == undefined"
-          );
-          return {
-            result: "EDITOR_ERROR",
-          };
-        }
+        if (speaker == undefined)
+          throw new Error("speaker is not defined for audioItem");
+
         const engineAudioQuery = convertAudioQueryFromEditorToEngine(
           audioQuery,
           state.engineManifests[engineId].defaultSamplingRate
@@ -1108,42 +1101,33 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId,
-        })
-          .then(async (instance): Promise<GenerateAudioResultObject> => {
-            let blob: Blob;
-            if (
-              audioItem.morphingInfo != undefined &&
-              state.experimentalSetting.enableMorphing
-            ) {
-              if (!getters.VALID_MOPHING_INFO(audioItem)) {
-                return {
-                  result: "VALID_MOPHING_ERROR",
-                  errorMessage: "モーフィングの設定が無効です。",
-                };
-              }
-              blob = await instance.invoke(
-                "synthesisMorphingSynthesisMorphingPost"
-              )({
-                audioQuery: engineAudioQuery,
-                baseSpeaker: speaker,
-                targetSpeaker: audioItem.morphingInfo.targetStyleId,
-                morphRate: audioItem.morphingInfo.rate,
-              });
-            } else {
-              blob = await instance.invoke("synthesisSynthesisPost")({
-                audioQuery: engineAudioQuery,
-                speaker,
-                enableInterrogativeUpspeak:
-                  state.experimentalSetting.enableInterrogativeUpspeak,
-              });
-            }
-            audioBlobCache[id] = blob;
-            return { result: "SUCCESS", blob };
-          })
-          .catch((e) => {
-            window.electron.logError(e);
-            return { result: "ENGINE_ERROR" };
-          });
+        }).then(async (instance) => {
+          let blob: Blob;
+          if (
+            audioItem.morphingInfo != undefined &&
+            state.experimentalSetting.enableMorphing
+          ) {
+            if (!getters.VALID_MOPHING_INFO(audioItem))
+              throw new Error("VALID_MOPHING_ERROR");
+            blob = await instance.invoke(
+              "synthesisMorphingSynthesisMorphingPost"
+            )({
+              audioQuery: engineAudioQuery,
+              baseSpeaker: speaker,
+              targetSpeaker: audioItem.morphingInfo.targetStyleId,
+              morphRate: audioItem.morphingInfo.rate,
+            });
+          } else {
+            blob = await instance.invoke("synthesisSynthesisPost")({
+              audioQuery: engineAudioQuery,
+              speaker,
+              enableInterrogativeUpspeak:
+                state.experimentalSetting.enableInterrogativeUpspeak,
+            });
+          }
+          audioBlobCache[id] = blob;
+          return blob;
+        });
       }
     ),
   },
@@ -1218,15 +1202,21 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
         if (!blob) {
-          const audioResult = await dispatch("GENERATE_AUDIO", { audioKey });
-          if (audioResult.result !== "SUCCESS") {
+          try {
+            blob = await dispatch("GENERATE_AUDIO", { audioKey });
+          } catch (e) {
+            let errorMessage = undefined;
+            if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+              errorMessage = "モーフィングの設定が無効です。";
+            } else {
+              window.electron.logError(e);
+            }
             return {
               result: "ENGINE_ERROR",
               path: filePath,
-              errorMessage: audioResult.errorMessage,
+              errorMessage,
             };
           }
-          blob = audioResult.blob;
         }
 
         let writeFileResult = await window.electron.writeFile({
@@ -1420,16 +1410,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         for (const audioKey of state.audioKeys) {
           let blob = await dispatch("GET_AUDIO_CACHE", { audioKey });
           if (!blob) {
-            const audioResult = await dispatch("GENERATE_AUDIO", { audioKey });
-            callback?.(++finishedCount, totalCount);
-            if (audioResult.result !== "SUCCESS") {
+            try {
+              blob = await dispatch("GENERATE_AUDIO", { audioKey });
+            } catch (e) {
+              let errorMessage = undefined;
+              if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+                errorMessage = "モーフィングの設定が無効です。";
+              } else {
+                window.electron.logError(e);
+              }
               return {
                 result: "ENGINE_ERROR",
                 path: filePath,
-                errorMessage: audioResult.errorMessage,
+                errorMessage,
               };
+            } finally {
+              callback?.(++finishedCount, totalCount);
             }
-            blob = audioResult.blob;
           }
           const encodedBlob = await base64Encoder(blob);
           if (encodedBlob === undefined) {
@@ -1631,18 +1628,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             audioKey,
             nowGenerating: true,
           });
-          const audioResult = await withProgress(
-            dispatch("GENERATE_AUDIO", { audioKey }),
-            dispatch
-          );
-          commit("SET_AUDIO_NOW_GENERATING", {
-            audioKey,
-            nowGenerating: false,
-          });
-          if (audioResult.result !== "SUCCESS") {
-            throw new Error(audioResult.errorMessage);
+          try {
+            blob = await withProgress(
+              dispatch("GENERATE_AUDIO", { audioKey }),
+              dispatch
+            );
+          } catch (e) {
+            if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+              throw new Error("モーフィングの設定が無効です。");
+            }
+            window.electron.logError(e);
+            throw new Error("");
+          } finally {
+            commit("SET_AUDIO_NOW_GENERATING", {
+              audioKey,
+              nowGenerating: false,
+            });
           }
-          blob = audioResult.blob;
         }
 
         return dispatch("PLAY_AUDIO_BLOB", {

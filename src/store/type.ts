@@ -69,16 +69,6 @@ export type Command = {
   redoPatches: Patch[];
 };
 
-export type GenerateAudioResultObject =
-  | {
-      result: "SUCCESS";
-      blob: Blob;
-    }
-  | {
-      result: "VALID_MOPHING_ERROR" | "EDITOR_ERROR" | "ENGINE_ERROR";
-      errorMessage?: string;
-    };
-
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 export type SaveResult =
   | "SUCCESS"
@@ -370,11 +360,11 @@ export type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Promise<GenerateAudioResultObject>;
+    action(payload: { audioKey: string }): Promise<Blob>;
   };
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): GenerateAudioResultObject;
+    action(payload: { audioItem: AudioItem }): Blob;
   };
 
   CONNECT_AUDIO: {
