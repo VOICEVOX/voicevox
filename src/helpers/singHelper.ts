@@ -17,6 +17,25 @@ export function getPitchFromMidi(midi: number): string {
   return mapPitches[pitchPos];
 }
 
+export function getDoremiFromMidi(midi: number): string {
+  const mapPitches: Array<string> = [
+    "ド",
+    "ド",
+    "レ",
+    "レ",
+    "ミ",
+    "ファ",
+    "ファ",
+    "ソ",
+    "ソ",
+    "ラ",
+    "ラ",
+    "ラ",
+  ];
+  const pitchPos = midi % 12;
+  return mapPitches[pitchPos];
+}
+
 export function getOctaveFromMidi(midi: number): number {
   return Math.floor(midi / 12) - 1;
 }

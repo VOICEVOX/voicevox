@@ -270,6 +270,52 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  ADD_NOTE: {
+    mutation(state, { note }: { note: Note }) {
+      if (state.score) {
+        const notes = [...state.score.notes].concat(note).sort((a, b) => {
+          return a.position < b.position ? -1 : 1;
+        });
+        state.score.notes = notes;
+      }
+    },
+    // ノートを追加する
+    // NOTE: 重複削除など別途追加
+    async action({ state, commit }, { note }: { note: Note }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("ADD_NOTE", { note });
+    },
+  },
+
+  CHANGE_NOTE: {
+    mutation(state, { index, note }: { index: number; note: Note }) {
+      state.score?.notes.splice(index, 1, note);
+    },
+    async action(
+      { state, commit },
+      { index, note }: { index: number; note: Note }
+    ) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("CHANGE_NOTE", { index, note });
+    },
+  },
+
+  REMOVE_NOTE: {
+    mutation(state, { index }: { index: number }) {
+      state.score?.notes.splice(index, 1);
+    },
+    async action({ state, commit }, { index }: { index: number }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("REMOVE_NOTE", { index });
+    },
+  },
+
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async ({ dispatch }, { filePath }: { filePath?: string }) => {

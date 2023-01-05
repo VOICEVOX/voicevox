@@ -745,6 +745,21 @@ export type SingingStoreTypes = {
     action(payload: { position: number }): void;
   };
 
+  ADD_NOTE: {
+    mutation: { note: Note };
+    action(payload: { note: Note }): void;
+  };
+
+  CHANGE_NOTE: {
+    mutation: { index: number; note: Note };
+    action(payload: { index: number; note: Note }): void;
+  };
+
+  REMOVE_NOTE: {
+    mutation: { index: number };
+    action(payload: { index: number }): void;
+  };
+
   IMPORT_MIDI_FILE: {
     action(payload: { filePath?: string }): void;
   };

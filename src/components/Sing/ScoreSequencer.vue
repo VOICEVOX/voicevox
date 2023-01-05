@@ -27,32 +27,41 @@
             y.pitch === 'C' ? 'key-c' : ''
           } ${y.pitch === 'F' ? 'key-f' : ''}`"
           :id="`sequencer-cell-${x}-${y.midi}`"
+          @click="addNote(x, y.midi)"
         />
       </div>
       <div
         v-for="(note, index) in notes"
         :key="index"
+        class="sequencer-note"
+        @dblclick="removeNote(index)"
         v-bind:style="{
-          background: '#ddd',
-          position: 'absolute',
-          border: '1px solid #333',
           left: `${note.position}px`,
-          bottom: `${(note.midi + 1) * 24}px`,
+          bottom: `${note.midi * 24}px`,
           width: `${note.duration}px`,
           height: '24px',
-          zIndex: 10,
         }"
       >
-        {{ note.midi }}
+        <input
+          type="text"
+          class="sequencer-note-lyric"
+          :value="note.lyric"
+          @input="(e) => setLyric(index, e)"
+        />
+        <div class="sequencer-note-bar" />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
-import { midiKeys } from "@/helpers/singHelper";
+import {
+  midiKeys,
+  getPitchFromMidi,
+  getDoremiFromMidi,
+} from "@/helpers/singHelper";
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -66,19 +75,63 @@ export default defineComponent({
       const minDuration = resolution * 4 * 16;
       const lastNote = store.state.score?.notes.slice(-1)[0];
       const totalDuration = lastNote
-        ? Math.min(lastNote.position + lastNote.duration, minDuration)
+        ? Math.max(lastNote.position + lastNote.duration, minDuration)
         : minDuration;
       // NOTE: グリッド幅1/16: 設定できるようにする必要あり
       const gridDuration = resolution / 4;
-      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()];
+      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()].map(
+        (gridNum) => gridNum * gridDuration
+      );
     });
     const notes = computed(() => store.state.score?.notes);
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
+    const zoomX = computed(() => store.state.sequencerZoomX);
+    const zoomY = computed(() => store.state.sequencerZoomY);
+
+    const addNote = (position: number, midi: number) => {
+      // NOTE: フォーカスなど動作変更
+      store.dispatch("ADD_NOTE", {
+        note: {
+          position,
+          midi,
+          duration: 120,
+          lyric: getDoremiFromMidi(midi),
+        },
+      });
+    };
+
+    const removeNote = (index: number) => {
+      store.dispatch("REMOVE_NOTE", { index });
+    };
+
+    const setLyric = (index: number, event: Event) => {
+      if (!(event.target instanceof HTMLInputElement)) {
+        return;
+      }
+      if (event.target.value && store.state.score) {
+        const currentNote = store.state.score?.notes[index];
+        const lyric = event.target.value;
+        store.dispatch("CHANGE_NOTE", {
+          index,
+          note: {
+            ...currentNote,
+            lyric,
+          },
+        });
+      }
+    };
+
     return {
       timeSignatures,
       gridY,
       gridX,
       notes,
+      zoomX,
+      zoomY,
+      getPitchFromMidi,
+      addNote,
+      removeNote,
+      setLyric,
     };
   },
 });
@@ -184,5 +237,35 @@ export default defineComponent({
   &.key-c {
     border-bottom: 1px solid #ccc;
   }
+
+  &:hover {
+    background: rgba(colors.$primary-light-rgb, 0.5);
+    cursor: pointer;
+  }
+}
+
+.sequencer-note {
+  position: absolute;
+}
+
+.sequencer-note-lyric {
+  background: white;
+  border: 0;
+  border: 1px solid colors.$primary-light;
+  border-radius: 2px 2px 0 0;
+  font-weight: bold;
+  outline: none;
+  position: absolute;
+  top: -20px;
+  left: 4px;
+  width: 3rem;
+}
+
+.sequencer-note-bar {
+  background: colors.$primary;
+  border-radius: 2px;
+  height: 24px;
+  padding: 0 4px;
+  width: 100%;
 }
 </style>
