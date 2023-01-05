@@ -13,7 +13,23 @@ import { Midi } from "@tonejs/midi";
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
-  score: undefined,
+  score: {
+    resolution: 480,
+    tempos: [
+      {
+        position: 0,
+        tempo: 120,
+      },
+    ],
+    timeSignatures: [
+      {
+        position: 0,
+        beats: 4,
+        beatType: 4,
+      },
+    ],
+    notes: [],
+  },
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,

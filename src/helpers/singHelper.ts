@@ -27,19 +27,21 @@ export function getKeyColorFromMidi(midi: number): string {
   return mapWhiteKeys.includes(pitch) ? "white" : "black";
 }
 
-export const midiKeys = [...Array(128)].map((_, midi) => {
-  const pitch = getPitchFromMidi(midi);
-  const octave = getOctaveFromMidi(midi);
-  const name = `${pitch}${octave}`;
-  const color = getKeyColorFromMidi(midi);
-  return {
-    midi,
-    pitch,
-    octave,
-    name,
-    color,
-  };
-});
+export const midiKeys = [...Array(128)]
+  .map((_, midi) => {
+    const pitch = getPitchFromMidi(midi);
+    const octave = getOctaveFromMidi(midi);
+    const name = `${pitch}${octave}`;
+    const color = getKeyColorFromMidi(midi);
+    return {
+      midi,
+      pitch,
+      octave,
+      name,
+      color,
+    };
+  })
+  .reverse();
 
 export function getDisplayKey(midi: number): object {
   return midiKeys[midi];

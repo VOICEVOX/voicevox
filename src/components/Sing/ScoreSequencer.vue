@@ -2,48 +2,55 @@
   <div class="score-sequencer">
     <div class="sequencer-keys">
       <div
-        v-for="key in displayKeys"
-        :key="key.midi"
-        :class="`sequencer-key sequencer-key-${key.color} ${
-          key.pitch === 'C' ? 'sequencer-key-octave' : ''
-        } ${key.pitch === 'F' || key.pitch === 'D' ? 'sequencer-key-f' : ''}`"
-        :id="`sequencer-key-${key.midi}`"
-        :title="key.name"
+        v-for="y in gridY"
+        :key="y.midi"
+        :class="`sequencer-key ${y.color} ${y.pitch === 'C' ? 'key-c' : ''} ${
+          y.pitch === 'F' ? 'key-f' : ''
+        }`"
+        :id="`sequencer-key-${y.midi}`"
+        :title="y.name"
       >
-        {{ key.pitch === "C" ? key.name : "" }}
+        {{ y.pitch === "C" ? y.name : "" }}
       </div>
     </div>
-    <div class="sequencer-grid-y">
+    <div class="sequencer-grids">
       <div
-        v-for="key in displayKeys"
-        :key="key.midi"
-        :class="`sequencer-y sequencer-y-${key.color} ${
-          key.pitch === 'C' ? 'sequencer-y-octave' : ''
-        } ${key.pitch === 'F' ? 'sequencer-y-f' : ''}`"
-        :id="`sequencer-y-${key.midi}`"
-      />
+        v-for="x in gridX"
+        :key="x"
+        :class="`sequencer-row`"
+        :id="`sequencer-row-${x}`"
+      >
+        <div
+          v-for="y in gridY"
+          :key="y.midi"
+          :class="`sequencer-cell ${y.color} ${
+            y.pitch === 'C' ? 'key-c' : ''
+          } ${y.pitch === 'F' ? 'key-f' : ''}`"
+          :id="`sequencer-cell-${x}-${y.midi}`"
+        />
+      </div>
+      <div
+        v-for="(note, index) in notes"
+        :key="index"
+        v-bind:style="{
+          background: '#ddd',
+          position: 'absolute',
+          border: '1px solid #333',
+          left: `${note.position}px`,
+          bottom: `${(note.midi + 1) * 24}px`,
+          width: `${note.duration}px`,
+          height: '24px',
+          zIndex: 10,
+        }"
+      >
+        {{ note.midi }}
+      </div>
     </div>
-    <div
-      v-for="(note, index) in notes"
-      :key="index"
-      v-bind:style="{
-        background: '#ddd',
-        position: 'relative',
-        left: `${note.position}px`,
-        bottom: `${(note.midi + 1) * 24}px`,
-        width: `${note.duration}px`,
-        height: '24px',
-        zIndex: 100,
-      }"
-    >
-      {{ note.midi }}
-    </div>
-    <div class="sequencer-grid-x" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { midiKeys } from "@/helpers/singHelper";
 
@@ -52,12 +59,25 @@ export default defineComponent({
 
   setup() {
     const store = useStore();
-    const displayKeys = midiKeys.reverse();
+    const gridY = midiKeys;
+    const gridX = computed(() => {
+      const resolution = store.state.score?.resolution || 480;
+      // NOTE: 最低幅: 仮
+      const minDuration = resolution * 4 * 16;
+      const lastNote = store.state.score?.notes.slice(-1)[0];
+      const totalDuration = lastNote
+        ? Math.min(lastNote.position + lastNote.duration, minDuration)
+        : minDuration;
+      // NOTE: グリッド幅1/16: 設定できるようにする必要あり
+      const gridDuration = resolution / 4;
+      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()];
+    });
     const notes = computed(() => store.state.score?.notes);
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
     return {
-      displayKeys,
       timeSignatures,
+      gridY,
+      gridX,
       notes,
     };
   },
@@ -72,7 +92,7 @@ export default defineComponent({
   display: block;
   overflow: auto;
   margin-left: 0;
-  padding-left: 64px;
+  padding-left: 0;
   position: relative;
   height: 100%;
   width: auto;
@@ -80,11 +100,10 @@ export default defineComponent({
 .sequencer-keys {
   background: white;
   border-right: 1px solid #ccc;
-  position: absolute;
-  top: 0;
+  position: sticky;
   left: 0;
   width: 64px;
-  z-index: 10;
+  z-index: 100;
 }
 
 .sequencer-key {
@@ -102,11 +121,11 @@ export default defineComponent({
     border-bottom: 1px solid solid #ccc;
   }
 
-  &.sequencer-key-white {
+  &.white {
     background: white;
   }
 
-  &.sequencer-key-black {
+  &.black {
     background: #555;
 
     &:before {
@@ -131,30 +150,38 @@ export default defineComponent({
     }
   }
 
-  &.sequencer-key-octave {
+  &.key-c {
     border-bottom: 1px solid #ccc;
   }
 
-  &.sequencer-key-f {
+  &.key-f {
     border-bottom: 1px solid #ddd;
   }
 }
 
-.sequencer-grid-y {
-  min-width: 100%;
-  position: relative;
+.sequencer-grids {
+  display: flex;
+  position: absolute;
   top: 0;
+  left: 64px;
 }
 
-.sequencer-y {
+.sequencer-row {
+  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+  width: 120px;
+}
+
+.sequencer-cell {
   border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
   height: 24px;
 
-  &.sequencer-y-black {
+  &.black {
     background: #f2f2f2;
   }
 
-  &.sequencer-y-octave {
+  &.key-c {
     border-bottom: 1px solid #ccc;
   }
 }
