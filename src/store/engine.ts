@@ -154,12 +154,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       engineIds.map((engineId) =>
         dispatch("RESTART_ENGINE", {
           engineId,
-          preventOpeningDialog,
+          preventOpeningDialog: false,
         })
       );
       const result = await dispatch("POST_ENGINE_START", {
         engineIds,
-        preventOpeningDialog: false,
+        preventOpeningDialog: !!preventOpeningDialog,
       });
 
       return result;
@@ -198,23 +198,26 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             await dispatch("LOAD_CHARACTER", { engineId });
           }
 
+          await dispatch("LOAD_DEFAULT_STYLE_IDS");
           const newCharacters = await dispatch("GET_NEW_CHARACTERS");
           const result = {
             success: state.engineStates[engineId] === "READY",
             anyNewCharacters: newCharacters.length > 0,
           };
-          if (!preventOpeningDialog && result.anyNewCharacters) {
-            dispatch("SET_DIALOG_OPEN", {
-              isCharacterOrderDialogOpen: true,
-            });
-          }
           return result;
         })
       );
-      return {
+      const mergedResult = {
         success: result.every((r) => r.success),
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
+      if (!preventOpeningDialog && mergedResult.anyNewCharacters) {
+        dispatch("SET_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen: true,
+        });
+      }
+
+      return mergedResult;
     },
   },
 
