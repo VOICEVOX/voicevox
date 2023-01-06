@@ -119,6 +119,8 @@ describe("store/vuex.js test", () => {
           tweakableSliderByScroll: false,
         },
         isShowSinger: true,
+        sequencerZoomX: 1,
+        sequencerZoomY: 1,
       },
       getters: {
         ...uiStore.getters,

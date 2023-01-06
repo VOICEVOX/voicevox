@@ -316,6 +316,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_ZOOM_X: {
+    mutation(state, { zoomX }: { zoomX: number }) {
+      state.sequencerZoomX = zoomX;
+    },
+    async action({ commit }, { zoomX }) {
+      commit("SET_ZOOM_X", {
+        zoomX,
+      });
+    },
+  },
+
+  SET_ZOOM_Y: {
+    mutation(state, { zoomY }: { zoomY: number }) {
+      state.sequencerZoomY = zoomY;
+    },
+    async action({ commit }, { zoomY }) {
+      commit("SET_ZOOM_Y", {
+        zoomY,
+      });
+    },
+  },
+
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async ({ dispatch }, { filePath }: { filePath?: string }) => {

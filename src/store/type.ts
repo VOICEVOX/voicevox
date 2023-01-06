@@ -760,6 +760,16 @@ export type SingingStoreTypes = {
     action(payload: { index: number }): void;
   };
 
+  SET_ZOOM_X: {
+    mutation: { zoomX: number };
+    action(payload: { zoomX: number }): void;
+  };
+
+  SET_ZOOM_Y: {
+    mutation: { zoomY: number };
+    action(payload: { zoomY: number }): void;
+  };
+
   IMPORT_MIDI_FILE: {
     action(payload: { filePath?: string }): void;
   };

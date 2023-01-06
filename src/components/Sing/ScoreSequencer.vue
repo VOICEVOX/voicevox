@@ -9,6 +9,9 @@
         }`"
         :id="`sequencer-key-${y.midi}`"
         :title="y.name"
+        v-bind:style="{
+          height: `${24 * zoomY}px`,
+        }"
       >
         {{ y.pitch === "C" ? y.name : "" }}
       </div>
@@ -19,6 +22,9 @@
         :key="x"
         :class="`sequencer-row`"
         :id="`sequencer-row-${x}`"
+        v-bind:style="{
+          width: `${120 * zoomX}px`,
+        }"
       >
         <div
           v-for="y in gridY"
@@ -28,6 +34,9 @@
           } ${y.pitch === 'F' ? 'key-f' : ''}`"
           :id="`sequencer-cell-${x}-${y.midi}`"
           @click="addNote(x, y.midi)"
+          v-bind:style="{
+            height: `${24 * zoomY}px`,
+          }"
         />
       </div>
       <div
@@ -36,10 +45,10 @@
         class="sequencer-note"
         @dblclick="removeNote(index)"
         v-bind:style="{
-          left: `${note.position}px`,
-          bottom: `${note.midi * 24}px`,
-          width: `${note.duration}px`,
-          height: '24px',
+          left: `${note.position * zoomX}px`,
+          bottom: `${note.midi * 24 * zoomY}px`,
+          width: `${note.duration * zoomX}px`,
+          height: `${24 * zoomY}px`,
         }"
       >
         <input
@@ -51,6 +60,35 @@
         <div class="sequencer-note-bar" />
       </div>
     </div>
+    <input
+      type="range"
+      min="0.1"
+      max="1"
+      step="0.1"
+      :value="zoomX"
+      @change="(e) => setZoomX(e)"
+      v-bind:style="{
+        position: 'fixed',
+        zIndex: 10000,
+        bottom: '8px',
+        right: '16px',
+      }"
+    />
+    <input
+      type="range"
+      min="0.1"
+      max="1"
+      step="0.1"
+      :value="zoomY"
+      @change="(e) => setZoomY(e)"
+      v-bind:style="{
+        position: 'fixed',
+        zIndex: 10000,
+        bottom: '96px',
+        right: '-32px',
+        transform: 'rotate(-90deg)',
+      }"
+    />
   </div>
 </template>
 
@@ -121,6 +159,24 @@ export default defineComponent({
       }
     };
 
+    const setZoomX = (event: Event) => {
+      if (!(event.target instanceof HTMLInputElement)) {
+        return;
+      }
+      store.dispatch("SET_ZOOM_X", {
+        zoomX: Number(event.target.value),
+      });
+    };
+
+    const setZoomY = (event: Event) => {
+      if (!(event.target instanceof HTMLInputElement)) {
+        return;
+      }
+      store.dispatch("SET_ZOOM_Y", {
+        zoomY: Number(event.target.value),
+      });
+    };
+
     return {
       timeSignatures,
       gridY,
@@ -132,6 +188,8 @@ export default defineComponent({
       addNote,
       removeNote,
       setLyric,
+      setZoomX,
+      setZoomY,
     };
   },
 });
@@ -165,7 +223,6 @@ export default defineComponent({
   color: #555;
   display: flex;
   font-size: 10px;
-  height: 24px;
   text-align: right;
   padding-left: 4px;
   position: relative;
@@ -222,13 +279,11 @@ export default defineComponent({
 .sequencer-row {
   border-right: 1px solid #ddd;
   flex-shrink: 0;
-  width: 120px;
 }
 
 .sequencer-cell {
   border-bottom: 1px solid #ddd;
   flex-shrink: 0;
-  height: 24px;
 
   &.black {
     background: #f2f2f2;
@@ -264,8 +319,8 @@ export default defineComponent({
 .sequencer-note-bar {
   background: colors.$primary;
   border-radius: 2px;
-  height: 24px;
   padding: 0 4px;
+  height: 100%;
   width: 100%;
 }
 </style>
