@@ -703,6 +703,8 @@ export type SingingStoreState = {
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
   sequencerZoomX: number;
   sequencerZoomY: number;
+  sequencerScrollX: number;
+  sequencerScrollY: number;
 };
 
 export type SingingStoreTypes = {
@@ -768,6 +770,16 @@ export type SingingStoreTypes = {
   SET_ZOOM_Y: {
     mutation: { zoomY: number };
     action(payload: { zoomY: number }): void;
+  };
+
+  SET_SCROLL_X: {
+    mutation: { scrollX: number };
+    action(payload: { scrollX: number }): void;
+  };
+
+  SET_SCROLL_Y: {
+    mutation: { scrollY: number };
+    action(payload: { scrollY: number }): void;
   };
 
   IMPORT_MIDI_FILE: {

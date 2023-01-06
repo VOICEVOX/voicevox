@@ -35,6 +35,8 @@ export const singingStoreState: SingingStoreState = {
   isShowSinger: true,
   sequencerZoomX: 1,
   sequencerZoomY: 1,
+  sequencerScrollY: 60,
+  sequencerScrollX: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -334,6 +336,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { zoomY }) {
       commit("SET_ZOOM_Y", {
         zoomY,
+      });
+    },
+  },
+
+  SET_SCROLL_X: {
+    mutation(state, { scrollX }: { scrollX: number }) {
+      state.sequencerScrollX = scrollX;
+    },
+    async action({ commit }, { scrollX }) {
+      commit("SET_SCROLL_X", {
+        scrollX,
+      });
+    },
+  },
+
+  SET_SCROLL_Y: {
+    mutation(state, { scrollY }: { scrollY: number }) {
+      state.sequencerScrollY = scrollY;
+    },
+    async action({ commit }, { scrollY }) {
+      commit("SET_SCROLL_Y", {
+        scrollY,
       });
     },
   },

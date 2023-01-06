@@ -1,5 +1,5 @@
 <template>
-  <div class="score-sequencer">
+  <div class="score-sequencer" id="score-sequencer">
     <div class="sequencer-keys">
       <div
         v-for="y in gridY"
@@ -16,7 +16,7 @@
         {{ y.pitch === "C" ? y.name : "" }}
       </div>
     </div>
-    <div class="sequencer-grids">
+    <div class="sequencer-grids" ref="sequencer-grids">
       <div
         v-for="x in gridX"
         :key="x"
@@ -93,7 +93,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, onMounted } from "vue";
 import { useStore } from "@/store";
 import {
   midiKeys,
@@ -110,14 +110,14 @@ export default defineComponent({
     const gridX = computed(() => {
       const resolution = store.state.score?.resolution || 480;
       // NOTE: 最低幅: 仮
-      const minDuration = resolution * 4 * 16;
+      const minDuration = resolution * 4 * 15;
       const lastNote = store.state.score?.notes.slice(-1)[0];
       const totalDuration = lastNote
         ? Math.max(lastNote.position + lastNote.duration, minDuration)
         : minDuration;
       // NOTE: グリッド幅1/16: 設定できるようにする必要あり
       const gridDuration = resolution / 4;
-      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()].map(
+      return [...Array(Math.ceil(totalDuration / gridDuration) + 1).keys()].map(
         (gridNum) => gridNum * gridDuration
       );
     });
@@ -125,6 +125,22 @@ export default defineComponent({
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
+    const scrollX = computed(() => store.state.sequencerScrollX);
+    const scrollY = computed(() => store.state.sequencerScrollY);
+
+    onMounted(() => {
+      const el = document.querySelector("#score-sequencer");
+      if (el) {
+        el.scrollTop = scrollY.value * (24 * zoomY.value);
+        let a = 1000;
+        const testScroll = () => {
+          a = a - 1;
+          el.scrollLeft = a;
+          requestAnimationFrame(testScroll);
+        };
+        testScroll();
+      }
+    });
 
     const addNote = (position: number, midi: number) => {
       // NOTE: フォーカスなど動作変更
@@ -277,8 +293,12 @@ export default defineComponent({
 }
 
 .sequencer-row {
-  border-right: 1px solid #ddd;
+  border-right: 1px solid #eee;
   flex-shrink: 0;
+}
+
+.sequencer-row:nth-child(16n) {
+  border-right: 1px solid #ddd;
 }
 
 .sequencer-cell {
