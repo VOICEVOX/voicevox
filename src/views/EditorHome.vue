@@ -498,7 +498,6 @@ export default defineComponent({
         engineIds = store.state.engineIds;
       }
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
       await store.dispatch("POST_ENGINE_START", {
         engineIds,
         preventOpeningDialog: false,
