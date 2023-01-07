@@ -41,24 +41,32 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+// Electronの設定ファイルの保存場所を変更
+const fixedUserDataDir = path.join(
+  app.getPath("appData"),
+  `voicevox${isDevelopment ? "-dev" : ""}`
+);
+if (!fs.existsSync(fixedUserDataDir)) {
+  fs.mkdirSync(fixedUserDataDir);
+}
+app.setPath("userData", fixedUserDataDir);
+
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
 const prefix = dayjs().format("YYYYMMDD_HHmmss");
+const logPath = app.getPath("logs");
 log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
-
-const isDevelopment = process.env.NODE_ENV !== "production";
-
-if (isDevelopment) {
-  app.setPath(
-    "userData",
-    path.join(app.getPath("appData"), `${app.getName()}-dev`)
-  );
-}
+log.transports.file.resolvePath = (variables) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return path.join(logPath, variables.fileName!);
+};
 
 let win: BrowserWindow;
 
@@ -758,7 +766,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
-    properties: ["openFile"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   });
   return result.filePaths[0];
 });
@@ -766,7 +774,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
-    properties: ["openDirectory", "createDirectory"],
+    properties: ["openDirectory", "createDirectory", "treatPackageAsDirectory"],
   });
   if (result.canceled) {
     return undefined;
@@ -791,7 +799,7 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-    properties: ["openFile"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   });
   if (result.canceled) {
     return undefined;
@@ -845,7 +853,7 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: "Text", extensions: ["txt"] }],
-    properties: ["openFile", "createDirectory"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   })?.[0];
 });
 
@@ -878,6 +886,10 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
 
+ipcMainHandle("LOG_WARN", (_, ...params) => {
+  log.warn(...params);
+});
+
 ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
@@ -891,10 +903,6 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle("RESTART_ENGINE_ALL", async () => {
-  await engineManager.restartEngineAll(win);
-});
-
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await engineManager.restartEngine(engineId, win);
 });

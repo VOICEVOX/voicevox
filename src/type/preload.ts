@@ -81,9 +81,9 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
+  logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
   openEngineDirectory(engineId: string): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -115,6 +115,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  portraitPath: string | undefined;
   engineId: string;
   voiceSamplePaths: string[];
 };

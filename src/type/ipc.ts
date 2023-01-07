@@ -178,6 +178,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  LOG_WARN: {
+    args: [...params: unknown[]];
+    return: void;
+  };
+
   LOG_INFO: {
     args: [...params: unknown[]];
     return: void;
