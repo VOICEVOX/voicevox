@@ -4,6 +4,14 @@ import path from "path";
 
 import semver from "semver";
 
+function _logInfo(message: string) {
+  console.info(`configMigration014: ${message}`);
+}
+
+function _logError(message: string) {
+  console.error(`configMigration014: ${message}`);
+}
+
 export default function ({
   fixedUserDataDir,
   beforeUserDataDir,
@@ -22,9 +30,7 @@ export default function ({
       }
 
       if (semver.satisfies(config.__internal__.migrations.version, ">=0.14")) {
-        console.info(
-          `configMigration014: >=0.14 ${configPath} exists, do nothing`
-        );
+        _logInfo(`>=0.14 ${configPath} exists, do nothing`);
         return;
       }
     }
@@ -35,22 +41,18 @@ export default function ({
       // 今のconfigがあれば念のためバックアップ
       if (fs.existsSync(configPath)) {
         const backupPath = path.join(fixedUserDataDir, "config-backup.json");
-        console.info(`configMigration014: backup to ${backupPath}`);
+        _logInfo(`backup to ${backupPath}`);
         fs.copyFileSync(configPath, backupPath);
       }
 
-      console.info(
-        `configMigration014: copy from ${beforeConfigPath} to ${configPath}`
-      );
+      _logInfo(`copy from ${beforeConfigPath} to ${configPath}`);
       fs.copyFileSync(beforeConfigPath, configPath);
       return;
     } else {
-      console.info(
-        `configMigration014: ${beforeConfigPath} not exists, do nothing`
-      );
+      _logInfo(`${beforeConfigPath} not exists, do nothing`);
     }
   } catch (e) {
-    console.error("configMigration014: error!");
+    _logError("error!");
     console.error(e);
   }
 }
