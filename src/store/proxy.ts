@@ -40,7 +40,7 @@ export const convertAudioQueryFromEditorToEngine = (
   return {
     ...editorAudioQuery,
     outputSamplingRate:
-      editorAudioQuery.outputSamplingRate == "default"
+      editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
   };

@@ -85,6 +85,7 @@ if (isDevelopment) {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
+  process.chdir(appDirPath);
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -224,8 +225,8 @@ const store = new Store<ElectronStoreType>({
         exportText: { type: "boolean", default: false },
         outputStereo: { type: "boolean", default: false },
         outputSamplingRate: {
-          oneOf: [{ type: "number" }, { const: "default" }],
-          default: "default",
+          oneOf: [{ type: "number" }, { const: "engineDefault" }],
+          default: "engineDefault",
         },
         audioOutputDevice: { type: "string", default: "default" },
       },
@@ -238,7 +239,7 @@ const store = new Store<ElectronStoreType>({
         exportLab: false,
         exportText: false,
         outputStereo: false,
-        outputSamplingRate: "default",
+        outputSamplingRate: "engineDefault",
         audioOutputDevice: "default",
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
       },
@@ -320,6 +321,9 @@ const store = new Store<ElectronStoreType>({
       type: "string",
       default: "Default",
     },
+    editorFont: {
+      anyOf: [{ const: "default" }, { const: "os" }],
+    },
     experimentalSetting: {
       type: "object",
       properties: {
@@ -389,9 +393,8 @@ const store = new Store<ElectronStoreType>({
       }
     },
     ">=0.14": (store) => {
-      // 24000 Hz -> "default"
       if (store.get("savingSetting").outputSamplingRate == 24000) {
-        store.set("savingSetting.outputSamplingRate", "default");
+        store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
     },
   },
@@ -634,16 +637,22 @@ async function createWindow() {
   win.webContents.once("did-finish-load", () => {
     if (isMac) {
       if (filePathOnMac) {
-        ipcMainSend(win, "LOAD_PROJECT_FILE", {
-          filePath: filePathOnMac,
-          confirm: false,
-        });
+        if (filePathOnMac.endsWith(".vvproj")) {
+          ipcMainSend(win, "LOAD_PROJECT_FILE", {
+            filePath: filePathOnMac,
+            confirm: false,
+          });
+        }
         filePathOnMac = undefined;
       }
     } else {
       if (process.argv.length >= 2) {
         const filePath = process.argv[1];
-        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+        if (
+          fs.existsSync(filePath) &&
+          fs.statSync(filePath).isFile() &&
+          filePath.endsWith(".vvproj")
+        ) {
           ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
         }
       }
@@ -749,7 +758,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
-    properties: [],
+    properties: ["openFile"],
   });
   return result.filePaths[0];
 });
@@ -1131,8 +1140,13 @@ app.on("ready", async () => {
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
     log.info(`File path sent: ${filePath}`);
+    appState.willQuit = true;
     app.quit();
     return;
+  }
+
+  if (filePath?.endsWith(".vvpp")) {
+    await installVvppEngine(filePath);
   }
 
   createWindow().then(() => engineManager.runEngineAll(win));
