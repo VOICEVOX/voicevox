@@ -1633,12 +1633,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               dispatch("GENERATE_AUDIO", { audioKey }),
               dispatch
             );
-          } catch (e) {
-            if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
-              throw new Error("モーフィングの設定が無効です。");
-            }
-            window.electron.logError(e);
-            throw new Error("");
           } finally {
             commit("SET_AUDIO_NOW_GENERATING", {
               audioKey,
