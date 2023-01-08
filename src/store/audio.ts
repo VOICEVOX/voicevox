@@ -1751,7 +1751,7 @@ export const audioCommandStore = transformCommandStore(
         }: {
           audioItem: AudioItem;
           prevAudioKey: string | undefined;
-          applyPreset?: boolean;
+          applyPreset: boolean;
         }
       ) {
         const audioKey = await dispatch("GENERATE_AUDIO_KEY");
@@ -1759,7 +1759,7 @@ export const audioCommandStore = transformCommandStore(
           audioItem,
           audioKey,
           prevAudioKey,
-          applyPreset: applyPreset ?? true, // 明示的に指定しなければ必ずプリセット適用する
+          applyPreset,
         });
         return audioKey;
       },

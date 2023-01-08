@@ -426,6 +426,7 @@ export default defineComponent({
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
+        applyPreset: true,
       });
       audioCellRefs[newAudioKey].focusTextField();
     };
