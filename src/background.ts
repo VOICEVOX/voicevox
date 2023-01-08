@@ -140,6 +140,10 @@ const defaultHotkeySettings: HotkeySetting[] = [
     combination: "Shift Enter",
   },
   {
+    action: "テキスト欄を複製",
+    combination: !isMac ? "Ctrl D" : "Meta D",
+  },
+  {
     action: "テキスト欄を削除",
     combination: "Shift Delete",
   },
