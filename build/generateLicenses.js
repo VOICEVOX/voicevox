@@ -12,7 +12,7 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .parse();
 
-const { execSync } = require("child_process");
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const tmp = require("tmp");
 
@@ -41,21 +41,23 @@ const disallowedLicenses = [
   "LGPL-3.0",
   "NGPL",
   "MIT",
-].join(";");
+];
 
-// If it runs on Windows, the arg DO NOT be enclosed with single quotes.
-// If it run on Linux (bash), the arg SHOULD be enclosed with single quotes.
-const failOnArg = isWindows ? disallowedLicenses : `'${disallowedLicenses}'`;
+// On Windows, npm's global packages can be called with the extension `.cmd` or `.ps1`.
+// On Linux (bash), they can be called without extensions.
+const extension = isWindows ? ".cmd" : "";
 
 // https://github.com/davglass/license-checker
 // npm install -g license-checker
-const licenseJson = execSync(
-  `license-checker \
-  --production \
-  --excludePrivatePackages \
-  --json \
-  --customPath ${customFormatFile.name} \
-  --failOn ${failOnArg}`,
+const licenseJson = execFileSync(
+  `license-checker${extension}`,
+  [
+    "--production",
+    "--excludePrivatePackages",
+    "--json",
+    `--customPath=${customFormatFile.name}`,
+    `--failOn=${disallowedLicenses.join(";")}`,
+  ],
   {
     encoding: "utf-8",
   }
