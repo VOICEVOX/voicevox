@@ -37,10 +37,7 @@ const disallowedLicenses = [
   "GPL-2.0",
   "GPL-3.0",
   "AGPL",
-  "LGPL",
-  "LGPL-3.0",
   "NGPL",
-  "MIT",
 ];
 
 // On Windows, npm's global packages can be called with the extension `.cmd` or `.ps1`.
