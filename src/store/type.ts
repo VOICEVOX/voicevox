@@ -439,10 +439,12 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: string;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: string | undefined;
+      applyPreset?: boolean;
     }): Promise<string>;
   };
 
