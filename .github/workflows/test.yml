@@ -54,11 +54,8 @@ jobs:
           key: ${{ env.cache-version }}-${{ runner.os }}--node-modules-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--node-modules-
-      - run: cp package-lock.json package-lock.json.bak
-      - run: npm i
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm ci
-        if: hashFiles('package-lock.json') != hashFiles('package-lock.json.bak')
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run markdownlint
