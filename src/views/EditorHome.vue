@@ -201,6 +201,7 @@ import {
   SplitterPosition,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import cloneDeep from "clone-deep";
 
 export default defineComponent({
   name: "EditorHome",
@@ -245,6 +246,15 @@ export default defineComponent({
             focusCell({ audioKey: activeAudioKey.value });
           }
           return false; // this is the same with event.preventDefault()
+        },
+      ],
+      [
+        "テキスト欄を複製",
+        () => {
+          if (activeAudioKey.value != undefined) {
+            duplicateAudioItem();
+          }
+          return false;
         },
       ],
     ]);
@@ -416,6 +426,21 @@ export default defineComponent({
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
+      });
+      audioCellRefs[newAudioKey].focusTextField();
+    };
+    const duplicateAudioItem = async () => {
+      const prevAudioKey = activeAudioKey.value;
+
+      // audioItemが選択されていない状態で押されたら何もしない
+      if (prevAudioKey == undefined) return;
+
+      const prevAudioItem = store.state.audioItems[prevAudioKey];
+
+      const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+        audioItem: cloneDeep(prevAudioItem),
+        prevAudioKey: activeAudioKey.value,
+        applyPreset: false,
       });
       audioCellRefs[newAudioKey].focusTextField();
     };
