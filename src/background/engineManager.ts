@@ -379,17 +379,6 @@ export class EngineManager {
   }
 
   /**
-   * 全てのエンジンを再起動する。
-   * FIXME: winを受け取らなくても良いようにする
-   */
-  async restartEngineAll(win: BrowserWindow) {
-    const engineInfos = this.fetchEngineInfos();
-    for (const engineInfo of engineInfos) {
-      await this.restartEngine(engineInfo.uuid, win);
-    }
-  }
-
-  /**
    * エンジンを再起動する。
    * FIXME: winを受け取らなくても良いようにする
    */

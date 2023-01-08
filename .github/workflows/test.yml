@@ -46,7 +46,17 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ env.cache-version }}-${{ runner.os }}--node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--node-modules-
+
       - run: npm ci
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
       - name: Disallowed licenses check
         shell: bash
         run: npm run license:generate -- -o voicevox_licenses.json

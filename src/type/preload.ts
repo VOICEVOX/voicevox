@@ -12,6 +12,7 @@ export interface ElectronStoreType {
   userCharacterOrder: string[];
   defaultStyleIds: DefaultStyleId[];
   currentTheme: string;
+  editorFont: EditorFontType;
   experimentalSetting: ExperimentalSetting;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   acceptTerms: AcceptTermsStatus;
@@ -80,9 +81,9 @@ export interface Sandbox {
   minimizeWindow(): void;
   maximizeWindow(): void;
   logError(...params: unknown[]): void;
+  logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngineAll(): Promise<void>;
   restartEngine(engineId: string): Promise<void>;
   openEngineDirectory(engineId: string): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
@@ -114,6 +115,7 @@ export type StyleInfo = {
   styleName?: string;
   styleId: number;
   iconPath: string;
+  portraitPath: string | undefined;
   engineId: string;
   voiceSamplePaths: string[];
 };
@@ -159,6 +161,8 @@ export type ActivePointScrollMode = "CONTINUOUSLY" | "PAGE" | "OFF";
 
 export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
+export type EditorFontType = "default" | "os";
+
 export type SavingSetting = {
   exportLab: boolean;
   fileEncoding: Encoding;
@@ -168,7 +172,7 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number | "default";
+  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
 

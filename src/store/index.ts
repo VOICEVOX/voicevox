@@ -267,6 +267,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+  LOG_WARN: {
+    action(_, ...params: unknown[]) {
+      window.electron.logWarn(...params);
+    },
+  },
+
   LOG_INFO: {
     action(_, ...params: unknown[]) {
       window.electron.logInfo(...params);

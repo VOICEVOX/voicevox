@@ -61,6 +61,10 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 
 ## 使い方に関する質問
 
+### Q. 読み方が想定と異なります。
+
+単語の読み方は辞書登録で変更できます。設定 → 読み方＆アクセント辞書から単語を登録してみてください。
+
 ### Q. 使い方がわかりません。
 
 [使い方](https://voicevox.hiroshiba.jp/how_to_use) Web ページか、ソフトウェアのヘルプからご確認ください。  
@@ -83,16 +87,18 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox` もしくは `C:\Users\(ユーザー名)\AppData\Roaming\voicevox-cpu`
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox-cpu`
+`/Users/(ユーザー名)/Library/Application Support/voicevox`
 
 ### Q. エンジンの起動が失敗したというエラーが表示されます。
 
 対応する GPU が搭載されていない PC で GPU モードとして起動するとエラーが表示されます。  
 設定 → エンジンから CPU モードを選んでください。
+
+また、以前起動したエンジンが正常に停止されずに残っているかもしれません。その場合は PC の再起動をお試しください。
 
 ### Q. GPU モードで起動するとエラーが表示されます。
 
@@ -118,6 +124,18 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 ### Q. 「、」で区切った短い文節が読まれないことがあります。
 
 現状の音声合成エンジンの仕様になります。前後の無音の長さを長くすると改善することがあるのでお試しください。
+
+### Q. エラーログはどこで確認できますか？
+
+以下のディレクトリに保存されています。
+
+#### Windows 版
+
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs` もしくは `C:\Users\(ユーザー名)\AppData\Roaming\voicevox-cpu\logs`
+
+#### Mac 版
+
+`/Users/(ユーザー名)/Library/Application Support/voicevox-cpu/logs`
 
 ### `ubuntu 22.04`で動きません。
 
