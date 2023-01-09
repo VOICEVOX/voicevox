@@ -1106,7 +1106,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
           if (audioItem.morphingInfo != undefined) {
             if (!getters.VALID_MOPHING_INFO(audioItem))
-              throw new Error("VALID_MOPHING_ERROR");
+              throw new Error("VALID_MOPHING_ERROR"); //FIXME: エラーを変更した場合ハンドリング部分も修正する
             blob = await instance.invoke(
               "synthesisMorphingSynthesisMorphingPost"
             )({
@@ -1204,6 +1204,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             blob = await dispatch("GENERATE_AUDIO", { audioKey });
           } catch (e) {
             let errorMessage = undefined;
+            // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
             if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
               errorMessage = "モーフィングの設定が無効です。";
             } else {
@@ -1412,6 +1413,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               blob = await dispatch("GENERATE_AUDIO", { audioKey });
             } catch (e) {
               let errorMessage = undefined;
+              // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
               if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
                 errorMessage = "モーフィングの設定が無効です。";
               } else {

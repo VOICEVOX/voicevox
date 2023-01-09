@@ -504,6 +504,7 @@ export default defineComponent({
         });
       } catch (e) {
         let msg: string | undefined;
+        // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
         if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
           msg = "モーフィングの設定が無効です。";
         } else {
