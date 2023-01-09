@@ -52,7 +52,7 @@ async function generateUniqueIdAndQuery(
       audioQuery,
       audioItem.engineId,
       audioItem.styleId,
-      audioItem.morphingInfo, // FIXME: モーフィング非対応エンジンの場合morphingInfoが異なっていても同じ音声が出力されるが異なるIDが生成されてしまう
+      audioItem.morphingInfo,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
   );
@@ -1103,10 +1103,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         }).then(async (instance) => {
           let blob: Blob;
-          if (
-            audioItem.morphingInfo != undefined &&
-            state.experimentalSetting.enableMorphing
-          ) {
+          // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
+          if (audioItem.morphingInfo != undefined) {
             if (!getters.VALID_MOPHING_INFO(audioItem))
               throw new Error("VALID_MOPHING_ERROR");
             blob = await instance.invoke(
