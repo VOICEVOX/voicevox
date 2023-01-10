@@ -187,7 +187,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         ...defaultStyleIds,
         ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => {
           const characterInfo = allCharacterInfos.get(speakerUuid);
-          console.log(characterInfo);
           if (!characterInfo) {
             throw new Error(
               `characterInfo not found. speakerUuid=${speakerUuid}`
@@ -200,7 +199,6 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         }),
       ];
 
-      console.log(defaultStyleIds);
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
     },
   },
