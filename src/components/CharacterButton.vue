@@ -264,7 +264,6 @@ export default defineComponent({
       const defaultStyle = characterInfo?.metas.styles.find(
         (style) => style.styleId === defaultStyleId
       );
-      console.log(characterInfo, defaultStyleId, defaultStyle);
 
       if (defaultStyle == undefined)
         throw new Error("defaultStyle == undefined");
