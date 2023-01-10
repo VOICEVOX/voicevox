@@ -248,15 +248,6 @@ export default defineComponent({
           return false; // this is the same with event.preventDefault()
         },
       ],
-      [
-        "テキスト欄を複製",
-        () => {
-          if (activeAudioKey.value != undefined) {
-            duplicateAudioItem();
-          }
-          return false;
-        },
-      ],
     ]);
 
     setHotkeyFunctions(hotkeyMap);
@@ -275,39 +266,44 @@ export default defineComponent({
         )
     );
 
+    const canExecuteHotkey = (event: KeyboardEvent, key: HotkeyAction) =>
+      !event.isComposing &&
+      !uiLocked.value &&
+      parseCombo(event) === hotkeySettingsMap.value.get(key);
+
     // hotkeys handled by native, for they are made to be working while focusing input elements
     const hotkeyActionsNative = [
       (event: KeyboardEvent) => {
-        if (
-          !event.isComposing &&
-          !uiLocked.value &&
-          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を追加")
-        ) {
+        if (canExecuteHotkey(event, "テキスト欄を追加")) {
           addAudioItem();
           event.preventDefault();
         }
       },
       (event: KeyboardEvent) => {
-        if (
-          !event.isComposing &&
-          !uiLocked.value &&
-          parseCombo(event) == hotkeySettingsMap.value.get("テキスト欄を削除")
-        ) {
+        if (canExecuteHotkey(event, "テキスト欄を削除")) {
           removeAudioItem();
           event.preventDefault();
         }
       },
       (event: KeyboardEvent) => {
-        if (
-          !event.isComposing &&
-          !uiLocked.value &&
-          parseCombo(event) ==
-            hotkeySettingsMap.value.get("テキスト欄からフォーカスを外す")
-        ) {
+        if (canExecuteHotkey(event, "テキスト欄からフォーカスを外す")) {
           if (document.activeElement instanceof HTMLInputElement) {
             document.activeElement.blur();
           }
           event.preventDefault();
+        }
+      },
+      (event: KeyboardEvent) => {
+        if (canExecuteHotkey(event, "テキスト欄を複製")) {
+          event.preventDefault();
+
+          const audioKey = activeAudioKey.value;
+          if (audioKey != undefined) {
+            (async () => {
+              await audioCellRefs[audioKey].pushAudioText();
+              duplicateAudioItem();
+            })();
+          }
         }
       },
     ];
