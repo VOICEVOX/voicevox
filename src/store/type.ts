@@ -80,7 +80,7 @@ export type SaveResultObject = {
   path: string | undefined;
   errorMessage?: string;
 };
-export type WriteErrorTypeForSaveAllResultDialog = {
+export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
 };

@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts">
-import { WriteErrorTypeForSaveAllResultDialog } from "@/store/type";
+import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 import { useDialogPluginComponent } from "quasar";
 import { defineComponent, PropType } from "vue";
 
@@ -65,11 +65,11 @@ export default defineComponent({
       required: true,
     },
     writeErrorArray: {
-      type: Array as PropType<WriteErrorTypeForSaveAllResultDialog[]>,
+      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
       required: true,
     },
     engineErrorArray: {
-      type: Array as PropType<WriteErrorTypeForSaveAllResultDialog[]>,
+      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
       required: true,
     },
   },

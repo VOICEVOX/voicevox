@@ -2,7 +2,7 @@ import { Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
-  WriteErrorTypeForSaveAllResultDialog,
+  ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
@@ -86,8 +86,8 @@ export async function generateAndSaveAllAudioWithDialog({
   );
 
   const successArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
-  const engineErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
+  const writeErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
+  const engineErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
 
   if (result) {
     for (const item of result) {
