@@ -151,7 +151,7 @@
     :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
-  <default-style-select-dialog
+  <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
@@ -185,7 +185,7 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
@@ -217,7 +217,7 @@ export default defineComponent({
     HotkeySettingDialog,
     HeaderBarCustomDialog,
     CharacterPortrait,
-    DefaultStyleSelectDialog,
+    DefaultStyleListDialog,
     CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,

@@ -1,29 +1,18 @@
 <template>
-  <character-default-style-select-dialog
-    v-if="
-      selectedCharacterInfo &&
-      selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
-        undefined
-    "
-    v-model:isOpen="showStyleSelectDialog"
-    v-model:selectedStyleIndex="
-      selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
-    "
-    :character-info="selectedCharacterInfo"
-  />
   <q-dialog
     maximized
     transition-show="jump-up"
     transition-hide="jump-down"
-    class="transparent-backdrop"
-    v-model="modelValueComputed"
+    class="default-style-select-dialog transparent-backdrop"
+    v-model="isOpenComputed"
   >
     <q-layout container view="hHh Lpr lff" class="bg-background">
       <q-header class="q-py-sm">
         <q-toolbar>
           <div class="column">
             <q-toolbar-title class="text-display"
-              >設定 / デフォルトスタイル・試聴</q-toolbar-title
+              >設定 / デフォルトスタイル・試聴 /
+              {{ characterInfo.metas.speakerName }}</q-toolbar-title
             >
           </div>
 
@@ -42,60 +31,85 @@
         </q-toolbar>
       </q-header>
 
+      <q-drawer
+        bordered
+        show-if-above
+        :model-value="true"
+        :width="$q.screen.width / 3"
+        :breakpoint="0"
+      >
+        <div class="character-portrait-wrapper">
+          <img :src="characterInfo.portraitPath" class="character-portrait" />
+        </div>
+      </q-drawer>
+
       <q-page-container>
-        <q-page class="main">
-          <div class="character-items-container">
-            <div>
+        <q-page>
+          <div class="style-items-container">
+            <div class="q-pb-md">
               <q-item
-                v-for="speaker of speakerWithMultipleStyles"
-                :key="speaker.metas.speakerUuid"
+                v-for="(style, styleIndex) of characterInfo.metas.styles"
+                :key="styleIndex"
                 clickable
-                v-ripple="isHoverableItem"
-                class="q-pa-none character-item"
-                :class="[isHoverableItem && 'hoverable-character-item']"
-                @dblclick="openStyleSelectDialog(speaker)"
+                v-ripple="isHoverableStyleItem"
+                class="q-pa-none style-item"
+                :class="[
+                  selectedStyleIndexComputed === styleIndex &&
+                    'active-style-item',
+                  isHoverableStyleItem && 'hoverable-style-item',
+                ]"
+                @click="selectStyleIndex(styleIndex)"
+                @dblclick="closeDialog"
               >
-                <div class="character-item-inner">
-                  <img
-                    :src="
-                      speaker.metas.styles[
-                        selectedStyleIndexes[speaker.metas.speakerUuid]
-                      ].iconPath
-                    "
-                    class="style-icon"
-                  />
+                <div class="style-item-inner">
+                  <img :src="style.iconPath" class="style-icon" />
                   <span class="text-subtitle1 q-ma-sm">{{
-                    characterInfosMap[speaker.metas.speakerUuid].metas
-                      .speakerName
+                    style.styleName || "ノーマル"
                   }}</span>
-                  <div
-                    v-if="
-                      characterInfosMap[speaker.metas.speakerUuid].metas.styles
-                        .length > 1
-                    "
-                    class="style-select-container"
-                  >
-                    <span
-                      >{{
-                        selectedStyles[speaker.metas.speakerUuid]
-                          ? selectedStyles[speaker.metas.speakerUuid].styleName
-                          : "ノーマル"
-                      }}（{{
-                        characterInfosMap[speaker.metas.speakerUuid].metas
-                          .styles.length
-                      }}スタイル）</span
-                    >
+                  <div class="voice-samples">
+                    <q-btn
+                      v-for="voiceSampleIndex of [...Array(3).keys()]"
+                      :key="voiceSampleIndex"
+                      round
+                      outline
+                      :icon="
+                        playing != undefined &&
+                        characterInfo.metas.speakerUuid ===
+                          playing.speakerUuid &&
+                        style.styleId === playing.styleId &&
+                        voiceSampleIndex === playing.index
+                          ? 'stop'
+                          : 'play_arrow'
+                      "
+                      color="primary-light"
+                      class="voice-sample-btn"
+                      @mouseenter="isHoverableStyleItem = false"
+                      @mouseleave="isHoverableStyleItem = true"
+                      @click.stop="
+                        playing != undefined &&
+                        characterInfo.metas.speakerUuid ===
+                          playing.speakerUuid &&
+                        style.styleId === playing.styleId &&
+                        voiceSampleIndex === playing.index
+                          ? stop()
+                          : play(
+                              characterInfo.metas.speakerUuid,
+                              style,
+                              voiceSampleIndex
+                            )
+                      "
+                    />
+                    <q-radio
+                      class="
+                        absolute-top-right
+                        no-pointer-events
+                        text-primary-light
+                      "
+                      :model-value="selectedStyleIndexComputed"
+                      :val="styleIndex"
+                      @update:model-value="selectStyleIndex(styleIndex)"
+                    />
                   </div>
-                  <q-btn
-                    outline
-                    class="q-mt-sm"
-                    text-color="display"
-                    @mouseenter="isHoverableItem = false"
-                    @mouseleave="isHoverableItem = true"
-                    @click.stop="openStyleSelectDialog(speaker)"
-                  >
-                    変更
-                  </q-btn>
                 </div>
               </q-item>
             </div>
@@ -107,25 +121,24 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
+import { defineComponent, computed, ref, PropType } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
-import CharacterDefaultStyleSelectDialog from "@/components/CharacterDefaultStyleSelectDialog.vue";
+import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "DefaultStyleSelectDialog",
 
-  components: {
-    CharacterDefaultStyleSelectDialog,
-  },
-
   props: {
-    modelValue: {
+    isOpen: {
       type: Boolean,
       required: true,
     },
-    characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
+    selectedStyleIndex: {
+      type: Number,
+      required: true,
+    },
+    characterInfo: {
+      type: Object as PropType<CharacterInfo>,
       required: true,
     },
   },
@@ -133,117 +146,89 @@ export default defineComponent({
   setup(props, { emit }) {
     const store = useStore();
 
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
+    const isOpenComputed = computed({
+      get: () => props.isOpen,
+      set: (val) => emit("update:isOpen", val),
     });
 
-    // 選択中のキャラクター
-    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
-    const selectCharacter = (speakerUuid: string) => {
-      selectedCharacter.value = speakerUuid;
-    };
-
-    const showStyleSelectDialog = ref<boolean>(false);
-    const selectedCharacterInfo = computed(() => {
-      return props.characterInfos.find(
-        (characterInfo) =>
-          characterInfo.metas.speakerUuid === selectedCharacter.value
-      );
+    const selectedStyleIndexComputed = computed({
+      get: () => props.selectedStyleIndex,
+      set: (val) => {
+        emit("update:selectedStyleIndex", val);
+      },
     });
 
-    const characterInfosMap = computed(() => {
-      const map: { [key: string]: CharacterInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
-        map[characterInfo.metas.speakerUuid] = characterInfo;
-      });
-      return map;
-    });
+    const selectStyleIndex = (styleIndex: number) => {
+      selectedStyleIndexComputed.value = styleIndex;
 
-    // サンプルボイス一覧のキャラクター順番
-    const speakerWithMultipleStyles = ref<CharacterInfo[]>([]);
-
-    // 選択中のスタイル
-    const selectedStyleIndexes = ref<Record<string, number>>({});
-    const selectedStyles = computed(() => {
-      const map: { [key: string]: StyleInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
-        const selectedStyleIndex: number | undefined =
-          selectedStyleIndexes.value[characterInfo.metas.speakerUuid];
-        map[characterInfo.metas.speakerUuid] =
-          characterInfo.metas.styles[selectedStyleIndex ?? 0];
-      });
-      return map;
-    });
-
-    // キャラクター表示順序
-    const characterOrder = ref<CharacterInfo[]>([]);
-
-    // ダイアログが開かれたときに初期値を求める
-    watch([() => props.modelValue], async ([newValue]) => {
-      if (newValue) {
-        speakerWithMultipleStyles.value = store.state.userCharacterOrder
-          .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-          .filter((characterInfo) => characterInfo !== undefined)
-          .filter(
-            (characterInfo) => characterInfo.metas.styles.length > 1
-          ) as CharacterInfo[];
-        selectedStyleIndexes.value = Object.fromEntries([
-          ...store.state.userCharacterOrder.map((speakerUuid) => [
-            speakerUuid,
-            0,
-          ]),
-          ...store.state.defaultStyleIds.map((defaultStyle) => [
-            defaultStyle.speakerUuid,
-            characterInfosMap.value[
-              defaultStyle.speakerUuid
-            ]?.metas.styles.findIndex(
-              (style) => style.styleId === defaultStyle.defaultStyleId
-            ) ?? 0,
-          ]),
-        ]);
+      // 音声を再生する。同じ話者/styleIndexだったら停止する。
+      const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
+      if (
+        playing.value !== undefined &&
+        playing.value.styleId === selectedStyleInfo.styleId
+      ) {
+        stop();
+      } else {
+        play(props.characterInfo.metas.speakerUuid, selectedStyleInfo, 0);
       }
-    });
-
-    // キャラクター枠のホバー状態を表示するかどうか
-    // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
-    const isHoverableItem = ref(true);
-
-    const closeDialog = () => {
-      store.dispatch(
-        "SET_DEFAULT_STYLE_IDS",
-        Object.entries(selectedStyleIndexes.value).map(
-          ([speakerUuid, styleIndex]) => ({
-            speakerUuid,
-            defaultStyleId:
-              characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
-                .styleId,
-          })
-        )
-      );
-      stop();
-      modelValueComputed.value = false;
     };
-    const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
+
+    const isHoverableStyleItem = ref(true);
+
+    const playing =
+      ref<{ speakerUuid: string; styleId: number; index: number }>();
+
+    const audio = new Audio();
+    audio.volume = 0.5;
+    audio.onended = () => stop();
+
+    const play = (
+      speakerUuid: string,
+      { styleId, voiceSamplePaths }: StyleInfo,
+      index: number
+    ) => {
+      if (audio.src !== "") stop();
+
+      audio.src = voiceSamplePaths[index];
+      audio.play();
+      playing.value = { speakerUuid, styleId, index };
+    };
+    const stop = () => {
+      if (audio.src === "") return;
+
+      audio.pause();
+      audio.removeAttribute("src");
+      playing.value = undefined;
+    };
+
+    // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
+    const closeDialog = () => {
+      const defaultStyleIds = JSON.parse(
+        JSON.stringify(store.state.defaultStyleIds)
+      ) as DefaultStyleId[];
+      store.dispatch("SET_DEFAULT_STYLE_IDS", [
+        ...defaultStyleIds,
+        {
+          speakerUuid: props.characterInfo.metas.speakerUuid,
+          defaultStyleId:
+            props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+              .styleId,
+        },
+      ]);
+
       stop();
-      selectedCharacter.value = characterInfo.metas.speakerUuid;
-      showStyleSelectDialog.value = true;
+      isOpenComputed.value = false;
     };
 
     return {
-      modelValueComputed,
-      characterInfosMap,
-      showStyleSelectDialog,
-      selectedCharacterInfo,
-      speakerWithMultipleStyles,
-      selectedStyleIndexes,
-      selectedStyles,
-      selectedCharacter,
-      selectCharacter,
-      characterOrder,
-      isHoverableItem,
+      isOpenComputed,
+      selectedStyleIndexComputed,
+      selectStyleIndex,
+      isHoverableStyleItem,
+      playing,
+      play,
+      stop,
       closeDialog,
-      openStyleSelectDialog,
     };
   },
 });
@@ -266,104 +251,70 @@ export default defineComponent({
     margin: auto;
   }
 }
-
-.main {
+.q-page {
   height: calc(
     100vh - #{vars.$menubar-height + vars.$header-height +
       vars.$window-border-width}
   );
 
-  display: flex;
-  flex-direction: row;
-}
-
-.character-items-container {
-  height: 100%;
-  padding: 5px 16px;
-
-  flex-grow: 1;
-
-  display: flex;
-  flex-direction: column;
-  overflow-y: scroll;
-
-  > div {
-    $character-item-size: 215px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, $character-item-size);
-    grid-auto-rows: 230px;
-    column-gap: 10px;
-    row-gap: 10px;
-    align-content: center;
-    justify-content: center;
-    .character-item {
-      box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
-      border-radius: 10px;
-      overflow: hidden;
-      &.selected-character-item {
-        box-shadow: 0 0 0 2px colors.$primary-light;
-      }
-      &:hover :deep(.q-focus-helper) {
-        opacity: 0 !important;
-      }
-      &.hoverable-character-item:hover :deep(.q-focus-helper) {
-        opacity: 0.15 !important;
-      }
-      .character-item-inner {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        height: 100%;
-        .style-icon {
-          $icon-size: $character-item-size / 2;
-          width: $icon-size;
-          height: $icon-size;
-          border-radius: 5px;
-        }
-        .style-select-container {
-          display: flex;
-          flex-direction: row;
-          justify-content: center;
-          align-items: center;
-          margin-top: -1rem;
-        }
-        .new-character-item {
-          color: colors.$primary-light;
-          position: absolute;
-          left: 0px;
-          top: 0px;
-        }
-      }
+  > :deep(.scroll) {
+    overflow-y: scroll;
+    .q-tab-panel {
+      padding: 5px 16px;
     }
   }
-}
 
-.character-order-container {
-  width: 180px;
-  height: 100%;
+  $character-name-height: 30px;
+  .character-name {
+    height: $character-name-height;
+  }
 
-  display: flex;
-  flex-direction: column;
-
-  .character-order {
-    flex: 1;
-
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
-
-    overflow-y: auto;
-
-    .character-order-item {
-      border-radius: 10px;
-      border: 2px solid rgba(colors.$display-rgb, 0.15);
-      text-align: center;
-      cursor: grab;
-      &.selected-character-order-item {
-        border: 2px solid colors.$primary-light;
+  .style-items-container {
+    display: grid;
+    align-items: center;
+    height: calc(100% - #{$character-name-height});
+    > div {
+      $style-item-size: 215px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, $style-item-size);
+      grid-auto-rows: $style-item-size;
+      column-gap: 10px;
+      row-gap: 10px;
+      align-content: center;
+      justify-content: center;
+      .style-item {
+        box-shadow: 0 0 0 1px rgba(colors.$primary-light-rgb, 0.5);
+        border-radius: 10px;
+        overflow: hidden;
+        &.active-style-item {
+          box-shadow: 0 0 0 2px colors.$primary-light;
+        }
+        &:hover :deep(.q-focus-helper) {
+          opacity: 0 !important;
+        }
+        &.hoverable-style-item:hover :deep(.q-focus-helper) {
+          opacity: 0.15 !important;
+        }
+        .style-item-inner {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          .style-icon {
+            $icon-size: $style-item-size / 2;
+            width: $icon-size;
+            height: $icon-size;
+            border-radius: 5px;
+          }
+          .voice-samples {
+            display: flex;
+            column-gap: 5px;
+            align-items: center;
+            justify-content: center;
+          }
+        }
       }
     }
   }
@@ -377,7 +328,7 @@ export default defineComponent({
   }
 }
 
-@media screen and (max-width: 880px) {
+@media screen and (max-width: 700px) {
   .q-drawer-container {
     display: none;
   }
