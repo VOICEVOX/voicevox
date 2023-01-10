@@ -43,7 +43,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       });
     },
   },
-
   SET_ENGINE_INFOS: {
     mutation(
       state,
@@ -161,19 +160,16 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE_ALL: {
-    async action({ state, dispatch }, { preventOpeningDialog }) {
+    async action({ state, dispatch }) {
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
       const engineIds = state.engineIds;
 
-      engineIds.map((engineId) =>
-        dispatch("RESTART_ENGINE", {
-          engineId,
-          preventOpeningDialog: false,
-        })
+      await Promise.all(
+        engineIds.map((engineId) => window.electron.restartEngine(engineId))
       );
+
       const result = await dispatch("POST_ENGINE_START", {
         engineIds,
-        preventOpeningDialog: !!preventOpeningDialog,
       });
 
       return result;
@@ -181,13 +177,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE: {
-    async action({ dispatch, commit }, { engineId, preventOpeningDialog }) {
+    async action({ dispatch, commit }, { engineId }) {
       commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
       const result = await window.electron
         .restartEngine(engineId)
         .then(async () => {
           return await dispatch("POST_ENGINE_START", {
-            preventOpeningDialog: !!preventOpeningDialog,
             engineIds: [engineId],
           });
         })
@@ -203,7 +198,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   POST_ENGINE_START: {
-    async action({ state, dispatch }, { engineIds, preventOpeningDialog }) {
+    async action({ state, dispatch }, { engineIds }) {
       const result = await Promise.all(
         engineIds.map(async (engineId) => {
           if (state.engineStates[engineId] === "STARTING") {
@@ -225,7 +220,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         success: result.every((r) => r.success),
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
-      if (!preventOpeningDialog && mergedResult.anyNewCharacters) {
+      if (mergedResult.anyNewCharacters) {
         dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });

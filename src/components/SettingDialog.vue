@@ -842,7 +842,7 @@ export default defineComponent({
     };
 
     const restartAllEngineProcess = () => {
-      store.dispatch("RESTART_ENGINE_ALL", {});
+      store.dispatch("RESTART_ENGINE_ALL");
     };
 
     const savingSetting = computed(() => store.state.savingSetting);

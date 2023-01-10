@@ -507,7 +507,6 @@ export default defineComponent({
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
       await store.dispatch("POST_ENGINE_START", {
         engineIds,
-        preventOpeningDialog: false,
       });
 
       // 辞書を同期

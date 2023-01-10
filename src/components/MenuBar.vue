@@ -506,7 +506,7 @@ export default defineComponent({
             type: "button",
             label: "全てのエンジンを再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE_ALL", {});
+              store.dispatch("RESTART_ENGINE_ALL");
             },
             disableWhenUiLocked: false,
           },

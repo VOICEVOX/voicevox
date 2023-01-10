@@ -162,15 +162,32 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
-      // デフォルトスタイルが設定されていない場合は0をセットする
+      // デフォルトスタイルが設定されていない、または
+      // デフォルトスタイルのスタイルが存在しない場合は0をセットする
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
-        (speakerUuid) =>
-          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
+        (speakerUuid) => {
+          const defaultStyleId = defaultStyleIds.find(
+            (styleId) => styleId.speakerUuid == speakerUuid
+          );
+          if (!defaultStyleId) {
+            return true;
+          }
+
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+
+          if (!characterInfo) {
+            return false;
+          }
+          return !characterInfo.metas.styles.some(
+            (style) => style.styleId == defaultStyleId.defaultStyleId
+          );
+        }
       );
       defaultStyleIds = [
         ...defaultStyleIds,
         ...unsetCharacterInfos.map<DefaultStyleId>((speakerUuid) => {
           const characterInfo = allCharacterInfos.get(speakerUuid);
+          console.log(characterInfo);
           if (!characterInfo) {
             throw new Error(
               `characterInfo not found. speakerUuid=${speakerUuid}`
@@ -183,6 +200,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         }),
       ];
 
+      console.log(defaultStyleIds);
       commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
     },
   },
