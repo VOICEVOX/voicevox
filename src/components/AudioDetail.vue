@@ -255,10 +255,9 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
   computed,
-  defineComponent,
   nextTick,
   onBeforeUpdate,
   onMounted,
@@ -276,566 +275,509 @@ import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { EngineManifest, Mora } from "@/openapi/models";
 
-export default defineComponent({
-  components: { AudioAccent, AudioParameter, ToolTip },
+const props =
+  defineProps<{
+    activeAudioKey: string;
+  }>();
 
-  name: "AudioDetail",
+const store = useStore();
+const $q = useQuasar();
 
-  props: {
-    activeAudioKey: { type: String, required: true },
+const supportedFeatures = computed(
+  () =>
+    (audioItem.value?.engineId &&
+      store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
+      store.state.engineManifests[audioItem.value?.engineId]
+        .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
+);
+
+const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
+  [
+    "再生/停止",
+    () => {
+      if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
+        play();
+      } else {
+        stop();
+      }
+    },
+  ],
+  [
+    "ｱｸｾﾝﾄ欄を表示",
+    () => {
+      selectedDetail.value = "accent";
+    },
+  ],
+  [
+    "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+    () => {
+      if (supportedFeatures.value?.adjustMoraPitch) {
+        selectedDetail.value = "pitch";
+      }
+    },
+  ],
+  [
+    "長さ欄を表示",
+    () => {
+      if (supportedFeatures.value?.adjustPhonemeLength) {
+        selectedDetail.value = "length";
+      }
+    },
+  ],
+  [
+    "全体のイントネーションをリセット",
+    () => {
+      if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
+        store.dispatch("COMMAND_RESET_MORA_PITCH_AND_LENGTH", {
+          audioKey: store.getters.ACTIVE_AUDIO_KEY,
+        });
+      }
+    },
+  ],
+  [
+    "選択中のアクセント句のイントネーションをリセット",
+    () => {
+      if (
+        !uiLocked.value &&
+        store.getters.ACTIVE_AUDIO_KEY &&
+        store.state.audioPlayStartPoint !== undefined
+      ) {
+        store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+          audioKey: store.getters.ACTIVE_AUDIO_KEY,
+          accentPhraseIndex: store.state.audioPlayStartPoint,
+        });
+      }
+    },
+  ],
+]);
+// このコンポーネントは遅延評価なので手動でバインディングを行う
+setHotkeyFunctions(hotkeyMap, true);
+
+// detail selector
+type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
+const selectedDetail = ref<DetailTypes>("accent");
+
+// accent phrase
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+const audioItem = computed(() => store.state.audioItems[props.activeAudioKey]);
+const query = computed(() => audioItem.value?.query);
+const accentPhrases = computed(() => query.value?.accentPhrases);
+
+// エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
+// TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
+//       タブ自体の無効化＆移動以外の方法で無効化する
+watch(
+  supportedFeatures,
+  (newFeatures) => {
+    if (
+      (!newFeatures?.adjustMoraPitch && selectedDetail.value === "pitch") ||
+      (!newFeatures?.adjustPhonemeLength && selectedDetail.value === "length")
+    ) {
+      selectedDetail.value = "accent";
+    }
   },
+  { immediate: true }
+);
 
-  setup(props) {
-    const store = useStore();
-    const $q = useQuasar();
+const activePointScrollMode = computed(() => store.state.activePointScrollMode);
 
-    const supportedFeatures = computed(
-      () =>
-        (audioItem.value?.engineId &&
-          store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
-          store.state.engineManifests[audioItem.value?.engineId]
-            .supportedFeatures) as
-          | EngineManifest["supportedFeatures"]
-          | undefined
-    );
-
-    const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
-      [
-        "再生/停止",
-        () => {
-          if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-            play();
-          } else {
-            stop();
-          }
-        },
-      ],
-      [
-        "ｱｸｾﾝﾄ欄を表示",
-        () => {
-          selectedDetail.value = "accent";
-        },
-      ],
-      [
-        "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-        () => {
-          if (supportedFeatures.value?.adjustMoraPitch) {
-            selectedDetail.value = "pitch";
-          }
-        },
-      ],
-      [
-        "長さ欄を表示",
-        () => {
-          if (supportedFeatures.value?.adjustPhonemeLength) {
-            selectedDetail.value = "length";
-          }
-        },
-      ],
-      [
-        "全体のイントネーションをリセット",
-        () => {
-          if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-            store.dispatch("COMMAND_RESET_MORA_PITCH_AND_LENGTH", {
-              audioKey: store.getters.ACTIVE_AUDIO_KEY,
-            });
-          }
-        },
-      ],
-      [
-        "選択中のアクセント句のイントネーションをリセット",
-        () => {
-          if (
-            !uiLocked.value &&
-            store.getters.ACTIVE_AUDIO_KEY &&
-            store.state.audioPlayStartPoint !== undefined
-          ) {
-            store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
-              audioKey: store.getters.ACTIVE_AUDIO_KEY,
-              accentPhraseIndex: store.state.audioPlayStartPoint,
-            });
-          }
-        },
-      ],
-    ]);
-    // このコンポーネントは遅延評価なので手動でバインディングを行う
-    setHotkeyFunctions(hotkeyMap, true);
-
-    // detail selector
-    type DetailTypes = "accent" | "pitch" | "length" | "play" | "stop" | "save";
-    const selectedDetail = ref<DetailTypes>("accent");
-    const selectDetail = (index: number) => {
-      selectedDetail.value = index === 0 ? "accent" : "pitch";
-    };
-
-    // accent phrase
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
-
-    const audioItem = computed(
-      () => store.state.audioItems[props.activeAudioKey]
-    );
-    const query = computed(() => audioItem.value?.query);
-    const accentPhrases = computed(() => query.value?.accentPhrases);
-
-    // エンジンが変わったとき、selectedDetailが対応していないものを選択している場合はaccentに戻す
-    // TODO: 連続再生するとアクセントに移動してしまうため、タブの中身を全てdisabledにする、半透明divをかぶせるなど
-    //       タブ自体の無効化＆移動以外の方法で無効化する
-    watch(
-      supportedFeatures,
-      (newFeatures) => {
-        if (
-          (!newFeatures?.adjustMoraPitch && selectedDetail.value === "pitch") ||
-          (!newFeatures?.adjustPhonemeLength &&
-            selectedDetail.value === "length")
-        ) {
-          selectedDetail.value = "accent";
-        }
-      },
-      { immediate: true }
-    );
-
-    const activePointScrollMode = computed(
-      () => store.state.activePointScrollMode
-    );
-
-    // 再生開始アクセント句
-    const startPoint = computed({
-      get: () => {
-        return store.state.audioPlayStartPoint;
-      },
-      set: (startPoint) => {
-        store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
-      },
-    });
-    // アクティブ(再生されている状態)なアクセント句
-    const activePoint = ref<number | undefined>(undefined);
-
-    const setPlayAndStartPoint = (accentPhraseIndex: number) => {
-      // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
-      // UIロックというものにそぐわない挙動になるので何もしないようにする
-      if (uiLocked.value) return;
-
-      if (activePoint.value !== accentPhraseIndex) {
-        activePoint.value = accentPhraseIndex;
-        startPoint.value = accentPhraseIndex;
-      } else {
-        // 選択解除で最初から再生できるようにする
-        activePoint.value = undefined;
-        startPoint.value = undefined;
-      }
-    };
-
-    const lastPitches = ref<number[][]>([]);
-    watch(accentPhrases, async (newPhrases) => {
-      activePoint.value = startPoint.value;
-      // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
-      // DOMの描画が少し遅いので、nextTickをはさむ
-      await nextTick();
-      scrollToActivePoint();
-      if (newPhrases) {
-        lastPitches.value = newPhrases.map((phrase) =>
-          phrase.moras.map((mora) => mora.pitch)
-        );
-      } else {
-        lastPitches.value = [];
-      }
-    });
-
-    const changeAccent = (accentPhraseIndex: number, accent: number) =>
-      store.dispatch("COMMAND_CHANGE_ACCENT", {
-        audioKey: props.activeAudioKey,
-        accentPhraseIndex,
-        accent,
-      });
-    const toggleAccentPhraseSplit = (
-      accentPhraseIndex: number,
-      isPause: boolean,
-      moraIndex?: number
-    ) => {
-      store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
-        audioKey: props.activeAudioKey,
-        accentPhraseIndex,
-        ...(!isPause
-          ? { isPause, moraIndex: moraIndex as number }
-          : { isPause }),
-      });
-    };
-
-    const maxPitch = 6.5;
-    const minPitch = 3;
-    const maxMoraLength = 0.3;
-    const minMoraLength = 0;
-    const changeMoraData = (
-      accentPhraseIndex: number,
-      moraIndex: number,
-      data: number,
-      type: MoraDataType
-    ) => {
-      if (!altKeyFlag.value) {
-        if (type == "pitch") {
-          lastPitches.value[accentPhraseIndex][moraIndex] = data;
-        }
-        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
-          audioKey: props.activeAudioKey,
-          accentPhraseIndex,
-          moraIndex,
-          data,
-          type,
-        });
-      } else {
-        if (accentPhrases.value === undefined) {
-          throw Error("accentPhrases.value === undefined");
-        }
-        store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
-          audioKey: props.activeAudioKey,
-          accentPhraseIndex,
-          moraIndex,
-          data,
-          type,
-        });
-      }
-    };
-
-    // audio play
-    const play = async () => {
-      try {
-        await store.dispatch("PLAY_AUDIO", {
-          audioKey: props.activeAudioKey,
-        });
-      } catch (e) {
-        $q.dialog({
-          title: "再生に失敗しました",
-          message: "エンジンの再起動をお試しください。",
-          ok: {
-            label: "閉じる",
-            flat: true,
-            textColor: "display",
-          },
-        });
-      }
-    };
-
-    const stop = () => {
-      store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
-    };
-
-    const nowPlaying = computed(
-      () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
-    );
-    const nowGenerating = computed(
-      () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
-    );
-
-    // continuously play
-    const nowPlayingContinuously = computed(
-      () => store.state.nowPlayingContinuously
-    );
-
-    const audioDetail = ref<HTMLElement>();
-    let accentPhraseElems: HTMLElement[] = [];
-    const addAccentPhraseElem = (elem: HTMLElement) => {
-      if (elem) {
-        accentPhraseElems.push(elem);
-      }
-    };
-    onBeforeUpdate(() => {
-      accentPhraseElems = [];
-    });
-
-    const scrollToActivePoint = () => {
-      if (
-        activePoint.value === undefined ||
-        !audioDetail.value ||
-        accentPhraseElems.length === 0
-      )
-        return;
-      const elem = accentPhraseElems[activePoint.value];
-
-      if (activePointScrollMode.value === "CONTINUOUSLY") {
-        const scrollCount = Math.max(
-          elem.offsetLeft -
-            audioDetail.value.offsetLeft +
-            elem.offsetWidth / 2 -
-            audioDetail.value.offsetWidth / 2,
-          0
-        );
-        audioDetail.value.scroll(scrollCount, 0);
-      } else if (activePointScrollMode.value === "PAGE") {
-        const displayedPart =
-          audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
-        const nextAccentPhraseStart =
-          elem.offsetLeft - audioDetail.value.offsetLeft;
-        const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
-        // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
-        if (
-          nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
-          displayedPart <= nextAccentPhraseEnd
-        ) {
-          const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
-          audioDetail.value.scroll(scrollCount, 0);
-        }
-      } else {
-        // activePointScrollMode.value === "OFF"
-        return;
-      }
-    };
-
-    // NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
-    let focusInterval: ReturnType<typeof setInterval> | undefined;
-    watch(nowPlaying, async (newState) => {
-      if (newState) {
-        const accentPhraseOffsets = await store.dispatch(
-          "GET_AUDIO_PLAY_OFFSETS",
-          {
-            audioKey: props.activeAudioKey,
-          }
-        );
-        // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
-        // それに合わせてフォーカスするアクセント句を変えていく
-        focusInterval = setInterval(() => {
-          const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-          for (let i = 1; i < accentPhraseOffsets.length; i++) {
-            if (
-              currentTime !== undefined &&
-              accentPhraseOffsets[i - 1] <= currentTime &&
-              currentTime < accentPhraseOffsets[i]
-            ) {
-              activePoint.value = i - 1;
-              scrollToActivePoint();
-            }
-          }
-        }, 10);
-      } else if (focusInterval !== undefined) {
-        clearInterval(focusInterval);
-        focusInterval = undefined;
-        // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
-        activePoint.value = startPoint.value ?? 0;
-        scrollToActivePoint();
-        if (startPoint.value === undefined)
-          activePoint.value = startPoint.value;
-      }
-    });
-
-    const pronunciationByPhrase = computed(() => {
-      const textArray: Array<string> = [];
-      accentPhrases.value?.forEach((accentPhrase) => {
-        let textString = "";
-        accentPhrase.moras.forEach((mora) => {
-          textString += mora.text;
-        });
-        if (accentPhrase.pauseMora) {
-          textString += "、";
-        }
-        textArray.push(textString);
-      });
-      return textArray;
-    });
-
-    const handleChangePronounce = (
-      newPronunciation: string,
-      phraseIndex: number
-    ) => {
-      let popUntilPause = false;
-      newPronunciation = newPronunciation.replace(",", "、");
-      if (accentPhrases.value == undefined)
-        throw new Error("accentPhrases.value == undefined");
-      if (
-        newPronunciation.slice(-1) == "、" &&
-        accentPhrases.value.length - 1 != phraseIndex
-      ) {
-        newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
-        popUntilPause = true;
-      }
-      store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
-        audioKey: props.activeAudioKey,
-        newPronunciation,
-        accentPhraseIndex: phraseIndex,
-        popUntilPause,
-      });
-    };
-
-    type hoveredType = "vowel" | "consonant";
-
-    type hoveredInfoType = {
-      accentPhraseIndex: number | undefined;
-      moraIndex?: number | undefined;
-      type?: hoveredType;
-    };
-
-    const accentHoveredInfo = reactive<hoveredInfoType>({
-      accentPhraseIndex: undefined,
-    });
-
-    const pitchHoveredInfo = reactive<hoveredInfoType>({
-      accentPhraseIndex: undefined,
-      moraIndex: undefined,
-    });
-
-    const lengthHoveredInfo = reactive<hoveredInfoType>({
-      accentPhraseIndex: undefined,
-      moraIndex: undefined,
-      type: "vowel",
-    });
-
-    const handleHoverText = (
-      isOver: boolean,
-      phraseIndex: number,
-      moraIndex: number
-    ) => {
-      if (selectedDetail.value == "accent") {
-        if (isOver) {
-          accentHoveredInfo.accentPhraseIndex = phraseIndex;
-        } else {
-          accentHoveredInfo.accentPhraseIndex = undefined;
-        }
-      } else if (selectedDetail.value == "pitch") {
-        if (isOver) {
-          pitchHoveredInfo.accentPhraseIndex = phraseIndex;
-          pitchHoveredInfo.moraIndex = moraIndex;
-        } else {
-          pitchHoveredInfo.accentPhraseIndex = undefined;
-          pitchHoveredInfo.moraIndex = undefined;
-        }
-      }
-    };
-
-    const handleLengthHoverText = (
-      isOver: boolean,
-      phoneme: hoveredType,
-      phraseIndex: number,
-      moraIndex?: number
-    ) => {
-      lengthHoveredInfo.type = phoneme;
-      // the pause and pitch templates don't emit a mouseOver event
-      if (isOver) {
-        lengthHoveredInfo.accentPhraseIndex = phraseIndex;
-        lengthHoveredInfo.moraIndex = moraIndex;
-      } else {
-        lengthHoveredInfo.accentPhraseIndex = undefined;
-        lengthHoveredInfo.moraIndex = undefined;
-      }
-    };
-
-    const unvoicableVowels = ["U", "I", "i", "u"];
-
-    const isHovered = (
-      vowel: string,
-      accentPhraseIndex: number,
-      moraIndex: number
-    ) => {
-      let isHover = false;
-      if (!uiLocked.value) {
-        if (selectedDetail.value == "accent") {
-          if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
-            isHover = true;
-          }
-        } else if (selectedDetail.value == "pitch") {
-          if (
-            accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
-            moraIndex === pitchHoveredInfo.moraIndex &&
-            unvoicableVowels.indexOf(vowel) > -1
-          ) {
-            isHover = true;
-          }
-        }
-      }
-      return isHover;
-    };
-
-    const getHoveredText = (
-      mora: Mora,
-      accentPhraseIndex: number,
-      moraIndex: number
-    ) => {
-      if (selectedDetail.value != "length") return mora.text;
-      if (
-        accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
-        moraIndex === lengthHoveredInfo.moraIndex
-      ) {
-        if (lengthHoveredInfo.type == "vowel") {
-          return mora.vowel.toUpperCase();
-        } else {
-          return mora.consonant?.toUpperCase();
-        }
-      } else {
-        return mora.text;
-      }
-    };
-
-    const shiftKeyFlag = ref(false);
-    const altKeyFlag = ref(false);
-
-    const keyEventListter = (event: KeyboardEvent) => {
-      shiftKeyFlag.value = event.shiftKey;
-      altKeyFlag.value = event.altKey;
-    };
-
-    const handleChangeVoicing = (
-      mora: Mora,
-      accentPhraseIndex: number,
-      moraIndex: number
-    ) => {
-      if (
-        selectedDetail.value == "pitch" &&
-        unvoicableVowels.indexOf(mora.vowel) > -1
-      ) {
-        let data = 0;
-        if (mora.pitch == 0) {
-          if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
-            // 元々無声だった場合、適当な値を代入
-            data = 5.5;
-          } else {
-            data = lastPitches.value[accentPhraseIndex][moraIndex];
-          }
-        }
-        changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
-      }
-    };
-
-    onMounted(() => {
-      window.addEventListener("keyup", keyEventListter);
-      document.addEventListener("keydown", keyEventListter);
-    });
-
-    onUnmounted(() => {
-      window.removeEventListener("keyup", keyEventListter);
-      document.removeEventListener("keydown", keyEventListter);
-    });
-
-    return {
-      maxPitch,
-      minPitch,
-      maxMoraLength,
-      minMoraLength,
-      selectDetail,
-      selectedDetail,
-      activePoint,
-      setPlayAndStartPoint,
-      uiLocked,
-      supportedFeatures,
-      audioItem,
-      query,
-      accentPhrases,
-      changeAccent,
-      toggleAccentPhraseSplit,
-      changeMoraData,
-      play,
-      stop,
-      nowPlaying,
-      nowGenerating,
-      nowPlayingContinuously,
-      addAccentPhraseElem,
-      pronunciationByPhrase,
-      handleChangePronounce,
-      handleHoverText,
-      handleLengthHoverText,
-      isHovered,
-      getHoveredText,
-      shiftKeyFlag,
-      handleChangeVoicing,
-      audioDetail,
-    };
+// 再生開始アクセント句
+const startPoint = computed({
+  get: () => {
+    return store.state.audioPlayStartPoint;
   },
+  set: (startPoint) => {
+    store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
+  },
+});
+// アクティブ(再生されている状態)なアクセント句
+const activePoint = ref<number | undefined>(undefined);
+
+const setPlayAndStartPoint = (accentPhraseIndex: number) => {
+  // UIロック中に再生位置を変えても特に問題は起きないと思われるが、
+  // UIロックというものにそぐわない挙動になるので何もしないようにする
+  if (uiLocked.value) return;
+
+  if (activePoint.value !== accentPhraseIndex) {
+    activePoint.value = accentPhraseIndex;
+    startPoint.value = accentPhraseIndex;
+  } else {
+    // 選択解除で最初から再生できるようにする
+    activePoint.value = undefined;
+    startPoint.value = undefined;
+  }
+};
+
+const lastPitches = ref<number[][]>([]);
+watch(accentPhrases, async (newPhrases) => {
+  activePoint.value = startPoint.value;
+  // 連続再生時に、最初に選択されていた場所に戻るためにscrollToActivePointを呼ぶ必要があるが、
+  // DOMの描画が少し遅いので、nextTickをはさむ
+  await nextTick();
+  scrollToActivePoint();
+  if (newPhrases) {
+    lastPitches.value = newPhrases.map((phrase) =>
+      phrase.moras.map((mora) => mora.pitch)
+    );
+  } else {
+    lastPitches.value = [];
+  }
+});
+
+const changeAccent = (accentPhraseIndex: number, accent: number) =>
+  store.dispatch("COMMAND_CHANGE_ACCENT", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex,
+    accent,
+  });
+const toggleAccentPhraseSplit = (
+  accentPhraseIndex: number,
+  isPause: boolean,
+  moraIndex?: number
+) => {
+  store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
+    audioKey: props.activeAudioKey,
+    accentPhraseIndex,
+    ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
+  });
+};
+
+const maxPitch = 6.5;
+const minPitch = 3;
+const maxMoraLength = 0.3;
+const minMoraLength = 0;
+const changeMoraData = (
+  accentPhraseIndex: number,
+  moraIndex: number,
+  data: number,
+  type: MoraDataType
+) => {
+  if (!altKeyFlag.value) {
+    if (type == "pitch") {
+      lastPitches.value[accentPhraseIndex][moraIndex] = data;
+    }
+    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+      audioKey: props.activeAudioKey,
+      accentPhraseIndex,
+      moraIndex,
+      data,
+      type,
+    });
+  } else {
+    if (accentPhrases.value === undefined) {
+      throw Error("accentPhrases.value === undefined");
+    }
+    store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+      audioKey: props.activeAudioKey,
+      accentPhraseIndex,
+      moraIndex,
+      data,
+      type,
+    });
+  }
+};
+
+// audio play
+const play = async () => {
+  try {
+    await store.dispatch("PLAY_AUDIO", {
+      audioKey: props.activeAudioKey,
+    });
+  } catch (e) {
+    $q.dialog({
+      title: "再生に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+      ok: {
+        label: "閉じる",
+        flat: true,
+        textColor: "display",
+      },
+    });
+  }
+};
+
+const stop = () => {
+  store.dispatch("STOP_AUDIO", { audioKey: props.activeAudioKey });
+};
+
+const nowPlaying = computed(
+  () => store.state.audioStates[props.activeAudioKey]?.nowPlaying
+);
+const nowGenerating = computed(
+  () => store.state.audioStates[props.activeAudioKey]?.nowGenerating
+);
+
+// continuously play
+const nowPlayingContinuously = computed(
+  () => store.state.nowPlayingContinuously
+);
+
+const audioDetail = ref<HTMLElement>();
+let accentPhraseElems: HTMLElement[] = [];
+const addAccentPhraseElem = (elem: HTMLElement) => {
+  if (elem) {
+    accentPhraseElems.push(elem);
+  }
+};
+onBeforeUpdate(() => {
+  accentPhraseElems = [];
+});
+
+const scrollToActivePoint = () => {
+  if (
+    activePoint.value === undefined ||
+    !audioDetail.value ||
+    accentPhraseElems.length === 0
+  )
+    return;
+  const elem = accentPhraseElems[activePoint.value];
+
+  if (activePointScrollMode.value === "CONTINUOUSLY") {
+    const scrollCount = Math.max(
+      elem.offsetLeft -
+        audioDetail.value.offsetLeft +
+        elem.offsetWidth / 2 -
+        audioDetail.value.offsetWidth / 2,
+      0
+    );
+    audioDetail.value.scroll(scrollCount, 0);
+  } else if (activePointScrollMode.value === "PAGE") {
+    const displayedPart =
+      audioDetail.value.scrollLeft + audioDetail.value.offsetWidth;
+    const nextAccentPhraseStart =
+      elem.offsetLeft - audioDetail.value.offsetLeft;
+    const nextAccentPhraseEnd = nextAccentPhraseStart + elem.offsetWidth;
+    // 再生しようとしているアクセント句が表示範囲外にある時に、自動スクロールを行う
+    if (
+      nextAccentPhraseEnd <= audioDetail.value.scrollLeft ||
+      displayedPart <= nextAccentPhraseEnd
+    ) {
+      const scrollCount = elem.offsetLeft - audioDetail.value.offsetLeft;
+      audioDetail.value.scroll(scrollCount, 0);
+    }
+  } else {
+    // activePointScrollMode.value === "OFF"
+    return;
+  }
+};
+
+// NodeJS.Timeout型が直接指定できないので、typeofとReturnTypeで取ってきている
+let focusInterval: ReturnType<typeof setInterval> | undefined;
+watch(nowPlaying, async (newState) => {
+  if (newState) {
+    const accentPhraseOffsets = await store.dispatch("GET_AUDIO_PLAY_OFFSETS", {
+      audioKey: props.activeAudioKey,
+    });
+    // 現在再生されているaudio elementの再生時刻を0.01秒毎に取得(監視)し、
+    // それに合わせてフォーカスするアクセント句を変えていく
+    focusInterval = setInterval(() => {
+      const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
+      for (let i = 1; i < accentPhraseOffsets.length; i++) {
+        if (
+          currentTime !== undefined &&
+          accentPhraseOffsets[i - 1] <= currentTime &&
+          currentTime < accentPhraseOffsets[i]
+        ) {
+          activePoint.value = i - 1;
+          scrollToActivePoint();
+        }
+      }
+    }, 10);
+  } else if (focusInterval !== undefined) {
+    clearInterval(focusInterval);
+    focusInterval = undefined;
+    // startPointがundefinedの場合、一旦最初のアクセント句までスクロール、その後activePointの選択を解除(undefinedに)する
+    activePoint.value = startPoint.value ?? 0;
+    scrollToActivePoint();
+    if (startPoint.value === undefined) activePoint.value = startPoint.value;
+  }
+});
+
+const pronunciationByPhrase = computed(() => {
+  const textArray: Array<string> = [];
+  accentPhrases.value?.forEach((accentPhrase) => {
+    let textString = "";
+    accentPhrase.moras.forEach((mora) => {
+      textString += mora.text;
+    });
+    if (accentPhrase.pauseMora) {
+      textString += "、";
+    }
+    textArray.push(textString);
+  });
+  return textArray;
+});
+
+const handleChangePronounce = (
+  newPronunciation: string,
+  phraseIndex: number
+) => {
+  let popUntilPause = false;
+  newPronunciation = newPronunciation.replace(",", "、");
+  if (accentPhrases.value == undefined)
+    throw new Error("accentPhrases.value == undefined");
+  if (
+    newPronunciation.slice(-1) == "、" &&
+    accentPhrases.value.length - 1 != phraseIndex
+  ) {
+    newPronunciation += pronunciationByPhrase.value[phraseIndex + 1];
+    popUntilPause = true;
+  }
+  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+    audioKey: props.activeAudioKey,
+    newPronunciation,
+    accentPhraseIndex: phraseIndex,
+    popUntilPause,
+  });
+};
+
+type hoveredType = "vowel" | "consonant";
+
+type hoveredInfoType = {
+  accentPhraseIndex: number | undefined;
+  moraIndex?: number | undefined;
+  type?: hoveredType;
+};
+
+const accentHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+});
+
+const pitchHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+  moraIndex: undefined,
+});
+
+const lengthHoveredInfo = reactive<hoveredInfoType>({
+  accentPhraseIndex: undefined,
+  moraIndex: undefined,
+  type: "vowel",
+});
+
+const handleHoverText = (
+  isOver: boolean,
+  phraseIndex: number,
+  moraIndex: number
+) => {
+  if (selectedDetail.value == "accent") {
+    if (isOver) {
+      accentHoveredInfo.accentPhraseIndex = phraseIndex;
+    } else {
+      accentHoveredInfo.accentPhraseIndex = undefined;
+    }
+  } else if (selectedDetail.value == "pitch") {
+    if (isOver) {
+      pitchHoveredInfo.accentPhraseIndex = phraseIndex;
+      pitchHoveredInfo.moraIndex = moraIndex;
+    } else {
+      pitchHoveredInfo.accentPhraseIndex = undefined;
+      pitchHoveredInfo.moraIndex = undefined;
+    }
+  }
+};
+
+const handleLengthHoverText = (
+  isOver: boolean,
+  phoneme: hoveredType,
+  phraseIndex: number,
+  moraIndex?: number
+) => {
+  lengthHoveredInfo.type = phoneme;
+  // the pause and pitch templates don't emit a mouseOver event
+  if (isOver) {
+    lengthHoveredInfo.accentPhraseIndex = phraseIndex;
+    lengthHoveredInfo.moraIndex = moraIndex;
+  } else {
+    lengthHoveredInfo.accentPhraseIndex = undefined;
+    lengthHoveredInfo.moraIndex = undefined;
+  }
+};
+
+const unvoicableVowels = ["U", "I", "i", "u"];
+
+const isHovered = (
+  vowel: string,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  let isHover = false;
+  if (!uiLocked.value) {
+    if (selectedDetail.value == "accent") {
+      if (accentPhraseIndex === accentHoveredInfo.accentPhraseIndex) {
+        isHover = true;
+      }
+    } else if (selectedDetail.value == "pitch") {
+      if (
+        accentPhraseIndex === pitchHoveredInfo.accentPhraseIndex &&
+        moraIndex === pitchHoveredInfo.moraIndex &&
+        unvoicableVowels.indexOf(vowel) > -1
+      ) {
+        isHover = true;
+      }
+    }
+  }
+  return isHover;
+};
+
+const getHoveredText = (
+  mora: Mora,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  if (selectedDetail.value != "length") return mora.text;
+  if (
+    accentPhraseIndex === lengthHoveredInfo.accentPhraseIndex &&
+    moraIndex === lengthHoveredInfo.moraIndex
+  ) {
+    if (lengthHoveredInfo.type == "vowel") {
+      return mora.vowel.toUpperCase();
+    } else {
+      return mora.consonant?.toUpperCase();
+    }
+  } else {
+    return mora.text;
+  }
+};
+
+const shiftKeyFlag = ref(false);
+const altKeyFlag = ref(false);
+
+const keyEventListter = (event: KeyboardEvent) => {
+  shiftKeyFlag.value = event.shiftKey;
+  altKeyFlag.value = event.altKey;
+};
+
+const handleChangeVoicing = (
+  mora: Mora,
+  accentPhraseIndex: number,
+  moraIndex: number
+) => {
+  if (
+    selectedDetail.value == "pitch" &&
+    unvoicableVowels.indexOf(mora.vowel) > -1
+  ) {
+    let data = 0;
+    if (mora.pitch == 0) {
+      if (lastPitches.value[accentPhraseIndex][moraIndex] == 0) {
+        // 元々無声だった場合、適当な値を代入
+        data = 5.5;
+      } else {
+        data = lastPitches.value[accentPhraseIndex][moraIndex];
+      }
+    }
+    changeMoraData(accentPhraseIndex, moraIndex, data, "voicing");
+  }
+};
+
+onMounted(() => {
+  window.addEventListener("keyup", keyEventListter);
+  document.addEventListener("keydown", keyEventListter);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keyup", keyEventListter);
+  document.removeEventListener("keydown", keyEventListter);
 });
 </script>
 

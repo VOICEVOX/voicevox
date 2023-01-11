@@ -61,57 +61,33 @@
   </template>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
-import { defineComponent, computed, PropType } from "vue";
 
-export default defineComponent({
-  name: "AudioAccent",
+const props =
+  defineProps<{
+    accentPhrase: AccentPhrase;
+    accentPhraseIndex: number;
+    uiLocked: boolean;
+    shiftKeyFlag: boolean;
+    onChangeAccent: (
+      accentPhraseIndex: number,
+      accent: number
+    ) => Promise<void>;
+  }>();
 
-  props: {
-    accentPhrase: { type: Object as PropType<AccentPhrase>, required: true },
-    accentPhraseIndex: { type: Number, required: true },
-    uiLocked: { type: Boolean, required: true },
-    shiftKeyFlag: { type: Boolean, default: false },
-    onChangeAccent: {
-      type: Function as PropType<
-        (accentPhraseIndex: number, accent: number) => Promise<void>
-      >,
-      required: true,
-    },
-  },
+const changeAccent = (accent: number) =>
+  props.onChangeAccent(props.accentPhraseIndex, accent);
 
-  setup(props) {
-    const changeAccent = (accent: number) =>
-      props.onChangeAccent(props.accentPhraseIndex, accent);
-
-    const previewAccentSlider = previewSliderHelper({
-      onChange: changeAccent,
-      modelValue: () => props.accentPhrase.accent,
-      disable: () => props.uiLocked,
-      disableScroll: () => props.shiftKeyFlag,
-      max: () => props.accentPhrase.moras.length,
-      min: () => 1,
-      step: () => 1,
-    });
-
-    const accentLine = computed(() => {
-      const accent = previewAccentSlider.state.currentValue.value ?? 0;
-      return [...Array(props.accentPhrase.moras.length).keys()].map(
-        (index) =>
-          `${index * 40 + 10} ${
-            index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
-          }`
-      );
-    });
-
-    return {
-      previewAccentSlider,
-      changeAccent,
-      accentLine,
-    };
-  },
+const previewAccentSlider = previewSliderHelper({
+  onChange: changeAccent,
+  modelValue: () => props.accentPhrase.accent,
+  disable: () => props.uiLocked,
+  disableScroll: () => props.shiftKeyFlag,
+  max: () => props.accentPhrase.moras.length,
+  min: () => 1,
+  step: () => 1,
 });
 </script>
 
