@@ -250,7 +250,7 @@ export default defineComponent({
       ],
       [
         // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
-        // https://github.com/VOICEVOX/voicevox/pull/1096
+        // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
         "テキスト欄を複製",
         () => {
           if (activeAudioKey.value != undefined) {
