@@ -100,7 +100,7 @@
                 color="primary-light"
                 use-input
                 input-debounce="0"
-                :model-value="presetName"
+                :model-value="presetNameInDialog"
                 :options="presetOptionsList"
                 @input-value="setPresetName"
                 @filter="filterPresetOptionsList"
@@ -422,12 +422,6 @@ const supportedFeatures = computed(
       store.state.engineManifests[audioItem.value?.engineId]
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
-
-const applyPreset = () => {
-  store.dispatch("COMMAND_APPLY_AUDIO_PRESET", {
-    audioKey: props.activeAudioKey,
-  });
-};
 
 const setAudioSpeedScale = (speedScale: number) => {
   store.dispatch("COMMAND_SET_AUDIO_SPEED_SCALE", {
