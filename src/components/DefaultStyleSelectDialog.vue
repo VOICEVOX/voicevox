@@ -22,7 +22,7 @@
           <div class="row items-center no-wrap">
             <q-btn
               unelevated
-              label="完了"
+              :label="isModified ? '保存' : '戻る'"
               color="toolbar-button"
               text-color="toolbar-button-display"
               class="text-no-wrap"
@@ -122,7 +122,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, PropType } from "vue";
+import { defineComponent, computed, ref, PropType, watch } from "vue";
 import { useStore } from "@/store";
 import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
 
@@ -150,6 +150,18 @@ export default defineComponent({
     const isOpenComputed = computed({
       get: () => props.isOpen,
       set: (val) => emit("update:isOpen", val),
+    });
+
+    const firstSelectedStyleIndex = ref(0);
+    const isModified = computed(() => {
+      return firstSelectedStyleIndex.value !== props.selectedStyleIndex;
+    });
+
+    // ダイアログが開かれたときに初期値を求める
+    watch([() => props.isOpen], async ([newValue]) => {
+      if (newValue) {
+        firstSelectedStyleIndex.value = props.selectedStyleIndex;
+      }
     });
 
     const selectedStyleIndexComputed = computed({
@@ -230,6 +242,7 @@ export default defineComponent({
       play,
       stop,
       closeDialog,
+      isModified,
     };
   },
 });
