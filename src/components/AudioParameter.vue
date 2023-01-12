@@ -80,9 +80,9 @@ const emit =
     (
       e: "mouseOver",
       isOver: boolean,
+      type: MoraDataType,
       accentPhraseIndex: number,
-      moraIndex: number,
-      type: MoraDataType
+      moraIndex: number
     ): void;
   }>();
 
@@ -124,9 +124,9 @@ const handleMouseHover = (isOver: boolean) => {
     emit(
       "mouseOver",
       isOver,
+      props.type,
       props.accentPhraseIndex,
-      props.moraIndex,
-      props.type
+      props.moraIndex
     );
   }
 };
