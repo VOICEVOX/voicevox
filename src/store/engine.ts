@@ -253,6 +253,13 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  OPEN_ENGINE_SETTING_URL: {
+    async action(_, { engineId }) {
+      const url = await window.electron.getEngineSettingUrl(engineId);
+      window.open(url, "_blank");
+    },
+  },
+
   SET_ENGINE_STATE: {
     mutation(
       state,

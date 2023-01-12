@@ -211,6 +211,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  GET_ENGINE_SETTING_URL: {
+    args: [obj: { engineId: EngineId }];
+    return: string;
+  };
+
   CHECK_FILE_EXISTS: {
     args: [obj: { file: string }];
     return: boolean;

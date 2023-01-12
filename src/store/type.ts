@@ -769,6 +769,10 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId }): void;
   };
 
+  OPEN_ENGINE_SETTING_URL: {
+    action(payload: { engineId: EngineId }): void;
+  };
+
   SET_ENGINE_STATE: {
     mutation: { engineId: EngineId; engineState: EngineState };
   };

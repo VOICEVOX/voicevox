@@ -200,6 +200,10 @@ const api: Sandbox = {
     return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
   },
 
+  getEngineSettingUrl: (engineId: EngineId) => {
+    return ipcRendererInvoke("GET_ENGINE_SETTING_URL", { engineId });
+  },
+
   checkFileExists: (file) => {
     return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
   },

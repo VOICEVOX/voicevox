@@ -766,6 +766,11 @@ ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
   openEngineDirectory(engineId);
 });
 
+ipcMainHandle("GET_ENGINE_SETTING_URL", (_, { engineId }) => {
+  const engineInfo = engineManager.fetchEngineInfo(engineId);
+  return engineInfo.host + "/setting";
+});
+
 ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   if (newData !== undefined) {
     const hotkeySettings = store.get("hotkeySettings");
