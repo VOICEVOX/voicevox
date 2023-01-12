@@ -64,8 +64,9 @@
 <script setup lang="ts">
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
+import { computed } from "vue";
 
-const props =
+const props = withDefaults(
   defineProps<{
     accentPhrase: AccentPhrase;
     accentPhraseIndex: number;
@@ -75,7 +76,11 @@ const props =
       accentPhraseIndex: number,
       accent: number
     ) => Promise<void>;
-  }>();
+  }>(),
+  {
+    shiftKeyFlag: false,
+  }
+);
 
 const changeAccent = (accent: number) =>
   props.onChangeAccent(props.accentPhraseIndex, accent);
@@ -88,6 +93,16 @@ const previewAccentSlider = previewSliderHelper({
   max: () => props.accentPhrase.moras.length,
   min: () => 1,
   step: () => 1,
+});
+
+const accentLine = computed(() => {
+  const accent = previewAccentSlider.state.currentValue.value ?? 0;
+  return [...Array(props.accentPhrase.moras.length).keys()].map(
+    (index) =>
+      `${index * 40 + 10} ${
+        index + 1 == accent || (index != 0 && index < accent) ? 5 : 45
+      }`
+  );
 });
 </script>
 
