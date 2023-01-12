@@ -164,6 +164,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
       // デフォルトスタイルが設定されていない、または
       // デフォルトスタイルのスタイルが存在しない場合は0をセットする
+      // FIXME: 勝手に0番のデフォルトスタイルが保存されてしまうため、存在しないデフォルトスタイルでもUIが表示されるようにする
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
         (speakerUuid) => {
           const defaultStyleId = defaultStyleIds.find(
