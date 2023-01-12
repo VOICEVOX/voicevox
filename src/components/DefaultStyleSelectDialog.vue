@@ -1,8 +1,9 @@
 <template>
   <q-dialog
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transition-show="fade"
+    transition-hide="fade"
+    transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
     v-model="isOpenComputed"
   >
