@@ -160,12 +160,27 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINE_ALL: {
-    async action({ state, dispatch }) {
+    async action({ state, dispatch, commit }) {
       // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
       const engineIds = state.engineIds;
 
       await Promise.all(
-        engineIds.map((engineId) => window.electron.restartEngine(engineId))
+        engineIds.map(async (engineId) => {
+          commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
+          try {
+            return window.electron.restartEngine(engineId);
+          } catch (e) {
+            dispatch("LOG_ERROR", {
+              error: e,
+              message: `Failed to restart engine: ${engineId}`,
+            });
+            await dispatch("DETECTED_ENGINE_ERROR", { engineId });
+            return {
+              success: false,
+              anyNewCharacters: false,
+            };
+          }
+        })
       );
 
       const result = await dispatch("POST_ENGINE_START", {
