@@ -47,7 +47,7 @@
       <q-page-container>
         <q-page>
           <div class="style-items-container">
-            <div class="q-pb-md">
+            <div class="q-py-md">
               <q-item
                 v-for="(style, styleIndex) of characterInfo.metas.styles"
                 :key="styleIndex"
@@ -270,6 +270,7 @@ export default defineComponent({
     100vh - #{vars.$menubar-height + vars.$header-height +
       vars.$window-border-width}
   );
+  overflow-y: scroll;
 
   > :deep(.scroll) {
     overflow-y: scroll;
