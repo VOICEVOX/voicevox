@@ -169,7 +169,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const defaultStyleId = defaultStyleIds.find(
             (styleId) => styleId.speakerUuid == speakerUuid
           );
-          if (!defaultStyleId) {
+          if (defaultStyleId === undefined) {
             return true;
           }
 
