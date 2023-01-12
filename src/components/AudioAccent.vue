@@ -22,9 +22,7 @@
           @update:model-value="
             previewAccentSlider.qSliderProps['onUpdate:modelValue']
           "
-          @click.stop="
-            undefined; // クリックでアクセント句が選択されないように
-          "
+          @click.stop="stopPropagation"
           @change="previewAccentSlider.qSliderProps.onChange"
           @wheel="previewAccentSlider.qSliderProps.onWheel"
           @pan="previewAccentSlider.qSliderProps.onPan"
@@ -71,7 +69,7 @@ const props = withDefaults(
     accentPhrase: AccentPhrase;
     accentPhraseIndex: number;
     uiLocked: boolean;
-    shiftKeyFlag: boolean;
+    shiftKeyFlag?: boolean;
     onChangeAccent: (
       accentPhraseIndex: number,
       accent: number
@@ -104,6 +102,9 @@ const accentLine = computed(() => {
       }`
   );
 });
+
+// クリックでアクセント句が選択されないように、@click.stopに渡す
+const stopPropagation = undefined;
 </script>
 
 <style scoped lang="scss">

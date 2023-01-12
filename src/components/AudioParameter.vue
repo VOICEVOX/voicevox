@@ -30,7 +30,7 @@
       :disable="previewSlider.qSliderProps.disable.value"
       :model-value="previewSlider.qSliderProps.modelValue.value"
       @update:model-value="previewSlider.qSliderProps['onUpdate:modelValue']"
-      @click.stop="undefined"
+      @click.stop="stopPropagation"
       @change="previewSlider.qSliderProps.onChange"
       @wheel="previewSlider.qSliderProps.onWheel"
       @pan="previewSlider.qSliderProps.onPan"
@@ -43,20 +43,30 @@ import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
 import { computed, reactive } from "vue";
 
-const props =
+const props = withDefaults(
   defineProps<{
     value: number;
     accentPhraseIndex: number;
     moraIndex: number;
     uiLocked: boolean;
-    min: number;
-    max: number;
-    step: number;
-    disable: boolean;
-    type: MoraDataType;
-    clip: boolean;
-    shiftKeyFlag: boolean;
-  }>();
+    min?: number;
+    max?: number;
+    step?: number;
+    disable?: boolean;
+    type?: MoraDataType;
+    clip?: boolean;
+    shiftKeyFlag?: boolean;
+  }>(),
+  {
+    min: 0.0,
+    max: 10.0,
+    step: 0.01,
+    disable: false,
+    type: "vowel",
+    clip: false,
+    shiftKeyFlag: false,
+  }
+);
 
 const emit =
   defineEmits<{
@@ -128,6 +138,9 @@ const precisionComputed = computed(() => {
     return 3;
   }
 });
+
+// クリックでアクセント句が選択されないように@click.stopに渡す
+const stopPropagation = undefined;
 </script>
 
 <style scoped lang="scss">
