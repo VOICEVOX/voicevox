@@ -87,7 +87,7 @@
                   </q-item-section>
                   <q-item-section>
                     <q-item-label class="text-display">{{
-                      engineManifests[id]
+                      engineManifests[id] != undefined
                         ? engineManifests[id].brandName
                         : engineInfos[id].name
                     }}</q-item-label>
