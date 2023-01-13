@@ -33,10 +33,10 @@ export const singingStoreState: SingingStoreState = {
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
-  sequencerZoomX: 1,
-  sequencerZoomY: 1,
-  sequencerScrollY: 60,
-  sequencerScrollX: 0,
+  sequencerZoomX: 0.5,
+  sequencerZoomY: 0.5,
+  sequencerScrollY: 60, // midi number
+  sequencerScrollX: 0, // midi duration
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -322,7 +322,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { zoomX }: { zoomX: number }) {
       state.sequencerZoomX = zoomX;
     },
-    async action({ commit }, { zoomX }) {
+    action({ commit }, { zoomX }) {
       commit("SET_ZOOM_X", {
         zoomX,
       });
@@ -333,7 +333,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { zoomY }: { zoomY: number }) {
       state.sequencerZoomY = zoomY;
     },
-    async action({ commit }, { zoomY }) {
+    action({ commit }, { zoomY }) {
       commit("SET_ZOOM_Y", {
         zoomY,
       });

@@ -72,6 +72,7 @@
         zIndex: 10000,
         bottom: '8px',
         right: '16px',
+        width: '80px',
       }"
     />
     <input
@@ -84,9 +85,10 @@
       v-bind:style="{
         position: 'fixed',
         zIndex: 10000,
-        bottom: '96px',
-        right: '-32px',
+        bottom: '64px',
+        right: '-8px',
         transform: 'rotate(-90deg)',
+        width: '80px',
       }"
     />
   </div>
@@ -109,15 +111,15 @@ export default defineComponent({
     const gridY = midiKeys;
     const gridX = computed(() => {
       const resolution = store.state.score?.resolution || 480;
-      // NOTE: 最低幅: 仮
-      const minDuration = resolution * 4 * 15;
+      // NOTE: 最低幅: 仮16小節
+      const minDuration = resolution * 4 * 16;
       const lastNote = store.state.score?.notes.slice(-1)[0];
       const totalDuration = lastNote
         ? Math.max(lastNote.position + lastNote.duration, minDuration)
         : minDuration;
       // NOTE: グリッド幅1/16: 設定できるようにする必要あり
       const gridDuration = resolution / 4;
-      return [...Array(Math.ceil(totalDuration / gridDuration) + 1).keys()].map(
+      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()].map(
         (gridNum) => gridNum * gridDuration
       );
     });
@@ -130,20 +132,13 @@ export default defineComponent({
 
     onMounted(() => {
       const el = document.querySelector("#score-sequencer");
+      // C4あたりにスクロールする
       if (el) {
         el.scrollTop = scrollY.value * (24 * zoomY.value);
-        let a = 1000;
-        const testScroll = () => {
-          a = a - 1;
-          el.scrollLeft = a;
-          requestAnimationFrame(testScroll);
-        };
-        testScroll();
       }
     });
 
     const addNote = (position: number, midi: number) => {
-      // NOTE: フォーカスなど動作変更
       store.dispatch("ADD_NOTE", {
         note: {
           position,
@@ -297,10 +292,6 @@ export default defineComponent({
   flex-shrink: 0;
 }
 
-.sequencer-row:nth-child(16n) {
-  border-right: 1px solid #ddd;
-}
-
 .sequencer-cell {
   border-bottom: 1px solid #ddd;
   flex-shrink: 0;
@@ -326,14 +317,15 @@ export default defineComponent({
 .sequencer-note-lyric {
   background: white;
   border: 0;
-  border: 1px solid colors.$primary-light;
+  border-bottom: 1px solid colors.$primary-light;
   border-radius: 2px 2px 0 0;
+  font-size: 0.875rem;
   font-weight: bold;
   outline: none;
   position: absolute;
-  top: -20px;
+  top: -24px;
   left: 4px;
-  width: 3rem;
+  width: 2rem;
 }
 
 .sequencer-note-bar {
