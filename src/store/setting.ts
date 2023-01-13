@@ -332,12 +332,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         }
       }
 
-      const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応
-      if (engineId === undefined)
-        throw new Error(`No such engine registered: index == 0`);
-
       await dispatch("SET_USE_GPU", { useGpu });
-      const success = await dispatch("RESTART_ENGINE", { engineId });
+      const success = await dispatch("RESTART_ENGINES", {
+        engineIds: state.engineIds,
+      });
 
       // GPUモードに変更できなかった場合はCPUモードに戻す
       // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい

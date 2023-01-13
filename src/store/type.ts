@@ -692,18 +692,8 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<{
-      success: boolean;
-      anyNewCharacters: boolean;
-    }>;
-  };
-
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<{
+  RESTART_ENGINES: {
+    action(payload: { engineIds: string[] }): Promise<{
       success: boolean;
       anyNewCharacters: boolean;
     }>;

@@ -97,6 +97,7 @@ export default defineComponent({
     const useGpu = computed(() => store.state.useGpu);
     const isEdited = computed(() => store.getters.IS_EDITED);
     const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
+    const engineIds = computed(() => store.state.engineIds);
     const engineInfos = computed(() => store.state.engineInfos);
     const engineManifests = computed(() => store.state.engineManifests);
 
@@ -458,8 +459,8 @@ export default defineComponent({
             type: "button",
             label: "再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE", {
-                engineId: engineInfo.uuid,
+              store.dispatch("RESTART_ENGINES", {
+                engineIds: [engineInfo.uuid],
               });
             },
             disableWhenUiLocked: false,
@@ -490,8 +491,8 @@ export default defineComponent({
                     type: "button",
                     label: "再起動",
                     onClick: () => {
-                      store.dispatch("RESTART_ENGINE", {
-                        engineId: engineInfo.uuid,
+                      store.dispatch("RESTART_ENGINES", {
+                        engineIds: [engineInfo.uuid],
                       });
                     },
                     disableWhenUiLocked: false,
@@ -506,7 +507,7 @@ export default defineComponent({
             type: "button",
             label: "全てのエンジンを再起動",
             onClick: () => {
-              store.dispatch("RESTART_ENGINE_ALL");
+              store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
             },
             disableWhenUiLocked: false,
           },

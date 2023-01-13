@@ -159,11 +159,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     ),
   },
 
-  RESTART_ENGINE_ALL: {
-    async action({ state, dispatch, commit }) {
-      // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
-      const engineIds = state.engineIds;
-
+  RESTART_ENGINES: {
+    async action({ state, dispatch, commit }, { engineIds }) {
       await Promise.all(
         engineIds.map(async (engineId) => {
           commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
@@ -187,27 +184,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds,
       });
 
-      return result;
-    },
-  },
-
-  RESTART_ENGINE: {
-    async action({ dispatch, commit }, { engineId }) {
-      commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
-      const result = await window.electron
-        .restartEngine(engineId)
-        .then(async () => {
-          return await dispatch("POST_ENGINE_START", {
-            engineIds: [engineId],
-          });
-        })
-        .catch(async () => {
-          await dispatch("DETECTED_ENGINE_ERROR", { engineId });
-          return {
-            success: false,
-            anyNewCharacters: false,
-          };
-        });
       return result;
     },
   },
