@@ -20,11 +20,9 @@ import { z } from "zod";
 
 type MinimumEngineManifest = {
   name: string;
-  brandName: string;
   uuid: string;
   command: string;
   port: string;
-  icon: string;
 };
 
 type EngineProcessContainer = {
@@ -115,7 +113,6 @@ export class EngineManager {
         uuid: manifest.uuid,
         host: `http://127.0.0.1:${manifest.port}`,
         name: manifest.name,
-        brandName: manifest.brandName,
         path: engineDir,
         executionEnabled: true,
         executionFilePath: path.join(engineDir, command),

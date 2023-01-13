@@ -264,7 +264,6 @@ export type EngineInfo = {
   uuid: string;
   host: string;
   name: string;
-  brandName: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
   executionFilePath: string;

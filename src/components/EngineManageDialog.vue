@@ -87,7 +87,7 @@
                   </q-item-section>
                   <q-item-section>
                     <q-item-label class="text-display">{{
-                      engineInfos[id].name
+                      engineManifests[id].brandName
                     }}</q-item-label>
                     <q-item-label caption class="engine-path">{{
                       engineInfos[id].uuid

@@ -2,7 +2,7 @@
   <div class="character-portrait-wrapper">
     <span class="character-name">{{ characterName }}</span>
     <span class="character-engine-name" v-if="isMultipleEngine">{{
-      engineName
+      brandName
     }}</span>
     <img :src="portraitPath" class="character-portrait" />
     <div v-if="isInitializingSpeaker" class="loading">
@@ -60,14 +60,14 @@ export default defineComponent({
         : characterInfo.value?.metas.speakerName;
     });
 
-    const engineName = computed(() => {
+    const brandName = computed(() => {
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
       const engineId = audioItem?.engineId ?? store.state.engineIds[0];
-      const engineInfo = store.state.engineInfos[engineId];
-      return engineInfo?.name;
+      const engineManifest = store.state.engineManifests[engineId];
+      return engineManifest?.brandName;
     });
 
     const portraitPath = computed(
@@ -83,7 +83,7 @@ export default defineComponent({
 
     return {
       characterName,
-      engineName,
+      brandName,
       portraitPath,
       isInitializingSpeaker,
       isMultipleEngine,

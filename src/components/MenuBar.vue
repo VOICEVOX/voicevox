@@ -471,7 +471,9 @@ export default defineComponent({
             (engineInfo) =>
               ({
                 type: "root",
-                label: engineInfo.brandName,
+                label:
+                  engineManifests.value[engineInfo.uuid] &&
+                  engineManifests.value[engineInfo.uuid].brandName,
                 icon:
                   engineManifests.value[engineInfo.uuid] &&
                   base64ImageToUri(engineManifests.value[engineInfo.uuid].icon),
