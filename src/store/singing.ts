@@ -9,6 +9,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { Midi } from "@tonejs/midi";
+import { getDoremiFromMidi } from "@/helpers/singHelper";
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -322,7 +323,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { zoomX }: { zoomX: number }) {
       state.sequencerZoomX = zoomX;
     },
-    action({ commit }, { zoomX }) {
+    async action({ commit }, { zoomX }) {
       commit("SET_ZOOM_X", {
         zoomX,
       });
@@ -333,7 +334,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { zoomY }: { zoomY: number }) {
       state.sequencerZoomY = zoomY;
     },
-    action({ commit }, { zoomY }) {
+    async action({ commit }, { zoomY }) {
       commit("SET_ZOOM_Y", {
         zoomY,
       });
@@ -408,7 +409,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               note.durationTicks
             ),
             midi: note.midi,
-            lyric: "",
+            lyric: getDoremiFromMidi(note.midi),
           }))
           .sort((a, b) => a.position - b.position)
           .forEach((note) => {
