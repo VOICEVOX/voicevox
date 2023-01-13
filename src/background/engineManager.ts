@@ -20,6 +20,7 @@ import Ajv from "ajv/dist/jtd";
 
 type MinimumEngineManifest = {
   name: string;
+  brandName: string;
   uuid: string;
   command: string;
   port: string;
@@ -124,6 +125,7 @@ export class EngineManager {
         uuid: manifest.uuid,
         host: `http://127.0.0.1:${manifest.port}`,
         name: manifest.name,
+        brandName: manifest.brandName,
         path: engineDir,
         executionEnabled: true,
         executionFilePath: path.join(engineDir, command),
@@ -295,7 +297,7 @@ export class EngineManager {
         const dialogMessage =
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-            : `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`;
+            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
         dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
       }
     });
