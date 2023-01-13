@@ -1,2 +1,4 @@
 src/openapi/**/* linguist-generated=true
 openapi.json linguist-generated=true
+
+src/fonts/*.woff2 linguist-vendored=true
