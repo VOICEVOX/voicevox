@@ -235,6 +235,9 @@ export default defineComponent({
           (m) => m.uuid
         )) {
           const manifest = store.state.engineManifests[id];
+          if (!manifest) {
+            continue;
+          }
 
           data.push(
             {
