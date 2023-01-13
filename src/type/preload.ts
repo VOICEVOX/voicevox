@@ -474,7 +474,7 @@ export const electronStoreSchema = z
       .default({}),
     engineDirs: z.string().array().default([]),
   })
-  .passthrough();
+  .passthrough(); // release-0.14直前で消す
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
