@@ -42,6 +42,10 @@ export const defaultHotkeySettings: HotkeySetting[] = [
     combination: "Shift Enter",
   },
   {
+    action: "テキスト欄を複製",
+    combination: !isMac ? "Ctrl D" : "Meta D",
+  },
+  {
     action: "テキスト欄を削除",
     combination: "Shift Delete",
   },
@@ -289,6 +293,7 @@ export type PresetConfig = {
   items: Record<string, Preset>;
   keys: string[];
 };
+
 export const hotkeyActionSchema = z.enum([
   "音声書き出し",
   "一つだけ書き出し",
@@ -299,6 +304,7 @@ export const hotkeyActionSchema = z.enum([
   "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
   "長さ欄を表示",
   "テキスト欄を追加",
+  "テキスト欄を複製",
   "テキスト欄を削除",
   "テキスト欄からフォーカスを外す",
   "テキスト欄にフォーカスを戻す",
