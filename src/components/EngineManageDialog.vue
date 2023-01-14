@@ -90,7 +90,9 @@
                       engineInfos[id].name
                     }}</q-item-label>
                     <q-item-label caption class="engine-path">{{
-                      engineInfos[id].uuid
+                      engineManifests[id] != undefined
+                        ? engineManifests[id].brandName
+                        : engineInfos[id].uuid
                     }}</q-item-label>
                   </q-item-section>
                 </q-item>

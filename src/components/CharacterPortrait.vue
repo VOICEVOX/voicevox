@@ -66,8 +66,9 @@ export default defineComponent({
         ? store.state.audioItems[activeAudioKey]
         : undefined;
       const engineId = audioItem?.engineId ?? store.state.engineIds[0];
+      const engineManifest = store.state.engineManifests[engineId];
       const engineInfo = store.state.engineInfos[engineId];
-      return engineInfo?.name;
+      return engineManifest ? engineManifest.brandName : engineInfo.name;
     });
 
     const portraitPath = computed(

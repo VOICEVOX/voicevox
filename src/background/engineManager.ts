@@ -23,7 +23,6 @@ type MinimumEngineManifest = {
   uuid: string;
   command: string;
   port: string;
-  icon: string;
 };
 
 type EngineProcessContainer = {
@@ -285,7 +284,7 @@ export class EngineManager {
         const dialogMessage =
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-            : `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`;
+            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
         dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
       }
     });
