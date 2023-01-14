@@ -91,6 +91,7 @@ describe("store/vuex.js test", () => {
           "88022f86-c823-436e-85a3-500c629749c4": {
             manifestVersion: "0.13.0",
             name: "DUMMY VOICEVOX ENGINE",
+            brandName: "DUMMY VOICEVOX",
             uuid: "c7b58856-bd56-4aa1-afb7-b8415f824b06",
             url: "https://github.com/VOICEVOX/voicevox_engine",
             icon: "engine_manifest_assets/icon.png",

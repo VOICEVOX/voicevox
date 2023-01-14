@@ -235,6 +235,10 @@ export default defineComponent({
           (m) => m.uuid
         )) {
           const manifest = store.state.engineManifests[id];
+          if (!manifest) {
+            store.dispatch("LOG_WARN", `manifest not found: ${id}`);
+            continue;
+          }
 
           data.push(
             {

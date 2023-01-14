@@ -456,10 +456,12 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: string;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     }): Promise<string>;
   };
 
@@ -858,6 +860,10 @@ export type IndexStoreTypes = {
   };
 
   LOG_ERROR: {
+    action(...payload: unknown[]): void;
+  };
+
+  LOG_WARN: {
     action(...payload: unknown[]): void;
   };
 

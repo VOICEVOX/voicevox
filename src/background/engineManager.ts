@@ -16,14 +16,13 @@ import {
 } from "@/type/preload";
 
 import log from "electron-log";
-import Ajv from "ajv/dist/jtd";
+import { z } from "zod";
 
 type MinimumEngineManifest = {
   name: string;
   uuid: string;
   command: string;
   port: string;
-  icon: string;
 };
 
 type EngineProcessContainer = {
@@ -38,28 +37,18 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv = process.env.DEFAULT_ENGINE_INFOS ?? "[]";
 
-  const envSchema = {
-    elements: {
-      properties: {
-        uuid: { type: "string" },
-        host: { type: "string" },
-        name: { type: "string" },
-        executionEnabled: { type: "boolean" },
-        executionFilePath: { type: "string" },
-        executionArgs: { elements: { type: "string" } },
-      },
-      optionalProperties: {
-        path: { type: "string" },
-      },
-    },
-  } as const;
-  const ajv = new Ajv();
-  const validate = ajv.compile(envSchema);
-
-  const engines = JSON.parse(defaultEngineInfosEnv);
-  if (!validate(engines)) {
-    throw validate.errors;
-  }
+  const envSchema = z
+    .object({
+      uuid: z.string().uuid(),
+      host: z.string(),
+      name: z.string(),
+      executionEnabled: z.boolean(),
+      executionFilePath: z.string(),
+      executionArgs: z.array(z.string()),
+      path: z.string().optional(),
+    })
+    .array();
+  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
     return {
@@ -295,7 +284,7 @@ export class EngineManager {
         const dialogMessage =
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-            : `${engineInfo.name}の音声合成エンジンが異常終了しました。エンジンを再起動してください。`;
+            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
         dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
       }
     });
@@ -376,17 +365,6 @@ export class EngineManager {
         reject(error);
       }
     });
-  }
-
-  /**
-   * 全てのエンジンを再起動する。
-   * FIXME: winを受け取らなくても良いようにする
-   */
-  async restartEngineAll(win: BrowserWindow) {
-    const engineInfos = this.fetchEngineInfos();
-    for (const engineInfo of engineInfos) {
-      await this.restartEngine(engineInfo.uuid, win);
-    }
   }
 
   /**
