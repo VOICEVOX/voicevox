@@ -60,14 +60,6 @@
   </q-item>
 </template>
 
-<style lang="scss" scoped>
-.engine-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 2px;
-}
-</style>
-
 <script lang="ts">
 import { defineComponent, ref, PropType, computed, watch } from "vue";
 import type { MenuItemData } from "@/components/MenuBar.vue";
@@ -152,3 +144,11 @@ export default defineComponent({
   },
 });
 </script>
+
+<style lang="scss" scoped>
+.engine-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 2px;
+}
+</style>
