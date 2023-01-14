@@ -317,7 +317,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="restartSelectedEngine"
-                :disable="uiLocked || engineStates[selectedId] !== 'READY'"
+                :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
                 >再起動</q-btn
               >
             </div>
