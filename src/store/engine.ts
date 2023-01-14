@@ -160,7 +160,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   RESTART_ENGINES: {
-    async action({ state, dispatch, commit }, { engineIds }) {
+    async action({ dispatch, commit }, { engineIds }) {
       await Promise.all(
         engineIds.map(async (engineId) => {
           commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
