@@ -1,2 +1,3 @@
 src/openapi/**/* linguist-generated=true
 openapi.json linguist-generated=true
+*.woff2 linguist-vendored=true

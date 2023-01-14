@@ -152,7 +152,6 @@ const pushAudioText = async () => {
 const setActiveAudioKey = () => {
   store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
 };
-
 const isEnableSplitText = computed(() => store.state.splitTextWhenPaste);
 // コピペしたときに句点と改行で区切る
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
