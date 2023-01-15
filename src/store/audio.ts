@@ -1732,25 +1732,34 @@ export const audioCommandStore = transformCommandStore(
           audioItem: AudioItem;
           audioKey: string;
           prevAudioKey: string | undefined;
+          applyPreset: boolean;
         }
       ) {
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
-        audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-          audioKey: payload.audioKey,
-        });
+        if (payload.applyPreset) {
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+            audioKey: payload.audioKey,
+          });
+        }
       },
       async action(
         { dispatch, commit },
         {
           audioItem,
           prevAudioKey,
-        }: { audioItem: AudioItem; prevAudioKey: string | undefined }
+          applyPreset,
+        }: {
+          audioItem: AudioItem;
+          prevAudioKey: string | undefined;
+          applyPreset: boolean;
+        }
       ) {
         const audioKey = await dispatch("GENERATE_AUDIO_KEY");
         commit("COMMAND_REGISTER_AUDIO_ITEM", {
           audioItem,
           audioKey,
           prevAudioKey,
+          applyPreset,
         });
         return audioKey;
       },

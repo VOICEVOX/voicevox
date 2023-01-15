@@ -275,6 +275,7 @@ export default defineComponent({
       await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: props.audioKey,
+        applyPreset: true,
       });
       moveDownCell();
     };
