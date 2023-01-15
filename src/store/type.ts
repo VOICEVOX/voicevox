@@ -1060,7 +1060,7 @@ export type UiStoreTypes = {
     }): void;
   };
 
-  ON_CLOSE_SPLASH: {
+  CLOSE_SPLASH: {
     action(): void;
   };
 

@@ -237,7 +237,7 @@ export type IpcIHData = {
     return: ThemeSetting | void;
   };
 
-  ON_CLOSE_SPLASH: {
+  CLOSE_SPLASH: {
     args: [];
     return: void;
   };

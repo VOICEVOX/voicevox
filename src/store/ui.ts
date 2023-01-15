@@ -193,7 +193,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  ON_CLOSE_SPLASH: {
+  CLOSE_SPLASH: {
     action() {
       window.electron.closeSplash();
     },

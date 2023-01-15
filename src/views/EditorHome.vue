@@ -525,7 +525,7 @@ export default defineComponent({
       // close splash after creating the first audio cell
       // For more information:
       // https://github.com/VOICEVOX/voicevox/pull/1013#discussion_r1046200849
-      store.dispatch("ON_CLOSE_SPLASH");
+      store.dispatch("CLOSE_SPLASH");
 
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,

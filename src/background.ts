@@ -1393,7 +1393,7 @@ const getCurrentTheme = (): ThemeConf => {
   return currentThemeRef;
 };
 
-ipcMainHandle("ON_CLOSE_SPLASH", async () => {
+ipcMainHandle("CLOSE_SPLASH", async () => {
   splash.close();
   win.show();
 });

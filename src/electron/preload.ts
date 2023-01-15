@@ -235,7 +235,7 @@ const api: Sandbox = {
   },
 
   closeSplash: () => {
-    ipcRenderer.invoke("ON_CLOSE_SPLASH");
+    ipcRenderer.invoke("CLOSE_SPLASH");
   },
 
   /**
