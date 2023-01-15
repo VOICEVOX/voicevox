@@ -264,6 +264,13 @@ export type DefaultStyleId = {
   defaultStyleId: number;
 };
 
+export type MinimumEngineManifest = {
+  name: string;
+  uuid: string;
+  command: string;
+  port: string;
+};
+
 export type EngineInfo = {
   uuid: string;
   host: string;
