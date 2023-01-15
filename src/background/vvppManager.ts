@@ -7,7 +7,7 @@ import { dialog } from "electron";
 import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
-import { spawn } from "child_process";
+import { spawnSync } from "child_process";
 
 const isNotWin = process.platform !== "win32";
 
@@ -168,7 +168,7 @@ export class VvppManager {
       await moveFile(outputDir, engineDirectory);
     }
     if (isNotWin) {
-      spawn("chmod", ["u+x", manifest.command], {
+      spawnSync("chmod", ["u+x", manifest.command], {
         cwd: engineDirectory,
       });
     }
