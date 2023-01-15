@@ -1018,19 +1018,17 @@ async function createWindow() {
 
   // load and show splash
   const currentTheme = getCurrentTheme();
-  if (currentTheme !== null) {
-    const splashURL = path.join(__static, "splash.html");
+  const splashURL = path.join(__static, "splash.html");
 
-    const primary = currentTheme.colors.primary.substring(1);
-    const display = currentTheme.colors.display.substring(1);
-    const background = currentTheme.colors.background.substring(1);
+  const primary = currentTheme.colors.primary.substring(1);
+  const display = currentTheme.colors.display.substring(1);
+  const background = currentTheme.colors.background.substring(1);
 
-    const version = app.getVersion();
+  const version = app.getVersion();
 
-    const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
+  const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
 
-    splash.loadURL(fullURL);
-  }
+  splash.loadURL(fullURL);
   splash.once("ready-to-show", splash.show);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -1383,7 +1381,7 @@ const getThemes = () => {
   return { currentTheme: currentTheme, availableThemes: themes };
 };
 
-const getCurrentTheme = (): ThemeConf | null => {
+const getCurrentTheme = (): ThemeConf => {
   const { currentTheme, availableThemes } = getThemes();
   let currentThemeRef = null;
   availableThemes.forEach((theme) => {
@@ -1391,6 +1389,7 @@ const getCurrentTheme = (): ThemeConf | null => {
       currentThemeRef = theme;
     }
   });
+  if (currentThemeRef === null) currentThemeRef = availableThemes[0];
   return currentThemeRef;
 };
 
