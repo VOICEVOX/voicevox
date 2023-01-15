@@ -8,6 +8,13 @@ import { dialog } from "electron";
 import { EngineInfo } from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
+import { spawn } from "child_process";
+
+type EngineManifestJson = EngineManifest & {
+  command: string;
+};
+
+const isNotWin = process.platform !== "win32";
 
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
@@ -68,12 +75,12 @@ export class VvppManager {
     this.willDeleteEngineIds.add(engineId);
   }
 
-  toValidDirName(manifest: EngineManifest) {
+  toValidDirName(manifest: EngineManifestJson) {
     // フォルダに使用できない文字が含まれている場合は置換する
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
   }
 
-  isEngineDirName(dir: string, manifest: EngineManifest) {
+  isEngineDirName(dir: string, manifest: EngineManifestJson) {
     return dir.endsWith(`+${manifest.uuid}`);
   }
 
@@ -96,7 +103,7 @@ export class VvppManager {
 
   async extractVvpp(
     vvppPath: string
-  ): Promise<{ outputDir: string; manifest: EngineManifest }> {
+  ): Promise<{ outputDir: string; manifest: EngineManifestJson }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
@@ -144,7 +151,7 @@ export class VvppManager {
         path.join(outputDir, "engine_manifest.json"),
         "utf-8"
       )
-    ) as EngineManifest;
+    ) as EngineManifestJson;
     return {
       outputDir,
       manifest,
@@ -164,6 +171,11 @@ export class VvppManager {
       this.markWillMove(outputDir, dirName);
     } else {
       await moveFile(outputDir, engineDirectory);
+    }
+    if (isNotWin) {
+      spawn("chmod", ["u+x", manifest.command], {
+        cwd: engineDirectory,
+      });
     }
   }
 
