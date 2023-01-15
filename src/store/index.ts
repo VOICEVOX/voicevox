@@ -276,9 +276,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   INIT_VUEX: {
     async action({ dispatch }) {
       // 設定ファイルからstoreへ読み込む
-      dispatch("HYDRATE_UI_STORE");
-      dispatch("HYDRATE_PRESET_STORE");
-      dispatch("HYDRATE_SETTING_STORE");
+      const promises: Promise<void>[] = [];
+      promises.push(dispatch("HYDRATE_UI_STORE"));
+      promises.push(dispatch("HYDRATE_PRESET_STORE"));
+      promises.push(dispatch("HYDRATE_SETTING_STORE"));
+
+      await Promise.all(promises);
     },
   },
 
