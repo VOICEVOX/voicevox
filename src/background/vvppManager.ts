@@ -1,18 +1,13 @@
-import { EngineManifest } from "@/openapi";
 import fs from "fs";
 import path from "path";
 import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
-import { EngineInfo } from "@/type/preload";
+import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
 import { spawn } from "child_process";
-
-type EngineManifestJson = EngineManifest & {
-  command: string;
-};
 
 const isNotWin = process.platform !== "win32";
 
@@ -75,12 +70,12 @@ export class VvppManager {
     this.willDeleteEngineIds.add(engineId);
   }
 
-  toValidDirName(manifest: EngineManifestJson) {
+  toValidDirName(manifest: MinimumEngineManifest) {
     // フォルダに使用できない文字が含まれている場合は置換する
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
   }
 
-  isEngineDirName(dir: string, manifest: EngineManifestJson) {
+  isEngineDirName(dir: string, manifest: MinimumEngineManifest) {
     return dir.endsWith(`+${manifest.uuid}`);
   }
 
@@ -103,7 +98,7 @@ export class VvppManager {
 
   async extractVvpp(
     vvppPath: string
-  ): Promise<{ outputDir: string; manifest: EngineManifestJson }> {
+  ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
@@ -151,7 +146,7 @@ export class VvppManager {
         path.join(outputDir, "engine_manifest.json"),
         "utf-8"
       )
-    ) as EngineManifestJson;
+    ) as MinimumEngineManifest;
     return {
       outputDir,
       manifest,
