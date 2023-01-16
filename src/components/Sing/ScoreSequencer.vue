@@ -1,5 +1,5 @@
 <template>
-  <div class="score-sequencer" id="score-sequencer">
+  <div class="score-sequencer">
     <div class="sequencer-keys">
       <div
         v-for="y in gridY"
@@ -16,7 +16,7 @@
         {{ y.pitch === "C" ? y.name : "" }}
       </div>
     </div>
-    <div class="sequencer-grids" ref="sequencer-grids">
+    <div class="sequencer-grids">
       <div
         v-for="x in gridX"
         :key="x"
@@ -39,6 +39,7 @@
           }"
         />
       </div>
+      <!-- NOTE: ノートと歌詞入力あわせコンポーネント分割予定 -->
       <div
         v-for="(note, index) in notes"
         :key="index"
@@ -60,6 +61,7 @@
         <div class="sequencer-note-bar" />
       </div>
     </div>
+    <!-- NOTE: スクロールバー+ズームレンジ仮 -->
     <input
       type="range"
       min="0.1"
@@ -153,6 +155,7 @@ export default defineComponent({
       store.dispatch("REMOVE_NOTE", { index });
     };
 
+    // NOTE: ノートのバーと歌詞入力でコンポーネント分割予定
     const setLyric = (index: number, event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;

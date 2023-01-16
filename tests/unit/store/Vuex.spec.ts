@@ -122,7 +122,7 @@ describe("store/vuex.js test", () => {
         sequencerZoomX: 1,
         sequencerZoomY: 1,
         sequencerScrollX: 0,
-        sequencerScrollY: 60,
+        sequencerScrollY: 60,お
       },
       getters: {
         ...uiStore.getters,

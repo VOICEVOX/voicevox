@@ -48,22 +48,13 @@ export default defineComponent({
 
     // 歌声合成エディターの初期化
     onMounted(async () => {
+      if (store.state.score === undefined) {
+        const emptyScore = await store.dispatch("GET_EMPTY_SCORE");
+        await store.dispatch("SET_SCORE", { score: emptyScore });
+      }
       await store.dispatch("SET_SINGER", {});
-
-      const score = await store.dispatch("GET_EMPTY_SCORE");
-
-      // 実装時の確認用です TODO: 必要なくなったら削除
-      score.notes = [
-        { position: 0, duration: 480, midi: 60, lyric: "ら" },
-        { position: 480, duration: 480, midi: 62, lyric: "ら" },
-        { position: 960, duration: 480, midi: 64, lyric: "ら" },
-        { position: 1440, duration: 480, midi: 65, lyric: "ら" },
-        { position: 1920, duration: 1920, midi: 67, lyric: "ら" },
-      ];
-
-      await store.dispatch("SET_SCORE", { score });
+      return {};
     });
-    return null;
   },
 });
 </script>

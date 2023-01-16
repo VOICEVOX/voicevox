@@ -5,6 +5,7 @@ import {
   Note,
   SingingStoreState,
   SingingStoreTypes,
+  commandMutationsCreator,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -14,23 +15,7 @@ import { getDoremiFromMidi } from "@/helpers/singHelper";
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
-  score: {
-    resolution: 480,
-    tempos: [
-      {
-        position: 0,
-        tempo: 120,
-      },
-    ],
-    timeSignatures: [
-      {
-        position: 0,
-        beats: 4,
-        beatType: 4,
-      },
-    ],
-    notes: [],
-  },
+  score: undefined,
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
@@ -276,8 +261,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {
-        const notes = [...state.score.notes].concat(note).sort((a, b) => {
-          return a.position < b.position ? -1 : 1;
+        const notes = state.score.notes.concat(note).sort((a, b) => {
+          return a.position - b.position;
         });
         state.score.notes = notes;
       }

@@ -30,7 +30,7 @@ export function getDoremiFromMidi(midi: number): string {
     "ソ",
     "ラ",
     "ラ",
-    "ラ",
+    "シ",
   ];
   const pitchPos = midi % 12;
   return mapPitches[pitchPos];
@@ -61,7 +61,3 @@ export const midiKeys = [...Array(128)]
     };
   })
   .reverse();
-
-export function getDisplayKey(midi: number): object {
-  return midiKeys[midi];
-}
