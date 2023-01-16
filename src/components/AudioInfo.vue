@@ -392,6 +392,92 @@
         @pan="postPhonemeLengthSlider.qSliderProps.onPan"
       />
     </div>
+    <div
+      v-if="shouldShowMorphing"
+      class="q-px-md"
+      :class="{
+        disabled: uiLocked,
+      }"
+    >
+      <q-separator class="q-mb-md" />
+      <span class="text-body1 q-mb-xs">モーフィング</span>
+      <div class="row no-wrap items-center">
+        <character-button
+          class="q-my-xs"
+          :character-infos="mophingTargetCharacters"
+          :show-engine-info="mophingTargetEngines.length >= 2"
+          :emptiable="true"
+          :ui-locked="uiLocked"
+          v-model:selected-voice="morphingTargetVoice"
+        />
+        <div class="q-pl-xs overflow-hidden">
+          <div class="text-body2 text-no-wrap ellipsis overflow-hidden">
+            {{
+              morphingTargetCharacterInfo
+                ? morphingTargetCharacterInfo.metas.speakerName
+                : "未設定"
+            }}
+          </div>
+          <div
+            v-if="
+              morphingTargetCharacterInfo &&
+              morphingTargetCharacterInfo.metas.styles.length >= 2
+            "
+            class="text-body2 text-no-wrap ellipsis overflow-hidden"
+          >
+            ({{
+              morphingTargetStyleInfo
+                ? morphingTargetStyleInfo.styleName
+                : undefined
+            }})
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="!isSupportedMorphing"
+        class="text-warning"
+        style="font-size: 0.7rem"
+      >
+        非対応エンジンです
+      </div>
+      <div
+        v-else-if="isValidMorphingInfo"
+        class="text-warning"
+        style="font-size: 0.7rem"
+      >
+        無効な設定です
+      </div>
+      <div :class="{ disabled: morphingTargetStyleInfo == undefined }">
+        <span class="text-body1 q-mb-xs"
+          >割合
+          {{
+            morphingRateSlider.state.currentValue.value != undefined
+              ? morphingRateSlider.state.currentValue.value.toFixed(2)
+              : undefined
+          }}</span
+        >
+        <q-slider
+          dense
+          snap
+          color="primary-light"
+          trackSize="2px"
+          :min="morphingRateSlider.qSliderProps.min.value"
+          :max="morphingRateSlider.qSliderProps.max.value"
+          :step="morphingRateSlider.qSliderProps.step.value"
+          :disable="
+            morphingRateSlider.qSliderProps.disable.value ||
+            morphingTargetStyleInfo == undefined
+          "
+          :model-value="morphingRateSlider.qSliderProps.modelValue.value"
+          @update:model-value="
+            morphingRateSlider.qSliderProps['onUpdate:modelValue']
+          "
+          @change="morphingRateSlider.qSliderProps.onChange"
+          @wheel="morphingRateSlider.qSliderProps.onWheel"
+          @pan="morphingRateSlider.qSliderProps.onPan"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -400,8 +486,9 @@ import { computed, defineComponent, ref } from "vue";
 import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
-import { Preset } from "@/type/preload";
+import { MorphingInfo, Preset, Voice } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
+import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
 
@@ -409,6 +496,7 @@ export default defineComponent({
   name: "AudioInfo",
 
   components: {
+    CharacterButton,
     PresetManageDialog,
   },
 
@@ -485,6 +573,22 @@ export default defineComponent({
       });
     };
 
+    const setMorphingRate = (rate: number) => {
+      const info = audioItem.value.morphingInfo;
+      if (info == undefined) {
+        throw new Error("audioItem.value.morphingInfo == undefined");
+      }
+      store.dispatch("COMMAND_SET_MORPHING_INFO", {
+        audioKey: props.activeAudioKey,
+        morphingInfo: {
+          rate,
+          targetEngineId: info.targetEngineId,
+          targetSpeakerId: info.targetSpeakerId,
+          targetStyleId: info.targetStyleId,
+        },
+      });
+    };
+
     const speedScaleSlider = previewSliderHelper({
       modelValue: () => query.value?.speedScale ?? null,
       disable: () =>
@@ -550,6 +654,89 @@ export default defineComponent({
       scrollMinStep: () => 0.01,
     });
 
+    // モーフィング
+    const shouldShowMorphing = computed(
+      () => store.state.experimentalSetting.enableMorphing
+    );
+
+    const isSupportedMorphing = computed(
+      () => supportedFeatures.value?.synthesisMorphing
+    );
+
+    const isValidMorphingInfo = computed(() => {
+      if (audioItem.value.morphingInfo == undefined) return false;
+      return !store.getters.VALID_MOPHING_INFO(audioItem.value);
+    });
+
+    const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+
+    const mophingTargetCharacters = computed(() => {
+      const allCharacters = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS;
+      return allCharacters
+        .map((character) => {
+          const targetStyles = character.metas.styles.filter((style) =>
+            mophingTargetEngines.includes(style.engineId)
+          );
+          character.metas.styles = targetStyles;
+          return character;
+        })
+        .filter((characters) => characters.metas.styles.length >= 1);
+    });
+
+    const morphingTargetVoice = computed({
+      get() {
+        const morphingInfo = audioItem.value.morphingInfo;
+        if (morphingInfo == undefined) return undefined;
+        return {
+          engineId: morphingInfo.targetEngineId,
+          speakerId: morphingInfo.targetSpeakerId,
+          styleId: morphingInfo.targetStyleId,
+        };
+      },
+      set(voice: Voice | undefined) {
+        const morphingInfo =
+          voice != undefined
+            ? {
+                rate: audioItem.value.morphingInfo?.rate ?? 0.5,
+                targetEngineId: voice.engineId,
+                targetSpeakerId: voice.speakerId,
+                targetStyleId: voice.styleId,
+              }
+            : undefined;
+        store.dispatch("COMMAND_SET_MORPHING_INFO", {
+          audioKey: props.activeAudioKey,
+          morphingInfo,
+        });
+      },
+    });
+
+    const morphingTargetCharacterInfo = computed(() =>
+      mophingTargetCharacters.value.find(
+        (character) =>
+          character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
+      )
+    );
+
+    const morphingTargetStyleInfo = computed(() => {
+      const targetVoice = morphingTargetVoice.value;
+      return morphingTargetCharacterInfo.value?.metas.styles.find(
+        (style) =>
+          style.engineId === targetVoice?.engineId &&
+          style.styleId === targetVoice.styleId
+      );
+    });
+
+    const morphingRateSlider = previewSliderHelper({
+      modelValue: () => audioItem.value.morphingInfo?.rate ?? null,
+      disable: () => uiLocked.value,
+      onChange: setMorphingRate,
+      max: () => 1,
+      min: () => 0,
+      step: () => 0.01,
+      scrollStep: () => 0.1,
+      scrollMinStep: () => 0.01,
+    });
+
     // プリセット
     const enablePreset = computed(
       () => store.state.experimentalSetting.enablePreset
@@ -572,13 +759,30 @@ export default defineComponent({
       if (audioPresetKey.value == undefined)
         throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
       const preset = presetItems.value[audioPresetKey.value];
-      const { name: _, ...presetParts } = preset;
+      const { name: _, morphingInfo, ...presetParts } = preset;
 
       // 入力パラメータと比較
-      const keys = Object.keys(presetParts) as (keyof Omit<Preset, "name">)[];
-      return keys.some(
-        (key) => presetParts[key] !== presetPartsFromParameter.value[key]
-      );
+      const keys = Object.keys(presetParts) as (keyof Omit<
+        Preset,
+        "name" | "morphingInfo"
+      >)[];
+      if (
+        keys.some(
+          (key) => presetParts[key] !== presetPartsFromParameter.value[key]
+        )
+      )
+        return true;
+      const morphingInfoFromParameter =
+        presetPartsFromParameter.value.morphingInfo;
+      if (morphingInfo && morphingInfoFromParameter) {
+        const morphingInfoKeys = Object.keys(
+          morphingInfo
+        ) as (keyof MorphingInfo)[];
+        return morphingInfoKeys.some(
+          (key) => morphingInfo[key] !== morphingInfoFromParameter[key]
+        );
+      }
+      return morphingInfo != morphingInfoFromParameter;
     });
 
     type PresetSelectModelType = {
@@ -737,6 +941,18 @@ export default defineComponent({
         volumeScale: volumeScaleSlider.state.currentValue.value,
         prePhonemeLength: prePhonemeLengthSlider.state.currentValue.value,
         postPhonemeLength: postPhonemeLengthSlider.state.currentValue.value,
+        morphingInfo:
+          morphingTargetStyleInfo.value &&
+          morphingTargetCharacterInfo.value &&
+          morphingRateSlider.state.currentValue.value != undefined // FIXME: ifでチェックしてthrowする
+            ? {
+                rate: morphingRateSlider.state.currentValue.value,
+                targetEngineId: morphingTargetStyleInfo.value.engineId,
+                targetSpeakerId:
+                  morphingTargetCharacterInfo.value.metas.speakerUuid,
+                targetStyleId: morphingTargetStyleInfo.value.styleId,
+              }
+            : undefined,
       };
     });
 
@@ -895,6 +1111,7 @@ export default defineComponent({
       setAudioVolumeScale,
       setAudioPrePhonemeLength,
       setAudioPostPhonemeLength,
+      setMorphingRate,
       applyPreset,
       enablePreset,
       isRegisteredPreset,
@@ -920,6 +1137,15 @@ export default defineComponent({
       volumeScaleSlider,
       prePhonemeLengthSlider,
       postPhonemeLengthSlider,
+      mophingTargetEngines,
+      shouldShowMorphing,
+      isSupportedMorphing,
+      isValidMorphingInfo,
+      mophingTargetCharacters,
+      morphingTargetVoice,
+      morphingTargetCharacterInfo,
+      morphingTargetStyleInfo,
+      morphingRateSlider,
       handleChangeSpeedScaleInput,
       handleChangePitchScaleInput,
       handleChangeIntonationInput,

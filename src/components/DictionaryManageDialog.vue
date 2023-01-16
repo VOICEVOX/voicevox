@@ -483,12 +483,14 @@ export default defineComponent({
         audioItem,
       });
       if (!blob) {
-        blob = await createUILockAction(
-          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-            audioItem,
-          })
-        );
-        if (!blob) {
+        try {
+          blob = await createUILockAction(
+            store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+              audioItem,
+            })
+          );
+        } catch (e) {
+          window.electron.logError(e);
           nowGenerating.value = false;
           $q.dialog({
             title: "生成に失敗しました",

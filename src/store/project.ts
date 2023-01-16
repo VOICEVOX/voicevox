@@ -419,6 +419,15 @@ const audioQuerySchema = {
   },
 } as const;
 
+const morphingInfoSchema = {
+  properties: {
+    rate: { type: "float32" },
+    targetEngineId: { type: "string" },
+    targetSpeakerId: { type: "string" },
+    targetStyleId: { type: "int32" },
+  },
+} as const;
+
 const audioItemSchema = {
   properties: {
     text: { type: "string" },
@@ -428,6 +437,7 @@ const audioItemSchema = {
     styleId: { type: "int32" },
     query: audioQuerySchema,
     presetKey: { type: "string" },
+    morphingInfo: morphingInfoSchema,
   },
 } as const;
 

@@ -294,6 +294,14 @@ export type Preset = {
   volumeScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
+  morphingInfo?: MorphingInfo;
+};
+
+export type MorphingInfo = {
+  rate: number;
+  targetEngineId: string;
+  targetSpeakerId: string;
+  targetStyleId: number;
 };
 
 export type PresetConfig = {
@@ -397,6 +405,7 @@ export type ThemeSetting = {
 export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
+  enableMorphing: boolean;
 };
 
 export const splitterPositionSchema = z.object({
@@ -455,6 +464,14 @@ export const electronStoreSchema = z
               volumeScale: z.number(),
               prePhonemeLength: z.number(),
               postPhonemeLength: z.number(),
+              morphingInfo: z
+                .object({
+                  rate: z.number(),
+                  targetEngineId: z.string().uuid(),
+                  targetSpeakerId: z.string().uuid(),
+                  targetStyleId: z.number(),
+                })
+                .optional(),
             })
           )
           .default({}),
@@ -467,6 +484,7 @@ export const electronStoreSchema = z
       .object({
         enablePreset: z.boolean().default(false),
         enableInterrogativeUpspeak: z.boolean().default(false),
+        enableMorphing: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
