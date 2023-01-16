@@ -716,7 +716,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_STYLE_ID: {
+  SET_AUDIO_VOICE: {
     mutation(state, { audioKey, voice }: { audioKey: string; voice: Voice }) {
       state.audioItems[audioKey].engineId = voice.engineId;
       state.audioItems[audioKey].speakerId = voice.speakerId;
@@ -1853,7 +1853,7 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_STYLE_ID: {
+    COMMAND_CHANGE_VOICE: {
       mutation(
         draft,
         payload: { audioKey: string; voice: Voice } & (
@@ -1862,7 +1862,7 @@ export const audioCommandStore = transformCommandStore(
           | { update: "AudioQuery"; query: AudioQuery }
         )
       ) {
-        audioStore.mutations.SET_AUDIO_STYLE_ID(draft, {
+        audioStore.mutations.SET_AUDIO_VOICE(draft, {
           audioKey: payload.audioKey,
           voice: payload.voice,
         });
@@ -1901,7 +1901,7 @@ export const audioCommandStore = transformCommandStore(
                 styleId,
               }
             );
-            commit("COMMAND_CHANGE_STYLE_ID", {
+            commit("COMMAND_CHANGE_VOICE", {
               audioKey,
               voice,
               update: "AccentPhrases",
@@ -1914,7 +1914,7 @@ export const audioCommandStore = transformCommandStore(
               engineId,
               styleId,
             });
-            commit("COMMAND_CHANGE_STYLE_ID", {
+            commit("COMMAND_CHANGE_VOICE", {
               audioKey,
               voice,
               update: "AudioQuery",
@@ -1922,7 +1922,7 @@ export const audioCommandStore = transformCommandStore(
             });
           }
         } catch (error) {
-          commit("COMMAND_CHANGE_STYLE_ID", {
+          commit("COMMAND_CHANGE_VOICE", {
             audioKey,
             voice,
             update: "StyleId",
@@ -2630,15 +2630,11 @@ export const audioCommandStore = transformCommandStore(
           {
             prevAudioKey,
             texts,
-            engineId,
-            speakerId,
-            styleId,
+            voice,
           }: {
             prevAudioKey: string;
             texts: string[];
-            engineId: string;
-            speakerId: string;
-            styleId: number;
+            voice: Voice;
           }
         ) => {
           const audioKeyItemPairs: {
@@ -2657,9 +2653,9 @@ export const audioCommandStore = transformCommandStore(
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
-              engineId,
-              speakerId,
-              styleId,
+              engineId: voice.engineId,
+              speakerId: voice.speakerId,
+              styleId: voice.styleId,
               baseAudioItem,
               presetKey: basePresetKey,
             });

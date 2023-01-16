@@ -280,7 +280,7 @@ export type AudioStoreTypes = {
     }): Promise<AudioQuery>;
   };
 
-  SET_AUDIO_STYLE_ID: {
+  SET_AUDIO_VOICE: {
     mutation: { audioKey: string; voice: Voice };
   };
 
@@ -467,7 +467,7 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; text: string }): void;
   };
 
-  COMMAND_CHANGE_STYLE_ID: {
+  COMMAND_CHANGE_VOICE: {
     mutation: { audioKey: string; voice: Voice } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
@@ -610,9 +610,7 @@ export type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
-      engineId: string;
-      speakerId: string;
-      styleId: number;
+      voice: Voice;
     }): string[];
   };
 };

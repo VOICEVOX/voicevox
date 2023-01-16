@@ -114,7 +114,7 @@ export default defineComponent({
       },
       set(voice: Voice | undefined) {
         if (voice == undefined) return;
-        store.dispatch("COMMAND_CHANGE_STYLE_ID", {
+        store.dispatch("COMMAND_CHANGE_VOICE", {
           audioKey: props.audioKey,
           voice,
         });
@@ -208,9 +208,11 @@ export default defineComponent({
 
           const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
             texts,
-            engineId,
-            speakerId,
-            styleId,
+            voice: {
+              engineId,
+              speakerId,
+              styleId,
+            },
             prevAudioKey,
           });
           if (audioKeys)
