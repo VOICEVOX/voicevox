@@ -134,6 +134,16 @@ const store = new Store<ElectronStoreType>({
       if (store.get("savingSetting").outputSamplingRate == 24000) {
         store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
+      const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+      const prevDefaultStyleIds = store.get("defaultStyleIds");
+      store.set(
+        "defaultStyleIds",
+        prevDefaultStyleIds.map((defaultStyle) => ({
+          engineId: defaultStyle.engineId ?? engineId,
+          speakerUuid: defaultStyle.speakerUuid,
+          defaultStyleId: defaultStyle.defaultStyleId,
+        }))
+      );
     },
   },
 });

@@ -158,7 +158,9 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   LOAD_DEFAULT_STYLE_IDS: {
     async action({ commit, getters }) {
-      let defaultStyleIds = await window.electron.getSetting("defaultStyleIds");
+      let defaultStyleIds = (await window.electron.getSetting(
+        "defaultStyleIds"
+      )) as DefaultStyleId[];
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
@@ -177,6 +179,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             );
           }
           return {
+            engineId: characterInfo.metas.styles[0].engineId,
             speakerUuid: speakerUuid,
             defaultStyleId: characterInfo.metas.styles[0].styleId,
           };

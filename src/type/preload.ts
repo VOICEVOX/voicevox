@@ -258,8 +258,8 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-// FIXME: engineIdを追加
 export type DefaultStyleId = {
+  engineId: string;
   speakerUuid: string;
   defaultStyleId: number;
 };
@@ -448,7 +448,11 @@ export const electronStoreSchema = z
       .default(defaultToolbarButtonSetting),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
-      .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
+      .object({
+        engineId: z.string().uuid().optional(),
+        speakerUuid: z.string().uuid(),
+        defaultStyleId: z.number(),
+      })
       .array()
       .default([]),
     presets: z
