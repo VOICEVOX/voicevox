@@ -134,7 +134,11 @@ const store = new Store<ElectronStoreType>({
       if (store.get("savingSetting").outputSamplingRate == 24000) {
         store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
-      const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+      // できるならEngineManagerからEnginIDを取得したい
+      const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
+        .uuid;
+      if (engineId == undefined)
+        throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = store.get("defaultStyleIds");
       store.set(
         "defaultStyleIds",
