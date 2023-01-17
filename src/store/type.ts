@@ -705,6 +705,7 @@ export type SingingStoreState = {
   sequencerZoomY: number;
   sequencerScrollX: number;
   sequencerScrollY: number;
+  sequencerSnapSize: number;
 };
 
 export type SingingStoreTypes = {

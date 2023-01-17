@@ -1,5 +1,5 @@
 <template>
-  <div class="score-sequencer">
+  <div class="score-sequencer" id="score-sequencer">
     <div
       class="sequencer-keys"
       v-bind:style="{
@@ -36,8 +36,8 @@
           />
           <text
             font-size="10"
-            fill="#333"
-            x="4"
+            fill="#555"
+            x="48"
             v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
             v-bind:opacity="y.pitch === 'C' ? 1 : 0"
           >
@@ -97,27 +97,37 @@
       <div
         v-for="(note, index) in notes"
         :key="index"
-        className="sequencer-note"
+        class="sequencer-note"
         v-bind:style="{
           left: `${(note.position / 4) * zoomX}px`,
-          top: `${(128 - note.midi - 1) * BASE_Y_SIZE * zoomY}px`,
+          top: `${(127 - note.midi) * BASE_Y_SIZE * zoomY}px`,
         }"
       >
         <input
           type="text"
-          class="sequencer-note-lyric"
           :value="note.lyric"
           @input="(e) => setLyric(index, e)"
+          class="sequencer-note-lyric"
+          v-bind:style="{ bottom: `${BASE_Y_SIZE * zoomY + 4}px` }"
         />
-        <svg>
+        <svg
+          v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+          v-bind:width="`${(note.duration / 4) * zoomX}`"
+          xmlns="http://www.w3.org/2000/svg"
+          v-bind:style="{
+            position: 'relative',
+            top: 0,
+            left: 0,
+          }"
+        >
           <rect
             y="0"
             x="0"
             v-bind:height="`${BASE_Y_SIZE * zoomY}`"
             v-bind:width="`${(note.duration / 4) * zoomX}`"
             stroke-width="1"
-            stroke="#555"
-            fill="#555"
+            @dblclick="removeNote(index)"
+            class="sequencer-note-bar"
           />
         </svg>
       </div>
@@ -165,7 +175,6 @@ import {
   getPitchFromMidi,
   getDoremiFromMidi,
 } from "@/helpers/singHelper";
-import { react } from "@babel/types";
 
 export default defineComponent({
   name: "SingScoreSequencer",
@@ -201,23 +210,24 @@ export default defineComponent({
         el.scrollTop = scrollY.value * (BASE_Y_SIZE * zoomY.value);
       }
     });
-    /*
-        const getPosition = (x: number, y: number) => {
-    
-        }; */
-    const addNote = (event: Event) => {
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
-      }
-      /*
-            store.dispatch("ADD_NOTE", {
-              note: {
-                position,
-                midi,
-                duration: 120, // NOTE: スナップに合わせて変更
-                lyric: getDoremiFromMidi(midi),
-              },
-            }); */
+    const addNote = (event: PointerEvent) => {
+      const snapSize = store.state.sequencerSnapSize;
+      const resolution = store.state.score?.resolution;
+      const gridXSize = resolution ? resolution / 4 : 120;
+      const position =
+        gridXSize * Math.floor(event.offsetX / (BASE_X_SIZE * zoomX.value));
+      const midi =
+        127 - Math.floor(event.offsetY / (BASE_Y_SIZE * zoomY.value));
+      const duration = snapSize;
+      const lyric = getDoremiFromMidi(midi);
+      store.dispatch("ADD_NOTE", {
+        note: {
+          position,
+          midi,
+          duration,
+          lyric,
+        },
+      });
     };
     const removeNote = (index: number) => {
       store.dispatch("REMOVE_NOTE", { index });
@@ -255,12 +265,6 @@ export default defineComponent({
         zoomY: Number(event.target.value),
       });
     };
-    const getTest = (event: Event) => {
-      console.log(event);
-      if (!(event.target instanceof HTMLInputElement)) {
-        return;
-      }
-    };
     return {
       timeSignatures,
       gridY,
@@ -276,7 +280,6 @@ export default defineComponent({
       setZoomY,
       BASE_X_SIZE,
       BASE_Y_SIZE,
-      getTest,
     };
   },
 });
@@ -309,51 +312,7 @@ export default defineComponent({
   box-sizing: border-box;
   color: #555;
   display: flex;
-  font-size: 10px;
-  text-align: right;
-  padding-left: 4px;
   position: relative;
-
-  &:last-child {
-    border-bottom: 1px solid solid #ccc;
-  }
-
-  &.white {
-    background: white;
-  }
-
-  &.black {
-    background: #555;
-
-    &:before {
-      background: white;
-      content: "";
-      display: block;
-      height: 24px;
-      position: absolute;
-      width: 16px;
-      right: 0;
-    }
-
-    &:after {
-      background: #ddd;
-      content: "";
-      display: block;
-      height: 1px;
-      position: absolute;
-      right: 0;
-      width: 16px;
-      top: 12px;
-    }
-  }
-
-  &.key-c {
-    border-bottom: 1px solid #ccc;
-  }
-
-  &.key-f {
-    border-bottom: 1px solid #ddd;
-  }
 }
 
 .sequencer-grids {
@@ -364,29 +323,6 @@ export default defineComponent({
   left: 64px;
 }
 
-.sequencer-row {
-  border-right: 1px solid #eee;
-  flex-shrink: 0;
-}
-
-.sequencer-cell {
-  border-bottom: 1px solid #ddd;
-  flex-shrink: 0;
-
-  &.black {
-    background: #f2f2f2;
-  }
-
-  &.key-c {
-    border-bottom: 1px solid #ccc;
-  }
-
-  &:hover {
-    background: rgba(colors.$primary-light-rgb, 0.5);
-    cursor: pointer;
-  }
-}
-
 .sequencer-note {
   position: absolute;
 }
@@ -395,21 +331,18 @@ export default defineComponent({
   background: white;
   border: 0;
   border-bottom: 1px solid colors.$primary-light;
-  border-radius: 2px 2px 0 0;
+  color: colors.$display;
   font-size: 0.875rem;
   font-weight: bold;
   outline: none;
+  padding: 0;
   position: absolute;
-  top: -24px;
-  left: 4px;
-  width: 2rem;
+  left: 0;
+  width: 1.5rem;
 }
 
 .sequencer-note-bar {
-  background: colors.$primary;
-  border-radius: 2px;
-  padding: 0 4px;
-  height: 100%;
-  width: 100%;
+  fill: colors.$primary;
+  stroke: colors.$primary-light;
 }
 </style>

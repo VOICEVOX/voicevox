@@ -20,8 +20,9 @@ export const singingStoreState: SingingStoreState = {
   isShowSinger: true,
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.5,
-  sequencerScrollY: 60, // midi number
-  sequencerScrollX: 0, // midi duration
+  sequencerScrollY: 60, // Y軸 midi number
+  sequencerScrollX: 0, // X軸 midi duration(仮)
+  sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
