@@ -5,7 +5,6 @@ import {
   Note,
   SingingStoreState,
   SingingStoreTypes,
-  commandMutationsCreator,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
