@@ -25,7 +25,10 @@
             <div class="error">失敗（エンジンエラー）:</div>
             <q-item v-for="(value, index) in engineErrorArray" :key="index">
               <q-item-section>
-                <q-item-label>{{ value }}</q-item-label>
+                <q-item-label>{{ value.path }}</q-item-label>
+                <q-item-label v-if="value.message"
+                  >詳細：{{ value.message }}</q-item-label
+                >
               </q-item-section>
             </q-item>
           </q-list>
@@ -50,15 +53,25 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 import { useDialogPluginComponent } from "quasar";
+import { defineComponent, PropType } from "vue";
 
 export default defineComponent({
   name: "SaveAllResultDialog",
   props: {
-    successArray: Array,
-    writeErrorArray: Array,
-    engineErrorArray: Array,
+    successArray: {
+      type: Array as PropType<string | undefined[]>,
+      required: true,
+    },
+    writeErrorArray: {
+      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
+      required: true,
+    },
+    engineErrorArray: {
+      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
+      required: true,
+    },
   },
   emits: {
     ...useDialogPluginComponent.emits,

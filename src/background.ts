@@ -37,9 +37,11 @@ import {
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+import zodToJsonSchema from "zod-to-json-schema";
+
 import EngineManager from "./background/engineManager";
 import VvppManager from "./background/vvppManager";
-import zodToJsonSchema from "zod-to-json-schema";
+import configMigration014 from "./background/configMigration014";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -48,6 +50,7 @@ type SingleInstanceLockData = {
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Electronの設定ファイルの保存場所を変更
+const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
 const fixedUserDataDir = path.join(
   app.getPath("appData"),
   `voicevox${isDevelopment ? "-dev" : ""}`
@@ -56,6 +59,9 @@ if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
 app.setPath("userData", fixedUserDataDir);
+if (!isDevelopment) {
+  configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
+}
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";

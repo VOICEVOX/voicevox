@@ -13,17 +13,11 @@ import {
   EngineInfo,
   ElectronStoreType,
   EngineDirValidationResult,
+  MinimumEngineManifest,
 } from "@/type/preload";
 
 import log from "electron-log";
 import { z } from "zod";
-
-type MinimumEngineManifest = {
-  name: string;
-  uuid: string;
-  command: string;
-  port: string;
-};
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
