@@ -134,7 +134,7 @@ const store = new Store<ElectronStoreType>({
       if (store.get("savingSetting").outputSamplingRate == 24000) {
         store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
-      // できるならEngineManagerからEnginIDを取得したい
+      // FIXME: できるならEngineManagerからEnginIDを取得したい
       const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
         .uuid;
       if (engineId == undefined)
