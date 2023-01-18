@@ -1,63 +1,53 @@
 <template>
   <div class="score-sequencer" id="score-sequencer">
-    <div
+    <!-- 鍵盤表示 -->
+    <svg
+      width="64"
+      v-bind:height="`${BASE_Y_SIZE * zoomY * 128}`"
+      xmlns="http://www.w3.org/2000/svg"
       class="sequencer-keys"
-      v-bind:style="{
-        height: `${BASE_Y_SIZE * zoomY * 128}px`,
-      }"
     >
+      <g v-for="(y, index) in gridY" :key="index">
+        <rect
+          x="0"
+          v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
+          v-bind:width="`${y.color === 'black' ? 48 : 64}`"
+          v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+          v-bind:class="`sequencer-keys-item-${y.color}`"
+        />
+        <line
+          x1="0"
+          v-bind:y1="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
+          x2="64"
+          v-bind:y2="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
+          stroke-width="1"
+          v-bind:class="`sequencer-keys-item-separator ${
+            y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
+          } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
+        />
+        <text
+          font-size="10"
+          x="48"
+          v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
+          v-bind:opacity="y.pitch === 'C' ? 1 : 0"
+          class="sequencer-keys-item-pitchname"
+        >
+          {{ y.name }}
+        </text>
+      </g>
+    </svg>
+    <div class="sequencer-body">
+      <!-- グリッド -->
+      <!-- NOTE: 現状小節+オクターブごとの罫線なし -->
       <svg
-        width="100%"
-        height="100%"
+        v-bind:height="`${BASE_Y_SIZE * zoomY * 128}`"
+        v-bind:width="`${gridX.length * BASE_X_SIZE * zoomX}`"
         xmlns="http://www.w3.org/2000/svg"
-        class="sequencer-keys-items"
-      >
-        <g v-for="(y, index) in gridY" :key="index">
-          <rect
-            x="0"
-            v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
-            v-bind:width="`${y.color === 'black' ? 48 : 64}`"
-            v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-            v-bind:class="`sequencer-keys-item-${y.color}`"
-          />
-          <line
-            x1="0"
-            v-bind:y1="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-            x2="64"
-            v-bind:y2="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-            stroke-width="1"
-            v-bind:class="`sequencer-keys-item-separator ${
-              y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
-            } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
-          />
-          <text
-            font-size="10"
-            x="48"
-            v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
-            v-bind:opacity="y.pitch === 'C' ? 1 : 0"
-            class="sequencer-keys-item-pitchname"
-          >
-            {{ y.name }}
-          </text>
-        </g>
-      </svg>
-    </div>
-    <div
-      class="sequencer-grids"
-      v-bind:style="{
-        height: `${BASE_Y_SIZE * zoomY * 128 + 164}px`,
-        width: `${gridX.length * BASE_X_SIZE * zoomX}px`,
-      }"
-    >
-      <svg
-        width="100%"
-        height="100%"
-        xmlns="http://www.w3.org/2000/svg"
-        class="sequencer-grids-items"
+        class="sequencer-grids"
       >
         <defs>
           <pattern
-            id="grid"
+            id="sequencer-grid-x"
             v-bind:width="`${BASE_X_SIZE * zoomX}px`"
             v-bind:height="`${12 * BASE_Y_SIZE * zoomY}px`"
             patternUnits="userSpaceOnUse"
@@ -78,8 +68,8 @@
           y="0"
           width="100%"
           height="100%"
-          id="grid"
-          fill="url(#grid)"
+          id="sequencer-grid"
+          fill="url(#sequencer-grid-x)"
           @click="(e) => addNote(e)"
         />
       </svg>
@@ -93,6 +83,7 @@
           top: `${(127 - note.midi) * BASE_Y_SIZE * zoomY}px`,
         }"
       >
+        <!-- NOTE: q-inputへの変更 / 表示面+速度面から、クリック時のみinputを表示に変更予定 -->
         <input
           type="text"
           :value="note.lyric"
@@ -109,15 +100,15 @@
             <rect
               y="0"
               x="0"
-              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-              v-bind:width="`${(note.duration / 4) * zoomX}`"
+              height="100%"
+              width="100%"
               stroke-width="1"
               class="sequencer-note-bar-body"
             />
             <rect
               y="0"
               x="-4"
-              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+              height="100%"
               width="8"
               fill-opacity="0"
               draggable
@@ -126,7 +117,7 @@
             <rect
               y="0"
               v-bind:x="`${(note.duration / 4) * zoomX - 4}`"
-              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+              height="100%"
               width="8"
               fill-opacity="0"
               class="sequencer-note-bar-draghandle"
@@ -143,7 +134,7 @@
       max="1"
       step="0.05"
       :value="zoomX"
-      @change="(e) => setZoomX(e)"
+      @input="(e) => setZoomX(e)"
       v-bind:style="{
         position: 'fixed',
         zIndex: 10000,
@@ -158,7 +149,7 @@
       max="1"
       step="0.05"
       :value="zoomY"
-      @change="(e) => setZoomY(e)"
+      @input="(e) => setZoomY(e)"
       v-bind:style="{
         position: 'fixed',
         zIndex: 10000,
@@ -214,7 +205,7 @@ export default defineComponent({
         el.scrollTop = scrollY.value * (BASE_Y_SIZE * zoomY.value);
       }
     });
-    const addNote = (event: PointerEvent) => {
+    const addNote = (event: MouseEvent) => {
       const snapSize = store.state.sequencerSnapSize;
       const resolution = store.state.score?.resolution;
       const gridXSize = resolution ? resolution / 4 : 120;
@@ -299,18 +290,16 @@ export default defineComponent({
 .score-sequencer {
   display: block;
   height: 100%;
-  overflow: scroll;
-  margin-left: 0;
-  padding-left: 0;
+  overflow: auto;
+  padding-bottom: 164px;
   position: relative;
+  width: 100%;
 }
 .sequencer-keys {
   background: white;
-  border-right: 1px solid #ccc;
-  height: 100%;
+  display: block;
   position: sticky;
   left: 0;
-  width: 64px;
   z-index: 100;
 }
 
@@ -338,15 +327,17 @@ export default defineComponent({
   fill: #555;
 }
 
-.sequencer-grids {
+.sequencer-body {
   display: block;
-  overflow: hidden;
   position: absolute;
+  height: 100%;
+  width: 100%;
   top: 0;
   left: 64px;
+  padding-bottom: 164px;
 }
 
-.sequencer-grids-items {
+.sequencer-grids {
   display: block;
 }
 
@@ -373,6 +364,8 @@ export default defineComponent({
   color: colors.$display;
   font-size: 12px;
   font-weight: bold;
+  font-feature-settings: "palt" 1;
+  letter-spacing: 0.05em;
   outline: none;
   padding: 0;
   position: absolute;
