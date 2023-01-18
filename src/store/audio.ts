@@ -107,7 +107,7 @@ function parseTextFile(
   let lastStyle = uuid2StyleIds.get(
     userOrderedCharacterInfos[0].metas.speakerUuid
   );
-  if (lastStyle == undefined) throw new Error(`lastStyleId is undefined.`);
+  if (lastStyle == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splitText);
     if (styleId !== undefined) {
