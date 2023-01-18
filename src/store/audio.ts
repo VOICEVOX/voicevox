@@ -85,7 +85,7 @@ function parseTextFile(
     const style = uuid2StyleIds.get(uuid);
     const speakerName = characterInfo.metas.speakerName;
     if (style == undefined)
-      throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
+      throw new Error(`style is undefined. speakerUuid: ${uuid}`);
     characters.set(speakerName, {
       engineId: style.engineId,
       styleId: style.styleId,
