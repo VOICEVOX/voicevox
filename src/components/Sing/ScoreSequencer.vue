@@ -47,7 +47,7 @@
       >
         <defs>
           <pattern
-            id="sequencer-grid-x"
+            id="sequencer-grid-16"
             v-bind:width="`${BASE_X_SIZE * zoomX}px`"
             v-bind:height="`${12 * BASE_Y_SIZE * zoomY}px`"
             patternUnits="userSpaceOnUse"
@@ -62,6 +62,23 @@
               v-bind:class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
             />
           </pattern>
+          <pattern
+            id="sequencer-grid-measure"
+            v-bind:width="`${BASE_X_SIZE * 16 * zoomX}`"
+            v-bind:height="`${12 * BASE_Y_SIZE * zoomY}`"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect width="100%" height="100%" fill="url(#sequencer-grid-16)" />
+            <line
+              x="100%"
+              x2="0"
+              y1="0"
+              y2="100%"
+              stroke-width="1"
+              fill="none"
+              class="sequencer-grid-separator-line"
+            />
+          </pattern>
         </defs>
         <rect
           x="0"
@@ -69,7 +86,7 @@
           width="100%"
           height="100%"
           id="sequencer-grid"
-          fill="url(#sequencer-grid-x)"
+          fill="url(#sequencer-grid-measure)"
           @click="(e) => addNote(e)"
         />
       </svg>
@@ -308,7 +325,7 @@ export default defineComponent({
 }
 
 .sequencer-keys-item-separator-octave {
-  stroke: #ccc;
+  stroke: #bbb;
 }
 
 .sequencer-keys-item-separator-f {
@@ -345,12 +362,17 @@ export default defineComponent({
   stroke: #ddd;
   stroke-width: 1;
 }
+
 .sequencer-grids-col-white {
   fill: #fff;
 }
 
 .sequencer-grids-col-black {
   fill: #eee;
+}
+
+.sequencer-grid-separator-line {
+  stroke: #bbb;
 }
 
 .sequencer-note {
