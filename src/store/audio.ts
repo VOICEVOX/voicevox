@@ -115,7 +115,6 @@ function parseTextFile(
       continue;
     }
 
-    // FIXME: engineIdの追加
     audioItems.push({
       text: splitText,
       engineId: lastStyle.engineId,
