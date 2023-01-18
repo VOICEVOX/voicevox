@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.13.2
-  VOICEVOX_RESOURCE_VERSION: 0.13.2
+  VOICEVOX_ENGINE_VERSION: 0.14.0-preview.8
+  VOICEVOX_RESOURCE_VERSION: 0.14.0-preview.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
@@ -180,42 +180,6 @@ jobs:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
           path: resource
-
-      - name: Replace Character Info
-        shell: bash
-        run: |
-          cp -r resource/character_info public/characters
-          cd public/characters
-          # Explore characters directory.
-          # Character directory name is uuid, but this script can automatically detect character directory name.
-          # We don't need to change this code when add more characters.
-          # FILEPATH example: "./35b2c544-660e-401e-b503-0e14c635303a"
-          for FILEPATH in ./*
-            do
-            # Extract speaker name from metas.json by jq command
-            SPEAKER_NAME="$(jq -r '.speakerName' "$FILEPATH/metas.json")"
-            pushd "$FILEPATH/icons"
-            # Explore character icons directory.
-            # ICONPATH example: "./0.png"
-            for ICONPATH in ./*.png
-              do
-              # ":2" part is python slice like, can remove "./" part from ICONPATH
-              # For example, SPEAKER_NAME is "AAA", ICONPATH is "./0.png"
-              # If don't use ":2": "${SPEAKER_NAME}_${ICONPATH}" is "AAA_./0.png"
-              #       If use ":2": "${SPEAKER_NAME}_${ICONPATH:2}" is "AAA_0.png"
-              mv $ICONPATH "${SPEAKER_NAME}_${ICONPATH:2}"
-            done
-            popd
-            pushd "$FILEPATH/voice_samples"
-            # Explore character voice_samples directory.
-            # VOICEPATH example: "./0_000.wav"
-            for VOICEPATH in ./*.wav
-              do
-              # Same as for ICONPATH
-              mv $VOICEPATH "${SPEAKER_NAME}_${VOICEPATH:2}"
-            done
-            popd
-          done
 
       - name: Create and replace software resources
         shell: bash
@@ -420,7 +384,7 @@ jobs:
         env:
           VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ env.VOICEVOX_ENGINE_VERSION }}
         run: |
-          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_asset_name }}.7z.txt"
+          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/voicevox_engine-${{ matrix.voicevox_engine_asset_name }}-${{ env.VOICEVOX_ENGINE_VERSION }}.7z.txt"
           cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
 
       - name: Extract VOICEVOX ENGINE

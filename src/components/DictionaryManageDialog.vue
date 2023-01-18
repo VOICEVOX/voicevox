@@ -20,6 +20,7 @@
               flat
               icon="close"
               color="display"
+              :disable="wordEditing"
               @click="discardOrNotDialog(closeDialog)"
             />
           </q-toolbar>
@@ -39,7 +40,11 @@
             </div>
           </div>
           <div class="col-4 word-list-col">
-            <div v-if="wordEditing" class="word-list-disable-overlay" />
+            <div
+              v-if="wordEditing"
+              class="word-list-disable-overlay"
+              @click="discardOrNotDialog(cancel)"
+            />
             <div class="word-list-header text-no-wrap">
               <div class="row word-list-title text-h5">単語一覧</div>
               <div class="row no-wrap">
@@ -77,6 +82,7 @@
                 v-ripple
                 clickable
                 @click="selectWord(key)"
+                @dblclick="editWord"
                 :active="selectedId === key"
                 active-class="active-word"
               >
@@ -222,7 +228,7 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="isWordChanged ? discardOrNotDialog(cancel) : cancel()"
+                @click="discardOrNotDialog(cancel)"
                 :disable="uiLocked"
                 >キャンセル</q-btn
               >
@@ -477,12 +483,14 @@ export default defineComponent({
         audioItem,
       });
       if (!blob) {
-        blob = await createUILockAction(
-          store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
-            audioItem,
-          })
-        );
-        if (!blob) {
+        try {
+          blob = await createUILockAction(
+            store.dispatch("GENERATE_AUDIO_FROM_AUDIO_ITEM", {
+              audioItem,
+            })
+          );
+        } catch (e) {
+          window.electron.logError(e);
           nowGenerating.value = false;
           $q.dialog({
             title: "生成に失敗しました",

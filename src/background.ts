@@ -1,7 +1,7 @@
 "use strict";
 
 import dotenv from "dotenv";
-import Store from "electron-store";
+import Store, { Schema } from "electron-store";
 
 import {
   app,
@@ -25,21 +25,43 @@ import {
   HotkeySetting,
   ThemeConf,
   AcceptTermsStatus,
-  ToolbarSetting,
   EngineInfo,
   ElectronStoreType,
   SystemError,
+  electronStoreSchema,
+  defaultHotkeySettings,
+  isMac,
+  defaultToolbarButtonSetting,
 } from "./type/preload";
 
 import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
+import zodToJsonSchema from "zod-to-json-schema";
+
 import EngineManager from "./background/engineManager";
 import VvppManager from "./background/vvppManager";
+import configMigration014 from "./background/configMigration014";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
+
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+// Electronの設定ファイルの保存場所を変更
+const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
+const fixedUserDataDir = path.join(
+  app.getPath("appData"),
+  `voicevox${isDevelopment ? "-dev" : ""}`
+);
+if (!fs.existsSync(fixedUserDataDir)) {
+  fs.mkdirSync(fixedUserDataDir);
+}
+app.setPath("userData", fixedUserDataDir);
+if (!isDevelopment) {
+  configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
+}
 
 // silly以上のログをコンソールに出力
 log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -47,18 +69,14 @@ log.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
 const prefix = dayjs().format("YYYYMMDD_HHmmss");
+const logPath = app.getPath("logs");
 log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
-
-const isDevelopment = process.env.NODE_ENV !== "production";
-
-if (isDevelopment) {
-  app.setPath(
-    "userData",
-    path.join(app.getPath("appData"), `${app.getName()}-dev`)
-  );
-}
+log.transports.file.resolvePath = (variables) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return path.join(logPath, variables.fileName!);
+};
 
 let win: BrowserWindow;
 
@@ -92,290 +110,13 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
-const isMac = process.platform === "darwin";
-
-const defaultHotkeySettings: HotkeySetting[] = [
-  {
-    action: "音声書き出し",
-    combination: !isMac ? "Ctrl E" : "Meta E",
-  },
-  {
-    action: "一つだけ書き出し",
-    combination: "E",
-  },
-  {
-    action: "音声を繋げて書き出し",
-    combination: "",
-  },
-  {
-    action: "再生/停止",
-    combination: "Space",
-  },
-  {
-    action: "連続再生/停止",
-    combination: "Shift Space",
-  },
-  {
-    action: "ｱｸｾﾝﾄ欄を表示",
-    combination: "1",
-  },
-  {
-    action: "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
-    combination: "2",
-  },
-  {
-    action: "長さ欄を表示",
-    combination: "3",
-  },
-  {
-    action: "テキスト欄を追加",
-    combination: "Shift Enter",
-  },
-  {
-    action: "テキスト欄を削除",
-    combination: "Shift Delete",
-  },
-  {
-    action: "テキスト欄からフォーカスを外す",
-    combination: "Escape",
-  },
-  {
-    action: "テキスト欄にフォーカスを戻す",
-    combination: "Enter",
-  },
-  {
-    action: "元に戻す",
-    combination: !isMac ? "Ctrl Z" : "Meta Z",
-  },
-  {
-    action: "やり直す",
-    combination: !isMac ? "Ctrl Y" : "Shift Meta Z",
-  },
-  {
-    action: "新規プロジェクト",
-    combination: !isMac ? "Ctrl N" : "Meta N",
-  },
-  {
-    action: "プロジェクトを名前を付けて保存",
-    combination: !isMac ? "Ctrl Shift S" : "Shift Meta S",
-  },
-  {
-    action: "プロジェクトを上書き保存",
-    combination: !isMac ? "Ctrl S" : "Meta S",
-  },
-  {
-    action: "プロジェクト読み込み",
-    combination: !isMac ? "Ctrl O" : "Meta O",
-  },
-  {
-    action: "テキスト読み込む",
-    combination: "",
-  },
-  {
-    action: "全体のイントネーションをリセット",
-    combination: !isMac ? "Ctrl G" : "Meta G",
-  },
-  {
-    action: "選択中のアクセント句のイントネーションをリセット",
-    combination: "R",
-  },
-];
-
-const defaultToolbarButtonSetting: ToolbarSetting = [
-  "PLAY_CONTINUOUSLY",
-  "STOP",
-  "EXPORT_AUDIO_ONE",
-  "EMPTY",
-  "UNDO",
-  "REDO",
-];
-
 // 設定ファイル
+const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
+if (!("properties" in electronStoreJsonSchema)) {
+  throw new Error("electronStoreJsonSchema must be object");
+}
 const store = new Store<ElectronStoreType>({
-  schema: {
-    useGpu: {
-      type: "boolean",
-      default: false,
-    },
-    inheritAudioInfo: {
-      type: "boolean",
-      default: true,
-    },
-    activePointScrollMode: {
-      type: "string",
-      enum: ["CONTINUOUSLY", "PAGE", "OFF"],
-      default: "OFF",
-    },
-    savingSetting: {
-      type: "object",
-      properties: {
-        fileEncoding: {
-          type: "string",
-          enum: ["UTF-8", "Shift_JIS"],
-          default: "UTF-8",
-        },
-        fileNamePattern: {
-          type: "string",
-          default: "",
-        },
-        fixedExportEnabled: { type: "boolean", default: false },
-        avoidOverwrite: { type: "boolean", default: false },
-        fixedExportDir: { type: "string", default: "" },
-        exportLab: { type: "boolean", default: false },
-        exportText: { type: "boolean", default: false },
-        outputStereo: { type: "boolean", default: false },
-        outputSamplingRate: {
-          oneOf: [{ type: "number" }, { const: "default" }],
-          default: "default",
-        },
-        audioOutputDevice: { type: "string", default: "default" },
-      },
-      default: {
-        fileEncoding: "UTF-8",
-        fileNamePattern: "",
-        fixedExportEnabled: false,
-        avoidOverwrite: false,
-        fixedExportDir: "",
-        exportLab: false,
-        exportText: false,
-        outputStereo: false,
-        outputSamplingRate: "default",
-        audioOutputDevice: "default",
-        splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
-      },
-    },
-    // To future developers: if you are to modify the store schema with array type,
-    // for example, the hotkeySettings below,
-    // please remember to add a corresponding migration
-    // Learn more: https://github.com/sindresorhus/electron-store#migrations
-    hotkeySettings: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          action: { type: "string" },
-          combination: { type: "string" },
-        },
-      },
-      default: defaultHotkeySettings,
-    },
-    toolbarSetting: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: defaultToolbarButtonSetting,
-    },
-    userCharacterOrder: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: [],
-    },
-    defaultStyleIds: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          speakerUuid: { type: "string" },
-          defaultStyleId: { type: "number" },
-        },
-      },
-      default: [],
-    },
-    presets: {
-      type: "object",
-      properties: {
-        items: {
-          type: "object",
-          patternProperties: {
-            // uuid
-            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}": {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                speedScale: { type: "number" },
-                pitchScale: { type: "number" },
-                intonationScale: { type: "number" },
-                volumeScale: { type: "number" },
-                prePhonemeLength: { type: "number" },
-                postPhonemeLength: { type: "number" },
-              },
-            },
-          },
-          additionalProperties: false,
-        },
-        keys: {
-          type: "array",
-          items: {
-            type: "string",
-            pattern:
-              "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
-          },
-        },
-      },
-      default: { items: {}, keys: [] },
-    },
-    currentTheme: {
-      type: "string",
-      default: "Default",
-    },
-    experimentalSetting: {
-      type: "object",
-      properties: {
-        enablePreset: { type: "boolean", default: false },
-        enableInterrogativeUpspeak: {
-          type: "boolean",
-          default: false,
-        },
-      },
-      default: {
-        enablePreset: false,
-        enableInterrogativeUpspeak: false,
-      },
-    },
-    acceptRetrieveTelemetry: {
-      type: "string",
-      enum: ["Unconfirmed", "Accepted", "Refused"],
-      default: "Unconfirmed",
-    },
-    acceptTerms: {
-      type: "string",
-      enum: ["Unconfirmed", "Accepted", "Rejected"],
-      default: "Unconfirmed",
-    },
-    splitTextWhenPaste: {
-      type: "string",
-      enum: ["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"],
-      default: "PERIOD_AND_NEW_LINE",
-    },
-    splitterPosition: {
-      type: "object",
-      properties: {
-        portraitPaneWidth: { type: "number" },
-        audioInfoPaneWidth: { type: "number" },
-        audioDetailPaneHeight: { type: "number" },
-      },
-      default: {},
-    },
-    confirmedTips: {
-      type: "object",
-      properties: {
-        tweakableSliderByScroll: { type: "boolean", default: false },
-      },
-      default: {
-        tweakableSliderByScroll: false,
-      },
-    },
-    engineDirs: {
-      type: "array",
-      items: {
-        type: "string",
-      },
-      default: [],
-    },
-  },
+  schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
   migrations: {
     ">=0.13": (store) => {
       // acceptTems -> acceptTerms
@@ -390,9 +131,8 @@ const store = new Store<ElectronStoreType>({
       }
     },
     ">=0.14": (store) => {
-      // 24000 Hz -> "default"
       if (store.get("savingSetting").outputSamplingRate == 24000) {
-        store.set("savingSetting.outputSamplingRate", "default");
+        store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
     },
   },
@@ -756,7 +496,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
     title,
     defaultPath,
     filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
-    properties: ["openFile"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   });
   return result.filePaths[0];
 });
@@ -764,7 +504,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
 ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
-    properties: ["openDirectory", "createDirectory"],
+    properties: ["openDirectory", "createDirectory", "treatPackageAsDirectory"],
   });
   if (result.canceled) {
     return undefined;
@@ -789,7 +529,7 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-    properties: ["openFile"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   });
   if (result.canceled) {
     return undefined;
@@ -843,7 +583,7 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: "Text", extensions: ["txt"] }],
-    properties: ["openFile", "createDirectory"],
+    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   })?.[0];
 });
 
@@ -876,6 +616,10 @@ ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
 
+ipcMainHandle("LOG_WARN", (_, ...params) => {
+  log.warn(...params);
+});
+
 ipcMainHandle("LOG_INFO", (_, ...params) => {
   log.info(...params);
 });
@@ -889,10 +633,6 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle("RESTART_ENGINE_ALL", async () => {
-  await engineManager.restartEngineAll(win);
-});
-
 ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
   await engineManager.restartEngine(engineId, win);
 });

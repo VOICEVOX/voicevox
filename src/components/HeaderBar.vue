@@ -109,10 +109,14 @@ export default defineComponent({
     const playContinuously = async () => {
       try {
         await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
-      } catch {
+      } catch (e) {
+        let msg: string | undefined;
+        if (e instanceof Error && e.message !== "") {
+          msg = e.message;
+        }
         $q.dialog({
           title: "再生に失敗しました",
-          message: "エンジンの再起動をお試しください。",
+          message: msg ?? "エンジンの再起動をお試しください。",
           ok: {
             label: "閉じる",
             flat: true,

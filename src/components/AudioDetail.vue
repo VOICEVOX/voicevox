@@ -55,7 +55,8 @@
             スライダーを微調整できます。
           </p>
           ホイール: ±0.1<br />
-          Ctrl + ホイール: ±0.01
+          Ctrl + ホイール: ±0.01<br />
+          Alt + ホイール: 一括調整
         </tool-tip>
         <div
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
@@ -502,9 +503,16 @@ export default defineComponent({
           audioKey: props.activeAudioKey,
         });
       } catch (e) {
+        let msg: string | undefined;
+        // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
+        if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+          msg = "モーフィングの設定が無効です。";
+        } else {
+          window.electron.logError(e);
+        }
         $q.dialog({
           title: "再生に失敗しました",
-          message: "エンジンの再起動をお試しください。",
+          message: msg ?? "エンジンの再起動をお試しください。",
           ok: {
             label: "閉じる",
             flat: true,

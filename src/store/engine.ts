@@ -30,6 +30,20 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  GET_SORTED_ENGINE_INFOS: {
+    getter: (state) => {
+      return Object.values(state.engineInfos).sort((a, b) => {
+        const isDefaultA = a.type === "default" ? 1 : 0;
+        const isDefaultB = b.type === "default" ? 1 : 0;
+        if (isDefaultA !== isDefaultB) {
+          return isDefaultB - isDefaultA;
+        }
+
+        return a.uuid.localeCompare(b.uuid);
+      });
+    },
+  },
+
   SET_ENGINE_INFOS: {
     mutation(
       state,

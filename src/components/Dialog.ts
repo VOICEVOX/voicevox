@@ -2,7 +2,7 @@ import { Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
-  WriteErrorTypeForSaveAllResultDialog,
+  ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
 import { QVueGlobals } from "quasar";
@@ -45,8 +45,12 @@ export async function generateAndSaveOneAudioWithDialog({
       }
       break;
     case "ENGINE_ERROR":
-      msg =
-        "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+      if (result.errorMessage) {
+        msg = result.errorMessage;
+      } else {
+        msg =
+          "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+      }
       break;
   }
   quasarDialog({
@@ -82,8 +86,8 @@ export async function generateAndSaveAllAudioWithDialog({
   );
 
   const successArray: Array<string | undefined> = [];
-  const writeErrorArray: Array<WriteErrorTypeForSaveAllResultDialog> = [];
-  const engineErrorArray: Array<string | undefined> = [];
+  const writeErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
+  const engineErrorArray: Array<ErrorTypeForSaveAllResultDialog> = [];
 
   if (result) {
     for (const item of result) {
@@ -105,7 +109,7 @@ export async function generateAndSaveAllAudioWithDialog({
           writeErrorArray.push({ path: path, message: msg });
           break;
         case "ENGINE_ERROR":
-          engineErrorArray.push(path);
+          engineErrorArray.push({ path: path, message: msg });
           break;
       }
     }
@@ -154,15 +158,19 @@ export async function generateAndConnectAndSaveAudioWithDialog({
   let msg = "";
   switch (result.result) {
     case "WRITE_ERROR":
-      if (result.errorMessage) {
+      if (result.errorMessage != undefined) {
         msg = result.errorMessage;
       } else {
         msg = "何らかの理由で書き出しに失敗しました。ログを参照してください。";
       }
       break;
     case "ENGINE_ERROR":
-      msg =
-        "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+      if (result.errorMessage != undefined) {
+        msg = result.errorMessage;
+      } else {
+        msg =
+          "エンジンのエラーによって失敗しました。エンジンの再起動をお試しください。";
+      }
       break;
   }
 

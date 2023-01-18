@@ -29,12 +29,14 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
+  EditorFontType,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -43,7 +45,7 @@ import { QVueGlobals } from "quasar";
  * エディタ用のAudioQuery
  */
 export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
-  outputSamplingRate: number | "default";
+  outputSamplingRate: number | "engineDefault";
 };
 
 // FIXME: SpeakerIdを追加する
@@ -53,6 +55,7 @@ export type AudioItem = {
   styleId?: number;
   query?: EditorAudioQuery;
   presetKey?: string;
+  morphingInfo?: MorphingInfo;
 };
 
 export type AudioState = {
@@ -77,7 +80,7 @@ export type SaveResultObject = {
   path: string | undefined;
   errorMessage?: string;
 };
-export type WriteErrorTypeForSaveAllResultDialog = {
+export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
 };
@@ -264,6 +267,21 @@ export type AudioStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
   };
 
+  SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+  };
+
+  MORPHING_SUPPORTED_ENGINES: {
+    getter: string[];
+  };
+
+  VALID_MOPHING_INFO: {
+    getter(audioItem: AudioItem): boolean;
+  };
+
   SET_AUDIO_QUERY: {
     mutation: { audioKey: string; audioQuery: AudioQuery };
     action(payload: { audioKey: string; audioQuery: AudioQuery }): void;
@@ -342,11 +360,11 @@ export type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Promise<Blob | null>;
+    action(payload: { audioKey: string }): Promise<Blob>;
   };
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): Blob | null;
+    action(payload: { audioItem: AudioItem }): Blob;
   };
 
   CONNECT_AUDIO: {
@@ -438,10 +456,12 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: string;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     }): Promise<string>;
   };
 
@@ -578,6 +598,17 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
   };
 
+  COMMAND_SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+    action(payload: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    }): void;
+  };
+
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
       audioKey: string;
@@ -665,6 +696,10 @@ export type EngineStoreState = {
 export type EngineStoreTypes = {
   GET_ENGINE_INFOS: {
     action(): void;
+  };
+
+  GET_SORTED_ENGINE_INFOS: {
+    getter: EngineInfo[];
   };
 
   SET_ENGINE_MANIFESTS: {
@@ -828,6 +863,10 @@ export type IndexStoreTypes = {
     action(...payload: unknown[]): void;
   };
 
+  LOG_WARN: {
+    action(...payload: unknown[]): void;
+  };
+
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
@@ -893,6 +932,7 @@ export type SettingStoreState = {
   engineInfos: Record<string, EngineInfo>;
   engineManifests: Record<string, EngineManifest>;
   themeSetting: ThemeSetting;
+  editorFont: EditorFontType;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -923,6 +963,11 @@ export type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  SET_EDITOR_FONT: {
+    mutation: { editorFont: EditorFontType };
+    action(payload: { editorFont: EditorFontType }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
