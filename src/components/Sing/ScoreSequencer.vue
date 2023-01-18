@@ -87,7 +87,7 @@
           height="100%"
           id="sequencer-grid"
           fill="url(#sequencer-grid-measure)"
-          @click="(e) => addNote(e)"
+          @mousedown="(e) => addNote(e)"
         />
       </svg>
       <!-- NOTE: ノートと歌詞入力あわせコンポーネント分割予定 -->
