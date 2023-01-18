@@ -143,7 +143,7 @@ const store = new Store<ElectronStoreType>({
       store.set(
         "defaultStyleIds",
         prevDefaultStyleIds.map((defaultStyle) => ({
-          engineId: defaultStyle.engineId ?? engineId,
+          engineId: engineId,
           speakerUuid: defaultStyle.speakerUuid,
           defaultStyleId: defaultStyle.defaultStyleId,
         }))

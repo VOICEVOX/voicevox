@@ -1,5 +1,6 @@
 import { IpcRenderer, IpcRendererEvent } from "electron";
 import { IpcSOData } from "./ipc";
+import { NIL as NIL_UUID } from "uuid";
 import { z } from "zod";
 
 export const isMac = process.platform === "darwin";
@@ -449,7 +450,8 @@ export const electronStoreSchema = z
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
-        engineId: z.string().uuid().optional(),
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".default(NIL_UUID)"を外す
+        engineId: z.string().uuid().default(NIL_UUID),
         speakerUuid: z.string().uuid(),
         defaultStyleId: z.number(),
       })
