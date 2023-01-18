@@ -451,7 +451,7 @@ export const electronStoreSchema = z
     defaultStyleIds: z
       .object({
         // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".default(NIL_UUID)"を外す
-        engineId: z.string().uuid().default(NIL_UUID),
+        engineId: z.string().uuid().or(z.literal("")).default(""),
         speakerUuid: z.string().uuid(),
         defaultStyleId: z.number(),
       })
