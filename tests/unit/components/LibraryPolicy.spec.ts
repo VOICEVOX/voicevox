@@ -13,25 +13,24 @@ const actions = {};
 const getters = {};
 
 const singleStore = createStore({
-  actions: {
-    ...actions,
-    GET_SORTED_ENGINE_INFOS: async () => {
-      return singleEngineState.engineInfos;
+  state: singleEngineState,
+  getters: {
+    ...getters,
+    GET_SORTED_ENGINE_INFOS: () => {
+      return [...Object.values(singleEngineState.engineInfos)];
     },
   },
-  state: singleEngineState,
-  getters,
 });
 
 const multipleEngineStore = createStore({
-  actions: {
-    ...actions,
-    GET_SORTED_ENGINE_INFOS: async () => {
-      return multipleEngineState.engineInfos;
+  actions,
+  state: multipleEngineState,
+  getters: {
+    ...getters,
+    GET_SORTED_ENGINE_INFOS: () => {
+      return [...Object.values(multipleEngineState.engineInfos)];
     },
   },
-  state: multipleEngineState,
-  getters,
 });
 
 const mountComponent = (multipleEngine: boolean) => {

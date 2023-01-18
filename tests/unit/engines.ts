@@ -32,6 +32,7 @@ export const singleEngineState: Pick<
     [engineAUuid]: {
       manifestVersion: "0.13.0",
       name: "Engine 1",
+      brandName: "Engine 1",
       uuid: engineAUuid,
       url: "https://github.com/VOICEVOX/voicevox_engine",
       icon: "engine_manifest_assets/icon.png",
@@ -63,6 +64,7 @@ export const singleEngineState: Pick<
               styleId: 0,
               engineId: "",
               iconPath: dummyImage,
+              portraitPath: undefined,
 
               voiceSamplePaths: [],
             },
@@ -113,6 +115,7 @@ export const multipleEngineState: Pick<
     [engineAUuid]: {
       manifestVersion: "0.13.0",
       name: "Engine 1",
+      brandName: "Engine 1",
       uuid: engineAUuid,
       url: "https://github.com/VOICEVOX/voicevox_engine",
       icon: "engine_manifest_assets/icon.png",
@@ -135,6 +138,7 @@ export const multipleEngineState: Pick<
     [engineBUuid]: {
       manifestVersion: "0.13.0",
       name: "Engine 2",
+      brandName: "Engine 2",
       uuid: engineBUuid,
       url: "https://github.com/VOICEVOX/voicevox_engine",
       icon: "engine_manifest_assets/icon.png",
@@ -166,6 +170,7 @@ export const multipleEngineState: Pick<
               styleId: 0,
               engineId: engineAUuid,
               iconPath: dummyImage,
+              portraitPath: undefined,
 
               voiceSamplePaths: [],
             },
@@ -187,6 +192,7 @@ export const multipleEngineState: Pick<
               styleId: 0,
               engineId: engineBUuid,
               iconPath: dummyImage,
+              portraitPath: undefined,
 
               voiceSamplePaths: [],
             },
