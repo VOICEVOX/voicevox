@@ -223,7 +223,6 @@ export default defineComponent({
       }
     });
     const addNote = (event: MouseEvent) => {
-      const snapSize = store.state.sequencerSnapSize;
       const resolution = store.state.score?.resolution;
       const gridXSize = resolution ? resolution / 4 : 120;
       const position =
@@ -233,7 +232,8 @@ export default defineComponent({
       if (0 > midi) {
         return;
       }
-      const duration = snapSize;
+      // NOTE: 1/4のノートは追加
+      const duration = gridXSize * 4;
       const lyric = getDoremiFromMidi(midi);
       store.dispatch("ADD_NOTE", {
         note: {
