@@ -111,8 +111,11 @@ export default defineComponent({
         await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
       } catch (e) {
         let msg: string | undefined;
-        if (e instanceof Error && e.message !== "") {
-          msg = e.message;
+        // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
+        if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+          msg = "モーフィングの設定が無効です。";
+        } else {
+          window.electron.logError(e);
         }
         $q.dialog({
           title: "再生に失敗しました",
