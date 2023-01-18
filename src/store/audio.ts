@@ -323,7 +323,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   LOAD_MORPHABLE_PAIR: {
-    async action({ state, commit }, { engineId }) {
+    async action({ state, commit, dispatch }, { engineId }) {
       if (
         !state.engineManifests[engineId].supportedFeatures?.synthesisMorphing
       ) {
@@ -343,7 +343,20 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               await Promise.all(
                 styleIds.map(async (targetStyleId) => [
                   targetStyleId,
-                  true, // TODO: エンジンからのAPIに置き換える
+                  await (
+                    await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
+                  )
+                    .invoke("isMorphableIsMorphableGet")({
+                      baseSpeaker: baseStyleId,
+                      targetSpeaker: targetStyleId,
+                    })
+                    .catch((error) => {
+                      window.electron.logError(
+                        error,
+                        `Failed to get isMorphableIsMorphableGet`
+                      );
+                      return false;
+                    }),
                 ])
               )
             ),
