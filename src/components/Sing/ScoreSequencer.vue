@@ -10,11 +10,7 @@
         width="100%"
         height="100%"
         xmlns="http://www.w3.org/2000/svg"
-        v-bind:style="{
-          position: 'relative',
-          top: 0,
-          left: 0,
-        }"
+        class="sequencer-keys-items"
       >
         <g v-for="(y, index) in gridY" :key="index">
           <rect
@@ -22,24 +18,24 @@
             v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
             v-bind:width="`${y.color === 'black' ? 48 : 64}`"
             v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-            v-bind:fill="`${y.color === 'white' ? '#fff' : '#555'}`"
+            v-bind:class="`sequencer-keys-item-${y.color}`"
           />
           <line
             x1="0"
             v-bind:y1="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
             x2="64"
             v-bind:y2="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-            v-bind:stroke="`${
-              y.pitch === 'C' ? '#bbb' : y.pitch === 'F' ? '#ddd' : '#fff'
-            }`"
             stroke-width="1"
+            v-bind:class="`sequencer-keys-item-separator ${
+              y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
+            } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
           />
           <text
             font-size="10"
-            fill="#555"
             x="48"
             v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
             v-bind:opacity="y.pitch === 'C' ? 1 : 0"
+            class="sequencer-keys-item-pitchname"
           >
             {{ y.name }}
           </text>
@@ -57,11 +53,7 @@
         width="100%"
         height="100%"
         xmlns="http://www.w3.org/2000/svg"
-        v-bind:style="{
-          position: 'relative',
-          top: 0,
-          left: 0,
-        }"
+        class="sequencer-grids-items"
       >
         <defs>
           <pattern
@@ -77,9 +69,7 @@
               v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
               v-bind:width="`${BASE_X_SIZE * zoomX}`"
               v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-              v-bind:fill="`${y.color === 'white' ? '#fff' : '#eee'}`"
-              stroke-width="1"
-              stroke="#ddd"
+              v-bind:class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
             />
           </pattern>
         </defs>
@@ -108,27 +98,41 @@
           :value="note.lyric"
           @input="(e) => setLyric(index, e)"
           class="sequencer-note-lyric"
-          v-bind:style="{ bottom: `${BASE_Y_SIZE * zoomY + 4}px` }"
         />
         <svg
           v-bind:height="`${BASE_Y_SIZE * zoomY}`"
           v-bind:width="`${(note.duration / 4) * zoomX}`"
           xmlns="http://www.w3.org/2000/svg"
-          v-bind:style="{
-            position: 'relative',
-            top: 0,
-            left: 0,
-          }"
+          class="sequencer-note-bar"
         >
-          <rect
-            y="0"
-            x="0"
-            v-bind:height="`${BASE_Y_SIZE * zoomY}`"
-            v-bind:width="`${(note.duration / 4) * zoomX}`"
-            stroke-width="1"
-            @dblclick="removeNote(index)"
-            class="sequencer-note-bar"
-          />
+          <g @dblclick="removeNote(index)">
+            <rect
+              y="0"
+              x="0"
+              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+              v-bind:width="`${(note.duration / 4) * zoomX}`"
+              stroke-width="1"
+              class="sequencer-note-bar-body"
+            />
+            <rect
+              y="0"
+              x="-4"
+              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+              width="8"
+              fill-opacity="0"
+              draggable
+              class="sequencer-note-bar-draghandle"
+            />
+            <rect
+              y="0"
+              v-bind:x="`${(note.duration / 4) * zoomX - 4}`"
+              v-bind:height="`${BASE_Y_SIZE * zoomY}`"
+              width="8"
+              fill-opacity="0"
+              class="sequencer-note-bar-draghandle"
+              draggable
+            />
+          </g>
         </svg>
       </div>
     </div>
@@ -137,7 +141,7 @@
       type="range"
       min="0.2"
       max="1"
-      step="0.1"
+      step="0.05"
       :value="zoomX"
       @change="(e) => setZoomX(e)"
       v-bind:style="{
@@ -150,9 +154,9 @@
     />
     <input
       type="range"
-      min="0.2"
+      min="0.25"
       max="1"
-      step="0.1"
+      step="0.05"
       :value="zoomY"
       @change="(e) => setZoomY(e)"
       v-bind:style="{
@@ -218,6 +222,9 @@ export default defineComponent({
         gridXSize * Math.floor(event.offsetX / (BASE_X_SIZE * zoomX.value));
       const midi =
         127 - Math.floor(event.offsetY / (BASE_Y_SIZE * zoomY.value));
+      if (0 > midi) {
+        return;
+      }
       const duration = snapSize;
       const lyric = getDoremiFromMidi(midi);
       store.dispatch("ADD_NOTE", {
@@ -307,12 +314,28 @@ export default defineComponent({
   z-index: 100;
 }
 
-.sequencer-key {
-  align-items: center;
-  box-sizing: border-box;
-  color: #555;
-  display: flex;
-  position: relative;
+.sequencer-keys-items {
+  display: block;
+}
+
+.sequencer-keys-item-separator-octave {
+  stroke: #ccc;
+}
+
+.sequencer-keys-item-separator-f {
+  stroke: #ddd;
+}
+
+.sequencer-keys-item-white {
+  fill: #fff;
+}
+
+.sequencer-keys-item-black {
+  fill: #555;
+}
+
+.sequencer-keys-item-pitchname {
+  fill: #555;
 }
 
 .sequencer-grids {
@@ -321,6 +344,22 @@ export default defineComponent({
   position: absolute;
   top: 0;
   left: 64px;
+}
+
+.sequencer-grids-items {
+  display: block;
+}
+
+.sequencer-grids-col {
+  stroke: #ddd;
+  stroke-width: 1;
+}
+.sequencer-grids-col-white {
+  fill: #fff;
+}
+
+.sequencer-grids-col-black {
+  fill: #eee;
 }
 
 .sequencer-note {
@@ -332,17 +371,29 @@ export default defineComponent({
   border: 0;
   border-bottom: 1px solid colors.$primary-light;
   color: colors.$display;
-  font-size: 0.875rem;
+  font-size: 12px;
   font-weight: bold;
   outline: none;
   padding: 0;
   position: absolute;
+  bottom: 100%;
   left: 0;
-  width: 1.5rem;
+  width: 24px;
 }
 
 .sequencer-note-bar {
+  display: block;
+  position: relative;
+}
+.sequencer-note-bar-body {
   fill: colors.$primary;
   stroke: colors.$primary-light;
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+.sequencer-note-bar-draghandle {
+  cursor: ew-resize;
 }
 </style>
