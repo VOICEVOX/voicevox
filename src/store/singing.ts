@@ -294,7 +294,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_NOTE: {
     mutation(state, { index }: { index: number }) {
-      state.score?.notes.splice(index, 1);
+      if (state.score) {
+        const notes = [...state.score.notes];
+        notes.splice(index, 1);
+        state.score.notes = notes;
+      }
     },
     async action({ state, commit }, { index }: { index: number }) {
       if (state.score === undefined) {
