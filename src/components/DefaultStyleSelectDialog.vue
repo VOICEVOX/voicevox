@@ -288,10 +288,11 @@ export default defineComponent({
         JSON.stringify(store.state.defaultStyleIds)
       ) as DefaultStyleId[];
       multiStyleCharacterInfos.value.forEach((info, idx) => {
+        const defaultStyleKey = selectedStyleIndexes.value[idx] ?? 0;
         const defaultStyleInfo = {
+          engineId: info.metas.styles[defaultStyleKey].engineId,
           speakerUuid: info.metas.speakerUuid,
-          defaultStyleId:
-            info.metas.styles[selectedStyleIndexes.value[idx] ?? 0].styleId,
+          defaultStyleId: info.metas.styles[defaultStyleKey].styleId,
         };
         const nowSettingIndex = defaultStyleIds.findIndex(
           (s) => s.speakerUuid === info.metas.speakerUuid

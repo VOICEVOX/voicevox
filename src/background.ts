@@ -134,6 +134,20 @@ const store = new Store<ElectronStoreType>({
       if (store.get("savingSetting").outputSamplingRate == 24000) {
         store.set("savingSetting.outputSamplingRate", "engineDefault");
       }
+      // FIXME: できるならEngineManagerからEnginIDを取得したい
+      const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
+        .uuid;
+      if (engineId == undefined)
+        throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+      const prevDefaultStyleIds = store.get("defaultStyleIds");
+      store.set(
+        "defaultStyleIds",
+        prevDefaultStyleIds.map((defaultStyle) => ({
+          engineId: engineId,
+          speakerUuid: defaultStyle.speakerUuid,
+          defaultStyleId: defaultStyle.defaultStyleId,
+        }))
+      );
     },
   },
 });
