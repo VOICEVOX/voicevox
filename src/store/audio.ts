@@ -196,6 +196,7 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  morphablePairInfo: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -318,6 +319,44 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }: { engineId: string; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
+    },
+  },
+
+  LOAD_MORPHABLE_PAIR: {
+    async action({ state, commit }, { engineId }) {
+      if (
+        !state.engineManifests[engineId].supportedFeatures?.synthesisMorphing
+      ) {
+        commit("SET_MORPHABLE_PAIR", { engineId, morphablePairInfo: {} });
+        return;
+      }
+      const characterInfos = state.characterInfos[engineId];
+      const styles = characterInfos.flatMap(
+        (characterInfo) => characterInfo.metas.styles
+      );
+      const styleIds = styles.map((style) => style.styleId);
+      const morphablePairInfo = Object.fromEntries(
+        await Promise.all(
+          styleIds.map(async (baseStyleId) => [
+            baseStyleId,
+            Object.fromEntries(
+              await Promise.all(
+                styleIds.map(async (targetStyleId) => [
+                  targetStyleId,
+                  true, // TODO: エンジンからのAPIに置き換える
+                ])
+              )
+            ),
+          ])
+        )
+      );
+      commit("SET_MORPHABLE_PAIR", { engineId, morphablePairInfo });
+    },
+  },
+
+  SET_MORPHABLE_PAIR: {
+    mutation(state, { engineId, morphablePairInfo }) {
+      state.morphablePairInfo[engineId] = morphablePairInfo;
     },
   },
 
