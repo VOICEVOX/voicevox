@@ -675,7 +675,9 @@ export default defineComponent({
       const baseEngineId = audioItem.value.engineId;
       const baseStyleId = audioItem.value.styleId;
       if (baseEngineId === undefined || baseStyleId == undefined) {
-        return [];
+        throw new Error(
+          "baseEngineId == undefined || baseStyleId == undefined"
+        );
       }
       return [
         /**
