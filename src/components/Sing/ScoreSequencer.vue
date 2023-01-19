@@ -99,8 +99,9 @@
         :key="index"
         class="sequencer-note"
         v-bind:style="{
-          left: `${(note.position / 4) * zoomX}px`,
-          top: `${(127 - note.midi) * BASE_Y_SIZE * zoomY}px`,
+          transform: `translate3d(${(note.position / 4) * zoomX}px,${
+            (127 - note.midi) * BASE_Y_SIZE * zoomY
+          }px,0)`,
         }"
       >
         <!-- NOTE: q-inputへの変更 / 表示面+速度面から、クリック時のみinputを表示に変更予定 -->
@@ -198,15 +199,18 @@ export default defineComponent({
     const gridY = midiKeys;
     const gridX = computed(() => {
       const resolution = store.state.score?.resolution || 480;
-      // NOTE: 最低幅: 仮16小節
-      const minDuration = resolution * 4 * 16;
+      // NOTE: 最低長: 仮32小節...MIDI長さ(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+      const minDuration = resolution * 4 * 32;
       const lastNote = store.state.score?.notes.slice(-1)[0];
+      // Score長さ: スコア長もしくは最低長のうち長い方
       const totalDuration = lastNote
         ? Math.max(lastNote.position + lastNote.duration, minDuration)
         : minDuration;
-      // NOTE: グリッド幅1/16: 設定できるようにする必要あり
+      // グリッド幅1/16
       const gridDuration = resolution / 4;
-      return [...Array(Math.ceil(totalDuration / gridDuration)).keys()].map(
+      // NOTE: いったん最後尾に足した場合は伸びるようにする
+      const gridsMax = Math.ceil(totalDuration / gridDuration) + 16;
+      return [...Array(gridsMax).keys()].map(
         (gridNum) => gridNum * gridDuration
       );
     });
@@ -235,8 +239,8 @@ export default defineComponent({
       if (0 > midi) {
         return;
       }
-      // NOTE: 1/4のノートは追加
-      const duration = gridXSize * 4;
+      // NOTE: ノートの追加は1/8をベース
+      const duration = gridXSize * 2;
       const lyric = getDoremiFromMidi(midi);
       store.dispatch("ADD_NOTE", {
         note: {
@@ -308,6 +312,7 @@ export default defineComponent({
 @use '@/styles/colors' as colors;
 
 .score-sequencer {
+  backface-visibility: hidden;
   display: block;
   height: 100%;
   overflow: auto;
@@ -315,16 +320,14 @@ export default defineComponent({
   position: relative;
   width: 100%;
 }
+
 .sequencer-keys {
-  background: white;
+  backface-visibility: hidden;
+  background: #fff;
   display: block;
   position: sticky;
   left: 0;
   z-index: 100;
-}
-
-.sequencer-keys-items {
-  display: block;
 }
 
 .sequencer-keys-item-separator-octave {
@@ -348,6 +351,7 @@ export default defineComponent({
 }
 
 .sequencer-body {
+  backface-visibility: hidden;
   display: block;
   position: absolute;
   height: 100%;
@@ -376,11 +380,16 @@ export default defineComponent({
 }
 
 .sequencer-grid-separator-line {
+  backface-visibility: hidden;
   stroke: #b0b0b0;
 }
 
 .sequencer-note {
+  backface-visibility: hidden;
   position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0, 0;
 }
 
 .sequencer-note-lyric {
