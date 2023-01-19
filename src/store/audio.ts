@@ -760,17 +760,36 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       ),
   },
 
+  IS_A_VALID_MOPHING_PAIR: {
+    getter: (state, getters) => (baseVoice, targetVoice) => {
+      if (baseVoice.engineId !== targetVoice.engineId) {
+        return false;
+      }
+      const engineId = baseVoice.engineId;
+      if (!getters.MORPHING_SUPPORTED_ENGINES.includes(engineId)) {
+        return false;
+      }
+      return !!state.morphablePairInfo[engineId]?.[baseVoice.styleId]?.[
+        targetVoice.styleId
+      ];
+    },
+  },
+
   VALID_MOPHING_INFO: {
     getter: (_, getters) => (audioItem: AudioItem) => {
-      if (
-        audioItem.morphingInfo == undefined ||
-        audioItem.engineId == undefined
-      )
+      const baseVoice = audioItem.engineId !== undefined &&
+        audioItem.styleId !== undefined && {
+          engineId: audioItem.engineId,
+          styleId: audioItem.styleId,
+        };
+      const targetVoice = audioItem.morphingInfo && {
+        engineId: audioItem.morphingInfo.targetEngineId,
+        styleId: audioItem.morphingInfo.targetStyleId,
+      };
+      if (!baseVoice || !targetVoice) {
         return false;
-      return (
-        getters.MORPHING_SUPPORTED_ENGINES.includes(audioItem.engineId) &&
-        audioItem.engineId === audioItem.morphingInfo.targetEngineId
-      );
+      }
+      return getters.IS_A_VALID_MOPHING_PAIR(baseVoice, targetVoice);
     },
   },
 

@@ -671,16 +671,32 @@ export default defineComponent({
     const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
     const mophingTargetCharacters = computed(() => {
-      const allCharacters = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS;
-      return allCharacters
-        .map((character) => {
-          const targetStyles = character.metas.styles.filter((style) =>
-            mophingTargetEngines.includes(style.engineId)
-          );
-          character.metas.styles = targetStyles;
-          return character;
-        })
-        .filter((characters) => characters.metas.styles.length >= 1);
+      const baseEngineId = audioItem.value.engineId;
+      const baseStyleId = audioItem.value.styleId;
+      if (baseEngineId === undefined || baseStyleId == undefined) {
+        return [];
+      }
+      return store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.map((character) => {
+        const targetStyles = character.metas.styles.filter((style) =>
+          store.getters.IS_A_VALID_MOPHING_PAIR(
+            {
+              engineId: baseEngineId,
+              styleId: baseStyleId,
+            },
+            {
+              engineId: style.engineId,
+              styleId: style.styleId,
+            }
+          )
+        );
+        return {
+          ...character,
+          metas: {
+            ...character.metas,
+            styles: targetStyles,
+          },
+        };
+      }).filter((characters) => characters.metas.styles.length >= 1);
     });
 
     const morphingTargetVoice = computed({
@@ -711,7 +727,7 @@ export default defineComponent({
     });
 
     const morphingTargetCharacterInfo = computed(() =>
-      mophingTargetCharacters.value.find(
+      store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.find(
         (character) =>
           character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
       )

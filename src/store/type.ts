@@ -291,6 +291,13 @@ export type AudioStoreTypes = {
     getter: string[];
   };
 
+  IS_A_VALID_MOPHING_PAIR: {
+    getter(
+      baseVoice: { engineId: string; styleId: number },
+      targetVoice: { engineId: string; styleId: number }
+    ): boolean;
+  };
+
   VALID_MOPHING_INFO: {
     getter(audioItem: AudioItem): boolean;
   };
