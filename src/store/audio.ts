@@ -346,10 +346,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
                   await (
                     await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
                   )
+                    /** booleanを返すAPIは何故か"true" | "false"となってしまう */
                     .invoke("isMorphableIsMorphableGet")({
                       baseSpeaker: baseStyleId,
                       targetSpeaker: targetStyleId,
                     })
+                    .then((res) => (res as unknown as string) === "true")
                     .catch((error) => {
                       window.electron.logError(
                         error,
