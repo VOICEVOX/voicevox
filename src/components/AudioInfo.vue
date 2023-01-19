@@ -441,7 +441,7 @@
         非対応エンジンです
       </div>
       <div
-        v-else-if="isValidMorphingInfo"
+        v-else-if="isInvalidMorphingInfo"
         class="text-warning"
         style="font-size: 0.7rem"
       >
@@ -663,7 +663,7 @@ export default defineComponent({
       () => supportedFeatures.value?.synthesisMorphing
     );
 
-    const isValidMorphingInfo = computed(() => {
+    const isInvalidMorphingInfo = computed(() => {
       if (audioItem.value.morphingInfo == undefined) return false;
       return !store.getters.VALID_MOPHING_INFO(audioItem.value);
     });
@@ -671,32 +671,42 @@ export default defineComponent({
     const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
     const mophingTargetCharacters = computed(() => {
+      // 選択可能なスタイルをフィルタリングする.
       const baseEngineId = audioItem.value.engineId;
       const baseStyleId = audioItem.value.styleId;
       if (baseEngineId === undefined || baseStyleId == undefined) {
         return [];
       }
-      return store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.map((character) => {
-        const targetStyles = character.metas.styles.filter((style) =>
-          store.getters.IS_A_VALID_MOPHING_PAIR(
-            {
-              engineId: baseEngineId,
-              styleId: baseStyleId,
+      return [
+        /**
+         * isInvalidMorphingInfoのとき、mophingTargetCharactersにmorphingTargetVoiceの
+         * 値が存在しないことによってcharacter-button内で画像が描画出来ない問題を防ぐ
+         */
+        ...(isInvalidMorphingInfo.value && morphingTargetCharacterInfo.value
+          ? [morphingTargetCharacterInfo.value]
+          : []),
+        ...store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.map((character) => {
+          const targetStyles = character.metas.styles.filter((style) =>
+            store.getters.IS_A_VALID_MOPHING_PAIR(
+              {
+                engineId: baseEngineId,
+                styleId: baseStyleId,
+              },
+              {
+                engineId: style.engineId,
+                styleId: style.styleId,
+              }
+            )
+          );
+          return {
+            ...character,
+            metas: {
+              ...character.metas,
+              styles: targetStyles,
             },
-            {
-              engineId: style.engineId,
-              styleId: style.styleId,
-            }
-          )
-        );
-        return {
-          ...character,
-          metas: {
-            ...character.metas,
-            styles: targetStyles,
-          },
-        };
-      }).filter((characters) => characters.metas.styles.length >= 1);
+          };
+        }).filter((characters) => characters.metas.styles.length >= 1),
+      ];
     });
 
     const morphingTargetVoice = computed({
@@ -1156,7 +1166,7 @@ export default defineComponent({
       mophingTargetEngines,
       shouldShowMorphing,
       isSupportedMorphing,
-      isValidMorphingInfo,
+      isInvalidMorphingInfo,
       mophingTargetCharacters,
       morphingTargetVoice,
       morphingTargetCharacterInfo,
