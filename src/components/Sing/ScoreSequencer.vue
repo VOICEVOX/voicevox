@@ -2,7 +2,7 @@
   <div class="score-sequencer" id="score-sequencer">
     <!-- 鍵盤表示 -->
     <svg
-      width="64"
+      width="48"
       v-bind:height="`${BASE_Y_SIZE * zoomY * 128}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-keys"
@@ -11,25 +11,27 @@
         <rect
           x="0"
           v-bind:y="`${BASE_Y_SIZE * zoomY * index}`"
-          v-bind:width="`${y.color === 'black' ? 48 : 64}`"
+          v-bind:width="`${y.color === 'black' ? 30 : 48}`"
           v-bind:height="`${BASE_Y_SIZE * zoomY}`"
           v-bind:class="`sequencer-keys-item-${y.color}`"
+          v-bind:title="y.name"
         />
         <line
           x1="0"
           v-bind:y1="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
-          x2="64"
+          x2="48"
           v-bind:y2="`${(index + 1) * BASE_Y_SIZE * zoomY}`"
           stroke-width="1"
           v-bind:class="`sequencer-keys-item-separator ${
             y.pitch === 'C' && 'sequencer-keys-item-separator-octave'
           } ${y.pitch === 'F' && 'sequencer-keys-item-separator-f'}`"
+          v-if="y.pitch === 'C' || y.pitch === 'F'"
         />
         <text
           font-size="10"
-          x="48"
+          x="32"
           v-bind:y="`${BASE_Y_SIZE * zoomY * (index + 1) - 4}`"
-          v-bind:opacity="y.pitch === 'C' ? 1 : 0"
+          v-if="y.pitch === 'C'"
           class="sequencer-keys-item-pitchname"
         >
           {{ y.name }}
@@ -62,6 +64,7 @@
               v-bind:class="`sequencer-grids-col sequencer-grids-col-${y.color}`"
             />
           </pattern>
+          <!-- NOTE: 4/4 1小節でグリッド見た目確認目的 -->
           <pattern
             id="sequencer-grid-measure"
             v-bind:width="`${BASE_X_SIZE * 16 * zoomX}`"
@@ -350,7 +353,7 @@ export default defineComponent({
   height: 100%;
   width: 100%;
   top: 0;
-  left: 64px;
+  left: 48px;
   padding-bottom: 164px;
 }
 
@@ -359,7 +362,8 @@ export default defineComponent({
 }
 
 .sequencer-grids-col {
-  stroke: #ddd;
+  display: block;
+  stroke: #e8e8e8;
   stroke-width: 1;
 }
 
@@ -368,11 +372,11 @@ export default defineComponent({
 }
 
 .sequencer-grids-col-black {
-  fill: #eee;
+  fill: #f2f2f2;
 }
 
 .sequencer-grid-separator-line {
-  stroke: #bbb;
+  stroke: #b0b0b0;
 }
 
 .sequencer-note {
@@ -391,7 +395,7 @@ export default defineComponent({
   outline: none;
   padding: 0;
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% - 1px);
   left: 0;
   width: 24px;
 }
@@ -402,7 +406,8 @@ export default defineComponent({
 }
 .sequencer-note-bar-body {
   fill: colors.$primary;
-  stroke: colors.$primary-light;
+  stroke: #fff;
+  stroke-opacity: 0.5;
   position: relative;
   top: 0;
   left: 0;
