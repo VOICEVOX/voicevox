@@ -213,112 +213,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.14", semverSatisfiesOptions)
           ) {
-            const speakers = [
-              {
-                //"四国めたん",
-                speaker_uuid: "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
-                styles: [2, 0, 6, 4, 36, 37],
-              },
-              {
-                //"ずんだもん",
-                speaker_uuid: "388f246b-8c41-4ac1-8e2d-5d79f3ff56d9",
-                styles: [3, 1, 7, 5, 22, 38],
-              },
-              {
-                //"春日部つむぎ",
-                speaker_uuid: "35b2c544-660e-401e-b503-0e14c635303a",
-                styles: [8],
-              },
-              {
-                //"雨晴はう",
-                speaker_uuid: "3474ee95-c274-47f9-aa1a-8322163d96f1",
-                styles: [10],
-              },
-              {
-                //"波音リツ",
-                speaker_uuid: "b1a81618-b27b-40d2-b0ea-27a9ad408c4b",
-                styles: [9],
-              },
-              {
-                //"玄野武宏",
-                speaker_uuid: "c30dc15a-0992-4f8d-8bb8-ad3b314e6a6f",
-                styles: [11, 39, 40, 41],
-              },
-              {
-                //"白上虎太郎",
-                speaker_uuid: "e5020595-5c5d-4e87-b849-270a518d0dcf",
-                styles: [12, 32, 33, 34, 35],
-              },
-              {
-                //"青山龍星",
-                speaker_uuid: "4f51116a-d9ee-4516-925d-21f183e2afad",
-                styles: [13],
-              },
-              {
-                //"冥鳴ひまり",
-                speaker_uuid: "8eaad775-3119-417e-8cf4-2a10bfd592c8",
-                styles: [14],
-              },
-              {
-                //"九州そら",
-                speaker_uuid: "481fb609-6446-4870-9f46-90c4dd623403",
-                styles: [16, 15, 18, 17, 19],
-              },
-              {
-                //"もち子さん",
-                speaker_uuid: "9f3ee141-26ad-437e-97bd-d22298d02ad2",
-                styles: [20],
-              },
-              {
-                //"剣崎雌雄",
-                speaker_uuid: "1a17ca16-7ee5-4ea5-b191-2f02ace24d21",
-                styles: [21],
-              },
-              {
-                //"WhiteCUL",
-                speaker_uuid: "67d5d8da-acd7-4207-bb10-b5542d3a663b",
-                styles: [23, 24, 25, 26],
-              },
-              {
-                //"後鬼",
-                speaker_uuid: "0f56c2f2-644c-49c9-8989-94e11f7129d0",
-                styles: [27, 28],
-              },
-              {
-                //"No.7",
-                speaker_uuid: "044830d2-f23b-44d6-ac0d-b5d733caa900",
-                styles: [29, 30, 31],
-              },
-              {
-                //"ちび式じい",
-                speaker_uuid: "468b8e94-9da4-4f7a-8715-a22a48844f9e",
-                styles: [42],
-              },
-              {
-                //"櫻歌ミコ",
-                speaker_uuid: "0693554c-338e-4790-8982-b9c6d476dc69",
-                styles: [43, 44, 45],
-              },
-              {
-                //"小夜/SAYO",
-                speaker_uuid: "a8cc6d22-aad0-4ab8-bf1e-2f843924164a",
-                styles: [46],
-              },
-              {
-                //"ナースロボ＿タイプＴ",
-                speaker_uuid: "882a636f-3bac-431a-966d-c5e6bba9f949",
-                styles: [47, 48, 49, 50],
-              },
-            ];
+            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            if (characterInfos == undefined)
+              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
             for (const audioItemsKey in obj.audioItems) {
               const audioItem = obj.audioItems[audioItemsKey];
               if (audioItem.engineId === undefined) {
                 audioItem.engineId = engineId;
               }
               if (audioItem.speakerId == undefined) {
-                audioItem.speakerId = speakers.find((speaker) =>
-                  speaker.styles.includes(audioItem.styleId)
-                )?.speaker_uuid;
+                audioItem.speakerId = characterInfos.find((characterInfo) =>
+                  characterInfo.metas.styles.some(
+                    (styeleinfo) =>
+                      styeleinfo.engineId === audioItem.engineId &&
+                      styeleinfo.styleId === audioItem.styleId
+                  )
+                )?.metas.speakerUuid;
               }
             }
           }

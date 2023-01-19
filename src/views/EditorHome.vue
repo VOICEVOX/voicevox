@@ -526,23 +526,25 @@ export default defineComponent({
       const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
       isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
 
-      // 最初のAudioCellを作成
-      const audioItem: AudioItem = await store.dispatch(
-        "GENERATE_AUDIO_ITEM",
-        {}
-      );
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-        audioItem,
-      });
-      focusCell({ audioKey: newAudioKey });
-
-      // 最初の話者を初期化
-      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
-        store.dispatch("SETUP_SPEAKER", {
-          audioKey: newAudioKey,
-          engineId: audioItem.engineId,
-          styleId: audioItem.styleId,
+      const filePath = store.state.projectFilePath;
+      if (filePath != undefined) {
+        await store.dispatch("LOAD_PROJECT_FILE", { filePath });
+      } else {
+        // 最初のAudioCellを作成
+        const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+        const audioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+          audioItem,
         });
+        focusCell({ audioKey });
+
+        // 最初の話者を初期化
+        if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+          store.dispatch("SETUP_SPEAKER", {
+            audioKey: audioKey,
+            engineId: audioItem.engineId,
+            styleId: audioItem.styleId,
+          });
+        }
       }
 
       // ショートカットキーの設定

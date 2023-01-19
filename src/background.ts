@@ -598,15 +598,43 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
+  let projectFilePath = "";
+  if (isMac) {
+    if (filePathOnMac) {
+      if (filePathOnMac.endsWith(".vvproj")) {
+        projectFilePath = encodeURI(filePathOnMac);
+      }
+      filePathOnMac = undefined;
+    }
+  } else {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      if (
+        fs.existsSync(filePath) &&
+        fs.statSync(filePath).isFile() &&
+        filePath.endsWith(".vvproj")
+      ) {
+        projectFilePath = encodeURI(filePath);
+      }
+    }
+  }
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
       (process.env.WEBPACK_DEV_SERVER_URL as string) +
         "#/home?isSafeMode=" +
-        appState.isSafeMode
+        appState.isSafeMode +
+        "&projectFilePath=" +
+        projectFilePath
     );
   } else {
     createProtocol("app");
-    win.loadURL("app://./index.html#/home?isSafeMode=" + appState.isSafeMode);
+    win.loadURL(
+      "app://./index.html#/home?isSafeMode=" +
+        appState.isSafeMode +
+        "&projectFilePath=" +
+        projectFilePath
+    );
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -640,31 +668,6 @@ async function createWindow() {
       width: windowSize[0],
       height: windowSize[1],
     });
-  });
-
-  win.webContents.once("did-finish-load", () => {
-    if (isMac) {
-      if (filePathOnMac) {
-        if (filePathOnMac.endsWith(".vvproj")) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", {
-            filePath: filePathOnMac,
-            confirm: false,
-          });
-        }
-        filePathOnMac = undefined;
-      }
-    } else {
-      if (process.argv.length >= 2) {
-        const filePath = process.argv[1];
-        if (
-          fs.existsSync(filePath) &&
-          fs.statSync(filePath).isFile() &&
-          filePath.endsWith(".vvproj")
-        ) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
-        }
-      }
-    }
   });
 
   mainWindowState.manage(win);
