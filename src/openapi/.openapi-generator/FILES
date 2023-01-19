@@ -13,6 +13,8 @@ models/Preset.ts
 models/Speaker.ts
 models/SpeakerInfo.ts
 models/SpeakerStyle.ts
+models/SpeakerSupportPermittedSynthesisMorphing.ts
+models/SpeakerSupportedFeatures.ts
 models/StyleInfo.ts
 models/SupportedDevicesInfo.ts
 models/SupportedFeatures.ts
