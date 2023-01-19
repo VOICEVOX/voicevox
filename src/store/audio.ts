@@ -68,28 +68,35 @@ function parseTextFile(
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
-  const characters = new Map<string, number>();
-  const uuid2StyleIds = new Map<string, number>();
+  const characters = new Map<string, { engineId: string; styleId: number }>();
+  const uuid2StyleIds = new Map<
+    string,
+    { engineId: string; styleId: number }
+  >();
   for (const defaultStyleId of defaultStyleIds) {
     const speakerUuid = defaultStyleId.speakerUuid;
+    const engineId = defaultStyleId.engineId;
     const styleId = defaultStyleId.defaultStyleId;
-    uuid2StyleIds.set(speakerUuid, styleId);
+    uuid2StyleIds.set(speakerUuid, { engineId, styleId });
   }
   // setup default characters
   for (const characterInfo of userOrderedCharacterInfos) {
     const uuid = characterInfo.metas.speakerUuid;
-    const styleId = uuid2StyleIds.get(uuid);
+    const style = uuid2StyleIds.get(uuid);
     const speakerName = characterInfo.metas.speakerName;
-    if (styleId == undefined)
-      throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
-    characters.set(speakerName, styleId);
+    if (style == undefined)
+      throw new Error(`style is undefined. speakerUuid: ${uuid}`);
+    characters.set(speakerName, {
+      engineId: style.engineId,
+      styleId: style.styleId,
+    });
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
       characters.set(
         `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
-        style.styleId
+        { engineId: style.engineId, styleId: style.styleId }
       );
     }
   }
@@ -97,19 +104,22 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = uuid2StyleIds.get(
+  let lastStyle = uuid2StyleIds.get(
     userOrderedCharacterInfos[0].metas.speakerUuid
   );
-  if (lastStyleId == undefined) throw new Error(`lastStyleId is undefined.`);
+  if (lastStyle == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const styleId = characters.get(splitText);
     if (styleId !== undefined) {
-      lastStyleId = styleId;
+      lastStyle = styleId;
       continue;
     }
 
-    // FIXME: engineIdの追加
-    audioItems.push({ text: splitText, styleId: lastStyleId });
+    audioItems.push({
+      text: splitText,
+      engineId: lastStyle.engineId,
+      styleId: lastStyle.styleId,
+    });
   }
   return audioItems;
 }
