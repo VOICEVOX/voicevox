@@ -12,8 +12,6 @@ export * from './Preset';
 export * from './Speaker';
 export * from './SpeakerInfo';
 export * from './SpeakerStyle';
-export * from './SpeakerSupportPermitedSynthesisMorphing';
-export * from './SpeakerSupportedFeatures';
 export * from './StyleInfo';
 export * from './SupportedDevicesInfo';
 export * from './SupportedFeatures';
