@@ -37,12 +37,16 @@ npm ci
 
 ## 実行
 
-`.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`があるパスを指定します。
+`.env.production`をコピーして`.env`を作成し、`DEFAULT_ENGINE_INFOS`内の`executionFilePath`に`voicevox_engine`があるパスのフルパスを指定します。
 
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) のディレクトリのパスを指定すれば動きます。
 
 Windowsの場合でもパスの区切り文字は`\`ではなく`/`なのでご注意ください。
-また、macOS向けの`VOICEVOX.app`を利用している場合は`/path/to/file/VOICEVOX.app/Contents/MacOS/run`を指定してください。
+
+また、macOS向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/MacOS/run`を指定してください。
+
+Linuxの場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できるtar.gz版に含まれる`run`コマンドを指定してください。
+AppImage版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
 
 VOICEVOXエディタの実行とは別にエンジンAPIのサーバを立てている場合は`executionFilePath`を指定する必要はありません。
 これは製品版VOICEVOXを起動している場合もあてはまります。
