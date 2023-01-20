@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.13.3
-  VOICEVOX_RESOURCE_VERSION: 0.13.3
+  VOICEVOX_ENGINE_VERSION: 0.14.0-preview.8
+  VOICEVOX_RESOURCE_VERSION: 0.14.0-preview.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
@@ -384,7 +384,7 @@ jobs:
         env:
           VOICEVOX_ENGINE_RELEASE_URL: ${{ env.VOICEVOX_ENGINE_REPO_URL }}/releases/download/${{ env.VOICEVOX_ENGINE_VERSION }}
         run: |
-          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/${{ matrix.voicevox_engine_asset_name }}.7z.txt"
+          curl -L -o "voicevox_engine/download/list.txt" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/voicevox_engine-${{ matrix.voicevox_engine_asset_name }}-${{ env.VOICEVOX_ENGINE_VERSION }}.7z.txt"
           cat "voicevox_engine/download/list.txt" | xargs -I '%' curl -L -o "voicevox_engine/download/%" "${{ env.VOICEVOX_ENGINE_RELEASE_URL }}/%"
 
       - name: Extract VOICEVOX ENGINE

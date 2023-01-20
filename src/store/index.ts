@@ -194,6 +194,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             );
           }
           return {
+            engineId: characterInfo.metas.styles[0].engineId,
             speakerUuid: speakerUuid,
             defaultStyleId: characterInfo.metas.styles[0].styleId,
           };
