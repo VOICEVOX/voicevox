@@ -220,7 +220,10 @@ export default defineComponent({
         JSON.stringify(store.state.defaultStyleIds)
       ) as DefaultStyleId[];
       store.dispatch("SET_DEFAULT_STYLE_IDS", [
-        ...defaultStyleIds,
+        ...defaultStyleIds.filter(
+          (defaultStyleId) =>
+            defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
+        ),
         {
           speakerUuid: props.characterInfo.metas.speakerUuid,
           defaultStyleId:
