@@ -1,15 +1,15 @@
 function detectImageTypeFromBase64(data: string): string {
   switch (data[0]) {
     case "/":
-      return "image/svg+xml";
+      return "image/jpeg";
     case "R":
       return "image/gif";
     case "i":
       return "image/png";
-    case "D":
-      return "image/jpeg";
+    case "U":
+      return "image/webp";
     default:
-      return "";
+      throw new Error("Unsupported image type");
   }
 }
 
