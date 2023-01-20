@@ -706,6 +706,7 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
+  selectedNotes: Array<number>;
 };
 
 export type SingingStoreTypes = {

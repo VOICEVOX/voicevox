@@ -23,6 +23,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
   sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
+  selectedNotes: [],
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({

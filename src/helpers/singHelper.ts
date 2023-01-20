@@ -61,3 +61,6 @@ export const midiKeys = [...Array(128)]
     };
   })
   .reverse();
+
+export const BASE_GRID_SIZE_X = 30;
+export const BASE_GRID_SIZE_Y = 30;
