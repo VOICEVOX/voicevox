@@ -43,7 +43,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       });
     },
   },
-
   SET_ENGINE_INFOS: {
     mutation(
       state,
@@ -160,37 +159,65 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     ),
   },
 
-  RESTART_ENGINE_ALL: {
-    async action({ state, dispatch }) {
-      // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
-      let allSuccess = true;
-      const engineIds = state.engineIds;
+  RESTART_ENGINES: {
+    async action({ dispatch, commit }, { engineIds }) {
+      await Promise.all(
+        engineIds.map(async (engineId) => {
+          commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
+          try {
+            return window.electron.restartEngine(engineId);
+          } catch (e) {
+            dispatch("LOG_ERROR", {
+              error: e,
+              message: `Failed to restart engine: ${engineId}`,
+            });
+            await dispatch("DETECTED_ENGINE_ERROR", { engineId });
+            return {
+              success: false,
+              anyNewCharacters: false,
+            };
+          }
+        })
+      );
 
-      for (const engineId of engineIds) {
-        const success = await dispatch("RESTART_ENGINE", {
-          engineId,
-        });
-        allSuccess = allSuccess && success;
-      }
+      const result = await dispatch("POST_ENGINE_START", {
+        engineIds,
+      });
 
-      return allSuccess;
+      return result;
     },
   },
 
-  RESTART_ENGINE: {
-    async action({ dispatch, commit, state }, { engineId }) {
-      commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
-      const success = await window.electron
-        .restartEngine(engineId)
-        .then(async () => {
-          await dispatch("START_WAITING_ENGINE", { engineId });
-          return state.engineStates[engineId] === "READY";
+  POST_ENGINE_START: {
+    async action({ state, dispatch }, { engineIds }) {
+      const result = await Promise.all(
+        engineIds.map(async (engineId) => {
+          if (state.engineStates[engineId] === "STARTING") {
+            await dispatch("START_WAITING_ENGINE", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+            await dispatch("LOAD_CHARACTER", { engineId });
+          }
+
+          await dispatch("LOAD_DEFAULT_STYLE_IDS");
+          const newCharacters = await dispatch("GET_NEW_CHARACTERS");
+          const result = {
+            success: state.engineStates[engineId] === "READY",
+            anyNewCharacters: newCharacters.length > 0,
+          };
+          return result;
         })
-        .catch(async () => {
-          await dispatch("DETECTED_ENGINE_ERROR", { engineId });
-          return false;
+      );
+      const mergedResult = {
+        success: result.every((r) => r.success),
+        anyNewCharacters: result.some((r) => r.anyNewCharacters),
+      };
+      if (mergedResult.anyNewCharacters) {
+        dispatch("SET_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen: true,
         });
-      return success;
+      }
+
+      return mergedResult;
     },
   },
 
