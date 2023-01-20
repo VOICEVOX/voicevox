@@ -4,22 +4,16 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-export default defineComponent({
-  setup() {
-    const store = useStore();
-    const howToUse = ref("");
-    const md = useMarkdownIt();
-    onMounted(async () => {
-      howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
-    });
-    return {
-      howToUse,
-    };
-  },
+
+const store = useStore();
+const howToUse = ref("");
+const md = useMarkdownIt();
+onMounted(async () => {
+  howToUse.value = md.render(await store.dispatch("GET_HOW_TO_USE_TEXT"));
 });
 </script>
 

@@ -177,6 +177,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             );
           }
           return {
+            engineId: characterInfo.metas.styles[0].engineId,
             speakerUuid: speakerUuid,
             defaultStyleId: characterInfo.metas.styles[0].styleId,
           };
@@ -264,6 +265,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   LOG_ERROR: {
     action(_, ...params: unknown[]) {
       window.electron.logError(...params);
+    },
+  },
+
+  LOG_WARN: {
+    action(_, ...params: unknown[]) {
+      window.electron.logWarn(...params);
     },
   },
 

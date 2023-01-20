@@ -218,6 +218,9 @@ export default defineComponent({
             defaultStyleId:
               characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
                 .styleId,
+            engineId:
+              characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+                .engineId,
           })
         )
       );

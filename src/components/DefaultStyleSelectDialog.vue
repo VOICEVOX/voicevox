@@ -226,6 +226,9 @@ export default defineComponent({
           defaultStyleId:
             props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
               .styleId,
+          engineId:
+            props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+              .engineId,
         },
       ]);
 
