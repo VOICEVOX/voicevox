@@ -8,7 +8,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   WriteFileErrorResult,
-  NativeThemeType
+  NativeThemeType,
 } from "@/type/preload";
 
 /**

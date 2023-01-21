@@ -368,7 +368,7 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
 
-export type NativeThemeType = typeof nativeTheme["themeSource"]
+export type NativeThemeType = typeof nativeTheme["themeSource"];
 
 export type MoraDataType =
   | "consonant"
