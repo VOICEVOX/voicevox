@@ -221,7 +221,7 @@ const api: Sandbox = {
   },
 
   setNativeTheme: (source) => {
-    ipcRendererInvoke("SET_NATIVE_THEME", source);
+    ipcRenderer.invoke("SET_NATIVE_THEME", source);
   },
 
   theme: (newData) => {

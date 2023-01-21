@@ -258,6 +258,7 @@ export type IpcIHData = {
 
   SET_NATIVE_THEME: {
     args: [source: "system" | "light" | "dark"];
+    return: void;
   };
 
   INSTALL_VVPP_ENGINE: {
