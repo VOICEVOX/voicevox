@@ -378,6 +378,9 @@ const accentPhrase = ref<AccentPhrase | undefined>();
 const accentPhraseTable = ref<HTMLElement>();
 
 const convertHankakuToZenkaku = (text: string) => {
+  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
+  text = text.replace(/\p{Z}/u, () => String.fromCharCode(0x3000));
+
   // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
   return text.replace(/[\u0021-\u007e]/g, (s) => {
     return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
