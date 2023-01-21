@@ -220,6 +220,10 @@ const api: Sandbox = {
     return await ipcRendererInvoke("GET_DEFAULT_TOOLBAR_SETTING");
   },
 
+  setNativeTheme: (source) => {
+    ipcRendererInvoke("SET_NATIVE_THEME", source);
+  },
+
   theme: (newData) => {
     return ipcRenderer.invoke("THEME", { newData });
   },

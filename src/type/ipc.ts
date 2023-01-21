@@ -256,6 +256,12 @@ export type IpcIHData = {
     return: ElectronStoreType[keyof ElectronStoreType];
   };
 
+  SET_NATIVE_THEME: {
+    args: [
+      source: ('system' | 'light' | 'dark')
+    ];
+  };
+
   INSTALL_VVPP_ENGINE: {
     args: [path: string];
     return: Promise<boolean>;

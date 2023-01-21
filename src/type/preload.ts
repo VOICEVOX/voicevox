@@ -173,6 +173,7 @@ export interface Sandbox {
   changePinWindow(): void;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
+  setNativeTheme(source: ('system' | 'light' | 'dark')): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSetting<Key extends keyof ElectronStoreType>(
