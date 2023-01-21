@@ -104,16 +104,16 @@ export class VvppManager {
   }
 
   async extractVvpp(
-    vvpppPath: string
+    vvppLikeFilePath: string
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     const streams: fs.ReadStream[] = [];
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
-    if (vvpppPath.match(/\.[0-9]+\.vvppp$/)) {
+    if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
-      const vvpppPathGlob = vvpppPath
+      const vvpppPathGlob = vvppLikeFilePath
         .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
         .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
       const filePaths: string[] = [];
@@ -137,7 +137,7 @@ export class VvppManager {
       }
     } else {
       log.log("Not a split file");
-      streams.push(fs.createReadStream(vvpppPath));
+      streams.push(fs.createReadStream(vvppLikeFilePath));
     }
 
     log.log("Extracting vvpp to", outputDir);
