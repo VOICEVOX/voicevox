@@ -1,4 +1,4 @@
-import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
 
@@ -173,6 +173,7 @@ export interface Sandbox {
   changePinWindow(): void;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
+  setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSetting<Key extends keyof ElectronStoreType>(
@@ -366,6 +367,8 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
+
+export type NativeThemeType = typeof nativeTheme["themeSource"];
 
 export type MoraDataType =
   | "consonant"
