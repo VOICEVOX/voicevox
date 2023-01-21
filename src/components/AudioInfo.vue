@@ -679,36 +679,70 @@ export default defineComponent({
           "baseEngineId == undefined || baseStyleId == undefined"
         );
       }
-      return [
-        /**
-         * isInvalidMorphingInfoのとき、mophingTargetCharactersにmorphingTargetVoiceの
-         * 値が存在しないことによってcharacter-button内で画像が描画出来ない問題を防ぐ
-         */
-        ...(isInvalidMorphingInfo.value && morphingTargetCharacterInfo.value
-          ? [morphingTargetCharacterInfo.value]
-          : []),
-        ...store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.map((character) => {
-          const targetStyles = character.metas.styles.filter((style) =>
-            store.getters.IS_A_VALID_MOPHING_PAIR(
-              {
-                engineId: baseEngineId,
-                styleId: baseStyleId,
-              },
-              {
-                engineId: style.engineId,
-                styleId: style.styleId,
-              }
-            )
+
+      const morphingTargetCharacterOptions = [];
+
+      // モーフィング対象に選択されたキャラクターは一番上に表示する．
+      // キャラクター画像を表示する為、スタイルが選択不可能な場合でも現在選択されている値は残す
+      if (morphingTargetCharacterInfo.value) {
+        const selectableMorphingTargetStyles =
+          morphingTargetCharacterInfo.value.metas.styles.filter(
+            (style) =>
+              style.styleId == morphingTargetVoice.value?.styleId ||
+              store.getters.IS_A_VALID_MOPHING_PAIR(
+                {
+                  engineId: baseEngineId,
+                  styleId: baseStyleId,
+                },
+                {
+                  engineId: baseEngineId,
+                  styleId: style.styleId,
+                }
+              )
           );
-          return {
-            ...character,
-            metas: {
-              ...character.metas,
-              styles: targetStyles,
-            },
-          };
-        }).filter((characters) => characters.metas.styles.length >= 1),
-      ];
+        morphingTargetCharacterOptions.push({
+          ...morphingTargetCharacterInfo.value,
+          metas: {
+            ...morphingTargetCharacterInfo.value.metas,
+            styles: selectableMorphingTargetStyles,
+          },
+        });
+      }
+
+      // モーフィング対象のスタイルだけをフィルタリングする
+      morphingTargetCharacterOptions.splice(
+        1,
+        0,
+        ...store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.filter(
+          (character) =>
+            character.metas.speakerUuid !==
+            audioItem.value.morphingInfo?.targetSpeakerId
+        )
+          .map((character) => {
+            const targetStyles = character.metas.styles.filter((style) =>
+              store.getters.IS_A_VALID_MOPHING_PAIR(
+                {
+                  engineId: baseEngineId,
+                  styleId: baseStyleId,
+                },
+                {
+                  engineId: style.engineId,
+                  styleId: style.styleId,
+                }
+              )
+            );
+            return {
+              ...character,
+              metas: {
+                ...character.metas,
+                styles: targetStyles,
+              },
+            };
+          })
+          .filter((characters) => characters.metas.styles.length >= 1)
+      );
+
+      return morphingTargetCharacterOptions;
     });
 
     const morphingTargetVoice = computed({
