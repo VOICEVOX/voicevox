@@ -23,10 +23,18 @@ const globAsync = (pattern: string, options?: glob.IOptions) => {
   });
 };
 
+export const isVvppFile = (filePath: string) => {
+  return (
+    path.extname(filePath) === ".vvpp" || path.extname(filePath) === ".vvppp"
+  );
+};
+
 // # 軽い概要
 //
 // フォルダ名："エンジン名+UUID"
 // エンジン名にフォルダ名に使用できない文字が含まれている場合は"_"に置換する。連続する"_"は1つにする。
+// 拡張子は".vvpp"または".vvppp"。".vvppp"は分割されているファイルであることを示す。
+// engine.0.vvppp、engine.1.vvppp、engine.2.vvppp、...というように分割されている。
 // UUIDはengine_manifest.jsonのuuidを使用する
 //
 // 追加：
@@ -96,29 +104,29 @@ export class VvppManager {
   }
 
   async extractVvpp(
-    vvppPath: string
+    vvpppPath: string
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     const streams: fs.ReadStream[] = [];
-    // 名前.数値.vvppの場合は分割されているとみなして連結する
-    if (vvppPath.match(/\.[0-9]+\.vvpp$/)) {
+    // 名前.数値.vvpppの場合は分割されているとみなして連結する
+    if (vvpppPath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
-      const vvppPathGlob = vvppPath
-        .replace(/\.[0-9]+\.vvpp$/, ".*.vvpp")
+      const vvpppPathGlob = vvpppPath
+        .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
         .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
       const filePaths: string[] = [];
-      for (const p of await globAsync(vvppPathGlob)) {
-        if (!p.match(/\.[0-9]+\.vvpp$/)) {
+      for (const p of await globAsync(vvpppPathGlob)) {
+        if (!p.match(/\.[0-9]+\.vvppp$/)) {
           continue;
         }
         log.log(`found ${p}`);
         filePaths.push(p);
       }
       filePaths.sort((a, b) => {
-        const aMatch = a.match(/\.([0-9]+)\.vvpp$/);
-        const bMatch = b.match(/\.([0-9]+)\.vvpp$/);
+        const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
+        const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
         if (aMatch === null || bMatch === null) {
           throw new Error(`match is null: a=${a}, b=${b}`);
         }
@@ -129,7 +137,7 @@ export class VvppManager {
       }
     } else {
       log.log("Not a split file");
-      streams.push(fs.createReadStream(vvppPath));
+      streams.push(fs.createReadStream(vvpppPath));
     }
 
     log.log("Extracting vvpp to", outputDir);
