@@ -38,6 +38,10 @@ module.exports = {
             name: "VOICEVOX Plugin package",
             description: "VOICEVOX Plugin package",
             role: "Editor",
+            icon:
+              process.platform === "darwin"
+                ? "vvpp-icon.icns"
+                : "vvpp-icon.png",
           },
         ],
         extraFiles: [
