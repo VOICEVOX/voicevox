@@ -8,6 +8,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   WriteFileErrorResult,
+  NativeThemeType
 } from "@/type/preload";
 
 /**
@@ -257,7 +258,7 @@ export type IpcIHData = {
   };
 
   SET_NATIVE_THEME: {
-    args: [source: "system" | "light" | "dark"];
+    args: [source: NativeThemeType];
     return: void;
   };
 
