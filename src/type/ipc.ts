@@ -8,6 +8,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   WriteFileErrorResult,
+  NativeThemeType,
 } from "@/type/preload";
 
 /**
@@ -254,6 +255,11 @@ export type IpcIHData = {
       newValue: ElectronStoreType[keyof ElectronStoreType]
     ];
     return: ElectronStoreType[keyof ElectronStoreType];
+  };
+
+  SET_NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
   };
 
   INSTALL_VVPP_ENGINE: {

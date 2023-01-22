@@ -217,6 +217,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         theme.isDark ? "true" : "false"
       );
 
+      window.electron.setNativeTheme(theme.isDark ? "dark" : "light");
+
       commit("SET_THEME_SETTING", {
         currentTheme: currentTheme,
       });
