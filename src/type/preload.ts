@@ -174,6 +174,8 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   setNativeTheme(source: NativeThemeType): void;
+  // FIXME: anyを消す
+  nativeThemeUpdated(callback: any): Electron.IpcRenderer;
   theme(newData: IpcThemeType): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSetting<Key extends keyof ElectronStoreType>(
@@ -407,6 +409,7 @@ export type ThemeConf = {
 
 export type ThemeSetting = {
   useSystemTheme: boolean;
+  renderTheme: string;
   currentTheme: string;
   availableThemes: ThemeConf[];
 };

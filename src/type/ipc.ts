@@ -235,6 +235,11 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
+  NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
+  };
+
   THEME: {
     args: [obj: IpcThemeType];
     return: ThemeSetting | void;
@@ -256,11 +261,6 @@ export type IpcIHData = {
       newValue: ElectronStoreType[keyof ElectronStoreType]
     ];
     return: ElectronStoreType[keyof ElectronStoreType];
-  };
-
-  SET_NATIVE_THEME: {
-    args: [source: NativeThemeType];
-    return: void;
   };
 
   INSTALL_VVPP_ENGINE: {

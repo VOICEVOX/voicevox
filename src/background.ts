@@ -666,6 +666,7 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return store.get("hotkeySettings");
 });
 
+// テーマ関係
 ipcMainHandle("THEME", (_, newData) => {
   let earlyReturn = false;
   if (newData.useSystemTheme !== undefined) {
@@ -692,6 +693,15 @@ ipcMainHandle("THEME", (_, newData) => {
     currentTheme: store.get("currentTheme"),
     availableThemes: themes,
   };
+});
+
+ipcMainHandle("NATIVE_THEME", (_, source) => {
+  nativeTheme.themeSource = source;
+});
+
+nativeTheme.on("updated", () => {
+  win.webContents.send("NATIVE_THEME_UPDATED");
+  console.log("Color Theme Updated");
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
@@ -724,10 +734,6 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   store.set(key, newValue);
   return store.get(key);
-});
-
-ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
-  nativeTheme.themeSource = source;
 });
 
 ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {

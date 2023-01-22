@@ -37,6 +37,7 @@ export const settingStoreState: SettingStoreState = {
   engineManifests: {},
   themeSetting: {
     useSystemTheme: true,
+    renderTheme: "Default",
     currentTheme: "Default",
     availableThemes: [],
   },
@@ -182,6 +183,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  // 設定ファイルとの同期
   SET_THEME_SETTING: {
     mutation(state, { useSystemTheme, currentTheme, themes }) {
       if (useSystemTheme !== undefined) {
@@ -194,42 +196,57 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         state.themeSetting.availableThemes = themes;
       }
     },
-    action({ state, commit }, { useSystemTheme, currentTheme }) {
+    action({ dispatch, commit }, { useSystemTheme, currentTheme }) {
       // storeに保存
       window.electron.theme({ useSystemTheme, currentTheme });
 
       if (currentTheme !== undefined) {
-        const theme = state.themeSetting.availableThemes.find(
-          (value) => value.name == currentTheme
-        );
-
-        if (theme == undefined) {
-          throw Error("Theme not found");
-        }
-
-        for (const key in theme.colors) {
-          const color = theme.colors[key as ThemeColorType];
-          const { r, g, b } = colors.hexToRgb(color);
-          document.documentElement.style.setProperty(`--color-${key}`, color);
-          document.documentElement.style.setProperty(
-            `--color-${key}-rgb`,
-            `${r}, ${g}, ${b}`
-          );
-        }
-        Dark.set(theme.isDark);
-        setCssVar("primary", theme.colors["primary"]);
-        setCssVar("warning", theme.colors["warning"]);
-
-        document.documentElement.setAttribute(
-          "is-dark-theme",
-          theme.isDark ? "true" : "false"
-        );
-
-        window.electron.setNativeTheme(theme.isDark ? "dark" : "light");
+        dispatch("SET_RENDER_THEME", { newData: currentTheme });
       }
 
-      console.log(`DISPATCH!!! ${useSystemTheme} ${currentTheme}`);
       commit("SET_THEME_SETTING", { useSystemTheme, currentTheme });
+    },
+  },
+
+  // ウィンドウにレンダリングする
+  SET_RENDER_THEME: {
+    mutation(state, { newData }) {
+      state.themeSetting.renderTheme = newData;
+    },
+    action({ state, commit }, { newData }) {
+      const theme = state.themeSetting.availableThemes.find(
+        (value) => value.name == newData
+      );
+
+      if (theme == undefined) {
+        throw Error("Theme not found");
+      }
+
+      for (const key in theme.colors) {
+        const color = theme.colors[key as ThemeColorType];
+        const { r, g, b } = colors.hexToRgb(color);
+        document.documentElement.style.setProperty(`--color-${key}`, color);
+        document.documentElement.style.setProperty(
+          `--color-${key}-rgb`,
+          `${r}, ${g}, ${b}`
+        );
+      }
+      Dark.set(theme.isDark);
+      setCssVar("primary", theme.colors["primary"]);
+      setCssVar("warning", theme.colors["warning"]);
+
+      document.documentElement.setAttribute(
+        "is-dark-theme",
+        theme.isDark ? "true" : "false"
+      );
+
+      const nativeTheme = state.themeSetting.useSystemTheme
+        ? "system"
+        : theme.isDark
+        ? "dark"
+        : "light";
+      window.electron.setNativeTheme(nativeTheme);
+      commit("SET_RENDER_THEME", { newData });
     },
   },
 

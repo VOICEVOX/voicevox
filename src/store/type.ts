@@ -972,6 +972,11 @@ export type SettingStoreTypes = {
     action(payload: { useSystemTheme?: boolean; currentTheme?: string }): void;
   };
 
+  SET_RENDER_THEME: {
+    mutation: { newData: string };
+    action(payload: { newData: string }): void;
+  };
+
   SET_EDITOR_FONT: {
     mutation: { editorFont: EditorFontType };
     action(payload: { editorFont: EditorFontType }): void;
