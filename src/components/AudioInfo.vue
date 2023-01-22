@@ -646,7 +646,7 @@ const isSupportedMorphing = computed(
 
 const isInvalidMorphingInfo = computed(() => {
   if (audioItem.value.morphingInfo == undefined) return false;
-  return !store.getters.VALID_MOPHING_INFO(audioItem.value);
+  return !store.getters.VALID_MOPHING_INFO(audioItem.value, true);
 });
 
 const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;

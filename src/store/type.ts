@@ -307,7 +307,7 @@ export type AudioStoreTypes = {
   };
 
   VALID_MOPHING_INFO: {
-    getter(audioItem: AudioItem): boolean;
+    getter(audioItem: AudioItem, strictCache?: boolean): boolean;
   };
 
   SET_AUDIO_QUERY: {

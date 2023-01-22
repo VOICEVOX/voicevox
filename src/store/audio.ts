@@ -794,21 +794,27 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   VALID_MOPHING_INFO: {
-    getter: (_, getters) => (audioItem: AudioItem) => {
-      const baseVoice = audioItem.engineId !== undefined &&
-        audioItem.styleId !== undefined && {
-          engineId: audioItem.engineId,
-          styleId: audioItem.styleId,
+    getter:
+      (_, getters) =>
+      (audioItem: AudioItem, strictCache = false) => {
+        const baseVoice = audioItem.engineId !== undefined &&
+          audioItem.styleId !== undefined && {
+            engineId: audioItem.engineId,
+            styleId: audioItem.styleId,
+          };
+        const targetVoice = audioItem.morphingInfo && {
+          engineId: audioItem.morphingInfo.targetEngineId,
+          styleId: audioItem.morphingInfo.targetStyleId,
         };
-      const targetVoice = audioItem.morphingInfo && {
-        engineId: audioItem.morphingInfo.targetEngineId,
-        styleId: audioItem.morphingInfo.targetStyleId,
-      };
-      if (!baseVoice || !targetVoice) {
-        return false;
-      }
-      return getters.IS_A_VALID_MOPHING_PAIR(baseVoice, targetVoice);
-    },
+        if (!baseVoice || !targetVoice) {
+          return false;
+        }
+        return getters.IS_A_VALID_MOPHING_PAIR(
+          baseVoice,
+          targetVoice,
+          strictCache
+        );
+      },
   },
 
   SET_AUDIO_QUERY: {
