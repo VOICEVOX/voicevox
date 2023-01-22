@@ -40,7 +40,7 @@ import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
 
 import EngineManager from "./background/engineManager";
-import VvppManager from "./background/vvppManager";
+import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
 
 type SingleInstanceLockData = {
@@ -506,7 +506,9 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     defaultPath,
-    filters: [{ name: "VOICEVOX Plugin Package", extensions: ["vvpp"] }],
+    filters: [
+      { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
+    ],
     properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
   });
   return result.filePaths[0];
@@ -924,7 +926,7 @@ app.on("ready", async () => {
     return;
   }
 
-  if (filePath?.endsWith(".vvpp")) {
+  if (filePath && isVvppFile(filePath)) {
     await installVvppEngine(filePath);
   }
 
@@ -936,7 +938,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   if (!data.filePath) {
     log.info("No file path sent");
-  } else if (data.filePath.endsWith(".vvpp")) {
+  } else if (isVvppFile(data.filePath)) {
     log.info("Second instance launched with vvpp file");
     await installVvppEngine(data.filePath);
     dialog
