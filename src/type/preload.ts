@@ -309,11 +309,13 @@ export type PresetConfig = {
   keys: string[];
 };
 
-export type MorphablePairInfo = {
+export type MorphableTargetsInfo = {
   [baseStyleId: number]:
     | undefined
     | {
-        [targetStyleId: number]: undefined | boolean;
+        [targetStyleId: number]: {
+          isMorphable: boolean;
+        };
       };
 };
 

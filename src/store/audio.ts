@@ -35,6 +35,8 @@ import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
+const MORPHABLE_CHACHE_LIMIT = 16;
+
 async function generateUniqueIdAndQuery(
   state: State,
   audioItem: AudioItem
@@ -196,7 +198,8 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
-  morphablePairInfo: {},
+  morphableTargetsInfo: {},
+  morphableTargetsCacheKey: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -322,56 +325,38 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  LOAD_MORPHABLE_PAIR: {
-    async action({ state, commit, dispatch }, { engineId }) {
-      if (
-        !state.engineManifests[engineId].supportedFeatures?.synthesisMorphing
-      ) {
-        commit("SET_MORPHABLE_PAIR", { engineId, morphablePairInfo: {} });
-        return;
-      }
-      const characterInfos = state.characterInfos[engineId];
-      const styles = characterInfos.flatMap(
-        (characterInfo) => characterInfo.metas.styles
-      );
-      const styleIds = styles.map((style) => style.styleId);
-      const morphablePairInfo = Object.fromEntries(
-        await Promise.all(
-          styleIds.map(async (baseStyleId) => [
-            baseStyleId,
-            Object.fromEntries(
-              await Promise.all(
-                styleIds.map(async (targetStyleId) => [
-                  targetStyleId,
-                  await (
-                    await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
-                  )
-                    /** booleanを返すAPIは何故か"true" | "false"となってしまう */
-                    .invoke("isMorphableIsMorphableGet")({
-                      baseSpeaker: baseStyleId,
-                      targetSpeaker: targetStyleId,
-                    })
-                    .then((res) => (res as unknown as string) === "true")
-                    .catch((error) => {
-                      window.electron.logError(
-                        error,
-                        `Failed to get isMorphableIsMorphableGet`
-                      );
-                      return false;
-                    }),
-                ])
-              )
-            ),
-          ])
-        )
-      );
-      commit("SET_MORPHABLE_PAIR", { engineId, morphablePairInfo });
+  INITIALIZE_MORPHING_INFO: {
+    mutation(state, { engineId }) {
+      state.morphableTargetsInfo[engineId] = {};
+      state.morphableTargetsCacheKey[engineId] = [];
+    },
+    action({ commit }, payload) {
+      commit("INITIALIZE_MORPHING_INFO", payload);
     },
   },
 
-  SET_MORPHABLE_PAIR: {
-    mutation(state, { engineId, morphablePairInfo }) {
-      state.morphablePairInfo[engineId] = morphablePairInfo;
+  SET_MORPHABLE_TARGETS: {
+    mutation(state, { engineId, baseStyleId, morphableTargets }) {
+      const prevIndex = state.morphableTargetsCacheKey[engineId].findIndex(
+        (styleId) => styleId === baseStyleId
+      );
+      if (prevIndex < 0) {
+        state.morphableTargetsCacheKey[engineId].splice(0, 0, baseStyleId);
+        // キャッシュ上限を超えた場合は削除する
+        if (
+          state.morphableTargetsCacheKey[engineId].length >
+          MORPHABLE_CHACHE_LIMIT
+        ) {
+          const postStyleId = state.morphableTargetsCacheKey[engineId].pop();
+          if (postStyleId) {
+            delete state.morphableTargetsInfo[engineId][postStyleId];
+          }
+        }
+      } else {
+        state.morphableTargetsCacheKey[engineId].splice(prevIndex, 1);
+        state.morphableTargetsCacheKey[engineId].splice(0, 0, baseStyleId);
+      }
+      state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
     },
   },
 
@@ -769,9 +754,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (!getters.MORPHING_SUPPORTED_ENGINES.includes(engineId)) {
         return false;
       }
-      return !!state.morphablePairInfo[engineId]?.[baseVoice.styleId]?.[
+      return !!state.morphableTargetsInfo[engineId][baseVoice.styleId]?.[
         targetVoice.styleId
-      ];
+      ]?.isMorphable;
     },
   },
 

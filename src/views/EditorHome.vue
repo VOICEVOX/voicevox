@@ -540,7 +540,7 @@ export default defineComponent({
 
           await store.dispatch("LOAD_CHARACTER", { engineId });
 
-          await store.dispatch("LOAD_MORPHABLE_PAIR", { engineId });
+          await store.dispatch("INITIALIZE_MORPHING_INFO", { engineId });
         })
       );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
