@@ -8,6 +8,7 @@ models/EngineManifest.ts
 models/HTTPValidationError.ts
 models/LicenseInfo.ts
 models/Mora.ts
+models/MorphableTargetInfo.ts
 models/ParseKanaBadRequest.ts
 models/Preset.ts
 models/Speaker.ts

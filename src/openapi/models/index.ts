@@ -7,6 +7,7 @@ export * from './EngineManifest';
 export * from './HTTPValidationError';
 export * from './LicenseInfo';
 export * from './Mora';
+export * from './MorphableTargetInfo';
 export * from './ParseKanaBadRequest';
 export * from './Preset';
 export * from './Speaker';
