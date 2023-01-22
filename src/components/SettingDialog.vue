@@ -452,6 +452,29 @@
               </q-card-actions>
 
               <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>システムテーマを使う</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テーマをシステムに合わせます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="useSystemThemeMode"
+                  @update:model-value="changeuseSystemTheme($event)"
+                >
+                </q-toggle>
+              </q-card-actions>
+
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>フォント</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -721,6 +744,9 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+    const useSystemThemeMode = computed(
+      () => store.state.themeSetting.useSystemTheme
+    );
     const activePointScrollMode = computed({
       get: () => store.state.activePointScrollMode,
       set: (activePointScrollMode: ActivePointScrollMode) => {
@@ -856,6 +882,12 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeuseSystemTheme = async (useSystemTheme: boolean) => {
+      if (store.state.themeSetting.useSystemTheme === useSystemTheme) return;
+      console.log(`CHANGEUSESYSTEMTHEME: ${useSystemTheme}`);
+      store.dispatch("SET_THEME_SETTING", { useSystemTheme });
+    };
+
     const changeExperimentalSetting = async (
       key: keyof ExperimentalSetting,
       data: boolean
@@ -950,12 +982,14 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
+      useSystemThemeMode,
       activePointScrollMode,
       activePointScrollModeOptions,
       experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
+      changeuseSystemTheme,
       changeExperimentalSetting,
       restartAllEngineProcess,
       savingSetting,
