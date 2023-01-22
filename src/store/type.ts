@@ -144,14 +144,6 @@ export type AudioStoreTypes = {
     mutation: { engineId: string; characterInfos: CharacterInfo[] };
   };
 
-  SET_MORPHABLE_TARGETS: {
-    mutation: {
-      engineId: string;
-      baseStyleId: number;
-      morphableTargets: Exclude<MorphableTargetsInfo[number], undefined>;
-    };
-  };
-
   CHARACTER_INFO: {
     getter(engineId: string, styleId: number): CharacterInfo | undefined;
   };
@@ -278,9 +270,21 @@ export type AudioStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
   };
 
-  INITIALIZE_MORPHING_INFO: {
+  INITIALIZE_MORPHABLE_TARGETS: {
     action(payload: { engineId: string }): void;
     mutation: { engineId: string };
+  };
+
+  LOAD_MORPHABLE_TARGETS: {
+    action(payload: { engineId: string; baseStyleId: number }): Promise<void>;
+  };
+
+  SET_MORPHABLE_TARGETS: {
+    mutation: {
+      engineId: string;
+      baseStyleId: number;
+      morphableTargets?: Exclude<MorphableTargetsInfo[number], undefined>;
+    };
   };
 
   SET_MORPHING_INFO: {
@@ -297,7 +301,8 @@ export type AudioStoreTypes = {
   IS_A_VALID_MOPHING_PAIR: {
     getter(
       baseVoice: { engineId: string; styleId: number },
-      targetVoice: { engineId: string; styleId: number }
+      targetVoice: { engineId: string; styleId: number },
+      strictCache?: boolean
     ): boolean;
   };
 

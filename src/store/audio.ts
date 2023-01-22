@@ -325,13 +325,35 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  INITIALIZE_MORPHING_INFO: {
+  INITIALIZE_MORPHABLE_TARGETS: {
     mutation(state, { engineId }) {
       state.morphableTargetsInfo[engineId] = {};
       state.morphableTargetsCacheKey[engineId] = [];
     },
     action({ commit }, payload) {
-      commit("INITIALIZE_MORPHING_INFO", payload);
+      commit("INITIALIZE_MORPHABLE_TARGETS", payload);
+    },
+  },
+
+  LOAD_MORPHABLE_TARGETS: {
+    async action({ state, dispatch, commit }, { engineId, baseStyleId }) {
+      if (!state.engineManifests[engineId].supportedFeatures?.synthesisMorphing)
+        return;
+
+      const cacheMorphableTargets =
+        state.morphableTargetsInfo[engineId][baseStyleId];
+      if (cacheMorphableTargets) return;
+      const morphableTargets = await (
+        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
+      ).invoke("morphableTargetsMorphableTargetsGet")({
+        baseSpeaker: baseStyleId,
+      });
+      commit("SET_MORPHABLE_TARGETS", {
+        engineId,
+        baseStyleId,
+        morphableTargets,
+      });
+      return;
     },
   },
 
@@ -340,7 +362,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const prevIndex = state.morphableTargetsCacheKey[engineId].findIndex(
         (styleId) => styleId === baseStyleId
       );
-      if (prevIndex < 0) {
+      if (prevIndex < 0 && morphableTargets) {
         state.morphableTargetsCacheKey[engineId].splice(0, 0, baseStyleId);
         // キャッシュ上限を超えた場合は削除する
         if (
@@ -348,15 +370,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           MORPHABLE_CHACHE_LIMIT
         ) {
           const postStyleId = state.morphableTargetsCacheKey[engineId].pop();
-          if (postStyleId) {
+          if (postStyleId !== undefined) {
             delete state.morphableTargetsInfo[engineId][postStyleId];
           }
         }
+        state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
       } else {
         state.morphableTargetsCacheKey[engineId].splice(prevIndex, 1);
         state.morphableTargetsCacheKey[engineId].splice(0, 0, baseStyleId);
+        if (morphableTargets)
+          state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
       }
-      state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
     },
   },
 
@@ -745,19 +769,28 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       ),
   },
 
+  /**
+   * 引数の2つのVoiceがモーフィング可能かどうか返す。
+   * strictCacheがtrueのときキャッシュが存在しない場合は不可とされる。
+   */
   IS_A_VALID_MOPHING_PAIR: {
-    getter: (state, getters) => (baseVoice, targetVoice) => {
-      if (baseVoice.engineId !== targetVoice.engineId) {
-        return false;
-      }
-      const engineId = baseVoice.engineId;
-      if (!getters.MORPHING_SUPPORTED_ENGINES.includes(engineId)) {
-        return false;
-      }
-      return !!state.morphableTargetsInfo[engineId][baseVoice.styleId]?.[
-        targetVoice.styleId
-      ]?.isMorphable;
-    },
+    getter:
+      (state, getters) =>
+      (baseVoice, targetVoice, strictCache = false) => {
+        if (baseVoice.engineId !== targetVoice.engineId) {
+          return false;
+        }
+        const engineId = baseVoice.engineId;
+        if (!getters.MORPHING_SUPPORTED_ENGINES.includes(engineId)) {
+          return false;
+        }
+        return (
+          !strictCache ||
+          !!state.morphableTargetsInfo[engineId][baseVoice.styleId]?.[
+            targetVoice.styleId
+          ]?.isMorphable
+        );
+      },
   },
 
   VALID_MOPHING_INFO: {

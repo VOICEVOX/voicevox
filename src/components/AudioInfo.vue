@@ -482,7 +482,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+import { computed, defineComponent, ref, watch } from "vue";
 import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
@@ -670,6 +670,35 @@ export default defineComponent({
 
     const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
+    const isMorphableTargetsCached = computed(() => {
+      const baseEngineId = audioItem.value.engineId;
+      const baseStyleId = audioItem.value.styleId;
+      if (baseEngineId === undefined || baseStyleId == undefined) {
+        throw new Error(
+          "baseEngineId == undefined || baseStyleId == undefined"
+        );
+      }
+      return store.state.morphableTargetsCacheKey[baseEngineId].includes(
+        baseStyleId
+      );
+    });
+
+    watch(
+      () =>
+        [audioItem.value.engineId, audioItem.value.styleId] as [string, number],
+      ([engineId, styleId]) => {
+        if (engineId !== undefined && styleId !== undefined) {
+          store.dispatch("LOAD_MORPHABLE_TARGETS", {
+            engineId,
+            baseStyleId: styleId,
+          });
+        }
+      },
+      {
+        immediate: true,
+      }
+    );
+
     const mophingTargetCharacters = computed(() => {
       // 選択可能なスタイルをフィルタリングする.
       const baseEngineId = audioItem.value.engineId;
@@ -728,7 +757,8 @@ export default defineComponent({
                 {
                   engineId: style.engineId,
                   styleId: style.styleId,
-                }
+                },
+                true
               )
             );
             return {
@@ -1203,6 +1233,7 @@ export default defineComponent({
       shouldShowMorphing,
       isSupportedMorphing,
       isInvalidMorphingInfo,
+      isMorphableTargetsCached,
       mophingTargetCharacters,
       morphingTargetVoice,
       morphingTargetCharacterInfo,
