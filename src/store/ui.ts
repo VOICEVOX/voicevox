@@ -369,4 +369,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       dispatch("SET_PROGRESS", { progress: -1 });
     },
   },
+
+  SET_CAN_USE_GPU: {
+    mutation(state, { canUseGPU }) {
+      state.canUseGPU = canUseGPU;
+    },
+    action({ commit }) {
+      // ここにGPUが使えるかどうかの処理を書く
+    },
+  },
 });

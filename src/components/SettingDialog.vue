@@ -715,12 +715,7 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const canUseGPU = computed({
-      get: () => !store.state.canUseGPU,
-      set: (useGPU: boolean) => {
-        useGPU;
-      },
-    });
+    const canUseGPU = store.state.canUseGPU;
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),

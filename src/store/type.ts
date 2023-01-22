@@ -1186,6 +1186,11 @@ export type UiStoreTypes = {
   RESET_PROGRESS: {
     action(): void;
   };
+
+  SET_CAN_USE_GPU: {
+    mutation: { canUseGPU: boolean };
+    action(): void;
+  };
 };
 
 /*
