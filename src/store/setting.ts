@@ -215,6 +215,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.themeSetting.renderTheme = newData;
     },
     action({ state, commit }, { newData }) {
+      console.log("Theme color set");
       const theme = state.themeSetting.availableThemes.find(
         (value) => value.name == newData
       );
@@ -247,7 +248,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       } else {
         nativeTheme = theme.isDark ? "dark" : "light";
       }
-      console.log(nativeTheme);
       window.electron.setNativeTheme(nativeTheme);
       commit("SET_RENDER_THEME", { newData });
     },

@@ -708,9 +708,9 @@ ipcMainHandle("GET_SHOULD_USE_DARK_COLORS", () => {
 });
 
 nativeTheme.on("updated", () => {
-  console.log("updated");
   if (lock.pop()) return;
   win.webContents.send("NATIVE_THEME_UPDATED");
+  console.log("Native Theme Updated");
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

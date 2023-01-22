@@ -884,7 +884,6 @@ export default defineComponent({
 
     const changeuseSystemTheme = async (useSystemTheme: boolean) => {
       if (store.state.themeSetting.useSystemTheme === useSystemTheme) return;
-      console.log(`CHANGEUSESYSTEMTHEME: ${useSystemTheme}`);
       store.dispatch("SET_THEME_SETTING", { useSystemTheme });
     };
 
