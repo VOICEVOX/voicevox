@@ -36,6 +36,7 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
+  canUseGPU: false,
   useGpu: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",

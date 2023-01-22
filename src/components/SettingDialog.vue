@@ -60,6 +60,7 @@
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
                   ]"
+                  :disable="canUseGPU"
                 >
                 </q-btn-toggle>
               </q-card-actions>
@@ -714,6 +715,13 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
+    const canUseGPU = computed({
+      get: () => !store.state.canUseGPU,
+      set: (useGPU: boolean) => {
+        useGPU;
+      },
+    });
+
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
       set: (mode: string) => {
@@ -948,6 +956,7 @@ export default defineComponent({
 
     return {
       settingDialogOpenedComputed,
+      canUseGPU,
       engineMode,
       inheritAudioInfoMode,
       activePointScrollMode,
