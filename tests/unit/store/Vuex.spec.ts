@@ -23,7 +23,8 @@ describe("store/vuex.js test", () => {
           "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
         },
         characterInfos: {},
-        morphablePairInfo: {},
+        morphableTargetsCacheKey: {},
+        morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -178,7 +179,8 @@ describe("store/vuex.js test", () => {
       assert.equal(store.state.engineStates[engineId], "STARTING")
     );
     assert.isObject(store.state.characterInfos);
-    assert.isObject(store.state.morphablePairInfo);
+    assert.isObject(store.state.morphableTargetsInfo);
+    assert.isObject(store.state.morphableTargetsCacheKey);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
