@@ -151,7 +151,7 @@
     :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
-  <default-style-select-dialog
+  <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
@@ -185,7 +185,7 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
@@ -218,7 +218,7 @@ export default defineComponent({
     HotkeySettingDialog,
     HeaderBarCustomDialog,
     CharacterPortrait,
-    DefaultStyleSelectDialog,
+    DefaultStyleListDialog,
     CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
@@ -532,26 +532,13 @@ export default defineComponent({
       } else {
         engineIds = store.state.engineIds;
       }
-      await Promise.all(
-        engineIds.map(async (engineId) => {
-          await store.dispatch("START_WAITING_ENGINE", { engineId });
-
-          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
-
-          await store.dispatch("LOAD_CHARACTER", { engineId });
-
-          await store.dispatch("INITIALIZE_MORPHABLE_TARGETS", { engineId });
-        })
-      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+      await store.dispatch("POST_ENGINE_START", {
+        engineIds,
+      });
 
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
-
-      // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
-      const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
-      isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
 
       // 最初のAudioCellを作成
       const audioItem: AudioItem = await store.dispatch(
