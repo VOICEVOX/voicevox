@@ -197,15 +197,29 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         state.themeSetting.availableThemes = themes;
       }
     },
-    async action({ dispatch, commit }, { useSystemTheme, currentTheme }) {
+    async action(
+      { state, dispatch, commit },
+      { useSystemTheme, currentTheme }
+    ) {
       // storeに保存
       window.electron.theme({ useSystemTheme, currentTheme });
 
       commit("SET_THEME_SETTING", { useSystemTheme, currentTheme });
 
-      if (currentTheme !== undefined) {
-        dispatch("SET_RENDER_THEME", { newData: currentTheme });
+      if (useSystemTheme !== undefined) {
+        if (useSystemTheme) {
+          window.electron.setNativeTheme("system");
+          const isDark = await window.electron.getShouldUseDarkColors();
+          const newData = isDark ? "Dark" : "Default";
+          dispatch("SET_RENDER_THEME", { newData });
+        } else {
+          const newData = state.themeSetting.currentTheme;
+          dispatch("SET_RENDER_THEME", { newData });
+        }
       }
+
+      if (currentTheme !== undefined && !state.themeSetting.useSystemTheme)
+        dispatch("SET_RENDER_THEME", { newData: currentTheme });
     },
   },
 
@@ -215,7 +229,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.themeSetting.renderTheme = newData;
     },
     action({ state, commit }, { newData }) {
-      console.log("Theme color set");
       const theme = state.themeSetting.availableThemes.find(
         (value) => value.name == newData
       );
