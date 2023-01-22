@@ -221,7 +221,11 @@ const api: Sandbox = {
   },
 
   setNativeTheme: (source) => {
-    ipcRenderer.invoke("NATIVE_THEME", source);
+    return ipcRenderer.invoke("SET_NATIVE_THEME", source);
+  },
+
+  getShouldUseDarkColors: () => {
+    return ipcRenderer.invoke("GET_SHOULD_USE_DARK_COLORS");
   },
 
   nativeThemeUpdated: (callback) =>

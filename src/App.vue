@@ -49,6 +49,14 @@ export default defineComponent({
       },
       { immediate: true }
     );
+
+    // システムテーマに追従
+    window.electron.nativeThemeUpdated(async () => {
+      if (!store.state.themeSetting.useSystemTheme) return;
+      const isDark = await window.electron.getShouldUseDarkColors();
+      const newData = isDark ? "Dark" : "Default";
+      store.dispatch("SET_RENDER_THEME", { newData });
+    });
   },
 });
 </script>

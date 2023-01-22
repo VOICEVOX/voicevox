@@ -695,13 +695,20 @@ ipcMainHandle("THEME", (_, newData) => {
   };
 });
 
-ipcMainHandle("NATIVE_THEME", (_, source) => {
+const lock: boolean[] = [];
+ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
   nativeTheme.themeSource = source;
+  lock.push(true);
+});
+
+ipcMainHandle("GET_SHOULD_USE_DARK_COLORS", () => {
+  return nativeTheme.shouldUseDarkColors;
 });
 
 nativeTheme.on("updated", () => {
+  console.log("updated");
+  if (lock.pop()) return;
   win.webContents.send("NATIVE_THEME_UPDATED");
-  console.log("Color Theme Updated");
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

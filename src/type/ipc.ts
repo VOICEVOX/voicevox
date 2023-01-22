@@ -235,9 +235,14 @@ export type IpcIHData = {
     return: ToolbarSetting;
   };
 
-  NATIVE_THEME: {
+  SET_NATIVE_THEME: {
     args: [source: NativeThemeType];
     return: void;
+  };
+
+  GET_SHOULD_USE_DARK_COLORS: {
+    args: [];
+    return: boolean;
   };
 
   THEME: {

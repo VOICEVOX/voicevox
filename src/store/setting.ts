@@ -7,6 +7,7 @@ import {
   ThemeColorType,
   ThemeConf,
   ToolbarSetting,
+  NativeThemeType,
 } from "@/type/preload";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import Mousetrap from "mousetrap";
@@ -196,15 +197,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         state.themeSetting.availableThemes = themes;
       }
     },
-    action({ dispatch, commit }, { useSystemTheme, currentTheme }) {
+    async action({ dispatch, commit }, { useSystemTheme, currentTheme }) {
       // storeに保存
       window.electron.theme({ useSystemTheme, currentTheme });
+
+      commit("SET_THEME_SETTING", { useSystemTheme, currentTheme });
 
       if (currentTheme !== undefined) {
         dispatch("SET_RENDER_THEME", { newData: currentTheme });
       }
-
-      commit("SET_THEME_SETTING", { useSystemTheme, currentTheme });
     },
   },
 
@@ -240,11 +241,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         theme.isDark ? "true" : "false"
       );
 
-      const nativeTheme = state.themeSetting.useSystemTheme
-        ? "system"
-        : theme.isDark
-        ? "dark"
-        : "light";
+      let nativeTheme: NativeThemeType;
+      if (state.themeSetting.useSystemTheme) {
+        nativeTheme = "system";
+      } else {
+        nativeTheme = theme.isDark ? "dark" : "light";
+      }
+      console.log(nativeTheme);
       window.electron.setNativeTheme(nativeTheme);
       commit("SET_RENDER_THEME", { newData });
     },

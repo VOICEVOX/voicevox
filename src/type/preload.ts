@@ -174,6 +174,7 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   setNativeTheme(source: NativeThemeType): void;
+  getShouldUseDarkColors(): Promise<boolean>;
   // FIXME: anyを消す
   nativeThemeUpdated(callback: any): Electron.IpcRenderer;
   theme(newData: IpcThemeType): Promise<ThemeSetting | void>;
