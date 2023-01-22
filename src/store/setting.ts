@@ -36,6 +36,7 @@ export const settingStoreState: SettingStoreState = {
   engineInfos: {},
   engineManifests: {},
   themeSetting: {
+    useSystemTheme: true,
     currentTheme: "Default",
     availableThemes: [],
   },
@@ -68,13 +69,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      const theme = await window.electron.theme();
+      const theme = await window.electron.theme({});
       if (theme) {
         commit("SET_THEME_SETTING", {
+          useSystemTheme: theme.useSystemTheme,
           currentTheme: theme.currentTheme,
           themes: theme.availableThemes,
         });
         dispatch("SET_THEME_SETTING", {
+          useSystemTheme: theme.useSystemTheme,
           currentTheme: theme.currentTheme,
         });
       }
@@ -180,17 +183,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_THEME_SETTING: {
-    mutation(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] }
-    ) {
+    mutation(state, { useSystemTheme, currentTheme, themes }) {
+      if (useSystemTheme) {
+        state.themeSetting.useSystemTheme = useSystemTheme;
+      }
+      if (currentTheme) {
+        state.themeSetting.currentTheme = currentTheme;
+      }
       if (themes) {
         state.themeSetting.availableThemes = themes;
       }
-      state.themeSetting.currentTheme = currentTheme;
     },
-    action({ state, commit }, { currentTheme }: { currentTheme: string }) {
-      window.electron.theme(currentTheme);
+    action({ state, commit }, { useSystemTheme, currentTheme }) {
+      // storeに保存
+      window.electron.theme({ useSystemTheme, currentTheme });
+
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
@@ -219,9 +226,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.electron.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      commit("SET_THEME_SETTING", {
-        currentTheme: currentTheme,
-      });
+      commit("SET_THEME_SETTING", { useSystemTheme, currentTheme });
     },
   },
 

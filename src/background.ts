@@ -666,11 +666,19 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return store.get("hotkeySettings");
 });
 
-ipcMainHandle("THEME", (_, { newData }) => {
-  if (newData !== undefined) {
-    store.set("currentTheme", newData);
-    return;
+ipcMainHandle("THEME", (_, newData) => {
+  let earlyReturn = false;
+  if (newData.useSystemTheme !== undefined) {
+    store.set("useSystemTheme", newData.useSystemTheme);
+    earlyReturn = true;
   }
+  if (newData.currentTheme !== undefined) {
+    store.set("currentTheme", newData.currentTheme);
+    earlyReturn = true;
+  }
+  // 値がセットされた場合はvoidを返す
+  if (earlyReturn) return;
+
   const dir = path.join(__static, "themes");
   const themes: ThemeConf[] = [];
   const files = fs.readdirSync(dir);
@@ -678,7 +686,12 @@ ipcMainHandle("THEME", (_, { newData }) => {
     const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
     themes.push(theme);
   });
-  return { currentTheme: store.get("currentTheme"), availableThemes: themes };
+
+  return {
+    useSystemTheme: store.get("useSystemTheme"),
+    currentTheme: store.get("currentTheme"),
+    availableThemes: themes,
+  };
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {

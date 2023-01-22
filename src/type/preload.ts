@@ -174,7 +174,7 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
   setNativeTheme(source: NativeThemeType): void;
-  theme(newData?: string): Promise<ThemeSetting | void>;
+  theme(newData: IpcThemeType): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSetting<Key extends keyof ElectronStoreType>(
     key: Key
@@ -368,6 +368,11 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
 
+// newDataの型 (設定したい値だけ入れる)
+export type IpcThemeType = {
+  useSystemTheme?: boolean;
+  currentTheme?: string;
+};
 export type NativeThemeType = typeof nativeTheme["themeSource"];
 
 export type MoraDataType =
@@ -401,6 +406,7 @@ export type ThemeConf = {
 };
 
 export type ThemeSetting = {
+  useSystemTheme: boolean;
   currentTheme: string;
   availableThemes: ThemeConf[];
 };
@@ -486,6 +492,7 @@ export const electronStoreSchema = z
         keys: z.string().uuid().array().default([]),
       })
       .default({}),
+    useSystemTheme: z.boolean().default(true),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: z

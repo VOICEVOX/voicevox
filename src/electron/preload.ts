@@ -225,7 +225,7 @@ const api: Sandbox = {
   },
 
   theme: (newData) => {
-    return ipcRenderer.invoke("THEME", { newData });
+    return ipcRenderer.invoke("THEME", newData);
   },
 
   vuexReady: () => {

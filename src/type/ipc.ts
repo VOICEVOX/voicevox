@@ -9,6 +9,7 @@ import {
   UpdateInfo,
   WriteFileErrorResult,
   NativeThemeType,
+  IpcThemeType,
 } from "@/type/preload";
 
 /**
@@ -235,7 +236,7 @@ export type IpcIHData = {
   };
 
   THEME: {
-    args: [obj: { newData?: string }];
+    args: [obj: IpcThemeType];
     return: ThemeSetting | void;
   };
 

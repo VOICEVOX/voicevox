@@ -964,8 +964,12 @@ export type SettingStoreTypes = {
   };
 
   SET_THEME_SETTING: {
-    mutation: { currentTheme: string; themes?: ThemeConf[] };
-    action(payload: { currentTheme: string }): void;
+    mutation: {
+      useSystemTheme?: boolean;
+      currentTheme?: string;
+      themes?: ThemeConf[];
+    };
+    action(payload: { useSystemTheme?: boolean; currentTheme?: string }): void;
   };
 
   SET_EDITOR_FONT: {
