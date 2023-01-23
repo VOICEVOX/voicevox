@@ -646,7 +646,17 @@ const isSupportedMorphing = computed(
 
 const isInvalidMorphingInfo = computed(() => {
   if (audioItem.value.morphingInfo == undefined) return false;
-  return !store.getters.VALID_MOPHING_INFO(audioItem.value, true);
+  const baseVoice = audioItem.value.engineId !== undefined &&
+    audioItem.value.styleId !== undefined && {
+      engineId: audioItem.value.engineId,
+      styleId: audioItem.value.styleId,
+    };
+  const targetVoice = {
+    engineId: audioItem.value.morphingInfo.targetEngineId,
+    styleId: audioItem.value.morphingInfo.targetStyleId,
+  };
+  if (!baseVoice) return true;
+  return !store.getters.IS_A_VALID_MOPHING_PAIR(baseVoice, targetVoice);
 });
 
 const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;

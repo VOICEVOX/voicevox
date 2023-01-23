@@ -338,11 +338,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   LOAD_MORPHABLE_TARGETS: {
     async action({ state, dispatch, commit }, { engineId, baseStyleId }) {
       if (!state.engineManifests[engineId].supportedFeatures?.synthesisMorphing)
-        return;
+        return undefined;
 
       const cacheMorphableTargets =
         state.morphableTargetsInfo[engineId][baseStyleId];
-      if (cacheMorphableTargets) return;
+      if (cacheMorphableTargets) return cacheMorphableTargets;
+
       const rawMorphableTargets = (
         await (
           await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
@@ -376,7 +377,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         baseStyleId,
         morphableTargets,
       });
-      return;
+      return morphableTargets;
     },
   },
 
@@ -807,37 +808,36 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (!getters.MORPHING_SUPPORTED_ENGINES.includes(engineId)) {
           return false;
         }
+        const morphableTargets =
+          state.morphableTargetsInfo[engineId][baseVoice.styleId];
+        return morphableTargets === undefined
+          ? !strictCache
+          : morphableTargets[targetVoice.styleId]?.isMorphable;
+      },
+    async action({ state, getters, dispatch }, { baseVoice, targetVoice }) {
+      if (!getters.IS_A_VALID_MOPHING_PAIR(baseVoice, targetVoice, false)) {
+        // キャッシュなしでもリクエストとして不正と分かる場合
+        return false;
+      } else if (
+        state.morphableTargetsCacheKey[baseVoice.engineId].includes(
+          baseVoice.styleId
+        )
+      ) {
+        // キャッシュが存在する場合
+        return getters.IS_A_VALID_MOPHING_PAIR(baseVoice, targetVoice, true);
+      } else {
+        // キャッシュが存在しない場合、APIから情報を取得する
+        const engineId = baseVoice.engineId;
+        const morphableTargets = await dispatch("LOAD_MORPHABLE_TARGETS", {
+          engineId,
+          baseStyleId: baseVoice.styleId,
+        });
         return (
-          !strictCache ||
-          !!state.morphableTargetsInfo[engineId][baseVoice.styleId]?.[
-            targetVoice.styleId
-          ]?.isMorphable
+          morphableTargets !== undefined &&
+          morphableTargets[targetVoice.styleId].isMorphable
         );
-      },
-  },
-
-  VALID_MOPHING_INFO: {
-    getter:
-      (_, getters) =>
-      (audioItem: AudioItem, strictCache = false) => {
-        const baseVoice = audioItem.engineId !== undefined &&
-          audioItem.styleId !== undefined && {
-            engineId: audioItem.engineId,
-            styleId: audioItem.styleId,
-          };
-        const targetVoice = audioItem.morphingInfo && {
-          engineId: audioItem.morphingInfo.targetEngineId,
-          styleId: audioItem.morphingInfo.targetStyleId,
-        };
-        if (!baseVoice || !targetVoice) {
-          return false;
-        }
-        return getters.IS_A_VALID_MOPHING_PAIR(
-          baseVoice,
-          targetVoice,
-          strictCache
-        );
-      },
+      }
+    },
   },
 
   SET_AUDIO_QUERY: {
@@ -1237,7 +1237,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let blob: Blob;
           // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
           if (audioItem.morphingInfo != undefined) {
-            if (!getters.VALID_MOPHING_INFO(audioItem))
+            if (
+              !(await dispatch("IS_A_VALID_MOPHING_PAIR", {
+                baseVoice: {
+                  engineId,
+                  styleId: speaker,
+                },
+                targetVoice: {
+                  engineId: audioItem.morphingInfo.targetEngineId,
+                  styleId: audioItem.morphingInfo.targetStyleId,
+                },
+              }))
+            )
               throw new Error("VALID_MOPHING_ERROR"); //FIXME: エラーを変更した場合ハンドリング部分も修正する
             blob = await instance.invoke(
               "synthesisMorphingSynthesisMorphingPost"

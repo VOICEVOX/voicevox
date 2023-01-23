@@ -276,7 +276,10 @@ export type AudioStoreTypes = {
   };
 
   LOAD_MORPHABLE_TARGETS: {
-    action(payload: { engineId: string; baseStyleId: number }): Promise<void>;
+    action(payload: {
+      engineId: string;
+      baseStyleId: number;
+    }): Promise<MorphableTargetsInfo[number] | undefined>;
   };
 
   SET_MORPHABLE_TARGETS: {
@@ -304,10 +307,10 @@ export type AudioStoreTypes = {
       targetVoice: { engineId: string; styleId: number },
       strictCache?: boolean
     ): boolean;
-  };
-
-  VALID_MOPHING_INFO: {
-    getter(audioItem: AudioItem, strictCache?: boolean): boolean;
+    action(payload: {
+      baseVoice: { engineId: string; styleId: number };
+      targetVoice: { engineId: string; styleId: number };
+    }): Promise<boolean>;
   };
 
   SET_AUDIO_QUERY: {
