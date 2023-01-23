@@ -131,8 +131,8 @@ export interface MoraPitchMoraPitchPostRequest {
     coreVersion?: string;
 }
 
-export interface MorphableTargetsMorphableTargetsGetRequest {
-    baseSpeaker: number;
+export interface MorphableTargetsMorphableTargetsPostRequest {
+    requestBody: Array<number>;
     coreVersion?: string;
 }
 
@@ -494,19 +494,19 @@ export interface DefaultApiInterface {
     /**
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。
      * @summary base_speakersに指定した話者に対してエンジン内の話者がモーフィングが可能かどうか返す
-     * @param {number} baseSpeaker 
+     * @param {Array<number>} requestBody 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
      */
-    morphableTargetsMorphableTargetsGetRaw(requestParameters: MorphableTargetsMorphableTargetsGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: MorphableTargetInfo; }>>;
+    morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
 
     /**
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。
      * base_speakersに指定した話者に対してエンジン内の話者がモーフィングが可能かどうか返す
      */
-    morphableTargetsMorphableTargetsGet(requestParameters: MorphableTargetsMorphableTargetsGetRequest, initOverrides?: RequestInit): Promise<{ [key: string]: MorphableTargetInfo; }>;
+    morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
 
     /**
      * 
@@ -1401,16 +1401,12 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。
      * base_speakersに指定した話者に対してエンジン内の話者がモーフィングが可能かどうか返す
      */
-    async morphableTargetsMorphableTargetsGetRaw(requestParameters: MorphableTargetsMorphableTargetsGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<{ [key: string]: MorphableTargetInfo; }>> {
-        if (requestParameters.baseSpeaker === null || requestParameters.baseSpeaker === undefined) {
-            throw new runtime.RequiredError('baseSpeaker','Required parameter requestParameters.baseSpeaker was null or undefined when calling morphableTargetsMorphableTargetsGet.');
+    async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
+        if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
+            throw new runtime.RequiredError('requestBody','Required parameter requestParameters.requestBody was null or undefined when calling morphableTargetsMorphableTargetsPost.');
         }
 
         const queryParameters: any = {};
-
-        if (requestParameters.baseSpeaker !== undefined) {
-            queryParameters['base_speaker'] = requestParameters.baseSpeaker;
-        }
 
         if (requestParameters.coreVersion !== undefined) {
             queryParameters['core_version'] = requestParameters.coreVersion;
@@ -1418,22 +1414,25 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+        headerParameters['Content-Type'] = 'application/json';
+
         const response = await this.request({
             path: `/morphable_targets`,
-            method: 'GET',
+            method: 'POST',
             headers: headerParameters,
             query: queryParameters,
+            body: requestParameters.requestBody,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => runtime.mapValues(jsonValue, MorphableTargetInfoFromJSON));
+        return new runtime.JSONApiResponse<any>(response);
     }
 
     /**
      * 指定されたベース話者に対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。
      * base_speakersに指定した話者に対してエンジン内の話者がモーフィングが可能かどうか返す
      */
-    async morphableTargetsMorphableTargetsGet(requestParameters: MorphableTargetsMorphableTargetsGetRequest, initOverrides?: RequestInit): Promise<{ [key: string]: MorphableTargetInfo; }> {
-        const response = await this.morphableTargetsMorphableTargetsGetRaw(requestParameters, initOverrides);
+    async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
+        const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
