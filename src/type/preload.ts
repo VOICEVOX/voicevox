@@ -496,7 +496,7 @@ export const electronStoreSchema = z
         keys: z.string().uuid().array().default([]),
       })
       .default({}),
-    useSystemTheme: z.boolean().default(true),
+    useSystemTheme: z.boolean().default(false),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: z
