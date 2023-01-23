@@ -60,14 +60,14 @@
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
                   ]"
-                  :disable="!canUseGPU"
+                  :disable="!allEngineCanUseGPU"
                 >
                   <q-tooltip
                     anchor="center start"
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                    :target="!canUseGPU"
+                    :target="!allEngineCanUseGPU"
                   >
                     お使いのソフトウェアはCPU版のためGPUモードを利用できません。
                   </q-tooltip>
@@ -724,14 +724,14 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const canUseGPU = computed({
-      get: () => store.state.canUseGPU,
+    const allEngineCanUseGPU = computed({
+      get: () => store.state.allEngineCanUseGPU,
       set: () => {
-        store.dispatch("SET_CAN_USE_GPU");
+        undefined;
       },
     });
 
-    onMounted(() => store.dispatch("SET_CAN_USE_GPU"));
+    onMounted(() => store.dispatch("SET_ALL_ENGINE_CAN_USE_GPU"));
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
@@ -967,7 +967,7 @@ export default defineComponent({
 
     return {
       settingDialogOpenedComputed,
-      canUseGPU,
+      allEngineCanUseGPU,
       engineMode,
       inheritAudioInfoMode,
       activePointScrollMode,
