@@ -343,13 +343,34 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const cacheMorphableTargets =
         state.morphableTargetsInfo[engineId][baseStyleId];
       if (cacheMorphableTargets) return;
-      const morphableTargets = (
+      const rawMorphableTargets = (
         await (
           await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
         ).invoke("morphableTargetsMorphableTargetsPost")({
           requestBody: [baseStyleId],
         })
       )[0];
+
+      // FIXME: 何故かis_morphableがCamelCaseに変換されないので変換する必要がある
+      const morphableTargets = Object.fromEntries(
+        Object.entries(rawMorphableTargets).map(([key, value]) => {
+          const isMorphable = (value as unknown as { is_morphable: boolean })
+            .is_morphable;
+          if (isMorphable === undefined && typeof isMorphable !== "boolean") {
+            throw Error(
+              "The is_morphable property does not exist, it is either CamelCase or the engine type is wrong."
+            );
+          }
+          return [
+            key,
+            {
+              ...value,
+              isMorphable,
+            },
+          ];
+        })
+      );
+
       commit("SET_MORPHABLE_TARGETS", {
         engineId,
         baseStyleId,
