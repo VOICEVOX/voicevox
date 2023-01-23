@@ -6,7 +6,10 @@ import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
-  canUseGPU: false,
+  engineCanUseGPU: {},
+
+  // TODO:エンジン毎の設定が可能になれば消す
+  allEngineCanUseGPU: false,
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -362,42 +365,59 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  SET_CAN_USE_GPU: {
-    mutation(state, { canUseGPU }) {
-      state.canUseGPU = canUseGPU;
+  SET_ENGINE_CAN_USE_GPU: {
+    mutation(state, { engineId, engineCanUseGPU }) {
+      state.engineCanUseGPU = {
+        ...state.engineCanUseGPU,
+        [engineId]: engineCanUseGPU,
+      };
     },
-    async action({ commit, dispatch }) {
+
+    async action({ commit, dispatch }, { engineId }) {
+      const canUseCudaOrDML = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      })
+        .then(
+          async (instance) =>
+            await instance.invoke("supportedDevicesSupportedDevicesGet")({})
+        )
+        .catch((e) => e);
+
+      const { cuda, dml } = canUseCudaOrDML;
+
+      const canUseGPU = cuda || dml;
+
+      commit("SET_ENGINE_CAN_USE_GPU", {
+        engineId,
+        engineCanUseGPU: canUseGPU,
+      });
+    },
+  },
+
+  // TODO:エンジン毎の設定が可能になれば消す
+  SET_ALL_ENGINE_CAN_USE_GPU: {
+    mutation(state, { allEngineCanUseGPU }) {
+      state.allEngineCanUseGPU = allEngineCanUseGPU;
+    },
+    async action({ commit, dispatch, state }) {
       const engineInfos = await window.electron.engineInfos();
 
       const engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
 
-      const canUseCudaOrDMLPromises = engineIds.map(async (engineId) =>
-        dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
-          .then(
-            async (instance) =>
-              await instance.invoke("supportedDevicesSupportedDevicesGet")({})
-          )
-          .catch((e) => e)
+      await Promise.all(
+        engineIds.map((engineId) =>
+          dispatch("SET_ENGINE_CAN_USE_GPU", { engineId })
+        )
       );
 
-      const canUseCudaOrDMLArray = await Promise.all(canUseCudaOrDMLPromises);
-
-      const canUseGPU = canUseCudaOrDMLArray.reduce(
-        (prev, supportedDevices) => {
-          if (supportedDevices instanceof Error) {
-            return false;
-          }
-
-          const { cuda, dml } = supportedDevices;
-          const canEngineUseGPU = cuda || dml;
-
-          return prev && canEngineUseGPU;
-        },
+      const allEngineCanUseGPU = Object.values(state.engineCanUseGPU).reduce(
+        (prev, cur) => prev && cur,
         true
       );
 
-      // すべてのエンジンでcudaかdmlが利用可能ならtrue
-      commit("SET_CAN_USE_GPU", { canUseGPU: canUseGPU });
+      commit("SET_ALL_ENGINE_CAN_USE_GPU", {
+        allEngineCanUseGPU,
+      });
     },
   },
 });

@@ -22,6 +22,11 @@ describe("store/vuex.js test", () => {
         engineStates: {
           "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
         },
+        engineCanUseGPU: {},
+
+        // TODO:エンジン毎の設定が可能になれば消す
+        allEngineCanUseGPU: false,
+
         characterInfos: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
@@ -34,7 +39,6 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
-        canUseGPU: false,
         useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",

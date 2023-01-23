@@ -691,7 +691,10 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
-  canUseGPU: boolean;
+  engineCanUseGPU: Record<string, boolean>;
+
+  // TODO:エンジン毎の設定が可能になれば消す
+  allEngineCanUseGPU: boolean;
 };
 
 export type EngineStoreTypes = {
@@ -789,8 +792,14 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
-  SET_CAN_USE_GPU: {
-    mutation: { canUseGPU: boolean };
+  SET_ENGINE_CAN_USE_GPU: {
+    mutation: { engineId: string; engineCanUseGPU: boolean };
+    action(payload: { engineId: string }): void;
+  };
+
+  // TODO:エンジン毎の設定が可能になれば消す
+  SET_ALL_ENGINE_CAN_USE_GPU: {
+    mutation: { allEngineCanUseGPU: boolean };
     action(): void;
   };
 };
