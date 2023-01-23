@@ -356,7 +356,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         Object.entries(rawMorphableTargets).map(([key, value]) => {
           const isMorphable = (value as unknown as { is_morphable: boolean })
             .is_morphable;
-          if (isMorphable === undefined && typeof isMorphable !== "boolean") {
+          if (isMorphable === undefined || typeof isMorphable !== "boolean") {
             throw Error(
               "The is_morphable property does not exist, it is either CamelCase or the engine type is wrong."
             );
