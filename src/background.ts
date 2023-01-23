@@ -669,14 +669,14 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
 });
 
 // テーマ関係
-ipcMainHandle("THEME", (_, newData) => {
+ipcMainHandle("THEME", (_, obj) => {
   let earlyReturn = false;
-  if (newData.useSystemTheme !== undefined) {
-    store.set("useSystemTheme", newData.useSystemTheme);
+  if (obj.useSystemTheme !== undefined) {
+    store.set("useSystemTheme", obj.useSystemTheme);
     earlyReturn = true;
   }
-  if (newData.currentTheme !== undefined) {
-    store.set("currentTheme", newData.currentTheme);
+  if (obj.currentTheme !== undefined) {
+    store.set("currentTheme", obj.currentTheme);
     earlyReturn = true;
   }
   // 値がセットされた場合はvoidを返す
@@ -697,10 +697,10 @@ ipcMainHandle("THEME", (_, newData) => {
   };
 });
 
-const lock: boolean[] = [];
+const lockNativeThemeUpdated: boolean[] = [];
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
   nativeTheme.themeSource = source;
-  lock.push(true);
+  lockNativeThemeUpdated.push(true);
 });
 
 ipcMainHandle("GET_SHOULD_USE_DARK_COLORS", () => {
@@ -708,7 +708,7 @@ ipcMainHandle("GET_SHOULD_USE_DARK_COLORS", () => {
 });
 
 nativeTheme.on("updated", () => {
-  if (lock.pop()) return;
+  if (lockNativeThemeUpdated.pop()) return;
   win.webContents.send("NATIVE_THEME_UPDATED");
 });
 
