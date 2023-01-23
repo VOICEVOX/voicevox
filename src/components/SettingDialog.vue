@@ -724,12 +724,7 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const allEngineCanUseGPU = computed({
-      get: () => store.state.allEngineCanUseGPU,
-      set: () => {
-        undefined;
-      },
-    });
+    const allEngineCanUseGPU = computed(() => store.state.allEngineCanUseGPU);
 
     onMounted(() => store.dispatch("SET_ALL_ENGINE_CAN_USE_GPU"));
 
