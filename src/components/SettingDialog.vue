@@ -69,7 +69,7 @@
                     transition-hide="jump-right"
                     :target="!allEngineCanUseGPU"
                   >
-                    お使いのソフトウェアはCPU版のためGPUモードを利用できません。
+                    お使いのエンジンはCPU版のためGPUモードを利用できません。
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
