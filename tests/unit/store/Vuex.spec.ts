@@ -34,6 +34,7 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
+        canUseGPU: false,
         useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",
