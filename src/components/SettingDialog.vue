@@ -452,29 +452,6 @@
               </q-card-actions>
 
               <q-card-actions class="q-px-md q-py-sm bg-surface">
-                <div>システムテーマを使う</div>
-                <div>
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      テーマをシステムに合わせます
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-toggle
-                  :model-value="useSystemThemeMode"
-                  @update:model-value="changeuseSystemTheme($event)"
-                >
-                </q-toggle>
-              </q-card-actions>
-
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>フォント</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -744,9 +721,6 @@ export default defineComponent({
       },
     });
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
-    const useSystemThemeMode = computed(
-      () => store.state.themeSetting.useSystemTheme
-    );
     const activePointScrollMode = computed({
       get: () => store.state.activePointScrollMode,
       set: (activePointScrollMode: ActivePointScrollMode) => {
@@ -779,9 +753,23 @@ export default defineComponent({
     const experimentalSetting = computed(() => store.state.experimentalSetting);
 
     const currentThemeNameComputed = computed({
-      get: () => store.state.themeSetting.currentTheme,
+      get: () => {
+        if (store.state.themeSetting.useSystemTheme) {
+          return "system";
+        } else {
+          return store.state.themeSetting.currentTheme;
+        }
+      },
       set: (currentTheme: string) => {
-        store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+        console.log(currentTheme);
+        if (currentTheme === "system") {
+          store.dispatch("SET_THEME_SETTING", { useSystemTheme: true });
+        } else {
+          store.dispatch("SET_THEME_SETTING", {
+            currentTheme: currentTheme,
+            useSystemTheme: false,
+          });
+        }
       },
     });
 
@@ -792,11 +780,12 @@ export default defineComponent({
     );
 
     const availableThemeNameComputed = computed(() => {
-      return [...store.state.themeSetting.availableThemes]
+      const themes = [...store.state.themeSetting.availableThemes]
         .sort((a, b) => a.order - b.order)
         .map((theme) => {
           return { label: theme.displayName, value: theme.name };
         });
+      return [{ label: "システムに合わせる", value: "system" }].concat(themes);
     });
 
     const currentAudioOutputDeviceComputed = computed<{
@@ -880,11 +869,6 @@ export default defineComponent({
     const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
       if (store.state.inheritAudioInfo === inheritAudioInfo) return;
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
-    };
-
-    const changeuseSystemTheme = async (useSystemTheme: boolean) => {
-      if (store.state.themeSetting.useSystemTheme === useSystemTheme) return;
-      store.dispatch("SET_THEME_SETTING", { useSystemTheme });
     };
 
     const changeExperimentalSetting = async (
@@ -981,14 +965,12 @@ export default defineComponent({
       settingDialogOpenedComputed,
       engineMode,
       inheritAudioInfoMode,
-      useSystemThemeMode,
       activePointScrollMode,
       activePointScrollModeOptions,
       experimentalSetting,
       currentAudioOutputDeviceComputed,
       availableAudioOutputDevices,
       changeinheritAudioInfo,
-      changeuseSystemTheme,
       changeExperimentalSetting,
       restartAllEngineProcess,
       savingSetting,
