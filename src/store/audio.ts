@@ -35,7 +35,7 @@ import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
-const MORPHABLE_CHACHE_LIMIT = 16;
+const MORPHABLE_CACHE_LIMIT = 16;
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -369,7 +369,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         // キャッシュ上限を超えた場合は削除する
         if (
           state.morphableTargetsCacheKey[engineId].length >
-          MORPHABLE_CHACHE_LIMIT
+          MORPHABLE_CACHE_LIMIT
         ) {
           const postStyleId = state.morphableTargetsCacheKey[engineId].pop();
           if (postStyleId !== undefined) {
