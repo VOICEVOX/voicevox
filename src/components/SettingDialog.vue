@@ -773,12 +773,6 @@ export default defineComponent({
       },
     });
 
-    const currentThemeComputed = computed(() =>
-      store.state.themeSetting.availableThemes.find((value) => {
-        return value.name == currentThemeNameComputed.value;
-      })
-    );
-
     const availableThemeNameComputed = computed(() => {
       const themes = [...store.state.themeSetting.availableThemes]
         .sort((a, b) => a.order - b.order)
@@ -979,7 +973,6 @@ export default defineComponent({
       handleSavingSettingChange,
       openFileExplore,
       currentThemeNameComputed,
-      currentThemeComputed,
       availableThemeNameComputed,
       acceptRetrieveTelemetryComputed,
       splitTextWhenPaste,
