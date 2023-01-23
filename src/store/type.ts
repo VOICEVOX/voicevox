@@ -691,6 +691,7 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
+  canUseGPU: boolean;
 };
 
 export type EngineStoreTypes = {
@@ -786,6 +787,11 @@ export type EngineStoreTypes = {
 
   FETCH_AND_SET_ENGINE_MANIFEST: {
     action(payload: { engineId: string }): void;
+  };
+
+  SET_CAN_USE_GPU: {
+    mutation: { canUseGPU: boolean };
+    action(): void;
   };
 };
 
@@ -1017,7 +1023,6 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
-  canUseGPU: boolean;
   useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
@@ -1184,11 +1189,6 @@ export type UiStoreTypes = {
   };
 
   RESET_PROGRESS: {
-    action(): void;
-  };
-
-  SET_CAN_USE_GPU: {
-    mutation: { canUseGPU: boolean };
     action(): void;
   };
 };

@@ -36,7 +36,6 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
-  canUseGPU: false,
   useGpu: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
@@ -367,45 +366,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action({ dispatch }) {
       // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
-    },
-  },
-
-  SET_CAN_USE_GPU: {
-    mutation(state, { canUseGPU }) {
-      state.canUseGPU = canUseGPU;
-    },
-    async action({ commit, dispatch }) {
-      const engineInfos = await window.electron.engineInfos();
-
-      const engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
-
-      const canUseCudaOrDMLPromises = engineIds.map(async (engineId) =>
-        dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
-          .then(
-            async (instance) =>
-              await instance.invoke("supportedDevicesSupportedDevicesGet")({})
-          )
-          .catch((e) => e)
-      );
-
-      const canUseCudaOrDMLArray = await Promise.all(canUseCudaOrDMLPromises);
-
-      const canUseGPU = canUseCudaOrDMLArray.reduce(
-        (prev, supportedDevices) => {
-          if (supportedDevices instanceof Error) {
-            return false;
-          }
-
-          const { cuda, dml } = supportedDevices;
-          const canEngineUseGPU = cuda || dml;
-
-          return prev && canEngineUseGPU;
-        },
-        true
-      );
-
-      // すべてのエンジンでcudaかdmlが利用可能ならtrue
-      commit("SET_CAN_USE_GPU", { canUseGPU: canUseGPU });
     },
   },
 });
