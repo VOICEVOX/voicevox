@@ -343,11 +343,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const cacheMorphableTargets =
         state.morphableTargetsInfo[engineId][baseStyleId];
       if (cacheMorphableTargets) return;
-      const morphableTargets = await (
-        await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
-      ).invoke("morphableTargetsMorphableTargetsGet")({
-        baseSpeaker: baseStyleId,
-      });
+      const morphableTargets = (
+        await (
+          await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
+        ).invoke("morphableTargetsMorphableTargetsPost")({
+          requestBody: [baseStyleId],
+        })
+      )[0];
       commit("SET_MORPHABLE_TARGETS", {
         engineId,
         baseStyleId,
