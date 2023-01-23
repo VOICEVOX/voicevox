@@ -60,8 +60,17 @@
                     { label: 'CPU', value: 'switchCPU' },
                     { label: 'GPU', value: 'switchGPU' },
                   ]"
-                  :disable="canUseGPU"
+                  :disable="!canUseGPU"
                 >
+                  <q-tooltip
+                    anchor="center start"
+                    self="center right"
+                    transition-show="jump-left"
+                    transition-hide="jump-right"
+                    :target="!canUseGPU"
+                  >
+                    お使いのデバイスではGPUモードを利用できません。
+                  </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
             </q-card>
@@ -680,7 +689,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { defineComponent, computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
@@ -715,7 +724,14 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const canUseGPU = store.state.canUseGPU;
+    const canUseGPU = computed({
+      get: () => store.state.canUseGPU,
+      set: () => {
+        store.dispatch("SET_CAN_USE_GPU");
+      },
+    });
+
+    onMounted(() => store.dispatch("SET_CAN_USE_GPU"));
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
