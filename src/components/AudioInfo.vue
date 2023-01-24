@@ -682,10 +682,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   // 対象リストを問い合わせていないときはとりあえず空欄を表示
   // FIXME: そもそもモーフィングUIを表示しないようにする
   const morphableTargets =
-    store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId];
-  if (morphableTargets == undefined) {
-    return [];
-  }
+    store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId] ?? {};
 
   const morphableTargetSyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
     .filter(([, info]) => info.isMorphable)
@@ -711,7 +708,6 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
     .filter((characters) => characters.metas.styles.length >= 1);
 
   // 選択中のキャラがいない場合は一番上に追加する
-  console.log("morphingTargetVoice.value", morphingTargetVoice.value);
   if (
     morphingTargetVoice.value != undefined &&
     !characterInfos.some(
