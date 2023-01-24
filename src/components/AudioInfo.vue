@@ -669,8 +669,8 @@ watch(
 );
 
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
-  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
-  if (infos == undefined)
+  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  if (allCharacterInfos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
   const baseEngineId = audioItem.value.engineId;
@@ -684,16 +684,16 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   const morphableTargets =
     store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId] ?? {};
 
-  const morphableTargetSyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
-    .filter(([, info]) => info.isMorphable)
+  const morphableSyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
+    .filter(([, value]) => value.isMorphable)
     .map(([styleId]) => parseInt(styleId));
 
-  const characterInfos = infos
+  const characterInfos: CharacterInfo[] = allCharacterInfos
     // モーフィング可能なスタイルのみを残す
     .map((character) => {
       const styles = character.metas.styles.filter(
         (style) =>
-          morphableTargetSyleIds.includes(style.styleId) &&
+          morphableSyleIds.includes(style.styleId) &&
           style.engineId == baseEngineId
       );
       return {
@@ -714,7 +714,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
       (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
     )
   ) {
-    const info = infos.find(
+    const info = allCharacterInfos.find(
       (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
     );
     if (info == undefined) throw new Error("info == undefined");

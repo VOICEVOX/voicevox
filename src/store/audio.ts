@@ -767,12 +767,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.morphingInfo?.targetStyleId == undefined
       )
         return false;
-      const morphableTargetInfo =
+      const info =
         state.morphableTargetsInfo[audioItem.engineId]?.[audioItem.styleId]?.[
           audioItem.morphingInfo.targetStyleId
         ];
-      if (morphableTargetInfo == undefined) return false;
-      return morphableTargetInfo.isMorphable;
+      if (info == undefined) return false;
+      return info.isMorphable;
     },
   },
 
