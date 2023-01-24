@@ -1,13 +1,14 @@
-import { EngineManifest } from "@/openapi";
 import fs from "fs";
 import path from "path";
 import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
-import { EngineInfo } from "@/type/preload";
+import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
+
+const isNotWin = process.platform !== "win32";
 
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
@@ -22,10 +23,18 @@ const globAsync = (pattern: string, options?: glob.IOptions) => {
   });
 };
 
+export const isVvppFile = (filePath: string) => {
+  return (
+    path.extname(filePath) === ".vvpp" || path.extname(filePath) === ".vvppp"
+  );
+};
+
 // # 軽い概要
 //
 // フォルダ名："エンジン名+UUID"
 // エンジン名にフォルダ名に使用できない文字が含まれている場合は"_"に置換する。連続する"_"は1つにする。
+// 拡張子は".vvpp"または".vvppp"。".vvppp"は分割されているファイルであることを示す。
+// engine.0.vvppp、engine.1.vvppp、engine.2.vvppp、...というように分割されている。
 // UUIDはengine_manifest.jsonのuuidを使用する
 //
 // 追加：
@@ -68,12 +77,12 @@ export class VvppManager {
     this.willDeleteEngineIds.add(engineId);
   }
 
-  toValidDirName(manifest: EngineManifest) {
+  toValidDirName(manifest: MinimumEngineManifest) {
     // フォルダに使用できない文字が含まれている場合は置換する
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
   }
 
-  isEngineDirName(dir: string, manifest: EngineManifest) {
+  isEngineDirName(dir: string, manifest: MinimumEngineManifest) {
     return dir.endsWith(`+${manifest.uuid}`);
   }
 
@@ -95,29 +104,29 @@ export class VvppManager {
   }
 
   async extractVvpp(
-    vvppPath: string
-  ): Promise<{ outputDir: string; manifest: EngineManifest }> {
+    vvppLikeFilePath: string
+  ): Promise<{ outputDir: string; manifest: MinimumEngineManifest }> {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     const streams: fs.ReadStream[] = [];
-    // 名前.数値.vvppの場合は分割されているとみなして連結する
-    if (vvppPath.match(/\.[0-9]+\.vvpp$/)) {
+    // 名前.数値.vvpppの場合は分割されているとみなして連結する
+    if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
-      const vvppPathGlob = vvppPath
-        .replace(/\.[0-9]+\.vvpp$/, ".*.vvpp")
+      const vvpppPathGlob = vvppLikeFilePath
+        .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
         .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
       const filePaths: string[] = [];
-      for (const p of await globAsync(vvppPathGlob)) {
-        if (!p.match(/\.[0-9]+\.vvpp$/)) {
+      for (const p of await globAsync(vvpppPathGlob)) {
+        if (!p.match(/\.[0-9]+\.vvppp$/)) {
           continue;
         }
         log.log(`found ${p}`);
         filePaths.push(p);
       }
       filePaths.sort((a, b) => {
-        const aMatch = a.match(/\.([0-9]+)\.vvpp$/);
-        const bMatch = b.match(/\.([0-9]+)\.vvpp$/);
+        const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
+        const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
         if (aMatch === null || bMatch === null) {
           throw new Error(`match is null: a=${a}, b=${b}`);
         }
@@ -128,7 +137,7 @@ export class VvppManager {
       }
     } else {
       log.log("Not a split file");
-      streams.push(fs.createReadStream(vvppPath));
+      streams.push(fs.createReadStream(vvppLikeFilePath));
     }
 
     log.log("Extracting vvpp to", outputDir);
@@ -144,7 +153,7 @@ export class VvppManager {
         path.join(outputDir, "engine_manifest.json"),
         "utf-8"
       )
-    ) as EngineManifest;
+    ) as MinimumEngineManifest;
     return {
       outputDir,
       manifest,
@@ -164,6 +173,12 @@ export class VvppManager {
       this.markWillMove(outputDir, dirName);
     } else {
       await moveFile(outputDir, engineDirectory);
+    }
+    if (isNotWin) {
+      await fs.promises.chmod(
+        path.join(engineDirectory, manifest.command),
+        "755"
+      );
     }
   }
 

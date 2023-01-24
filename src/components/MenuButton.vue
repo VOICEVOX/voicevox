@@ -39,80 +39,66 @@
   </q-btn>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import { debounce } from "quasar";
 import MenuItem from "@/components/MenuItem.vue";
 import { MenuItemData } from "@/components/MenuBar.vue";
 import { useStore } from "@/store";
 
-export default defineComponent({
-  name: "MenuButton",
+const props = withDefaults(
+  defineProps<{
+    selected: boolean;
+    disable?: boolean;
+    menudata: MenuItemData;
+  }>(),
+  {
+    disable: false,
+  }
+);
 
-  components: {
-    MenuItem,
-  },
+const emit =
+  defineEmits<{
+    (event: "update:selected", value: boolean): void;
+  }>();
 
-  props: {
-    selected: {
-      type: Boolean,
-      required: true,
-    },
-    disable: {
-      type: Boolean,
-      required: false,
-    },
-    menudata: {
-      type: Object as PropType<MenuItemData>,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-    const uiLocked = computed(() => store.getters.UI_LOCKED);
-    if (props.menudata.type === "root") {
-      const selectedComputed = computed({
-        get: () => props.selected,
-        set: (val) => emit("update:selected", val),
-      });
-
-      const subMenuOpenFlags = ref(
-        [...Array(props.menudata.subMenu.length)].map(() => false)
-      );
-
-      const reassignSubMenuOpen = debounce((idx: number) => {
-        if (subMenuOpenFlags.value[idx]) return;
-        if (props.menudata.type !== "root") return;
-
-        const len = props.menudata.subMenu.length;
-        const arr = [...Array(len)].map(() => false);
-        arr[idx] = true;
-
-        subMenuOpenFlags.value = arr;
-      }, 100);
-
-      watch(
-        () => props.selected,
-        () => {
-          // 何もしないと自分の選択状態が変わっても子の選択状態は変わらないため、
-          // 選択状態でなくなった時に子の選択状態をリセットします
-          if (props.menudata.type === "root" && !props.selected) {
-            const len = props.menudata.subMenu.length;
-            subMenuOpenFlags.value = [...Array(len)].map(() => false);
-          }
-        }
-      );
-
-      return {
-        uiLocked,
-        selectedComputed,
-        subMenuOpenFlags,
-        reassignSubMenuOpen,
-      };
-    }
-  },
+const store = useStore();
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+const selectedComputed = computed({
+  get: () => props.selected,
+  set: (val) => emit("update:selected", val),
 });
+
+const subMenuOpenFlags = ref(
+  props.menudata.type === "root"
+    ? [...Array(props.menudata.subMenu.length)].map(() => false)
+    : []
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  if (props.menudata.type !== "root") return;
+
+  const len = props.menudata.subMenu.length;
+  const arr = [...Array(len)].map(() => false);
+  arr[idx] = true;
+
+  subMenuOpenFlags.value = arr;
+}, 100);
+
+if (props.menudata.type === "root") {
+  watch(
+    () => props.selected,
+    () => {
+      // 何もしないと自分の選択状態が変わっても子の選択状態は変わらないため、
+      // 選択状態でなくなった時に子の選択状態をリセットします
+      if (props.menudata.type === "root" && !props.selected) {
+        const len = props.menudata.subMenu.length;
+        subMenuOpenFlags.value = [...Array(len)].map(() => false);
+      }
+    }
+  );
+}
 </script>
 
 <style scoped lang="scss">

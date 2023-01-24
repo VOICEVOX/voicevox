@@ -162,10 +162,27 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
 
-      // デフォルトスタイルが設定されていない場合は0をセットする
+      // デフォルトスタイルが設定されていない、または
+      // デフォルトスタイルのスタイルが存在しない場合は0をセットする
+      // FIXME: 勝手に0番のデフォルトスタイルが保存されてしまうため、存在しないデフォルトスタイルでもUIが表示されるようにする
       const unsetCharacterInfos = [...allCharacterInfos.keys()].filter(
-        (speakerUuid) =>
-          !defaultStyleIds.some((styleId) => styleId.speakerUuid == speakerUuid)
+        (speakerUuid) => {
+          const defaultStyleId = defaultStyleIds.find(
+            (styleId) => styleId.speakerUuid == speakerUuid
+          );
+          if (defaultStyleId === undefined) {
+            return true;
+          }
+
+          const characterInfo = allCharacterInfos.get(speakerUuid);
+
+          if (!characterInfo) {
+            return false;
+          }
+          return !characterInfo.metas.styles.some(
+            (style) => style.styleId == defaultStyleId.defaultStyleId
+          );
+        }
       );
       defaultStyleIds = [
         ...defaultStyleIds,
@@ -177,6 +194,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
             );
           }
           return {
+            engineId: characterInfo.metas.styles[0].engineId,
             speakerUuid: speakerUuid,
             defaultStyleId: characterInfo.metas.styles[0].styleId,
           };

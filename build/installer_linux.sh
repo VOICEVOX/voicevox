@@ -435,6 +435,13 @@ cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
         <glob pattern="*.vvpp" />
         <icon name="voicevox" />
     </mime-type>
+    <mime-type type="application/x-voicevox-plugin-package-part">
+        <comment>VOICEVOX Plugin package (part)</comment>
+        <comment xml:lang="ja">VOICEVOX プラグインパッケージ（分割）</comment>
+        <sub-class-of type="application/zip" />
+        <glob pattern="*.vvppp" />
+        <icon name="voicevox" />
+    </mime-type>
 </mime-info>
 EOS
 

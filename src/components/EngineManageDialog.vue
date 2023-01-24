@@ -90,7 +90,9 @@
                       engineInfos[id].name
                     }}</q-item-label>
                     <q-item-label caption class="engine-path">{{
-                      engineInfos[id].uuid
+                      engineManifests[id] != undefined
+                        ? engineManifests[id].brandName
+                        : engineInfos[id].uuid
                     }}</q-item-label>
                   </q-item-section>
                 </q-item>
@@ -317,7 +319,7 @@
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 @click="restartSelectedEngine"
-                :disable="uiLocked || engineStates[selectedId] !== 'READY'"
+                :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
                 >再起動</q-btn
               >
             </div>
@@ -565,7 +567,9 @@ export default defineComponent({
     };
 
     const restartSelectedEngine = () => {
-      store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
+      store.dispatch("RESTART_ENGINES", {
+        engineIds: [selectedId.value],
+      });
     };
 
     const requireRestart = (message: string) => {

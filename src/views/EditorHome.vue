@@ -151,7 +151,7 @@
     :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
-  <default-style-select-dialog
+  <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
@@ -185,7 +185,7 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
@@ -201,6 +201,7 @@ import {
   SplitterPosition,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import cloneDeep from "clone-deep";
 
 export default defineComponent({
   name: "EditorHome",
@@ -217,7 +218,7 @@ export default defineComponent({
     HotkeySettingDialog,
     HeaderBarCustomDialog,
     CharacterPortrait,
-    DefaultStyleSelectDialog,
+    DefaultStyleListDialog,
     CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
@@ -245,6 +246,17 @@ export default defineComponent({
             focusCell({ audioKey: activeAudioKey.value });
           }
           return false; // this is the same with event.preventDefault()
+        },
+      ],
+      [
+        // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
+        // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
+        "テキスト欄を複製",
+        () => {
+          if (activeAudioKey.value != undefined) {
+            duplicateAudioItem();
+          }
+          return false;
         },
       ],
     ]);
@@ -419,6 +431,22 @@ export default defineComponent({
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
+        applyPreset: true,
+      });
+      audioCellRefs[newAudioKey].focusTextField();
+    };
+    const duplicateAudioItem = async () => {
+      const prevAudioKey = activeAudioKey.value;
+
+      // audioItemが選択されていない状態で押されたら何もしない
+      if (prevAudioKey == undefined) return;
+
+      const prevAudioItem = store.state.audioItems[prevAudioKey];
+
+      const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+        audioItem: cloneDeep(prevAudioItem),
+        prevAudioKey: activeAudioKey.value,
+        applyPreset: false,
       });
       audioCellRefs[newAudioKey].focusTextField();
     };
@@ -507,17 +535,10 @@ export default defineComponent({
       } else {
         engineIds = store.state.engineIds;
       }
-      await Promise.all(
-        engineIds.map(async (engineId) => {
-          await store.dispatch("START_WAITING_ENGINE", { engineId });
-
-          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
-
-          await store.dispatch("LOAD_CHARACTER", { engineId });
-        })
-      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+      await store.dispatch("POST_ENGINE_START", {
+        engineIds,
+      });
 
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
@@ -532,15 +553,15 @@ export default defineComponent({
       } else {
         // 最初のAudioCellを作成
         const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-        const audioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+        const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
-        focusCell({ audioKey });
+        focusCell({ audioKey: newAudioKey });
 
         // 最初の話者を初期化
         if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
           store.dispatch("SETUP_SPEAKER", {
-            audioKey: audioKey,
+            audioKey: newAudioKey,
             engineId: audioItem.engineId,
             styleId: audioItem.styleId,
           });

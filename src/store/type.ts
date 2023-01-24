@@ -29,6 +29,7 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
@@ -55,6 +56,7 @@ export type AudioItem = {
   styleId?: number;
   query?: EditorAudioQuery;
   presetKey?: string;
+  morphingInfo?: MorphingInfo;
 };
 
 export type AudioState = {
@@ -79,7 +81,7 @@ export type SaveResultObject = {
   path: string | undefined;
   errorMessage?: string;
 };
-export type WriteErrorTypeForSaveAllResultDialog = {
+export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
 };
@@ -267,6 +269,21 @@ export type AudioStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
   };
 
+  SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+  };
+
+  MORPHING_SUPPORTED_ENGINES: {
+    getter: string[];
+  };
+
+  VALID_MOPHING_INFO: {
+    getter(audioItem: AudioItem): boolean;
+  };
+
   SET_AUDIO_QUERY: {
     mutation: { audioKey: string; audioQuery: AudioQuery };
     action(payload: { audioKey: string; audioQuery: AudioQuery }): void;
@@ -345,11 +362,11 @@ export type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Promise<Blob | null>;
+    action(payload: { audioKey: string }): Promise<Blob>;
   };
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): Blob | null;
+    action(payload: { audioItem: AudioItem }): Blob;
   };
 
   CONNECT_AUDIO: {
@@ -441,10 +458,12 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: string;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     }): Promise<string>;
   };
 
@@ -577,6 +596,17 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
   };
 
+  COMMAND_SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+    action(payload: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    }): void;
+  };
+
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
       audioKey: string;
@@ -689,15 +719,18 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
+  RESTART_ENGINES: {
+    action(payload: { engineIds: string[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
+  POST_ENGINE_START: {
+    action(payload: { engineIds: string[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
   DETECTED_ENGINE_ERROR: {
