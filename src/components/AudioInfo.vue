@@ -669,14 +669,18 @@ watch(
 );
 
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
-  // 選択可能なスタイルをフィルタリングする.
+  const infos = store.getters.USER_ORDERED_CHARACTER_INFOS;
+  if (infos == undefined)
+    throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+
   const baseEngineId = audioItem.value.engineId;
   const baseStyleId = audioItem.value.styleId;
   if (baseEngineId === undefined || baseStyleId == undefined) {
     throw new Error("baseEngineId == undefined || baseStyleId == undefined");
   }
+
   // 対象リストを問い合わせていないときはとりあえず空欄を表示
-  // FIXME: 準備がまだのときはモーフィング周りを表示しないようにする
+  // FIXME: そもそもモーフィングUIを表示しないようにする
   const morphableTargets =
     store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId];
   if (morphableTargets == undefined) {
@@ -687,7 +691,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
     .filter(([, info]) => info.isMorphable)
     .map(([styleId]) => parseInt(styleId));
 
-  const characterInfos = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+  const characterInfos = infos
     // モーフィング可能なスタイルのみを残す
     .map((character) => {
       const styles = character.metas.styles.filter(
@@ -703,18 +707,24 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
         },
       };
     })
-    // スタイルが１つもないキャラクターは除外する
-    .filter((characters) => characters.metas.styles.length >= 1)
-    // 元のキャラを一番上にする
-    .sort((a) => {
-      if (
-        a.metas.speakerUuid ==
-        getCharacterInfo(store.state, baseEngineId, baseStyleId)?.metas
-          .speakerUuid
-      )
-        return -1;
-      return 0;
-    });
+    // スタイルが１つもないキャラクターは省く
+    .filter((characters) => characters.metas.styles.length >= 1);
+
+  // 選択中のキャラがいない場合は一番上に追加する
+  console.log("morphingTargetVoice.value", morphingTargetVoice.value);
+  if (
+    morphingTargetVoice.value != undefined &&
+    !characterInfos.some(
+      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
+    )
+  ) {
+    const info = infos.find(
+      (info) => info.metas.speakerUuid == morphingTargetVoice.value?.speakerId
+    );
+    if (info == undefined) throw new Error("info == undefined");
+    characterInfos.unshift(info);
+  }
+
   return characterInfos;
 });
 
@@ -746,7 +756,7 @@ const morphingTargetVoice = computed({
 });
 
 const morphingTargetCharacterInfo = computed(() =>
-  store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.find(
+  store.getters.USER_ORDERED_CHARACTER_INFOS?.find(
     (character) =>
       character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
   )
