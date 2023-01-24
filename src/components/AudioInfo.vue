@@ -684,7 +684,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   const morphableTargets =
     store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId] ?? {};
 
-  const morphableSyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
+  const morphableStyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
     .filter(([, value]) => value.isMorphable)
     .map(([styleId]) => parseInt(styleId));
 
@@ -693,7 +693,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
     .map((character) => {
       const styles = character.metas.styles.filter(
         (style) =>
-          morphableSyleIds.includes(style.styleId) &&
+          morphableStyleIds.includes(style.styleId) &&
           style.engineId == baseEngineId
       );
       return {
