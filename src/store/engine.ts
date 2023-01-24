@@ -196,6 +196,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           if (state.engineStates[engineId] === "STARTING") {
             await dispatch("START_WAITING_ENGINE", { engineId });
             await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES", {
+              engineId,
+            });
             await dispatch("LOAD_CHARACTER", { engineId });
           }
 
