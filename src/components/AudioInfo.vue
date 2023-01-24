@@ -404,8 +404,8 @@
       <div class="row no-wrap items-center">
         <character-button
           class="q-my-xs"
-          :character-infos="mophingTargetCharacters"
-          :show-engine-info="mophingTargetEngines.length >= 2"
+          :character-infos="morphingTargetCharacters"
+          :show-engine-info="morphingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"
           v-model:selected-voice="morphingTargetVoice"
@@ -646,17 +646,17 @@ const isSupportedMorphing = computed(
 
 const isValidMorphingInfo = computed(() => {
   if (audioItem.value.morphingInfo == undefined) return false;
-  return !store.getters.VALID_MOPHING_INFO(audioItem.value);
+  return !store.getters.VALID_MORPHING_INFO(audioItem.value);
 });
 
-const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
-const mophingTargetCharacters = computed(() => {
+const morphingTargetCharacters = computed(() => {
   const allCharacters = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS;
   return allCharacters
     .map((character) => {
       const targetStyles = character.metas.styles.filter((style) =>
-        mophingTargetEngines.includes(style.engineId)
+        morphingTargetEngines.includes(style.engineId)
       );
       character.metas.styles = targetStyles;
       return character;
@@ -692,7 +692,7 @@ const morphingTargetVoice = computed({
 });
 
 const morphingTargetCharacterInfo = computed(() =>
-  mophingTargetCharacters.value.find(
+  morphingTargetCharacters.value.find(
     (character) =>
       character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
   )
