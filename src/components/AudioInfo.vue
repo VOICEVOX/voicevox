@@ -679,7 +679,7 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
     throw new Error("baseEngineId == undefined || baseStyleId == undefined");
   }
 
-  // 対象リストを問い合わせていないときはとりあえず空欄を表示
+  // モーフィング対象リストを問い合わせていないときはとりあえず空欄を表示
   // FIXME: そもそもモーフィングUIを表示しないようにする
   const morphableTargets =
     store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId] ?? {};
