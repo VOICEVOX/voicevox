@@ -482,7 +482,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
@@ -652,21 +652,18 @@ const isValidMorphingInfo = computed(() =>
 const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
 // モーフィング可能なターゲット一覧を取得
-watch(
-  () => [audioItem.value.engineId, audioItem.value.styleId],
-  () => {
-    if (
-      audioItem.value.engineId != undefined &&
-      audioItem.value.styleId != undefined
-    ) {
-      store.dispatch("LOAD_MORPHABLE_TARGETS", {
-        engineId: audioItem.value.engineId,
-        baseStyleId: audioItem.value.styleId,
-      });
-    }
-  },
-  { immediate: true }
-);
+watchEffect(() => {
+  if (
+    audioItem.value != undefined &&
+    audioItem.value.engineId != undefined &&
+    audioItem.value.styleId != undefined
+  ) {
+    store.dispatch("LOAD_MORPHABLE_TARGETS", {
+      engineId: audioItem.value.engineId,
+      baseStyleId: audioItem.value.styleId,
+    });
+  }
+});
 
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS;
