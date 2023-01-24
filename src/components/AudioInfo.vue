@@ -491,7 +491,6 @@ import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
-import { getCharacterInfo } from "@/store/audio";
 
 const props =
   defineProps<{
