@@ -689,7 +689,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref, onMounted } from "vue";
+import { defineComponent, computed, ref } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
@@ -724,9 +724,9 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const allEngineCanUseGPU = computed(() => store.state.allEngineCanUseGPU);
-
-    onMounted(() => store.dispatch("SET_ALL_ENGINE_CAN_USE_GPU"));
+    const allEngineCanUseGPU = computed(
+      () => store.getters.ALL_ENGINE_CAN_USE_GPU
+    );
 
     const engineMode = computed({
       get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
