@@ -8,11 +8,14 @@ models/EngineManifest.ts
 models/HTTPValidationError.ts
 models/LicenseInfo.ts
 models/Mora.ts
+models/MorphableTargetInfo.ts
 models/ParseKanaBadRequest.ts
 models/Preset.ts
 models/Speaker.ts
 models/SpeakerInfo.ts
 models/SpeakerStyle.ts
+models/SpeakerSupportPermittedSynthesisMorphing.ts
+models/SpeakerSupportedFeatures.ts
 models/StyleInfo.ts
 models/SupportedDevicesInfo.ts
 models/SupportedFeatures.ts
