@@ -404,8 +404,8 @@
       <div class="row no-wrap items-center">
         <character-button
           class="q-my-xs"
-          :character-infos="mophingTargetCharacters"
-          :show-engine-info="mophingTargetEngines.length >= 2"
+          :character-infos="morphingTargetCharacters"
+          :show-engine-info="morphingTargetEngines.length >= 2"
           :emptiable="true"
           :ui-locked="uiLocked"
           v-model:selected-voice="morphingTargetVoice"
@@ -441,7 +441,7 @@
         非対応エンジンです
       </div>
       <div
-        v-else-if="isValidMorphingInfo"
+        v-else-if="morphingTargetVoice && !isValidMorphingInfo"
         class="text-warning"
         style="font-size: 0.7rem"
       >
@@ -482,15 +482,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
-import { MorphingInfo, Preset, Voice } from "@/type/preload";
+import { CharacterInfo, MorphingInfo, Preset, Voice } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
+import { getCharacterInfo } from "@/store/audio";
 
 const props =
   defineProps<{
@@ -644,24 +645,77 @@ const isSupportedMorphing = computed(
   () => supportedFeatures.value?.synthesisMorphing
 );
 
-const isValidMorphingInfo = computed(() => {
-  if (audioItem.value.morphingInfo == undefined) return false;
-  return !store.getters.VALID_MOPHING_INFO(audioItem.value);
-});
+const isValidMorphingInfo = computed(() =>
+  store.getters.VALID_MORPHING_INFO(audioItem.value)
+);
 
-const mophingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
-const mophingTargetCharacters = computed(() => {
-  const allCharacters = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS;
-  return allCharacters
+// モーフィング可能なターゲット一覧を取得
+watch(
+  () => [audioItem.value.engineId, audioItem.value.styleId],
+  () => {
+    if (
+      audioItem.value.engineId != undefined &&
+      audioItem.value.styleId != undefined
+    ) {
+      store.dispatch("LOAD_MORPHABLE_TARGETS", {
+        engineId: audioItem.value.engineId,
+        baseStyleId: audioItem.value.styleId,
+      });
+    }
+  },
+  { immediate: true }
+);
+
+const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
+  // 選択可能なスタイルをフィルタリングする.
+  const baseEngineId = audioItem.value.engineId;
+  const baseStyleId = audioItem.value.styleId;
+  if (baseEngineId === undefined || baseStyleId == undefined) {
+    throw new Error("baseEngineId == undefined || baseStyleId == undefined");
+  }
+  // 対象リストを問い合わせていないときはとりあえず空欄を表示
+  // FIXME: 準備がまだのときはモーフィング周りを表示しないようにする
+  const morphableTargets =
+    store.state.morphableTargetsInfo[baseEngineId]?.[baseStyleId];
+  if (morphableTargets == undefined) {
+    return [];
+  }
+
+  const morphableTargetSyleIds = Object.entries(morphableTargets) // FIXME: Voiceにするべき
+    .filter(([, info]) => info.isMorphable)
+    .map(([styleId]) => parseInt(styleId));
+
+  const characterInfos = store.getters.GET_ORDERED_ALL_CHARACTER_INFOS
+    // モーフィング可能なスタイルのみを残す
     .map((character) => {
-      const targetStyles = character.metas.styles.filter((style) =>
-        mophingTargetEngines.includes(style.engineId)
+      const styles = character.metas.styles.filter(
+        (style) =>
+          morphableTargetSyleIds.includes(style.styleId) &&
+          style.engineId == baseEngineId
       );
-      character.metas.styles = targetStyles;
-      return character;
+      return {
+        ...character,
+        metas: {
+          ...character.metas,
+          styles,
+        },
+      };
     })
-    .filter((characters) => characters.metas.styles.length >= 1);
+    // スタイルが１つもないキャラクターは除外する
+    .filter((characters) => characters.metas.styles.length >= 1)
+    // 元のキャラを一番上にする
+    .sort((a) => {
+      if (
+        a.metas.speakerUuid ==
+        getCharacterInfo(store.state, baseEngineId, baseStyleId)?.metas
+          .speakerUuid
+      )
+        return -1;
+      return 0;
+    });
+  return characterInfos;
 });
 
 const morphingTargetVoice = computed({
@@ -692,7 +746,7 @@ const morphingTargetVoice = computed({
 });
 
 const morphingTargetCharacterInfo = computed(() =>
-  mophingTargetCharacters.value.find(
+  store.getters.GET_ORDERED_ALL_CHARACTER_INFOS.find(
     (character) =>
       character.metas.speakerUuid === morphingTargetVoice.value?.speakerId
   )
