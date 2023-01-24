@@ -11,6 +11,7 @@ import {
   AccentPhrase,
   AudioQuery,
   EngineManifest,
+  SupportedDevicesInfo,
   UserDictWord,
 } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
@@ -691,10 +692,7 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
-  engineCanUseGPU: Record<string, boolean>;
-
-  // TODO:エンジン毎の設定が可能になれば消す
-  allEngineCanUseGPU: boolean;
+  engineSupportedDevices: Record<string, SupportedDevicesInfo>;
 };
 
 export type EngineStoreTypes = {
@@ -792,15 +790,20 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
-  SET_ENGINE_CAN_USE_GPU: {
-    mutation: { engineId: string; engineCanUseGPU: boolean };
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation: { engineId: string; supportedDevices: SupportedDevicesInfo };
+  };
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
     action(payload: { engineId: string }): void;
   };
 
-  // TODO:エンジン毎の設定が可能になれば消す
-  SET_ALL_ENGINE_CAN_USE_GPU: {
-    mutation: { allEngineCanUseGPU: boolean };
-    action(): void;
+  ENGINE_CAN_USE_GPU: {
+    getter: (engineId: string) => boolean;
+  };
+
+  ALL_ENGINE_CAN_USE_GPU: {
+    getter: boolean;
   };
 };
 

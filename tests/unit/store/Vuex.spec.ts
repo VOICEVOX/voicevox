@@ -22,11 +22,7 @@ describe("store/vuex.js test", () => {
         engineStates: {
           "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
         },
-        engineCanUseGPU: {},
-
-        // TODO:エンジン毎の設定が可能になれば消す
-        allEngineCanUseGPU: false,
-
+        engineSupportedDevices: {},
         characterInfos: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
