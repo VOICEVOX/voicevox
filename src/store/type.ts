@@ -278,7 +278,7 @@ export type AudioStoreTypes = {
     getter: string[];
   };
 
-  VALID_MOPHING_INFO: {
+  VALID_MORPHING_INFO: {
     getter(audioItem: AudioItem): boolean;
   };
 
