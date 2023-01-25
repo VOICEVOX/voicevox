@@ -992,7 +992,7 @@ export default defineComponent({
         options = [
           {
             label: `全体設定を使用（${store.state.useGpu ? "GPU" : "CPU"}）`,
-            value: "default",
+            value: "inherit",
           },
           ...options,
         ];
