@@ -378,19 +378,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ dispatch, commit }, { engineId }) {
       const supportedDevices = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
-      })
-        .then(
-          async (instance) =>
-            await instance.invoke("supportedDevicesSupportedDevicesGet")({})
-        )
-        .catch((e) => e);
+      }).then(
+        async (instance) =>
+          await instance.invoke("supportedDevicesSupportedDevicesGet")({})
+      );
 
-      if (!(supportedDevices instanceof Error)) {
-        commit("SET_ENGINE_SUPPORTED_DEVICES", {
-          engineId,
-          supportedDevices: supportedDevices,
-        });
-      }
+      commit("SET_ENGINE_SUPPORTED_DEVICES", {
+        engineId,
+        supportedDevices: supportedDevices,
+      });
     },
   },
 
