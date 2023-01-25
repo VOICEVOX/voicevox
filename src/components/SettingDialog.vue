@@ -56,15 +56,12 @@
                   text-color="display"
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
-                  :options="[
-                    { label: 'CPU', value: 'switchCPU' },
-                    { label: 'GPU', value: 'switchGPU' },
-                  ]"
+                  :options="engineModeOptions"
                 >
                 </q-btn-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>音声のサンプリングレート(全エンジン共通)</div>
+                <div>音声のサンプリングレート</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -718,6 +715,8 @@ import {
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
+type SamplingRateOption = SavingSetting["outputSamplingRate"] | "inherit";
+
 export default defineComponent({
   name: "SettingDialog",
 
@@ -900,19 +899,20 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
-    const samplingRateOptions: SavingSetting["outputSamplingRate"][] = [
-      "engineDefault",
-      24000,
-      44100,
-      48000,
-      88200,
-      96000,
-    ];
-    const renderSamplingRateLabel = (
-      value: SavingSetting["outputSamplingRate"]
-    ) => {
+    const samplingRateOptions = computed<SamplingRateOption[]>(() => {
+      let options = ["engineDefault", 24000, 44100, 48000, 88200, 96000];
+      if (selectedEngineId.value !== "global") {
+        options = ["inherit", ...options];
+      }
+      return options as SamplingRateOption[];
+    });
+    const renderSamplingRateLabel = (value: SamplingRateOption): string => {
       if (value === "engineDefault") {
-        return "デフォルト";
+        return "エンジンのデフォルト";
+      } else if (value === "inherit") {
+        return `全体設定を使用（${renderSamplingRateLabel(
+          savingSetting.value.outputSamplingRate
+        )}）`;
       } else {
         return `${value / 1000} kHz`;
       }
@@ -983,12 +983,29 @@ export default defineComponent({
         return engineInfos.value[engineIdOrGlobal].name;
       }
     };
+    const engineModeOptions = computed(() => {
+      let options = [
+        { label: "CPU", value: "switchCPU" },
+        { label: "GPU", value: "switchGPU" },
+      ];
+      if (selectedEngineId.value !== "global") {
+        options = [
+          {
+            label: `全体設定を使用（${store.state.useGpu ? "GPU" : "CPU"}）`,
+            value: "default",
+          },
+          ...options,
+        ];
+      }
+      return options;
+    });
 
     return {
       settingDialogOpenedComputed,
       engineMode,
       engineIds,
       selectedEngineId,
+      engineModeOptions,
       renderEngineNameLabel,
       inheritAudioInfoMode,
       activePointScrollMode,
