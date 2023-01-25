@@ -83,18 +83,36 @@
                   borderless
                   name="samplingRate"
                   :model-value="savingSetting.outputSamplingRate"
-                  :options="[24000, 44100, 48000, 88200, 96000]"
-                  :option-label="
-                    (item) =>
-                      `${item / 1000} kHz${
-                        item === 24000 ? '(デフォルト)' : ''
-                      }`
-                  "
+                  :options="samplingRateOptions"
+                  :option-label="renderSamplingRateLabel"
                   @update:model-value="
                     handleSavingSettingChange('outputSamplingRate', $event)
                   "
                 >
                 </q-select>
+              </q-card-actions>
+              <q-card-actions
+                class="q-px-md q-py-none bg-surface"
+                v-if="engineIds.length > 1"
+              >
+                <div>エンジンの選択</div>
+                <q-tooltip
+                  :delay="500"
+                  anchor="center left"
+                  self="center right"
+                  transition-show="jump-left"
+                  transition-hide="jump-right"
+                >
+                  設定する対象のエンジンを選択できます。</q-tooltip
+                >
+                <q-space />
+                <q-select
+                  borderless
+                  name="engine"
+                  :model-value="selectedEngineId"
+                  :options="['global', ...engineIds]"
+                  :option-label="renderEngineNameLabel"
+                />
               </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
@@ -725,6 +743,8 @@ export default defineComponent({
         changeUseGPU(mode == "switchGPU" ? true : false);
       },
     });
+    const engineIds = computed(() => store.state.engineIds);
+    const engineInfos = computed(() => store.state.engineInfos);
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
     const activePointScrollMode = computed({
       get: () => store.state.activePointScrollMode,
@@ -871,7 +891,7 @@ export default defineComponent({
     };
 
     const restartAllEngineProcess = () => {
-      store.dispatch("RESTART_ENGINES", { engineIds: store.state.engineIds });
+      store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
     };
 
     const savingSetting = computed(() => store.state.savingSetting);
@@ -951,9 +971,21 @@ export default defineComponent({
 
     const showsFilePatternEditDialog = ref(false);
 
+    const selectedEngineId = ref("global");
+    const renderEngineNameLabel = (engineIdOrGlobal: string) => {
+      if (engineIdOrGlobal === "global") {
+        return "全体";
+      } else {
+        return engineInfos.value[engineIdOrGlobal].name;
+      }
+    };
+
     return {
       settingDialogOpenedComputed,
       engineMode,
+      engineIds,
+      selectedEngineId,
+      renderEngineNameLabel,
       inheritAudioInfoMode,
       activePointScrollMode,
       activePointScrollModeOptions,
