@@ -196,6 +196,7 @@ const audioElements: Record<string, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -318,6 +319,58 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }: { engineId: string; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
+    },
+  },
+
+  LOAD_MORPHABLE_TARGETS: {
+    async action({ state, dispatch, commit }, { engineId, baseStyleId }) {
+      if (!state.engineManifests[engineId].supportedFeatures?.synthesisMorphing)
+        return;
+
+      if (state.morphableTargetsInfo[engineId]?.[baseStyleId]) return;
+
+      const rawMorphableTargets = (
+        await (
+          await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
+        ).invoke("morphableTargetsMorphableTargetsPost")({
+          requestBody: [baseStyleId],
+        })
+      )[0];
+
+      // FIXME: 何故かis_morphableがCamelCaseに変換されないので変換する必要がある
+      const morphableTargets = Object.fromEntries(
+        Object.entries(rawMorphableTargets).map(([key, value]) => {
+          const isMorphable = (value as unknown as { is_morphable: boolean })
+            .is_morphable;
+          if (isMorphable === undefined || typeof isMorphable !== "boolean") {
+            throw Error(
+              "The is_morphable property does not exist, it is either CamelCase or the engine type is wrong."
+            );
+          }
+          return [
+            parseInt(key),
+            {
+              ...value,
+              isMorphable,
+            },
+          ];
+        })
+      );
+
+      commit("SET_MORPHABLE_TARGETS", {
+        engineId,
+        baseStyleId,
+        morphableTargets,
+      });
+    },
+  },
+
+  SET_MORPHABLE_TARGETS: {
+    mutation(state, { engineId, baseStyleId, morphableTargets }) {
+      if (!state.morphableTargetsInfo[engineId]) {
+        state.morphableTargetsInfo[engineId] = {};
+      }
+      state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
     },
   },
 
@@ -707,16 +760,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   VALID_MORPHING_INFO: {
-    getter: (_, getters) => (audioItem: AudioItem) => {
+    getter: (state) => (audioItem: AudioItem) => {
       if (
-        audioItem.morphingInfo == undefined ||
-        audioItem.engineId == undefined
+        audioItem.engineId == undefined ||
+        audioItem.styleId == undefined ||
+        audioItem.morphingInfo?.targetStyleId == undefined
       )
         return false;
-      return (
-        getters.MORPHING_SUPPORTED_ENGINES.includes(audioItem.engineId) &&
-        audioItem.engineId === audioItem.morphingInfo.targetEngineId
-      );
+      const info =
+        state.morphableTargetsInfo[audioItem.engineId]?.[audioItem.styleId]?.[
+          audioItem.morphingInfo.targetStyleId
+        ];
+      if (info == undefined) return false;
+      return info.isMorphable;
     },
   },
 

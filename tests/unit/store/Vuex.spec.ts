@@ -24,6 +24,7 @@ describe("store/vuex.js test", () => {
         },
         engineSupportedDevices: {},
         characterInfos: {},
+        morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -178,6 +179,7 @@ describe("store/vuex.js test", () => {
       assert.equal(store.state.engineStates[engineId], "STARTING")
     );
     assert.isObject(store.state.characterInfos);
+    assert.isObject(store.state.morphableTargetsInfo);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);

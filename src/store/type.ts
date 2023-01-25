@@ -13,6 +13,7 @@ import {
   EngineManifest,
   SupportedDevicesInfo,
   UserDictWord,
+  MorphableTargetInfo,
 } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -38,6 +39,7 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  MorphableTargetInfoTable,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -108,6 +110,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   characterInfos: Record<string, CharacterInfo[]>;
+  morphableTargetsInfo: Record<string, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -266,6 +269,21 @@ export type AudioStoreTypes = {
 
   SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKey: string; postPhonemeLength: number };
+  };
+
+  LOAD_MORPHABLE_TARGETS: {
+    action(payload: { engineId: string; baseStyleId: number }): void;
+  };
+
+  SET_MORPHABLE_TARGETS: {
+    mutation: {
+      engineId: string;
+      baseStyleId: number;
+      morphableTargets?: Exclude<
+        { [key: number]: MorphableTargetInfo },
+        undefined
+      >;
+    };
   };
 
   SET_MORPHING_INFO: {
