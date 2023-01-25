@@ -567,7 +567,9 @@ export default defineComponent({
     };
 
     const restartSelectedEngine = () => {
-      store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
+      store.dispatch("RESTART_ENGINES", {
+        engineIds: [selectedId.value],
+      });
     };
 
     const requireRestart = (message: string) => {

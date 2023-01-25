@@ -354,9 +354,6 @@ async function createWindow() {
   }
   if (isDevelopment) win.webContents.openDevTools();
 
-  // Macではdarkモードかつウィンドウが非アクティブのときに閉じるボタンなどが見えなくなるので、lightテーマに固定
-  if (isMac) nativeTheme.themeSource = "light";
-
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
   win.on("enter-full-screen", () =>
@@ -714,6 +711,10 @@ ipcMainHandle("GET_SETTING", (_, key) => {
 ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   store.set(key, newValue);
   return store.get(key);
+});
+
+ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
+  nativeTheme.themeSource = source;
 });
 
 ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
