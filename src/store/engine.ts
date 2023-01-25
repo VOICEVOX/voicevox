@@ -6,6 +6,7 @@ import type { EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
+  engineSupportedDevices: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -195,6 +196,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           if (state.engineStates[engineId] === "STARTING") {
             await dispatch("START_WAITING_ENGINE", { engineId });
             await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES", {
+              engineId,
+            });
             await dispatch("LOAD_CHARACTER", { engineId });
           }
 
@@ -358,6 +362,48 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           instance.invoke("engineManifestEngineManifestGet")({})
         ),
       });
+    },
+  },
+
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation(state, { engineId, supportedDevices }) {
+      state.engineSupportedDevices = {
+        ...state.engineSupportedDevices,
+        [engineId]: supportedDevices,
+      };
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
+    async action({ dispatch, commit }, { engineId }) {
+      const supportedDevices = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      }).then(
+        async (instance) =>
+          await instance.invoke("supportedDevicesSupportedDevicesGet")({})
+      );
+
+      commit("SET_ENGINE_SUPPORTED_DEVICES", {
+        engineId,
+        supportedDevices: supportedDevices,
+      });
+    },
+  },
+
+  ENGINE_CAN_USE_GPU: {
+    getter: (state) => (engineId) => {
+      const supportedDevices = state.engineSupportedDevices[engineId];
+
+      return supportedDevices?.cuda || supportedDevices?.dml;
+    },
+  },
+
+  // TODO:エンジン毎の設定が可能になれば消す
+  ALL_ENGINE_CAN_USE_GPU: {
+    getter: (state, getters) => {
+      return state.engineIds.every((engineId) =>
+        getters.ENGINE_CAN_USE_GPU(engineId)
+      );
     },
   },
 });
