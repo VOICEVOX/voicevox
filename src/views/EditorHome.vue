@@ -540,11 +540,16 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
+      const projectFilePath = store.state.projectFilePath;
+      if (projectFilePath != undefined) {
+        // プロジェクトファイルの読み込みに失敗したときのために事前にprojectFilePathをundefinedにしておく
+        store.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+        await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: projectFilePath,
+        });
+      }
       // 最初のAudioCellを作成
-      const audioItem: AudioItem = await store.dispatch(
-        "GENERATE_AUDIO_ITEM",
-        {}
-      );
+      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
         audioItem,
       });

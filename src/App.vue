@@ -28,6 +28,12 @@ export default defineComponent({
     watch(query, (newQuery) => {
       if (newQuery) {
         store.dispatch("SET_IS_SAFE_MODE", newQuery["isSafeMode"] === "true");
+        const filePath = newQuery["projectFilePath"];
+        if (typeof filePath === "string" && filePath !== "") {
+          store.commit("SET_PROJECT_FILEPATH", {
+            filePath,
+          });
+        }
       }
     });
 
