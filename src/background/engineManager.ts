@@ -233,9 +233,14 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const useGpu = this.store.get("useGpu");
+    let useGpu = this.store.get("engineSetting")[engineId].useGpu;
+    if (useGpu === "inherit") {
+      useGpu = this.store.get("useGpu");
 
-    log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
+      log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"} (inherit)`);
+    } else {
+      log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
+    }
 
     // エンジンプロセスの起動
     const enginePath = engineInfo.executionFilePath;

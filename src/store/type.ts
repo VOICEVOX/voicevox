@@ -38,6 +38,7 @@ import {
   EngineDirValidationResult,
   EditorFontType,
   EngineSetting,
+  EngineSettingRecord,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -1008,12 +1009,18 @@ export type SettingStoreTypes = {
   };
 
   SET_ENGINE_SETTING: {
-    mutation: { engineSetting: EngineSetting };
-    action(payload: { engineSetting: EngineSetting }): void;
+    mutation: { engineSetting: EngineSettingRecord; engineId: string };
+    action(payload: {
+      engineSetting: EngineSettingRecord;
+      engineId: string;
+    }): Promise<void>;
   };
 
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean }): void;
+    action(payload: {
+      useGpu: boolean | "inherit";
+      engineId: "global" | string;
+    }): Promise<void>;
   };
 };
 

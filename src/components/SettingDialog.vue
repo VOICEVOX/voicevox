@@ -42,8 +42,8 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      GPU モードの利用には GPU が必要です。Linux は
-                      NVIDIA&trade; 製 GPU のみ対応しています。
+                      Gpu モードの利用には GPU が必要です。Linux は
+                      NVIDIA&trade; 製 Gpu のみ対応しています。
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -741,9 +741,20 @@ export default defineComponent({
     });
 
     const engineMode = computed({
-      get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
-      set: (mode: string) => {
-        changeUseGPU(mode == "switchGPU" ? true : false);
+      get: () => {
+        let useGpu;
+        if (selectedEngineId.value == "global") {
+          useGpu = store.state.useGpu;
+        } else {
+          useGpu = store.state.engineSetting[selectedEngineId.value].useGpu;
+          if (useGpu === "inherit") {
+            return "inherit";
+          }
+        }
+        return useGpu ? "switchGpu" : "switchCpu";
+      },
+      set: (mode: "switchGpu" | "switchCpu" | "inherit") => {
+        changeUseGpu(mode);
       },
     });
     const engineIds = computed(() => store.state.engineIds);
@@ -864,8 +875,20 @@ export default defineComponent({
       },
     });
 
-    const changeUseGPU = async (useGpu: boolean) => {
-      if (store.state.useGpu === useGpu) return;
+    const changeUseGpu = async (
+      useGpuValue: "switchGpu" | "switchCpu" | "inherit"
+    ) => {
+      let useGpu, useGpuBefore;
+      const isSwitchGpu = useGpuValue === "switchGpu" ? true : false;
+      if (selectedEngineId.value !== "global") {
+        useGpu = useGpuValue === "inherit" ? ("inherit" as const) : isSwitchGpu;
+        useGpuBefore = store.state.engineSetting[selectedEngineId.value].useGpu;
+      } else {
+        useGpu = isSwitchGpu;
+        useGpuBefore = store.state.useGpu;
+      }
+
+      if (useGpu === useGpuBefore) return;
 
       $q.loading.show({
         spinnerColor: "primary",
@@ -874,7 +897,10 @@ export default defineComponent({
         message: "起動モードを変更中です",
       });
 
-      await store.dispatch("CHANGE_USE_GPU", { useGpu });
+      await store.dispatch("CHANGE_USE_GPU", {
+        useGpu,
+        engineId: selectedEngineId.value,
+      });
 
       $q.loading.hide();
     };
@@ -985,8 +1011,8 @@ export default defineComponent({
     };
     const engineModeOptions = computed(() => {
       let options = [
-        { label: "CPU", value: "switchCPU" },
-        { label: "GPU", value: "switchGPU" },
+        { label: "Cpu", value: "switchCpu" },
+        { label: "Gpu", value: "switchGpu" },
       ];
       if (selectedEngineId.value !== "global") {
         options = [

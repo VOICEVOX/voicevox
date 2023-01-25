@@ -32,6 +32,7 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
+  engineSettingRecord,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -901,6 +902,18 @@ app.on("ready", async () => {
   if (filePath?.endsWith(".vvpp")) {
     await installVvppEngine(filePath);
   }
+
+  const engineInfos = engineManager.fetchEngineInfos();
+  const engineSetting = store.get("engineSetting");
+  for (const engineInfo of engineInfos) {
+    if (!engineSetting[engineInfo.uuid]) {
+      // engineSettingRecordのデフォルト値を設定
+      // FIXME: z.objectからデフォルト値を取得する方法がないので、parseで空のオブジェクトを渡している。
+      //        もっと良い実装があるはず。
+      engineSetting[engineInfo.uuid] = engineSettingRecord.parse({});
+    }
+  }
+  store.set("engineSetting", engineSetting);
 
   createWindow().then(() => engineManager.runEngineAll(win));
 });

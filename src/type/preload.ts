@@ -261,10 +261,13 @@ export type SavingSetting = {
 
 export type EngineSetting = Record<string, EngineSettingRecord>;
 
-type EngineSettingRecord = {
-  useGpu: boolean | "inherit";
-  outputSamplingRate: number | "inherit";
-};
+export const engineSettingRecord = z.object({
+  useGpu: z.union([z.boolean(), z.literal("inherit")]).default("inherit"),
+  outputSamplingRate: z
+    .union([z.number(), z.literal("inherit")])
+    .default("inherit"),
+});
+export type EngineSettingRecord = z.infer<typeof engineSettingRecord>;
 
 export type DefaultStyleId = {
   engineId: string;
@@ -456,14 +459,7 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
-    engineSetting: z.record(
-      z.object({
-        useGpu: z.union([z.boolean(), z.literal("inherit")]).default("inherit"),
-        outputSamplingRate: z
-          .union([z.number(), z.literal("inherit")])
-          .default("inherit"),
-      })
-    ),
+    engineSetting: z.record(engineSettingRecord).default({}),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
