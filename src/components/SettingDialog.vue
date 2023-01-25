@@ -96,20 +96,24 @@
                 v-if="engineIds.length > 1"
               >
                 <div>エンジンの選択</div>
-                <q-tooltip
-                  :delay="500"
-                  anchor="center left"
-                  self="center right"
-                  transition-show="jump-left"
-                  transition-hide="jump-right"
-                >
-                  設定する対象のエンジンを選択できます。</q-tooltip
-                >
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      設定する対象のエンジンを選択できます。</q-tooltip
+                    >
+                  </q-icon>
+                </div>
                 <q-space />
                 <q-select
                   borderless
                   name="engine"
-                  :model-value="selectedEngineId"
+                  v-model="selectedEngineId"
                   :options="['global', ...engineIds]"
                   :option-label="renderEngineNameLabel"
                 />
