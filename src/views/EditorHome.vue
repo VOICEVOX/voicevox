@@ -521,11 +521,6 @@ export default defineComponent({
     // ソフトウェアを初期化
     const isCompletedInitialStartup = ref(false);
     onMounted(async () => {
-      const projectFilePath = props.projectFilePath;
-      if (projectFilePath != undefined && projectFilePath !== "") {
-        // タイトルバーに読み込み中のプロジェクト名を表示
-        store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
-      }
       await store.dispatch("GET_ENGINE_INFOS");
 
       let engineIds: string[];
@@ -549,13 +544,22 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      const generateInitAudioCell = async () => {
+      // プロジェクトファイルが指定されていればロード
+      let projectFileLoaded = false;
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+        projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: props.projectFilePath,
+        });
+      }
+
+      if (!projectFileLoaded) {
         // 最初のAudioCellを作成
         const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
         const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
         focusCell({ audioKey: newAudioKey });
+
         // 最初の話者を初期化
         if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
           store.dispatch("SETUP_SPEAKER", {
@@ -564,18 +568,6 @@ export default defineComponent({
             styleId: audioItem.styleId,
           });
         }
-      };
-
-      if (projectFilePath != undefined && projectFilePath !== "") {
-        const result = await store.dispatch("LOAD_PROJECT_FILE", {
-          filePath: projectFilePath,
-        });
-        if (!result) {
-          store.commit("SET_PROJECT_FILEPATH", {});
-          await generateInitAudioCell();
-        }
-      } else {
-        await generateInitAudioCell();
       }
 
       // ショートカットキーの設定
