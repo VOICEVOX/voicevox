@@ -412,6 +412,7 @@ async function createWindow() {
   mainWindowState.manage(win);
 }
 
+// UI処理を開始。その他の準備が完了した後に呼ばれる。
 async function start() {
   const engineInfos = engineManager.fetchEngineInfos();
   const engineSetting = store.get("engineSetting");
