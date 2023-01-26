@@ -206,6 +206,10 @@ import cloneDeep from "clone-deep";
 export default defineComponent({
   name: "EditorHome",
 
+  props: {
+    projectFilePath: { type: String },
+  },
+
   components: {
     draggable,
     MenuBar,
@@ -227,7 +231,7 @@ export default defineComponent({
     ProgressDialog,
   },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -540,12 +544,9 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      const projectFilePath = store.state.projectFilePath;
-      if (projectFilePath != undefined) {
-        // プロジェクトファイルの読み込みに失敗したときのために事前にprojectFilePathをundefinedにしておく
-        store.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
         await store.dispatch("LOAD_PROJECT_FILE", {
-          filePath: projectFilePath,
+          filePath: props.projectFilePath,
         });
       }
       // 最初のAudioCellを作成
