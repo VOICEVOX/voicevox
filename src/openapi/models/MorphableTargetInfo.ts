@@ -14,41 +14,34 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * スピーカーのスタイル情報
+ * 
  * @export
- * @interface SpeakerStyle
+ * @interface MorphableTargetInfo
  */
-export interface SpeakerStyle {
+export interface MorphableTargetInfo {
     /**
      * 
-     * @type {string}
-     * @memberof SpeakerStyle
+     * @type {boolean}
+     * @memberof MorphableTargetInfo
      */
-    name: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof SpeakerStyle
-     */
-    id: number;
+    isMorphable: boolean;
 }
 
-export function SpeakerStyleFromJSON(json: any): SpeakerStyle {
-    return SpeakerStyleFromJSONTyped(json, false);
+export function MorphableTargetInfoFromJSON(json: any): MorphableTargetInfo {
+    return MorphableTargetInfoFromJSONTyped(json, false);
 }
 
-export function SpeakerStyleFromJSONTyped(json: any, ignoreDiscriminator: boolean): SpeakerStyle {
+export function MorphableTargetInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean): MorphableTargetInfo {
     if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'name': json['name'],
-        'id': json['id'],
+        'isMorphable': json['is_morphable'],
     };
 }
 
-export function SpeakerStyleToJSON(value?: SpeakerStyle | null): any {
+export function MorphableTargetInfoToJSON(value?: MorphableTargetInfo | null): any {
     if (value === undefined) {
         return undefined;
     }
@@ -57,8 +50,7 @@ export function SpeakerStyleToJSON(value?: SpeakerStyle | null): any {
     }
     return {
         
-        'name': value.name,
-        'id': value.id,
+        'is_morphable': value.isMorphable,
     };
 }
 
