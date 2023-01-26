@@ -28,8 +28,19 @@
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
-              <q-card-actions>
+              <q-card-actions class="engine-setting">
                 <div class="text-h5">エンジン</div>
+                <template v-if="engineIds.length > 0">
+                  <q-space />
+                  <q-select
+                    borderless
+                    dense
+                    name="engine"
+                    v-model="selectedEngineId"
+                    :options="['global', ...engineIds]"
+                    :option-label="renderEngineNameLabel"
+                  />
+                </template>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>エンジンモード</div>
@@ -97,33 +108,6 @@
                   "
                 >
                 </q-select>
-              </q-card-actions>
-              <q-card-actions
-                class="q-px-md q-py-none bg-surface"
-                v-if="engineIds.length > 1"
-              >
-                <div>エンジンの選択</div>
-                <div>
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      設定する対象のエンジンを選択できます。</q-tooltip
-                    >
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-select
-                  borderless
-                  name="engine"
-                  v-model="selectedEngineId"
-                  :options="['global', ...engineIds]"
-                  :option-label="renderEngineNameLabel"
-                />
               </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
@@ -765,9 +749,9 @@ export default defineComponent({
             return "inherit";
           }
         }
-        return useGpu ? "switchGpu" : "switchCpu";
+        return useGpu;
       },
-      set: (mode: "switchGpu" | "switchCpu" | "inherit") => {
+      set: (mode: boolean | "inherit") => {
         changeUseGpu(mode);
       },
     });
@@ -889,16 +873,11 @@ export default defineComponent({
       },
     });
 
-    const changeUseGpu = async (
-      useGpuValue: "switchGpu" | "switchCpu" | "inherit"
-    ) => {
-      let useGpu, useGpuBefore;
-      const isSwitchGpu = useGpuValue === "switchGpu" ? true : false;
+    const changeUseGpu = async (useGpu: boolean | "inherit") => {
+      let useGpuBefore;
       if (selectedEngineId.value !== "global") {
-        useGpu = useGpuValue === "inherit" ? ("inherit" as const) : isSwitchGpu;
         useGpuBefore = store.state.engineSetting[selectedEngineId.value].useGpu;
       } else {
-        useGpu = isSwitchGpu;
         useGpuBefore = store.state.useGpu;
       }
 
@@ -1024,9 +1003,9 @@ export default defineComponent({
       }
     };
     const engineModeOptions = computed(() => {
-      let options = [
-        { label: "Cpu", value: "switchCpu" },
-        { label: "Gpu", value: "switchGpu" },
+      let options: { label: string; value: boolean | "inherit" }[] = [
+        { label: "CPU", value: false },
+        { label: "GPU", value: true },
       ];
       if (selectedEngineId.value !== "global") {
         options = [
@@ -1135,6 +1114,10 @@ export default defineComponent({
     width: unset !important;
     max-height: unset;
   }
+}
+
+.engine-setting {
+  align-items: flex-end;
 }
 
 .root {
