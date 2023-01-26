@@ -235,7 +235,7 @@ export class EngineManager {
 
     let useGpu = this.store.get("engineSetting")[engineId].useGpu;
     let isInherit = false;
-    if (useGpu === "inherit") {
+    if (useGpu === "inherit" || engineInfos.length === 1) {
       useGpu = this.store.get("useGpu");
       isInherit = true;
     }
