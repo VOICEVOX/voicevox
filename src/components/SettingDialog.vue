@@ -872,11 +872,6 @@ export default defineComponent({
 
     const changeUseGpu = async (useGpu: boolean | "inherit") => {
       let useGpuBefore;
-      if (selectedEngineId.value !== "global") {
-        useGpuBefore = store.state.engineSetting[selectedEngineId.value].useGpu;
-      } else {
-        useGpuBefore = store.state.useGpu;
-      }
 
       if (useGpu === useGpuBefore) return;
 
