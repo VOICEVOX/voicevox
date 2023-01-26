@@ -64,6 +64,12 @@ describe("store/vuex.js test", () => {
           outputSamplingRate: 24000,
           audioOutputDevice: "default",
         },
+        engineSetting: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
+            outputSamplingRate: "inherit",
+            useGpu: "inherit",
+          },
+        },
         themeSetting: {
           currentTheme: "Default",
           availableThemes: [],
