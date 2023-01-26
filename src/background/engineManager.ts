@@ -234,13 +234,16 @@ export class EngineManager {
     engineProcessContainer.willQuitEngine = false;
 
     let useGpu = this.store.get("engineSetting")[engineId].useGpu;
+    let isInherit = false;
     if (useGpu === "inherit") {
       useGpu = this.store.get("useGpu");
-
-      log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"} (inherit)`);
-    } else {
-      log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
+      isInherit = true;
     }
+    log.info(
+      `ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}${
+        isInherit ? " (inherit)" : ""
+      }`
+    );
 
     // エンジンプロセスの起動
     const enginePath = engineInfo.executionFilePath;
