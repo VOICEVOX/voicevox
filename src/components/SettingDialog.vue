@@ -100,12 +100,9 @@
                 <q-select
                   borderless
                   name="samplingRate"
-                  :model-value="savingSetting.outputSamplingRate"
+                  v-model="outputSamplingRate"
                   :options="samplingRateOptions"
                   :option-label="renderSamplingRateLabel"
-                  @update:model-value="
-                    handleSavingSettingChange('outputSamplingRate', $event)
-                  "
                 >
                 </q-select>
               </q-card-actions>
@@ -941,12 +938,21 @@ export default defineComponent({
       key: keyof SavingSetting,
       data: string | boolean | number
     ) => {
-      const storeDispatch = (): void => {
-        store.dispatch("SET_SAVING_SETTING", {
-          data: { ...savingSetting.value, [key]: data },
-        });
-      };
-      if (key === "outputSamplingRate" && data !== "engineDefault") {
+      store.dispatch("SET_SAVING_SETTING", {
+        data: { ...savingSetting.value, [key]: data },
+      });
+    };
+
+    const outputSamplingRate = computed({
+      get: () => {
+        if (selectedEngineId.value !== "global") {
+          return store.state.engineSetting[selectedEngineId.value]
+            .outputSamplingRate;
+        } else {
+          return store.state.savingSetting.outputSamplingRate;
+        }
+      },
+      set: (outputSamplingRate: SamplingRateOption) => {
         $q.dialog({
           title: "出力サンプリングレートを変更します",
           message:
@@ -963,11 +969,29 @@ export default defineComponent({
             flat: true,
             textColor: "display",
           },
-        }).onOk(storeDispatch);
+        }).onOk(() => {
+          if (selectedEngineId.value !== "global") {
+            store.dispatch("SET_ENGINE_SETTING", {
+              engineId: selectedEngineId.value,
+              engineSetting: {
+                ...store.state.engineSetting[selectedEngineId.value],
+                outputSamplingRate,
+              },
+            });
+          } else {
+            if (outputSamplingRate === "inherit") {
+              throw new Error(
+                "outputSamplingRate cannot be inherit when global"
+              );
+            }
+            store.dispatch("SET_SAVING_SETTING", {
+              data: { ...savingSetting.value, outputSamplingRate },
+            });
+          }
+        });
         return;
-      }
-      storeDispatch();
-    };
+      },
+    });
 
     const openFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
@@ -1040,6 +1064,7 @@ export default defineComponent({
       samplingRateOptions,
       renderSamplingRateLabel,
       handleSavingSettingChange,
+      outputSamplingRate,
       openFileExplore,
       currentThemeNameComputed,
       currentThemeComputed,

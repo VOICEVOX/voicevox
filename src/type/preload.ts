@@ -264,7 +264,7 @@ export type EngineSetting = Record<string, EngineSettingRecord>;
 export const engineSettingRecord = z.object({
   useGpu: z.union([z.boolean(), z.literal("inherit")]).default("inherit"),
   outputSamplingRate: z
-    .union([z.number(), z.literal("inherit")])
+    .union([z.number(), z.literal("inherit"), z.literal("engineDefault")])
     .default("inherit"),
 });
 export type EngineSettingRecord = z.infer<typeof engineSettingRecord>;
