@@ -310,6 +310,16 @@ export type PresetConfig = {
   keys: string[];
 };
 
+export type MorphableTargetInfoTable = {
+  [baseStyleId: number]:
+    | undefined
+    | {
+        [targetStyleId: number]: {
+          isMorphable: boolean;
+        };
+      };
+};
+
 export const hotkeyActionSchema = z.enum([
   "音声書き出し",
   "一つだけ書き出し",
