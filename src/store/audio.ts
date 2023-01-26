@@ -42,7 +42,17 @@ async function generateUniqueIdAndQuery(
   audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
   const audioQuery = audioItem.query;
   if (audioQuery != undefined) {
-    audioQuery.outputSamplingRate = state.savingSetting.outputSamplingRate;
+    let outputSamplingRate;
+    if (audioItem.engineId && state.engineIds.length > 1) {
+      outputSamplingRate =
+        state.engineSetting[audioItem.engineId].outputSamplingRate;
+    } else {
+      outputSamplingRate = "inherit" as const;
+    }
+    if (outputSamplingRate === "inherit") {
+      outputSamplingRate = state.savingSetting.outputSamplingRate;
+    }
+    audioQuery.outputSamplingRate = outputSamplingRate;
     audioQuery.outputStereo = state.savingSetting.outputStereo;
   }
 
