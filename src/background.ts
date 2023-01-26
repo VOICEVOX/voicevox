@@ -853,6 +853,7 @@ app.on("before-quit", async (event) => {
   return;
 });
 
+// macOSではウィンドウを閉じてもアプリケーションが終了せずドックに残り、それをクリックするとactivateイベントが発火するので画面を再表示する
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
