@@ -412,6 +412,23 @@ async function createWindow() {
   mainWindowState.manage(win);
 }
 
+async function start() {
+  const engineInfos = engineManager.fetchEngineInfos();
+  const engineSetting = store.get("engineSetting");
+  for (const engineInfo of engineInfos) {
+    if (!engineSetting[engineInfo.uuid]) {
+      // engineSettingRecordのデフォルト値を設定
+      // FIXME: z.objectからデフォルト値を取得する方法がないので、parseで空のオブジェクトを渡している。
+      //        もっと良い実装があるはず。
+      engineSetting[engineInfo.uuid] = engineSettingRecord.parse({});
+    }
+  }
+  store.set("engineSetting", engineSetting);
+
+  await createWindow();
+  await engineManager.runEngineAll(win);
+}
+
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
     label: "VOICEVOX",
@@ -810,7 +827,7 @@ app.on("before-quit", async (event) => {
       appState.willRestart = false;
       appState.willQuit = false;
 
-      createWindow().then(() => engineManager.runEngineAll(win));
+      start();
     } else {
       log.info("Post engine kill process done. Now quit app");
     }
@@ -905,19 +922,7 @@ app.on("ready", async () => {
     await installVvppEngine(filePath);
   }
 
-  const engineInfos = engineManager.fetchEngineInfos();
-  const engineSetting = store.get("engineSetting");
-  for (const engineInfo of engineInfos) {
-    if (!engineSetting[engineInfo.uuid]) {
-      // engineSettingRecordのデフォルト値を設定
-      // FIXME: z.objectからデフォルト値を取得する方法がないので、parseで空のオブジェクトを渡している。
-      //        もっと良い実装があるはず。
-      engineSetting[engineInfo.uuid] = engineSettingRecord.parse({});
-    }
-  }
-  store.set("engineSetting", engineSetting);
-
-  createWindow().then(() => engineManager.runEngineAll(win));
+  start();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
