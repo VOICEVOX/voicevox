@@ -363,22 +363,19 @@ async function createWindow() {
     }
   }
 
+  const parameter =
+    "#/home?isSafeMode=" +
+    appState.isSafeMode +
+    "&projectFilePath=" +
+    projectFilePath;
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) +
-        "#/home?isSafeMode=" +
-        appState.isSafeMode +
-        "&projectFilePath=" +
-        projectFilePath
+      (process.env.WEBPACK_DEV_SERVER_URL as string) + parameter
     );
   } else {
     createProtocol("app");
-    win.loadURL(
-      "app://./index.html#/home?isSafeMode=" +
-        appState.isSafeMode +
-        "&projectFilePath=" +
-        projectFilePath
-    );
+    win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
