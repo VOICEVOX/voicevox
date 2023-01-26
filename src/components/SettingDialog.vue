@@ -62,12 +62,12 @@
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
-                  v-model="engineMode"
+                  v-model="engineUseGpu"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
-                  :options="engineModeOptions"
+                  :options="engineUseGpuOptions"
                   :disable="!allEngineCanUseGPU"
                 >
                   <q-tooltip
@@ -735,7 +735,7 @@ export default defineComponent({
       () => store.getters.ALL_ENGINE_CAN_USE_GPU
     );
 
-    const engineMode = computed({
+    const engineUseGpu = computed({
       get: () => {
         let useGpu;
         if (selectedEngineId.value == "global") {
@@ -1021,7 +1021,7 @@ export default defineComponent({
         return engineInfos.value[engineIdOrGlobal].name;
       }
     };
-    const engineModeOptions = computed(() => {
+    const engineUseGpuOptions = computed(() => {
       let options: { label: string; value: boolean | "inherit" }[] = [
         { label: "CPU", value: false },
         { label: "GPU", value: true },
@@ -1041,10 +1041,10 @@ export default defineComponent({
     return {
       settingDialogOpenedComputed,
       allEngineCanUseGPU,
-      engineMode,
+      engineUseGpu,
       engineIds,
       selectedEngineId,
-      engineModeOptions,
+      engineUseGpuOptions,
       renderEngineNameLabel,
       inheritAudioInfoMode,
       activePointScrollMode,
