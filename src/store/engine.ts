@@ -397,13 +397,4 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       return supportedDevices?.cuda || supportedDevices?.dml;
     },
   },
-
-  // TODO:エンジン毎の設定が可能になれば消す
-  ALL_ENGINE_CAN_USE_GPU: {
-    getter: (state, getters) => {
-      return state.engineIds.every((engineId) =>
-        getters.ENGINE_CAN_USE_GPU(engineId)
-      );
-    },
-  },
 });

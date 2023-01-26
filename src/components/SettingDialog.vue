@@ -68,16 +68,18 @@
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
                   :options="engineUseGpuOptions"
-                  :disable="!allEngineCanUseGPU"
+                  :disable="!canEngineUseGpu(selectedEngineId)"
                 >
                   <q-tooltip
                     anchor="center start"
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                    :target="!allEngineCanUseGPU"
+                    :target="!canEngineUseGpu(selectedEngineId)"
                   >
-                    お使いのエンジンはCPU版のためGPUモードを利用できません。
+                    {{
+                      engineInfos[selectedEngineId].name
+                    }}はCPU版のためGPUモードを利用できません。
                   </q-tooltip>
                 </q-btn-toggle>
               </q-card-actions>
@@ -731,10 +733,6 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const allEngineCanUseGPU = computed(
-      () => store.getters.ALL_ENGINE_CAN_USE_GPU
-    );
-
     const engineUseGpu = computed({
       get: () => {
         let useGpu;
@@ -1038,11 +1036,22 @@ export default defineComponent({
       return options;
     });
 
+    const canEngineUseGpu = (engineIdOrGlobal: string) => {
+      if (engineIdOrGlobal === "global") {
+        return engineIds.value.some((engineId) =>
+          store.getters.ENGINE_CAN_USE_GPU(engineId)
+        );
+      } else {
+        return store.getters.ENGINE_CAN_USE_GPU;
+      }
+    };
+
     return {
       settingDialogOpenedComputed,
-      allEngineCanUseGPU,
       engineUseGpu,
+      canEngineUseGpu,
       engineIds,
+      engineInfos,
       selectedEngineId,
       engineUseGpuOptions,
       renderEngineNameLabel,

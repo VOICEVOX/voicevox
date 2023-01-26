@@ -821,10 +821,6 @@ export type EngineStoreTypes = {
   ENGINE_CAN_USE_GPU: {
     getter: (engineId: string) => boolean;
   };
-
-  ALL_ENGINE_CAN_USE_GPU: {
-    getter: boolean;
-  };
 };
 
 /*
