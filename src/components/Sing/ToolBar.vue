@@ -8,9 +8,29 @@
       <img :src="selectedStyleIconPath" class="singer-avatar" />
     </div>
     <div class="sing-player">
-      <button type="button" class="sing-button-temp">戻る</button>
-      <button type="button" class="sing-button-temp">再生</button>
-      <div class="sing-player-position">00:00</div>
+      <q-btn
+        flat
+        round
+        class="sing-transport-button"
+        icon="skip_previous"
+        @click="seek(0)"
+      ></q-btn>
+      <q-btn
+        v-if="!nowPlaying"
+        round
+        class="sing-playback-button"
+        icon="play_arrow"
+        @click="play"
+      ></q-btn>
+      <q-btn
+        v-else
+        round
+        class="sing-playback-button"
+        icon="stop"
+        @click="stop"
+      ></q-btn>
+      <q-btn flat round class="sing-transport-button" icon="loop"></q-btn>
+      <div class="sing-playback-position">{{ playbackPositionStr }}</div>
       <q-input
         type="number"
         :model-value="tempoInputBuffer"
@@ -18,7 +38,7 @@
         hide-bottom-space
         class="sing-tempo"
         @update:model-value="setTempoInputBuffer"
-        @change="setTempo()"
+        @change="setTempo"
       >
         <template v-slot:prepend>
           <div />
@@ -31,7 +51,7 @@
         hide-bottom-space
         class="sing-time-signature"
         @update:model-value="setBeatsInputBuffer"
-        @change="setTimeSignature()"
+        @change="setTimeSignature"
       >
         <template v-slot:prepend>
           <div />
@@ -45,7 +65,7 @@
         hide-bottom-space
         class="sing-time-signature"
         @update:model-value="setBeatTypeInputBuffer"
-        @change="setTimeSignature()"
+        @change="setTimeSignature"
       >
         <template v-slot:prepend>
           <div />
@@ -53,7 +73,7 @@
       </q-input>
     </div>
     <div class="sing-setting">
-      <input type="range" min="0" max="100" class="sing-volume" />
+      <q-slider v-model.number="volume" class="sing-volume" />
       <select class="sing-snap">
         <option>1/16</option>
       </select>
@@ -105,7 +125,7 @@ export default defineComponent({
 
     const setTempoInputBuffer = (tempoStr: string) => {
       const tempo = Number(tempoStr);
-      if (Number.isNaN(tempo) || tempo <= 0) return;
+      if (!Number.isFinite(tempo) || tempo <= 0) return;
       tempoInputBuffer.value = tempo;
     };
     const setBeatsInputBuffer = (beatsStr: string) => {
@@ -119,13 +139,31 @@ export default defineComponent({
       beatTypeInputBuffer.value = beatType;
     };
 
+    const playbackPositionStr = ref("");
+
+    const updatePlayPos = async () => {
+      const playPos = store.getters.GET_PLAYBACK_POSITION();
+      const playTime = store.getters.POSITION_TO_TIME(playPos);
+
+      const intPlayTime = Math.floor(playTime);
+      const min = Math.floor(intPlayTime / 60);
+      const minStr = String(min).padStart(2, "0");
+      const secStr = String(intPlayTime - min * 60).padStart(2, "0");
+      const match = String(playTime).match(/\.(\d+)$/);
+      const milliSecStr = (match?.[1] ?? "0").padEnd(3, "0").substring(0, 3);
+
+      playbackPositionStr.value = `${minStr}:${secStr}.${milliSecStr}`;
+    };
+
     const tempos = computed(() => store.state.score?.tempos);
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
+    const nowPlaying = computed(() => store.state.nowPlaying);
 
     watch(
       tempos,
       () => {
         tempoInputBuffer.value = tempos.value?.[0].tempo ?? 0;
+        updatePlayPos();
       },
       { deep: true }
     );
@@ -133,16 +171,25 @@ export default defineComponent({
       timeSignatures,
       () => {
         beatsInputBuffer.value = timeSignatures.value?.[0].beats ?? 0;
-      },
-      { deep: true }
-    );
-    watch(
-      timeSignatures,
-      () => {
         beatTypeInputBuffer.value = timeSignatures.value?.[0].beatType ?? 0;
+        updatePlayPos();
       },
       { deep: true }
     );
+
+    let requestId: number | undefined = undefined;
+    watch(nowPlaying, (newState) => {
+      if (newState) {
+        const updateView = () => {
+          updatePlayPos();
+          requestId = window.requestAnimationFrame(updateView);
+        };
+        updateView();
+      } else if (requestId !== undefined) {
+        window.cancelAnimationFrame(requestId);
+        requestId = undefined;
+      }
+    });
 
     const setTempo = async () => {
       const tempo = tempoInputBuffer.value;
@@ -168,6 +215,28 @@ export default defineComponent({
       });
     };
 
+    const play = () => {
+      store.dispatch("SING_PLAY_AUDIO");
+    };
+
+    const stop = () => {
+      store.dispatch("SING_STOP_AUDIO");
+    };
+
+    const seek = async (position: number) => {
+      await store.dispatch("SET_PLAYBACK_POSITION", { position });
+      updatePlayPos();
+    };
+
+    const volume = computed({
+      get() {
+        return store.state.volume * 100;
+      },
+      set(value: number) {
+        store.dispatch("SET_VOLUME", { volume: value / 100 });
+      },
+    });
+
     return {
       isShowSinger,
       toggleShowSinger,
@@ -180,6 +249,12 @@ export default defineComponent({
       setBeatTypeInputBuffer,
       setTempo,
       setTimeSignature,
+      playbackPositionStr,
+      nowPlaying,
+      play,
+      stop,
+      seek,
+      volume,
     };
   },
 });
@@ -228,12 +303,17 @@ export default defineComponent({
   display: flex;
 }
 
-.sing-button-temp {
+.sing-transport-button {
+  margin: 0 1px;
+}
+
+.sing-playback-button {
   margin: 0 4px;
 }
 
 .sing-tempo {
-  margin: 0 4px;
+  margin-left: 16px;
+  margin-right: 4px;
   width: 64px;
 }
 
@@ -242,9 +322,10 @@ export default defineComponent({
   width: 36px;
 }
 
-.sing-player-position {
+.sing-playback-position {
   font-size: 18px;
   margin: 0 4px;
+  min-width: 82px;
 }
 
 .sing-setting {
@@ -254,7 +335,7 @@ export default defineComponent({
 }
 
 .sing-volume {
-  margin-right: 4px;
+  margin-right: 10px;
   width: 72px;
 }
 </style>

@@ -706,6 +706,8 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
+  nowPlaying: boolean;
+  volume: number;
 };
 
 export type SingingStoreTypes = {
@@ -789,6 +791,39 @@ export type SingingStoreTypes = {
 
   IMPORT_MUSICXML_FILE: {
     action(payload: { filePath?: string }): void;
+  };
+
+  POSITION_TO_TIME: {
+    getter(position: number): number;
+  };
+
+  TIME_TO_POSITION: {
+    getter(time: number): number;
+  };
+
+  GET_PLAYBACK_POSITION: {
+    getter(): number;
+  };
+
+  SET_PLAYBACK_POSITION: {
+    action(payload: { position: number }): void;
+  };
+
+  SET_PLAYBACK_STATE: {
+    mutation: { nowPlaying: boolean };
+  };
+
+  SING_PLAY_AUDIO: {
+    action(): void;
+  };
+
+  SING_STOP_AUDIO: {
+    action(): void;
+  };
+
+  SET_VOLUME: {
+    mutation: { volume: number };
+    action(payload: { volume: number }): void;
   };
 };
 
