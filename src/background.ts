@@ -853,10 +853,6 @@ app.on("before-quit", async (event) => {
   return;
 });
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
-});
-
 app.once("will-finish-launching", () => {
   // macOS only
   app.once("open-file", (event, filePath) => {
