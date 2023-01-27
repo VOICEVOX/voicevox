@@ -11,7 +11,9 @@ import {
   AccentPhrase,
   AudioQuery,
   EngineManifest,
+  SupportedDevicesInfo,
   UserDictWord,
+  MorphableTargetInfo,
 } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -37,6 +39,7 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  MorphableTargetInfoTable,
   Voice,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -108,6 +111,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   characterInfos: Record<string, CharacterInfo[]>;
+  morphableTargetsInfo: Record<string, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -269,6 +273,21 @@ export type AudioStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
   };
 
+  LOAD_MORPHABLE_TARGETS: {
+    action(payload: { engineId: string; baseStyleId: number }): void;
+  };
+
+  SET_MORPHABLE_TARGETS: {
+    mutation: {
+      engineId: string;
+      baseStyleId: number;
+      morphableTargets?: Exclude<
+        { [key: number]: MorphableTargetInfo },
+        undefined
+      >;
+    };
+  };
+
   SET_MORPHING_INFO: {
     mutation: {
       audioKey: string;
@@ -280,7 +299,7 @@ export type AudioStoreTypes = {
     getter: string[];
   };
 
-  VALID_MOPHING_INFO: {
+  VALID_MORPHING_INFO: {
     getter(audioItem: AudioItem): boolean;
   };
 
@@ -688,6 +707,7 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
+  engineSupportedDevices: Record<string, SupportedDevicesInfo>;
 };
 
 export type EngineStoreTypes = {
@@ -783,6 +803,22 @@ export type EngineStoreTypes = {
 
   FETCH_AND_SET_ENGINE_MANIFEST: {
     action(payload: { engineId: string }): void;
+  };
+
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation: { engineId: string; supportedDevices: SupportedDevicesInfo };
+  };
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
+    action(payload: { engineId: string }): void;
+  };
+
+  ENGINE_CAN_USE_GPU: {
+    getter: (engineId: string) => boolean;
+  };
+
+  ALL_ENGINE_CAN_USE_GPU: {
+    getter: boolean;
   };
 };
 
