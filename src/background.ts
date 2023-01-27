@@ -150,7 +150,7 @@ const store = new Store<ElectronStoreType>({
       const outputSamplingRate: number =
         // @ts-expect-error 削除されたパラメータ。
         store.get("savingSetting").outputSamplingRate;
-      store.set(`engineSetting.${engineId}`, {
+      store.set(`engineSettings.${engineId}`, {
         useGpu: store.get("useGpu"),
         outputSamplingRate:
           outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
