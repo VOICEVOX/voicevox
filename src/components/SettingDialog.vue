@@ -905,17 +905,14 @@ export default defineComponent({
       return store.getters.ENGINE_CAN_USE_GPU(engineId);
     };
 
-    const samplingRateOptions = computed<SamplingRateOption[]>(() => {
-      const options: SamplingRateOption[] = [
-        "engineDefault",
-        24000,
-        44100,
-        48000,
-        88200,
-        96000,
-      ];
-      return options;
-    });
+    const samplingRateOptions: SamplingRateOption[] = [
+      "engineDefault",
+      24000,
+      44100,
+      48000,
+      88200,
+      96000,
+    ];
     const renderSamplingRateLabel = (value: SamplingRateOption): string => {
       if (value === "engineDefault") {
         return "エンジンのデフォルト";
