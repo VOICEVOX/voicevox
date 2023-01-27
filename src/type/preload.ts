@@ -255,17 +255,16 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
 
 export type EngineSetting = Record<string, EngineSettingRecord>;
 
 export const engineSettingRecord = z.object({
-  useGpu: z.union([z.boolean(), z.literal("inherit")]).default("inherit"),
+  useGpu: z.boolean().default(false),
   outputSamplingRate: z
-    .union([z.number(), z.literal("inherit"), z.literal("engineDefault")])
-    .default("inherit"),
+    .union([z.number(), z.literal("engineDefault")])
+    .default("engineDefault"),
 });
 export type EngineSettingRecord = z.infer<typeof engineSettingRecord>;
 
@@ -443,7 +442,6 @@ export type ConfirmedTips = {
 };
 export const electronStoreSchema = z
   .object({
-    useGpu: z.boolean().default(false),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
@@ -458,9 +456,6 @@ export const electronStoreSchema = z
         exportLab: z.boolean().default(false),
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
-        outputSamplingRate: z
-          .union([z.number(), z.literal("engineDefault")])
-          .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
       .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ

@@ -1049,10 +1049,7 @@ export type SettingStoreTypes = {
   };
 
   CHANGE_USE_GPU: {
-    action(payload: {
-      useGpu: boolean | "inherit";
-      engineId: "global" | string;
-    }): Promise<void>;
+    action(payload: { useGpu: boolean; engineId: string }): Promise<void>;
   };
 };
 
@@ -1063,7 +1060,6 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
-  useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1156,11 +1152,6 @@ export type UiStoreTypes = {
 
   HYDRATE_UI_STORE: {
     action(): void;
-  };
-
-  SET_USE_GPU: {
-    mutation: { useGpu: boolean };
-    action(payload: { useGpu: boolean }): void;
   };
 
   SET_INHERIT_AUDIOINFO: {

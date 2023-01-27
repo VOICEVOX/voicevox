@@ -37,7 +37,7 @@
                     dense
                     name="engine"
                     v-model="selectedEngineId"
-                    :options="['global', ...engineIds]"
+                    :options="engineIds"
                     :option-label="renderEngineNameLabel"
                   />
                 </template>
@@ -701,6 +701,7 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
   SavingSetting,
+  EngineSettingRecord,
   ExperimentalSetting,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
@@ -708,7 +709,7 @@ import {
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
-type SamplingRateOption = SavingSetting["outputSamplingRate"] | "inherit";
+type SamplingRateOption = EngineSettingRecord["outputSamplingRate"];
 
 export default defineComponent({
   name: "SettingDialog",
@@ -735,18 +736,9 @@ export default defineComponent({
 
     const engineUseGpu = computed({
       get: () => {
-        let useGpu;
-        if (selectedEngineId.value == "global") {
-          useGpu = store.state.useGpu;
-        } else {
-          useGpu = store.state.engineSetting[selectedEngineId.value].useGpu;
-          if (useGpu === "inherit") {
-            return "inherit";
-          }
-        }
-        return useGpu;
+        return store.state.engineSetting[selectedEngineId.value].useGpu;
       },
-      set: (mode: boolean | "inherit") => {
+      set: (mode: boolean) => {
         changeUseGpu(mode);
       },
     });
@@ -868,7 +860,7 @@ export default defineComponent({
       },
     });
 
-    const changeUseGpu = async (useGpu: boolean | "inherit") => {
+    const changeUseGpu = async (useGpu: boolean) => {
       let useGpuBefore;
 
       if (useGpu === useGpuBefore) return;
@@ -909,19 +901,19 @@ export default defineComponent({
     const savingSetting = computed(() => store.state.savingSetting);
 
     const samplingRateOptions = computed<SamplingRateOption[]>(() => {
-      let options = ["engineDefault", 24000, 44100, 48000, 88200, 96000];
-      if (selectedEngineId.value !== "global") {
-        options = ["inherit", ...options];
-      }
-      return options as SamplingRateOption[];
+      const options: SamplingRateOption[] = [
+        "engineDefault",
+        24000,
+        44100,
+        48000,
+        88200,
+        96000,
+      ];
+      return options;
     });
     const renderSamplingRateLabel = (value: SamplingRateOption): string => {
       if (value === "engineDefault") {
         return "エンジンのデフォルト";
-      } else if (value === "inherit") {
-        return `全体設定を使用（${renderSamplingRateLabel(
-          savingSetting.value.outputSamplingRate
-        )}）`;
       } else {
         return `${value / 1000} kHz`;
       }
@@ -938,12 +930,8 @@ export default defineComponent({
 
     const outputSamplingRate = computed({
       get: () => {
-        if (selectedEngineId.value !== "global") {
-          return store.state.engineSetting[selectedEngineId.value]
-            .outputSamplingRate;
-        } else {
-          return store.state.savingSetting.outputSamplingRate;
-        }
+        return store.state.engineSetting[selectedEngineId.value]
+          .outputSamplingRate;
       },
       set: (outputSamplingRate: SamplingRateOption) => {
         $q.dialog({
@@ -963,24 +951,13 @@ export default defineComponent({
             textColor: "display",
           },
         }).onOk(() => {
-          if (selectedEngineId.value !== "global") {
-            store.dispatch("SET_ENGINE_SETTING", {
-              engineId: selectedEngineId.value,
-              engineSetting: {
-                ...store.state.engineSetting[selectedEngineId.value],
-                outputSamplingRate,
-              },
-            });
-          } else {
-            if (outputSamplingRate === "inherit") {
-              throw new Error(
-                "outputSamplingRate cannot be inherit when global"
-              );
-            }
-            store.dispatch("SET_SAVING_SETTING", {
-              data: { ...savingSetting.value, outputSamplingRate },
-            });
-          }
+          store.dispatch("SET_ENGINE_SETTING", {
+            engineId: selectedEngineId.value,
+            engineSetting: {
+              ...store.state.engineSetting[selectedEngineId.value],
+              outputSamplingRate,
+            },
+          });
         });
         return;
       },
@@ -1011,39 +988,25 @@ export default defineComponent({
 
     const showsFilePatternEditDialog = ref(false);
 
-    const selectedEngineId = ref("global");
-    const renderEngineNameLabel = (engineIdOrGlobal: string) => {
-      if (engineIdOrGlobal === "global") {
-        return "全体";
-      } else {
-        return engineInfos.value[engineIdOrGlobal].name;
-      }
-    };
-    const engineUseGpuOptions = computed(() => {
-      let options: { label: string; value: boolean | "inherit" }[] = [
-        { label: "CPU", value: false },
-        { label: "GPU", value: true },
-      ];
-      if (selectedEngineId.value !== "global") {
-        options = [
-          {
-            label: `全体設定を使用（${store.state.useGpu ? "GPU" : "CPU"}）`,
-            value: "inherit",
-          },
-          ...options,
-        ];
-      }
-      return options;
+    const selectedEngineIdRaw = ref("");
+    const selectedEngineId = computed({
+      get: () => {
+        return selectedEngineIdRaw.value || engineIds.value[0];
+      },
+      set: (engineId: string) => {
+        selectedEngineIdRaw.value = engineId;
+      },
     });
+    const renderEngineNameLabel = (engineId: string) => {
+      return engineInfos.value[engineId].name;
+    };
+    const engineUseGpuOptions = [
+      { label: "CPU", value: false },
+      { label: "GPU", value: true },
+    ];
 
-    const canEngineUseGpu = (engineIdOrGlobal: string) => {
-      if (engineIdOrGlobal === "global") {
-        return engineIds.value.some((engineId) =>
-          store.getters.ENGINE_CAN_USE_GPU(engineId)
-        );
-      } else {
-        return store.getters.ENGINE_CAN_USE_GPU;
-      }
+    const canEngineUseGpu = (engineId: string) => {
+      return store.getters.ENGINE_CAN_USE_GPU(engineId);
     };
 
     return {

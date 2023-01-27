@@ -132,9 +132,6 @@ const store = new Store<ElectronStoreType>({
       }
     },
     ">=0.14": (store) => {
-      if (store.get("savingSetting").outputSamplingRate == 24000) {
-        store.set("savingSetting.outputSamplingRate", "engineDefault");
-      }
       // FIXME: できるならEngineManagerからEnginIDを取得したい
       const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
         .uuid;
@@ -149,6 +146,15 @@ const store = new Store<ElectronStoreType>({
           defaultStyleId: defaultStyle.defaultStyleId,
         }))
       );
+
+      const outputSamplingRate: number =
+        // @ts-expect-error 削除されたパラメータ。
+        store.get("savingSetting").outputSamplingRate;
+      store.set(`engineSetting.${engineId}`, {
+        useGpu: store.get("useGpu"),
+        outputSamplingRate:
+          outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
+      });
     },
   },
 });

@@ -36,7 +36,6 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
-        useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
@@ -61,13 +60,12 @@ describe("store/vuex.js test", () => {
           exportLab: false,
           exportText: false,
           outputStereo: false,
-          outputSamplingRate: 24000,
           audioOutputDevice: "default",
         },
         engineSetting: {
           "88022f86-c823-436e-85a3-500c629749c4": {
-            outputSamplingRate: "inherit",
-            useGpu: "inherit",
+            outputSamplingRate: "engineDefault",
+            useGpu: false,
           },
         },
         themeSetting: {

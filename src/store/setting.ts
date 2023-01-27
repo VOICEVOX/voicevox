@@ -27,7 +27,6 @@ export const settingStoreState: SettingStoreState = {
     exportLab: false,
     exportText: false,
     outputStereo: false,
-    outputSamplingRate: "engineDefault",
     audioOutputDevice: "default",
   },
   hotkeySettings: [],
@@ -357,33 +356,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           }
         }
 
-        let result;
-        if (engineId === "global") {
-          if (useGpu === "inherit") {
-            throw new Error("useGpu is inherit, but engineId is global");
-          }
-          const engineIdsWithInherit = state.engineIds.filter(
-            (id) => state.engineSetting[id].useGpu === "inherit"
-          );
-          await dispatch("SET_USE_GPU", { useGpu });
-          await dispatch("RESTART_ENGINES", {
-            engineIds: engineIdsWithInherit,
-          });
-          result = await dispatch("POST_ENGINE_START", {
-            engineIds: engineIdsWithInherit,
-          });
-        } else {
-          await dispatch("SET_ENGINE_SETTING", {
-            engineSetting: { ...state.engineSetting[engineId], useGpu },
-            engineId,
-          });
-          await dispatch("RESTART_ENGINES", {
-            engineIds: [engineId],
-          });
-          result = await dispatch("POST_ENGINE_START", {
-            engineIds: [engineId],
-          });
-        }
+        await dispatch("SET_ENGINE_SETTING", {
+          engineSetting: { ...state.engineSetting[engineId], useGpu },
+          engineId,
+        });
+        await dispatch("RESTART_ENGINES", {
+          engineIds: [engineId],
+        });
+        const result = await dispatch("POST_ENGINE_START", {
+          engineIds: [engineId],
+        });
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい

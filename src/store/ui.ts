@@ -36,7 +36,6 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
-  useGpu: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -173,10 +172,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   HYDRATE_UI_STORE: {
     async action({ commit }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.getSetting("useGpu"),
-      });
-
       commit("SET_INHERIT_AUDIOINFO", {
         inheritAudioInfo: await window.electron.getSetting("inheritAudioInfo"),
       });
@@ -198,17 +193,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   ON_VUEX_READY: {
     action() {
       window.electron.vuexReady();
-    },
-  },
-
-  SET_USE_GPU: {
-    mutation(state, { useGpu }: { useGpu: boolean }) {
-      state.useGpu = useGpu;
-    },
-    async action({ commit }, { useGpu }: { useGpu: boolean }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.setSetting("useGpu", useGpu),
-      });
     },
   },
 
