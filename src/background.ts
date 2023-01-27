@@ -424,9 +424,7 @@ async function start() {
   const engineSetting = store.get("engineSetting");
   for (const engineInfo of engineInfos) {
     if (!engineSetting[engineInfo.uuid]) {
-      // engineSettingRecordのデフォルト値を設定
-      // FIXME: z.objectからデフォルト値を取得する方法がないので、parseで空のオブジェクトを渡している。
-      //        もっと良い実装があるはず。
+      // 空オブジェクトをパースさせることで、デフォルト値を取得する
       engineSetting[engineInfo.uuid] = engineSettingRecord.parse({});
     }
   }
