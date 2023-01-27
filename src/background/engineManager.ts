@@ -266,7 +266,7 @@ export class EngineManager {
       );
     });
 
-    engineProcess.on("close", (code, signal) => {
+    engineProcess.on("close", async (code, signal) => {
       log.info(
         `ENGINE ${engineId}: Process terminated due to receipt of signal ${signal}`
       );
@@ -276,9 +276,30 @@ export class EngineManager {
         ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
         const dialogMessage =
           engineInfos.length === 1
-            ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
-        dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
+            ? "音声合成エンジンが異常終了しました。"
+            : `${engineInfo.name}が異常終了しました。`;
+        if (this.store.get("engineSetting")[engineId].useGpu) {
+          const dialogResult = await dialog.showMessageBox({
+            title: "音声合成エンジンエラー",
+            message:
+              dialogMessage +
+              "\n現在、GPUモードで起動しています。CPUモードで再起動しますか？",
+            type: "error",
+            buttons: ["いいえ", "はい"],
+            cancelId: 0,
+            defaultId: 1,
+            noLink: true,
+          });
+          if (dialogResult.response === 1) {
+            this.store.set(`engineSetting.${engineId}.useGpu`, false);
+            this.runEngine(engineId, win);
+          }
+        } else {
+          dialog.showErrorBox(
+            "音声合成エンジンエラー",
+            dialogMessage + "\nエンジンを再起動してください。"
+          );
+        }
       }
     });
   }
