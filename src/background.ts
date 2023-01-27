@@ -155,6 +155,10 @@ const store = new Store<ElectronStoreType>({
         outputSamplingRate:
           outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
       });
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("savingSetting.outputSamplingRate");
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("useGpu");
     },
   },
 });
