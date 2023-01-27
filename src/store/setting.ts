@@ -360,10 +360,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           engineSetting: { ...state.engineSetting[engineId], useGpu },
           engineId,
         });
-        await dispatch("RESTART_ENGINES", {
-          engineIds: [engineId],
-        });
-        const result = await dispatch("POST_ENGINE_START", {
+        const result = await dispatch("RESTART_ENGINES", {
           engineIds: [engineId],
         });
 

@@ -861,10 +861,6 @@ export default defineComponent({
     });
 
     const changeUseGpu = async (useGpu: boolean) => {
-      let useGpuBefore;
-
-      if (useGpu === useGpuBefore) return;
-
       $q.loading.show({
         spinnerColor: "primary",
         spinnerSize: 50,
