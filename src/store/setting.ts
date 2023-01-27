@@ -366,7 +366,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
-        if (!result && useGpu) {
+        if (!result.success && useGpu) {
           await window.electron.showMessageDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
