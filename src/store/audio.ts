@@ -45,7 +45,7 @@ async function generateUniqueIdAndQuery(
     if (audioItem.engineId == undefined)
       throw new Error(`audioItem.engineId is undefined`);
     audioQuery.outputSamplingRate =
-      state.engineSetting[audioItem.engineId].outputSamplingRate;
+      state.engineSettings[audioItem.engineId].outputSamplingRate;
     audioQuery.outputStereo = state.savingSetting.outputStereo;
   }
 
