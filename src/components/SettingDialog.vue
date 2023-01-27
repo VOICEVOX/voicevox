@@ -902,7 +902,7 @@ export default defineComponent({
     ];
 
     const gpuSwitchEnabled = (engineId: string) => {
-      // CPUモードでもGPUモードからCPUモードに変更できるようにする
+      // CPU版でもGPUモードからCPUモードに変更できるようにする
       return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
     };
 
