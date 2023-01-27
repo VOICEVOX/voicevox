@@ -341,7 +341,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
 
         // 対応するGPUがない場合に変更を続行するか問う
-        if (useGpu === true && !isAvailableGPUMode) {
+        if (useGpu && !isAvailableGPUMode) {
           const result = await window.electron.showQuestionDialog({
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
