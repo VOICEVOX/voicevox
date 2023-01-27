@@ -938,33 +938,45 @@ export default defineComponent({
         return store.state.engineSetting[selectedEngineId.value]
           .outputSamplingRate;
       },
-      set: (outputSamplingRate: SamplingRateOption) => {
-        $q.dialog({
-          title: "出力サンプリングレートを変更します",
-          message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-          html: true,
-          persistent: true,
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(() => {
-          store.dispatch("SET_ENGINE_SETTING", {
-            engineId: selectedEngineId.value,
-            engineSetting: {
-              ...store.state.engineSetting[selectedEngineId.value],
-              outputSamplingRate,
-            },
+      set: async (outputSamplingRate: SamplingRateOption) => {
+        if (outputSamplingRate !== "engineDefault") {
+          const confirmChange = await new Promise((resolve) => {
+            $q.dialog({
+              title: "出力サンプリングレートを変更します",
+              message:
+                "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+              html: true,
+              persistent: true,
+              ok: {
+                label: "変更する",
+                flat: true,
+                textColor: "display",
+              },
+              cancel: {
+                label: "変更しない",
+                flat: true,
+                textColor: "display",
+              },
+            })
+              .onOk(() => {
+                resolve(true);
+              })
+              .onCancel(() => {
+                resolve(false);
+              });
           });
+          if (!confirmChange) {
+            return;
+          }
+        }
+
+        store.dispatch("SET_ENGINE_SETTING", {
+          engineId: selectedEngineId.value,
+          engineSetting: {
+            ...store.state.engineSetting[selectedEngineId.value],
+            outputSamplingRate,
+          },
         });
-        return;
       },
     });
 
