@@ -206,6 +206,10 @@ import cloneDeep from "clone-deep";
 export default defineComponent({
   name: "EditorHome",
 
+  props: {
+    projectFilePath: { type: String },
+  },
+
   components: {
     draggable,
     MenuBar,
@@ -227,7 +231,7 @@ export default defineComponent({
     ProgressDialog,
   },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -543,14 +547,15 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
-      const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
-      isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
+      // プロジェクトファイルが指定されていればロード
+      let projectFileLoaded = false;
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+        projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: props.projectFilePath,
+        });
+      }
 
-      const filePath = store.state.projectFilePath;
-      if (filePath != undefined) {
-        await store.dispatch("LOAD_PROJECT_FILE", { filePath });
-      } else {
+      if (!projectFileLoaded) {
         // 最初のAudioCellを作成
         const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
         const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {

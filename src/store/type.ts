@@ -940,7 +940,7 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string; confirm?: boolean }): void;
+    action(payload: { filePath?: string; confirm?: boolean }): boolean;
   };
 
   SAVE_PROJECT_FILE: {
