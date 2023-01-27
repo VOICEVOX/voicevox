@@ -54,9 +54,7 @@ export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
 
 export type AudioItem = {
   text: string;
-  engineId?: string;
-  speakerId?: string;
-  styleId?: number;
+  voice: Voice;
   query?: EditorAudioQuery;
   presetKey?: string;
   morphingInfo?: MorphingInfo;

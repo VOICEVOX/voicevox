@@ -214,16 +214,10 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       if (state.audioKeys.length === 1) {
         const audioItem = state.audioItems[state.audioKeys[0]];
         if (audioItem.text === "") {
-          if (audioItem.engineId === undefined)
-            throw new Error("assert audioItem.engineId !== undefined");
-
-          if (audioItem.styleId === undefined)
-            throw new Error("assert audioItem.styleId !== undefined");
-
           const characterInfo = getCharacterInfo(
             state,
-            audioItem.engineId,
-            audioItem.styleId
+            audioItem.voice.engineId,
+            audioItem.voice.styleId
           );
 
           if (characterInfo === undefined)
@@ -232,9 +226,15 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
           const speakerUuid = characterInfo.metas.speakerUuid;
           const defaultStyleId = defaultStyleIds.find(
             (styleId) => speakerUuid == styleId.speakerUuid
-          )?.defaultStyleId;
+          );
+          if (defaultStyleId == undefined)
+            throw new Error("defaultStyleId == undefined");
 
-          audioItem.styleId = defaultStyleId;
+          audioItem.voice = {
+            engineId: defaultStyleId.engineId,
+            speakerId: defaultStyleId.speakerUuid,
+            styleId: defaultStyleId.defaultStyleId,
+          };
         }
       }
     },

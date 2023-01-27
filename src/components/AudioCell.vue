@@ -90,12 +90,10 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const selectedVoice = computed<Voice | undefined>({
   get() {
-    const engineId = audioItem.value.engineId;
-    const styleId = audioItem.value.styleId;
+    const engineId = audioItem.value.voice.engineId;
+    const styleId = audioItem.value.voice.styleId;
 
     if (
-      engineId == undefined ||
-      styleId == undefined ||
       !store.state.engineIds.some((storeEngineId) => storeEngineId === engineId)
     )
       return undefined;
@@ -178,25 +176,9 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
         await pushAudioText();
       }
 
-      const engineId = audioItem.value.engineId;
-      if (engineId === undefined)
-        throw new Error("assert engineId !== undefined");
-
-      const speakerId = audioItem.value.speakerId;
-      if (speakerId === undefined)
-        throw new Error("assert speakerId !== undefined");
-
-      const styleId = audioItem.value.styleId;
-      if (styleId === undefined)
-        throw new Error("assert styleId !== undefined");
-
       const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
         texts,
-        voice: {
-          engineId,
-          speakerId,
-          styleId,
-        },
+        voice: audioItem.value.voice,
         prevAudioKey,
       });
       if (audioKeys)

@@ -51,8 +51,9 @@ async function generateUniqueIdAndQuery(
     JSON.stringify([
       audioItem.text,
       audioQuery,
-      audioItem.engineId,
-      audioItem.styleId,
+      audioItem.voice.engineId,
+      audioItem.voice.speakerId,
+      audioItem.voice.styleId,
       audioItem.morphingInfo,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
@@ -69,35 +70,33 @@ function parseTextFile(
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
-  const characters = new Map<string, { engineId: string; styleId: number }>();
-  const uuid2StyleIds = new Map<
-    string,
-    { engineId: string; styleId: number }
-  >();
+  const characters = new Map<string, Voice>();
+  const uuid2Voice = new Map<string, Voice>();
   for (const defaultStyleId of defaultStyleIds) {
-    const speakerUuid = defaultStyleId.speakerUuid;
+    const speakerId = defaultStyleId.speakerUuid;
     const engineId = defaultStyleId.engineId;
     const styleId = defaultStyleId.defaultStyleId;
-    uuid2StyleIds.set(speakerUuid, { engineId, styleId });
+    uuid2Voice.set(speakerId, { engineId, speakerId, styleId });
   }
   // setup default characters
   for (const characterInfo of userOrderedCharacterInfos) {
     const uuid = characterInfo.metas.speakerUuid;
-    const style = uuid2StyleIds.get(uuid);
+    const voice = uuid2Voice.get(uuid);
     const speakerName = characterInfo.metas.speakerName;
-    if (style == undefined)
+    if (voice == undefined)
       throw new Error(`style is undefined. speakerUuid: ${uuid}`);
-    characters.set(speakerName, {
-      engineId: style.engineId,
-      styleId: style.styleId,
-    });
+    characters.set(speakerName, voice);
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
       characters.set(
         `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
-        { engineId: style.engineId, styleId: style.styleId }
+        {
+          engineId: style.engineId,
+          speakerId: characterInfo.metas.speakerUuid,
+          styleId: style.styleId,
+        }
       );
     }
   }
@@ -105,22 +104,18 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyle = uuid2StyleIds.get(
+  let lastVoice = uuid2Voice.get(
     userOrderedCharacterInfos[0].metas.speakerUuid
   );
-  if (lastStyle == undefined) throw new Error(`lastStyle is undefined.`);
+  if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const styleId = characters.get(splitText);
-    if (styleId !== undefined) {
-      lastStyle = styleId;
+    const voice = characters.get(splitText);
+    if (voice !== undefined) {
+      lastVoice = voice;
       continue;
     }
 
-    audioItems.push({
-      text: splitText,
-      engineId: lastStyle.engineId,
-      styleId: lastStyle.styleId,
-    });
+    audioItems.push({ text: splitText, voice: lastVoice });
   }
   return audioItems;
 }
@@ -132,21 +127,16 @@ function buildFileName(state: State, audioKey: string) {
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
 
-  if (audioItem.engineId === undefined)
-    throw new Error("asssrt audioItem.engineId !== undefined");
-  if (audioItem.styleId === undefined)
-    throw new Error("assert audioItem.styleId !== undefined");
-
   const character = getCharacterInfo(
     state,
-    audioItem.engineId,
-    audioItem.styleId
+    audioItem.voice.engineId,
+    audioItem.voice.styleId
   );
   if (character === undefined)
     throw new Error("assert character !== undefined");
 
   const style = character.metas.styles.find(
-    (style) => style.styleId === audioItem.styleId
+    (style) => style.styleId === audioItem.voice.styleId
   );
   if (style === undefined) throw new Error("assert style !== undefined");
 
@@ -524,9 +514,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const audioItem: AudioItem = {
         text,
-        engineId,
-        speakerId,
-        styleId,
+        voice: { engineId, speakerId, styleId },
       };
       if (query != undefined) {
         audioItem.query = query;
@@ -765,16 +753,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   VALID_MORPHING_INFO: {
     getter: (state) => (audioItem: AudioItem) => {
-      if (
-        audioItem.engineId == undefined ||
-        audioItem.styleId == undefined ||
-        audioItem.morphingInfo?.targetStyleId == undefined
-      )
-        return false;
+      if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
       const info =
-        state.morphableTargetsInfo[audioItem.engineId]?.[audioItem.styleId]?.[
-          audioItem.morphingInfo.targetStyleId
-        ];
+        state.morphableTargetsInfo[audioItem.voice.engineId]?.[
+          audioItem.voice.styleId
+        ]?.[audioItem.morphingInfo.targetStyleId];
       if (info == undefined) return false;
       return info.isMorphable;
     },
@@ -822,9 +805,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   SET_AUDIO_VOICE: {
     mutation(state, { audioKey, voice }: { audioKey: string; voice: Voice }) {
-      state.audioItems[audioKey].engineId = voice.engineId;
-      state.audioItems[audioKey].speakerId = voice.speakerId;
-      state.audioItems[audioKey].styleId = voice.styleId;
+      state.audioItems[audioKey].voice = voice;
     },
   },
 
@@ -1145,9 +1126,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, getters, state },
         { audioItem }: { audioItem: AudioItem }
       ) => {
-        const engineId = audioItem.engineId;
-        if (engineId === undefined)
-          throw new Error("engineId is not defined for audioItem");
+        const engineId = audioItem.voice.engineId;
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1156,9 +1135,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (audioQuery == undefined)
           throw new Error("audioQuery is not defined for audioItem");
 
-        const speaker = audioItem.styleId;
-        if (speaker == undefined)
-          throw new Error("speaker is not defined for audioItem");
+        const speaker = audioItem.voice.styleId;
 
         const engineAudioQuery = convertAudioQueryFromEditorToEngine(
           audioQuery,
@@ -1636,8 +1613,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
-          const styleId = state.audioItems[audioKey].styleId;
-          const engineId = state.audioItems[audioKey].engineId;
+          const styleId = state.audioItems[audioKey].voice.styleId;
+          const engineId = state.audioItems[audioKey].voice.engineId;
           if (!engineId) {
             throw new Error("engineId is undefined");
           }
@@ -1959,14 +1936,8 @@ export const audioCommandStore = transformCommandStore(
         { state, commit, dispatch },
         { audioKey, text }: { audioKey: string; text: string }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
-
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
         try {
           if (query !== undefined) {
@@ -2116,13 +2087,8 @@ export const audioCommandStore = transformCommandStore(
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
           try {
-            const engineId = state.audioItems[audioKey].engineId;
-            if (engineId === undefined)
-              throw new Error("assert engineId !== undefined");
-
-            const styleId = state.audioItems[audioKey].styleId;
-            if (styleId === undefined)
-              throw new Error("assert styleId !== undefined");
+            const engineId = state.audioItems[audioKey].voice.engineId;
+            const styleId = state.audioItems[audioKey].voice.styleId;
 
             const resultAccentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_AND_COPY_MORA_DATA",
@@ -2169,13 +2135,8 @@ export const audioCommandStore = transformCommandStore(
         const { audioKey, accentPhraseIndex } = payload;
         const query = state.audioItems[audioKey].query;
 
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         if (query === undefined) {
           throw Error(
@@ -2300,13 +2261,8 @@ export const audioCommandStore = transformCommandStore(
           popUntilPause: boolean;
         }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
@@ -2400,13 +2356,8 @@ export const audioCommandStore = transformCommandStore(
 
     COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
       async action({ state, dispatch, commit }, { audioKey }) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         const query = state.audioItems[audioKey].query;
         if (query === undefined) throw new Error("assert query !== undefined");
@@ -2429,11 +2380,8 @@ export const audioCommandStore = transformCommandStore(
         { state, dispatch, commit },
         { audioKey, accentPhraseIndex }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId == undefined) throw new Error("engineId == undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId == undefined) throw new Error("styleId == undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
@@ -2752,7 +2700,10 @@ export const audioCommandStore = transformCommandStore(
 
           if (!getters.USER_ORDERED_CHARACTER_INFOS)
             throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
-          for (const { text, engineId, speakerId, styleId } of parseTextFile(
+          for (const {
+            text,
+            voice: { engineId, speakerId, styleId },
+          } of parseTextFile(
             body,
             state.defaultStyleIds,
             getters.USER_ORDERED_CHARACTER_INFOS

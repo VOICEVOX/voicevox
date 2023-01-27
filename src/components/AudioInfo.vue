@@ -507,9 +507,10 @@ const query = computed(() => audioItem.value?.query);
 
 const supportedFeatures = computed(
   () =>
-    (audioItem.value?.engineId &&
-      store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
-      store.state.engineManifests[audioItem.value?.engineId]
+    (store.state.engineIds.some(
+      (id) => id === audioItem.value.voice.engineId
+    ) &&
+      store.state.engineManifests[audioItem.value.voice.engineId]
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
@@ -652,14 +653,10 @@ const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 
 // モーフィング可能なターゲット一覧を取得
 watchEffect(() => {
-  if (
-    audioItem.value != undefined &&
-    audioItem.value.engineId != undefined &&
-    audioItem.value.styleId != undefined
-  ) {
+  if (audioItem.value != undefined) {
     store.dispatch("LOAD_MORPHABLE_TARGETS", {
-      engineId: audioItem.value.engineId,
-      baseStyleId: audioItem.value.styleId,
+      engineId: audioItem.value.voice.engineId,
+      baseStyleId: audioItem.value.voice.styleId,
     });
   }
 });
@@ -669,11 +666,8 @@ const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   if (allCharacterInfos == undefined)
     throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
 
-  const baseEngineId = audioItem.value.engineId;
-  const baseStyleId = audioItem.value.styleId;
-  if (baseEngineId === undefined || baseStyleId == undefined) {
-    throw new Error("baseEngineId == undefined || baseStyleId == undefined");
-  }
+  const baseEngineId = audioItem.value.voice.engineId;
+  const baseStyleId = audioItem.value.voice.styleId;
 
   // モーフィング対象リストを問い合わせていないときはとりあえず空欄を表示
   // FIXME: そもそもモーフィングUIを表示しないようにする

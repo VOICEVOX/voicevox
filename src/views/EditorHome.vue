@@ -411,9 +411,9 @@ export default defineComponent({
       let styleId: number | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
-        engineId = store.state.audioItems[prevAudioKey].engineId;
-        speakerId = store.state.audioItems[prevAudioKey].speakerId;
-        styleId = store.state.audioItems[prevAudioKey].styleId;
+        engineId = store.state.audioItems[prevAudioKey].voice.engineId;
+        speakerId = store.state.audioItems[prevAudioKey].voice.speakerId;
+        styleId = store.state.audioItems[prevAudioKey].voice.styleId;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -564,13 +564,11 @@ export default defineComponent({
         focusCell({ audioKey: newAudioKey });
 
         // 最初の話者を初期化
-        if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
-          store.dispatch("SETUP_SPEAKER", {
-            audioKey: newAudioKey,
-            engineId: audioItem.engineId,
-            styleId: audioItem.styleId,
-          });
-        }
+        store.dispatch("SETUP_SPEAKER", {
+          audioKey: newAudioKey,
+          engineId: audioItem.voice.engineId,
+          styleId: audioItem.voice.styleId,
+        });
       }
 
       // ショートカットキーの設定
