@@ -62,7 +62,7 @@ describe("store/vuex.js test", () => {
           outputStereo: false,
           audioOutputDevice: "default",
         },
-        engineSetting: {
+        engineSettings: {
           "88022f86-c823-436e-85a3-500c629749c4": {
             outputSamplingRate: "engineDefault",
             useGpu: false,

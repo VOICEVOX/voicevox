@@ -701,7 +701,7 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
   SavingSetting,
-  EngineSettingRecord,
+  EngineSetting,
   ExperimentalSetting,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
@@ -709,7 +709,7 @@ import {
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
-type SamplingRateOption = EngineSettingRecord["outputSamplingRate"];
+type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
 export default defineComponent({
   name: "SettingDialog",
@@ -736,7 +736,7 @@ export default defineComponent({
 
     const engineUseGpu = computed({
       get: () => {
-        return store.state.engineSetting[selectedEngineId.value].useGpu;
+        return store.state.engineSettings[selectedEngineId.value].useGpu;
       },
       set: (mode: boolean) => {
         changeUseGpu(mode);
@@ -933,7 +933,7 @@ export default defineComponent({
 
     const outputSamplingRate = computed({
       get: () => {
-        return store.state.engineSetting[selectedEngineId.value]
+        return store.state.engineSettings[selectedEngineId.value]
           .outputSamplingRate;
       },
       set: async (outputSamplingRate: SamplingRateOption) => {
@@ -971,7 +971,7 @@ export default defineComponent({
         store.dispatch("SET_ENGINE_SETTING", {
           engineId: selectedEngineId.value,
           engineSetting: {
-            ...store.state.engineSetting[selectedEngineId.value],
+            ...store.state.engineSettings[selectedEngineId.value],
             outputSamplingRate,
           },
         });

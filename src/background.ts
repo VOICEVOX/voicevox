@@ -32,7 +32,7 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSettingRecord,
+  engineSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -425,14 +425,14 @@ async function createWindow() {
 // UI処理を開始。その他の準備が完了した後に呼ばれる。
 async function start() {
   const engineInfos = engineManager.fetchEngineInfos();
-  const engineSetting = store.get("engineSetting");
+  const engineSettings = store.get("engineSettings");
   for (const engineInfo of engineInfos) {
-    if (!engineSetting[engineInfo.uuid]) {
+    if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSetting[engineInfo.uuid] = engineSettingRecord.parse({});
+      engineSettings[engineInfo.uuid] = engineSetting.parse({});
     }
   }
-  store.set("engineSetting", engineSetting);
+  store.set("engineSettings", engineSettings);
 
   await createWindow();
   await engineManager.runEngineAll(win);

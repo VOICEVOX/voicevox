@@ -39,9 +39,9 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
-  EngineSetting,
-  EngineSettingRecord,
+  EngineSettings,
   MorphableTargetInfoTable,
+  EngineSetting,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -975,7 +975,7 @@ export type SettingStoreState = {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
-  engineSetting: EngineSetting;
+  engineSettings: EngineSettings;
 };
 
 export type SettingStoreTypes = {
@@ -1041,9 +1041,9 @@ export type SettingStoreTypes = {
   };
 
   SET_ENGINE_SETTING: {
-    mutation: { engineSetting: EngineSettingRecord; engineId: string };
+    mutation: { engineSetting: EngineSetting; engineId: string };
     action(payload: {
-      engineSetting: EngineSettingRecord;
+      engineSetting: EngineSetting;
       engineId: string;
     }): Promise<void>;
   };

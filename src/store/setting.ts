@@ -54,7 +54,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
   },
-  engineSetting: {},
+  engineSettings: {},
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -118,7 +118,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
 
       for (const [engineId, engineSetting] of Object.entries(
-        await window.electron.getSetting("engineSetting")
+        await window.electron.getSetting("engineSettings")
       )) {
         commit("SET_ENGINE_SETTING", {
           engineId,
@@ -320,11 +320,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   SET_ENGINE_SETTING: {
     mutation(state, { engineSetting, engineId }) {
-      state.engineSetting[engineId] = engineSetting;
+      state.engineSettings[engineId] = engineSetting;
     },
     async action({ commit, state }, { engineSetting, engineId }) {
-      window.electron.setSetting("engineSetting", {
-        ...state.engineSetting,
+      window.electron.setSetting("engineSettings", {
+        ...state.engineSettings,
         [engineId]: engineSetting,
       });
       commit("SET_ENGINE_SETTING", { engineSetting, engineId });
@@ -357,7 +357,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         }
 
         await dispatch("SET_ENGINE_SETTING", {
-          engineSetting: { ...state.engineSetting[engineId], useGpu },
+          engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });
         const result = await dispatch("RESTART_ENGINES", {

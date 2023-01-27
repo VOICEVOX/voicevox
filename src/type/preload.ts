@@ -258,15 +258,15 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSetting = Record<string, EngineSettingRecord>;
+export type EngineSettings = Record<string, EngineSetting>;
 
-export const engineSettingRecord = z.object({
+export const engineSetting = z.object({
   useGpu: z.boolean().default(false),
   outputSamplingRate: z
     .union([z.number(), z.literal("engineDefault")])
     .default("engineDefault"),
 });
-export type EngineSettingRecord = z.infer<typeof engineSettingRecord>;
+export type EngineSetting = z.infer<typeof engineSetting>;
 
 export type DefaultStyleId = {
   engineId: string;
@@ -464,7 +464,7 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
-    engineSetting: z.record(engineSettingRecord).default({}),
+    engineSettings: z.record(engineSetting).default({}),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
