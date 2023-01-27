@@ -68,14 +68,14 @@
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
                   :options="engineUseGpuOptions"
-                  :disable="!canEngineUseGpu(selectedEngineId)"
+                  :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
                   <q-tooltip
                     anchor="center start"
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                    :target="!canEngineUseGpu(selectedEngineId)"
+                    :target="!gpuSwitchEnabled(selectedEngineId)"
                   >
                     {{
                       engineInfos[selectedEngineId].name
@@ -901,8 +901,9 @@ export default defineComponent({
       { label: "GPU", value: true },
     ];
 
-    const canEngineUseGpu = (engineId: string) => {
-      return store.getters.ENGINE_CAN_USE_GPU(engineId);
+    const gpuSwitchEnabled = (engineId: string) => {
+      // CPUモードでもGPUモードからCPUモードに変更できるようにする
+      return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
     };
 
     const samplingRateOptions: SamplingRateOption[] = [
@@ -1018,7 +1019,7 @@ export default defineComponent({
     return {
       settingDialogOpenedComputed,
       engineUseGpu,
-      canEngineUseGpu,
+      gpuSwitchEnabled,
       engineIds,
       engineInfos,
       selectedEngineId,
