@@ -896,6 +896,15 @@ export default defineComponent({
 
     const savingSetting = computed(() => store.state.savingSetting);
 
+    const engineUseGpuOptions = [
+      { label: "CPU", value: false },
+      { label: "GPU", value: true },
+    ];
+
+    const canEngineUseGpu = (engineId: string) => {
+      return store.getters.ENGINE_CAN_USE_GPU(engineId);
+    };
+
     const samplingRateOptions = computed<SamplingRateOption[]>(() => {
       const options: SamplingRateOption[] = [
         "engineDefault",
@@ -995,14 +1004,6 @@ export default defineComponent({
     });
     const renderEngineNameLabel = (engineId: string) => {
       return engineInfos.value[engineId].name;
-    };
-    const engineUseGpuOptions = [
-      { label: "CPU", value: false },
-      { label: "GPU", value: true },
-    ];
-
-    const canEngineUseGpu = (engineId: string) => {
-      return store.getters.ENGINE_CAN_USE_GPU(engineId);
     };
 
     return {
