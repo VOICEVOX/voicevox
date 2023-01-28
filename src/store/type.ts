@@ -1042,10 +1042,7 @@ export type SettingStoreTypes = {
 
   SET_ENGINE_SETTING: {
     mutation: { engineSetting: EngineSetting; engineId: string };
-    action(payload: {
-      engineSetting: EngineSetting;
-      engineId: string;
-    }): Promise<void>;
+    action(payload: { engineSetting: EngineSetting; engineId: string }): void;
   };
 
   CHANGE_USE_GPU: {
