@@ -36,7 +36,6 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
-        useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
@@ -61,8 +60,13 @@ describe("store/vuex.js test", () => {
           exportLab: false,
           exportText: false,
           outputStereo: false,
-          outputSamplingRate: 24000,
           audioOutputDevice: "default",
+        },
+        engineSettings: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
+            outputSamplingRate: "engineDefault",
+            useGpu: false,
+          },
         },
         themeSetting: {
           currentTheme: "Default",
@@ -194,7 +198,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.undoCommands);
     assert.isArray(store.state.redoCommands);
     assert.isEmpty(store.state.redoCommands);
-    assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);

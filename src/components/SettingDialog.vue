@@ -28,8 +28,19 @@
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
-              <q-card-actions>
+              <q-card-actions class="engine-setting">
                 <div class="text-h5">エンジン</div>
+                <template v-if="engineIds.length > 0">
+                  <q-space />
+                  <q-select
+                    borderless
+                    dense
+                    name="engine"
+                    v-model="selectedEngineId"
+                    :options="engineIds"
+                    :option-label="renderEngineNameLabel"
+                  />
+                </template>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-sm bg-surface">
                 <div>エンジンモード</div>
@@ -51,27 +62,51 @@
                 <q-btn-toggle
                   padding="xs md"
                   unelevated
-                  v-model="engineMode"
+                  v-model="engineUseGpu"
                   color="background"
                   text-color="display"
                   toggle-color="primary"
                   toggle-text-color="display-on-primary"
-                  :options="[
-                    { label: 'CPU', value: 'switchCPU' },
-                    { label: 'GPU', value: 'switchGPU' },
-                  ]"
-                  :disable="!allEngineCanUseGPU"
+                  :options="engineUseGpuOptions"
+                  :disable="!gpuSwitchEnabled(selectedEngineId)"
                 >
                   <q-tooltip
                     anchor="center start"
                     self="center right"
                     transition-show="jump-left"
                     transition-hide="jump-right"
-                    :target="!allEngineCanUseGPU"
+                    :target="!gpuSwitchEnabled(selectedEngineId)"
                   >
-                    お使いのエンジンはCPU版のためGPUモードを利用できません。
+                    {{
+                      engineInfos[selectedEngineId].name
+                    }}はCPU版のためGPUモードを利用できません。
                   </q-tooltip>
                 </q-btn-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>音声のサンプリングレート</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-select
+                  borderless
+                  name="samplingRate"
+                  v-model="outputSamplingRate"
+                  :options="samplingRateOptions"
+                  :option-label="renderSamplingRateLabel"
+                >
+                </q-select>
               </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
@@ -548,34 +583,6 @@
                 >
                 </q-select>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>音声のサンプリングレート</div>
-                <div>
-                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
-                    <q-tooltip
-                      :delay="500"
-                      anchor="center left"
-                      self="center right"
-                      transition-show="jump-left"
-                      transition-hide="jump-right"
-                    >
-                      再生・保存時の音声のサンプリングレートを変更します（サンプリングレートを上げても音声の品質は上がりません。）
-                    </q-tooltip>
-                  </q-icon>
-                </div>
-                <q-space />
-                <q-select
-                  borderless
-                  name="samplingRate"
-                  :model-value="savingSetting.outputSamplingRate"
-                  :options="samplingRateOptions"
-                  :option-label="renderSamplingRateLabel"
-                  @update:model-value="
-                    handleSavingSettingChange('outputSamplingRate', $event)
-                  "
-                >
-                </q-select>
-              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -694,12 +701,15 @@ import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import {
   SavingSetting,
+  EngineSetting,
   ExperimentalSetting,
   ActivePointScrollMode,
   SplitTextWhenPasteType,
   EditorFontType,
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
+
+type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
 export default defineComponent({
   name: "SettingDialog",
@@ -724,16 +734,16 @@ export default defineComponent({
       set: (val) => emit("update:modelValue", val),
     });
 
-    const allEngineCanUseGPU = computed(
-      () => store.getters.ALL_ENGINE_CAN_USE_GPU
-    );
-
-    const engineMode = computed({
-      get: () => (store.state.useGpu ? "switchGPU" : "switchCPU"),
-      set: (mode: string) => {
-        changeUseGPU(mode == "switchGPU" ? true : false);
+    const engineUseGpu = computed({
+      get: () => {
+        return store.state.engineSettings[selectedEngineId.value].useGpu;
+      },
+      set: (mode: boolean) => {
+        changeUseGpu(mode);
       },
     });
+    const engineIds = computed(() => store.state.engineIds);
+    const engineInfos = computed(() => store.state.engineInfos);
     const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
     const activePointScrollMode = computed({
       get: () => store.state.activePointScrollMode,
@@ -850,9 +860,7 @@ export default defineComponent({
       },
     });
 
-    const changeUseGPU = async (useGpu: boolean) => {
-      if (store.state.useGpu === useGpu) return;
-
+    const changeUseGpu = async (useGpu: boolean) => {
       $q.loading.show({
         spinnerColor: "primary",
         spinnerSize: 50,
@@ -860,7 +868,10 @@ export default defineComponent({
         message: "起動モードを変更中です",
       });
 
-      await store.dispatch("CHANGE_USE_GPU", { useGpu });
+      await store.dispatch("CHANGE_USE_GPU", {
+        useGpu,
+        engineId: selectedEngineId.value,
+      });
 
       $q.loading.hide();
     };
@@ -879,13 +890,19 @@ export default defineComponent({
       });
     };
 
-    const restartAllEngineProcess = () => {
-      store.dispatch("RESTART_ENGINES", { engineIds: store.state.engineIds });
-    };
-
     const savingSetting = computed(() => store.state.savingSetting);
 
-    const samplingRateOptions: SavingSetting["outputSamplingRate"][] = [
+    const engineUseGpuOptions = [
+      { label: "CPU", value: false },
+      { label: "GPU", value: true },
+    ];
+
+    const gpuSwitchEnabled = (engineId: string) => {
+      // CPU版でもGPUモードからCPUモードに変更できるようにする
+      return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
+    };
+
+    const samplingRateOptions: SamplingRateOption[] = [
       "engineDefault",
       24000,
       44100,
@@ -893,11 +910,9 @@ export default defineComponent({
       88200,
       96000,
     ];
-    const renderSamplingRateLabel = (
-      value: SavingSetting["outputSamplingRate"]
-    ) => {
+    const renderSamplingRateLabel = (value: SamplingRateOption): string => {
       if (value === "engineDefault") {
-        return "デフォルト";
+        return "エンジンのデフォルト";
       } else {
         return `${value / 1000} kHz`;
       }
@@ -907,33 +922,57 @@ export default defineComponent({
       key: keyof SavingSetting,
       data: string | boolean | number
     ) => {
-      const storeDispatch = (): void => {
-        store.dispatch("SET_SAVING_SETTING", {
-          data: { ...savingSetting.value, [key]: data },
-        });
-      };
-      if (key === "outputSamplingRate" && data !== "engineDefault") {
-        $q.dialog({
-          title: "出力サンプリングレートを変更します",
-          message:
-            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-          html: true,
-          persistent: true,
-          ok: {
-            label: "変更する",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "変更しない",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(storeDispatch);
-        return;
-      }
-      storeDispatch();
+      store.dispatch("SET_SAVING_SETTING", {
+        data: { ...savingSetting.value, [key]: data },
+      });
     };
+
+    const outputSamplingRate = computed({
+      get: () => {
+        return store.state.engineSettings[selectedEngineId.value]
+          .outputSamplingRate;
+      },
+      set: async (outputSamplingRate: SamplingRateOption) => {
+        if (outputSamplingRate !== "engineDefault") {
+          const confirmChange = await new Promise((resolve) => {
+            $q.dialog({
+              title: "出力サンプリングレートを変更します",
+              message:
+                "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+              html: true,
+              persistent: true,
+              ok: {
+                label: "変更する",
+                flat: true,
+                textColor: "display",
+              },
+              cancel: {
+                label: "変更しない",
+                flat: true,
+                textColor: "display",
+              },
+            })
+              .onOk(() => {
+                resolve(true);
+              })
+              .onCancel(() => {
+                resolve(false);
+              });
+          });
+          if (!confirmChange) {
+            return;
+          }
+        }
+
+        store.dispatch("SET_ENGINE_SETTING", {
+          engineId: selectedEngineId.value,
+          engineSetting: {
+            ...store.state.engineSettings[selectedEngineId.value],
+            outputSamplingRate,
+          },
+        });
+      },
+    });
 
     const openFileExplore = async () => {
       const path = await window.electron.showOpenDirectoryDialog({
@@ -960,10 +999,28 @@ export default defineComponent({
 
     const showsFilePatternEditDialog = ref(false);
 
+    const selectedEngineIdRaw = ref("");
+    const selectedEngineId = computed({
+      get: () => {
+        return selectedEngineIdRaw.value || engineIds.value[0];
+      },
+      set: (engineId: string) => {
+        selectedEngineIdRaw.value = engineId;
+      },
+    });
+    const renderEngineNameLabel = (engineId: string) => {
+      return engineInfos.value[engineId].name;
+    };
+
     return {
       settingDialogOpenedComputed,
-      allEngineCanUseGPU,
-      engineMode,
+      engineUseGpu,
+      gpuSwitchEnabled,
+      engineIds,
+      engineInfos,
+      selectedEngineId,
+      engineUseGpuOptions,
+      renderEngineNameLabel,
       inheritAudioInfoMode,
       activePointScrollMode,
       activePointScrollModeOptions,
@@ -972,11 +1029,11 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
-      restartAllEngineProcess,
       savingSetting,
       samplingRateOptions,
       renderSamplingRateLabel,
       handleSavingSettingChange,
+      outputSamplingRate,
       openFileExplore,
       currentThemeNameComputed,
       currentThemeComputed,
@@ -1051,6 +1108,10 @@ export default defineComponent({
     width: unset !important;
     max-height: unset;
   }
+}
+
+.engine-setting {
+  align-items: flex-end;
 }
 
 .root {

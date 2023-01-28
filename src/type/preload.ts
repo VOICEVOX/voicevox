@@ -255,9 +255,18 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
+
+export type EngineSettings = Record<string, EngineSetting>;
+
+export const engineSetting = z.object({
+  useGpu: z.boolean().default(false),
+  outputSamplingRate: z
+    .union([z.number(), z.literal("engineDefault")])
+    .default("engineDefault"),
+});
+export type EngineSetting = z.infer<typeof engineSetting>;
 
 export type DefaultStyleId = {
   engineId: string;
@@ -433,7 +442,6 @@ export type ConfirmedTips = {
 };
 export const electronStoreSchema = z
   .object({
-    useGpu: z.boolean().default(false),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
@@ -448,9 +456,6 @@ export const electronStoreSchema = z
         exportLab: z.boolean().default(false),
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
-        outputSamplingRate: z
-          .union([z.number(), z.literal("engineDefault")])
-          .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
       .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
@@ -459,6 +464,7 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineSetting).default({}),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({

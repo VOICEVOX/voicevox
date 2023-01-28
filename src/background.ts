@@ -32,6 +32,7 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
+  engineSetting,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -131,9 +132,6 @@ const store = new Store<ElectronStoreType>({
       }
     },
     ">=0.14": (store) => {
-      if (store.get("savingSetting").outputSamplingRate == 24000) {
-        store.set("savingSetting.outputSamplingRate", "engineDefault");
-      }
       // FIXME: できるならEngineManagerからEnginIDを取得したい
       const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
         .uuid;
@@ -148,6 +146,19 @@ const store = new Store<ElectronStoreType>({
           defaultStyleId: defaultStyle.defaultStyleId,
         }))
       );
+
+      const outputSamplingRate: number =
+        // @ts-expect-error 削除されたパラメータ。
+        store.get("savingSetting").outputSamplingRate;
+      store.set(`engineSettings.${engineId}`, {
+        useGpu: store.get("useGpu"),
+        outputSamplingRate:
+          outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
+      });
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("savingSetting.outputSamplingRate");
+      // @ts-expect-error 削除されたパラメータ。
+      store.delete("useGpu");
     },
   },
 });
@@ -409,6 +420,22 @@ async function createWindow() {
   });
 
   mainWindowState.manage(win);
+}
+
+// UI処理を開始。その他の準備が完了した後に呼ばれる。
+async function start() {
+  const engineInfos = engineManager.fetchEngineInfos();
+  const engineSettings = store.get("engineSettings");
+  for (const engineInfo of engineInfos) {
+    if (!engineSettings[engineInfo.uuid]) {
+      // 空オブジェクトをパースさせることで、デフォルト値を取得する
+      engineSettings[engineInfo.uuid] = engineSetting.parse({});
+    }
+  }
+  store.set("engineSettings", engineSettings);
+
+  await createWindow();
+  await engineManager.runEngineAll(win);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -809,7 +836,7 @@ app.on("before-quit", async (event) => {
       appState.willRestart = false;
       appState.willQuit = false;
 
-      createWindow().then(() => engineManager.runEngineAll(win));
+      start();
     } else {
       log.info("Post engine kill process done. Now quit app");
     }
@@ -900,7 +927,7 @@ app.on("ready", async () => {
     await installVvppEngine(filePath);
   }
 
-  createWindow().then(() => engineManager.runEngineAll(win));
+  start();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
