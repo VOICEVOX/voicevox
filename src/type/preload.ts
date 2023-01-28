@@ -428,6 +428,7 @@ export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
   enableMorphing: boolean;
+  enableMultiEngine: boolean;
 };
 
 export const splitterPositionSchema = z.object({
@@ -509,6 +510,7 @@ export const electronStoreSchema = z
         enablePreset: z.boolean().default(false),
         enableInterrogativeUpspeak: z.boolean().default(false),
         enableMorphing: z.boolean().default(false),
+        enableMultiEngine: z.boolean().default(false),
       })
       .passthrough()
       .default({}),

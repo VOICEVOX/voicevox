@@ -91,6 +91,9 @@ const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const enableMultiEngine = computed(
+  () => store.state.experimentalSetting.enableMultiEngine
+);
 
 const titleText = computed(
   () =>
@@ -502,18 +505,24 @@ async function updateEngines() {
       },
     ];
   }
-  engineMenu.subMenu.push({
-    type: "button",
-    label: "エンジンの管理",
-    onClick: () => {
-      store.dispatch("SET_DIALOG_OPEN", {
-        isEngineManageDialogOpen: true,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
+  if (enableMultiEngine.value) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "エンジンの管理",
+      onClick: () => {
+        store.dispatch("SET_DIALOG_OPEN", {
+          isEngineManageDialogOpen: true,
+        });
+      },
+      disableWhenUiLocked: false,
+    });
+  }
 }
-watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
+// engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
+// FIXME: computedにする
+watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
+  immediate: true,
+});
 
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ
