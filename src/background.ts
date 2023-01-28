@@ -249,6 +249,24 @@ async function installVvppEngineWithWarning({
 }
 
 /**
+ * マルチエンジン機能が有効だった場合はtrueを返す。
+ * 無効だった場合はダイアログを表示してfalseを返す。
+ */
+function checkMultiEngineEnabled(): boolean {
+  const enabled = store.get("experimentalSetting").enableMultiEngine;
+  if (!enabled) {
+    dialog.showMessageBoxSync(win, {
+      type: "info",
+      title: "マルチエンジン機能が無効です",
+      message: `マルチエンジン機能が無効です。有効にするには設定で有効にしてください。`,
+      buttons: ["OK"],
+      noLink: true,
+    });
+  }
+  return enabled;
+}
+
+/**
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
@@ -971,7 +989,7 @@ app.on("ready", async () => {
   if (filePath && isVvppFile(filePath)) {
     log.info(`vvpp file install: ${filePath}`);
     // FIXME: GUI側に合流させる
-    if (store.get("experimentalSetting.enableMultiEngine")) {
+    if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: filePath,
         restartNeeded: false,
@@ -990,7 +1008,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
   } else if (isVvppFile(data.filePath)) {
     log.info("Second instance launched with vvpp file");
     // FIXME: GUI側に合流させる
-    if (store.get("experimentalSetting.enableMultiEngine")) {
+    if (checkMultiEngineEnabled()) {
       await installVvppEngineWithWarning({
         vvppPath: data.filePath,
         restartNeeded: true,
