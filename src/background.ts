@@ -204,6 +204,69 @@ async function installVvppEngine(vvppPath: string) {
 }
 
 /**
+ * 危険性を案内してからVVPPエンジンをインストールする。
+ * FIXME: こちらで案内せず、GUIでのインストール側に合流させる
+ */
+async function installVvppEngineWithWarning({
+  vvppPath,
+  restartNeeded,
+}: {
+  vvppPath: string;
+  restartNeeded: boolean;
+}) {
+  const result = dialog.showMessageBoxSync(win, {
+    type: "warning",
+    title: "エンジン追加の確認",
+    message: `この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。`,
+    buttons: ["追加", "キャンセル"],
+    noLink: true,
+    cancelId: 1,
+  });
+  if (result == 1) {
+    return;
+  }
+
+  await installVvppEngine(vvppPath);
+
+  if (restartNeeded) {
+    dialog
+      .showMessageBox(win, {
+        type: "info",
+        title: "再起動が必要です",
+        message:
+          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
+        buttons: ["再起動", "キャンセル"],
+        noLink: true,
+        cancelId: 1,
+      })
+      .then((result) => {
+        if (result.response === 0) {
+          appState.willRestart = true;
+          app.quit();
+        }
+      });
+  }
+}
+
+/**
+ * マルチエンジン機能が有効だった場合はtrueを返す。
+ * 無効だった場合はダイアログを表示してfalseを返す。
+ */
+function checkMultiEngineEnabled(): boolean {
+  const enabled = store.get("experimentalSetting").enableMultiEngine;
+  if (!enabled) {
+    dialog.showMessageBoxSync(win, {
+      type: "info",
+      title: "マルチエンジン機能が無効です",
+      message: `マルチエンジン機能が無効です。vvppファイルを使用するには設定からマルチエンジン機能を有効にしてください。`,
+      buttons: ["OK"],
+      noLink: true,
+    });
+  }
+  return enabled;
+}
+
+/**
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
@@ -924,7 +987,14 @@ app.on("ready", async () => {
   }
 
   if (filePath && isVvppFile(filePath)) {
-    await installVvppEngine(filePath);
+    log.info(`vvpp file install: ${filePath}`);
+    // FIXME: GUI側に合流させる
+    if (checkMultiEngineEnabled()) {
+      await installVvppEngineWithWarning({
+        vvppPath: filePath,
+        restartNeeded: false,
+      });
+    }
   }
 
   start();
@@ -937,23 +1007,13 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     log.info("No file path sent");
   } else if (isVvppFile(data.filePath)) {
     log.info("Second instance launched with vvpp file");
-    await installVvppEngine(data.filePath);
-    dialog
-      .showMessageBox(win, {
-        type: "info",
-        title: "再起動が必要です",
-        message:
-          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
-        buttons: ["再起動", "キャンセル"],
-        noLink: true,
-        cancelId: 1,
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          appState.willRestart = true;
-          app.quit();
-        }
+    // FIXME: GUI側に合流させる
+    if (checkMultiEngineEnabled()) {
+      await installVvppEngineWithWarning({
+        vvppPath: data.filePath,
+        restartNeeded: true,
       });
+    }
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
     ipcMainSend(win, "LOAD_PROJECT_FILE", {

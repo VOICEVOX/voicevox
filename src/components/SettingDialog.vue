@@ -664,6 +664,30 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>マルチエンジン機能</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      複数のVOICEVOX準拠エンジンを活用できるようにする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableMultiEngine"
+                  @update:model-value="
+                    changeExperimentalSetting('enableMultiEngine', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
