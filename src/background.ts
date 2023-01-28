@@ -258,7 +258,7 @@ function checkMultiEngineEnabled(): boolean {
     dialog.showMessageBoxSync(win, {
       type: "info",
       title: "マルチエンジン機能が無効です",
-      message: `マルチエンジン機能が無効です。有効にするには設定で有効にしてください。`,
+      message: `マルチエンジン機能が無効です。vvppファイルを使用するには設定からマルチエンジン機能を有効にしてください。`,
       buttons: ["OK"],
       noLink: true,
     });
