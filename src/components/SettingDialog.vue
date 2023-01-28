@@ -890,10 +890,6 @@ export default defineComponent({
       });
     };
 
-    const restartAllEngineProcess = () => {
-      store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
-    };
-
     const savingSetting = computed(() => store.state.savingSetting);
 
     const engineUseGpuOptions = [
@@ -1033,7 +1029,6 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
-      restartAllEngineProcess,
       savingSetting,
       samplingRateOptions,
       renderSamplingRateLabel,
