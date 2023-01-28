@@ -183,6 +183,10 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  setEngineSetting(
+    engineId: string,
+    engineSetting: EngineSetting
+  ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;

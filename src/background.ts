@@ -805,6 +805,10 @@ ipcMainHandle("SET_SETTING", (_, key, newValue) => {
   return store.get(key);
 });
 
+ipcMainHandle("SET_ENGINE_SETTING", (_, engineId, engineSetting) => {
+  store.set(`engineSettings.${engineId}`, engineSetting);
+});
+
 ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
   nativeTheme.themeSource = source;
 });

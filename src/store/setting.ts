@@ -323,11 +323,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { engineSetting, engineId }) {
       state.engineSettings[engineId] = engineSetting;
     },
-    async action({ commit, state }, { engineSetting, engineId }) {
-      window.electron.setSetting("engineSettings", {
-        ...state.engineSettings,
-        [engineId]: engineSetting,
-      });
+    async action({ commit }, { engineSetting, engineId }) {
+      await window.electron.setEngineSetting(engineId, engineSetting);
       commit("SET_ENGINE_SETTING", { engineSetting, engineId });
     },
   },
@@ -357,7 +354,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           }
         }
 
-        await dispatch("SET_ENGINE_SETTING", {
+        dispatch("SET_ENGINE_SETTING", {
           engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });
