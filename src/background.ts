@@ -996,22 +996,6 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
         restartNeeded: true,
       });
     }
-    dialog
-      .showMessageBox(win, {
-        type: "info",
-        title: "再起動が必要です",
-        message:
-          "VVPPファイルを読み込みました。反映には再起動が必要です。今すぐ再起動しますか？",
-        buttons: ["再起動", "キャンセル"],
-        noLink: true,
-        cancelId: 1,
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          appState.willRestart = true;
-          app.quit();
-        }
-      });
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
     ipcMainSend(win, "LOAD_PROJECT_FILE", {
