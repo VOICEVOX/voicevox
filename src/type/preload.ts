@@ -190,7 +190,7 @@ export interface Sandbox {
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(obj: { isSafeMode: boolean }): void;
+  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
 
 export type AppInfos = {

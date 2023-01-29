@@ -17,7 +17,7 @@
       "
     />
     <q-space />
-    <div class="window-title" :class="{ 'text-warning': isSafeMode }">
+    <div class="window-title" :class="{ 'text-warning': isMultiEngineOffMode }">
       {{ titleText }}
     </div>
     <q-space />
@@ -81,7 +81,7 @@ const currentVersion = ref("");
 window.electron.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
-const isSafeMode = computed(() => store.state.isSafeMode);
+const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
 const projectName = computed(() => store.getters.PROJECT_NAME);
@@ -102,7 +102,7 @@ const titleText = computed(
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value + " - " : "") +
     (useGpu.value ? "GPU" : "CPU") +
-    (isSafeMode.value ? " - セーフモード" : "")
+    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "")
 );
 
 // FIXME: App.vue内に移動する
@@ -398,21 +398,6 @@ const menudata = ref<MenuItemData[]>([
   },
 ]);
 
-if (store.state.isSafeMode) {
-  (
-    menudata.value.find((data) => data.label === "設定") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "セーフモードを解除",
-    onClick() {
-      store.dispatch("RESTART_APP", {
-        isSafeMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-}
-
 const subMenuOpenFlags = ref(
   [...Array(menudata.value.length)].map(() => false)
 );
@@ -523,6 +508,22 @@ async function updateEngines() {
 watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
   immediate: true,
 });
+
+// マルチエンジンオフモードの解除
+if (store.state.isMultiEngineOffMode) {
+  (
+    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
+  ).subMenu.push({
+    type: "button",
+    label: "マルチエンジンをオンにして再起動",
+    onClick() {
+      store.dispatch("RESTART_APP", {
+        isMultiEngineOffMode: false,
+      });
+    },
+    disableWhenUiLocked: false,
+  });
+}
 
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

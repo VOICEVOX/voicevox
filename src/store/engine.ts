@@ -14,9 +14,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ state, commit }) {
       const engineInfos = await window.electron.engineInfos();
 
-      // セーフモード時はengineIdsをデフォルトエンジンのIDだけにする。
+      // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
       let engineIds: string[];
-      if (state.isSafeMode) {
+      if (state.isMultiEngineOffMode) {
         engineIds = engineInfos
           .filter((engineInfo) => engineInfo.type === "default")
           .map((info) => info.uuid);

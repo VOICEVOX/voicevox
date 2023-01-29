@@ -22,12 +22,15 @@ export default defineComponent({
     const store = useStore();
     store.dispatch("INIT_VUEX");
 
-    // URLパラメータに従ってセーフモードにする
+    // URLパラメータに従ってマルチエンジンをオフにする
     const route = useRoute();
     const query = computed(() => route.query);
     watch(query, (newQuery) => {
       if (newQuery) {
-        store.dispatch("SET_IS_SAFE_MODE", newQuery["isSafeMode"] === "true");
+        store.dispatch(
+          "SET_IS_MULTI_ENGINE_OFF_MODE",
+          newQuery["isMultiEngineOffMode"] === "true"
+        );
       }
     });
 
