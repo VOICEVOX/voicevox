@@ -230,14 +230,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               if (audioItem.engineId === undefined) {
                 audioItem.engineId = engineId;
               }
-              if (audioItem.speakerId == undefined) {
-                audioItem.speakerId = characterInfos.find((characterInfo) =>
+              if (audioItem.voice == undefined) {
+                const oldEngineId = audioItem.engineId;
+                const oldStyleId = audioItem.styleId;
+                const speakerId = characterInfos.find((characterInfo) =>
                   characterInfo.metas.styles.some(
                     (styeleinfo) =>
                       styeleinfo.engineId === audioItem.engineId &&
                       styeleinfo.styleId === audioItem.styleId
                   )
                 )?.metas.speakerUuid;
+                audioItem.voice = {
+                  engineId: oldEngineId,
+                  speakerId,
+                  styleId: oldStyleId,
+                };
+                delete audioItem.engineId;
+                delete audioItem.styleId;
               }
             }
           }
@@ -257,23 +266,38 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].engineId != undefined
+                parsedProjectData.audioItems[audioKey].voice != undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "engineId" attribute.'
-            );
+            throw new Error('Every audioItem should have a "voice" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "engineId" attribute.');
           }
           // FIXME: assert engineId is registered
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].styleId != undefined
+                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "styleId" attribute.'
-            );
+            throw new Error('Every voice should have a "speakerId" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "styleId" attribute.');
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
@@ -437,9 +461,11 @@ const morphingInfoSchema = z.object({
 
 const audioItemSchema = z.object({
   text: z.string(),
-  engineId: z.string().optional(),
-  speakerId: z.string().optional(),
-  styleId: z.number().optional(),
+  voice: z.object({
+    engineId: z.string().uuid(),
+    speakerId: z.string().uuid(),
+    styleId: z.number(),
+  }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
   morphingInfo: morphingInfoSchema.optional(),
