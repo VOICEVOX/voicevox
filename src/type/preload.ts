@@ -529,7 +529,7 @@ export const electronStoreSchema = z.object({
       tweakableSliderByScroll: z.boolean().default(false),
     })
     .default({}),
-  engineDirs: z.string().array().default([]),
+  registeredEngineDirs: z.string().array().default([]),
 });
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
 
