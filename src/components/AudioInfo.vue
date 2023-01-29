@@ -399,7 +399,7 @@
         disabled: uiLocked,
       }"
     >
-      <q-separator class="q-mb-md" />
+      <q-separator class="q-my-md" />
       <span class="text-body1 q-mb-xs">モーフィング</span>
       <div class="row no-wrap items-center">
         <character-button
@@ -410,8 +410,8 @@
           :ui-locked="uiLocked"
           v-model:selected-voice="morphingTargetVoice"
         />
-        <div class="q-pl-xs overflow-hidden">
-          <div class="text-body2 text-no-wrap ellipsis overflow-hidden">
+        <div class="q-pl-xs row overflow-hidden">
+          <div class="text-body2 ellipsis overflow-hidden">
             {{
               morphingTargetCharacterInfo
                 ? morphingTargetCharacterInfo.metas.speakerName
@@ -423,13 +423,13 @@
               morphingTargetCharacterInfo &&
               morphingTargetCharacterInfo.metas.styles.length >= 2
             "
-            class="text-body2 text-no-wrap ellipsis overflow-hidden"
+            class="text-body2 ellipsis overflow-hidden"
           >
-            ({{
+            （{{
               morphingTargetStyleInfo
                 ? morphingTargetStyleInfo.styleName
                 : undefined
-            }})
+            }}）
           </div>
         </div>
       </div>

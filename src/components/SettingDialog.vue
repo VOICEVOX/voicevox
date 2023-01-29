@@ -651,7 +651,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      2人の話者でモーフィングした音声を合成する
+                      モーフィングした音声を合成可能にする
                     </q-tooltip>
                   </q-icon>
                 </div>
