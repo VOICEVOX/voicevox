@@ -57,6 +57,7 @@ const licenseJson = execFileSync(
   ],
   {
     encoding: "utf-8",
+    maxBuffer: 1024 * 1024 * 10,
   }
 );
 
