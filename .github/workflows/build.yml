@@ -239,6 +239,9 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+
+          # https://github.com/electron-userland/electron-builder/issues/3179
+          USE_HARD_LINKS: false
         run: npm run electron:build_pnever -- --dir
 
       - name: Reset Code Signing Envs
