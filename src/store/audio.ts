@@ -472,9 +472,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       { state, getters, dispatch },
       payload: {
         text?: string;
-        engineId?: string;
-        speakerId?: string;
-        styleId?: number;
+        voice?: Voice;
         presetKey?: string;
         baseAudioItem?: AudioItem;
       }
@@ -486,36 +484,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         throw new Error("state.defaultStyleIds == undefined");
       if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
-      const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
 
-      const engineId = payload.engineId ?? state.engineIds[0];
-
-      // FIXME: engineIdも含めて探査する
-      const defaultStyleId =
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) =>
-              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
-          )
-        ];
-      const styleId = payload.styleId ?? defaultStyleId.defaultStyleId;
-      const speakerId = payload.speakerId ?? defaultStyleId.speakerUuid;
+      const defaultStyleId = state.defaultStyleIds[0];
+      const voice = payload.voice ?? {
+        engineId: defaultStyleId.engineId,
+        speakerId: defaultStyleId.speakerUuid,
+        styleId: defaultStyleId.defaultStyleId,
+      };
       const baseAudioItem = payload.baseAudioItem;
 
-      const query = getters.IS_ENGINE_READY(engineId)
+      const query = getters.IS_ENGINE_READY(voice.engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
-            engineId,
-            styleId,
+            engineId: voice.engineId,
+            styleId: voice.styleId,
           }).catch(() => undefined)
         : undefined;
 
-      const audioItem: AudioItem = {
-        text,
-        voice: { engineId, speakerId, styleId },
-      };
+      const audioItem: AudioItem = { text, voice };
       if (query != undefined) {
         audioItem.query = query;
       }
@@ -2700,10 +2688,7 @@ export const audioCommandStore = transformCommandStore(
 
           if (!getters.USER_ORDERED_CHARACTER_INFOS)
             throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
-          for (const {
-            text,
-            voice: { engineId, speakerId, styleId },
-          } of parseTextFile(
+          for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
             getters.USER_ORDERED_CHARACTER_INFOS
@@ -2713,9 +2698,7 @@ export const audioCommandStore = transformCommandStore(
             audioItems.push(
               await dispatch("GENERATE_AUDIO_ITEM", {
                 text,
-                engineId,
-                speakerId,
-                styleId,
+                voice,
                 baseAudioItem,
               })
             );
@@ -2780,9 +2763,7 @@ export const audioCommandStore = transformCommandStore(
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
-              engineId: voice.engineId,
-              speakerId: voice.speakerId,
-              styleId: voice.styleId,
+              voice,
               baseAudioItem,
               presetKey: basePresetKey,
             });

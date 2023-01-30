@@ -470,9 +470,7 @@ const play = async () => {
   nowGenerating.value = true;
   const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
     text: yomi.value,
-    engineId,
-    speakerId,
-    styleId: styleId.value,
+    voice: { engineId, speakerId, styleId: styleId.value },
   });
 
   if (audioItem.query == undefined)

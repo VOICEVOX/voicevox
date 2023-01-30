@@ -193,9 +193,7 @@ export type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
-      engineId?: string;
-      speakerId?: string;
-      styleId?: number;
+      voice?: Voice;
       presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
