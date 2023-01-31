@@ -85,7 +85,6 @@ const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
 const projectName = computed(() => store.getters.PROJECT_NAME);
-const useGpu = computed(() => store.state.useGpu);
 const isEdited = computed(() => store.getters.IS_EDITED);
 const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
@@ -100,8 +99,7 @@ const titleText = computed(
     (isEdited.value ? "*" : "") +
     (projectName.value !== undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
-    (currentVersion.value ? " - Ver. " + currentVersion.value + " - " : "") +
-    (useGpu.value ? "GPU" : "CPU") +
+    (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "")
 );
 

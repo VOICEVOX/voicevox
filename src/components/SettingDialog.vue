@@ -30,7 +30,7 @@
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">エンジン</div>
-                <template v-if="engineIds.length > 0">
+                <template v-if="engineIds.length > 1">
                   <q-space />
                   <q-select
                     borderless
