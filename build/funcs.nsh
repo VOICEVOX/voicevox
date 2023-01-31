@@ -172,10 +172,10 @@
 !macroend
 
 ; ${getDiskSpace} Result Dir
-; Dir に指定されたディレクトリーがあるドライブの空き容量をバイト単位で取得する
-; Windows 標準機能でドライブをフォルダーへマウントしたりすると
-; C:\somedir の空き容量が C:\ と一致するとは限らないため、調べたいディレクトリーを渡す必要がある
-; @param Dir 空き容量を調べたいディレクトリー
+; Dir に指定されたディレクトリがあるドライブの空き容量をバイト単位で取得する
+; Windows 標準機能でドライブをフォルダへマウントしたりすると
+; C:\somedir の空き容量が C:\ と一致するとは限らないため、調べたいディレクトリを渡す必要がある
+; @param Dir 空き容量を調べたいディレクトリ
 ; @return Result インストール先の空き容量（バイト単位）、失敗時は ""
 !define getDiskSpace "!insertmacro getDiskSpace"
 !macro getDiskSpace Result Dir
@@ -183,7 +183,7 @@
   Exch $0       ;       $0
   Push $1       ;       $1 $0
 
-  ; 存在しないディレクトリーだと失敗するので親を辿る
+  ; 存在しないディレクトリだと失敗するので親を辿る
   getDiskSpace_loop:
   ${IfNot} ${FileExists} "$0\*.*"
     ${GetParent} $0 $0
@@ -191,7 +191,7 @@
   ${EndIf}
 
   ; Input
-  ;  $0 = 空き容量を調べたいディレクトリー
+  ;  $0 = 空き容量を調べたいディレクトリ
   ; Output
   ;  $0 = 取得した空き容量
   ;  $1 = 成功したかどうか

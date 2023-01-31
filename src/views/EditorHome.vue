@@ -28,10 +28,10 @@
               エンジン起動に時間がかかっています。<br />
               <q-btn
                 outline
-                @click="restartAppWithSafeMode"
+                @click="restartAppWithMultiEngineOffMode"
                 v-if="isMultipleEngine"
               >
-                セーフモードで起動する</q-btn
+                マルチエンジンをオフにして再起動する</q-btn
               >
               <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
             </template>
@@ -520,7 +520,7 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       let engineIds: string[];
-      if (store.state.isSafeMode) {
+      if (store.state.isMultiEngineOffMode) {
         // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(
           (engine) => engine.type === "default"
@@ -600,7 +600,7 @@ export default defineComponent({
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
-    const isEngineWaitingLong = ref<boolean>(false);
+    const isEngineWaitingLong = ref<boolean>(true);
     let engineTimer: number | undefined = undefined;
     watch(allEngineState, (newEngineState) => {
       if (engineTimer !== undefined) {
@@ -611,13 +611,13 @@ export default defineComponent({
         isEngineWaitingLong.value = false;
         engineTimer = window.setTimeout(() => {
           isEngineWaitingLong.value = true;
-        }, 60000);
+        }, 30000);
       } else {
         isEngineWaitingLong.value = false;
       }
     });
-    const restartAppWithSafeMode = () => {
-      store.dispatch("RESTART_APP", { isSafeMode: true });
+    const restartAppWithMultiEngineOffMode = () => {
+      store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
     };
 
     const openFaq = () => {
@@ -776,7 +776,7 @@ export default defineComponent({
       allEngineState,
       isEngineWaitingLong,
       isMultipleEngine,
-      restartAppWithSafeMode,
+      restartAppWithMultiEngineOffMode,
       openFaq,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,

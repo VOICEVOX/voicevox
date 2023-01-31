@@ -284,7 +284,7 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [obj: { isSafeMode: boolean }];
+    args: [obj: { isMultiEngineOffMode: boolean }];
     return: void;
   };
 

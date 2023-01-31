@@ -34,7 +34,7 @@ export const storeKey: InjectionKey<
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
   userCharacterOrder: [],
-  isSafeMode: false,
+  isMultiEngineOffMode: false,
 };
 
 export const indexStore = createPartialStore<IndexStoreTypes>({
@@ -312,12 +312,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
-  SET_IS_SAFE_MODE: {
-    mutation(state, { isSafeMode }) {
-      state.isSafeMode = isSafeMode;
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation(state, { isMultiEngineOffMode }) {
+      state.isMultiEngineOffMode = isMultiEngineOffMode;
     },
-    action({ commit }, isSafeMode) {
-      commit("SET_IS_SAFE_MODE", { isSafeMode });
+    action({ commit }, isMultiEngineOffMode) {
+      commit("SET_IS_MULTI_ENGINE_OFF_MODE", { isMultiEngineOffMode });
     },
   },
 });

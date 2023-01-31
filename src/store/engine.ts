@@ -14,9 +14,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ state, commit }) {
       const engineInfos = await window.electron.engineInfos();
 
-      // セーフモード時はengineIdsをデフォルトエンジンのIDだけにする。
+      // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
       let engineIds: string[];
-      if (state.isSafeMode) {
+      if (state.isMultiEngineOffMode) {
         engineIds = engineInfos
           .filter((engineInfo) => engineInfo.type === "default")
           .map((info) => info.uuid);
@@ -311,19 +311,23 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   ADD_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
-      await window.electron.setSetting("engineDirs", [
-        ...engineDirs,
+      const registeredEngineDirs = await window.electron.getSetting(
+        "registeredEngineDirs"
+      );
+      await window.electron.setSetting("registeredEngineDirs", [
+        ...registeredEngineDirs,
         engineDir,
       ]);
     },
   },
   REMOVE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
+      const registeredEngineDirs = await window.electron.getSetting(
+        "registeredEngineDirs"
+      );
       await window.electron.setSetting(
-        "engineDirs",
-        engineDirs.filter((path) => path !== engineDir)
+        "registeredEngineDirs",
+        registeredEngineDirs.filter((path) => path !== engineDir)
       );
     },
   },

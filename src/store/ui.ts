@@ -319,8 +319,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RESTART_APP: {
-    action(_, { isSafeMode }: { isSafeMode?: boolean }) {
-      window.electron.restartApp({ isSafeMode: !!isSafeMode });
+    action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
+      window.electron.restartApp({
+        isMultiEngineOffMode: !!isMultiEngineOffMode,
+      });
     },
   },
 

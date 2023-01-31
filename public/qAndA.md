@@ -39,7 +39,7 @@ GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応して
 これは、実行しようとしたアプリやファイルの危険性がないかどうかの確認を促す、Windows SmartScreen（または Windows Defender SmartScreen）という機能からのメッセージです。  
 発行元などを確認して問題がない場合は、メッセージ内の「詳細情報」をクリックして表示される画面から、インストーラーを実行して下さい。
 
-### Q. インストール先のディレクトリはどこですか？
+### Q. インストール先のフォルダはどこですか？
 
 デフォルトのインストール先は下記の場所です。
 
@@ -127,15 +127,15 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 ### Q. エラーログはどこで確認できますか？
 
-以下のディレクトリに保存されています。
+以下のフォルダに保存されています。
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs` もしくは `C:\Users\(ユーザー名)\AppData\Roaming\voicevox-cpu\logs`
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox-cpu/logs`
+`/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
 
 ### `ubuntu 22.04`で動きません。
 
@@ -175,13 +175,8 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 
 ### Q. クレジット記載を省くにはどうすれば良いですか？
 
-#### ずんだもん・四国めたんの場合
-
-商用ライセンスの取得が必要です。[ずんだもん、四国めたん音源利用規約](https://zunko.jp/con_ongen_kiyaku.html)をご確認ください。
-
-#### その他のキャラクターの場合
-
-現在、クレジット記載を省く手段はご用意しておりません。
+キャラクターによっては商用ライセンスを取得することでクレジット記載を省くことができます。
+詳細は各キャラクターの利用規約をご確認ください。
 
 ### Q. VOICEVOX の開発に協力したいです。
 
