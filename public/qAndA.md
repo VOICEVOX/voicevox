@@ -131,11 +131,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs` もしくは `C:\Users\(ユーザー名)\AppData\Roaming\voicevox-cpu\logs`
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox-cpu/logs`
+`/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
 
 ### `ubuntu 22.04`で動きません。
 
@@ -175,13 +175,8 @@ VOICEVOX は、キャラクターとソフトウェアで権利者が異なり�
 
 ### Q. クレジット記載を省くにはどうすれば良いですか？
 
-#### ずんだもん・四国めたんの場合
-
-商用ライセンスの取得が必要です。[ずんだもん、四国めたん音源利用規約](https://zunko.jp/con_ongen_kiyaku.html)をご確認ください。
-
-#### その他のキャラクターの場合
-
-現在、クレジット記載を省く手段はご用意しておりません。
+キャラクターによっては商用ライセンスを取得することでクレジット記載を省くことができます。
+詳細は各キャラクターの利用規約をご確認ください。
 
 ### Q. VOICEVOX の開発に協力したいです。
 
