@@ -183,6 +183,10 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  setEngineSetting(
+    engineId: string,
+    engineSetting: EngineSetting
+  ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: string): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
@@ -255,9 +259,18 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
+
+export type EngineSettings = Record<string, EngineSetting>;
+
+export const engineSetting = z.object({
+  useGpu: z.boolean().default(false),
+  outputSamplingRate: z
+    .union([z.number(), z.literal("engineDefault")])
+    .default("engineDefault"),
+});
+export type EngineSetting = z.infer<typeof engineSetting>;
 
 export type DefaultStyleId = {
   engineId: string;
@@ -419,6 +432,7 @@ export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
   enableMorphing: boolean;
+  enableMultiEngine: boolean;
 };
 
 export const splitterPositionSchema = z.object({
@@ -433,7 +447,6 @@ export type ConfirmedTips = {
 };
 export const electronStoreSchema = z
   .object({
-    useGpu: z.boolean().default(false),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
@@ -448,9 +461,6 @@ export const electronStoreSchema = z
         exportLab: z.boolean().default(false),
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
-        outputSamplingRate: z
-          .union([z.number(), z.literal("engineDefault")])
-          .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
       .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
@@ -459,6 +469,7 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineSetting).default({}),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
@@ -503,6 +514,7 @@ export const electronStoreSchema = z
         enablePreset: z.boolean().default(false),
         enableInterrogativeUpspeak: z.boolean().default(false),
         enableMorphing: z.boolean().default(false),
+        enableMultiEngine: z.boolean().default(false),
       })
       .passthrough()
       .default({}),

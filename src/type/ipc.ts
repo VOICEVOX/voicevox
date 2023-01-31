@@ -9,6 +9,7 @@ import {
   UpdateInfo,
   WriteFileErrorResult,
   NativeThemeType,
+  EngineSetting,
 } from "@/type/preload";
 
 /**
@@ -255,6 +256,11 @@ export type IpcIHData = {
       newValue: ElectronStoreType[keyof ElectronStoreType]
     ];
     return: ElectronStoreType[keyof ElectronStoreType];
+  };
+
+  SET_ENGINE_SETTING: {
+    args: [engineId: string, engineSetting: EngineSetting];
+    return: void;
   };
 
   SET_NATIVE_THEME: {

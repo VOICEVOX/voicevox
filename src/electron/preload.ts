@@ -253,6 +253,14 @@ const api: Sandbox = {
     )) as typeof newValue;
   },
 
+  setEngineSetting: async (engineId, engineSetting) => {
+    return await ipcRendererInvoke(
+      "SET_ENGINE_SETTING",
+      engineId,
+      engineSetting
+    );
+  },
+
   installVvppEngine: async (filePath) => {
     return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
   },
