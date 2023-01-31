@@ -141,23 +141,34 @@ export class VvppManager {
     }
 
     log.log("Extracting vvpp to", outputDir);
-    await new Promise((resolve, reject) => {
-      new MultiStream(streams)
-        .pipe(Extract({ path: outputDir }))
-        .on("close", resolve)
-        .on("error", reject);
-    });
-    // FIXME: バリデーションをかけるか、`validateEngineDir`で検査する
-    const manifest = JSON.parse(
-      await fs.promises.readFile(
-        path.join(outputDir, "engine_manifest.json"),
-        "utf-8"
-      )
-    ) as MinimumEngineManifest;
-    return {
-      outputDir,
-      manifest,
-    };
+    try {
+      await new Promise((resolve, reject) => {
+        new MultiStream(streams)
+          .pipe(Extract({ path: outputDir }))
+          .on("close", resolve)
+          .on("error", reject);
+      });
+      // FIXME: バリデーションをかけるか、`validateEngineDir`で検査する
+      const manifest = JSON.parse(
+        await fs.promises.readFile(
+          path.join(outputDir, "engine_manifest.json"),
+          "utf-8"
+        )
+      ) as MinimumEngineManifest;
+      return {
+        outputDir,
+        manifest,
+      };
+    } catch (e) {
+      if (fs.existsSync(outputDir)) {
+        await fs.promises.rmdir(outputDir, { recursive: true });
+      }
+      throw e;
+    } finally {
+      for (const stream of streams) {
+        stream.close();
+      }
+    }
   }
 
   async install(vvppPath: string) {
