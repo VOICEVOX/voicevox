@@ -161,7 +161,7 @@ export class VvppManager {
       };
     } catch (e) {
       if (fs.existsSync(outputDir)) {
-        await fs.promises.rmdir(outputDir, { recursive: true });
+        await fs.promises.rm(outputDir, { recursive: true });
       }
       throw e;
     } finally {
