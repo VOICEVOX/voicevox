@@ -264,12 +264,14 @@ export type SavingSetting = {
 
 export type EngineSettings = Record<string, EngineSetting>;
 
-export const engineSetting = z.object({
-  useGpu: z.boolean().default(false),
-  outputSamplingRate: z
-    .union([z.number(), z.literal("engineDefault")])
-    .default("engineDefault"),
-});
+export const engineSetting = z
+  .object({
+    useGpu: z.boolean().default(false),
+    outputSamplingRate: z
+      .union([z.number(), z.literal("engineDefault")])
+      .default("engineDefault"),
+  })
+  .passthrough();
 export type EngineSetting = z.infer<typeof engineSetting>;
 
 export type DefaultStyleId = {
@@ -362,10 +364,12 @@ export type HotkeyAction = z.infer<typeof hotkeyActionSchema>;
 
 export type HotkeyCombo = string;
 
-export const hotkeySettingSchema = z.object({
-  action: hotkeyActionSchema,
-  combination: z.string(),
-});
+export const hotkeySettingSchema = z
+  .object({
+    action: hotkeyActionSchema,
+    combination: z.string(),
+  })
+  .passthrough();
 export type HotkeySetting = z.infer<typeof hotkeySettingSchema>;
 
 export type HotkeyReturnType =
@@ -435,102 +439,115 @@ export type ExperimentalSetting = {
   enableMultiEngine: boolean;
 };
 
-export const splitterPositionSchema = z.object({
-  portraitPaneWidth: z.number().optional(),
-  audioInfoPaneWidth: z.number().optional(),
-  audioDetailPaneHeight: z.number().optional(),
-});
+export const splitterPositionSchema = z
+  .object({
+    portraitPaneWidth: z.number().optional(),
+    audioInfoPaneWidth: z.number().optional(),
+    audioDetailPaneHeight: z.number().optional(),
+  })
+  .passthrough();
 export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
 };
-export const electronStoreSchema = z.object({
-  inheritAudioInfo: z.boolean().default(true),
-  activePointScrollMode: z.enum(["CONTINUOUSLY", "PAGE", "OFF"]).default("OFF"),
-  savingSetting: z
-    .object({
-      fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-      fileNamePattern: z.string().default(""),
-      fixedExportEnabled: z.boolean().default(false),
-      avoidOverwrite: z.boolean().default(false),
-      fixedExportDir: z.string().default(""),
-      exportLab: z.boolean().default(false),
-      exportText: z.boolean().default(false),
-      outputStereo: z.boolean().default(false),
-      audioOutputDevice: z.string().default(""),
-    })
-    .passthrough() // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら外す
-    .default({}),
-  hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
-  toolbarSetting: toolbarSettingSchema
-    .array()
-    .default(defaultToolbarButtonSetting),
-  engineSettings: z.record(engineSetting).default({}),
-  userCharacterOrder: z.string().array().default([]),
-  defaultStyleIds: z
-    .object({
-      // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".or(z.literal("")).default("")"を外す
-      engineId: z.string().uuid().or(z.literal("")).default(""),
-      speakerUuid: z.string().uuid(),
-      defaultStyleId: z.number(),
-    })
-    .array()
-    .default([]),
-  presets: z
-    .object({
-      items: z
-        .record(
-          z.string().uuid(),
-          z.object({
-            name: z.string(),
-            speedScale: z.number(),
-            pitchScale: z.number(),
-            intonationScale: z.number(),
-            volumeScale: z.number(),
-            prePhonemeLength: z.number(),
-            postPhonemeLength: z.number(),
-            morphingInfo: z
+export const electronStoreSchema = z
+  .object({
+    inheritAudioInfo: z.boolean().default(true),
+    activePointScrollMode: z
+      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+      .default("OFF"),
+    savingSetting: z
+      .object({
+        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        fileNamePattern: z.string().default(""),
+        fixedExportEnabled: z.boolean().default(false),
+        avoidOverwrite: z.boolean().default(false),
+        fixedExportDir: z.string().default(""),
+        exportLab: z.boolean().default(false),
+        exportText: z.boolean().default(false),
+        outputStereo: z.boolean().default(false),
+        audioOutputDevice: z.string().default(""),
+      })
+      .passthrough()
+      .default({}),
+    hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
+    toolbarSetting: toolbarSettingSchema
+      .array()
+      .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineSetting).default({}),
+    userCharacterOrder: z.string().array().default([]),
+    defaultStyleIds: z
+      .object({
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".or(z.literal("")).default("")"を外す
+        engineId: z.string().uuid().or(z.literal("")).default(""),
+        speakerUuid: z.string().uuid(),
+        defaultStyleId: z.number(),
+      })
+      .passthrough()
+      .array()
+      .default([]),
+    presets: z
+      .object({
+        items: z
+          .record(
+            z.string().uuid(),
+            z
               .object({
-                rate: z.number(),
-                targetEngineId: z.string().uuid(),
-                targetSpeakerId: z.string().uuid(),
-                targetStyleId: z.number(),
+                name: z.string(),
+                speedScale: z.number(),
+                pitchScale: z.number(),
+                intonationScale: z.number(),
+                volumeScale: z.number(),
+                prePhonemeLength: z.number(),
+                postPhonemeLength: z.number(),
+                morphingInfo: z
+                  .object({
+                    rate: z.number(),
+                    targetEngineId: z.string().uuid(),
+                    targetSpeakerId: z.string().uuid(),
+                    targetStyleId: z.number(),
+                  })
+                  .passthrough()
+                  .optional(),
               })
-              .optional(),
-          })
-        )
-        .default({}),
-      keys: z.string().uuid().array().default([]),
-    })
-    .default({}),
-  currentTheme: z.string().default("Default"),
-  editorFont: z.enum(["default", "os"]).default("default"),
-  experimentalSetting: z
-    .object({
-      enablePreset: z.boolean().default(false),
-      enableInterrogativeUpspeak: z.boolean().default(false),
-      enableMorphing: z.boolean().default(false),
-      enableMultiEngine: z.boolean().default(false),
-    })
-    .default({}),
-  acceptRetrieveTelemetry: z
-    .enum(["Unconfirmed", "Accepted", "Refused"])
-    .default("Unconfirmed"),
-  acceptTerms: z
-    .enum(["Unconfirmed", "Accepted", "Rejected"])
-    .default("Unconfirmed"),
-  splitTextWhenPaste: z
-    .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
-    .default("PERIOD_AND_NEW_LINE"),
-  splitterPosition: splitterPositionSchema.default({}),
-  confirmedTips: z
-    .object({
-      tweakableSliderByScroll: z.boolean().default(false),
-    })
-    .default({}),
-  registeredEngineDirs: z.string().array().default([]),
-});
+              .passthrough()
+          )
+          .default({}),
+        keys: z.string().uuid().array().default([]),
+      })
+      .passthrough()
+      .default({}),
+    currentTheme: z.string().default("Default"),
+    editorFont: z.enum(["default", "os"]).default("default"),
+    experimentalSetting: z
+      .object({
+        enablePreset: z.boolean().default(false),
+        enableInterrogativeUpspeak: z.boolean().default(false),
+        enableMorphing: z.boolean().default(false),
+        enableMultiEngine: z.boolean().default(false),
+      })
+      .passthrough()
+      .default({}),
+    acceptRetrieveTelemetry: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    acceptTerms: z
+      .enum(["Unconfirmed", "Accepted", "Rejected"])
+      .default("Unconfirmed"),
+    splitTextWhenPaste: z
+      .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
+      .default("PERIOD_AND_NEW_LINE"),
+    splitterPosition: splitterPositionSchema.default({}),
+    confirmedTips: z
+      .object({
+        tweakableSliderByScroll: z.boolean().default(false),
+      })
+      .passthrough()
+      .default({}),
+    registeredEngineDirs: z.string().array().default([]),
+  })
+  .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
