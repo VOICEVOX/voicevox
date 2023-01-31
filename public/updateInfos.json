@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.14.1",
+    "descriptions": [
+      "一部環境で起動しない問題を修正",
+      "タイトルバーからデバイス表記を除去"
+    ],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
     "version": "0.14.0",
     "descriptions": [
       "プロジェクトを名前をつけて保存時にファイルが切り替わるように",
