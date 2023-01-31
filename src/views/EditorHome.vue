@@ -600,7 +600,7 @@ export default defineComponent({
       return lastEngineState; // FIXME: 暫定的に1つのエンジンの状態を返す
     });
 
-    const isEngineWaitingLong = ref<boolean>(true);
+    const isEngineWaitingLong = ref<boolean>(false);
     let engineTimer: number | undefined = undefined;
     watch(allEngineState, (newEngineState) => {
       if (engineTimer !== undefined) {
