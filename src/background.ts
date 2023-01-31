@@ -387,7 +387,7 @@ migrateHotkeySettings();
 const appState = {
   willQuit: false,
   willRestart: false,
-  isSafeMode: false,
+  isMultiEngineOffMode: false,
 };
 let filePathOnMac: string | undefined = undefined;
 // create window
@@ -419,12 +419,15 @@ async function createWindow() {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
       (process.env.WEBPACK_DEV_SERVER_URL as string) +
-        "#/home?isSafeMode=" +
-        appState.isSafeMode
+        "#/home?isMultiEngineOffMode=" +
+        appState.isMultiEngineOffMode
     );
   } else {
     createProtocol("app");
-    win.loadURL("app://./index.html#/home?isSafeMode=" + appState.isSafeMode);
+    win.loadURL(
+      "app://./index.html#/home?isMultiEngineOffMode=" +
+        appState.isMultiEngineOffMode
+    );
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -825,9 +828,9 @@ ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
   return engineManager.validateEngineDir(engineDir);
 });
 
-ipcMainHandle("RESTART_APP", async (_, { isSafeMode }) => {
+ipcMainHandle("RESTART_APP", async (_, { isMultiEngineOffMode }) => {
   appState.willRestart = true;
-  appState.isSafeMode = isSafeMode;
+  appState.isMultiEngineOffMode = isMultiEngineOffMode;
   win.close();
 });
 

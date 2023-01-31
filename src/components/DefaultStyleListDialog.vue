@@ -53,7 +53,7 @@
                 v-ripple="isHoverableItem"
                 class="q-pa-none character-item"
                 :class="[isHoverableItem && 'hoverable-character-item']"
-                @dblclick="openStyleSelectDialog(speaker)"
+                @click="openStyleSelectDialog(speaker)"
               >
                 <div class="character-item-inner">
                   <img
@@ -86,16 +86,6 @@
                       }}スタイル）</span
                     >
                   </div>
-                  <q-btn
-                    outline
-                    class="q-mt-sm"
-                    text-color="display"
-                    @mouseenter="isHoverableItem = false"
-                    @mouseleave="isHoverableItem = true"
-                    @click.stop="openStyleSelectDialog(speaker)"
-                  >
-                    変更
-                  </q-btn>
                 </div>
               </q-item>
             </div>
@@ -259,16 +249,6 @@ export default defineComponent({
 .q-toolbar div:first-child {
   min-width: 0;
 }
-.character-portrait-wrapper {
-  display: grid;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  .character-portrait {
-    margin: auto;
-  }
-}
 
 .main {
   height: calc(
@@ -291,10 +271,10 @@ export default defineComponent({
   overflow-y: scroll;
 
   > div {
-    $character-item-size: 215px;
+    $character-item-size: 200px;
     display: grid;
     grid-template-columns: repeat(auto-fit, $character-item-size);
-    grid-auto-rows: 230px;
+    grid-auto-rows: 200px;
     column-gap: 10px;
     row-gap: 10px;
     align-content: center;
@@ -332,41 +312,6 @@ export default defineComponent({
           align-items: center;
           margin-top: -1rem;
         }
-        .new-character-item {
-          color: colors.$primary-light;
-          position: absolute;
-          left: 0px;
-          top: 0px;
-        }
-      }
-    }
-  }
-}
-
-.character-order-container {
-  width: 180px;
-  height: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  .character-order {
-    flex: 1;
-
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
-
-    overflow-y: auto;
-
-    .character-order-item {
-      border-radius: 10px;
-      border: 2px solid rgba(colors.$display-rgb, 0.15);
-      text-align: center;
-      cursor: grab;
-      &.selected-character-order-item {
-        border: 2px solid colors.$primary-light;
       }
     }
   }
@@ -377,18 +322,6 @@ export default defineComponent({
   > .scroll {
     width: unset !important;
     overflow: hidden;
-  }
-}
-
-@media screen and (max-width: 880px) {
-  .q-drawer-container {
-    display: none;
-  }
-  .q-page-container {
-    padding-left: unset !important;
-    .q-page-sticky {
-      left: 0 !important;
-    }
   }
 }
 </style>

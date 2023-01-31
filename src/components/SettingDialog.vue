@@ -28,7 +28,7 @@
           <div class="q-pa-md row items-start q-gutter-md">
             <!-- Engine Mode Card -->
             <q-card flat class="setting-card">
-              <q-card-actions class="engine-setting">
+              <q-card-actions>
                 <div class="text-h5">エンジン</div>
                 <template v-if="engineIds.length > 0">
                   <q-space />
@@ -651,7 +651,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      2人の話者でモーフィングした音声を合成する
+                      モーフィングした音声を合成可能にする
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -675,7 +675,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      複数のVOICEVOX準拠エンジンを活用できるようにする
+                      複数のVOICEVOX準拠エンジンを利用可能にする
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -936,7 +936,7 @@ export default defineComponent({
     ];
     const renderSamplingRateLabel = (value: SamplingRateOption): string => {
       if (value === "engineDefault") {
-        return "エンジンのデフォルト";
+        return "デフォルト";
       } else {
         return `${value / 1000} kHz`;
       }
@@ -1132,10 +1132,6 @@ export default defineComponent({
     width: unset !important;
     max-height: unset;
   }
-}
-
-.engine-setting {
-  align-items: flex-end;
 }
 
 .root {

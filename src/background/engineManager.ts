@@ -83,7 +83,7 @@ export class EngineManager {
 
   /**
    * 追加エンジンの一覧を取得する。
-   * FIXME: store.get("engineDirs")への副作用をEngineManager外に移動する
+   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
   fetchAdditionalEngineInfos(): EngineInfo[] {
     const engines: EngineInfo[] = [];
@@ -129,8 +129,8 @@ export class EngineManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
-    // FIXME: この関数の引数でengineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("engineDirs")) {
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
+    for (const engineDir of this.store.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -141,8 +141,8 @@ export class EngineManager {
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
         this.store.set(
-          "engineDirs",
-          this.store.get("engineDirs").filter((p) => p !== engineDir)
+          "registeredEngineDirs",
+          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
         );
       }
     }

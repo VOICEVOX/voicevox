@@ -830,7 +830,7 @@ export type EngineStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
-  isSafeMode: boolean;
+  isMultiEngineOffMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -912,8 +912,8 @@ export type IndexStoreTypes = {
     action(): void;
   };
 
-  SET_IS_SAFE_MODE: {
-    mutation: { isSafeMode: boolean };
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
 };
@@ -1203,7 +1203,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(obj: { isSafeMode?: boolean }): void;
+    action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
   START_PROGRESS: {
