@@ -64,6 +64,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   LOAD_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     */
     action: createUILockAction(
       async (
         context,
