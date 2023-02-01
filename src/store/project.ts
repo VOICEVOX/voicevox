@@ -222,14 +222,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.14", semverSatisfiesOptions)
           ) {
-            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
-            if (characterInfos == undefined)
-              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
             for (const audioItemsKey in projectData.audioItems) {
               const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.engineId === undefined) {
                 audioItem.engineId = engineId;
               }
+            }
+          }
+
+          if (
+            semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
+          ) {
+            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            if (characterInfos == undefined)
+              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.voice == undefined) {
                 const oldEngineId = audioItem.engineId;
                 const oldStyleId = audioItem.styleId;
