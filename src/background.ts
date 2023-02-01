@@ -342,7 +342,7 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  let projectFilePath = "";
+  let projectFilePath: string | undefined = "";
   if (isMac) {
     if (filePathOnMac) {
       if (filePathOnMac.endsWith(".vvproj")) {
