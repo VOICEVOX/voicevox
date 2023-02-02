@@ -162,6 +162,7 @@ export class VvppManager {
       };
     } catch (e) {
       if (fs.existsSync(outputDir)) {
+        log.log("Failed to extract vvpp, removing", outputDir);
         await fs.promises.rm(outputDir, { recursive: true });
       }
       throw e;
