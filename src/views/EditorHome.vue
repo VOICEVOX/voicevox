@@ -199,6 +199,7 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
+  EngineId,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 import cloneDeep from "clone-deep";
@@ -402,7 +403,7 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let engineId: string | undefined = undefined;
+      let engineId: EngineId | undefined = undefined;
       let styleId: number | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
@@ -519,7 +520,7 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      let engineIds: string[];
+      let engineIds: EngineId[];
       if (store.state.isMultiEngineOffMode) {
         // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(

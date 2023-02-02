@@ -333,7 +333,7 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import type { EngineDirValidationResult } from "@/type/preload";
+import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 type EngineLoaderType = "dir" | "vvpp";
@@ -400,7 +400,8 @@ export default defineComponent({
     watch(
       [engineInfos, engineStates, engineManifests],
       async () => {
-        for (const id of Object.keys(engineInfos.value)) {
+        for (const idStr of Object.keys(engineInfos.value)) {
+          const id = EngineId(idStr);
           if (engineStates.value[id] !== "READY") continue;
           if (engineVersions.value[id]) continue;
           const version = await store
@@ -418,14 +419,21 @@ export default defineComponent({
       { immediate: true }
     );
 
-    const selectedId = ref("");
+    const selectedId = ref<EngineId | undefined>(undefined);
+
     const isDeletable = computed(() => {
+      // FIXME: いたるところにエンジンが選択済みかを検証するコードがある。
+      // 選択後に現れる領域は別ComponentにしてselectedIdをpropで渡せばこれは不要になる
+      if (selectedId.value == undefined)
+        throw new Error("engine is not selected");
       return (
         engineInfos.value[selectedId.value] &&
         engineInfos.value[selectedId.value].type === "path"
       );
     });
     const engineDir = computed(() => {
+      if (selectedId.value == undefined)
+        throw new Error("engine is not selected");
       return engineInfos.value[selectedId.value]?.path || "（組み込み）";
     });
 
@@ -522,6 +530,8 @@ export default defineComponent({
           textColor: "warning",
         },
       }).onOk(async () => {
+        if (selectedId.value == undefined)
+          throw new Error("engine is not selected");
         switch (engineInfos.value[selectedId.value].type) {
           case "path": {
             const engineDir = store.state.engineInfos[selectedId.value].path;
@@ -556,15 +566,19 @@ export default defineComponent({
       });
     };
 
-    const selectEngine = (id: string) => {
+    const selectEngine = (id: EngineId) => {
       selectedId.value = id;
     };
 
     const openSelectedEngineDirectory = () => {
+      if (selectedId.value == undefined)
+        throw new Error("assert selectedId.value != undefined");
       store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
     };
 
     const restartSelectedEngine = () => {
+      if (selectedId.value == undefined)
+        throw new Error("assert selectedId.value != undefined");
       store.dispatch("RESTART_ENGINES", {
         engineIds: [selectedId.value],
       });
@@ -644,13 +658,13 @@ export default defineComponent({
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
-      selectedId.value = "";
+      selectedId.value = undefined;
       isAddingEngine.value = false;
     };
     // エンジン追加状態
     const toAddEngineState = () => {
       isAddingEngine.value = true;
-      selectedId.value = "";
+      selectedId.value = undefined;
       newEngineDirValidationState.value = null;
       newEngineDir.value = "";
       vvppFilePath.value = "";

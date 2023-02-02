@@ -76,8 +76,9 @@
 import { useStore } from "@/store";
 import { computed, defineComponent, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { EngineId } from "@/type/preload";
 
-type DetailKey = { engine: string; character: string };
+type DetailKey = { engine: EngineId; character: string };
 
 export default defineComponent({
   setup() {
@@ -96,16 +97,19 @@ export default defineComponent({
       () =>
         new Map(
           Object.entries(store.state.characterInfos).map(
-            ([engineId, characterInfos]) => [
-              engineId,
-              {
+            ([engineIdStr, characterInfos]) => {
+              const engineId = EngineId(engineIdStr);
+              return [
                 engineId,
-                name: store.state.engineManifests[engineId].name,
-                characterInfos: new Map(
-                  characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
-                ),
-              },
-            ]
+                {
+                  engineId,
+                  name: store.state.engineManifests[engineId].name,
+                  characterInfos: new Map(
+                    characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+                  ),
+                },
+              ];
+            }
           )
         )
     );

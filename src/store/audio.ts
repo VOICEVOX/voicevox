@@ -17,6 +17,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  EngineId,
   MoraDataType,
   MorphingInfo,
   StyleInfo,
@@ -71,10 +72,10 @@ function parseTextFile(
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
-  const characters = new Map<string, { engineId: string; styleId: number }>();
+  const characters = new Map<string, { engineId: EngineId; styleId: number }>();
   const uuid2StyleIds = new Map<
     string,
-    { engineId: string; styleId: number }
+    { engineId: EngineId; styleId: number }
   >();
   for (const defaultStyleId of defaultStyleIds) {
     const speakerUuid = defaultStyleId.speakerUuid;
@@ -181,7 +182,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
-  engineId: string,
+  engineId: EngineId,
   styleId: number
 ): CharacterInfo | undefined {
   const engineCharacterInfos = state.characterInfos[engineId];
@@ -319,7 +320,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         engineId,
         characterInfos,
-      }: { engineId: string; characterInfos: CharacterInfo[] }
+      }: { engineId: EngineId; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
     },
@@ -484,7 +485,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       { state, getters, dispatch },
       payload: {
         text?: string;
-        engineId?: string;
+        engineId?: EngineId;
         styleId?: number;
         presetKey?: string;
         baseAudioItem?: AudioItem;
@@ -798,7 +799,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         text,
         engineId,
         styleId,
-      }: { text: string; engineId: string; styleId: number }
+      }: { text: string; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -826,7 +827,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioKey,
         engineId,
         styleId,
-      }: { audioKey: string; engineId: string; styleId: number }
+      }: { audioKey: string; engineId: EngineId; styleId: number }
     ) {
       state.audioItems[audioKey].engineId = engineId;
       state.audioItems[audioKey].styleId = styleId;
@@ -857,7 +858,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         isKana,
       }: {
         text: string;
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         isKana?: boolean;
       }
@@ -992,7 +993,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases,
         engineId,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; engineId: string; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -1025,7 +1026,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         copyIndexes: number[];
       }
@@ -1207,7 +1208,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
+        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
         if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
@@ -2016,7 +2017,7 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_CHANGE_STYLE_ID: {
       mutation(
         draft,
-        payload: { engineId: string; styleId: number; audioKey: string } & (
+        payload: { engineId: EngineId; styleId: number; audioKey: string } & (
           | { update: "StyleId" }
           | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
           | { update: "AudioQuery"; query: AudioQuery }
@@ -2048,7 +2049,7 @@ export const audioCommandStore = transformCommandStore(
           audioKey,
           engineId,
           styleId,
-        }: { audioKey: string; engineId: string; styleId: number }
+        }: { audioKey: string; engineId: EngineId; styleId: number }
       ) {
         const query = state.audioItems[audioKey].query;
         try {
@@ -2821,7 +2822,7 @@ export const audioCommandStore = transformCommandStore(
           }: {
             prevAudioKey: string;
             texts: string[];
-            engineId: string;
+            engineId: EngineId;
             styleId: number;
           }
         ) => {

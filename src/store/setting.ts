@@ -7,6 +7,7 @@ import {
   ThemeColorType,
   ThemeConf,
   ToolbarSetting,
+  EngineId,
 } from "@/type/preload";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import Mousetrap from "mousetrap";
@@ -118,11 +119,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
 
-      for (const [engineId, engineSetting] of Object.entries(
+      for (const [engineIdStr, engineSetting] of Object.entries(
         await window.electron.getSetting("engineSettings")
       )) {
+        if (engineSetting == undefined)
+          throw new Error(
+            `engineSetting is undefined. engineIdStr: ${engineIdStr}`
+          );
         commit("SET_ENGINE_SETTING", {
-          engineId,
+          engineId: EngineId(engineIdStr),
           engineSetting,
         });
       }

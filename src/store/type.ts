@@ -42,6 +42,7 @@ import {
   EngineSettings,
   MorphableTargetInfoTable,
   EngineSetting,
+  EngineId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -56,7 +57,7 @@ export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
 // FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
-  engineId?: string;
+  engineId?: EngineId;
   styleId?: number;
   query?: EditorAudioQuery;
   presetKey?: string;
@@ -140,15 +141,15 @@ export type AudioStoreTypes = {
   };
 
   LOAD_CHARACTER: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   SET_CHARACTER_INFOS: {
-    mutation: { engineId: string; characterInfos: CharacterInfo[] };
+    mutation: { engineId: EngineId; characterInfos: CharacterInfo[] };
   };
 
   CHARACTER_INFO: {
-    getter(engineId: string, styleId: number): CharacterInfo | undefined;
+    getter(engineId: EngineId, styleId: number): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -162,7 +163,7 @@ export type AudioStoreTypes = {
   SETUP_SPEAKER: {
     action(payload: {
       audioKey: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): void;
   };
@@ -196,7 +197,7 @@ export type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
-      engineId?: string;
+      engineId?: EngineId;
       styleId?: number;
       presetKey?: string;
       baseAudioItem?: AudioItem;
@@ -274,12 +275,12 @@ export type AudioStoreTypes = {
   };
 
   LOAD_MORPHABLE_TARGETS: {
-    action(payload: { engineId: string; baseStyleId: number }): void;
+    action(payload: { engineId: EngineId; baseStyleId: number }): void;
   };
 
   SET_MORPHABLE_TARGETS: {
     mutation: {
-      engineId: string;
+      engineId: EngineId;
       baseStyleId: number;
       morphableTargets?: Exclude<
         { [key: number]: MorphableTargetInfo },
@@ -311,13 +312,13 @@ export type AudioStoreTypes = {
   FETCH_AUDIO_QUERY: {
     action(payload: {
       text: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): Promise<AudioQuery>;
   };
 
   SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; engineId: string; styleId: number };
+    mutation: { audioKey: string; engineId: EngineId; styleId: number };
   };
 
   SET_ACCENT_PHRASES: {
@@ -327,7 +328,7 @@ export type AudioStoreTypes = {
   FETCH_ACCENT_PHRASES: {
     action(payload: {
       text: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
@@ -358,7 +359,7 @@ export type AudioStoreTypes = {
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): Promise<AccentPhrase[]>;
   };
@@ -366,7 +367,7 @@ export type AudioStoreTypes = {
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
@@ -506,14 +507,14 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineId: string; styleId: number; audioKey: string } & (
+    mutation: { engineId: EngineId; styleId: number; audioKey: string } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
     action(payload: {
       audioKey: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): void;
   };
@@ -663,7 +664,7 @@ export type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): string[];
   };
@@ -711,8 +712,8 @@ export type CommandStoreTypes = {
  */
 
 export type EngineStoreState = {
-  engineStates: Record<string, EngineState>;
-  engineSupportedDevices: Record<string, SupportedDevicesInfo>;
+  engineStates: Record<EngineId, EngineState>;
+  engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
 };
 
 export type EngineStoreTypes = {
@@ -737,45 +738,45 @@ export type EngineStoreTypes = {
   };
 
   IS_ENGINE_READY: {
-    getter(engineId: string): boolean;
+    getter(engineId: EngineId): boolean;
   };
 
   START_WAITING_ENGINE: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   RESTART_ENGINES: {
-    action(payload: { engineIds: string[] }): Promise<{
+    action(payload: { engineIds: EngineId[] }): Promise<{
       success: boolean;
       anyNewCharacters: boolean;
     }>;
   };
 
   POST_ENGINE_START: {
-    action(payload: { engineIds: string[] }): Promise<{
+    action(payload: { engineIds: EngineId[] }): Promise<{
       success: boolean;
       anyNewCharacters: boolean;
     }>;
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   OPEN_ENGINE_DIRECTORY: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineId: string; engineState: EngineState };
+    mutation: { engineId: EngineId; engineState: EngineState };
   };
 
   IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
+    action(payload: { engineId: EngineId; styleId: number }): Promise<boolean>;
   };
 
   INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): void;
+    action(payload: { engineId: EngineId; styleId: number }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -795,31 +796,31 @@ export type EngineStoreTypes = {
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    action: (engineId: string) => Promise<boolean>;
+    action: (engineId: EngineId) => Promise<boolean>;
   };
 
   SET_ENGINE_INFOS: {
-    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
+    mutation: { engineIds: EngineId[]; engineInfos: EngineInfo[] };
   };
 
   SET_ENGINE_MANIFEST: {
-    mutation: { engineId: string; engineManifest: EngineManifest };
+    mutation: { engineId: EngineId; engineManifest: EngineManifest };
   };
 
   FETCH_AND_SET_ENGINE_MANIFEST: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   SET_ENGINE_SUPPORTED_DEVICES: {
-    mutation: { engineId: string; supportedDevices: SupportedDevicesInfo };
+    mutation: { engineId: EngineId; supportedDevices: SupportedDevicesInfo };
   };
 
   FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   ENGINE_CAN_USE_GPU: {
-    getter: (engineId: string) => boolean;
+    getter: (engineId: EngineId) => boolean;
   };
 };
 
@@ -965,9 +966,9 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineIds: string[];
-  engineInfos: Record<string, EngineInfo>;
-  engineManifests: Record<string, EngineManifest>;
+  engineIds: EngineId[];
+  engineInfos: Record<EngineId, EngineInfo>;
+  engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -1041,15 +1042,15 @@ export type SettingStoreTypes = {
   };
 
   SET_ENGINE_SETTING: {
-    mutation: { engineSetting: EngineSetting; engineId: string };
+    mutation: { engineSetting: EngineSetting; engineId: EngineId };
     action(payload: {
       engineSetting: EngineSetting;
-      engineId: string;
+      engineId: EngineId;
     }): Promise<void>;
   };
 
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean; engineId: string }): Promise<void>;
+    action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
   };
 };
 
@@ -1276,7 +1277,7 @@ export type DictionaryStoreState = Record<string, unknown>;
 export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
     action(payload: {
-      engineId: string;
+      engineId: EngineId;
     }): Promise<Record<string, UserDictWord>>;
   };
   LOAD_ALL_USER_DICT: {
@@ -1328,7 +1329,7 @@ type IEngineConnectorFactoryActionsMapper = <
 export type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
-      engineId: string;
+      engineId: EngineId;
     }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };
