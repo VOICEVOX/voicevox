@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import log from "electron-log";
 import { moveFile } from "move-file";
+// FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
 import { Extract } from "unzipper";
 import { dialog } from "electron";
 import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
