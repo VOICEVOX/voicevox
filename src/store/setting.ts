@@ -27,7 +27,6 @@ export const settingStoreState: SettingStoreState = {
     exportLab: false,
     exportText: false,
     outputStereo: false,
-    outputSamplingRate: "engineDefault",
     audioOutputDevice: "default",
   },
   hotkeySettings: [],
@@ -45,6 +44,7 @@ export const settingStoreState: SettingStoreState = {
     enablePreset: false,
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
+    enableMultiEngine: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -55,6 +55,7 @@ export const settingStoreState: SettingStoreState = {
   confirmedTips: {
     tweakableSliderByScroll: false,
   },
+  engineSettings: {},
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -116,6 +117,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       commit("SET_CONFIRMED_TIPS", {
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
+
+      for (const [engineId, engineSetting] of Object.entries(
+        await window.electron.getSetting("engineSettings")
+      )) {
+        commit("SET_ENGINE_SETTING", {
+          engineId,
+          engineSetting,
+        });
+      }
     },
   },
 
@@ -309,50 +319,63 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
+  SET_ENGINE_SETTING: {
+    mutation(state, { engineSetting, engineId }) {
+      state.engineSettings[engineId] = engineSetting;
+    },
+    async action({ commit }, { engineSetting, engineId }) {
+      await window.electron.setEngineSetting(engineId, engineSetting);
+      commit("SET_ENGINE_SETTING", { engineSetting, engineId });
+    },
+  },
+
   CHANGE_USE_GPU: {
     /**
      * CPU/GPUモードを切り替えようとする。
      * GPUモードでエンジン起動に失敗した場合はCPUモードに戻す。
      */
-    action: createUILockAction(async ({ state, dispatch }, { useGpu }) => {
-      if (state.useGpu === useGpu) return;
+    action: createUILockAction(
+      async ({ state, dispatch }, { useGpu, engineId }) => {
+        const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
 
-      const isAvailableGPUMode = await window.electron.isAvailableGPUMode();
+        // 対応するGPUがない場合に変更を続行するか問う
+        if (useGpu && !isAvailableGPUMode) {
+          const result = await window.electron.showQuestionDialog({
+            type: "warning",
+            title: "対応するGPUデバイスが見つかりません",
+            message:
+              "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
+              "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
+            buttons: ["変更する", "変更しない"],
+            cancelId: 1,
+          });
+          if (result == 1) {
+            return;
+          }
+        }
 
-      // 対応するGPUがない場合に変更を続行するか問う
-      if (useGpu && !isAvailableGPUMode) {
-        const result = await window.electron.showQuestionDialog({
-          type: "warning",
-          title: "対応するGPUデバイスが見つかりません",
-          message:
-            "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
-            "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-          buttons: ["変更する", "変更しない"],
-          cancelId: 1,
+        dispatch("SET_ENGINE_SETTING", {
+          engineSetting: { ...state.engineSettings[engineId], useGpu },
+          engineId,
         });
-        if (result == 1) {
+        const result = await dispatch("RESTART_ENGINES", {
+          engineIds: [engineId],
+        });
+
+        // GPUモードに変更できなかった場合はCPUモードに戻す
+        // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
+        if (!result.success && useGpu) {
+          await window.electron.showMessageDialog({
+            type: "error",
+            title: "GPUモードに変更できませんでした",
+            message:
+              "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
+          });
+          await dispatch("CHANGE_USE_GPU", { useGpu: false, engineId });
           return;
         }
       }
-
-      await dispatch("SET_USE_GPU", { useGpu });
-      const success = await dispatch("RESTART_ENGINES", {
-        engineIds: state.engineIds,
-      });
-
-      // GPUモードに変更できなかった場合はCPUモードに戻す
-      // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
-      if (!success && useGpu) {
-        await window.electron.showMessageDialog({
-          type: "error",
-          title: "GPUモードに変更できませんでした",
-          message:
-            "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
-        });
-        await dispatch("CHANGE_USE_GPU", { useGpu: false });
-        return;
-      }
-    }),
+    ),
   },
 });
 

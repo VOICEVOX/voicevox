@@ -39,7 +39,9 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  EngineSettings,
   MorphableTargetInfoTable,
+  EngineSetting,
   Voice,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -812,10 +814,6 @@ export type EngineStoreTypes = {
   ENGINE_CAN_USE_GPU: {
     getter: (engineId: string) => boolean;
   };
-
-  ALL_ENGINE_CAN_USE_GPU: {
-    getter: boolean;
-  };
 };
 
 /*
@@ -825,7 +823,7 @@ export type EngineStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
-  isSafeMode: boolean;
+  isMultiEngineOffMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -907,8 +905,8 @@ export type IndexStoreTypes = {
     action(): void;
   };
 
-  SET_IS_SAFE_MODE: {
-    mutation: { isSafeMode: boolean };
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
 };
@@ -970,6 +968,7 @@ export type SettingStoreState = {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineSettings: EngineSettings;
 };
 
 export type SettingStoreTypes = {
@@ -1034,8 +1033,16 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  SET_ENGINE_SETTING: {
+    mutation: { engineSetting: EngineSetting; engineId: string };
+    action(payload: {
+      engineSetting: EngineSetting;
+      engineId: string;
+    }): Promise<void>;
+  };
+
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean }): void;
+    action(payload: { useGpu: boolean; engineId: string }): Promise<void>;
   };
 };
 
@@ -1046,7 +1053,6 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
-  useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1141,11 +1147,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SET_USE_GPU: {
-    mutation: { useGpu: boolean };
-    action(payload: { useGpu: boolean }): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
@@ -1195,7 +1196,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(obj: { isSafeMode?: boolean }): void;
+    action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
   START_PROGRESS: {
