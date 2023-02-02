@@ -32,7 +32,7 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSetting,
+  engineSettingSchema,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -495,7 +495,7 @@ async function start() {
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSettings[engineInfo.uuid] = engineSetting.parse({});
+      engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
   store.set("engineSettings", engineSettings);
