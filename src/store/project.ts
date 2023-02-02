@@ -64,6 +64,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   LOAD_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     */
     action: createUILockAction(
       async (
         context,
@@ -75,7 +78,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "プロジェクトファイルの選択",
           });
           if (ret == undefined || ret?.length == 0) {
-            return;
+            return false;
           }
           filePath = ret[0];
         }
@@ -275,7 +278,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               cancelId: 1,
             });
             if (result == 1) {
-              return;
+              return false;
             }
           }
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
@@ -293,6 +296,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
+          return true;
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -307,6 +311,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "エラー",
             message,
           });
+          return false;
         }
       }
     ),

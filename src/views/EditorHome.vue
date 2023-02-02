@@ -206,6 +206,10 @@ import cloneDeep from "clone-deep";
 export default defineComponent({
   name: "EditorHome",
 
+  props: {
+    projectFilePath: { type: String },
+  },
+
   components: {
     draggable,
     MenuBar,
@@ -227,7 +231,7 @@ export default defineComponent({
     ProgressDialog,
   },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -540,23 +544,30 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      // 最初のAudioCellを作成
-      const audioItem: AudioItem = await store.dispatch(
-        "GENERATE_AUDIO_ITEM",
-        {}
-      );
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-        audioItem,
-      });
-      focusCell({ audioKey: newAudioKey });
-
-      // 最初の話者を初期化
-      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
-        store.dispatch("SETUP_SPEAKER", {
-          audioKey: newAudioKey,
-          engineId: audioItem.engineId,
-          styleId: audioItem.styleId,
+      // プロジェクトファイルが指定されていればロード
+      let projectFileLoaded = false;
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+        projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: props.projectFilePath,
         });
+      }
+
+      if (!projectFileLoaded) {
+        // 最初のAudioCellを作成
+        const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+        const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+          audioItem,
+        });
+        focusCell({ audioKey: newAudioKey });
+
+        // 最初の話者を初期化
+        if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+          store.dispatch("SETUP_SPEAKER", {
+            audioKey: newAudioKey,
+            engineId: audioItem.engineId,
+            styleId: audioItem.styleId,
+          });
+        }
       }
 
       // ショートカットキーの設定
