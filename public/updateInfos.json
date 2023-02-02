@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.14.2",
+    "descriptions": ["エンジンのバージョンを0.14.1に"],
+    "contributors": []
+  },
+  {
     "version": "0.14.1",
     "descriptions": [
       "一部環境で起動しない問題を修正",
