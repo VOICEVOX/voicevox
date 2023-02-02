@@ -1,8 +1,8 @@
 <template>
   <q-dialog
     maximized
-    transition-show="fade"
-    transition-hide="fade"
+    transition-show="none"
+    transition-hide="none"
     transition-duration="100"
     class="default-style-select-dialog transparent-backdrop"
     v-model="isOpenComputed"
@@ -60,7 +60,6 @@
                   isHoverableStyleItem && 'hoverable-style-item',
                 ]"
                 @click="selectStyleIndex(styleIndex)"
-                @dblclick="closeDialog"
               >
                 <div class="style-item-inner">
                   <img :src="style.iconPath" class="style-icon" />
@@ -285,15 +284,10 @@ export default defineComponent({
     }
   }
 
-  $character-name-height: 30px;
-  .character-name {
-    height: $character-name-height;
-  }
-
   .style-items-container {
     display: grid;
     align-items: center;
-    height: calc(100% - #{$character-name-height});
+    height: calc(100% - 30px);
     > div {
       $style-item-size: 215px;
       display: grid;

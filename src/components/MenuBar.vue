@@ -17,7 +17,7 @@
       "
     />
     <q-space />
-    <div class="window-title" :class="{ 'text-warning': isSafeMode }">
+    <div class="window-title" :class="{ 'text-warning': isMultiEngineOffMode }">
       {{ titleText }}
     </div>
     <q-space />
@@ -81,25 +81,26 @@ const currentVersion = ref("");
 window.electron.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
-const isSafeMode = computed(() => store.state.isSafeMode);
+const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
 const projectName = computed(() => store.getters.PROJECT_NAME);
-const useGpu = computed(() => store.state.useGpu);
 const isEdited = computed(() => store.getters.IS_EDITED);
 const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
+const enableMultiEngine = computed(
+  () => store.state.experimentalSetting.enableMultiEngine
+);
 
 const titleText = computed(
   () =>
     (isEdited.value ? "*" : "") +
     (projectName.value !== undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
-    (currentVersion.value ? " - Ver. " + currentVersion.value + " - " : "") +
-    (useGpu.value ? "GPU" : "CPU") +
-    (isSafeMode.value ? " - セーフモード" : "")
+    (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "")
 );
 
 // FIXME: App.vue内に移動する
@@ -395,21 +396,6 @@ const menudata = ref<MenuItemData[]>([
   },
 ]);
 
-if (store.state.isSafeMode) {
-  (
-    menudata.value.find((data) => data.label === "設定") as MenuItemRoot
-  ).subMenu.push({
-    type: "button",
-    label: "セーフモードを解除",
-    onClick() {
-      store.dispatch("RESTART_APP", {
-        isSafeMode: false,
-      });
-    },
-    disableWhenUiLocked: false,
-  });
-}
-
 const subMenuOpenFlags = ref(
   [...Array(menudata.value.length)].map(() => false)
 );
@@ -502,18 +488,40 @@ async function updateEngines() {
       },
     ];
   }
-  engineMenu.subMenu.push({
+  if (enableMultiEngine.value) {
+    engineMenu.subMenu.push({
+      type: "button",
+      label: "エンジンの管理",
+      onClick: () => {
+        store.dispatch("SET_DIALOG_OPEN", {
+          isEngineManageDialogOpen: true,
+        });
+      },
+      disableWhenUiLocked: false,
+    });
+  }
+}
+// engineInfos、engineManifests、enableMultiEngineを見て動的に更新できるようにする
+// FIXME: computedにする
+watch([engineInfos, engineManifests, enableMultiEngine], updateEngines, {
+  immediate: true,
+});
+
+// マルチエンジンオフモードの解除
+if (store.state.isMultiEngineOffMode) {
+  (
+    menudata.value.find((data) => data.label === "エンジン") as MenuItemRoot
+  ).subMenu.push({
     type: "button",
-    label: "エンジンの管理",
-    onClick: () => {
-      store.dispatch("SET_DIALOG_OPEN", {
-        isEngineManageDialogOpen: true,
+    label: "マルチエンジンをオンにして再起動",
+    onClick() {
+      store.dispatch("RESTART_APP", {
+        isMultiEngineOffMode: false,
       });
     },
     disableWhenUiLocked: false,
   });
 }
-watch([engineInfos, engineManifests], updateEngines, { immediate: true }); // engineInfos、engineManifestsを見て動的に更新できるようにする
 
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

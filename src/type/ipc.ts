@@ -9,6 +9,7 @@ import {
   UpdateInfo,
   WriteFileErrorResult,
   NativeThemeType,
+  EngineSetting,
 } from "@/type/preload";
 
 /**
@@ -257,6 +258,11 @@ export type IpcIHData = {
     return: ElectronStoreType[keyof ElectronStoreType];
   };
 
+  SET_ENGINE_SETTING: {
+    args: [engineId: string, engineSetting: EngineSetting];
+    return: void;
+  };
+
   SET_NATIVE_THEME: {
     args: [source: NativeThemeType];
     return: void;
@@ -278,7 +284,7 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [obj: { isSafeMode: boolean }];
+    args: [obj: { isMultiEngineOffMode: boolean }];
     return: void;
   };
 

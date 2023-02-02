@@ -1,5 +1,68 @@
 [
   {
+    "version": "0.14.1",
+    "descriptions": [
+      "一部環境で起動しない問題を修正",
+      "タイトルバーからデバイス表記を除去"
+    ],
+    "contributors": ["sevenc-nanashi"]
+  },
+  {
+    "version": "0.14.0",
+    "descriptions": [
+      "プロジェクトを名前をつけて保存時にファイルが切り替わるように",
+      "コアをRust言語に移行",
+      "音声書き出し時にプログレスバー表示",
+      "話速や音量の値をテキスト入力可能に",
+      "デフォルトのフォントを変更",
+      "テキスト欄の複製機能",
+      "モーフィング機能",
+      "スタイルごとに異なる立ち絵の提供を可能に",
+      "DirectML利用時に適したGPUを自動選択",
+      "マルチエンジン機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "Appletigerv",
+      "haru3me",
+      "Hiroshiba",
+      "jdkfx",
+      "kantas-spike",
+      "kat0h",
+      "k-chop",
+      "ksk001100",
+      "madosuki",
+      "masinc",
+      "misogihagi",
+      "MT224244",
+      "My-MC",
+      "nebocco",
+      "PickledChair",
+      "qryxip",
+      "qwerty2501",
+      "raa0121",
+      "sabonerune",
+      "sarisia",
+      "Segu-g",
+      "sevenc-nanashi",
+      "sheltie-fusafusa",
+      "shigobu",
+      "shirayu",
+      "sigprogramming",
+      "smly",
+      "sousuke0422",
+      "takana-v",
+      "TOMOFUMI-KONDO",
+      "ts-klassen",
+      "tunamaguro",
+      "wappon-28-dev",
+      "whiteball",
+      "y-chan"
+    ]
+  },
+  {
     "version": "0.13.4",
     "descriptions": [
       "キャラクター「ちび式じい」「櫻歌ミコ」「小夜/SAYO」「ナースロボ＿タイプＴ」を追加",
@@ -37,7 +100,6 @@
       "イントネーションのTips追加",
       "辞書登録単語の優先度を変更可能に",
       "ダークテーマを追加",
-      "コアをRust言語に移行",
       "開発環境の向上",
       "バグ修正"
     ],
