@@ -63,6 +63,7 @@
         :key="index"
         v-bind:note="note"
         v-bind:index="index"
+        @moveNotesByKey="moveNotesByKey"
       />
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
@@ -189,6 +190,86 @@ export default defineComponent({
         zoomY: Number(event.target.value),
       });
     };
+    const moveNotesByKey = (event: KeyboardEvent) => {
+      // FIXME: 動作確認仮: 要りファクタ
+      // 要複数のノート設定
+      if (event.key === "ArrowUp") {
+        store.state.selectedNotes.forEach((index) => {
+          const note = store.state.score?.notes[index];
+          if (
+            note &&
+            Number.isInteger(note.midi) &&
+            Number.isInteger(note.position)
+          ) {
+            const midi = Math.min(note.midi + 1, 127);
+            store.dispatch("CHANGE_NOTE", {
+              index,
+              note: {
+                ...note,
+                midi,
+              },
+            });
+          }
+        });
+      }
+      if (event.key === "ArrowDown") {
+        store.state.selectedNotes.forEach((index) => {
+          const note = store.state.score?.notes[index];
+          if (
+            note &&
+            Number.isInteger(note.midi) &&
+            Number.isInteger(note.position)
+          ) {
+            const midi = Math.max(note.midi - 1, 0);
+            store.dispatch("CHANGE_NOTE", {
+              index,
+              note: {
+                ...note,
+                midi,
+              },
+            });
+          }
+        });
+      }
+      if (event.key === "ArrowRight") {
+        store.state.selectedNotes.forEach((index) => {
+          const note = store.state.score?.notes[index];
+          if (
+            note &&
+            Number.isInteger(note.midi) &&
+            Number.isInteger(note.position)
+          ) {
+            const position = note.position + 240;
+            store.dispatch("CHANGE_NOTE", {
+              index,
+              note: {
+                ...note,
+                position,
+              },
+            });
+          }
+        });
+      }
+      if (event.key === "ArrowLeft") {
+        store.state.selectedNotes.forEach((index) => {
+          const note = store.state.score?.notes[index];
+          if (
+            note &&
+            Number.isInteger(note.midi) &&
+            Number.isInteger(note.position)
+          ) {
+            const position = note.position - 240;
+            store.dispatch("CHANGE_NOTE", {
+              index,
+              note: {
+                ...note,
+                position,
+              },
+            });
+          }
+        });
+      }
+    };
     return {
       timeSignatures,
       gridY,
@@ -202,6 +283,7 @@ export default defineComponent({
       addNote,
       setZoomX,
       setZoomY,
+      moveNotesByKey,
     };
   },
 });

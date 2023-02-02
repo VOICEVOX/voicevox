@@ -19,6 +19,9 @@
       class="sequencer-note-bar"
       @mousedown="toggleSelected()"
       @dblclick="removeNote()"
+      @keydown.prevent="(e) => moveNoteByKey(e)"
+      focusable="true"
+      tabindex="0"
     >
       <g>
         <rect
@@ -53,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, PropType } from "vue";
+import { defineComponent, computed, PropType, watch } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -67,7 +70,10 @@ export default defineComponent({
     note: { type: Object as PropType<Note>, required: true },
     index: { type: Number, required: true },
   },
-  setup(props) {
+
+  emits: ["moveNotesByKey"],
+
+  setup(props, { emit }) {
     const store = useStore();
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
@@ -112,6 +118,11 @@ export default defineComponent({
         });
       }
     };
+
+    const moveNoteByKey = (event: KeyboardEvent) => {
+      emit("moveNotesByKey", event);
+    };
+
     return {
       sizeX,
       sizeY,
@@ -125,6 +136,7 @@ export default defineComponent({
       toggleSelected,
       removeNote,
       setLyric,
+      moveNoteByKey,
     };
   },
 });
