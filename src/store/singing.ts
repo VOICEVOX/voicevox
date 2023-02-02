@@ -259,6 +259,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SELECTED_NOTES: {
+    mutation(state, { selectedNotes }: { selectedNotes: number[] }) {
+      if (state.score) {
+        state.selectedNotes = selectedNotes;
+      }
+    },
+    async action(
+      { state, commit },
+      { selectedNotes }: { selectedNotes: number[] }
+    ) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("SET_SELECTED_NOTES", { selectedNotes });
+    },
+  },
+
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {

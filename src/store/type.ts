@@ -706,7 +706,7 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
-  selectedNotes: Array<number>;
+  selectedNotes: number[];
 };
 
 export type SingingStoreTypes = {
@@ -747,6 +747,11 @@ export type SingingStoreTypes = {
   REMOVE_TIME_SIGNATURE: {
     mutation: { index: number };
     action(payload: { position: number }): void;
+  };
+
+  SET_SELECTED_NOTES: {
+    mutation: { selectedNotes: Array<number> };
+    action(payload: { selectedNotes: Array<number> }): void;
   };
 
   ADD_NOTE: {

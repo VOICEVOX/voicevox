@@ -1,6 +1,6 @@
 <template>
   <div
-    class="sequencer-note"
+    v-bind:class="`sequencer-note ${isSelected ? 'selected' : ''}`"
     v-bind:style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
@@ -9,7 +9,7 @@
     <input
       type="text"
       :value="note.lyric"
-      @input="(e) => setLyric(index, e)"
+      @input="(e) => setLyric(e)"
       class="sequencer-note-lyric"
     />
     <svg
@@ -17,7 +17,8 @@
       v-bind:width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @dblclick="removeNote(index)"
+      @mousedown="toggleSelected()"
+      @dblclick="removeNote()"
     >
       <g>
         <rect
@@ -76,14 +77,31 @@ export default defineComponent({
     );
     const barHeight = computed(() => sizeY * zoomY.value);
     const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
-    const removeNote = (index: number) => {
+    const isSelected = computed(() => {
+      return store.state.selectedNotes.includes(props.index);
+    });
+    const toggleSelected = () => {
+      // TODO: Store側で行う
+      const selectedNotes = [...store.state.selectedNotes];
+      const index = props.index;
+      const selectedIndex = selectedNotes.findIndex((i) => i === index);
+      if (-1 === selectedIndex) {
+        selectedNotes.push(index);
+      } else {
+        selectedNotes.splice(selectedIndex, 1);
+      }
+      store.dispatch("SET_SELECTED_NOTES", { selectedNotes });
+    };
+    const removeNote = () => {
+      const index = props.index;
       store.dispatch("REMOVE_NOTE", { index });
     };
-    const setLyric = (index: number, event: Event) => {
+    const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
       }
       if (event.target.value && store.state.score) {
+        const index = props.index;
         const lyric = event.target.value;
         store.dispatch("CHANGE_NOTE", {
           index,
@@ -103,6 +121,8 @@ export default defineComponent({
       positionY,
       barHeight,
       barWidth,
+      isSelected,
+      toggleSelected,
       removeNote,
       setLyric,
     };
@@ -120,6 +140,12 @@ export default defineComponent({
   top: 0;
   left: 0;
   transform-origin: 0, 0;
+
+  &.selected {
+    .sequencer-note-bar-body {
+      fill: darkorange; // 仮
+    }
+  }
 }
 
 .sequencer-note-lyric {
