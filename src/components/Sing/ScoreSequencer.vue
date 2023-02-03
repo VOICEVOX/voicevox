@@ -63,7 +63,9 @@
         :key="index"
         v-bind:note="note"
         v-bind:index="index"
-        @moveNotesByKey="moveNotesByKey"
+        v-bind:cursorX="cursorX"
+        v-bind:cursorY="cursorY"
+        @handleNotesKeydown="handleNotesKeydown"
       />
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
@@ -102,7 +104,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, onMounted } from "vue";
+import { defineComponent, computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
@@ -122,6 +124,8 @@ export default defineComponent({
   },
   setup() {
     const store = useStore();
+    const cursorX = ref(0);
+    const cursorY = ref(0);
     const gridY = midiKeys;
     const gridX = computed(() => {
       const resolution = store.state.score?.resolution || 480;
@@ -146,11 +150,26 @@ export default defineComponent({
     const zoomY = computed(() => store.state.sequencerZoomY);
     const scrollX = computed(() => store.state.sequencerScrollX);
     const scrollY = computed(() => store.state.sequencerScrollY);
+    const MouseMoveListener = (event: MouseEvent) => {
+      cursorX.value = event.clientX;
+      cursorY.value = event.clientY;
+    };
     onMounted(() => {
       const el = document.querySelector("#score-sequencer");
       // C4あたりにスクロールする
       if (el) {
+        el.addEventListener("mousemove", {
+          handleEvent: MouseMoveListener,
+        });
         el.scrollTop = scrollY.value * (sizeY * zoomY.value);
+      }
+    });
+    onUnmounted(() => {
+      const el = document.querySelector("#score-sequencer");
+      if (el) {
+        el.removeEventListener("mousemove", {
+          handleEvent: MouseMoveListener,
+        });
       }
     });
     const addNote = (event: MouseEvent) => {
@@ -190,7 +209,7 @@ export default defineComponent({
         zoomY: Number(event.target.value),
       });
     };
-    const moveNotesByKey = (event: KeyboardEvent) => {
+    const handleNotesKeydown = (event: KeyboardEvent) => {
       // FIXME: 動作確認仮: 要りファクタ
       // 要複数のノート設定
       if (event.key === "ArrowUp") {
@@ -239,6 +258,7 @@ export default defineComponent({
             Number.isInteger(note.midi) &&
             Number.isInteger(note.position)
           ) {
+            // FIXME: 仮 1/16(ppq=480) / スナップサイズにあわせる必要あり
             const position = note.position + 240;
             store.dispatch("CHANGE_NOTE", {
               index,
@@ -258,6 +278,7 @@ export default defineComponent({
             Number.isInteger(note.midi) &&
             Number.isInteger(note.position)
           ) {
+            // FIXME: 仮 1/16(ppq=480) / スナップサイズにあわせる必要あり
             const position = note.position - 240;
             store.dispatch("CHANGE_NOTE", {
               index,
@@ -269,7 +290,23 @@ export default defineComponent({
           }
         });
       }
+      if (event.key === "Backspace" || event.key === "Delete") {
+        store.state.selectedNotes.forEach((index) => {
+          const note = store.state.score?.notes[index];
+          if (
+            note &&
+            Number.isInteger(note.midi) &&
+            Number.isInteger(note.position)
+          ) {
+            // FIXME: 仮 1/16(ppq=480) / スナップサイズにあわせる必要あり
+            store.dispatch("REMOVE_NOTE", {
+              index,
+            });
+          }
+        });
+      }
     };
+
     return {
       timeSignatures,
       gridY,
@@ -279,11 +316,13 @@ export default defineComponent({
       zoomY,
       sizeX,
       sizeY,
+      cursorX,
+      cursorY,
       getPitchFromMidi,
       addNote,
       setZoomX,
       setZoomY,
-      moveNotesByKey,
+      handleNotesKeydown,
     };
   },
 });

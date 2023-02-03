@@ -19,7 +19,7 @@
       class="sequencer-note-bar"
       @mousedown="toggleSelected()"
       @dblclick="removeNote()"
-      @keydown.prevent="(e) => moveNoteByKey(e)"
+      @keydown.prevent="(e) => handleKeydown(e)"
       focusable="true"
       tabindex="0"
     >
@@ -38,17 +38,17 @@
           height="100%"
           width="8"
           fill-opacity="0"
-          draggable
           class="sequencer-note-bar-draghandle"
         />
         <rect
           y="0"
           v-bind:x="`${(note.duration / 4) * zoomX - 4}`"
-          height="100%"
+          height="200%"
           width="8"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
-          draggable
+          @mousedown="dragRightStart"
+          @mouseup="dragRightEnd"
         />
       </g>
     </svg>
@@ -56,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, PropType, watch } from "vue";
+import { defineComponent, computed, PropType, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -69,9 +69,11 @@ export default defineComponent({
   props: {
     note: { type: Object as PropType<Note>, required: true },
     index: { type: Number, required: true },
+    cursorX: { type: Number },
+    cursorY: { type: Number },
   },
 
-  emits: ["moveNotesByKey"],
+  emits: ["handleNotesKeydown"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -83,6 +85,7 @@ export default defineComponent({
     );
     const barHeight = computed(() => sizeY * zoomY.value);
     const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
+    const gridXWidth = computed(() => sizeX * zoomX.value);
     const isSelected = computed(() => {
       return store.state.selectedNotes.includes(props.index);
     });
@@ -102,6 +105,36 @@ export default defineComponent({
       const index = props.index;
       store.dispatch("REMOVE_NOTE", { index });
     };
+    const dragId = ref();
+    const dragStartX = ref();
+    // FIXME: 試行で伸びるかを確認: ドラッグなどマウスイベントは親ScoreSequencer側で処理が必要
+    // 速度的には問題なさそう
+    const dragRight = () => {
+      if (!props.cursorX) {
+        return;
+      }
+      const pos = props.cursorX - dragStartX.value;
+      if (gridXWidth.value < pos) {
+        const duration = props.note.duration + 240;
+        store.dispatch("CHANGE_NOTE", {
+          index: props.index,
+          note: {
+            ...props.note,
+            duration,
+          },
+        });
+        dragStartX.value = dragStartX.value + gridXWidth.value;
+      }
+      dragId.value = requestAnimationFrame(dragRight);
+    };
+    const dragRightStart = (e: MouseEvent) => {
+      e.stopPropagation();
+      dragStartX.value = e.clientX;
+      dragId.value = requestAnimationFrame(dragRight);
+    };
+    const dragRightEnd = () => {
+      cancelAnimationFrame(dragId.value);
+    };
     const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
@@ -118,9 +151,8 @@ export default defineComponent({
         });
       }
     };
-
-    const moveNoteByKey = (event: KeyboardEvent) => {
-      emit("moveNotesByKey", event);
+    const handleKeydown = (event: KeyboardEvent) => {
+      emit("handleNotesKeydown", event);
     };
 
     return {
@@ -136,7 +168,9 @@ export default defineComponent({
       toggleSelected,
       removeNote,
       setLyric,
-      moveNoteByKey,
+      handleKeydown,
+      dragRightStart,
+      dragRightEnd,
     };
   },
 });
