@@ -17,7 +17,7 @@
       v-bind:width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @mousedown="toggleSelected()"
+      @mouseup="toggleSelected()"
       @dblclick="removeNote()"
       @keydown.prevent="(e) => handleKeydown(e)"
       focusable="true"
@@ -31,6 +31,7 @@
           width="100%"
           stroke-width="1"
           class="sequencer-note-bar-body"
+          @mousedown="handleDragMoveStart"
         />
         <rect
           y="0"
@@ -73,7 +74,7 @@ export default defineComponent({
     cursorY: { type: Number },
   },
 
-  emits: ["handleNotesKeydown"],
+  emits: ["handleNotesKeydown", "dragMoveStart"],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -189,6 +190,10 @@ export default defineComponent({
       emit("handleNotesKeydown", event);
     };
 
+    const handleDragMoveStart = (event: MouseEvent) => {
+      emit("dragMoveStart", event);
+    };
+
     return {
       sizeX,
       sizeY,
@@ -205,6 +210,7 @@ export default defineComponent({
       handleKeydown,
       dragRightStart,
       dragLeftStart,
+      handleDragMoveStart,
     };
   },
 });

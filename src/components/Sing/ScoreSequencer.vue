@@ -66,6 +66,7 @@
         v-bind:cursorX="cursorX"
         v-bind:cursorY="cursorY"
         @handleNotesKeydown="handleNotesKeydown"
+        @dragMoveStart="dragMoveStart"
       />
     </div>
     <!-- NOTE: スクロールバー+ズームレンジ仮 -->
@@ -319,6 +320,62 @@ export default defineComponent({
         });
       }
     };
+    const dragMoveStartX = ref();
+    const dragMoveStartY = ref();
+    const dragMove = () => {
+      if (false === store.state.isDrag) {
+        return;
+      }
+      if (!store.state.score?.notes) {
+        return;
+      }
+      const distanceX = cursorX.value - dragMoveStartX.value;
+      const distanceY = cursorY.value - dragMoveStartY.value;
+      const gridXWidth = sizeX * zoomX.value;
+      const gridYHeight = sizeY * zoomY.value;
+      let amountPositionX = 0;
+      if (gridXWidth <= Math.abs(distanceX)) {
+        amountPositionX = 0 < distanceX ? 120 : -120;
+        dragMoveStartX.value =
+          dragMoveStartX.value +
+          (0 < amountPositionX ? gridXWidth : -gridXWidth);
+      }
+      let amountPositionY = 0;
+      if (gridYHeight <= Math.abs(distanceY)) {
+        amountPositionY = 0 < distanceY ? -1 : 1;
+        dragMoveStartY.value =
+          dragMoveStartY.value +
+          (0 > amountPositionY ? gridYHeight : -gridYHeight);
+      }
+      store.state.selectedNotes.forEach((index) => {
+        const note = store.state.score?.notes[index];
+        if (
+          note &&
+          Number.isInteger(note.midi) &&
+          Number.isInteger(note.position)
+        ) {
+          const position = note.position + amountPositionX;
+          const midi = note.midi + amountPositionY;
+          store.dispatch("CHANGE_NOTE", {
+            index,
+            note: {
+              ...note,
+              midi,
+              position,
+            },
+          });
+        }
+      });
+      const requestId = requestAnimationFrame(dragMove);
+      store.dispatch("SET_DRAG_ID", { requestId });
+    };
+    const dragMoveStart = (event: MouseEvent) => {
+      dragMoveStartX.value = event.clientX;
+      dragMoveStartY.value = event.clientY;
+      store.dispatch("SET_IS_DRAG", { isDrag: true });
+      const requestId = requestAnimationFrame(dragMove);
+      store.dispatch("SET_DRAG_ID", { requestId });
+    };
 
     return {
       timeSignatures,
@@ -336,6 +393,7 @@ export default defineComponent({
       setZoomX,
       setZoomY,
       handleNotesKeydown,
+      dragMoveStart,
     };
   },
 });

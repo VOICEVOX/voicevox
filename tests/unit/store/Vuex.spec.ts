@@ -124,6 +124,8 @@ describe("store/vuex.js test", () => {
         sequencerScrollX: 0,
         sequencerScrollY: 60,
         sequencerSnapSize: 120,
+        isDrag: false,
+        sequencerDragId: 0,
         selectedNotes: [],
       },
       getters: {
