@@ -23,6 +23,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
   sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
+  isDrag: false,
+  sequencerDragId: 0,
   selectedNotes: [],
 };
 
@@ -370,6 +372,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { scrollY }) {
       commit("SET_SCROLL_Y", {
         scrollY,
+      });
+    },
+  },
+
+  SET_IS_DRAG: {
+    mutation(state, { isDrag }: { isDrag: boolean }) {
+      state.isDrag = isDrag;
+    },
+    async action({ commit }, { isDrag }) {
+      commit("SET_IS_DRAG", {
+        isDrag,
+      });
+    },
+  },
+
+  SET_DRAG_ID: {
+    mutation(state, { requestId }: { requestId: number }) {
+      state.sequencerDragId = requestId;
+    },
+    async action({ commit }, { requestId }) {
+      commit("SET_DRAG_ID", {
+        requestId,
       });
     },
   },

@@ -151,8 +151,15 @@ export default defineComponent({
     const scrollX = computed(() => store.state.sequencerScrollX);
     const scrollY = computed(() => store.state.sequencerScrollY);
     const MouseMoveListener = (event: MouseEvent) => {
+      event.stopPropagation();
       cursorX.value = event.clientX;
       cursorY.value = event.clientY;
+    };
+    const MouseUpListener = (event: MouseEvent) => {
+      event.stopPropagation();
+      store.dispatch("SET_IS_DRAG", { isDrag: false });
+      const requestId = store.state.sequencerDragId;
+      cancelAnimationFrame(requestId);
     };
     onMounted(() => {
       const el = document.querySelector("#score-sequencer");
@@ -160,6 +167,9 @@ export default defineComponent({
       if (el) {
         el.addEventListener("mousemove", {
           handleEvent: MouseMoveListener,
+        });
+        el.addEventListener("mouseup", {
+          handleEvent: MouseUpListener,
         });
         el.scrollTop = scrollY.value * (sizeY * zoomY.value);
       }
@@ -169,6 +179,9 @@ export default defineComponent({
       if (el) {
         el.removeEventListener("mousemove", {
           handleEvent: MouseMoveListener,
+        });
+        el.removeEventListener("mouseup", {
+          handleEvent: MouseUpListener,
         });
       }
     });

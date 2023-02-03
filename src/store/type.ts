@@ -706,6 +706,8 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
+  isDrag: boolean;
+  sequencerDragId: number;
   selectedNotes: number[];
 };
 
@@ -787,6 +789,16 @@ export type SingingStoreTypes = {
   SET_SCROLL_Y: {
     mutation: { scrollY: number };
     action(payload: { scrollY: number }): void;
+  };
+
+  SET_IS_DRAG: {
+    mutation: { isDrag: boolean };
+    action(payload: { isDrag: boolean }): void;
+  };
+
+  SET_DRAG_ID: {
+    mutation: { requestId: number };
+    action(payload: { requestId: number }): void;
   };
 
   IMPORT_MIDI_FILE: {

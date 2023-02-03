@@ -39,6 +39,7 @@
           width="8"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
+          @mousedown="dragLeftStart"
         />
         <rect
           y="0"
@@ -48,7 +49,6 @@
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
           @mousedown="dragRightStart"
-          @mouseup="dragRightEnd"
         />
       </g>
     </svg>
@@ -105,7 +105,6 @@ export default defineComponent({
       const index = props.index;
       store.dispatch("REMOVE_NOTE", { index });
     };
-    const dragId = ref();
     const dragStartX = ref();
     // FIXME: 試行で伸びるかを確認: ドラッグなどマウスイベントは親ScoreSequencer側で処理が必要
     // 速度的には問題なさそう
@@ -113,9 +112,12 @@ export default defineComponent({
       if (!props.cursorX) {
         return;
       }
+      if (false === store.state.isDrag) {
+        return;
+      }
       const pos = props.cursorX - dragStartX.value;
-      if (gridXWidth.value < pos) {
-        const duration = props.note.duration + 240;
+      if (gridXWidth.value <= Math.abs(pos) && 120 <= props.note.duration) {
+        const duration = props.note.duration + (0 < pos ? 120 : -120);
         store.dispatch("CHANGE_NOTE", {
           index: props.index,
           note: {
@@ -123,17 +125,49 @@ export default defineComponent({
             duration,
           },
         });
-        dragStartX.value = dragStartX.value + gridXWidth.value;
+        dragStartX.value =
+          dragStartX.value + (0 < pos ? gridXWidth.value : -gridXWidth.value);
       }
-      dragId.value = requestAnimationFrame(dragRight);
+      const requestId = requestAnimationFrame(dragRight);
+      store.dispatch("SET_DRAG_ID", { requestId });
     };
-    const dragRightStart = (e: MouseEvent) => {
-      e.stopPropagation();
-      dragStartX.value = e.clientX;
-      dragId.value = requestAnimationFrame(dragRight);
+    const dragRightStart = (event: MouseEvent) => {
+      dragStartX.value = event.clientX;
+      store.dispatch("SET_IS_DRAG", { isDrag: true });
+      const requestId = requestAnimationFrame(dragRight);
+      store.dispatch("SET_DRAG_ID", { requestId });
     };
-    const dragRightEnd = () => {
-      cancelAnimationFrame(dragId.value);
+    const dragLeft = () => {
+      if (!props.cursorX) {
+        return;
+      }
+      if (false === store.state.isDrag) {
+        return;
+      }
+      const pos = props.cursorX - dragStartX.value;
+      if (gridXWidth.value <= Math.abs(pos) && 120 <= props.note.duration) {
+        const position = props.note.position + (0 < pos ? 120 : -120);
+        const duration = props.note.duration + (0 > pos ? 120 : -120);
+        store.dispatch("CHANGE_NOTE", {
+          index: props.index,
+          note: {
+            ...props.note,
+            position,
+            duration,
+          },
+        });
+        dragStartX.value =
+          dragStartX.value + (0 < pos ? gridXWidth.value : -gridXWidth.value);
+      }
+      const requestId = requestAnimationFrame(dragLeft);
+      store.dispatch("SET_DRAG_ID", { requestId });
+    };
+    const dragLeftStart = (event: MouseEvent) => {
+      console.log("a");
+      dragStartX.value = event.clientX;
+      store.dispatch("SET_IS_DRAG", { isDrag: true });
+      const requestId = requestAnimationFrame(dragLeft);
+      store.dispatch("SET_DRAG_ID", { requestId });
     };
     const setLyric = (event: Event) => {
       if (!(event.target instanceof HTMLInputElement)) {
@@ -170,7 +204,7 @@ export default defineComponent({
       setLyric,
       handleKeydown,
       dragRightStart,
-      dragRightEnd,
+      dragLeftStart,
     };
   },
 });
