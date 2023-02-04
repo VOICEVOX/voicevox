@@ -24,7 +24,7 @@
       transition-show="none"
       transition-hide="none"
     >
-      <q-list style="min-width: max-content">
+      <q-list style="min-width: max-content" class="item-container">
         <q-item
           v-if="selectedStyleInfo == undefined && !emptiable"
           class="row no-wrap items-center"
@@ -57,6 +57,12 @@
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
+          :class="
+            selectedCharacter != undefined &&
+            characterInfo.metas.speakerUuid ===
+              selectedCharacter.metas.speakerUuid &&
+            'selected-row'
+          "
         >
           <q-btn-group flat class="col full-width">
             <q-btn
@@ -349,6 +355,11 @@ export default defineComponent({
 }
 
 .character-menu {
+  .item-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .q-item {
     color: colors.$display;
   }
@@ -361,6 +372,10 @@ export default defineComponent({
     > div:last-child:hover {
       background-color: rgba(colors.$primary-rgb, 0.1);
     }
+  }
+
+  .selected-row {
+    order: -1;
   }
 
   .selected-character-item,
