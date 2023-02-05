@@ -453,7 +453,7 @@ export class EngineManager {
     }
 
     if (
-      ["name", "uuid", "port", "command", "icon" ,"supported_features"].some(
+      ["name", "uuid", "port", "command", "icon", "supported_features"].some(
         (key) => !(key in manifestContent)
       )
     ) {
