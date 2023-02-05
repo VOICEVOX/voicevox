@@ -741,10 +741,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   VALID_MORPHING_INFO: {
     getter: (state) => (audioItem: AudioItem) => {
       if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
+      const { engineId, styleId } = audioItem.voice;
       const info =
-        state.morphableTargetsInfo[audioItem.voice.engineId]?.[
-          audioItem.voice.styleId
-        ]?.[audioItem.morphingInfo.targetStyleId];
+        state.morphableTargetsInfo[engineId]?.[styleId]?.[
+          audioItem.morphingInfo.targetStyleId
+        ];
       if (info == undefined) return false;
       return info.isMorphable;
     },
