@@ -701,6 +701,11 @@ export type SingingStoreState = {
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
   // NOTE: オーディオ再生はボイスと同様もしくは拡張して使う？
+  sequencerZoomX: number;
+  sequencerZoomY: number;
+  sequencerScrollX: number;
+  sequencerScrollY: number;
+  sequencerSnapSize: number;
 };
 
 export type SingingStoreTypes = {
@@ -741,6 +746,41 @@ export type SingingStoreTypes = {
   REMOVE_TIME_SIGNATURE: {
     mutation: { index: number };
     action(payload: { position: number }): void;
+  };
+
+  ADD_NOTE: {
+    mutation: { note: Note };
+    action(payload: { note: Note }): void;
+  };
+
+  CHANGE_NOTE: {
+    mutation: { index: number; note: Note };
+    action(payload: { index: number; note: Note }): void;
+  };
+
+  REMOVE_NOTE: {
+    mutation: { index: number };
+    action(payload: { index: number }): void;
+  };
+
+  SET_ZOOM_X: {
+    mutation: { zoomX: number };
+    action(payload: { zoomX: number }): void;
+  };
+
+  SET_ZOOM_Y: {
+    mutation: { zoomY: number };
+    action(payload: { zoomY: number }): void;
+  };
+
+  SET_SCROLL_X: {
+    mutation: { scrollX: number };
+    action(payload: { scrollX: number }): void;
+  };
+
+  SET_SCROLL_Y: {
+    mutation: { scrollY: number };
+    action(payload: { scrollY: number }): void;
   };
 
   IMPORT_MIDI_FILE: {

@@ -9,6 +9,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import { Midi } from "@tonejs/midi";
+import { getDoremiFromMidi } from "@/helpers/singHelper";
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -17,6 +18,11 @@ export const singingStoreState: SingingStoreState = {
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
+  sequencerZoomX: 0.5,
+  sequencerZoomY: 0.5,
+  sequencerScrollY: 60, // Y軸 midi number
+  sequencerScrollX: 0, // X軸 midi duration(仮)
+  sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -107,6 +113,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.score = score;
     },
     async action({ commit }, { score }: { score: Score }) {
+      console.log(score);
       commit("SET_SCORE", { score });
     },
   },
@@ -251,6 +258,104 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  ADD_NOTE: {
+    mutation(state, { note }: { note: Note }) {
+      if (state.score) {
+        const notes = state.score.notes.concat(note).sort((a, b) => {
+          return a.position - b.position;
+        });
+        state.score.notes = notes;
+      }
+    },
+    // ノートを追加する
+    // NOTE: 重複削除など別途追加
+    async action({ state, commit }, { note }: { note: Note }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("ADD_NOTE", { note });
+    },
+  },
+
+  CHANGE_NOTE: {
+    mutation(state, { index, note }: { index: number; note: Note }) {
+      if (state.score) {
+        const notes = [...state.score.notes];
+        notes.splice(index, 1, note);
+        state.score.notes = notes;
+      }
+    },
+    async action(
+      { state, commit },
+      { index, note }: { index: number; note: Note }
+    ) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("CHANGE_NOTE", { index, note });
+    },
+  },
+
+  REMOVE_NOTE: {
+    mutation(state, { index }: { index: number }) {
+      if (state.score) {
+        const notes = [...state.score.notes];
+        notes.splice(index, 1);
+        state.score.notes = notes;
+      }
+    },
+    async action({ state, commit }, { index }: { index: number }) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("REMOVE_NOTE", { index });
+    },
+  },
+
+  SET_ZOOM_X: {
+    mutation(state, { zoomX }: { zoomX: number }) {
+      state.sequencerZoomX = zoomX;
+    },
+    async action({ commit }, { zoomX }) {
+      commit("SET_ZOOM_X", {
+        zoomX,
+      });
+    },
+  },
+
+  SET_ZOOM_Y: {
+    mutation(state, { zoomY }: { zoomY: number }) {
+      state.sequencerZoomY = zoomY;
+    },
+    async action({ commit }, { zoomY }) {
+      commit("SET_ZOOM_Y", {
+        zoomY,
+      });
+    },
+  },
+
+  SET_SCROLL_X: {
+    mutation(state, { scrollX }: { scrollX: number }) {
+      state.sequencerScrollX = scrollX;
+    },
+    async action({ commit }, { scrollX }) {
+      commit("SET_SCROLL_X", {
+        scrollX,
+      });
+    },
+  },
+
+  SET_SCROLL_Y: {
+    mutation(state, { scrollY }: { scrollY: number }) {
+      state.sequencerScrollY = scrollY;
+    },
+    async action({ commit }, { scrollY }) {
+      commit("SET_SCROLL_Y", {
+        scrollY,
+      });
+    },
+  },
+
   IMPORT_MIDI_FILE: {
     action: createUILockAction(
       async ({ dispatch }, { filePath }: { filePath?: string }) => {
@@ -297,7 +402,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               note.durationTicks
             ),
             midi: note.midi,
-            lyric: "",
+            lyric: getDoremiFromMidi(note.midi),
           }))
           .sort((a, b) => a.position - b.position)
           .forEach((note) => {
