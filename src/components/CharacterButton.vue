@@ -232,12 +232,10 @@ export default defineComponent({
       return character;
     });
 
-    const isSelectedItem = computed(
-      () => (characterInfo: CharacterInfo) =>
-        selectedCharacter.value != undefined &&
-        characterInfo.metas.speakerUuid ===
-          selectedCharacter.value?.metas.speakerUuid
-    );
+    const isSelectedItem = (charcterInfo: CharacterInfo) =>
+      selectedCharacter.value != undefined &&
+      charcterInfo.metas.speakerUuid ===
+        selectedCharacter.value?.metas.speakerUuid;
 
     const selectedStyleInfo = computed(() => {
       const selectedVoice = props.selectedVoice;
