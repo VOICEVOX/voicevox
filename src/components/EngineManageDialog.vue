@@ -261,7 +261,7 @@
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
-              <ul v-if="engineManifests[selectedId]">
+              <ul v-if="engineManifests[selectedId].supportedFeatures">
                 <li
                   v-for="[feature, value] in Object.entries(
                     engineManifests[selectedId].supportedFeatures
