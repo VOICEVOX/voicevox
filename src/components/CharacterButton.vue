@@ -24,7 +24,7 @@
       transition-show="none"
       transition-hide="none"
     >
-      <q-list style="min-width: max-content" class="item-container">
+      <q-list style="min-width: max-content" class="character-item-container">
         <q-item
           v-if="selectedStyleInfo == undefined && !emptiable"
           class="row no-wrap items-center"
@@ -353,7 +353,7 @@ export default defineComponent({
 }
 
 .character-menu {
-  .item-container {
+  .character-item-container {
     display: flex;
     flex-direction: column;
   }
