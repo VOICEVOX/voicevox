@@ -24,7 +24,7 @@
       transition-show="none"
       transition-hide="none"
     >
-      <q-list style="min-width: max-content">
+      <q-list style="min-width: max-content" class="character-item-container">
         <q-item
           v-if="selectedStyleInfo == undefined && !emptiable"
           class="row no-wrap items-center"
@@ -57,6 +57,7 @@
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
+          :class="isSelectedItem(characterInfo) && 'selected-row'"
         >
           <q-btn-group flat class="col full-width">
             <q-btn
@@ -65,10 +66,7 @@
               v-close-popup
               class="col-grow"
               :class="
-                selectedCharacter != undefined &&
-                characterInfo.metas.speakerUuid ===
-                  selectedCharacter.metas.speakerUuid &&
-                'selected-character-item'
+                isSelectedItem(characterInfo) && 'selected-character-item'
               "
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -234,6 +232,11 @@ export default defineComponent({
       return character;
     });
 
+    const isSelectedItem = (characterInfo: CharacterInfo) =>
+      selectedCharacter.value != undefined &&
+      characterInfo.metas.speakerUuid ===
+        selectedCharacter.value?.metas.speakerUuid;
+
     const selectedStyleInfo = computed(() => {
       const selectedVoice = props.selectedVoice;
       const style = selectedCharacter.value?.metas.styles.find(
@@ -297,6 +300,7 @@ export default defineComponent({
       selectedCharacter,
       selectedStyleInfo,
       engineIcons,
+      isSelectedItem,
       getDefaultStyle,
       onSelectSpeaker,
       subMenuOpenFlags,
@@ -349,6 +353,11 @@ export default defineComponent({
 }
 
 .character-menu {
+  .character-item-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .q-item {
     color: colors.$display;
   }
@@ -361,6 +370,11 @@ export default defineComponent({
     > div:last-child:hover {
       background-color: rgba(colors.$primary-rgb, 0.1);
     }
+  }
+
+  // 選択中のキャラを上にする
+  .selected-row {
+    order: -1;
   }
 
   .selected-character-item,
