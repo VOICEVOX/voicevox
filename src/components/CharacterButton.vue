@@ -233,9 +233,9 @@ export default defineComponent({
     });
 
     const isSelectedItem = computed(
-      () => (charcterInfo: CharacterInfo) =>
+      () => (characterInfo: CharacterInfo) =>
         selectedCharacter.value != undefined &&
-        charcterInfo.metas.speakerUuid ===
+        characterInfo.metas.speakerUuid ===
           selectedCharacter.value?.metas.speakerUuid
     );
 
