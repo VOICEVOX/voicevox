@@ -137,7 +137,7 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 `/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
 
-### `ubuntu 22.04`で動きません。
+### Q. ubuntu 22.04 で動きません。
 
 `libfuse2`をインストールすることで解決するかもしれません。
 
