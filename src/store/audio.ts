@@ -52,9 +52,7 @@ async function generateUniqueIdAndQuery(
     JSON.stringify([
       audioItem.text,
       audioQuery,
-      audioItem.voice.engineId,
-      audioItem.voice.speakerId,
-      audioItem.voice.styleId,
+      audioItem.voice,
       audioItem.morphingInfo,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
