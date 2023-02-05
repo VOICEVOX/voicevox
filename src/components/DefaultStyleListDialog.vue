@@ -121,9 +121,6 @@ const modelValueComputed = computed({
 
 // 選択中のキャラクター
 const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
-const selectCharacter = (speakerUuid: string) => {
-  selectedCharacter.value = speakerUuid;
-};
 
 const showStyleSelectDialog = ref<boolean>(false);
 const selectedCharacterInfo = computed(() => {
@@ -156,9 +153,6 @@ const selectedStyles = computed(() => {
   });
   return map;
 });
-
-// キャラクター表示順序
-const characterOrder = ref<CharacterInfo[]>([]);
 
 // ダイアログが開かれたときに初期値を求める
 watch([() => props.modelValue], async ([newValue]) => {
