@@ -74,15 +74,13 @@
 
 <script setup lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "vue";
+import { computed, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 type DetailKey = { engine: string; character: string };
 
 const store = useStore();
 const md = useMarkdownIt();
-
-const allCharacterInfos = computed(() => store.getters.GET_ALL_CHARACTER_INFOS);
 
 const sortedEngineInfos = computed(() => store.getters.GET_SORTED_ENGINE_INFOS);
 
