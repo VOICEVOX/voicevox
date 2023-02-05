@@ -374,6 +374,7 @@ export default defineComponent({
     }
   }
 
+  // 選択中のキャラを上にする
   .selected-row {
     order: -1;
   }
