@@ -87,11 +87,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 #### Windows 版
 
-`C:\Users\(ユーザー名)\AppData\Roaming\voicevox`
+`C:\Users\(ユーザー名)\AppData\Roaming\voicevox\config.json`
 
 #### Mac 版
 
-`/Users/(ユーザー名)/Library/Application Support/voicevox`
+`/Users/(ユーザー名)/Library/Application Support/voicevox/config.json`
 
 ### Q. エンジンの起動が失敗したというエラーが表示されます。
 
