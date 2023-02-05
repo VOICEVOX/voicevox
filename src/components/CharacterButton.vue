@@ -57,12 +57,7 @@
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
-          :class="
-            selectedCharacter != undefined &&
-            characterInfo.metas.speakerUuid ===
-              selectedCharacter.metas.speakerUuid &&
-            'selected-row'
-          "
+          :class="isSelectedItem(characterInfo) && 'selected-row'"
         >
           <q-btn-group flat class="col full-width">
             <q-btn
@@ -71,10 +66,7 @@
               v-close-popup
               class="col-grow"
               :class="
-                selectedCharacter != undefined &&
-                characterInfo.metas.speakerUuid ===
-                  selectedCharacter.metas.speakerUuid &&
-                'selected-character-item'
+                isSelectedItem(characterInfo) && 'selected-character-item'
               "
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -240,6 +232,11 @@ export default defineComponent({
       return character;
     });
 
+    const isSelectedItem = (characterInfo: CharacterInfo) =>
+      selectedCharacter.value != undefined &&
+      characterInfo.metas.speakerUuid ===
+        selectedCharacter.value?.metas.speakerUuid;
+
     const selectedStyleInfo = computed(() => {
       const selectedVoice = props.selectedVoice;
       const style = selectedCharacter.value?.metas.styles.find(
@@ -303,6 +300,7 @@ export default defineComponent({
       selectedCharacter,
       selectedStyleInfo,
       engineIcons,
+      isSelectedItem,
       getDefaultStyle,
       onSelectSpeaker,
       subMenuOpenFlags,
