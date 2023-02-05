@@ -71,7 +71,7 @@ function parseTextFile(
   defaultStyleIds: DefaultStyleId[],
   userOrderedCharacterInfos: CharacterInfo[]
 ): AudioItem[] {
-  const characters = new Map<string, Voice>();
+  const name2Voice = new Map<string, Voice>();
   const uuid2Voice = new Map<string, Voice>();
   for (const defaultStyleId of defaultStyleIds) {
     const speakerId = defaultStyleId.speakerUuid;
@@ -86,12 +86,12 @@ function parseTextFile(
     const speakerName = characterInfo.metas.speakerName;
     if (voice == undefined)
       throw new Error(`style is undefined. speakerUuid: ${uuid}`);
-    characters.set(speakerName, voice);
+    name2Voice.set(speakerName, voice);
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
-      characters.set(
+      name2Voice.set(
         `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
         {
           engineId: style.engineId,
@@ -101,7 +101,7 @@ function parseTextFile(
       );
     }
   }
-  if (!characters.size) return [];
+  if (!name2Voice.size) return [];
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
@@ -110,7 +110,7 @@ function parseTextFile(
   );
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const voice = characters.get(splitText);
+    const voice = name2Voice.get(splitText);
     if (voice !== undefined) {
       lastVoice = voice;
       continue;
