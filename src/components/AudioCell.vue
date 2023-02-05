@@ -90,8 +90,7 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const selectedVoice = computed<Voice | undefined>({
   get() {
-    const engineId = audioItem.value.voice.engineId;
-    const styleId = audioItem.value.voice.styleId;
+    const { engineId, styleId } = audioItem.value.voice;
 
     if (
       !store.state.engineIds.some((storeEngineId) => storeEngineId === engineId)
