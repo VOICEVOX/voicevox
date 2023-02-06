@@ -43,6 +43,7 @@ import {
   MorphableTargetInfoTable,
   EngineSetting,
   Voice,
+  EngineId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
