@@ -98,6 +98,7 @@ export class Transport {
   }
 
   set time(value: number) {
+    // 再生中の場合は一度再生を停止して、再生時間を設定後に再び再生を開始
     if (this._state === "started") {
       this.stop();
       this._time = value;
@@ -151,6 +152,9 @@ export class Transport {
     });
   }
 
+  /**
+   * シーケンスを追加します。再生中に追加した場合は、次のスケジューリングで反映されます。
+   */
   addSequence(sequence: SoundSequence) {
     const exists = this.sequences.some((value) => {
       return value === sequence;
@@ -161,6 +165,9 @@ export class Transport {
     this.sequences.push(sequence);
   }
 
+  /**
+   * シーケンスを削除します。再生中に削除した場合は、次のスケジューリングで反映されます。
+   */
   removeSequence(sequence: SoundSequence) {
     const index = this.sequences.findIndex((value) => {
       return value === sequence;

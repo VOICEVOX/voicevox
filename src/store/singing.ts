@@ -96,6 +96,9 @@ const secondsToTicks = (
   );
 };
 
+/**
+ * ノートオンの時間とノートオフの時間を計算し、ノートイベントを生成します。
+ */
 const generateNoteEvents = (score: Score, notes: Note[]): NoteEvent[] => {
   const resolution = score.resolution;
   const tempos = score.tempos;
