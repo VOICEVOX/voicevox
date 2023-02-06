@@ -480,7 +480,7 @@ export class AudioRenderer {
   }
 
   constructor() {
-    const audioContext = new AudioContext();
+    const audioContext = new window.AudioContext();
     const transport = new Transport(audioContext, 0.2, 0.6);
     this.onlineContext = { audioContext, transport };
   }
