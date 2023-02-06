@@ -42,6 +42,7 @@ import {
   EngineSettings,
   MorphableTargetInfoTable,
   EngineSetting,
+  Voice,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -53,11 +54,9 @@ export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
   outputSamplingRate: number | "engineDefault";
 };
 
-// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
-  engineId?: string;
-  styleId?: number;
+  voice: Voice;
   query?: EditorAudioQuery;
   presetKey?: string;
   morphingInfo?: MorphingInfo;
@@ -196,8 +195,7 @@ export type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
-      engineId?: string;
-      styleId?: number;
+      voice?: Voice;
       presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
@@ -316,8 +314,8 @@ export type AudioStoreTypes = {
     }): Promise<AudioQuery>;
   };
 
-  SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; engineId: string; styleId: number };
+  SET_AUDIO_VOICE: {
+    mutation: { audioKey: string; voice: Voice };
   };
 
   SET_ACCENT_PHRASES: {
@@ -505,17 +503,13 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; text: string }): void;
   };
 
-  COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineId: string; styleId: number; audioKey: string } & (
+  COMMAND_CHANGE_VOICE: {
+    mutation: { audioKey: string; voice: Voice } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: {
-      audioKey: string;
-      engineId: string;
-      styleId: number;
-    }): void;
+    action(payload: { audioKey: string; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -663,8 +657,7 @@ export type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
-      engineId: string;
-      styleId: number;
+      voice: Voice;
     }): string[];
   };
 };
