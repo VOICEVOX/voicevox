@@ -199,13 +199,17 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
-  EngineId,
+  Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 import cloneDeep from "clone-deep";
 
 export default defineComponent({
   name: "EditorHome",
+
+  props: {
+    projectFilePath: { type: String },
+  },
 
   components: {
     draggable,
@@ -228,7 +232,7 @@ export default defineComponent({
     ProgressDialog,
   },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
@@ -403,12 +407,10 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let engineId: EngineId | undefined = undefined;
-      let styleId: number | undefined = undefined;
+      let voice: Voice | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
-        engineId = store.state.audioItems[prevAudioKey].engineId;
-        styleId = store.state.audioItems[prevAudioKey].styleId;
+        voice = store.state.audioItems[prevAudioKey].voice;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -420,8 +422,7 @@ export default defineComponent({
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-        engineId,
-        styleId,
+        voice,
         presetKey,
         baseAudioItem,
       });
@@ -541,22 +542,27 @@ export default defineComponent({
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      // 最初のAudioCellを作成
-      const audioItem: AudioItem = await store.dispatch(
-        "GENERATE_AUDIO_ITEM",
-        {}
-      );
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-        audioItem,
-      });
-      focusCell({ audioKey: newAudioKey });
+      // プロジェクトファイルが指定されていればロード
+      let projectFileLoaded = false;
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+        projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: props.projectFilePath,
+        });
+      }
 
-      // 最初の話者を初期化
-      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+      if (!projectFileLoaded) {
+        // 最初のAudioCellを作成
+        const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+        const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+          audioItem,
+        });
+        focusCell({ audioKey: newAudioKey });
+
+        // 最初の話者を初期化
         store.dispatch("SETUP_SPEAKER", {
           audioKey: newAudioKey,
-          engineId: audioItem.engineId,
-          styleId: audioItem.styleId,
+          engineId: audioItem.voice.engineId,
+          styleId: audioItem.voice.styleId,
         });
       }
 
