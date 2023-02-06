@@ -484,8 +484,10 @@ export const electronStoreSchema = z
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
-        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".or(z.literal("")).default("")"を外す
-        engineId: engineIdSchema,
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
         speakerUuid: z.string().uuid(),
         defaultStyleId: z.number(),
       })
