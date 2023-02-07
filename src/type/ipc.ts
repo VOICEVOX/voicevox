@@ -7,6 +7,9 @@ import {
   ThemeSetting,
   ToolbarSetting,
   UpdateInfo,
+  WriteFileErrorResult,
+  NativeThemeType,
+  EngineSetting,
 } from "@/type/preload";
 
 /**
@@ -177,6 +180,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  LOG_WARN: {
+    args: [...params: unknown[]];
+    return: void;
+  };
+
   LOG_INFO: {
     args: [...params: unknown[]];
     return: void;
@@ -199,11 +207,6 @@ export type IpcIHData = {
 
   OPEN_ENGINE_DIRECTORY: {
     args: [obj: { engineId: string }];
-    return: void;
-  };
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    args: [];
     return: void;
   };
 
@@ -255,6 +258,16 @@ export type IpcIHData = {
     return: ElectronStoreType[keyof ElectronStoreType];
   };
 
+  SET_ENGINE_SETTING: {
+    args: [engineId: string, engineSetting: EngineSetting];
+    return: void;
+  };
+
+  SET_NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
+  };
+
   INSTALL_VVPP_ENGINE: {
     args: [path: string];
     return: Promise<boolean>;
@@ -271,8 +284,23 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [obj: { isSafeMode: boolean }];
+    args: [obj: { isMultiEngineOffMode: boolean }];
     return: void;
+  };
+
+  JOIN_PATH: {
+    args: [obj: { pathArray: string[] }];
+    return: string;
+  };
+
+  WRITE_FILE: {
+    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    return: WriteFileErrorResult | undefined;
+  };
+
+  READ_FILE: {
+    args: [obj: { filePath: string }];
+    return: ArrayBuffer;
   };
 };
 

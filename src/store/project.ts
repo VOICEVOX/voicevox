@@ -1,11 +1,11 @@
 import { createUILockAction } from "@/store/ui";
 import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
-import { buildProjectFileName } from "./utility";
+import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
 
-import Ajv, { JTDDataType } from "ajv/dist/jtd";
 import { AccentPhrase } from "@/openapi";
+import { z } from "zod";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -16,8 +16,8 @@ export const projectStoreState: ProjectStoreState = {
 export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
-      return state.projectFilePath !== undefined
-        ? window.electron.getBaseName({ filePath: state.projectFilePath })
+      return state.projectFilePath
+        ? getBaseName(state.projectFilePath)
         : undefined;
     },
   },
@@ -64,6 +64,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   LOAD_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     */
     action: createUILockAction(
       async (
         context,
@@ -75,7 +78,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "プロジェクトファイルの選択",
           });
           if (ret == undefined || ret?.length == 0) {
-            return;
+            return false;
           }
           filePath = ret[0];
         }
@@ -85,16 +88,21 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         try {
           const buf = await window.electron.readFile({ filePath });
           const text = new TextDecoder("utf-8").decode(buf).trim();
-          const obj = JSON.parse(text);
+          const projectData = JSON.parse(text);
 
           // appVersion Validation check
-          if (!("appVersion" in obj && typeof obj.appVersion === "string")) {
+          if (
+            !(
+              "appVersion" in projectData &&
+              typeof projectData.appVersion === "string"
+            )
+          ) {
             throw new Error(
               projectFileErrorMsg +
                 " The appVersion of the project file should be string"
             );
           }
-          const projectAppVersion: string = obj.appVersion;
+          const projectAppVersion: string = projectData.appVersion;
           if (!semver.valid(projectAppVersion)) {
             throw new Error(
               projectFileErrorMsg +
@@ -112,19 +120,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
           ) {
-            for (const audioItemsKey in obj.audioItems) {
-              if ("charactorIndex" in obj.audioItems[audioItemsKey]) {
-                obj.audioItems[audioItemsKey].characterIndex =
-                  obj.audioItems[audioItemsKey].charactorIndex;
-                delete obj.audioItems[audioItemsKey].charactorIndex;
+            for (const audioItemsKey in projectData.audioItems) {
+              if ("charactorIndex" in projectData.audioItems[audioItemsKey]) {
+                projectData.audioItems[audioItemsKey].characterIndex =
+                  projectData.audioItems[audioItemsKey].charactorIndex;
+                delete projectData.audioItems[audioItemsKey].charactorIndex;
               }
             }
-            for (const audioItemsKey in obj.audioItems) {
-              if (obj.audioItems[audioItemsKey].query != null) {
-                obj.audioItems[audioItemsKey].query.volumeScale = 1;
-                obj.audioItems[audioItemsKey].query.prePhonemeLength = 0.1;
-                obj.audioItems[audioItemsKey].query.postPhonemeLength = 0.1;
-                obj.audioItems[audioItemsKey].query.outputSamplingRate =
+            for (const audioItemsKey in projectData.audioItems) {
+              if (projectData.audioItems[audioItemsKey].query != null) {
+                projectData.audioItems[audioItemsKey].query.volumeScale = 1;
+                projectData.audioItems[
+                  audioItemsKey
+                ].query.prePhonemeLength = 0.1;
+                projectData.audioItems[
+                  audioItemsKey
+                ].query.postPhonemeLength = 0.1;
+                projectData.audioItems[audioItemsKey].query.outputSamplingRate =
                   DEFAULT_SAMPLING_RATE;
               }
             }
@@ -133,8 +145,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.5", semverSatisfiesOptions)
           ) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.query != null) {
                 audioItem.query.outputStereo = false;
                 for (const accentPhrase of audioItem.query.accentPhrases) {
@@ -182,8 +194,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.7", semverSatisfiesOptions)
           ) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.characterIndex != null) {
                 if (audioItem.characterIndex == 0) {
                   // 四国めたん 0 -> 四国めたん(あまあま) 0
@@ -201,8 +213,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.8", semverSatisfiesOptions)
           ) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.speaker !== null) {
                 audioItem.styleId = audioItem.speaker;
                 delete audioItem.speaker;
@@ -213,44 +225,96 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             semver.satisfies(projectAppVersion, "<0.14", semverSatisfiesOptions)
           ) {
-            for (const audioItemsKey in obj.audioItems) {
-              const audioItem = obj.audioItems[audioItemsKey];
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
               if (audioItem.engineId === undefined) {
                 audioItem.engineId = engineId;
               }
             }
           }
 
-          // Validation check
-          const ajv = new Ajv();
-          const validate = ajv.compile(projectSchema);
-          if (!validate(obj)) {
-            throw validate.errors;
+          if (
+            semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
+          ) {
+            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            if (characterInfos == undefined)
+              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
+              if (audioItem.voice == undefined) {
+                const oldEngineId = audioItem.engineId;
+                const oldStyleId = audioItem.styleId;
+                const chracterinfo = characterInfos.find((characterInfo) =>
+                  characterInfo.metas.styles.some(
+                    (styeleinfo) =>
+                      styeleinfo.engineId === audioItem.engineId &&
+                      styeleinfo.styleId === audioItem.styleId
+                  )
+                );
+                if (chracterinfo == undefined)
+                  throw new Error(
+                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
+                  );
+                const speakerId = chracterinfo.metas.speakerUuid;
+                audioItem.voice = {
+                  engineId: oldEngineId,
+                  speakerId,
+                  styleId: oldStyleId,
+                };
+
+                delete audioItem.engineId;
+                delete audioItem.styleId;
+              }
+            }
           }
-          if (!obj.audioKeys.every((audioKey) => audioKey in obj.audioItems)) {
+
+          // Validation check
+          const parsedProjectData = projectSchema.parse(projectData);
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) => audioKey in parsedProjectData.audioItems
+            )
+          ) {
             throw new Error(
               projectFileErrorMsg +
                 " Every audioKey in audioKeys should be a key of audioItems"
             );
           }
           if (
-            !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].engineId != undefined
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice != undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "engineId" attribute.'
-            );
+            throw new Error('Every audioItem should have a "voice" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "engineId" attribute.');
           }
           // FIXME: assert engineId is registered
           if (
-            !obj.audioKeys.every(
-              (audioKey) => obj.audioItems[audioKey].styleId != undefined
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "styleId" attribute.'
-            );
+            throw new Error('Every voice should have a "speakerId" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "styleId" attribute.');
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
@@ -264,12 +328,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               cancelId: 1,
             });
             if (result == 1) {
-              return;
+              return false;
             }
           }
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
 
-          const { audioItems, audioKeys } = obj as ProjectType;
+          const { audioItems, audioKeys } = projectData as ProjectType;
 
           let prevAudioKey = undefined;
           for (const audioKey of audioKeys) {
@@ -282,6 +346,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
+          return true;
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -296,6 +361,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "エラー",
             message,
           });
+          return false;
         }
       }
     ),
@@ -347,7 +413,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const buf = new TextEncoder().encode(
           JSON.stringify(projectData)
         ).buffer;
-        window.electron.writeFile({ filePath, buffer: buf });
+        await window.electron.writeFile({ filePath, buffer: buf });
         context.commit("SET_PROJECT_FILEPATH", { filePath });
         context.commit(
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
@@ -374,78 +440,63 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 });
 
-const moraSchema = {
-  properties: {
-    text: { type: "string" },
-    vowel: { type: "string" },
-    vowelLength: { type: "float32" },
-    pitch: { type: "float32" },
-  },
-  optionalProperties: {
-    consonant: { type: "string" },
-    consonantLength: { type: "float32" },
-  },
-} as const;
+const moraSchema = z.object({
+  text: z.string(),
+  vowel: z.string(),
+  vowelLength: z.number(),
+  pitch: z.number(),
+  consonant: z.string().optional(),
+  consonantLength: z.number().optional(),
+});
 
-const accentPhraseSchema = {
-  properties: {
-    moras: {
-      elements: moraSchema,
-    },
-    accent: { type: "int32" },
-  },
-  optionalProperties: {
-    pauseMora: moraSchema,
-    isInterrogative: { type: "boolean" },
-  },
-} as const;
+const accentPhraseSchema = z.object({
+  moras: z.array(moraSchema),
+  accent: z.number(),
+  pauseMora: moraSchema.optional(),
+  isInterrogative: z.boolean().optional(),
+});
 
-const audioQuerySchema = {
-  properties: {
-    accentPhrases: {
-      elements: accentPhraseSchema,
-    },
-    speedScale: { type: "float32" },
-    pitchScale: { type: "float32" },
-    intonationScale: { type: "float32" },
-    volumeScale: { type: "float32" },
-    prePhonemeLength: { type: "float32" },
-    postPhonemeLength: { type: "float32" },
-    outputSamplingRate: { type: "int32" },
-    outputStereo: { type: "boolean" },
-  },
-  optionalProperties: {
-    kana: { type: "string" },
-  },
-} as const;
+const audioQuerySchema = z.object({
+  accentPhrases: z.array(accentPhraseSchema),
+  speedScale: z.number(),
+  pitchScale: z.number(),
+  intonationScale: z.number(),
+  volumeScale: z.number(),
+  prePhonemeLength: z.number(),
+  postPhonemeLength: z.number(),
+  outputSamplingRate: z.number(),
+  outputStereo: z.boolean(),
+  kana: z.string().optional(),
+});
 
-const audioItemSchema = {
-  properties: {
-    text: { type: "string" },
-  },
-  optionalProperties: {
-    engineId: { type: "string" },
-    styleId: { type: "int32" },
-    query: audioQuerySchema,
-    presetKey: { type: "string" },
-  },
-} as const;
+const morphingInfoSchema = z.object({
+  rate: z.number(),
+  targetEngineId: z.string(),
+  targetSpeakerId: z.string(),
+  targetStyleId: z.number(),
+});
 
-export const projectSchema = {
-  properties: {
-    appVersion: { type: "string" },
-    audioKeys: {
-      // description: "Attribute keys of audioItems.",
-      elements: { type: "string" },
-    },
-    audioItems: {
-      // description: "VOICEVOX states per cell",
-      values: audioItemSchema,
-    },
-  },
-} as const;
+const audioItemSchema = z.object({
+  text: z.string(),
+  voice: z.object({
+    engineId: z.string().uuid(),
+    speakerId: z.string().uuid(),
+    styleId: z.number(),
+  }),
+  query: audioQuerySchema.optional(),
+  presetKey: z.string().optional(),
+  morphingInfo: morphingInfoSchema.optional(),
+});
 
-export type LatestProjectType = JTDDataType<typeof projectSchema>;
+const projectSchema = z.object({
+  appVersion: z.string(),
+  // description: "Attribute keys of audioItems.",
+  audioKeys: z.array(z.string()),
+  // description: "VOICEVOX states per cell",
+  audioItems: z.record(audioItemSchema),
+});
+
+export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
   audioKeys: string[];

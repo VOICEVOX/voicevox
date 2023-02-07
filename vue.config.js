@@ -18,6 +18,8 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+const isMac = process.platform === "darwin";
+
 module.exports = {
   configureWebpack: {
     devtool: "source-map",
@@ -32,12 +34,21 @@ module.exports = {
             name: "VOICEVOX Project file",
             description: "VOICEVOX Project file",
             role: "Editor",
+            icon: "icons/vvproj." + (isMac ? "icns" : "ico"),
           },
           {
             ext: "vvpp",
             name: "VOICEVOX Plugin package",
             description: "VOICEVOX Plugin package",
             role: "Editor",
+            icon: "icons/vvpp." + (isMac ? "icns" : "ico"),
+          },
+          {
+            ext: "vvppp",
+            name: "VOICEVOX Plugin package (part)",
+            description: "VOICEVOX Plugin package (part)",
+            role: "Editor",
+            icon: "icons/vvpp." + (isMac ? "icns" : "ico"),
           },
         ],
         extraFiles: [

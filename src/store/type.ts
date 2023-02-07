@@ -11,7 +11,9 @@ import {
   AccentPhrase,
   AudioQuery,
   EngineManifest,
+  SupportedDevicesInfo,
   UserDictWord,
+  MorphableTargetInfo,
 } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -29,12 +31,18 @@ import {
   ToolbarSetting,
   UpdateInfo,
   Preset,
+  MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
   SplitTextWhenPasteType,
   SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
+  EditorFontType,
+  EngineSettings,
+  MorphableTargetInfoTable,
+  EngineSetting,
+  Voice,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -43,16 +51,15 @@ import { QVueGlobals } from "quasar";
  * エディタ用のAudioQuery
  */
 export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
-  outputSamplingRate: number | "default";
+  outputSamplingRate: number | "engineDefault";
 };
 
-// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
-  engineId?: string;
-  styleId?: number;
+  voice: Voice;
   query?: EditorAudioQuery;
   presetKey?: string;
+  morphingInfo?: MorphingInfo;
 };
 
 export type AudioState = {
@@ -77,7 +84,7 @@ export type SaveResultObject = {
   path: string | undefined;
   errorMessage?: string;
 };
-export type WriteErrorTypeForSaveAllResultDialog = {
+export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
 };
@@ -104,6 +111,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   characterInfos: Record<string, CharacterInfo[]>;
+  morphableTargetsInfo: Record<string, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -187,8 +195,7 @@ export type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
-      engineId?: string;
-      styleId?: number;
+      voice?: Voice;
       presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
@@ -264,6 +271,36 @@ export type AudioStoreTypes = {
     mutation: { audioKey: string; postPhonemeLength: number };
   };
 
+  LOAD_MORPHABLE_TARGETS: {
+    action(payload: { engineId: string; baseStyleId: number }): void;
+  };
+
+  SET_MORPHABLE_TARGETS: {
+    mutation: {
+      engineId: string;
+      baseStyleId: number;
+      morphableTargets?: Exclude<
+        { [key: number]: MorphableTargetInfo },
+        undefined
+      >;
+    };
+  };
+
+  SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+  };
+
+  MORPHING_SUPPORTED_ENGINES: {
+    getter: string[];
+  };
+
+  VALID_MORPHING_INFO: {
+    getter(audioItem: AudioItem): boolean;
+  };
+
   SET_AUDIO_QUERY: {
     mutation: { audioKey: string; audioQuery: AudioQuery };
     action(payload: { audioKey: string; audioQuery: AudioQuery }): void;
@@ -277,8 +314,8 @@ export type AudioStoreTypes = {
     }): Promise<AudioQuery>;
   };
 
-  SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; engineId: string; styleId: number };
+  SET_AUDIO_VOICE: {
+    mutation: { audioKey: string; voice: Voice };
   };
 
   SET_ACCENT_PHRASES: {
@@ -342,11 +379,11 @@ export type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Promise<Blob | null>;
+    action(payload: { audioKey: string }): Promise<Blob>;
   };
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
-    action(payload: { audioItem: AudioItem }): Blob | null;
+    action(payload: { audioItem: AudioItem }): Blob;
   };
 
   CONNECT_AUDIO: {
@@ -438,10 +475,12 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: string;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: string | undefined;
+      applyPreset: boolean;
     }): Promise<string>;
   };
 
@@ -464,17 +503,13 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; text: string }): void;
   };
 
-  COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineId: string; styleId: number; audioKey: string } & (
+  COMMAND_CHANGE_VOICE: {
+    mutation: { audioKey: string; voice: Voice } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: {
-      audioKey: string;
-      engineId: string;
-      styleId: number;
-    }): void;
+    action(payload: { audioKey: string; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
@@ -578,6 +613,17 @@ export type AudioCommandStoreTypes = {
     action(payload: { audioKey: string; postPhonemeLength: number }): void;
   };
 
+  COMMAND_SET_MORPHING_INFO: {
+    mutation: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    };
+    action(payload: {
+      audioKey: string;
+      morphingInfo: MorphingInfo | undefined;
+    }): void;
+  };
+
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
       audioKey: string;
@@ -611,8 +657,7 @@ export type AudioCommandStoreTypes = {
     action(payload: {
       prevAudioKey: string;
       texts: string[];
-      engineId: string;
-      styleId: number;
+      voice: Voice;
     }): string[];
   };
 };
@@ -660,11 +705,16 @@ export type CommandStoreTypes = {
 
 export type EngineStoreState = {
   engineStates: Record<string, EngineState>;
+  engineSupportedDevices: Record<string, SupportedDevicesInfo>;
 };
 
 export type EngineStoreTypes = {
   GET_ENGINE_INFOS: {
     action(): void;
+  };
+
+  GET_SORTED_ENGINE_INFOS: {
+    getter: EngineInfo[];
   };
 
   SET_ENGINE_MANIFESTS: {
@@ -687,15 +737,18 @@ export type EngineStoreTypes = {
     action(payload: { engineId: string }): void;
   };
 
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
+  RESTART_ENGINES: {
+    action(payload: { engineIds: string[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
+  POST_ENGINE_START: {
+    action(payload: { engineIds: string[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
   DETECTED_ENGINE_ERROR: {
@@ -704,10 +757,6 @@ export type EngineStoreTypes = {
 
   OPEN_ENGINE_DIRECTORY: {
     action(payload: { engineId: string }): void;
-  };
-
-  OPEN_USER_ENGINE_DIRECTORY: {
-    action(): void;
   };
 
   SET_ENGINE_STATE: {
@@ -753,6 +802,18 @@ export type EngineStoreTypes = {
   FETCH_AND_SET_ENGINE_MANIFEST: {
     action(payload: { engineId: string }): void;
   };
+
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation: { engineId: string; supportedDevices: SupportedDevicesInfo };
+  };
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
+    action(payload: { engineId: string }): void;
+  };
+
+  ENGINE_CAN_USE_GPU: {
+    getter: (engineId: string) => boolean;
+  };
 };
 
 /*
@@ -762,7 +823,7 @@ export type EngineStoreTypes = {
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
   userCharacterOrder: string[];
-  isSafeMode: boolean;
+  isMultiEngineOffMode: boolean;
 };
 
 export type IndexStoreTypes = {
@@ -832,6 +893,10 @@ export type IndexStoreTypes = {
     action(...payload: unknown[]): void;
   };
 
+  LOG_WARN: {
+    action(...payload: unknown[]): void;
+  };
+
   LOG_INFO: {
     action(...payload: unknown[]): void;
   };
@@ -840,8 +905,8 @@ export type IndexStoreTypes = {
     action(): void;
   };
 
-  SET_IS_SAFE_MODE: {
-    mutation: { isSafeMode: boolean };
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
 };
@@ -869,7 +934,7 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string; confirm?: boolean }): void;
+    action(payload: { filePath?: string; confirm?: boolean }): boolean;
   };
 
   SAVE_PROJECT_FILE: {
@@ -897,11 +962,13 @@ export type SettingStoreState = {
   engineInfos: Record<string, EngineInfo>;
   engineManifests: Record<string, EngineManifest>;
   themeSetting: ThemeSetting;
+  editorFont: EditorFontType;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineSettings: EngineSettings;
 };
 
 export type SettingStoreTypes = {
@@ -927,6 +994,11 @@ export type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  SET_EDITOR_FONT: {
+    mutation: { editorFont: EditorFontType };
+    action(payload: { editorFont: EditorFontType }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
@@ -961,8 +1033,16 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  SET_ENGINE_SETTING: {
+    mutation: { engineSetting: EngineSetting; engineId: string };
+    action(payload: {
+      engineSetting: EngineSetting;
+      engineId: string;
+    }): Promise<void>;
+  };
+
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean }): void;
+    action(payload: { useGpu: boolean; engineId: string }): Promise<void>;
   };
 };
 
@@ -973,7 +1053,6 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
-  useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1068,11 +1147,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SET_USE_GPU: {
-    mutation: { useGpu: boolean };
-    action(payload: { useGpu: boolean }): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
@@ -1122,7 +1196,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(obj: { isSafeMode?: boolean }): void;
+    action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
   START_PROGRESS: {

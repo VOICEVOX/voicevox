@@ -22,7 +22,9 @@ describe("store/vuex.js test", () => {
         engineStates: {
           "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
         },
+        engineSupportedDevices: {},
         characterInfos: {},
+        morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -34,7 +36,6 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
-        useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
@@ -48,7 +49,7 @@ describe("store/vuex.js test", () => {
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
-        isSafeMode: false,
+        isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
@@ -59,13 +60,19 @@ describe("store/vuex.js test", () => {
           exportLab: false,
           exportText: false,
           outputStereo: false,
-          outputSamplingRate: 24000,
           audioOutputDevice: "default",
+        },
+        engineSettings: {
+          "88022f86-c823-436e-85a3-500c629749c4": {
+            outputSamplingRate: "engineDefault",
+            useGpu: false,
+          },
         },
         themeSetting: {
           currentTheme: "Default",
           availableThemes: [],
         },
+        editorFont: "default",
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -83,13 +90,14 @@ describe("store/vuex.js test", () => {
             executionFilePath: "",
             executionArgs: [],
             host: "http://127.0.0.1",
-            type: "main",
+            type: "default",
           },
         },
         engineManifests: {
           "88022f86-c823-436e-85a3-500c629749c4": {
             manifestVersion: "0.13.0",
             name: "DUMMY VOICEVOX ENGINE",
+            brandName: "DUMMY VOICEVOX",
             uuid: "c7b58856-bd56-4aa1-afb7-b8415f824b06",
             url: "https://github.com/VOICEVOX/voicevox_engine",
             icon: "engine_manifest_assets/icon.png",
@@ -112,6 +120,8 @@ describe("store/vuex.js test", () => {
         experimentalSetting: {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
+          enableMorphing: false,
+          enableMultiEngine: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -174,6 +184,7 @@ describe("store/vuex.js test", () => {
       assert.equal(store.state.engineStates[engineId], "STARTING")
     );
     assert.isObject(store.state.characterInfos);
+    assert.isObject(store.state.morphableTargetsInfo);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
@@ -188,7 +199,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.undoCommands);
     assert.isArray(store.state.redoCommands);
     assert.isEmpty(store.state.redoCommands);
-    assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);

@@ -25,6 +25,7 @@ export type PreviewSliderHelper = {
     max: Ref<number>;
     step: Ref<number>;
     disable: Ref<boolean>;
+    modelValue: Ref<number | null>;
     "onUpdate:modelValue": (value: number) => void;
     onChange: (value: number) => void;
     onWheel: (event: Events["onWheel"]) => void;

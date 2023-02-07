@@ -36,7 +36,6 @@ export function withProgress<T>(
 export const uiStoreState: UiStoreState = {
   uiLockCount: 0,
   dialogLockCount: 0,
-  useGpu: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
   isHelpDialogOpen: false,
@@ -97,7 +96,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.uiLockCount--;
       } else {
         // eslint-disable-next-line no-console
-        console.warn("UNLOCK_UI is called when state.uiLockCount == 0");
+        window.electron.logWarn(
+          "UNLOCK_UI is called when state.uiLockCount == 0"
+        );
       }
     },
     action({ commit }) {
@@ -171,10 +172,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   HYDRATE_UI_STORE: {
     async action({ commit }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.getSetting("useGpu"),
-      });
-
       commit("SET_INHERIT_AUDIOINFO", {
         inheritAudioInfo: await window.electron.getSetting("inheritAudioInfo"),
       });
@@ -196,17 +193,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   CLOSE_SPLASH: {
     action() {
       window.electron.closeSplash();
-    },
-  },
-
-  SET_USE_GPU: {
-    mutation(state, { useGpu }: { useGpu: boolean }) {
-      state.useGpu = useGpu;
-    },
-    async action({ commit }, { useGpu }: { useGpu: boolean }) {
-      commit("SET_USE_GPU", {
-        useGpu: await window.electron.setSetting("useGpu", useGpu),
-      });
     },
   },
 
@@ -333,8 +319,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RESTART_APP: {
-    action(_, { isSafeMode }: { isSafeMode?: boolean }) {
-      window.electron.restartApp({ isSafeMode: !!isSafeMode });
+    action(_, { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean }) {
+      window.electron.restartApp({
+        isMultiEngineOffMode: !!isMultiEngineOffMode,
+      });
     },
   },
 

@@ -16,8 +16,8 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         const engineId = payload.engineId;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineId];
         if (engineInfo === undefined)
-          throw new Error(
-            `No such engineInfo registered: engineId == ${engineId}`
+          return Promise.reject(
+            new Error(`No such engineInfo registered: engineId == ${engineId}`)
           );
 
         const instance = _engineFactory.instance(engineInfo.host);
@@ -40,7 +40,7 @@ export const convertAudioQueryFromEditorToEngine = (
   return {
     ...editorAudioQuery,
     outputSamplingRate:
-      editorAudioQuery.outputSamplingRate == "default"
+      editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
   };

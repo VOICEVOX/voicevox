@@ -26,9 +26,14 @@
             <template v-if="isEngineWaitingLong">
               <q-separator spaced />
               エンジン起動に時間がかかっています。<br />
-              <q-btn outline @click="restartAppWithSafeMode">
-                セーフモードで起動する</q-btn
+              <q-btn
+                outline
+                @click="restartAppWithMultiEngineOffMode"
+                v-if="isMultipleEngine"
               >
+                マルチエンジンをオフにして再起動する</q-btn
+              >
+              <q-btn outline @click="openFaq" v-else>FAQを見る</q-btn>
             </template>
           </div>
         </div>
@@ -146,7 +151,7 @@
     :characterInfos="orderedAllCharacterInfos"
     v-model="isCharacterOrderDialogOpenComputed"
   />
-  <default-style-select-dialog
+  <default-style-list-dialog
     v-if="orderedAllCharacterInfos.length > 0"
     :characterInfos="orderedAllCharacterInfos"
     v-model="isDefaultStyleSelectDialogOpenComputed"
@@ -180,7 +185,7 @@ import SettingDialog from "@/components/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/HotkeySettingDialog.vue";
 import HeaderBarCustomDialog from "@/components/HeaderBarCustomDialog.vue";
 import CharacterPortrait from "@/components/CharacterPortrait.vue";
-import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
+import DefaultStyleListDialog from "@/components/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
@@ -194,11 +199,17 @@ import {
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
+  Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
+import cloneDeep from "clone-deep";
 
 export default defineComponent({
   name: "EditorHome",
+
+  props: {
+    projectFilePath: { type: String },
+  },
 
   components: {
     draggable,
@@ -212,7 +223,7 @@ export default defineComponent({
     HotkeySettingDialog,
     HeaderBarCustomDialog,
     CharacterPortrait,
-    DefaultStyleSelectDialog,
+    DefaultStyleListDialog,
     CharacterOrderDialog,
     AcceptRetrieveTelemetryDialog,
     AcceptTermsDialog,
@@ -221,13 +232,15 @@ export default defineComponent({
     ProgressDialog,
   },
 
-  setup() {
+  setup(props) {
     const store = useStore();
     const $q = useQuasar();
 
     const audioItems = computed(() => store.state.audioItems);
     const audioKeys = computed(() => store.state.audioKeys);
     const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
     // hotkeys handled by Mousetrap
     const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
@@ -238,6 +251,17 @@ export default defineComponent({
             focusCell({ audioKey: activeAudioKey.value });
           }
           return false; // this is the same with event.preventDefault()
+        },
+      ],
+      [
+        // FIXME: テキスト欄にフォーカスがある状態でも実行できるようにする
+        // https://github.com/VOICEVOX/voicevox/pull/1096#issuecomment-1378651920
+        "テキスト欄を複製",
+        () => {
+          if (activeAudioKey.value != undefined) {
+            duplicateAudioItem();
+          }
+          return false;
         },
       ],
     ]);
@@ -383,12 +407,10 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let engineId: string | undefined = undefined;
-      let styleId: number | undefined = undefined;
+      let voice: Voice | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
-        engineId = store.state.audioItems[prevAudioKey].engineId;
-        styleId = store.state.audioItems[prevAudioKey].styleId;
+        voice = store.state.audioItems[prevAudioKey].voice;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -400,8 +422,7 @@ export default defineComponent({
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-        engineId,
-        styleId,
+        voice,
         presetKey,
         baseAudioItem,
       });
@@ -409,6 +430,22 @@ export default defineComponent({
       const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
         audioItem,
         prevAudioKey: activeAudioKey.value,
+        applyPreset: true,
+      });
+      audioCellRefs[newAudioKey].focusTextField();
+    };
+    const duplicateAudioItem = async () => {
+      const prevAudioKey = activeAudioKey.value;
+
+      // audioItemが選択されていない状態で押されたら何もしない
+      if (prevAudioKey == undefined) return;
+
+      const prevAudioItem = store.state.audioItems[prevAudioKey];
+
+      const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+        audioItem: cloneDeep(prevAudioItem),
+        prevAudioKey: activeAudioKey.value,
+        applyPreset: false,
       });
       audioCellRefs[newAudioKey].focusTextField();
     };
@@ -485,10 +522,10 @@ export default defineComponent({
       await store.dispatch("GET_ENGINE_INFOS");
 
       let engineIds: string[];
-      if (store.state.isSafeMode) {
-        // メインエンジンだけを含める
+      if (store.state.isMultiEngineOffMode) {
+        // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(
-          (engine) => engine.type === "main"
+          (engine) => engine.type === "default"
         );
         if (!main) {
           throw new Error("No main engine found");
@@ -497,47 +534,41 @@ export default defineComponent({
       } else {
         engineIds = store.state.engineIds;
       }
-      await Promise.all(
-        engineIds.map(async (engineId) => {
-          await store.dispatch("START_WAITING_ENGINE", { engineId });
-
-          await store.dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
-
-          await store.dispatch("LOAD_CHARACTER", { engineId });
-        })
-      );
       await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-      await store.dispatch("LOAD_DEFAULT_STYLE_IDS");
+      await store.dispatch("POST_ENGINE_START", {
+        engineIds,
+      });
 
       // 辞書を同期
       await store.dispatch("SYNC_ALL_USER_DICT");
 
-      // 新キャラが追加されている場合はキャラ並び替えダイアログを表示
-      const newCharacters = await store.dispatch("GET_NEW_CHARACTERS");
-      isCharacterOrderDialogOpenComputed.value = newCharacters.length > 0;
+      // プロジェクトファイルが指定されていればロード
+      let projectFileLoaded = false;
+      if (props.projectFilePath != undefined && props.projectFilePath !== "") {
+        projectFileLoaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          filePath: props.projectFilePath,
+        });
+      }
 
-      // 最初のAudioCellを作成
-      const audioItem: AudioItem = await store.dispatch(
-        "GENERATE_AUDIO_ITEM",
-        {}
-      );
-
+      if (!projectFileLoaded) {
+        // 最初のAudioCellを作成
+        const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
+  
       // close splash after creating the first audio cell
       // For more information:
       // https://github.com/VOICEVOX/voicevox/pull/1013#discussion_r1046200849
       store.dispatch("CLOSE_SPLASH");
 
       const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
-        audioItem,
-      });
-      focusCell({ audioKey: newAudioKey });
+          audioItem,
+        });
+        focusCell({ audioKey: newAudioKey });
 
-      // 最初の話者を初期化
-      if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
+        // 最初の話者を初期化
         store.dispatch("SETUP_SPEAKER", {
           audioKey: newAudioKey,
-          engineId: audioItem.engineId,
-          styleId: audioItem.styleId,
+          engineId: audioItem.voice.engineId,
+          styleId: audioItem.voice.styleId,
         });
       }
 
@@ -593,13 +624,17 @@ export default defineComponent({
         isEngineWaitingLong.value = false;
         engineTimer = window.setTimeout(() => {
           isEngineWaitingLong.value = true;
-        }, 10000);
+        }, 30000);
       } else {
         isEngineWaitingLong.value = false;
       }
     });
-    const restartAppWithSafeMode = () => {
-      store.dispatch("RESTART_APP", { isSafeMode: true });
+    const restartAppWithMultiEngineOffMode = () => {
+      store.dispatch("RESTART_APP", { isMultiEngineOffMode: true });
+    };
+
+    const openFaq = () => {
+      window.open("https://voicevox.hiroshiba.jp/qa/", "_blank");
     };
 
     // ライセンス表示
@@ -753,7 +788,9 @@ export default defineComponent({
       isCompletedInitialStartup,
       allEngineState,
       isEngineWaitingLong,
-      restartAppWithSafeMode,
+      isMultipleEngine,
+      restartAppWithMultiEngineOffMode,
+      openFaq,
       isHelpDialogOpenComputed,
       isSettingDialogOpenComputed,
       isHotkeySettingDialogOpenComputed,

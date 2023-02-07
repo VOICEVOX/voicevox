@@ -1,5 +1,7 @@
 import { State } from "@/store/type";
 import { ToolbarButtonTagType } from "@/type/preload";
+import path from "path";
+import { Platform } from "quasar";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -165,4 +167,29 @@ export const convertLongVowel = (text: string): string => {
     .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
     .replace(/(?<=[ン]ー*)ー/g, "ン")
     .replace(/(?<=[ッ]ー*)ー/g, "ッ");
+};
+
+// based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
+export const getBaseName = (filePath: string) => {
+  if (!Platform.is.win) return path.basename(filePath);
+
+  const splitDeviceRegex =
+    /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
+  const splitTailRegex =
+    /^([\s\S]*?)((?:\.{1,2}|[^\\/]+?|)(\.[^./\\]*|))(?:[\\/]*)$/;
+
+  const resultOfSplitDeviceRegex = splitDeviceRegex.exec(filePath);
+  if (
+    resultOfSplitDeviceRegex == undefined ||
+    resultOfSplitDeviceRegex.length < 3
+  )
+    return "";
+  const tail = resultOfSplitDeviceRegex[3] || "";
+
+  const resultOfSplitTailRegex = splitTailRegex.exec(tail);
+  if (resultOfSplitTailRegex == undefined || resultOfSplitTailRegex.length < 2)
+    return "";
+  const basename = resultOfSplitTailRegex[2] || "";
+
+  return basename;
 };

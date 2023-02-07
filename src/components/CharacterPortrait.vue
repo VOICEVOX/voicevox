@@ -27,25 +27,36 @@ export default defineComponent({
         ? store.state.audioItems[activeAudioKey]
         : undefined;
 
-      const engineId = audioItem?.engineId;
-      const styleId = audioItem?.styleId;
+      const engineId = audioItem?.voice.engineId;
+      const styleId = audioItem?.voice.styleId;
 
-      if (engineId === undefined || styleId === undefined) return undefined;
+      if (
+        engineId === undefined ||
+        styleId === undefined ||
+        !store.state.engineIds.some((id) => id === engineId)
+      )
+        return undefined;
 
       return store.getters.CHARACTER_INFO(engineId, styleId);
     });
 
-    const characterName = computed(() => {
+    const styleInfo = computed(() => {
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const styleId = audioItem?.styleId;
+
+      const styleId = audioItem?.voice.styleId;
       const style = characterInfo.value?.metas.styles.find(
         (style) => style.styleId === styleId
       );
-      return style?.styleName
-        ? `${characterInfo.value?.metas.speakerName} (${style?.styleName})`
+      return style;
+    });
+
+    const characterName = computed(() => {
+      return styleInfo.value?.styleName
+        ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
         : characterInfo.value?.metas.speakerName;
     });
 
@@ -54,12 +65,15 @@ export default defineComponent({
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const engineId = audioItem?.engineId ?? store.state.engineIds[0];
+      const engineId = audioItem?.voice.engineId ?? store.state.engineIds[0];
+      const engineManifest = store.state.engineManifests[engineId];
       const engineInfo = store.state.engineInfos[engineId];
-      return engineInfo?.name;
+      return engineManifest ? engineManifest.brandName : engineInfo.name;
     });
 
-    const portraitPath = computed(() => characterInfo.value?.portraitPath);
+    const portraitPath = computed(
+      () => styleInfo.value?.portraitPath || characterInfo.value?.portraitPath
+    );
 
     const isInitializingSpeaker = computed(() => {
       const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
