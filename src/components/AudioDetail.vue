@@ -285,9 +285,11 @@ const $q = useQuasar();
 
 const supportedFeatures = computed(
   () =>
-    (audioItem.value?.engineId &&
-      store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
-      store.state.engineManifests[audioItem.value?.engineId]
+    (audioItem.value?.voice.engineId &&
+      store.state.engineIds.some(
+        (id) => id === audioItem.value.voice.engineId
+      ) &&
+      store.state.engineManifests[audioItem.value.voice.engineId]
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 
