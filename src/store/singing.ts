@@ -22,10 +22,9 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.5,
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
-  sequencerSnapSize: 120, // スナップサイズ 試行用で1/16(ppq=480)のmidi durationで固定
+  sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
   isDrag: false,
-  sequencerDragId: 0,
-  selectedNotes: [],
+  selectedNotes: [], // 選択中のノート
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -116,7 +115,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.score = score;
     },
     async action({ commit }, { score }: { score: Score }) {
-      console.log(score);
       commit("SET_SCORE", { score });
     },
   },
@@ -262,29 +260,49 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SELECTED_NOTES: {
-    mutation(state, { selectedNotes }: { selectedNotes: number[] }) {
+    mutation(state, { noteIndices }: { noteIndices: number[] }) {
       if (state.score) {
-        state.selectedNotes = selectedNotes;
+        state.selectedNotes = noteIndices;
       }
     },
     async action(
       { state, commit },
-      { selectedNotes }: { selectedNotes: number[] }
+      { noteIndices }: { noteIndices: number[] }
     ) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      commit("SET_SELECTED_NOTES", { selectedNotes });
+      commit("SET_SELECTED_NOTES", { noteIndices });
+    },
+  },
+
+  CLEAR_SELECTED_NOTES: {
+    mutation(state) {
+      if (state.score) {
+        state.selectedNotes.splice(0);
+      }
+    },
+    async action({ commit }) {
+      commit("CLEAR_SELECTED_NOTES");
     },
   },
 
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {
-        const notes = state.score.notes.concat(note).sort((a, b) => {
-          return a.position - b.position;
+        const notes = [...state.score.notes];
+        notes.push(note);
+        const addIndex = notes.length - 1;
+        const selectedNotes = [...state.selectedNotes].map((selectedIndex) => {
+          if (selectedIndex >= addIndex) {
+            return selectedIndex + 1;
+          } else {
+            return selectedIndex;
+          }
         });
+        selectedNotes.push(addIndex);
         state.score.notes = notes;
+        state.selectedNotes = selectedNotes;
       }
     },
     // ノートを追加する
@@ -297,11 +315,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CHANGE_NOTE: {
+  UPDATE_NOTE: {
     mutation(state, { index, note }: { index: number; note: Note }) {
       if (state.score) {
         const notes = [...state.score.notes];
-        notes.splice(index, 1, note);
+        notes.splice(index, 0, note);
         state.score.notes = notes;
       }
     },
@@ -312,23 +330,51 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      commit("CHANGE_NOTE", { index, note });
+      commit("UPDATE_NOTE", { index, note });
     },
   },
 
-  REMOVE_NOTE: {
-    mutation(state, { index }: { index: number }) {
+  SET_ALL_NOTES: {
+    mutation(state, { notes }: { notes: Note[] }) {
       if (state.score) {
-        const notes = [...state.score.notes];
-        notes.splice(index, 1);
         state.score.notes = notes;
       }
     },
-    async action({ state, commit }, { index }: { index: number }) {
+    async action({ state, commit }, { notes }: { notes: Note[] }) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
-      commit("REMOVE_NOTE", { index });
+      commit("SET_ALL_NOTES", { notes });
+    },
+  },
+
+  REMOVE_NOTES: {
+    mutation(state, { noteIndices }: { noteIndices: number[] }) {
+      if (state.score) {
+        const notes = [...state.score.notes];
+        let selectedNotes = [...state.selectedNotes];
+        noteIndices.forEach((removeIndex) => {
+          selectedNotes = selectedNotes.map((selectedIndex) => {
+            if (selectedIndex < removeIndex) {
+              return selectedIndex - 1;
+            } else {
+              return selectedIndex;
+            }
+          });
+          notes.splice(removeIndex, 1);
+        });
+        state.score.notes = notes;
+        state.selectedNotes = selectedNotes;
+      }
+    },
+    async action(
+      { state, commit },
+      { noteIndices }: { noteIndices: number[] }
+    ) {
+      if (state.score === undefined) {
+        throw new Error("Score is not initialized.");
+      }
+      commit("REMOVE_NOTES", { noteIndices });
     },
   },
 
@@ -383,17 +429,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { isDrag }) {
       commit("SET_IS_DRAG", {
         isDrag,
-      });
-    },
-  },
-
-  SET_DRAG_ID: {
-    mutation(state, { requestId }: { requestId: number }) {
-      state.sequencerDragId = requestId;
-    },
-    async action({ commit }, { requestId }) {
-      commit("SET_DRAG_ID", {
-        requestId,
       });
     },
   },

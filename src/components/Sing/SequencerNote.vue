@@ -1,7 +1,7 @@
 <template>
   <div
-    v-bind:class="`sequencer-note ${isSelected ? 'selected' : ''}`"
-    v-bind:style="{
+    :class="`sequencer-note ${isSelected ? 'selected' : ''}`"
+    :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
   >
@@ -9,17 +9,16 @@
     <input
       type="text"
       :value="note.lyric"
-      @input="(e) => setLyric(e)"
+      @input="setLyric"
       class="sequencer-note-lyric"
     />
     <svg
-      v-bind:height="`${barHeight}`"
-      v-bind:width="`${barWidth}`"
+      :height="`${barHeight}`"
+      :width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @mouseup="toggleSelected()"
-      @dblclick="removeNote()"
-      @keydown.prevent="(e) => handleKeydown(e)"
+      @dblclick="removeNote"
+      @keydown.prevent="handleKeydown"
       focusable="true"
       tabindex="0"
     >
@@ -31,25 +30,25 @@
           width="100%"
           stroke-width="1"
           class="sequencer-note-bar-body"
-          @mousedown="handleDragMoveStart"
+          @mousedown.stop="handleMouseDown"
         />
         <rect
           y="0"
           x="-4"
           height="100%"
-          width="8"
+          width="12"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
-          @mousedown="dragLeftStart"
+          @mousedown.stop="handleDragLeftStart"
         />
         <rect
           y="0"
-          v-bind:x="`${(note.duration / 4) * zoomX - 4}`"
-          height="200%"
-          width="8"
+          :x="`${(note.duration / 4) * zoomX - 4}`"
+          width="16"
+          height="100%"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
-          @mousedown="dragRightStart"
+          @mousedown.stop="handleDragRightStart"
         />
       </g>
     </svg>
@@ -57,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, PropType, ref } from "vue";
+import { defineComponent, computed, PropType } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -74,7 +73,12 @@ export default defineComponent({
     cursorY: { type: Number },
   },
 
-  emits: ["handleNotesKeydown", "dragMoveStart"],
+  emits: [
+    "handleNotesKeydown",
+    "handleDragMoveStart",
+    "handleDragRightStart",
+    "handleDragLeftStart",
+  ],
 
   setup(props, { emit }) {
     const store = useStore();
@@ -86,98 +90,23 @@ export default defineComponent({
     );
     const barHeight = computed(() => sizeY * zoomY.value);
     const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
-    const gridXWidth = computed(() => sizeX * zoomX.value);
     const isSelected = computed(() => {
       return store.state.selectedNotes.includes(props.index);
     });
-    const toggleSelected = () => {
-      // TODO: Store側で行う
-      const selectedNotes = [...store.state.selectedNotes];
-      const index = props.index;
-      const selectedIndex = selectedNotes.findIndex((i) => i === index);
-      if (-1 === selectedIndex) {
-        selectedNotes.push(index);
-      } else {
-        selectedNotes.splice(selectedIndex, 1);
-      }
-      store.dispatch("SET_SELECTED_NOTES", { selectedNotes });
-    };
+
     const removeNote = () => {
-      const index = props.index;
-      store.dispatch("REMOVE_NOTE", { index });
+      const noteIndices = [props.index];
+      store.dispatch("REMOVE_NOTES", { noteIndices });
     };
-    const dragStartX = ref();
-    // FIXME: 試行で伸びるかを確認: ドラッグなどマウスイベントは親ScoreSequencer側で処理が必要
-    // 速度的には問題なさそう
-    const dragRight = () => {
-      if (!props.cursorX) {
-        return;
-      }
-      if (false === store.state.isDrag) {
-        return;
-      }
-      const pos = props.cursorX - dragStartX.value;
-      if (gridXWidth.value <= Math.abs(pos) && 120 <= props.note.duration) {
-        const duration = props.note.duration + (0 < pos ? 120 : -120);
-        store.dispatch("CHANGE_NOTE", {
-          index: props.index,
-          note: {
-            ...props.note,
-            duration,
-          },
-        });
-        dragStartX.value =
-          dragStartX.value + (0 < pos ? gridXWidth.value : -gridXWidth.value);
-      }
-      const requestId = requestAnimationFrame(dragRight);
-      store.dispatch("SET_DRAG_ID", { requestId });
-    };
-    const dragRightStart = (event: MouseEvent) => {
-      dragStartX.value = event.clientX;
-      store.dispatch("SET_IS_DRAG", { isDrag: true });
-      const requestId = requestAnimationFrame(dragRight);
-      store.dispatch("SET_DRAG_ID", { requestId });
-    };
-    const dragLeft = () => {
-      if (!props.cursorX) {
-        return;
-      }
-      if (false === store.state.isDrag) {
-        return;
-      }
-      const pos = props.cursorX - dragStartX.value;
-      if (gridXWidth.value <= Math.abs(pos) && 120 <= props.note.duration) {
-        const position = props.note.position + (0 < pos ? 120 : -120);
-        const duration = props.note.duration + (0 > pos ? 120 : -120);
-        store.dispatch("CHANGE_NOTE", {
-          index: props.index,
-          note: {
-            ...props.note,
-            position,
-            duration,
-          },
-        });
-        dragStartX.value =
-          dragStartX.value + (0 < pos ? gridXWidth.value : -gridXWidth.value);
-      }
-      const requestId = requestAnimationFrame(dragLeft);
-      store.dispatch("SET_DRAG_ID", { requestId });
-    };
-    const dragLeftStart = (event: MouseEvent) => {
-      console.log("a");
-      dragStartX.value = event.clientX;
-      store.dispatch("SET_IS_DRAG", { isDrag: true });
-      const requestId = requestAnimationFrame(dragLeft);
-      store.dispatch("SET_DRAG_ID", { requestId });
-    };
-    const setLyric = (event: Event) => {
+
+    const setLyric = (event: InputEvent) => {
       if (!(event.target instanceof HTMLInputElement)) {
         return;
       }
       if (event.target.value && store.state.score) {
         const index = props.index;
         const lyric = event.target.value;
-        store.dispatch("CHANGE_NOTE", {
+        store.dispatch("UPDATE_NOTE", {
           index,
           note: {
             ...props.note,
@@ -186,12 +115,42 @@ export default defineComponent({
         });
       }
     };
+
     const handleKeydown = (event: KeyboardEvent) => {
       emit("handleNotesKeydown", event);
     };
 
-    const handleDragMoveStart = (event: MouseEvent) => {
-      emit("dragMoveStart", event);
+    const handleMouseDown = (event: MouseEvent) => {
+      if (!store.state.selectedNotes.includes(props.index)) {
+        const selectedNotes = [...store.state.selectedNotes];
+        const index = props.index;
+        selectedNotes.push(index);
+        store.dispatch("SET_SELECTED_NOTES", {
+          noteIndices: Array.from(new Set(selectedNotes)),
+        });
+      } else {
+        emit("handleDragMoveStart", event);
+      }
+    };
+
+    const handleDragRightStart = (event: MouseEvent) => {
+      const selectedNotes = [...store.state.selectedNotes];
+      const index = props.index;
+      selectedNotes.push(index);
+      store.dispatch("SET_SELECTED_NOTES", {
+        noteIndices: Array.from(new Set(selectedNotes)),
+      });
+      emit("handleDragRightStart", event);
+    };
+
+    const handleDragLeftStart = (event: MouseEvent) => {
+      const selectedNotes = [...store.state.selectedNotes];
+      const index = props.index;
+      selectedNotes.push(index);
+      store.dispatch("SET_SELECTED_NOTES", {
+        noteIndices: Array.from(new Set(selectedNotes)),
+      });
+      emit("handleDragLeftStart", event);
     };
 
     return {
@@ -204,13 +163,12 @@ export default defineComponent({
       barHeight,
       barWidth,
       isSelected,
-      toggleSelected,
       removeNote,
       setLyric,
       handleKeydown,
-      dragRightStart,
-      dragLeftStart,
-      handleDragMoveStart,
+      handleDragRightStart,
+      handleDragLeftStart,
+      handleMouseDown,
     };
   },
 });
@@ -230,6 +188,7 @@ export default defineComponent({
   &.selected {
     .sequencer-note-bar-body {
       fill: darkorange; // 仮
+      cursor: move;
     }
   }
 }

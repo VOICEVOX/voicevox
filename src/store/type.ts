@@ -707,7 +707,6 @@ export type SingingStoreState = {
   sequencerScrollY: number;
   sequencerSnapSize: number;
   isDrag: boolean;
-  sequencerDragId: number;
   selectedNotes: number[];
 };
 
@@ -752,8 +751,13 @@ export type SingingStoreTypes = {
   };
 
   SET_SELECTED_NOTES: {
-    mutation: { selectedNotes: Array<number> };
-    action(payload: { selectedNotes: Array<number> }): void;
+    mutation: { noteIndices: number[] };
+    action(payload: { noteIndices: number[] }): void;
+  };
+
+  CLEAR_SELECTED_NOTES: {
+    mutation: void;
+    action(): void;
   };
 
   ADD_NOTE: {
@@ -761,14 +765,19 @@ export type SingingStoreTypes = {
     action(payload: { note: Note }): void;
   };
 
-  CHANGE_NOTE: {
+  UPDATE_NOTE: {
     mutation: { index: number; note: Note };
     action(payload: { index: number; note: Note }): void;
   };
 
-  REMOVE_NOTE: {
-    mutation: { index: number };
-    action(payload: { index: number }): void;
+  SET_ALL_NOTES: {
+    mutation: { notes: Note[] };
+    action(payload: { notes: Note[] }): void;
+  };
+
+  REMOVE_NOTES: {
+    mutation: { noteIndices: number[] };
+    action(payload: { noteIndices: number[] }): void;
   };
 
   SET_ZOOM_X: {
@@ -794,11 +803,6 @@ export type SingingStoreTypes = {
   SET_IS_DRAG: {
     mutation: { isDrag: boolean };
     action(payload: { isDrag: boolean }): void;
-  };
-
-  SET_DRAG_ID: {
-    mutation: { requestId: number };
-    action(payload: { requestId: number }): void;
   };
 
   IMPORT_MIDI_FILE: {
