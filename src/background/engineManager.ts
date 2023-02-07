@@ -295,6 +295,7 @@ export class EngineManager {
   killEngineAll(): Record<EngineId, Promise<void>> {
     const killingProcessPromises: Record<EngineId, Promise<void>> = {};
 
+    // FIXME: engineProcessContainersをMapにする
     for (const engineIdStr of Object.keys(this.engineProcessContainers)) {
       const engineId = EngineId(engineIdStr);
       const promise = this.killEngine(engineId);

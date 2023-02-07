@@ -400,6 +400,7 @@ export default defineComponent({
     watch(
       [engineInfos, engineStates, engineManifests],
       async () => {
+        // FIXME: engineInfosをMapにする
         for (const idStr of Object.keys(engineInfos.value)) {
           const id = EngineId(idStr);
           if (engineStates.value[id] !== "READY") continue;

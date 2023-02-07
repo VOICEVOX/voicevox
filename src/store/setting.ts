@@ -119,6 +119,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
 
+      // FIXME: engineSettingsをMapにする
       for (const [engineIdStr, engineSetting] of Object.entries(
         await window.electron.getSetting("engineSettings")
       )) {
