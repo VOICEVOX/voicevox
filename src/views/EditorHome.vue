@@ -553,13 +553,13 @@ export default defineComponent({
       if (!projectFileLoaded) {
         // 最初のAudioCellを作成
         const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-  
-      // close splash after creating the first audio cell
-      // For more information:
-      // https://github.com/VOICEVOX/voicevox/pull/1013#discussion_r1046200849
-      store.dispatch("CLOSE_SPLASH");
 
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+        // close splash after creating the first audio cell
+        // For more information:
+        // https://github.com/VOICEVOX/voicevox/pull/1013#discussion_r1046200849
+        store.dispatch("CLOSE_SPLASH");
+
+        const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
         focusCell({ audioKey: newAudioKey });
