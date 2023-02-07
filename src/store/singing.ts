@@ -6,6 +6,7 @@ import {
   NoteSequence,
   SoundSequence,
   Synth,
+  Transport,
 } from "@/infrastructures/AudioRenderer";
 import { Midi } from "@tonejs/midi";
 import {
@@ -96,23 +97,6 @@ const secondsToTicks = (
   );
 };
 
-/**
- * ノートオンの時間とノートオフの時間を計算し、ノートイベントを生成します。
- */
-const generateNoteEvents = (score: Score, notes: Note[]): NoteEvent[] => {
-  const resolution = score.resolution;
-  const tempos = score.tempos;
-  return notes.map((value) => {
-    const noteOnPos = value.position;
-    const noteOffPos = value.position + value.duration;
-    return {
-      midi: value.midi,
-      noteOnTime: ticksToSeconds(resolution, tempos, noteOnPos),
-      noteOffTime: ticksToSeconds(resolution, tempos, noteOffPos),
-    };
-  });
-};
-
 type ChannelOptions = {
   readonly volume: number;
 };
@@ -146,7 +130,7 @@ class SingChannel {
   }
 
   setNoteEvents(noteEvents: NoteEvent[]) {
-    if (this.sequence !== undefined) {
+    if (this.sequence) {
       this.context.transport.removeSequence(this.sequence);
     }
     const sequence = new NoteSequence(this.synth, noteEvents);
@@ -155,7 +139,7 @@ class SingChannel {
   }
 
   dispose() {
-    if (this.sequence !== undefined) {
+    if (this.sequence) {
       this.context.transport.removeSequence(this.sequence);
     }
     this.synth.dispose();
@@ -194,6 +178,23 @@ const isValidNote = (note: Note) => {
   );
 };
 
+/**
+ * ノートオンの時間とノートオフの時間を計算し、ノートイベントを生成します。
+ */
+const generateNoteEvents = (score: Score, notes: Note[]): NoteEvent[] => {
+  const resolution = score.resolution;
+  const tempos = score.tempos;
+  return notes.map((value) => {
+    const noteOnPos = value.position;
+    const noteOffPos = value.position + value.duration;
+    return {
+      midi: value.midi,
+      noteOnTime: ticksToSeconds(resolution, tempos, noteOnPos),
+      noteOffTime: ticksToSeconds(resolution, tempos, noteOffPos),
+    };
+  });
+};
+
 const getFromOptional = <T>(value: T | undefined): T => {
   if (value === undefined) {
     throw new Error("The value is undefined.");
@@ -206,8 +207,16 @@ const DEFAULT_TEMPO = 120;
 const DEFAULT_BEATS = 4;
 const DEFAULT_BEAT_TYPE = 4;
 
-const audioRenderer = new AudioRenderer();
-const singChannel = new SingChannel(audioRenderer.context);
+let audioRenderer: AudioRenderer | undefined;
+let transport: Transport | undefined;
+let singChannel: SingChannel | undefined;
+
+// ユニットテスト時はAudioContextが存在しないのでAudioRendererを作らない
+if (window.AudioContext) {
+  audioRenderer = new AudioRenderer();
+  transport = audioRenderer.transport;
+  singChannel = new SingChannel(audioRenderer.context);
+}
 
 let playbackPosition = 0;
 
@@ -324,11 +333,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("SET_SCORE", { score });
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (transport && singChannel) {
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
 
-      const transport = audioRenderer.transport;
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+        transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      }
     },
   },
 
@@ -356,8 +366,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       tempo.tempo = round(tempo.tempo, 2);
 
-      const transport = audioRenderer.transport;
-      if (state.nowPlaying) {
+      if (transport && state.nowPlaying) {
         playbackPosition = getters.TIME_TO_POSITION(transport.time);
       }
 
@@ -366,10 +375,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TEMPO", { index, tempo });
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (transport && singChannel) {
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
 
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+        transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      }
     },
   },
 
@@ -392,8 +403,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (index === -1) return;
 
       const defaultTempo = { position: 0, tempo: DEFAULT_TEMPO };
-      const transport = audioRenderer.transport;
-      if (state.nowPlaying) {
+      if (transport && state.nowPlaying) {
         playbackPosition = getters.TIME_TO_POSITION(transport.time);
       }
 
@@ -402,10 +412,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         commit("SET_TEMPO", { index, tempo: defaultTempo });
       }
 
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (transport && singChannel) {
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
 
-      transport.time = getters.POSITION_TO_TIME(playbackPosition);
+        transport.time = getters.POSITION_TO_TIME(playbackPosition);
+      }
     },
   },
 
@@ -491,9 +503,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("ADD_NOTE", { note });
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (singChannel) {
+        const score = getFromOptional(state.score);
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
+      }
     },
   },
 
@@ -514,9 +528,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("CHANGE_NOTE", { index, note });
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (singChannel) {
+        const score = getFromOptional(state.score);
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
+      }
     },
   },
 
@@ -530,9 +546,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ state, commit }, { index }: { index: number }) {
       commit("REMOVE_NOTE", { index });
 
-      const score = getFromOptional(state.score);
-      const noteEvents = generateNoteEvents(score, score.notes);
-      singChannel.setNoteEvents(noteEvents);
+      if (singChannel) {
+        const score = getFromOptional(state.score);
+        const noteEvents = generateNoteEvents(score, score.notes);
+        singChannel.setNoteEvents(noteEvents);
+      }
     },
   },
 
@@ -593,8 +611,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
   GET_PLAYBACK_POSITION: {
     getter: (state, getters) => () => {
-      if (state.nowPlaying) {
-        const transport = audioRenderer.transport;
+      if (transport && state.nowPlaying) {
         playbackPosition = getters.TIME_TO_POSITION(transport.time);
       }
       return playbackPosition;
@@ -603,9 +620,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_PLAYBACK_POSITION: {
     async action({ getters }, { position }) {
-      const transport = audioRenderer.transport;
       playbackPosition = position;
-      transport.time = getters.POSITION_TO_TIME(position);
+      if (transport) {
+        transport.time = getters.POSITION_TO_TIME(position);
+      }
     },
   },
 
@@ -619,7 +637,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }) {
       commit("SET_PLAYBACK_STATE", { nowPlaying: true });
 
-      audioRenderer.transport.start();
+      transport?.start();
     },
   },
 
@@ -627,7 +645,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }) {
       commit("SET_PLAYBACK_STATE", { nowPlaying: false });
 
-      audioRenderer.transport.stop();
+      transport?.stop();
     },
   },
 
@@ -638,7 +656,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ commit }, { volume }) {
       commit("SET_VOLUME", { volume });
 
-      singChannel.volume = volume;
+      if (singChannel) {
+        singChannel.volume = volume;
+      }
     },
   },
 

@@ -141,7 +141,7 @@ export default defineComponent({
 
     const playbackPositionStr = ref("");
 
-    const updatePlayPos = async () => {
+    const updatePlayPos = () => {
       const playPos = store.getters.GET_PLAYBACK_POSITION();
       const playTime = store.getters.POSITION_TO_TIME(playPos);
 
