@@ -1,6 +1,7 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { EngineManifest } from "@/openapi";
 
 export const isMac = process.platform === "darwin";
 // ホットキーを追加したときは設定のマイグレーションが必要
@@ -280,12 +281,39 @@ export type DefaultStyleId = {
   defaultStyleId: number;
 };
 
-export type MinimumEngineManifest = {
+export type supportedFeaturesItem = {
+  type: string;
+  value: boolean;
+  name: string;
+};
+
+export const supportedFeaturesItem = z.object({
+  type: z.string(),
+  value: z.boolean(),
+  name: z.string(),
+});
+
+export type SupportedFeatures = z.infer<typeof supportedFeaturesItem>;
+
+export type minimumEngineManifest = {
   name: string;
   uuid: string;
   command: string;
-  port: string;
+  port: number;
+  supported_features: Record<string, supportedFeaturesItem>;
 };
+
+export const minimumEngineManifest = z
+  .object({
+    name: z.string(),
+    uuid: z.string(),
+    command: z.string(),
+    port: z.number(),
+    supported_features: z.record(z.string(), supportedFeaturesItem),
+  })
+  .passthrough();
+
+export type MinimumEngineManifest = z.infer<typeof minimumEngineManifest>;
 
 export type EngineInfo = {
   uuid: string;

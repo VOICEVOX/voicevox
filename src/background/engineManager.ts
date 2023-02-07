@@ -14,6 +14,7 @@ import {
   ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
+  minimumEngineManifest,
 } from "@/type/preload";
 
 import log from "electron-log";
@@ -94,8 +95,8 @@ export class EngineManager {
       }
       let manifest: MinimumEngineManifest;
       try {
-        manifest = JSON.parse(
-          fs.readFileSync(manifestPath, { encoding: "utf8" })
+        manifest = minimumEngineManifest.parse(
+          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }))
         );
       } catch (e) {
         return "manifestParseError";
@@ -447,16 +448,8 @@ export class EngineManager {
     );
     let manifestContent: MinimumEngineManifest;
     try {
-      manifestContent = JSON.parse(manifest);
+      manifestContent = minimumEngineManifest.parse(JSON.parse(manifest));
     } catch (e) {
-      return "invalidManifest";
-    }
-
-    if (
-      ["name", "uuid", "port", "command", "icon"].some(
-        (key) => !(key in manifestContent)
-      )
-    ) {
       return "invalidManifest";
     }
 
