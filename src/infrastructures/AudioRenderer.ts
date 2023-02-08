@@ -29,8 +29,8 @@ export interface SoundSequence {
 
 class SoundScheduler {
   readonly sequence: SoundSequence;
-  private readonly startContextTime;
-  private readonly startTime;
+  private readonly startContextTime: number;
+  private readonly startTime: number;
   private readonly events: SchedulableEvent[];
 
   private index = 0;

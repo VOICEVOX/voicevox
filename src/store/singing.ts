@@ -1,4 +1,3 @@
-import { getDoremiFromMidi, round } from "@/helpers/singHelper";
 import {
   AudioRenderer,
   Context,
@@ -8,17 +7,18 @@ import {
   Synth,
   Transport,
 } from "@/infrastructures/AudioRenderer";
-import { Midi } from "@tonejs/midi";
 import {
-  Note,
   Score,
-  SingingStoreState,
-  SingingStoreTypes,
   Tempo,
   TimeSignature,
+  Note,
+  SingingStoreState,
+  SingingStoreTypes,
 } from "./type";
-import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { Midi } from "@tonejs/midi";
+import { getDoremiFromMidi, round } from "@/helpers/singHelper";
 
 const ticksToSecondsForConstantBpm = (
   resolution: number,
@@ -351,11 +351,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
     async action({ state, getters, commit }, { tempo }) {
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
       if (!isValidTempo(tempo)) {
         throw new Error("The tempo is invalid.");
       }
-
-      const score = getFromOptional(state.score);
       const duplicate = score.tempos.some((value) => {
         return value.position === tempo.position;
       });
@@ -392,17 +394,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       score.tempos = tempos;
     },
     // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
-    async action(
-      { state, getters, commit },
-      { position }: { position: number }
-    ) {
-      const score = getFromOptional(state.score);
+    async action({ state, getters, commit, dispatch }, { position }) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTempo = emptyScore.tempos[0];
+
+      const score = state.score;
+      if (score === undefined || score.tempos.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
       const index = score.tempos.findIndex((value) => {
         return value.position === position;
       });
       if (index === -1) return;
 
-      const defaultTempo = { position: 0, tempo: DEFAULT_TEMPO };
       if (transport && state.nowPlaying) {
         playbackPosition = getters.TIME_TO_POSITION(transport.time);
       }
@@ -436,11 +440,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { state, commit },
       { timeSignature }: { timeSignature: TimeSignature }
     ) {
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
       if (!isValidTimeSignature(timeSignature)) {
         throw new Error("The time signature is invalid.");
       }
-
-      const score = getFromOptional(state.score);
       const duplicate = score.timeSignatures.some((value) => {
         return value.position === timeSignature.position;
       });
@@ -464,18 +470,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       score.timeSignatures = timeSignatures;
     },
     // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-    async action({ state, commit }, { position }: { position: number }) {
-      const score = getFromOptional(state.score);
+    async action({ state, commit, dispatch }, { position }) {
+      const emptyScore = await dispatch("GET_EMPTY_SCORE");
+      const defaultTimeSignature = emptyScore.timeSignatures[0];
+
+      const score = state.score;
+      if (score === undefined || score.timeSignatures.length === 0) {
+        throw new Error("Score is not initialized.");
+      }
       const index = score.timeSignatures.findIndex((value) => {
         return value.position === position;
       });
       if (index === -1) return;
-
-      const defaultTimeSignature = {
-        position: 0,
-        beats: DEFAULT_BEATS,
-        beatType: DEFAULT_BEAT_TYPE,
-      };
 
       commit("REMOVE_TIME_SIGNATURE", { index });
       if (index === 0) {
@@ -489,10 +495,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
-      const score = getFromOptional(state.score);
-      score.notes = score.notes
-        .concat(note)
-        .sort((a, b) => a.position - b.position);
+      if (state.score) {
+        const notes = state.score.notes.concat(note).sort((a, b) => {
+          return a.position - b.position;
+        });
+        state.score.notes = notes;
+      }
     },
     // ノートを追加する
     // NOTE: 重複削除など別途追加
@@ -513,10 +521,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CHANGE_NOTE: {
     mutation(state, { index, note }: { index: number; note: Note }) {
-      const score = getFromOptional(state.score);
-      const notes = [...score.notes];
-      notes.splice(index, 1, note);
-      score.notes = notes;
+      if (state.score) {
+        const notes = [...state.score.notes];
+        notes.splice(index, 1, note);
+        state.score.notes = notes;
+      }
     },
     async action(
       { state, commit },
@@ -538,10 +547,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   REMOVE_NOTE: {
     mutation(state, { index }: { index: number }) {
-      const score = getFromOptional(state.score);
-      const notes = [...score.notes];
-      notes.splice(index, 1);
-      score.notes = notes;
+      if (state.score) {
+        const notes = [...state.score.notes];
+        notes.splice(index, 1);
+        state.score.notes = notes;
+      }
     },
     async action({ state, commit }, { index }: { index: number }) {
       commit("REMOVE_NOTE", { index });

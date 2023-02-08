@@ -96,8 +96,9 @@ export default defineComponent({
       await store.dispatch("IMPORT_MUSICXML_FILE", {});
     };
 
-    const exportWaveFile = async () => {
-      // await store.dispatch("EXPORT_WAVE_FILE", {});
+    const exportSingDataAsWaveFile = async () => {
+      return null;
+      // await store.dispatch("EXPORT_SING_DATA_AS_WAVE_FILE", {});
     };
 
     const openHelpDialog = () => {
@@ -166,7 +167,7 @@ export default defineComponent({
             type: "button",
             label: "音声を出力",
             onClick: () => {
-              exportWaveFile();
+              exportSingDataAsWaveFile();
             },
           },
         ],

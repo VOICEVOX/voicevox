@@ -218,8 +218,7 @@ export default defineComponent({
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
     const zoomX = computed(() => store.state.sequencerZoomX);
     const zoomY = computed(() => store.state.sequencerZoomY);
-    // 一旦コメントアウトします
-    // const scrollX = computed(() => store.state.sequencerScrollX);
+    const scrollX = computed(() => store.state.sequencerScrollX);
     const scrollY = computed(() => store.state.sequencerScrollY);
     const BASE_Y_SIZE = 30;
     const BASE_X_SIZE = 30;
