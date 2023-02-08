@@ -65,7 +65,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   SET_ENGINE_MANIFESTS: {
     mutation(
       state,
-      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+      { engineManifests }: { engineManifests: Record<EngineId, EngineManifest> }
     ) {
       state.engineManifests = engineManifests;
     },

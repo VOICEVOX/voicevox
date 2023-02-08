@@ -111,7 +111,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  characterInfos: Record<string, CharacterInfo[]>;
+  characterInfos: Record<EngineId, CharacterInfo[]>;
   morphableTargetsInfo: Record<string, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
@@ -719,7 +719,7 @@ export type EngineStoreTypes = {
   };
 
   SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
+    mutation: { engineManifests: Record<EngineId, EngineManifest> };
   };
 
   FETCH_AND_SET_ENGINE_MANIFESTS: {

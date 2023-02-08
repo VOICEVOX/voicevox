@@ -395,7 +395,7 @@ export default defineComponent({
         ])
       )
     );
-    const engineVersions = ref<Record<string, string>>({});
+    const engineVersions = ref<Record<EngineId, string>>({});
 
     watch(
       [engineInfos, engineStates, engineManifests],

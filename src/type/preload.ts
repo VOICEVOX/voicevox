@@ -267,7 +267,7 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSettings = Record<string, EngineSetting>;
+export type EngineSettings = Record<EngineId, EngineSetting>;
 
 export const engineSettingSchema = z
   .object({
