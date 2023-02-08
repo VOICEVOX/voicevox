@@ -281,27 +281,11 @@ export type DefaultStyleId = {
   defaultStyleId: number;
 };
 
-export type supportedFeaturesItem = {
-  type: string;
-  value: boolean;
-  name: string;
-};
-
-export const supportedFeaturesItem = z.object({
+export const supportedFeaturesItemSchema = z.object({
   type: z.string(),
   value: z.boolean(),
   name: z.string(),
 });
-
-export type SupportedFeatures = z.infer<typeof supportedFeaturesItem>;
-
-export type minimumEngineManifest = {
-  name: string;
-  uuid: string;
-  command: string;
-  port: number;
-  supported_features: Record<string, supportedFeaturesItem>;
-};
 
 export const minimumEngineManifest = z
   .object({
@@ -309,7 +293,7 @@ export const minimumEngineManifest = z
     uuid: z.string(),
     command: z.string(),
     port: z.number(),
-    supported_features: z.record(z.string(), supportedFeaturesItem),
+    supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME: JSON側がcamelCaseのため。いずれ修正。
   })
   .passthrough();
 
