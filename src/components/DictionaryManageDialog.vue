@@ -360,16 +360,15 @@ const selectedId = ref("");
 const surface = ref("");
 const yomi = ref("");
 
-const styleId = computed(() => {
-  if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return 0;
-  return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0].styleId;
-});
-const engineIdComputed = computed(() => {
+const voiceComputed = computed(() => {
+  if (store.getters.USER_ORDERED_CHARACTER_INFOS == undefined)
+    throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
   if (store.state.engineIds.length === 0)
     throw new Error("assert engineId.length > 0");
-  if (!store.getters.USER_ORDERED_CHARACTER_INFOS)
-    throw new Error("assert USER_ORDERED_CHARACTER_INFOS");
-  return store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas.styles[0].engineId;
+  const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0].metas;
+  const speakerId = characterInfo.speakerUuid;
+  const { engineId, styleId } = characterInfo.styles[0];
+  return { engineId, speakerId, styleId };
 });
 
 const kanaRegex = createKanaRegex();
@@ -393,8 +392,7 @@ const setSurface = (text: string) => {
   surface.value = convertHankakuToZenkaku(text);
 };
 const setYomi = async (text: string, changeWord?: boolean) => {
-  const engineId = engineIdComputed.value;
-  if (engineId === undefined) throw new Error(`assert engineId !== undefined`);
+  const { engineId, styleId } = voiceComputed.value;
 
   // テキスト長が0の時にエラー表示にならないように、テキスト長を考慮する
   isOnlyHiraOrKana.value = !text.length || kanaRegex.test(text);
@@ -419,7 +417,7 @@ const setYomi = async (text: string, changeWord?: boolean) => {
         store.dispatch("FETCH_ACCENT_PHRASES", {
           text: text + "ガ'",
           engineId,
-          styleId: styleId.value,
+          styleId,
           isKana: true,
         })
       )
@@ -434,8 +432,7 @@ const setYomi = async (text: string, changeWord?: boolean) => {
 };
 
 const changeAccent = async (_: number, accent: number) => {
-  const engineId = engineIdComputed.value;
-  if (engineId === undefined) throw new Error(`assert engineId !== undefined`);
+  const { engineId, styleId } = voiceComputed.value;
 
   if (accentPhrase.value) {
     accentPhrase.value.accent = accent;
@@ -444,7 +441,7 @@ const changeAccent = async (_: number, accent: number) => {
         store.dispatch("FETCH_MORA_DATA", {
           accentPhrases: [accentPhrase.value],
           engineId,
-          styleId: styleId.value,
+          styleId,
         })
       )
     )[0];
@@ -455,16 +452,12 @@ const audioElem = new Audio();
 audioElem.pause();
 
 const play = async () => {
-  const engineId = engineIdComputed.value;
-  if (engineId === undefined) throw new Error(`assert engineId !== undefined`);
-
   if (!accentPhrase.value) return;
 
   nowGenerating.value = true;
   const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
     text: yomi.value,
-    engineId,
-    styleId: styleId.value,
+    voice: voiceComputed.value,
   });
 
   if (audioItem.query == undefined)

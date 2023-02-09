@@ -196,9 +196,11 @@ import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
+  EngineId,
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
+  Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 import cloneDeep from "clone-deep";
@@ -406,12 +408,10 @@ export default defineComponent({
     );
     const addAudioItem = async () => {
       const prevAudioKey = activeAudioKey.value;
-      let engineId: string | undefined = undefined;
-      let styleId: number | undefined = undefined;
+      let voice: Voice | undefined = undefined;
       let presetKey: string | undefined = undefined;
       if (prevAudioKey !== undefined) {
-        engineId = store.state.audioItems[prevAudioKey].engineId;
-        styleId = store.state.audioItems[prevAudioKey].styleId;
+        voice = store.state.audioItems[prevAudioKey].voice;
         presetKey = store.state.audioItems[prevAudioKey].presetKey;
       }
       let baseAudioItem: AudioItem | undefined = undefined;
@@ -423,8 +423,7 @@ export default defineComponent({
       //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
       //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
       const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
-        engineId,
-        styleId,
+        voice,
         presetKey,
         baseAudioItem,
       });
@@ -523,7 +522,7 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      let engineIds: string[];
+      let engineIds: EngineId[];
       if (store.state.isMultiEngineOffMode) {
         // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(
@@ -561,13 +560,11 @@ export default defineComponent({
         focusCell({ audioKey: newAudioKey });
 
         // 最初の話者を初期化
-        if (audioItem.engineId != undefined && audioItem.styleId != undefined) {
-          store.dispatch("SETUP_SPEAKER", {
-            audioKey: newAudioKey,
-            engineId: audioItem.engineId,
-            styleId: audioItem.styleId,
-          });
-        }
+        store.dispatch("SETUP_SPEAKER", {
+          audioKey: newAudioKey,
+          engineId: audioItem.voice.engineId,
+          styleId: audioItem.voice.styleId,
+        });
       }
 
       // ショートカットキーの設定
