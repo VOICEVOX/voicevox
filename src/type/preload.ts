@@ -1,7 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
-import { EngineManifest } from "@/openapi";
 
 export const isMac = process.platform === "darwin";
 // ホットキーを追加したときは設定のマイグレーションが必要
@@ -287,7 +286,7 @@ export const supportedFeaturesItemSchema = z.object({
   name: z.string(),
 });
 
-export const minimumEngineManifest = z
+export const minimumEngineManifestSchema = z
   .object({
     name: z.string(),
     uuid: z.string(),
@@ -297,7 +296,7 @@ export const minimumEngineManifest = z
   })
   .passthrough();
 
-export type MinimumEngineManifest = z.infer<typeof minimumEngineManifest>;
+export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
 export type EngineInfo = {
   uuid: string;
