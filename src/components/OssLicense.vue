@@ -6,7 +6,7 @@
     <div class="q-pa-md markdown-body">
       <q-list v-if="detailIndex === undefined">
         <q-item
-          v-for="(license, index) in licenses"
+          v-for="(license, index) in props.licenses"
           :key="index"
           clickable
           dense
@@ -34,37 +34,24 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 
-export default defineComponent({
-  name: "OssLicense",
+const props =
+  defineProps<{
+    licenses: Record<string, string>[];
+  }>();
 
-  props: {
-    licenses: {
-      type: Array as PropType<Record<string, string>[]>,
-      required: true,
-    },
-  },
-  setup() {
-    const detailIndex = ref<number | undefined>(undefined);
+const detailIndex = ref<number | undefined>(undefined);
 
-    const scroller = ref<HTMLElement>();
+const scroller = ref<HTMLElement>();
 
-    const selectLicenseIndex = (index: number | undefined) => {
-      if (scroller.value == undefined)
-        throw new Error("scroller.value == undefined");
-      scroller.value.scrollTop = 0;
-      detailIndex.value = index;
-    };
-
-    return {
-      selectLicenseIndex,
-      detailIndex,
-      scroller,
-    };
-  },
-});
+const selectLicenseIndex = (index: number | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  detailIndex.value = index;
+};
 </script>
 
 <style scoped lang="scss">

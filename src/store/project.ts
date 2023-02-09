@@ -6,6 +6,7 @@ import { createPartialStore } from "./vuex";
 
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
+import { EngineId, engineIdSchema } from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -115,7 +116,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           // Migration
-          const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+          const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
@@ -233,6 +234,41 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          if (
+            semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
+          ) {
+            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            if (characterInfos == undefined)
+              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
+              if (audioItem.voice == undefined) {
+                const oldEngineId = audioItem.engineId;
+                const oldStyleId = audioItem.styleId;
+                const chracterinfo = characterInfos.find((characterInfo) =>
+                  characterInfo.metas.styles.some(
+                    (styeleinfo) =>
+                      styeleinfo.engineId === audioItem.engineId &&
+                      styeleinfo.styleId === audioItem.styleId
+                  )
+                );
+                if (chracterinfo == undefined)
+                  throw new Error(
+                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
+                  );
+                const speakerId = chracterinfo.metas.speakerUuid;
+                audioItem.voice = {
+                  engineId: oldEngineId,
+                  speakerId,
+                  styleId: oldStyleId,
+                };
+
+                delete audioItem.engineId;
+                delete audioItem.styleId;
+              }
+            }
+          }
+
           // Validation check
           const parsedProjectData = projectSchema.parse(projectData);
           if (
@@ -248,23 +284,38 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].engineId != undefined
+                parsedProjectData.audioItems[audioKey].voice != undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "engineId" attribute.'
-            );
+            throw new Error('Every audioItem should have a "voice" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "engineId" attribute.');
           }
           // FIXME: assert engineId is registered
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].styleId != undefined
+                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "styleId" attribute.'
-            );
+            throw new Error('Every voice should have a "speakerId" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "styleId" attribute.');
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
@@ -421,15 +472,18 @@ const audioQuerySchema = z.object({
 
 const morphingInfoSchema = z.object({
   rate: z.number(),
-  targetEngineId: z.string(),
+  targetEngineId: engineIdSchema,
   targetSpeakerId: z.string(),
   targetStyleId: z.number(),
 });
 
 const audioItemSchema = z.object({
   text: z.string(),
-  engineId: z.string().optional(),
-  styleId: z.number().optional(),
+  voice: z.object({
+    engineId: engineIdSchema,
+    speakerId: z.string().uuid(),
+    styleId: z.number(),
+  }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
   morphingInfo: morphingInfoSchema.optional(),

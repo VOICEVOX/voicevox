@@ -4,6 +4,11 @@ import { z } from "zod";
 import { EngineManifest } from "@/openapi";
 
 export const isMac = process.platform === "darwin";
+
+export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export type EngineId = z.infer<typeof engineIdSchema>;
+export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -167,8 +172,8 @@ export interface Sandbox {
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(engineId: string): Promise<void>;
-  openEngineDirectory(engineId: string): void;
+  restartEngine(engineId: EngineId): Promise<void>;
+  openEngineDirectory(engineId: EngineId): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -185,11 +190,11 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   setEngineSetting(
-    engineId: string,
+    engineId: EngineId,
     engineSetting: EngineSetting
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
-  uninstallVvppEngine(engineId: string): Promise<boolean>;
+  uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
@@ -204,7 +209,7 @@ export type StyleInfo = {
   styleId: number;
   iconPath: string;
   portraitPath: string | undefined;
-  engineId: string;
+  engineId: EngineId;
   voiceSamplePaths: string[];
 };
 
@@ -231,7 +236,7 @@ export type UpdateInfo = {
 };
 
 export type Voice = {
-  engineId: string;
+  engineId: EngineId;
   speakerId: string;
   styleId: number;
 };
@@ -263,9 +268,9 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSettings = Record<string, EngineSetting>;
+export type EngineSettings = Record<EngineId, EngineSetting>;
 
-export const engineSetting = z
+export const engineSettingSchema = z
   .object({
     useGpu: z.boolean().default(false),
     outputSamplingRate: z
@@ -273,24 +278,24 @@ export const engineSetting = z
       .default("engineDefault"),
   })
   .passthrough();
-export type EngineSetting = z.infer<typeof engineSetting>;
+export type EngineSetting = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
-  engineId: string;
+  engineId: EngineId;
   speakerUuid: string;
   defaultStyleId: number;
 };
 
 export type MinimumEngineManifest = {
   name: string;
-  uuid: string;
+  uuid: EngineId;
   command: string;
   port: string;
   supported_features: Record<string, EngineManifest>;
 };
 
 export type EngineInfo = {
-  uuid: string;
+  uuid: EngineId;
   host: string;
   name: string;
   path?: string; // エンジンディレクトリのパス
@@ -317,7 +322,7 @@ export type Preset = {
 
 export type MorphingInfo = {
   rate: number;
-  targetEngineId: string;
+  targetEngineId: EngineId;
   targetSpeakerId: string;
   targetStyleId: number;
 };
@@ -477,12 +482,14 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
-    engineSettings: z.record(engineSetting).default({}),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
     userCharacterOrder: z.string().array().default([]),
     defaultStyleIds: z
       .object({
-        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".or(z.literal("")).default("")"を外す
-        engineId: z.string().uuid().or(z.literal("")).default(""),
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
         speakerUuid: z.string().uuid(),
         defaultStyleId: z.number(),
       })
@@ -506,7 +513,7 @@ export const electronStoreSchema = z
                 morphingInfo: z
                   .object({
                     rate: z.number(),
-                    targetEngineId: z.string().uuid(),
+                    targetEngineId: engineIdSchema,
                     targetSpeakerId: z.string().uuid(),
                     targetStyleId: z.number(),
                   })

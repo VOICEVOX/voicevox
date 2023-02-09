@@ -4,13 +4,15 @@
     class="relative-absolute-wrapper scroller markdown-body"
   >
     <div class="q-pa-md">
-      <template v-if="isUpdateAvailable">
-        <h3>最新バージョン {{ latestVersion }} が見つかりました</h3>
-        <a href="{{ downloadLink }}" target="_blank">ダウンロードページ</a>
+      <template v-if="props.isUpdateAvailable">
+        <h3>最新バージョン {{ props.latestVersion }} が見つかりました</h3>
+        <a href="{{ props.downloadLink }}" target="_blank"
+          >ダウンロードページ</a
+        >
         <hr />
       </template>
       <h3>アップデート履歴</h3>
-      <template v-for="(info, infoIndex) of updateInfos" :key="infoIndex">
+      <template v-for="(info, infoIndex) of props.updateInfos" :key="infoIndex">
         <h3>バージョン {{ info.version }}</h3>
         <ul>
           <template
@@ -37,30 +39,16 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from "vue";
+<script setup lang="ts">
 import { UpdateInfo } from "../type/preload";
 
-export default defineComponent({
-  props: {
-    latestVersion: {
-      type: String,
-      required: false,
-    },
-    downloadLink: {
-      type: String,
-      required: false,
-    },
-    updateInfos: {
-      type: Array as PropType<UpdateInfo[]>,
-      required: false,
-    },
-    isUpdateAvailable: {
-      type: Boolean,
-      required: false,
-    },
-  },
-});
+const props =
+  defineProps<{
+    latestVersion: string;
+    downloadLink: string;
+    updateInfos: UpdateInfo[];
+    isUpdateAvailable: boolean;
+  }>();
 </script>
 
 <style scoped lang="scss">

@@ -4,7 +4,7 @@ import log from "electron-log";
 import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
-import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
+import { EngineId, EngineInfo, MinimumEngineManifest } from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
 
@@ -57,7 +57,7 @@ export const isVvppFile = (filePath: string) => {
 export class VvppManager {
   vvppEngineDir: string;
 
-  willDeleteEngineIds: Set<string>;
+  willDeleteEngineIds: Set<EngineId>;
   willReplaceEngineDirs: Array<{ from: string; to: string }>;
 
   constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
@@ -73,7 +73,7 @@ export class VvppManager {
     });
   }
 
-  markWillDelete(engineId: string) {
+  markWillDelete(engineId: EngineId) {
     this.willDeleteEngineIds.add(engineId);
   }
 

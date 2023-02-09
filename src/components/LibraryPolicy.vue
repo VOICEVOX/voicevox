@@ -72,69 +72,53 @@
   </q-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useStore } from "@/store";
-import { computed, defineComponent, ref } from "vue";
+import { computed, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { EngineId } from "@/type/preload";
 
-type DetailKey = { engine: string; character: string };
+type DetailKey = { engine: EngineId; character: string };
 
-export default defineComponent({
-  setup() {
-    const store = useStore();
-    const md = useMarkdownIt();
+const store = useStore();
+const md = useMarkdownIt();
 
-    const allCharacterInfos = computed(
-      () => store.getters.GET_ALL_CHARACTER_INFOS
-    );
+const sortedEngineInfos = computed(() => store.getters.GET_SORTED_ENGINE_INFOS);
 
-    const sortedEngineInfos = computed(
-      () => store.getters.GET_SORTED_ENGINE_INFOS
-    );
-
-    const engineInfos = computed(
-      () =>
-        new Map(
-          Object.entries(store.state.characterInfos).map(
-            ([engineId, characterInfos]) => [
+const engineInfos = computed(
+  () =>
+    new Map(
+      Object.entries(store.state.characterInfos).map(
+        ([engineIdStr, characterInfos]) => {
+          const engineId = EngineId(engineIdStr);
+          return [
+            engineId,
+            {
               engineId,
-              {
-                engineId,
-                name: store.state.engineManifests[engineId].name,
-                characterInfos: new Map(
-                  characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
-                ),
-              },
-            ]
-          )
-        )
-    );
+              name: store.state.engineManifests[engineId].name,
+              characterInfos: new Map(
+                characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+              ),
+            },
+          ];
+        }
+      )
+    )
+);
 
-    const convertMarkdown = (text: string) => {
-      return md.render(text);
-    };
+const convertMarkdown = (text: string) => {
+  return md.render(text);
+};
 
-    const selectedInfo = ref<DetailKey | undefined>(undefined);
+const selectedInfo = ref<DetailKey | undefined>(undefined);
 
-    const scroller = ref<HTMLElement>();
-    const selectCharacterInfo = (index: DetailKey | undefined) => {
-      if (scroller.value == undefined)
-        throw new Error("scroller.value == undefined");
-      scroller.value.scrollTop = 0;
-      selectedInfo.value = index;
-    };
-
-    return {
-      characterInfos: allCharacterInfos,
-      engineInfos,
-      convertMarkdown,
-      sortedEngineInfos,
-      selectCharacterInfo,
-      selectedInfo,
-      scroller,
-    };
-  },
-});
+const scroller = ref<HTMLElement>();
+const selectCharacterInfo = (index: DetailKey | undefined) => {
+  if (scroller.value == undefined)
+    throw new Error("scroller.value == undefined");
+  scroller.value.scrollTop = 0;
+  selectedInfo.value = index;
+};
 </script>
 
 <style scoped lang="scss">
