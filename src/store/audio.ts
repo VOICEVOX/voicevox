@@ -486,7 +486,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const text = payload.text ?? "";
 
-      const defaultStyleId = state.defaultStyleIds[0];
+      const defaultSpeakerId =
+        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultStyleId = state.defaultStyleIds.find(
+        (styleId) => styleId.speakerUuid === defaultSpeakerId
+      );
+      if (defaultStyleId == undefined)
+        throw new Error("defaultStyleId == undefined");
+
       const voice = payload.voice ?? {
         engineId: defaultStyleId.engineId,
         speakerId: defaultStyleId.speakerUuid,
