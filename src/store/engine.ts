@@ -2,7 +2,7 @@ import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import type { EngineManifest } from "@/openapi";
-import type { EngineInfo } from "@/type/preload";
+import type { EngineId, EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
@@ -15,7 +15,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       const engineInfos = await window.electron.engineInfos();
 
       // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
-      let engineIds: string[];
+      let engineIds: EngineId[];
       if (state.isMultiEngineOffMode) {
         engineIds = engineInfos
           .filter((engineInfo) => engineInfo.type === "default")
@@ -50,7 +50,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       {
         engineIds,
         engineInfos,
-      }: { engineIds: string[]; engineInfos: EngineInfo[] }
+      }: { engineIds: EngineId[]; engineInfos: EngineInfo[] }
     ) {
       state.engineIds = engineIds;
       state.engineInfos = Object.fromEntries(
@@ -65,7 +65,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   SET_ENGINE_MANIFESTS: {
     mutation(
       state,
-      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+      { engineManifests }: { engineManifests: Record<EngineId, EngineManifest> }
     ) {
       state.engineManifests = engineManifests;
     },
@@ -256,7 +256,10 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   SET_ENGINE_STATE: {
     mutation(
       state,
-      { engineId, engineState }: { engineId: string; engineState: EngineState }
+      {
+        engineId,
+        engineState,
+      }: { engineId: EngineId; engineState: EngineState }
     ) {
       state.engineStates[engineId] = engineState;
     },
@@ -347,7 +350,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       {
         engineId,
         engineManifest,
-      }: { engineId: string; engineManifest: EngineManifest }
+      }: { engineId: EngineId; engineManifest: EngineManifest }
     ) {
       state.engineManifests = {
         ...state.engineManifests,

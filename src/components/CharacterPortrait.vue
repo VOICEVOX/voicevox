@@ -27,8 +27,8 @@ export default defineComponent({
         ? store.state.audioItems[activeAudioKey]
         : undefined;
 
-      const engineId = audioItem?.engineId;
-      const styleId = audioItem?.styleId;
+      const engineId = audioItem?.voice.engineId;
+      const styleId = audioItem?.voice.styleId;
 
       if (
         engineId === undefined ||
@@ -47,7 +47,7 @@ export default defineComponent({
         ? store.state.audioItems[activeAudioKey]
         : undefined;
 
-      const styleId = audioItem?.styleId;
+      const styleId = audioItem?.voice.styleId;
       const style = characterInfo.value?.metas.styles.find(
         (style) => style.styleId === styleId
       );
@@ -65,7 +65,7 @@ export default defineComponent({
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
-      const engineId = audioItem?.engineId ?? store.state.engineIds[0];
+      const engineId = audioItem?.voice.engineId ?? store.state.engineIds[0];
       const engineManifest = store.state.engineManifests[engineId];
       const engineInfo = store.state.engineInfos[engineId];
       return engineManifest ? engineManifest.brandName : engineInfo.name;

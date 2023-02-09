@@ -5,6 +5,7 @@ import { moveFile } from "move-file";
 import { Extract } from "unzipper";
 import { dialog } from "electron";
 import {
+  EngineId,
   EngineInfo,
   minimumEngineManifestSchema,
   MinimumEngineManifest,
@@ -61,7 +62,7 @@ export const isVvppFile = (filePath: string) => {
 export class VvppManager {
   vvppEngineDir: string;
 
-  willDeleteEngineIds: Set<string>;
+  willDeleteEngineIds: Set<EngineId>;
   willReplaceEngineDirs: Array<{ from: string; to: string }>;
 
   constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
@@ -77,7 +78,7 @@ export class VvppManager {
     });
   }
 
-  markWillDelete(engineId: string) {
+  markWillDelete(engineId: EngineId) {
     this.willDeleteEngineIds.add(engineId);
   }
 
