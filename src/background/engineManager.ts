@@ -14,7 +14,7 @@ import {
   ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
-  minimumEngineManifest,
+  minimumEngineManifestSchema,
 } from "@/type/preload";
 
 import log from "electron-log";
@@ -95,7 +95,7 @@ export class EngineManager {
       }
       let manifest: MinimumEngineManifest;
       try {
-        manifest = minimumEngineManifest.parse(
+        manifest = minimumEngineManifestSchema.parse(
           JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }))
         );
       } catch (e) {
@@ -448,7 +448,7 @@ export class EngineManager {
     );
     let manifestContent: MinimumEngineManifest;
     try {
-      manifestContent = minimumEngineManifest.parse(JSON.parse(manifest));
+      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
     } catch (e) {
       return "invalidManifest";
     }

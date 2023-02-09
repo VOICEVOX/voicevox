@@ -6,7 +6,7 @@ import { Extract } from "unzipper";
 import { dialog } from "electron";
 import {
   EngineInfo,
-  minimumEngineManifest,
+  minimumEngineManifestSchema,
   MinimumEngineManifest,
 } from "@/type/preload";
 import MultiStream from "multistream";
@@ -151,7 +151,7 @@ export class VvppManager {
         .on("close", resolve)
         .on("error", reject);
     });
-    const manifest: MinimumEngineManifest = minimumEngineManifest.parse(
+    const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
       JSON.parse(
         await fs.promises.readFile(
           path.join(outputDir, "engine_manifest.json"),
