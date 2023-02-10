@@ -17,7 +17,7 @@
       :width="`${barWidth}`"
       xmlns="http://www.w3.org/2000/svg"
       class="sequencer-note-bar"
-      @dblclick="removeNote"
+      @dblclick.prevent="removeNote"
       @keydown.prevent="handleKeydown"
       focusable="true"
       tabindex="0"
@@ -103,7 +103,7 @@ export default defineComponent({
       if (!(event.target instanceof HTMLInputElement)) {
         return;
       }
-      if (event.target.value && store.state.score) {
+      if (event.target.value) {
         const index = props.index;
         const lyric = event.target.value;
         store.dispatch("UPDATE_NOTE", {

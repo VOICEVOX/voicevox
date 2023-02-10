@@ -14,7 +14,12 @@ import { getDoremiFromMidi } from "@/helpers/singHelper";
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
-  score: undefined,
+  score: {
+    resolution: 480,
+    tempos: [] as Tempo[],
+    notes: [] as Note[],
+    timeSignatures: [] as TimeSignature[],
+  } as Score,
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,

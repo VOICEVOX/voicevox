@@ -696,7 +696,7 @@ export type AudioCommandStoreTypes = {
 export type SingingStoreState = {
   engineId?: string;
   styleId?: number;
-  score?: Score;
+  score: Score;
   renderPhrases: RenderPhrase[];
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
