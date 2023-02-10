@@ -285,12 +285,23 @@ export type DefaultStyleId = {
   defaultStyleId: number;
 };
 
-export type MinimumEngineManifest = {
-  name: string;
-  uuid: EngineId;
-  command: string;
-  port: string;
-};
+export const supportedFeaturesItemSchema = z.object({
+  type: z.string(),
+  value: z.boolean(),
+  name: z.string(),
+});
+
+export const minimumEngineManifestSchema = z
+  .object({
+    name: z.string(),
+    uuid: engineIdSchema,
+    command: z.string(),
+    port: z.number(),
+    supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
+  })
+  .passthrough();
+
+export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
 export type EngineInfo = {
   uuid: EngineId;
