@@ -294,7 +294,7 @@ export const supportedFeaturesItemSchema = z.object({
 export const minimumEngineManifestSchema = z
   .object({
     name: z.string(),
-    uuid: z.string(),
+    uuid: engineIdSchema,
     command: z.string(),
     port: z.number(),
     supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
