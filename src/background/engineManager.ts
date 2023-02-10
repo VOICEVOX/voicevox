@@ -16,6 +16,7 @@ import {
   MinimumEngineManifest,
   EngineId,
   engineIdSchema,
+  minimumEngineManifestSchema,
 } from "@/type/preload";
 
 import log from "electron-log";
@@ -96,8 +97,8 @@ export class EngineManager {
       }
       let manifest: MinimumEngineManifest;
       try {
-        manifest = JSON.parse(
-          fs.readFileSync(manifestPath, { encoding: "utf8" })
+        manifest = minimumEngineManifestSchema.parse(
+          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }))
         );
       } catch (e) {
         return "manifestParseError";
@@ -455,16 +456,8 @@ export class EngineManager {
     );
     let manifestContent: MinimumEngineManifest;
     try {
-      manifestContent = JSON.parse(manifest);
+      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
     } catch (e) {
-      return "invalidManifest";
-    }
-
-    if (
-      ["name", "uuid", "port", "command", "icon", "supported_features"].some(
-        (key) => !(key in manifestContent)
-      )
-    ) {
       return "invalidManifest";
     }
 
