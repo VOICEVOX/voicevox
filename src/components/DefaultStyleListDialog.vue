@@ -181,12 +181,7 @@ watch([() => props.modelValue], async ([newValue]) => {
               ),
             ] as const
         ),
-      ].filter(([speakerUuid, styleIndex]) => {
-        return (
-          characterInfosMap.value[speakerUuid]?.metas.styles[styleIndex] !==
-          undefined
-        );
-      })
+      ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value)
     );
   }
 });
