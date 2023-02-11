@@ -123,7 +123,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
+import {
+  CharacterInfo,
+  DefaultStyleId,
+  SpeakerId,
+  StyleInfo,
+} from "@/type/preload";
 
 const props =
   defineProps<{
@@ -181,14 +186,15 @@ const selectStyleIndex = (styleIndex: number) => {
 
 const isHoverableStyleItem = ref(true);
 
-const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+const playing =
+  ref<{ speakerUuid: SpeakerId; styleId: number; index: number }>();
 
 const audio = new Audio();
 audio.volume = 0.5;
 audio.onended = () => stop();
 
 const play = (
-  speakerUuid: string,
+  speakerUuid: SpeakerId,
   { styleId, voiceSamplePaths }: StyleInfo,
   index: number
 ) => {

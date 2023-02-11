@@ -20,6 +20,7 @@ import {
   EngineId,
   MoraDataType,
   MorphingInfo,
+  SpeakerId,
   StyleInfo,
   Voice,
   WriteFileErrorResult,
@@ -283,7 +284,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const characterInfo: CharacterInfo = {
           portraitPath: base64ImageToUri(speakerInfo.portrait),
           metas: {
-            speakerUuid: speaker.speakerUuid,
+            speakerUuid: SpeakerId(speaker.speakerUuid),
             speakerName: speaker.name,
             styles,
             policy: speakerInfo.policy,

@@ -1,5 +1,5 @@
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
-import { Preset } from "@/type/preload";
+import { Preset, SpeakerId } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 import { v4 as uuidv4 } from "uuid";
@@ -11,7 +11,10 @@ export const presetStoreState: PresetStoreState = {
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_PRESET_ITEMS: {
-    mutation(state, { presetItems }: { presetItems: Record<string, Preset> }) {
+    mutation(
+      state,
+      { presetItems }: { presetItems: Record<SpeakerId, Preset> }
+    ) {
       state.presetItems = presetItems;
     },
   },
