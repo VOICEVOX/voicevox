@@ -72,6 +72,7 @@ export default defineComponent({
     const presetList = computed(() =>
       presetKeys.value
         .filter((key) => presetItems.value[key] != undefined)
+        .filter((key) => !presetItems.value[key].isDefault)
         .map((key) => ({
           key,
           ...presetItems.value[key],
@@ -85,6 +86,7 @@ export default defineComponent({
       isPreview.value
         ? previewPresetKeys.value
             .filter((key) => presetItems.value[key] != undefined)
+            .filter((key) => !presetItems.value[key].isDefault)
             .map((key) => ({
               key,
               ...presetItems.value[key],
