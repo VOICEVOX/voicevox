@@ -163,6 +163,8 @@ watch([() => props.modelValue], async ([newValue]) => {
       .filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       ) as CharacterInfo[];
+    // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
+    // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
     selectedStyleIndexes.value = Object.fromEntries(
       [
         ...store.state.userCharacterOrder.map(
