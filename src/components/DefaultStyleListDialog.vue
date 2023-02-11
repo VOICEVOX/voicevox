@@ -163,17 +163,29 @@ watch([() => props.modelValue], async ([newValue]) => {
       .filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       ) as CharacterInfo[];
-    selectedStyleIndexes.value = Object.fromEntries([
-      ...store.state.userCharacterOrder.map((speakerUuid) => [speakerUuid, 0]),
-      ...store.state.defaultStyleIds.map((defaultStyle) => [
-        defaultStyle.speakerUuid,
-        characterInfosMap.value[
-          defaultStyle.speakerUuid
-        ]?.metas.styles.findIndex(
-          (style) => style.styleId === defaultStyle.defaultStyleId
-        ) ?? 0,
-      ]),
-    ]);
+    selectedStyleIndexes.value = Object.fromEntries(
+      [
+        ...store.state.userCharacterOrder.map(
+          (speakerUuid) => [speakerUuid, 0] as const
+        ),
+        ...store.state.defaultStyleIds.map(
+          (defaultStyle) =>
+            [
+              defaultStyle.speakerUuid,
+              characterInfosMap.value[
+                defaultStyle.speakerUuid
+              ]?.metas.styles.findIndex(
+                (style) => style.styleId === defaultStyle.defaultStyleId
+              ),
+            ] as const
+        ),
+      ].filter(([speakerUuid, styleIndex]) => {
+        return (
+          characterInfosMap.value[speakerUuid]?.metas.styles[styleIndex] !==
+          undefined
+        );
+      })
+    );
   }
 });
 
