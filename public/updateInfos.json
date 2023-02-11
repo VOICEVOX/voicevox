@@ -2,7 +2,7 @@
   {
     "version": "0.14.4",
     "descriptions": ["デフォルトスタイル選択ダイアログが閉じれないバグを修正"],
-    "contributors": []
+    "contributors": ["sevenc-nanashi"]
   },
   {
     "version": "0.14.3",
