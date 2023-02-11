@@ -5,7 +5,7 @@ import {
   IpcRendererEvent,
 } from "electron";
 
-import { Sandbox, ElectronStoreType } from "@/type/preload";
+import { Sandbox, ElectronStoreType, EngineId } from "@/type/preload";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
 function ipcRendererInvoke<T extends keyof IpcIHData>(
@@ -192,11 +192,11 @@ const api: Sandbox = {
     return ipcRendererInvoke("ENGINE_INFOS");
   },
 
-  restartEngine: (engineId: string) => {
+  restartEngine: (engineId: EngineId) => {
     return ipcRendererInvoke("RESTART_ENGINE", { engineId });
   },
 
-  openEngineDirectory: (engineId: string) => {
+  openEngineDirectory: (engineId: EngineId) => {
     return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
   },
 

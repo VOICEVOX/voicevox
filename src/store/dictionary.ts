@@ -1,5 +1,6 @@
 import { UserDictWord, UserDictWordToJSON } from "@/openapi";
 import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
+import { EngineId } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
@@ -64,7 +65,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
       { surface, pronunciation, accentType, priority }
     ) {
       // 同じ単語IDで登録するために、１つのエンジンで登録したあと全エンジンに同期する。
-      const engineId: string | undefined = state.engineIds[0];
+      const engineId: EngineId | undefined = state.engineIds[0];
 
       if (engineId === undefined)
         throw new Error(`No such engine registered: index == 0`);

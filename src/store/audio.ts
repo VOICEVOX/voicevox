@@ -17,6 +17,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  EngineId,
   MoraDataType,
   MorphingInfo,
   StyleInfo,
@@ -168,7 +169,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
-  engineId: string,
+  engineId: EngineId,
   styleId: number
 ): CharacterInfo | undefined {
   const engineCharacterInfos = state.characterInfos[engineId];
@@ -306,7 +307,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         engineId,
         characterInfos,
-      }: { engineId: string; characterInfos: CharacterInfo[] }
+      }: { engineId: EngineId; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
     },
@@ -486,7 +487,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const text = payload.text ?? "";
 
-      const defaultStyleId = state.defaultStyleIds[0];
+      const defaultSpeakerId =
+        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultStyleId = state.defaultStyleIds.find(
+        (styleId) => styleId.speakerUuid === defaultSpeakerId
+      );
+      if (defaultStyleId == undefined)
+        throw new Error("defaultStyleId == undefined");
+
       const voice = payload.voice ?? {
         engineId: defaultStyleId.engineId,
         speakerId: defaultStyleId.speakerUuid,
@@ -770,7 +778,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         text,
         engineId,
         styleId,
-      }: { text: string; engineId: string; styleId: number }
+      }: { text: string; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -821,7 +829,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         isKana,
       }: {
         text: string;
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         isKana?: boolean;
       }
@@ -956,7 +964,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases,
         engineId,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; engineId: string; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -989,7 +997,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         copyIndexes: number[];
       }
@@ -1167,7 +1175,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
+        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
         if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 

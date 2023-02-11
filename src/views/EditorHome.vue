@@ -196,6 +196,7 @@ import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
+  EngineId,
   HotkeyAction,
   HotkeyReturnType,
   SplitterPosition,
@@ -521,7 +522,7 @@ export default defineComponent({
     onMounted(async () => {
       await store.dispatch("GET_ENGINE_INFOS");
 
-      let engineIds: string[];
+      let engineIds: EngineId[];
       if (store.state.isMultiEngineOffMode) {
         // デフォルトエンジンだけを含める
         const main = Object.values(store.state.engineInfos).find(
