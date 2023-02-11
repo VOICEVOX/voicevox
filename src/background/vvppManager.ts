@@ -95,13 +95,13 @@ export class VvppManager {
     const engineId = engineInfo.uuid;
 
     if (engineInfo.type !== "vvpp") {
-      log.error(`No such engineInfo registered: engineId == ${engineId}`);
+      log.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
       return false;
     }
 
     const engineDirectory = engineInfo.path;
     if (engineDirectory == null) {
-      log.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
+      log.error(`engineDirectory is null: engineId == ${engineId}`);
       return false;
     }
 
