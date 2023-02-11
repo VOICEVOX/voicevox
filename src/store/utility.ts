@@ -1,7 +1,8 @@
 import { State } from "@/store/type";
-import { ToolbarButtonTagType } from "@/type/preload";
+import { ToolbarButtonTagType, Voice } from "@/type/preload";
 import path from "path";
 import { Platform } from "quasar";
+import { v5 as uuidv5 } from "uuid";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
@@ -192,4 +193,11 @@ export const getBaseName = (filePath: string) => {
   const basename = resultOfSplitTailRegex[2] || "";
 
   return basename;
+};
+
+export const voiceToUuid = (voice: Voice) => {
+  const namespaceUuid = "0093a5f2-92f9-41bd-8ba6-fab68d49de62";
+
+  const voiceConcatenated = `${voice.engineId}#${voice.speakerId}#${voice.styleId}`;
+  return uuidv5(voiceConcatenated, namespaceUuid);
 };
