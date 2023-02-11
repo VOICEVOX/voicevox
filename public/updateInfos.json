@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.14.4",
+    "descriptions": ["デフォルトスタイル選択ダイアログが閉じれないバグを修正"],
+    "contributors": []
+  },
+  {
     "version": "0.14.3",
     "descriptions": ["GPUモードが動作しない・極端に遅い問題を解決"],
     "contributors": []
