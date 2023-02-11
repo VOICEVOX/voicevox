@@ -186,8 +186,7 @@ const selectStyleIndex = (styleIndex: number) => {
 
 const isHoverableStyleItem = ref(true);
 
-const playing =
-  ref<{ speakerUuid: SpeakerId; styleId: number; index: number }>();
+const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
 
 const audio = new Audio();
 audio.volume = 0.5;
