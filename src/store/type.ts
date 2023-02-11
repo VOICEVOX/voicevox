@@ -350,6 +350,10 @@ export type AudioStoreTypes = {
     };
   };
 
+  SET_DEFAULT_PRESET: {
+    mutation: { audioKey: string };
+  };
+
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: string };
   };

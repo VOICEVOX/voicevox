@@ -32,6 +32,7 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
+  voiceToUuid,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
@@ -927,6 +928,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }
         }
       }
+    },
+  },
+
+  SET_DEFAULT_PRESET: {
+    mutation(state, { audioKey }: { audioKey: string }) {
+      const audioItem = state.audioItems[audioKey];
+      if (audioItem === undefined || audioItem.voice === undefined) return;
+
+      audioItem.presetKey = voiceToUuid(audioItem.voice);
     },
   },
 
@@ -1992,6 +2002,12 @@ export const audioCommandStore = transformCommandStore(
           audioStore.mutations.SET_ACCENT_PHRASES(draft, {
             audioKey: payload.audioKey,
             accentPhrases: payload.accentPhrases,
+          });
+          audioStore.mutations.SET_DEFAULT_PRESET(draft, {
+            audioKey: payload.audioKey,
+          });
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+            audioKey: payload.audioKey,
           });
         } else if (payload.update == "AudioQuery") {
           audioStore.mutations.SET_AUDIO_QUERY(draft, {
