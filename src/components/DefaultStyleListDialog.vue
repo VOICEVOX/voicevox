@@ -182,7 +182,6 @@ watch([() => props.modelValue], async ([newValue]) => {
             ] as const
         ),
       ].filter(([speakerUuid, styleIndex]) => {
-        // FIXME: もっと根本的な解決方法を考える
         return (
           characterInfosMap.value[speakerUuid]?.metas.styles[styleIndex] !==
           undefined
