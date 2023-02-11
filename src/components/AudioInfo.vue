@@ -854,14 +854,14 @@ const selectablePresetList = computed<PresetSelectModelType[]>(() => {
   }
 
   const defaultPresetKey = voiceToUuid(audioItem.value.voice);
-  const defaultPreset = presetList.value.filter(
+  const defaultPresetForCurrentStyle = presetList.value.filter(
     (preset) => preset.key === defaultPresetKey
   );
-  const rest = presetList.value.filter(
-    (preset) => preset.key !== defaultPresetKey
+  const commonPresets = presetList.value.filter(
+    (preset) => !presetItems.value[preset.key].isDefault
   );
 
-  return [...restPresetList, ...defaultPreset, ...rest];
+  return [...restPresetList, ...defaultPresetForCurrentStyle, ...commonPresets];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
