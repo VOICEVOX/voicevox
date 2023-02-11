@@ -1282,6 +1282,7 @@ export type DictionaryStoreTypes = {
       pronunciation: string;
       accentType: number;
       priority: number;
+      isShared: boolean;
     }): Promise<void>;
   };
   REWRITE_WORD: {
@@ -1291,6 +1292,7 @@ export type DictionaryStoreTypes = {
       pronunciation: string;
       accentType: number;
       priority: number;
+      isShared: boolean;
     }): Promise<void>;
   };
   DELETE_WORD: {
