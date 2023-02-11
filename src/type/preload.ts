@@ -327,6 +327,7 @@ export type Preset = {
   prePhonemeLength: number;
   postPhonemeLength: number;
   morphingInfo?: MorphingInfo;
+  isDefault?: boolean;
 };
 
 export type MorphingInfo = {
@@ -528,6 +529,7 @@ export const electronStoreSchema = z
                   })
                   .passthrough()
                   .optional(),
+                isDefault: z.boolean().default(false),
               })
               .passthrough()
           )
