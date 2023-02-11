@@ -11,10 +11,7 @@ export const presetStoreState: PresetStoreState = {
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_PRESET_ITEMS: {
-    mutation(
-      state,
-      { presetItems }: { presetItems: Record<SpeakerId, Preset> }
-    ) {
+    mutation(state, { presetItems }: { presetItems: Record<string, Preset> }) {
       state.presetItems = presetItems;
     },
   },
