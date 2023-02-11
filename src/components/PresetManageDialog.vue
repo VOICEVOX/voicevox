@@ -98,9 +98,15 @@ export default defineComponent({
       const newPresetKeys = featurePresetList.map((item) => item.key);
       previewPresetKeys.value = newPresetKeys;
       isPreview.value = true;
+
+      // デフォルトプリセットはlistから除外しているので末尾に追加しておかないと消える
+      const defaultPresets = presetKeys.value.filter(
+        (key) => presetItems.value[key].isDefault
+      );
+
       store
         .dispatch("SAVE_PRESET_ORDER", {
-          presetKeys: newPresetKeys,
+          presetKeys: [...newPresetKeys, ...defaultPresets],
         })
         .finally(() => (isPreview.value = false));
     };
