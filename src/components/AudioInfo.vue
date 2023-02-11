@@ -491,6 +491,7 @@ import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
+import { voiceToUuid } from "@/store/utility";
 
 const props =
   defineProps<{
@@ -844,13 +845,23 @@ const presetList = computed<{ label: string; key: string }[]>(() =>
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
   const restPresetList = [];
+
   if (isRegisteredPreset.value) {
     restPresetList.push({
       key: undefined,
       label: "プリセット解除",
     });
   }
-  return [...restPresetList, ...presetList.value];
+
+  const defaultPresetKey = voiceToUuid(audioItem.value.voice);
+  const defaultPreset = presetList.value.filter(
+    (preset) => preset.key === defaultPresetKey
+  );
+  const rest = presetList.value.filter(
+    (preset) => preset.key !== defaultPresetKey
+  );
+
+  return [...restPresetList, ...defaultPreset, ...rest];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
