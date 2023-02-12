@@ -94,9 +94,9 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }
 
       // 1. 初期値は /audio_query から得るべきか？
-      // 2. プリセット名は区別がつくように名付けるべきか？
+      // 2. プリセット名はhuman readableに名付けるべきか？
       const presetData: Preset = {
-        name: "デフォルトプリセット",
+        name: presetKey,
         speedScale: 1,
         pitchScale: 0,
         intonationScale: 1,

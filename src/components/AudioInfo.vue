@@ -777,6 +777,7 @@ const enablePreset = computed(
 const presetItems = computed(() => store.state.presetItems);
 const presetKeys = computed(() => store.state.presetKeys);
 const audioPresetKey = computed(() => audioItem.value?.presetKey);
+const defaultPresetKey = computed(() => voiceToUuid(audioItem.value.voice));
 const isRegisteredPreset = computed(
   () =>
     audioPresetKey.value != undefined &&
@@ -799,7 +800,9 @@ const isChangedPreset = computed(() => {
     "name" | "morphingInfo"
   >)[];
   if (
-    keys.some((key) => presetParts[key] !== presetPartsFromParameter.value[key])
+    keys
+      .filter((key) => key !== "isDefault")
+      .some((key) => presetParts[key] !== presetPartsFromParameter.value[key])
   )
     return true;
   const morphingInfoFromParameter = presetPartsFromParameter.value.morphingInfo;
@@ -833,14 +836,17 @@ const changePreset = (
   });
 };
 
-const presetList = computed<{ label: string; key: string }[]>(() =>
-  presetKeys.value
+const presetList = computed<{ label: string; key: string }[]>(() => {
+  return presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
     .map((key) => ({
       key,
-      label: presetItems.value[key].name,
-    }))
-);
+      label:
+        defaultPresetKey.value === key
+          ? "*デフォルト"
+          : presetItems.value[key].name,
+    }));
+});
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
@@ -853,10 +859,9 @@ const selectablePresetList = computed<PresetSelectModelType[]>(() => {
     });
   }
 
-  const defaultPresetKey = voiceToUuid(audioItem.value.voice);
-  const defaultPresetForCurrentStyle = presetList.value.filter(
-    (preset) => preset.key === defaultPresetKey
-  );
+  const defaultPresetForCurrentStyle = presetList.value
+    .filter((preset) => preset.key === defaultPresetKey.value)
+    .map((preset) => ({ ...preset, label: "*デフォルト" }));
   const commonPresets = presetList.value.filter(
     (preset) => !presetItems.value[preset.key].isDefault
   );
@@ -874,8 +879,12 @@ const presetSelectModel = computed<PresetSelectModelType>({
 
     if (audioPresetKey.value == undefined)
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+
     return {
-      label: presetItems.value[audioPresetKey.value].name,
+      label:
+        audioPresetKey.value === defaultPresetKey.value
+          ? "*デフォルト"
+          : presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
     };
   },
