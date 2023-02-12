@@ -952,6 +952,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
+    .filter((presetKey) => !presetItems.value[presetKey]?.isDefault)
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {
@@ -965,6 +966,7 @@ const checkRewritePreset = async () => {
   if (presetList.value.find((e) => e.label === presetName.value)) {
     showsPresetRewriteDialog.value = true;
   } else {
+    // FIXME: デフォルトプリセットと同名のプリセットが作成できないようにする
     const audioPresetKey = await addPreset();
     changePreset(audioPresetKey);
   }
