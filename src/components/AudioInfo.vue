@@ -1023,7 +1023,10 @@ const addPreset = () => {
 
 const updatePreset = async (fullApply: boolean) => {
   const key = presetList.value.find(
-    (preset) => preset.label === presetName.value
+    (preset) =>
+      // デフォルトプリセットは表示名を変更しておりlabelとの比較ではマッチしない
+      // key === nameになっているのでそれでチェックする
+      preset.label === presetName.value || preset.key === presetName.value
   )?.key;
   if (key === undefined) return;
 
@@ -1031,8 +1034,12 @@ const updatePreset = async (fullApply: boolean) => {
   const newPreset = createPresetData(title);
   if (newPreset == undefined) return;
 
+  // isDefaultはそのまま引き継ぐ
+  const currentPresetItem = presetItems.value[key];
+  const presetData = { ...newPreset, isDefault: currentPresetItem.isDefault };
+
   await store.dispatch("UPDATE_PRESET", {
-    presetData: newPreset,
+    presetData,
     presetKey: key,
   });
 
