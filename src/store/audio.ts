@@ -2029,6 +2029,11 @@ export const audioCommandStore = transformCommandStore(
         try {
           await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
 
+          // Voice切り替えのタイミングでデフォルトプリセットがなければ作る
+          await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+            presetKey: voiceToUuid(voice),
+          });
+
           if (query !== undefined) {
             const accentPhrases = query.accentPhrases;
             const newAccentPhrases: AccentPhrase[] = await dispatch(

@@ -67,8 +67,11 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   ADD_PRESET: {
-    async action(context, { presetData }: { presetData: Preset }) {
-      const newKey = uuidv4();
+    async action(
+      context,
+      { presetData, presetKey }: { presetData: Preset; presetKey?: string }
+    ) {
+      const newKey = presetKey ?? uuidv4();
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,
@@ -81,6 +84,28 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
 
       return newKey;
+    },
+  },
+
+  CREATE_DEFAULT_PRESET_IF_NEEDED: {
+    async action({ state, dispatch }, { presetKey }: { presetKey: string }) {
+      if (state.presetKeys.includes(presetKey)) {
+        return;
+      }
+
+      // 1. 初期値は /audio_query から得るべきか？
+      // 2. プリセット名は区別がつくように名付けるべきか？
+      const presetData: Preset = {
+        name: "デフォルトプリセット",
+        speedScale: 1,
+        pitchScale: 0,
+        intonationScale: 1,
+        volumeScale: 1,
+        prePhonemeLength: 0.1,
+        postPhonemeLength: 0.1,
+        isDefault: true,
+      };
+      await dispatch("ADD_PRESET", { presetData, presetKey });
     },
   },
 
