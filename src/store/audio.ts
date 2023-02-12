@@ -68,7 +68,8 @@ async function generateUniqueIdAndQuery(
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
-  userOrderedCharacterInfos: CharacterInfo[]
+  userOrderedCharacterInfos: CharacterInfo[],
+  initVoice?: Voice
 ): AudioItem[] {
   const name2Voice = new Map<string, Voice>();
   const uuid2Voice = new Map<string, Voice>();
@@ -104,9 +105,8 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastVoice = uuid2Voice.get(
-    userOrderedCharacterInfos[0].metas.speakerUuid
-  );
+  let lastVoice =
+    initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const voice = name2Voice.get(splitText);
@@ -2699,7 +2699,8 @@ export const audioCommandStore = transformCommandStore(
           for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
-            getters.USER_ORDERED_CHARACTER_INFOS
+            getters.USER_ORDERED_CHARACTER_INFOS,
+            baseAudioItem?.voice
           )) {
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
