@@ -194,10 +194,3 @@ export const getBaseName = (filePath: string) => {
 
   return basename;
 };
-
-export const voiceToUuid = (voice: Voice) => {
-  const namespaceUuid = "0093a5f2-92f9-41bd-8ba6-fab68d49de62";
-
-  const voiceConcatenated = `${voice.engineId}#${voice.speakerId}#${voice.styleId}`;
-  return uuidv5(voiceConcatenated, namespaceUuid);
-};

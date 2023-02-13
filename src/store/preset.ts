@@ -1,12 +1,14 @@
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
-import { Preset } from "@/type/preload";
+import { Preset, Voice, VoiceId } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 import { v4 as uuidv4 } from "uuid";
+import { voiceToVoiceId } from "@/lib/voice";
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
   presetKeys: [],
+  defaultPresetKeyMap: {},
 };
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
@@ -22,8 +24,33 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
     },
   },
 
+  SET_DEFAULT_PRESET_MAP: {
+    action(
+      { commit },
+      { defaultPresetKeyMap }: { defaultPresetKeyMap: Record<VoiceId, string> }
+    ) {
+      window.electron.setSetting("defaultPresetKeyMap", defaultPresetKeyMap);
+      commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeyMap });
+    },
+    mutation(
+      state,
+      { defaultPresetKeyMap }: { defaultPresetKeyMap: Record<VoiceId, string> }
+    ) {
+      state.defaultPresetKeyMap = defaultPresetKeyMap;
+    },
+  },
+
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
+      // Branded typeがkeyのrecordのinfer結果がPartialで包まれてしまうのでキャストが必要、つらい
+      const defaultPresetKeyMap = (await window.electron.getSetting(
+        "defaultPresetKeyMap"
+      )) as Record<VoiceId, string>;
+
+      commit("SET_DEFAULT_PRESET_MAP", {
+        defaultPresetKeyMap,
+      });
+
       const presetConfig = await window.electron.getSetting("presets");
       if (
         presetConfig === undefined ||
@@ -88,10 +115,15 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    async action({ state, dispatch }, { presetKey }: { presetKey: string }) {
-      if (state.presetKeys.includes(presetKey)) {
+    async action({ state, dispatch }, { voice }: { voice: Voice }) {
+      const voiceId = voiceToVoiceId(voice);
+      const defaultPresetKey = state.defaultPresetKeyMap[voiceId];
+
+      if (state.presetKeys.includes(defaultPresetKey)) {
         return;
       }
+
+      const presetKey = uuidv4();
 
       // 1. 初期値は /audio_query から得るべきか？
       // 2. プリセット名はhuman readableに名付けるべきか？
@@ -103,9 +135,15 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         volumeScale: 1,
         prePhonemeLength: 0.1,
         postPhonemeLength: 0.1,
-        isDefault: true,
       };
       await dispatch("ADD_PRESET", { presetData, presetKey });
+
+      await dispatch("SET_DEFAULT_PRESET_MAP", {
+        defaultPresetKeyMap: {
+          ...state.defaultPresetKeyMap,
+          [voiceId]: presetKey,
+        },
+      });
     },
   },
 

@@ -32,11 +32,11 @@ import {
   convertLongVowel,
   createKanaRegex,
   currentDateString,
-  voiceToUuid,
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { voiceToVoiceId } from "@/lib/voice";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -936,7 +936,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const audioItem = state.audioItems[audioKey];
       if (audioItem === undefined || audioItem.voice === undefined) return;
 
-      audioItem.presetKey = voiceToUuid(audioItem.voice);
+      const voiceId = voiceToVoiceId(audioItem.voice);
+      audioItem.presetKey = state.defaultPresetKeyMap[voiceId];
     },
   },
 
@@ -2030,9 +2031,7 @@ export const audioCommandStore = transformCommandStore(
           await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
 
           // Voice切り替えのタイミングでデフォルトプリセットがなければ作る
-          await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
-            presetKey: voiceToUuid(voice),
-          });
+          await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", { voice });
 
           if (query !== undefined) {
             const accentPhrases = query.accentPhrases;

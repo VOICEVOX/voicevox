@@ -491,7 +491,7 @@ import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
-import { voiceToUuid } from "@/store/utility";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 
 const props =
   defineProps<{
@@ -777,11 +777,16 @@ const enablePreset = computed(
 const presetItems = computed(() => store.state.presetItems);
 const presetKeys = computed(() => store.state.presetKeys);
 const audioPresetKey = computed(() => audioItem.value?.presetKey);
-const defaultPresetKey = computed(() => voiceToUuid(audioItem.value.voice));
 const isRegisteredPreset = computed(
   () =>
     audioPresetKey.value != undefined &&
     presetItems.value[audioPresetKey.value] != undefined
+);
+
+const { isDefaultPresetKey, getDefaultPresetKey } = useDefaultPreset();
+
+const currentDefaultPresetKey = computed(() =>
+  getDefaultPresetKey(audioItem.value.voice)
 );
 
 // 入力パラメータがプリセットから変更されたか
@@ -800,9 +805,7 @@ const isChangedPreset = computed(() => {
     "name" | "morphingInfo"
   >)[];
   if (
-    keys
-      .filter((key) => key !== "isDefault")
-      .some((key) => presetParts[key] !== presetPartsFromParameter.value[key])
+    keys.some((key) => presetParts[key] !== presetPartsFromParameter.value[key])
   )
     return true;
   const morphingInfoFromParameter = presetPartsFromParameter.value.morphingInfo;
@@ -842,7 +845,7 @@ const presetList = computed<{ label: string; key: string }[]>(() => {
     .map((key) => ({
       key,
       label:
-        defaultPresetKey.value === key
+        currentDefaultPresetKey.value === key
           ? "*デフォルト"
           : presetItems.value[key].name,
     }));
@@ -860,10 +863,10 @@ const selectablePresetList = computed<PresetSelectModelType[]>(() => {
   }
 
   const defaultPresetForCurrentStyle = presetList.value
-    .filter((preset) => preset.key === defaultPresetKey.value)
+    .filter((preset) => preset.key === currentDefaultPresetKey.value)
     .map((preset) => ({ ...preset, label: "*デフォルト" }));
   const commonPresets = presetList.value.filter(
-    (preset) => !presetItems.value[preset.key].isDefault
+    (preset) => !isDefaultPresetKey(preset.key)
   );
 
   return [...restPresetList, ...defaultPresetForCurrentStyle, ...commonPresets];
@@ -882,7 +885,7 @@ const presetSelectModel = computed<PresetSelectModelType>({
 
     return {
       label:
-        audioPresetKey.value === defaultPresetKey.value
+        audioPresetKey.value === currentDefaultPresetKey.value
           ? "*デフォルト"
           : presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
@@ -952,7 +955,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
-    .filter((presetKey) => !presetItems.value[presetKey]?.isDefault)
+    .filter(isDefaultPresetKey)
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {
@@ -1033,12 +1036,8 @@ const updatePreset = async (fullApply: boolean) => {
   if (key === undefined) return;
 
   const title = presetName.value;
-  const newPreset = createPresetData(title);
-  if (newPreset == undefined) return;
-
-  // isDefaultはそのまま引き継ぐ
-  const currentPresetItem = presetItems.value[key];
-  const presetData = { ...newPreset, isDefault: currentPresetItem.isDefault };
+  const presetData = createPresetData(title);
+  if (presetData == undefined) return;
 
   await store.dispatch("UPDATE_PRESET", {
     presetData,

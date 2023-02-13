@@ -8,6 +8,10 @@ export const engineIdSchema = z.string().uuid().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
+export const voiceIdSchema = z.string().brand<"VoiceId">();
+export type VoiceId = z.infer<typeof voiceIdSchema>;
+export const VoiceId = (id: string): VoiceId => voiceIdSchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -327,7 +331,6 @@ export type Preset = {
   prePhonemeLength: number;
   postPhonemeLength: number;
   morphingInfo?: MorphingInfo;
-  isDefault?: boolean;
 };
 
 export type MorphingInfo = {
@@ -468,6 +471,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
 };
+
 export const electronStoreSchema = z
   .object({
     inheritAudioInfo: z.boolean().default(true),
@@ -529,7 +533,6 @@ export const electronStoreSchema = z
                   })
                   .passthrough()
                   .optional(),
-                isDefault: z.boolean().default(false),
               })
               .passthrough()
           )
@@ -538,6 +541,7 @@ export const electronStoreSchema = z
       })
       .passthrough()
       .default({}),
+    defaultPresetKeyMap: z.record(voiceIdSchema, z.string().uuid()).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: z

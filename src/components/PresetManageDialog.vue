@@ -46,6 +46,7 @@ import { useStore } from "@/store";
 import draggable from "vuedraggable";
 
 import { Preset } from "@/type/preload";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 
 export default defineComponent({
   name: "PresetManageDialog",
@@ -65,6 +66,7 @@ export default defineComponent({
 
     const store = useStore();
     const $q = useQuasar();
+    const { isDefaultPresetKey } = useDefaultPreset();
 
     const presetItems = computed(() => store.state.presetItems);
     const presetKeys = computed(() => store.state.presetKeys);
@@ -72,7 +74,7 @@ export default defineComponent({
     const presetList = computed(() =>
       presetKeys.value
         .filter((key) => presetItems.value[key] != undefined)
-        .filter((key) => !presetItems.value[key].isDefault)
+        .filter((key) => !isDefaultPresetKey(key))
         .map((key) => ({
           key,
           ...presetItems.value[key],
@@ -86,7 +88,7 @@ export default defineComponent({
       isPreview.value
         ? previewPresetKeys.value
             .filter((key) => presetItems.value[key] != undefined)
-            .filter((key) => !presetItems.value[key].isDefault)
+            .filter((key) => !isDefaultPresetKey(key))
             .map((key) => ({
               key,
               ...presetItems.value[key],
@@ -100,13 +102,11 @@ export default defineComponent({
       isPreview.value = true;
 
       // デフォルトプリセットはlistから除外しているので末尾に追加しておかないと消える
-      const defaultPresets = presetKeys.value.filter(
-        (key) => presetItems.value[key].isDefault
-      );
+      const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
 
       store
         .dispatch("SAVE_PRESET_ORDER", {
-          presetKeys: [...newPresetKeys, ...defaultPresets],
+          presetKeys: [...newPresetKeys, ...defaultPresetKeys],
         })
         .finally(() => (isPreview.value = false));
     };

@@ -44,6 +44,7 @@ import {
   EngineSetting,
   Voice,
   EngineId,
+  VoiceId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -88,6 +89,10 @@ export type SaveResultObject = {
 export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
+};
+
+export type DefaultPreset = Voice & {
+  defaultPresetKey: string;
 };
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
@@ -1229,6 +1234,7 @@ export type UiStoreTypes = {
 export type PresetStoreState = {
   presetKeys: string[];
   presetItems: Record<string, Preset>;
+  defaultPresetKeyMap: Record<VoiceId, string>;
 };
 
 export type PresetStoreTypes = {
@@ -1240,6 +1246,12 @@ export type PresetStoreTypes = {
   SET_PRESET_KEYS: {
     mutation: {
       presetKeys: string[];
+    };
+  };
+  SET_DEFAULT_PRESET_MAP: {
+    action(payload: { defaultPresetKeyMap: Record<VoiceId, string> }): void;
+    mutation: {
+      defaultPresetKeyMap: Record<VoiceId, string>;
     };
   };
   HYDRATE_PRESET_STORE: {
@@ -1261,7 +1273,7 @@ export type PresetStoreTypes = {
     }): Promise<string>;
   };
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    action(payload: { presetKey: string }): void;
+    action(payload: { voice: Voice }): void;
   };
   UPDATE_PRESET: {
     action(payload: { presetData: Preset; presetKey: string }): void;
