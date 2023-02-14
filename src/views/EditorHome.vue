@@ -204,6 +204,7 @@ import {
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
 import cloneDeep from "clone-deep";
+import { voiceToVoiceId } from "@/lib/voice";
 
 export default defineComponent({
   name: "EditorHome",
@@ -564,6 +565,17 @@ export default defineComponent({
           audioKey: newAudioKey,
           engineId: audioItem.voice.engineId,
           styleId: audioItem.voice.styleId,
+        });
+
+        // 話者初期化のタイミングでデフォルトプリセットがなければ作る
+        await store.dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+          voice: audioItem.voice,
+        });
+        // デフォルトプリセットを適用する
+        await store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+          audioKey: newAudioKey,
+          presetKey:
+            store.state.defaultPresetKeyMap[voiceToVoiceId(audioItem.voice)],
         });
       }
 

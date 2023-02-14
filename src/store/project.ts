@@ -7,6 +7,7 @@ import { createPartialStore } from "./vuex";
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
 import { EngineId, engineIdSchema } from "@/type/preload";
+import { voiceToVoiceId } from "@/lib/voice";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -53,8 +54,18 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           "GENERATE_AUDIO_ITEM",
           {}
         );
-        await context.dispatch("REGISTER_AUDIO_ITEM", {
+        const audioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
+        });
+        // 話者初期化のタイミングでデフォルトプリセットがなければ作る
+        await context.dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+          voice: audioItem.voice,
+        });
+        // デフォルトプリセットを適用する
+        await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
+          audioKey,
+          presetKey:
+            context.state.defaultPresetKeyMap[voiceToVoiceId(audioItem.voice)],
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
