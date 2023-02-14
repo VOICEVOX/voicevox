@@ -846,7 +846,7 @@ const presetList = computed<{ label: string; key: string }[]>(() => {
       key,
       label:
         currentDefaultPresetKey.value === key
-          ? "*デフォルト"
+          ? "*デフォルト" // FIXME: defaultPreset作成の時点でちゃんとした名前をつけるのかどうか検討
           : presetItems.value[key].name,
     }));
 });
