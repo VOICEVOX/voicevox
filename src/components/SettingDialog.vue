@@ -608,8 +608,34 @@
                 <q-toggle
                   :model-value="experimentalSetting.enablePreset"
                   @update:model-value="
-                    changeExperimentalSetting('enablePreset', $event)
+                    changeExperimentalSetting('enablePreset', $event);
+                    changeExperimentalSetting('enableDefaultPreset', false);
                   "
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>デフォルトプリセット機能を有効にする</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      キャラクターに自動的にデフォルトプリセットが割り当てられます
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableDefaultPreset"
+                  @update:model-value="
+                    changeExperimentalSetting('enableDefaultPreset', $event)
+                  "
+                  :disable="!experimentalSetting.enablePreset"
                 >
                 </q-toggle>
               </q-card-actions>

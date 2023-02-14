@@ -452,12 +452,15 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
-export type ExperimentalSetting = {
-  enablePreset: boolean;
-  enableInterrogativeUpspeak: boolean;
-  enableMorphing: boolean;
-  enableMultiEngine: boolean;
-};
+export const experimentalSettingSchema = z.object({
+  enablePreset: z.boolean().default(false),
+  enableDefaultPreset: z.boolean().default(false),
+  enableInterrogativeUpspeak: z.boolean().default(false),
+  enableMorphing: z.boolean().default(false),
+  enableMultiEngine: z.boolean().default(false),
+});
+
+export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
 
 export const splitterPositionSchema = z
   .object({
@@ -544,15 +547,7 @@ export const electronStoreSchema = z
     defaultPresetKeyMap: z.record(voiceIdSchema, z.string().uuid()).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
-    experimentalSetting: z
-      .object({
-        enablePreset: z.boolean().default(false),
-        enableInterrogativeUpspeak: z.boolean().default(false),
-        enableMorphing: z.boolean().default(false),
-        enableMultiEngine: z.boolean().default(false),
-      })
-      .passthrough()
-      .default({}),
+    experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
       .default("Unconfirmed"),
