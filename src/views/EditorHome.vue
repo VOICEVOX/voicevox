@@ -571,12 +571,14 @@ export default defineComponent({
         await store.dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
           voice: audioItem.voice,
         });
-        // デフォルトプリセットを適用する
-        await store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-          audioKey: newAudioKey,
-          presetKey:
-            store.state.defaultPresetKeyMap[voiceToVoiceId(audioItem.voice)],
-        });
+        if (store.state.experimentalSetting.enableDefaultPreset) {
+          // デフォルトプリセットを適用する
+          await store.dispatch("COMMAND_SET_AUDIO_PRESET", {
+            audioKey: newAudioKey,
+            presetKey:
+              store.state.defaultPresetKeyMap[voiceToVoiceId(audioItem.voice)],
+          });
+        }
       }
 
       // ショートカットキーの設定

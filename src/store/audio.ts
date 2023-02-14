@@ -1999,16 +1999,22 @@ export const audioCommandStore = transformCommandStore(
           audioKey: payload.audioKey,
           voice: payload.voice,
         });
+
+        if (draft.experimentalSetting.enableDefaultPreset) {
+          // デフォルトプリセットを適用する
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey: payload.audioKey,
+            presetKey: draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)],
+          });
+          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
+            audioKey: payload.audioKey,
+          });
+        }
+
         if (payload.update == "AccentPhrases") {
           audioStore.mutations.SET_ACCENT_PHRASES(draft, {
             audioKey: payload.audioKey,
             accentPhrases: payload.accentPhrases,
-          });
-          audioStore.mutations.SET_DEFAULT_PRESET(draft, {
-            audioKey: payload.audioKey,
-          });
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
           });
         } else if (payload.update == "AudioQuery") {
           audioStore.mutations.SET_AUDIO_QUERY(draft, {
