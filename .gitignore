@@ -24,8 +24,8 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
-#Electron-builder output
-/dist_electron
+# Electron-builder output
+/dist-electron
 
 # data
 data/

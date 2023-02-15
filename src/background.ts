@@ -12,9 +12,9 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
+import url from "url";
 import path from "path";
 import { textEditContextMenu } from "./electron/contextMenu";
 import { hasSupportedGpu } from "./electron/device";
@@ -91,6 +91,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 let appDirPath: string;
+let __static: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -101,11 +102,13 @@ if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
+  __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
   process.chdir(appDirPath);
+  __static = appDirPath;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -308,7 +311,6 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // 使い方テキストの読み込み
-declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -447,12 +449,15 @@ async function createWindow() {
     "&projectFilePath=" +
     projectFilePath;
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + parameter
-    );
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
   } else {
-    createProtocol("app");
+    protocol.registerFileProtocol("app", (request, callback) => {
+      const filePath = url.fileURLToPath(
+        "file://" + request.url.slice("app://".length)
+      );
+      callback(filePath);
+    });
     win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();

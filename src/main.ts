@@ -1,5 +1,3 @@
-import "source-map-support/register";
-
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
@@ -23,7 +21,7 @@ createApp(App)
   .use(router)
   .use(
     createGtm({
-      id: process.env.VUE_APP_GTM_CONTAINER_ID ?? "GTM-DUMMY",
+      id: import.meta.env.VITE_PUBLIC_GTM_CONTAINER_ID ?? "GTM-DUMMY",
       vueRouter: router,
       // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
       enabled: false,
