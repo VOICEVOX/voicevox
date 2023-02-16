@@ -11,9 +11,6 @@
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
-    "// FIXME": "test系を動くようにする",
-    "// test:e2e": "playwright test",
-    "// test-watch:e2e": "vue-cli-service test:e2e --watch",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test:e2e": "cross-env VITE_IS_ELECTRON=true playwright test",
