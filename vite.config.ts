@@ -1,13 +1,20 @@
 import path from "path";
 import type { UserConfig } from "vite";
 import treeKill from "tree-kill";
+import { rmSync } from "fs";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 
+rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
+
 const config: UserConfig = {
   root: path.resolve(__dirname, "src"),
+  build: {
+    outDir: path.resolve(__dirname, "dist"),
+    chunkSizeWarningLimit: 10000,
+  },
   publicDir: path.resolve(__dirname, "public"),
   css: {
     preprocessorOptions: {
@@ -36,6 +43,9 @@ const config: UserConfig = {
       },
       vite: {
         plugins: [tsconfigPaths({ root: __dirname })],
+        build: {
+          outDir: path.resolve(__dirname, "dist"),
+        },
       },
     }),
   ],

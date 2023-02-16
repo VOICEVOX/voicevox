@@ -49,7 +49,8 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = import.meta.env.DEV;
+console.log("isDevelopment", isDevelopment, import.meta.env);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
@@ -108,7 +109,7 @@ if (isDevelopment) {
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
   process.chdir(appDirPath);
-  __static = appDirPath;
+  __static = __dirname;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -456,7 +457,7 @@ async function createWindow() {
       const filePath = url.fileURLToPath(
         "file://" + request.url.slice("app://".length)
       );
-      callback(filePath);
+      callback(path.join(__dirname, filePath));
     });
     win.loadURL("app://./index.html" + parameter);
   }

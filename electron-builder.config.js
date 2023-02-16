@@ -1,5 +1,5 @@
-import type { Configuration } from "electron-builder";
-import path from "path";
+const path = require("path");
+const fs = require("fs");
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
@@ -18,8 +18,18 @@ const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 const isMac = process.platform === "darwin";
 
-// preload: "src/electron/preload.ts",
-const builderOptions: Configuration = {
+/** @type {import("electron-builder").Configuration} */
+const builderOptions = {
+  beforeBuild: async () => {
+    if (fs.existsSync(path.resolve(__dirname, "dist_electron"))) {
+      fs.rmSync(path.resolve(__dirname, "dist_electron"), { recursive: true });
+    }
+  },
+  directories: {
+    output: "dist_electron",
+    buildResources: "build",
+  },
+  files: ["dist/**/*", "package.json"],
   fileAssociations: [
     {
       ext: "vvproj",
@@ -45,7 +55,10 @@ const builderOptions: Configuration = {
   ],
   extraFiles: [
     { from: "build/README.txt", to: "README.txt" },
-    { from: ".env.production", to: ".env" },
+    {
+      from: ".env.production",
+      to: ".env",
+    },
     {
       from: VOICEVOX_ENGINE_DIR,
       to: "",
@@ -68,9 +81,6 @@ const builderOptions: Configuration = {
         arch: ["x64"],
       },
     ],
-  },
-  directories: {
-    buildResources: "build",
   },
   nsisWeb: {
     artifactName:
@@ -114,4 +124,4 @@ const builderOptions: Configuration = {
   },
 };
 
-export default builderOptions;
+module.exports = builderOptions;
