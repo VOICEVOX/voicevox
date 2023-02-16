@@ -6,7 +6,7 @@ import { createPartialStore } from "./vuex";
 
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
-import { EngineId, engineIdSchema } from "@/type/preload";
+import { EngineId, engineIdSchema, speakerIdSchema } from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -473,7 +473,7 @@ const audioQuerySchema = z.object({
 const morphingInfoSchema = z.object({
   rate: z.number(),
   targetEngineId: engineIdSchema,
-  targetSpeakerId: z.string(),
+  targetSpeakerId: speakerIdSchema,
   targetStyleId: z.number(),
 });
 
@@ -481,7 +481,7 @@ const audioItemSchema = z.object({
   text: z.string(),
   voice: z.object({
     engineId: engineIdSchema,
-    speakerId: z.string().uuid(),
+    speakerId: speakerIdSchema,
     styleId: z.number(),
   }),
   query: audioQuerySchema.optional(),

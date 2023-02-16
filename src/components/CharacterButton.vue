@@ -184,7 +184,7 @@
 <script lang="ts">
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
-import { CharacterInfo, Voice } from "@/type/preload";
+import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { debounce } from "quasar";
 import { computed, defineComponent, PropType, ref } from "vue";
 
@@ -256,7 +256,7 @@ export default defineComponent({
       )
     );
 
-    const getDefaultStyle = (speakerUuid: string) => {
+    const getDefaultStyle = (speakerUuid: SpeakerId) => {
       // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
       const characterInfo = props.characterInfos.find(
         (info) => info.metas.speakerUuid === speakerUuid
@@ -276,7 +276,7 @@ export default defineComponent({
       return defaultStyle;
     };
 
-    const onSelectSpeaker = (speakerUuid: string) => {
+    const onSelectSpeaker = (speakerUuid: SpeakerId) => {
       const style = getDefaultStyle(speakerUuid);
       emit("update:selectedVoice", {
         engineId: style.engineId,
