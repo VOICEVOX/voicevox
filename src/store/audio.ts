@@ -17,8 +17,10 @@ import {
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  EngineId,
   MoraDataType,
   MorphingInfo,
+  SpeakerId,
   StyleInfo,
   Voice,
   WriteFileErrorResult,
@@ -67,7 +69,8 @@ async function generateUniqueIdAndQuery(
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
-  userOrderedCharacterInfos: CharacterInfo[]
+  userOrderedCharacterInfos: CharacterInfo[],
+  initVoice?: Voice
 ): AudioItem[] {
   const name2Voice = new Map<string, Voice>();
   const uuid2Voice = new Map<string, Voice>();
@@ -103,9 +106,8 @@ function parseTextFile(
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastVoice = uuid2Voice.get(
-    userOrderedCharacterInfos[0].metas.speakerUuid
-  );
+  let lastVoice =
+    initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
   if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
     const voice = name2Voice.get(splitText);
@@ -168,7 +170,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
-  engineId: string,
+  engineId: EngineId,
   styleId: number
 ): CharacterInfo | undefined {
   const engineCharacterInfos = state.characterInfos[engineId];
@@ -282,7 +284,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const characterInfo: CharacterInfo = {
           portraitPath: base64ImageToUri(speakerInfo.portrait),
           metas: {
-            speakerUuid: speaker.speakerUuid,
+            speakerUuid: SpeakerId(speaker.speakerUuid),
             speakerName: speaker.name,
             styles,
             policy: speakerInfo.policy,
@@ -306,7 +308,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         engineId,
         characterInfos,
-      }: { engineId: string; characterInfos: CharacterInfo[] }
+      }: { engineId: EngineId; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
     },
@@ -486,7 +488,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const text = payload.text ?? "";
 
-      const defaultStyleId = state.defaultStyleIds[0];
+      const defaultSpeakerId =
+        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultStyleId = state.defaultStyleIds.find(
+        (styleId) => styleId.speakerUuid === defaultSpeakerId
+      );
+      if (defaultStyleId == undefined)
+        throw new Error("defaultStyleId == undefined");
+
       const voice = payload.voice ?? {
         engineId: defaultStyleId.engineId,
         speakerId: defaultStyleId.speakerUuid,
@@ -770,7 +779,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         text,
         engineId,
         styleId,
-      }: { text: string; engineId: string; styleId: number }
+      }: { text: string; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -821,7 +830,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         isKana,
       }: {
         text: string;
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         isKana?: boolean;
       }
@@ -956,7 +965,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases,
         engineId,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; engineId: string; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -989,7 +998,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         copyIndexes: number[];
       }
@@ -1167,7 +1176,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
+        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
         if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
@@ -2691,7 +2700,8 @@ export const audioCommandStore = transformCommandStore(
           for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
-            getters.USER_ORDERED_CHARACTER_INFOS
+            getters.USER_ORDERED_CHARACTER_INFOS,
+            baseAudioItem?.voice
           )) {
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない

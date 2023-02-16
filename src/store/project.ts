@@ -6,6 +6,7 @@ import { createPartialStore } from "./vuex";
 
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
+import { EngineId, engineIdSchema, speakerIdSchema } from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -115,7 +116,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           // Migration
-          const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+          const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
@@ -471,16 +472,16 @@ const audioQuerySchema = z.object({
 
 const morphingInfoSchema = z.object({
   rate: z.number(),
-  targetEngineId: z.string(),
-  targetSpeakerId: z.string(),
+  targetEngineId: engineIdSchema,
+  targetSpeakerId: speakerIdSchema,
   targetStyleId: z.number(),
 });
 
 const audioItemSchema = z.object({
   text: z.string(),
   voice: z.object({
-    engineId: z.string().uuid(),
-    speakerId: z.string().uuid(),
+    engineId: engineIdSchema,
+    speakerId: speakerIdSchema,
     styleId: z.number(),
   }),
   query: audioQuerySchema.optional(),
