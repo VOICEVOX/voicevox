@@ -44,6 +44,7 @@ import {
   EngineSetting,
   Voice,
   EngineId,
+  SpeakerId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -112,7 +113,7 @@ export type QuasarDialog = QVueGlobals["dialog"];
 
 export type AudioStoreState = {
   characterInfos: Record<EngineId, CharacterInfo[]>;
-  morphableTargetsInfo: Record<string, MorphableTargetInfoTable>;
+  morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
   audioItems: Record<string, AudioItem>;
   audioKeys: string[];
@@ -823,13 +824,13 @@ export type EngineStoreTypes = {
 
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
-  userCharacterOrder: string[];
+  userCharacterOrder: SpeakerId[];
   isMultiEngineOffMode: boolean;
 };
 
 export type IndexStoreTypes = {
   GET_ALL_CHARACTER_INFOS: {
-    getter: Map<string, CharacterInfo>;
+    getter: Map<SpeakerId, CharacterInfo>;
   };
 
   GET_ORDERED_ALL_CHARACTER_INFOS: {
@@ -882,12 +883,12 @@ export type IndexStoreTypes = {
   };
 
   SET_USER_CHARACTER_ORDER: {
-    mutation: { userCharacterOrder: string[] };
-    action(payload: string[]): void;
+    mutation: { userCharacterOrder: SpeakerId[] };
+    action(payload: SpeakerId[]): void;
   };
 
   GET_NEW_CHARACTERS: {
-    action(): string[];
+    action(): SpeakerId[];
   };
 
   LOG_ERROR: {
