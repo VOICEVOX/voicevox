@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import path from "path";
 import type { UserConfig } from "vite";
 import treeKill from "tree-kill";
@@ -29,6 +30,12 @@ const config: UserConfig = {
     alias: {
       "@": path.resolve(__dirname, "src/"),
     },
+  },
+  test: {
+    include: [
+      path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
+    ],
+    environment: "happy-dom",
   },
 
   plugins: [
