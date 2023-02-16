@@ -50,7 +50,6 @@ type SingleInstanceLockData = {
 };
 
 const isDevelopment = import.meta.env.DEV;
-console.log("isDevelopment", isDevelopment, import.meta.env);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用

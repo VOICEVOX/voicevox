@@ -9,6 +9,8 @@ import vue from "@vitejs/plugin-vue";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
+const isElectron = process.env.VITE_IS_ELECTRON === "true";
+
 const config: UserConfig = {
   root: path.resolve(__dirname, "src"),
   build: {
@@ -28,26 +30,28 @@ const config: UserConfig = {
       "@": path.resolve(__dirname, "src/"),
     },
   },
+
   plugins: [
     vue(),
-    electron({
-      entry: ["./src/background.ts", "./src/electron/preload.ts"],
-      // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-      onstart: (options) => {
-        // @ts-expect-error vite-electron-pluginがprocess.electronAppを定義していない
-        const pid = process.electronApp?.pid;
-        if (pid) {
-          treeKill(pid);
-        }
-        options.startup([".", "--no-sandbox"]);
-      },
-      vite: {
-        plugins: [tsconfigPaths({ root: __dirname })],
-        build: {
-          outDir: path.resolve(__dirname, "dist"),
+    isElectron &&
+      electron({
+        entry: ["./src/background.ts", "./src/electron/preload.ts"],
+        // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
+        onstart: (options) => {
+          // @ts-expect-error vite-electron-pluginがprocess.electronAppを定義していない
+          const pid = process.electronApp?.pid;
+          if (pid) {
+            treeKill(pid);
+          }
+          options.startup([".", "--no-sandbox"]);
         },
-      },
-    }),
+        vite: {
+          plugins: [tsconfigPaths({ root: __dirname })],
+          build: {
+            outDir: path.resolve(__dirname, "dist"),
+          },
+        },
+      }),
   ],
 };
 
