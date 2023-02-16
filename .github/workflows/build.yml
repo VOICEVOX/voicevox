@@ -113,24 +113,6 @@ jobs:
 
           "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
-      # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
-      #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
-      #       it is inappropriate to copy the extraFiles to the VOICEVOX.app/Contents/ directory.
-      #       Fix it so that it is copied to the VOICEVOX.app/Contents/MacOS/ directory.
-      #       cf. https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
-      - name: Replace the extraFiles setting in vue.config.js for macOS
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: |
-          "${{ matrix.sed_name }}" -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
-          "${{ matrix.sed_name }}" -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
-
-          # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
-          # cf. https://deep.tacoskingdom.com/blog/15
-          str_config="$(cat vue.config.js)"
-          echo "${str_config//$'\n'/\\n}" | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
-          cat vue.config.js
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
