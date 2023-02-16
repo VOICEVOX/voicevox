@@ -1,3 +1,4 @@
+/** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
 module.exports = {
   root: true,
   env: {
@@ -16,6 +17,7 @@ module.exports = {
     ecmaVersion: 2020,
     parser: "@typescript-eslint/parser",
   },
+  ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
