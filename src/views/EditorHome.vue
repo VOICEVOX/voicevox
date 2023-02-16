@@ -544,7 +544,7 @@ onMounted(async () => {
     store.state.acceptRetrieveTelemetry === "Unconfirmed";
 
   isAcceptTermsDialogOpenComputed.value =
-    process.env.NODE_ENV == "production" &&
+    import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;

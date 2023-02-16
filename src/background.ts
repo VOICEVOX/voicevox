@@ -50,13 +50,20 @@ type SingleInstanceLockData = {
 };
 
 const isDevelopment = import.meta.env.DEV;
+const isTest = import.meta.env.MODE === "test";
+
+let suffix = "";
+if (isTest) {
+  suffix = "-test";
+} else if (isDevelopment) {
+  suffix = "-dev";
+}
+
+console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
-const fixedUserDataDir = path.join(
-  app.getPath("appData"),
-  `voicevox${isDevelopment ? "-dev" : ""}`
-);
+const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -987,7 +994,7 @@ app.on("ready", async () => {
 
   // 多重起動防止
   if (
-    // !isDevelopment &&
+    !isDevelopment &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)
