@@ -197,7 +197,7 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
-import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterOrderDialog",
@@ -314,7 +314,7 @@ export default defineComponent({
 
     // 音声再生
     const playing =
-      ref<{ speakerUuid: SpeakerId; styleId: number; index: number }>();
+      ref<{ speakerUuid: SpeakerId; styleId: StyleId; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
