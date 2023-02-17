@@ -23,7 +23,7 @@
     "electron:build": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js",
     "electron:pack": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js --dir",
     "electron:build_pnever": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js --publish never",
-    "electron:build_packed": "cross-var electron-builder --config electron-builder.config.js --prepackaged $PREPACKAGED",
+    "electron:build_packed": "cross-var electron-builder --config electron-builder.config.js --prepackaged $PREPACKAGED --publish never",
     "electron:serve": "cross-env VITE_IS_ELECTRON=true vite",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
