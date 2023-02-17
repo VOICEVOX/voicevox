@@ -237,7 +237,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 * Markdownの記述が正しいことを確認します。
   
   ```bash
-    npm run markdownlint
+    npm run markdownlint ./*/*.md
   ```
 
 * 命名に使っている英語が誤っていないことを確認します。
