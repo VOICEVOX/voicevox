@@ -5,7 +5,12 @@ import { moveFile } from "move-file";
 // FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
 import { Extract } from "unzipper";
 import { dialog } from "electron";
-import { EngineInfo, MinimumEngineManifest } from "@/type/preload";
+import {
+  EngineId,
+  EngineInfo,
+  minimumEngineManifestSchema,
+  MinimumEngineManifest,
+} from "@/type/preload";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
 
@@ -58,7 +63,7 @@ export const isVvppFile = (filePath: string) => {
 export class VvppManager {
   vvppEngineDir: string;
 
-  willDeleteEngineIds: Set<string>;
+  willDeleteEngineIds: Set<EngineId>;
   willReplaceEngineDirs: Array<{ from: string; to: string }>;
 
   constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
@@ -74,7 +79,7 @@ export class VvppManager {
     });
   }
 
-  markWillDelete(engineId: string) {
+  markWillDelete(engineId: EngineId) {
     this.willDeleteEngineIds.add(engineId);
   }
 
@@ -91,13 +96,13 @@ export class VvppManager {
     const engineId = engineInfo.uuid;
 
     if (engineInfo.type !== "vvpp") {
-      log.error(`No such engineInfo registered: engineId == ${engineId}`);
+      log.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
       return false;
     }
 
     const engineDirectory = engineInfo.path;
     if (engineDirectory == null) {
-      log.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
+      log.error(`engineDirectory is null: engineId == ${engineId}`);
       return false;
     }
 
@@ -149,13 +154,14 @@ export class VvppManager {
           .on("close", resolve)
           .on("error", reject);
       });
-      // FIXME: バリデーションをかけるか、`validateEngineDir`で検査する
-      const manifest = JSON.parse(
-        await fs.promises.readFile(
-          path.join(outputDir, "engine_manifest.json"),
-          "utf-8"
+      const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
+        JSON.parse(
+          await fs.promises.readFile(
+            path.join(outputDir, "engine_manifest.json"),
+            "utf-8"
+          )
         )
-      ) as MinimumEngineManifest;
+      );
       return {
         outputDir,
         manifest,

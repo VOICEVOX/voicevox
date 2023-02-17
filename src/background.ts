@@ -32,7 +32,8 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSetting,
+  engineSettingSchema,
+  EngineId,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -133,15 +134,18 @@ const store = new Store<ElectronStoreType>({
     },
     ">=0.14": (store) => {
       // FIXME: できるならEngineManagerからEnginIDを取得したい
-      const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
-        .uuid;
+      if (process.env.DEFAULT_ENGINE_INFOS == undefined)
+        throw new Error("DEFAULT_ENGINE_INFOS == undefined");
+      const engineId = EngineId(
+        JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
+      );
       if (engineId == undefined)
         throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = store.get("defaultStyleIds");
       store.set(
         "defaultStyleIds",
         prevDefaultStyleIds.map((defaultStyle) => ({
-          engineId: engineId,
+          engineId,
           speakerUuid: defaultStyle.speakerUuid,
           defaultStyleId: defaultStyle.defaultStyleId,
         }))
@@ -178,7 +182,7 @@ const engineManager = new EngineManager({
 const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
-function openEngineDirectory(engineId: string) {
+function openEngineDirectory(engineId: EngineId) {
   const engineDirectory = engineManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
@@ -270,7 +274,7 @@ function checkMultiEngineEnabled(): boolean {
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
-async function uninstallVvppEngine(engineId: string) {
+async function uninstallVvppEngine(engineId: EngineId) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
     engineInfo = engineManager.fetchEngineInfo(engineId);
@@ -416,18 +420,40 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
+  let projectFilePath: string | undefined = "";
+  if (isMac) {
+    if (filePathOnMac) {
+      if (filePathOnMac.endsWith(".vvproj")) {
+        projectFilePath = encodeURI(filePathOnMac);
+      }
+      filePathOnMac = undefined;
+    }
+  } else {
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      if (
+        fs.existsSync(filePath) &&
+        fs.statSync(filePath).isFile() &&
+        filePath.endsWith(".vvproj")
+      ) {
+        projectFilePath = encodeURI(filePath);
+      }
+    }
+  }
+
+  const parameter =
+    "#/home?isMultiEngineOffMode=" +
+    appState.isMultiEngineOffMode +
+    "&projectFilePath=" +
+    projectFilePath;
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) +
-        "#/home?isMultiEngineOffMode=" +
-        appState.isMultiEngineOffMode
+      (process.env.WEBPACK_DEV_SERVER_URL as string) + parameter
     );
   } else {
     createProtocol("app");
-    win.loadURL(
-      "app://./index.html#/home?isMultiEngineOffMode=" +
-        appState.isMultiEngineOffMode
-    );
+    win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -460,31 +486,6 @@ async function createWindow() {
     });
   });
 
-  win.webContents.once("did-finish-load", () => {
-    if (isMac) {
-      if (filePathOnMac) {
-        if (filePathOnMac.endsWith(".vvproj")) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", {
-            filePath: filePathOnMac,
-            confirm: false,
-          });
-        }
-        filePathOnMac = undefined;
-      }
-    } else {
-      if (process.argv.length >= 2) {
-        const filePath = process.argv[1];
-        if (
-          fs.existsSync(filePath) &&
-          fs.statSync(filePath).isFile() &&
-          filePath.endsWith(".vvproj")
-        ) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
-        }
-      }
-    }
-  });
-
   mainWindowState.manage(win);
 }
 
@@ -495,7 +496,7 @@ async function start() {
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSettings[engineInfo.uuid] = engineSetting.parse({});
+      engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
   store.set("engineSettings", engineSettings);
@@ -820,7 +821,7 @@ ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
   return await installVvppEngine(path);
 });
 
-ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: string) => {
+ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
   return await uninstallVvppEngine(engineId);
 });
 

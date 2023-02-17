@@ -337,12 +337,12 @@ export default defineComponent({
         ok: {
           label: "初期値に戻す",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
         cancel: {
           label: "初期値に戻さない",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
       }).onOk(() => {
         window.electron

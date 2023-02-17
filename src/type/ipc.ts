@@ -10,6 +10,7 @@ import {
   WriteFileErrorResult,
   NativeThemeType,
   EngineSetting,
+  EngineId,
 } from "@/type/preload";
 
 /**
@@ -201,12 +202,12 @@ export type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
   OPEN_ENGINE_DIRECTORY: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
@@ -259,7 +260,7 @@ export type IpcIHData = {
   };
 
   SET_ENGINE_SETTING: {
-    args: [engineId: string, engineSetting: EngineSetting];
+    args: [engineId: EngineId, engineSetting: EngineSetting];
     return: void;
   };
 
@@ -274,7 +275,7 @@ export type IpcIHData = {
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    args: [engineId: string];
+    args: [engineId: EngineId];
     return: Promise<boolean>;
   };
 
@@ -324,7 +325,7 @@ export type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 

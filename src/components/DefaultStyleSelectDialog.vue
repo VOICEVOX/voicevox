@@ -120,137 +120,121 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, DefaultStyleId, StyleInfo } from "@/type/preload";
+import {
+  CharacterInfo,
+  DefaultStyleId,
+  SpeakerId,
+  StyleInfo,
+} from "@/type/preload";
 
-export default defineComponent({
-  name: "DefaultStyleSelectDialog",
+const props =
+  defineProps<{
+    isOpen: boolean;
+    selectedStyleIndex: number;
+    characterInfo: CharacterInfo;
+  }>();
 
-  props: {
-    isOpen: {
-      type: Boolean,
-      required: true,
-    },
-    selectedStyleIndex: {
-      type: Number,
-      required: true,
-    },
-    characterInfo: {
-      type: Object as PropType<CharacterInfo>,
-      required: true,
-    },
-  },
+const emit =
+  defineEmits<{
+    (e: "update:isOpen", value: boolean): void;
+    (e: "update:selectedStyleIndex", value: number): void;
+  }>();
 
-  setup(props, { emit }) {
-    const store = useStore();
+const store = useStore();
 
-    const isOpenComputed = computed({
-      get: () => props.isOpen,
-      set: (val) => emit("update:isOpen", val),
-    });
+const isOpenComputed = computed({
+  get: () => props.isOpen,
+  set: (val) => emit("update:isOpen", val),
+});
 
-    const firstSelectedStyleIndex = ref(0);
-    const isModified = computed(() => {
-      return firstSelectedStyleIndex.value !== props.selectedStyleIndex;
-    });
+const firstSelectedStyleIndex = ref(0);
+const isModified = computed(() => {
+  return firstSelectedStyleIndex.value !== props.selectedStyleIndex;
+});
 
-    // ダイアログが開かれたときに初期値を求める
-    watch([() => props.isOpen], async ([newValue]) => {
-      if (newValue) {
-        firstSelectedStyleIndex.value = props.selectedStyleIndex;
-      }
-    });
+// ダイアログが開かれたときに初期値を求める
+watch([() => props.isOpen], async ([newValue]) => {
+  if (newValue) {
+    firstSelectedStyleIndex.value = props.selectedStyleIndex;
+  }
+});
 
-    const selectedStyleIndexComputed = computed({
-      get: () => props.selectedStyleIndex,
-      set: (val) => {
-        emit("update:selectedStyleIndex", val);
-      },
-    });
-
-    const selectStyleIndex = (styleIndex: number) => {
-      selectedStyleIndexComputed.value = styleIndex;
-
-      // 音声を再生する。同じ話者/styleIndexだったら停止する。
-      const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
-      if (
-        playing.value !== undefined &&
-        playing.value.styleId === selectedStyleInfo.styleId
-      ) {
-        stop();
-      } else {
-        play(props.characterInfo.metas.speakerUuid, selectedStyleInfo, 0);
-      }
-    };
-
-    const isHoverableStyleItem = ref(true);
-
-    const playing =
-      ref<{ speakerUuid: string; styleId: number; index: number }>();
-
-    const audio = new Audio();
-    audio.volume = 0.5;
-    audio.onended = () => stop();
-
-    const play = (
-      speakerUuid: string,
-      { styleId, voiceSamplePaths }: StyleInfo,
-      index: number
-    ) => {
-      if (audio.src !== "") stop();
-
-      audio.src = voiceSamplePaths[index];
-      audio.play();
-      playing.value = { speakerUuid, styleId, index };
-    };
-    const stop = () => {
-      if (audio.src === "") return;
-
-      audio.pause();
-      audio.removeAttribute("src");
-      playing.value = undefined;
-    };
-
-    // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
-    const closeDialog = () => {
-      const defaultStyleIds = JSON.parse(
-        JSON.stringify(store.state.defaultStyleIds)
-      ) as DefaultStyleId[];
-      store.dispatch("SET_DEFAULT_STYLE_IDS", [
-        ...defaultStyleIds.filter(
-          (defaultStyleId) =>
-            defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
-        ),
-        {
-          speakerUuid: props.characterInfo.metas.speakerUuid,
-          defaultStyleId:
-            props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-              .styleId,
-          engineId:
-            props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-              .engineId,
-        },
-      ]);
-
-      stop();
-      isOpenComputed.value = false;
-    };
-
-    return {
-      isOpenComputed,
-      selectedStyleIndexComputed,
-      selectStyleIndex,
-      isHoverableStyleItem,
-      playing,
-      play,
-      stop,
-      closeDialog,
-      isModified,
-    };
+const selectedStyleIndexComputed = computed({
+  get: () => props.selectedStyleIndex,
+  set: (val) => {
+    emit("update:selectedStyleIndex", val);
   },
 });
+
+const selectStyleIndex = (styleIndex: number) => {
+  selectedStyleIndexComputed.value = styleIndex;
+
+  // 音声を再生する。同じ話者/styleIndexだったら停止する。
+  const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
+  if (
+    playing.value !== undefined &&
+    playing.value.styleId === selectedStyleInfo.styleId
+  ) {
+    stop();
+  } else {
+    play(props.characterInfo.metas.speakerUuid, selectedStyleInfo, 0);
+  }
+};
+
+const isHoverableStyleItem = ref(true);
+
+const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+
+const audio = new Audio();
+audio.volume = 0.5;
+audio.onended = () => stop();
+
+const play = (
+  speakerUuid: SpeakerId,
+  { styleId, voiceSamplePaths }: StyleInfo,
+  index: number
+) => {
+  if (audio.src !== "") stop();
+
+  audio.src = voiceSamplePaths[index];
+  audio.play();
+  playing.value = { speakerUuid, styleId, index };
+};
+const stop = () => {
+  if (audio.src === "") return;
+
+  audio.pause();
+  audio.removeAttribute("src");
+  playing.value = undefined;
+};
+
+// 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
+const closeDialog = () => {
+  const defaultStyleIds = JSON.parse(
+    JSON.stringify(store.state.defaultStyleIds)
+  ) as DefaultStyleId[];
+  store.dispatch("SET_DEFAULT_STYLE_IDS", [
+    ...defaultStyleIds.filter(
+      (defaultStyleId) =>
+        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid
+    ),
+    {
+      speakerUuid: props.characterInfo.metas.speakerUuid,
+      defaultStyleId:
+        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+          .styleId,
+      engineId:
+        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
+          .engineId,
+    },
+  ]);
+
+  stop();
+  isOpenComputed.value = false;
+};
 </script>
 
 <style scoped lang="scss">

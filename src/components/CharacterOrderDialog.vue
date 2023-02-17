@@ -197,7 +197,7 @@
 import { defineComponent, computed, ref, PropType, watch } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterOrderDialog",
@@ -233,14 +233,14 @@ export default defineComponent({
     });
 
     // 新しいキャラクター
-    const newCharacters = ref<string[]>([]);
+    const newCharacters = ref<SpeakerId[]>([]);
     const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 
     // サンプルボイス一覧のキャラクター順番
-    const sampleCharacterOrder = ref<string[]>([]);
+    const sampleCharacterOrder = ref<SpeakerId[]>([]);
 
     // 選択中のスタイル
-    const selectedStyleIndexes = ref<Record<string, number>>({});
+    const selectedStyleIndexes = ref<Record<SpeakerId, number>>({});
     const selectedStyles = computed(() => {
       const map: { [key: string]: StyleInfo } = {};
       props.characterInfos.forEach((characterInfo) => {
@@ -254,7 +254,7 @@ export default defineComponent({
 
     // 選択中のキャラクター
     const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
-    const selectCharacter = (speakerUuid: string) => {
+    const selectCharacter = (speakerUuid: SpeakerId) => {
       selectedCharacter.value = speakerUuid;
     };
 
@@ -314,14 +314,14 @@ export default defineComponent({
 
     // 音声再生
     const playing =
-      ref<{ speakerUuid: string; styleId: number; index: number }>();
+      ref<{ speakerUuid: SpeakerId; styleId: number; index: number }>();
 
     const audio = new Audio();
     audio.volume = 0.5;
     audio.onended = () => stop();
 
     const play = (
-      speakerUuid: string,
+      speakerUuid: SpeakerId,
       { styleId, voiceSamplePaths }: StyleInfo,
       index: number
     ) => {
@@ -341,7 +341,7 @@ export default defineComponent({
 
     // 再生していたら停止、再生していなかったら再生
     const togglePlayOrStop = (
-      speakerUuid: string,
+      speakerUuid: SpeakerId,
       styleInfo: StyleInfo,
       index: number
     ) => {
@@ -358,7 +358,7 @@ export default defineComponent({
     };
 
     // スタイル番号をずらす
-    const rollStyleIndex = (speakerUuid: string, diff: number) => {
+    const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
       // 0 <= index <= length に収める
       const length = characterInfosMap.value[speakerUuid].metas.styles.length;
       const selectedStyleIndex: number | undefined =

@@ -30,7 +30,7 @@
             <q-card flat class="setting-card">
               <q-card-actions>
                 <div class="text-h5">エンジン</div>
-                <template v-if="engineIds.length > 0">
+                <template v-if="engineIds.length > 1">
                   <q-space />
                   <q-select
                     borderless
@@ -730,6 +730,7 @@ import {
   ActivePointScrollMode,
   SplitTextWhenPasteType,
   EditorFontType,
+  EngineId,
 } from "@/type/preload";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
@@ -921,7 +922,7 @@ export default defineComponent({
       { label: "GPU", value: true },
     ];
 
-    const gpuSwitchEnabled = (engineId: string) => {
+    const gpuSwitchEnabled = (engineId: EngineId) => {
       // CPU版でもGPUモードからCPUモードに変更できるようにする
       return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
     };
@@ -1023,16 +1024,16 @@ export default defineComponent({
 
     const showsFilePatternEditDialog = ref(false);
 
-    const selectedEngineIdRaw = ref("");
+    const selectedEngineIdRaw = ref<EngineId | undefined>(undefined);
     const selectedEngineId = computed({
       get: () => {
         return selectedEngineIdRaw.value || engineIds.value[0];
       },
-      set: (engineId: string) => {
+      set: (engineId: EngineId) => {
         selectedEngineIdRaw.value = engineId;
       },
     });
-    const renderEngineNameLabel = (engineId: string) => {
+    const renderEngineNameLabel = (engineId: EngineId) => {
       return engineInfos.value[engineId].name;
     };
 
