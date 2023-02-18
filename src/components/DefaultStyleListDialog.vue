@@ -99,7 +99,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 
 const props =
@@ -131,7 +131,7 @@ const selectedCharacterInfo = computed(() => {
 });
 
 const characterInfosMap = computed(() => {
-  const map: { [key: string]: CharacterInfo } = {};
+  const map: { [key: SpeakerId]: CharacterInfo } = {};
   props.characterInfos.forEach((characterInfo) => {
     map[characterInfo.metas.speakerUuid] = characterInfo;
   });
@@ -142,7 +142,7 @@ const characterInfosMap = computed(() => {
 const speakerWithMultipleStyles = ref<CharacterInfo[]>([]);
 
 // 選択中のスタイル
-const selectedStyleIndexes = ref<Record<string, number>>({});
+const selectedStyleIndexes = ref<Record<SpeakerId, number>>({});
 const selectedStyles = computed(() => {
   const map: { [key: string]: StyleInfo } = {};
   props.characterInfos.forEach((characterInfo) => {
@@ -194,14 +194,18 @@ const closeDialog = () => {
   store.dispatch(
     "SET_DEFAULT_STYLE_IDS",
     Object.entries(selectedStyleIndexes.value).map(
-      ([speakerUuid, styleIndex]) => ({
-        speakerUuid,
-        defaultStyleId:
-          characterInfosMap.value[speakerUuid].metas.styles[styleIndex].styleId,
-        engineId:
-          characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
-            .engineId,
-      })
+      ([speakerUuidStr, styleIndex]) => {
+        const speakerUuid = SpeakerId(speakerUuidStr);
+        return {
+          speakerUuid,
+          defaultStyleId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .styleId,
+          engineId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .engineId,
+        };
+      }
     )
   );
   stop();
