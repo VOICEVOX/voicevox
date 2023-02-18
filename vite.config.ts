@@ -44,7 +44,7 @@ const config: UserConfig = {
     checker({
       overlay: false,
       eslint: {
-        lintCommand: "eslint --ext .ts,.vue --config ../.eslintrc.js .",
+        lintCommand: "eslint --ext .ts,.vue .",
       },
       typescript: true,
       // FIXME: vue-tscの型エラーを解決したら有効化する

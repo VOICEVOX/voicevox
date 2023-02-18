@@ -51,4 +51,16 @@ module.exports = {
       },
     ],
   },
+  overrides: [
+    {
+      files: [
+        "./src/background.ts",
+        "./src/background/*.ts",
+        "./src/electron/*.ts",
+      ],
+      rules: {
+        "no-console": "off",
+      },
+    },
+  ],
 };
