@@ -8,6 +8,14 @@ export const engineIdSchema = z.string().uuid().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
+export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export type SpeakerId = z.infer<typeof speakerIdSchema>;
+export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
+
+export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export type AudioKey = z.infer<typeof audioKeySchema>;
+export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
 export const voiceIdSchema = z.string().brand<"VoiceId">();
 export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (id: string): VoiceId => voiceIdSchema.parse(id);
@@ -218,14 +226,14 @@ export type StyleInfo = {
 
 export type MetasJson = {
   speakerName: string;
-  speakerUuid: string;
+  speakerUuid: SpeakerId;
   styles: Pick<StyleInfo, "styleName" | "styleId">[];
 };
 
 export type CharacterInfo = {
   portraitPath: string;
   metas: {
-    speakerUuid: string;
+    speakerUuid: SpeakerId;
     speakerName: string;
     styles: StyleInfo[];
     policy: string;
@@ -240,7 +248,7 @@ export type UpdateInfo = {
 
 export type Voice = {
   engineId: EngineId;
-  speakerId: string;
+  speakerId: SpeakerId;
   styleId: number;
 };
 
@@ -285,7 +293,7 @@ export type EngineSetting = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
   engineId: EngineId;
-  speakerUuid: string;
+  speakerUuid: SpeakerId;
   defaultStyleId: number;
 };
 
@@ -336,7 +344,7 @@ export type Preset = {
 export type MorphingInfo = {
   rate: number;
   targetEngineId: EngineId;
-  targetSpeakerId: string;
+  targetSpeakerId: SpeakerId;
   targetStyleId: number;
 };
 
@@ -500,14 +508,14 @@ export const electronStoreSchema = z
       .array()
       .default(defaultToolbarButtonSetting),
     engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
-    userCharacterOrder: z.string().array().default([]),
+    userCharacterOrder: speakerIdSchema.array().default([]),
     defaultStyleIds: z
       .object({
         // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
         engineId: engineIdSchema
           .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
           .default(EngineId("00000000-0000-0000-0000-000000000000")),
-        speakerUuid: z.string().uuid(),
+        speakerUuid: speakerIdSchema,
         defaultStyleId: z.number(),
       })
       .passthrough()
@@ -531,7 +539,7 @@ export const electronStoreSchema = z
                   .object({
                     rate: z.number(),
                     targetEngineId: engineIdSchema,
-                    targetSpeakerId: z.string().uuid(),
+                    targetSpeakerId: speakerIdSchema,
                     targetStyleId: z.number(),
                   })
                   .passthrough()
