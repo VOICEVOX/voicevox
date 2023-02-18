@@ -1,8 +1,7 @@
 import { State } from "@/store/type";
-import { ToolbarButtonTagType, Voice } from "@/type/preload";
+import { ToolbarButtonTagType } from "@/type/preload";
 import path from "path";
 import { Platform } from "quasar";
-import { v5 as uuidv5 } from "uuid";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字
