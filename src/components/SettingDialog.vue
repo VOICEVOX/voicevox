@@ -688,6 +688,55 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>自動保存</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      編集中のデータを一定時間ごとに保存するようにする
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.enableAutoSave"
+                  @update:model-value="
+                    changeExperimentalSetting('enableAutoSave', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>自動保存間隔</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      自動保存の時間の間隔を分単位で設定する
+                    </q-tooltip>
+                  </q-icon>
+                  {{ experimentalSetting.autoSaveSpan }}分
+                </div>
+                <q-space />
+                <q-slider
+                  :model-value="experimentalSetting.autoSaveSpan"
+                  @update:model-value="
+                    changeExperimentalNumberSetting('autoSaveSpan', $event)
+                  "
+                >
+                </q-slider>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>
@@ -915,6 +964,15 @@ export default defineComponent({
       });
     };
 
+    const changeExperimentalNumberSetting = async (
+      key: keyof ExperimentalSetting,
+      data: number | null
+    ) => {
+      store.dispatch("SET_EXPERIMENTAL_SETTING", {
+        experimentalSetting: { ...experimentalSetting.value, [key]: data || 1 },
+      });
+    };
+
     const savingSetting = computed(() => store.state.savingSetting);
 
     const engineUseGpuOptions = [
@@ -1054,6 +1112,7 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
+      changeExperimentalNumberSetting,
       savingSetting,
       samplingRateOptions,
       renderSamplingRateLabel,
