@@ -12,6 +12,10 @@ export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
+export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export type AudioKey = z.infer<typeof audioKeySchema>;
+export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {

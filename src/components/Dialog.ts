@@ -1,4 +1,4 @@
-import { Encoding as EncodingType } from "@/type/preload";
+import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -18,7 +18,7 @@ export async function generateAndSaveOneAudioWithDialog({
   filePath,
   encoding,
 }: {
-  audioKey: string;
+  audioKey: AudioKey;
   quasarDialog: QuasarDialog;
   dispatch: Dispatch<AllActions>;
   filePath?: string;
