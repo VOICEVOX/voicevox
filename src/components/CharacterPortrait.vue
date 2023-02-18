@@ -14,6 +14,7 @@
 <script lang="ts">
 import { defineComponent, computed } from "vue";
 import { useStore } from "@/store";
+import { AudioKey } from "@/type/preload";
 
 export default defineComponent({
   name: "CharacterPortrait",
@@ -22,7 +23,8 @@ export default defineComponent({
     const store = useStore();
 
     const characterInfo = computed(() => {
-      const activeAudioKey: string | undefined = store.getters.ACTIVE_AUDIO_KEY;
+      const activeAudioKey: AudioKey | undefined =
+        store.getters.ACTIVE_AUDIO_KEY;
       const audioItem = activeAudioKey
         ? store.state.audioItems[activeAudioKey]
         : undefined;
