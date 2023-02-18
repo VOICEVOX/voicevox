@@ -9,14 +9,13 @@
 
 ## 起動方法
 
-### Windows 版の起動方法
+### Windows 版
 
 起動しようとすると「Windows によって PC が保護されました」というダイアログが表示されるかもしれません。その際は「詳細情報」をクリックし、「実行」を選んでください。
 
-1. <img src="res/image14.png" style="max-height: 16rem" alt="「Windows によってPCが保護されました」というダイアログ"/>
-2. <img src="res/image15.png" style="max-height: 16rem" alt="「詳細情報」をクリックし、「実行」を選んでいる様子"/>
+<img src="res/image14.png" style="max-height: 16rem" alt="「Windows によって PC が保護されました」というダイアログ" /> → <img src="res/image15.png" style="max-height: 16rem" alt="「詳細情報」をクリックし、「実行」を選んでいる様子。" />
 
-### Mac 版の起動方法
+### Mac 版
 
 初回起動時は Apple に登録されていないアプリケーションとして警告ダイアログが表示されるかもしれません。
 
@@ -98,8 +97,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 アクセント箇所を変えるには、読みの上にあるバーを左右に動かします。
 例えば「ディープラーニング」を「↑ ディープラ ↓ アニング」と読んでほしい場合は、「ラ」の位置まで丸をスライドします。
 
-1. <img src="res/image8.png" style="max-height: 8rem" alt="「ディープラーニング」"/>
-2. <img src="res/image1.png" style="max-height: 8rem" alt="「↑ ディープラ ↓ アニング」"/>
+<img src="res/image8.png" style="max-height: 8rem" alt="「ディープラーニング」" /> → <img src="res/image1.png" style="max-height: 8rem" alt="「↑ ディープラ ↓ アニング」" />
 
 ## イントネーションの変更
 
@@ -117,8 +115,7 @@ GPU をお持ちの方は、音声の生成がずっと速い GPU モードを�
 
 また、「キ」や「ツ」や「ス」などが無声化されている場合、バーが灰色になっています。イントネーション欄のテキストをクリックすることで無声化を解くことができます。
 
-1. <img src="res/image5.png" style="max-height: 10rem" alt="「キツツキデス」の「キ」「ツ」「ス」のバーが灰色になっている様子"/>
-2. <img src="res/image12.png" style="max-height: 10rem" alt="「キツツキデス」のすべての文字のバーが青色で表示されている様子"/>
+<img src="res/image5.png" style="max-height: 10rem" alt="「キツツキデス」の「キ」と「ツ」と「ス」のバーが灰色になっている様子" /> → <img src="res/image12.png" style="max-height: 10rem" alt="「キツツキデス」のすべての文字のバーが青色で表示されている様子。" />
 
 無声化できるものはイ行とウ行だけです。
 
@@ -338,12 +335,10 @@ Linux は Nvidia 製 GPU のみに対応しています。
 #### マルチエンジン機能
 
 VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用できるようになります。  
-マルチエンジン機能をオンにしたあと、メニューにある「エンジン」の「エンジンの管理」に移動し、下記のいずれかを実施すると利用可能になります。
+マルチエンジン機能をオンにしたあと、メニューにある「エンジン」の「エンジンの管理」に移動し、次のどちらかを実行すると利用できます。
 
 - VOICEVOX API 準拠エンジンの VVPP ファイルをインストールする
 - VOICEVOX 系ソフトウェア内のエンジンのパスを指定する
-
-### 「データ収集」項目
 
 #### ソフトウェア利用状況のデータ収集を許可する
 
@@ -360,12 +355,12 @@ VOICEVOX 以外の VOICEVOX API 準拠エンジンを VOICEVOX 内で利用で�
 
 ## アンインストール方法
 
-### Windows 版のアンインストール方法
+### Windows 版
 
 インストーラー版でインストールした場合、インストールしたフォルダの中にある Uninstall VOICEVOX.exe を実行してください。  
 ZIP ファイルを解凍した場合、ダウンロードした ZIP ファイルと、展開したフォルダを消去すればアンインストール完了です。
 
-### Mac 版のアンインストール方法
+### Mac 版
 
 インストーラー版でインストールした場合、「アプリケーション」フォルダにある VOICEVOX を「ゴミ箱」にドラッグ＆ドロップしてください。  
 ZIP ファイルを解凍した場合、ダウンロードした ZIP ファイルと、展開したフォルダを消去すればアンインストール完了です。
@@ -378,9 +373,6 @@ ZIP ファイルを解凍した場合、ダウンロードした ZIP ファイ�
 
 ご感想・ご要望は、ぜひ Twitter にてハッシュタグ `#VOICEVOX` を付けてツイートしてください。開発の励みになります。
 
-うまく動かない場合や不具合を見つけられた方は、下記の方法でご報告ください。
-
-- Twitter にて不具合をハッシュタグ `#VOICEVOX` を付けてツイートしていただく
-- VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）までご連絡いただく
+うまく動かない場合や不具合を見つけられた方は、Twitter にて不具合をハッシュタグ `#VOICEVOX` を付けてツイートしていただくか、VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）までご報告ください。
 
 その他、 Q&A に掲載されていないご質問があれば VOICEVOX 公式（[@voicevox_pj](https://twitter.com/voicevox_pj)）にお問い合わせください。

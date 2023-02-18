@@ -4,7 +4,7 @@
 
 ## Q. 動作環境を教えてください
 
-### CPU版の動作環境
+### CPU版
 
 Windows／Mac／Linux 搭載の PC に対応しています。
 
@@ -12,7 +12,7 @@ Windows／Mac／Linux 搭載の PC に対応しています。
 ※Mac：macOS Catalina 以降  
 ※Linux：Ubuntu 18.04・Ubuntu 20.04
 
-### GPU版の動作環境
+### GPU版
 
 GPU 搭載の Windows PC と、Nvidia 製 GPU 搭載の Linux PC に対応しています。
 
@@ -131,11 +131,11 @@ VOICEVOX Twitter アカウント [@voicevox_pj](https://twitter.com/voicevox_pj)
 
 以下のフォルダに保存されています。
 
-#### Windows版のエラーログ
+#### Windows版
 
 `C:\Users\(ユーザー名)\AppData\Roaming\voicevox\logs`
 
-#### Mac版のエラーログ
+#### Mac版
 
 `/Users/(ユーザー名)/Library/Application Support/voicevox/logs`
 
