@@ -183,8 +183,8 @@ jobs:
         shell: bash
         run: |
           # GTM ID
-          gtm_id=$(jq -r '.VUE_APP_GTM_CONTAINER_ID' resource/editor/metas.json)
-          "${{ matrix.sed_name }}" -i 's/VUE_APP_GTM_CONTAINER_ID=.*/VUE_APP_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
+          gtm_id=$(jq -r '.VITE_GTM_CONTAINER_ID' resource/editor/metas.json)
+          "${{ matrix.sed_name }}" -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
         shell: bash
