@@ -58,7 +58,6 @@ if (isTest) {
 } else if (isDevelopment) {
   suffix = "-dev";
 }
-
 console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更

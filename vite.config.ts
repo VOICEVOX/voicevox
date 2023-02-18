@@ -7,6 +7,7 @@ import { rmSync } from "fs";
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
+import checker from "vite-plugin-checker";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
@@ -40,6 +41,15 @@ const config: UserConfig = {
 
   plugins: [
     vue(),
+    checker({
+      overlay: false,
+      eslint: {
+        lintCommand: "eslint --ext .ts,.vue --config ../.eslintrc.js .",
+      },
+      typescript: true,
+      // FIXME: vue-tscの型エラーを解決したら有効化する
+      // vueTsc: true,
+    }),
     isElectron &&
       electron({
         entry: ["./src/background.ts", "./src/electron/preload.ts"],
