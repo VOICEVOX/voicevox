@@ -188,10 +188,10 @@ import { computed, ref } from "vue";
 const props = withDefaults(
   defineProps<{
     characterInfos: CharacterInfo[];
-    loading: boolean;
+    loading?: boolean;
     selectedVoice: Voice | undefined;
-    showEngineInfo: boolean;
-    emptiable: boolean;
+    showEngineInfo?: boolean;
+    emptiable?: boolean;
     uiLocked: boolean;
   }>(),
   {
