@@ -63,53 +63,41 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-export default defineComponent({
-  name: "AcceptRetrieveTelemetryDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const store = useStore();
 
-  setup(props, { emit }) {
-    const store = useStore();
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
 
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
+const handler = (acceptRetrieveTelemetry: boolean) => {
+  store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
+  });
 
-    const handler = (acceptRetrieveTelemetry: boolean) => {
-      store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-        acceptRetrieveTelemetry: acceptRetrieveTelemetry
-          ? "Accepted"
-          : "Refused",
-      });
+  modelValueComputed.value = false;
+};
 
-      modelValueComputed.value = false;
-    };
-
-    const md = useMarkdownIt();
-    const privacyPolicy = ref("");
-    onMounted(async () => {
-      privacyPolicy.value = md.render(
-        await store.dispatch("GET_PRIVACY_POLICY_TEXT")
-      );
-    });
-
-    return {
-      modelValueComputed,
-      handler,
-      privacyPolicy,
-    };
-  },
+const md = useMarkdownIt();
+const privacyPolicy = ref("");
+onMounted(async () => {
+  privacyPolicy.value = md.render(
+    await store.dispatch("GET_PRIVACY_POLICY_TEXT")
+  );
 });
 </script>
 

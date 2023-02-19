@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
     branches:
-      - '**'
+      - "**"
   workflow_dispatch:
 
 jobs:
@@ -16,12 +16,10 @@ jobs:
       cache-version: v2
     steps:
       - uses: actions/checkout@v3
-      - id: node-version
-        run: echo "NODE_VERSION=$(cat .node-version)" >> $GITHUB_OUTPUT
-
-      - uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: "${{ steps.node-version.outputs.NODE_VERSION }}"
+          node-version-file: ".node-version"
 
       - uses: actions/cache@v3
         with:
@@ -46,7 +44,21 @@ jobs:
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ env.cache-version }}-${{ runner.os }}--node-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ env.cache-version }}-${{ runner.os }}--node-modules-
+
       - run: npm ci
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+
+      - name: Disallowed licenses check
+        run: npm run license:generate -- -o voicevox_licenses.json
+
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run markdownlint

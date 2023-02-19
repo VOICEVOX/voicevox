@@ -9,6 +9,9 @@ import {
   UpdateInfo,
   WriteFileErrorResult,
   LibraryInstallationState,
+  NativeThemeType,
+  EngineSetting,
+  EngineId,
 } from "@/type/preload";
 
 /**
@@ -179,6 +182,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  LOG_WARN: {
+    args: [...params: unknown[]];
+    return: void;
+  };
+
   LOG_INFO: {
     args: [...params: unknown[]];
     return: void;
@@ -195,12 +203,12 @@ export type IpcIHData = {
   };
 
   RESTART_ENGINE: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
   OPEN_ENGINE_DIRECTORY: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 
@@ -252,13 +260,23 @@ export type IpcIHData = {
     return: ElectronStoreType[keyof ElectronStoreType];
   };
 
+  SET_ENGINE_SETTING: {
+    args: [engineId: EngineId, engineSetting: EngineSetting];
+    return: void;
+  };
+
+  SET_NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
+  };
+
   INSTALL_VVPP_ENGINE: {
     args: [path: string];
     return: Promise<boolean>;
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    args: [engineId: string];
+    args: [engineId: EngineId];
     return: Promise<boolean>;
   };
 
@@ -268,7 +286,7 @@ export type IpcIHData = {
   };
 
   RESTART_APP: {
-    args: [obj: { isSafeMode: boolean }];
+    args: [obj: { isMultiEngineOffMode: boolean }];
     return: void;
   };
 
@@ -313,7 +331,7 @@ export type IpcSOData = {
   };
 
   DETECTED_ENGINE_ERROR: {
-    args: [obj: { engineId: string }];
+    args: [obj: { engineId: EngineId }];
     return: void;
   };
 

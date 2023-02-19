@@ -60,50 +60,40 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, onMounted } from "vue";
+<script setup lang="ts">
+import { computed, ref, onMounted } from "vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
-export default defineComponent({
-  name: "AcceptTermsDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", value: boolean): void;
+  }>();
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const store = useStore();
 
-  setup(props, { emit }) {
-    const store = useStore();
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
 
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
+const handler = (acceptTerms: boolean) => {
+  store.dispatch("SET_ACCEPT_TERMS", {
+    acceptTerms: acceptTerms ? "Accepted" : "Rejected",
+  });
+  !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
 
-    const handler = (acceptTerms: boolean) => {
-      store.dispatch("SET_ACCEPT_TERMS", {
-        acceptTerms: acceptTerms ? "Accepted" : "Rejected",
-      });
-      !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
+  modelValueComputed.value = false;
+};
 
-      modelValueComputed.value = false;
-    };
-
-    const md = useMarkdownIt();
-    const terms = ref("");
-    onMounted(async () => {
-      terms.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
-    });
-
-    return {
-      modelValueComputed,
-      handler,
-      terms,
-    };
-  },
+const md = useMarkdownIt();
+const terms = ref("");
+onMounted(async () => {
+  terms.value = md.render(await store.dispatch("GET_POLICY_TEXT"));
 });
 </script>
 

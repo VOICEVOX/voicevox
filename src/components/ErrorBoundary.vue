@@ -15,8 +15,17 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      // FIXME: Promiseのエラーハンドリングもっと考える
       const handlePromiseRejectionEvent = (event: PromiseRejectionEvent) => {
-        logError(event.reason);
+        if (event.reason instanceof Error) {
+          logError(event.reason);
+        } else if (event.reason instanceof Response) {
+          logError(
+            new Error(`HTTP ${event.reason.status} at ${event.reason.url}`)
+          );
+        } else {
+          logError(new Error(event.reason));
+        }
       };
       window.addEventListener("error", (event: ErrorEvent) => {
         logError(event.error);

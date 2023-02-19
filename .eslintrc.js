@@ -42,6 +42,12 @@ module.exports = {
         ignoreRestSiblings: true,
       },
     ],
+    "vue/component-tags-order": [
+      "error",
+      {
+        order: ["template", "script", "style"],
+      },
+    ],
   },
   overrides: [
     {

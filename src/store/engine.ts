@@ -2,13 +2,14 @@ import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import type { EngineManifest } from "@/openapi";
-import type { EngineInfo } from "@/type/preload";
+import type { EngineId, EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   libraryInstallationState: {
     status: "idle",
   },
+  engineSupportedDevices: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -16,9 +17,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     async action({ state, commit }) {
       const engineInfos = await window.electron.engineInfos();
 
-      // セーフモード時はengineIdsをデフォルトエンジンのIDだけにする。
-      let engineIds: string[];
-      if (state.isSafeMode) {
+      // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
+      let engineIds: EngineId[];
+      if (state.isMultiEngineOffMode) {
         engineIds = engineInfos
           .filter((engineInfo) => engineInfo.type === "default")
           .map((info) => info.uuid);
@@ -33,13 +34,26 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  GET_SORTED_ENGINE_INFOS: {
+    getter: (state) => {
+      return Object.values(state.engineInfos).sort((a, b) => {
+        const isDefaultA = a.type === "default" ? 1 : 0;
+        const isDefaultB = b.type === "default" ? 1 : 0;
+        if (isDefaultA !== isDefaultB) {
+          return isDefaultB - isDefaultA;
+        }
+
+        return a.uuid.localeCompare(b.uuid);
+      });
+    },
+  },
   SET_ENGINE_INFOS: {
     mutation(
       state,
       {
         engineIds,
         engineInfos,
-      }: { engineIds: string[]; engineInfos: EngineInfo[] }
+      }: { engineIds: EngineId[]; engineInfos: EngineInfo[] }
     ) {
       state.engineIds = engineIds;
       state.engineInfos = Object.fromEntries(
@@ -54,7 +68,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   SET_ENGINE_MANIFESTS: {
     mutation(
       state,
-      { engineManifests }: { engineManifests: Record<string, EngineManifest> }
+      { engineManifests }: { engineManifests: Record<EngineId, EngineManifest> }
     ) {
       state.engineManifests = engineManifests;
     },
@@ -149,37 +163,68 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     ),
   },
 
-  RESTART_ENGINE_ALL: {
-    async action({ state, dispatch }) {
-      // NOTE: 暫定実装、すべてのエンジンの再起動に成功した場合に、成功とみなす
-      let allSuccess = true;
-      const engineIds = state.engineIds;
+  RESTART_ENGINES: {
+    async action({ dispatch, commit }, { engineIds }) {
+      await Promise.all(
+        engineIds.map(async (engineId) => {
+          commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
+          try {
+            return window.electron.restartEngine(engineId);
+          } catch (e) {
+            dispatch("LOG_ERROR", {
+              error: e,
+              message: `Failed to restart engine: ${engineId}`,
+            });
+            await dispatch("DETECTED_ENGINE_ERROR", { engineId });
+            return {
+              success: false,
+              anyNewCharacters: false,
+            };
+          }
+        })
+      );
 
-      for (const engineId of engineIds) {
-        const success = await dispatch("RESTART_ENGINE", {
-          engineId,
-        });
-        allSuccess = allSuccess && success;
-      }
+      const result = await dispatch("POST_ENGINE_START", {
+        engineIds,
+      });
 
-      return allSuccess;
+      return result;
     },
   },
 
-  RESTART_ENGINE: {
-    async action({ dispatch, commit, state }, { engineId }) {
-      commit("SET_ENGINE_STATE", { engineId, engineState: "STARTING" });
-      const success = await window.electron
-        .restartEngine(engineId)
-        .then(async () => {
-          await dispatch("START_WAITING_ENGINE", { engineId });
-          return state.engineStates[engineId] === "READY";
+  POST_ENGINE_START: {
+    async action({ state, dispatch }, { engineIds }) {
+      const result = await Promise.all(
+        engineIds.map(async (engineId) => {
+          if (state.engineStates[engineId] === "STARTING") {
+            await dispatch("START_WAITING_ENGINE", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_MANIFEST", { engineId });
+            await dispatch("FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES", {
+              engineId,
+            });
+            await dispatch("LOAD_CHARACTER", { engineId });
+          }
+
+          await dispatch("LOAD_DEFAULT_STYLE_IDS");
+          const newCharacters = await dispatch("GET_NEW_CHARACTERS");
+          const result = {
+            success: state.engineStates[engineId] === "READY",
+            anyNewCharacters: newCharacters.length > 0,
+          };
+          return result;
         })
-        .catch(async () => {
-          await dispatch("DETECTED_ENGINE_ERROR", { engineId });
-          return false;
+      );
+      const mergedResult = {
+        success: result.every((r) => r.success),
+        anyNewCharacters: result.some((r) => r.anyNewCharacters),
+      };
+      if (mergedResult.anyNewCharacters) {
+        dispatch("SET_DIALOG_OPEN", {
+          isCharacterOrderDialogOpen: true,
         });
-      return success;
+      }
+
+      return mergedResult;
     },
   },
 
@@ -214,7 +259,10 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   SET_ENGINE_STATE: {
     mutation(
       state,
-      { engineId, engineState }: { engineId: string; engineState: EngineState }
+      {
+        engineId,
+        engineState,
+      }: { engineId: EngineId; engineState: EngineState }
     ) {
       state.engineStates[engineId] = engineState;
     },
@@ -269,19 +317,23 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
   ADD_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
-      await window.electron.setSetting("engineDirs", [
-        ...engineDirs,
+      const registeredEngineDirs = await window.electron.getSetting(
+        "registeredEngineDirs"
+      );
+      await window.electron.setSetting("registeredEngineDirs", [
+        ...registeredEngineDirs,
         engineDir,
       ]);
     },
   },
   REMOVE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
-      const engineDirs = await window.electron.getSetting("engineDirs");
+      const registeredEngineDirs = await window.electron.getSetting(
+        "registeredEngineDirs"
+      );
       await window.electron.setSetting(
-        "engineDirs",
-        engineDirs.filter((path) => path !== engineDir)
+        "registeredEngineDirs",
+        registeredEngineDirs.filter((path) => path !== engineDir)
       );
     },
   },
@@ -301,7 +353,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       {
         engineId,
         engineManifest,
-      }: { engineId: string; engineManifest: EngineManifest }
+      }: { engineId: EngineId; engineManifest: EngineManifest }
     ) {
       state.engineManifests = {
         ...state.engineManifests,
@@ -320,6 +372,39 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           instance.invoke("engineManifestEngineManifestGet")({})
         ),
       });
+    },
+  },
+
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation(state, { engineId, supportedDevices }) {
+      state.engineSupportedDevices = {
+        ...state.engineSupportedDevices,
+        [engineId]: supportedDevices,
+      };
+    },
+  },
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
+    async action({ dispatch, commit }, { engineId }) {
+      const supportedDevices = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+        engineId,
+      }).then(
+        async (instance) =>
+          await instance.invoke("supportedDevicesSupportedDevicesGet")({})
+      );
+
+      commit("SET_ENGINE_SUPPORTED_DEVICES", {
+        engineId,
+        supportedDevices: supportedDevices,
+      });
+    },
+  },
+
+  ENGINE_CAN_USE_GPU: {
+    getter: (state) => (engineId) => {
+      const supportedDevices = state.engineSupportedDevices[engineId];
+
+      return supportedDevices?.cuda || supportedDevices?.dml;
     },
   },
 });
