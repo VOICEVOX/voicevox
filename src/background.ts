@@ -459,9 +459,7 @@ async function createWindow() {
     await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
   } else {
     protocol.registerFileProtocol("app", (request, callback) => {
-      const filePath = url.fileURLToPath(
-        "file://" + request.url.slice("app://".length)
-      );
+      const filePath = new URL(request.url).pathname;
       callback(path.join(__dirname, filePath));
     });
     win.loadURL("app://./index.html" + parameter);
