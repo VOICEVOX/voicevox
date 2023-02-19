@@ -254,343 +254,300 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { SpeakerFromJSON, SpeakerInfoFromJSON, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { DownloadableLibrary } from "@/type/preload";
+import { DownloadableLibrary, EngineId, SpeakerId } from "@/type/preload";
 
-export default defineComponent({
-  name: "LibraryDownloadDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const store = useStore();
 
-  setup(props, { emit }) {
-    const store = useStore();
+const engineIds = computed(() => store.state.engineIds);
+const engineInfos = computed(() => store.state.engineInfos);
+const engineManifests = computed(() => store.state.engineManifests);
 
-    const engineIds = computed(() => store.state.engineIds);
-    const engineInfos = computed(() => store.state.engineInfos);
-    const engineManifests = computed(() => store.state.engineManifests);
-
-    const engineIdsWithDownloadableLibraries = computed(() => {
-      return engineIds.value.filter((engineId) => {
-        return engineManifests.value[engineId]?.downloadableLibrariesUrl;
-      });
-    });
-
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-
-    // サンプルボイス一覧のキャラクター順番
-    const sampleLibraryOrder = ref<string[]>([]);
-
-    const downloadableLibraries = ref<Record<string, DownloadableLibrary[]>>(
-      {}
-    );
-
-    const downloadableLibrariesMap = computed(() => {
-      const downloadableLibrariesMap: Record<
-        string,
-        Record<string, DownloadableLibrary>
-      > = {};
-
-      for (const engineId of engineIdsWithDownloadableLibraries.value) {
-        downloadableLibrariesMap[engineId] = {};
-        for (const library of downloadableLibraries.value[engineId] || []) {
-          downloadableLibrariesMap[engineId][
-            library.downloadableModel.speaker.speakerUuid
-          ] = library;
-        }
-      }
-      return downloadableLibrariesMap;
-    });
-
-    const fetchStatus = ref<Record<string, "fetching" | "success" | "error">>(
-      {}
-    );
-
-    // 選択中のスタイル
-    const flatSelectedStyleIndexes = ref<Record<string, number>>({});
-    const selectedStyleIndexes = computed<
-      Record<string, Record<string, number>>
-    >(() => {
-      const selectedStyleIndexes: Record<string, Record<string, number>> = {};
-      for (const engineId of engineIdsWithDownloadableLibraries.value) {
-        selectedStyleIndexes[engineId] = {};
-        for (const [
-          selectedStyleIndexKey,
-          selectedStyleIndex,
-        ] of Object.entries(flatSelectedStyleIndexes.value)) {
-          const [engineId, speakerUuid] = selectedStyleIndexKey.split(":");
-          selectedStyleIndexes[engineId][speakerUuid] = selectedStyleIndex || 0;
-        }
-      }
-      return selectedStyleIndexes;
-    });
-    const selectedStyles = computed(() => {
-      const map: Record<string, Record<string, StyleInfo & { name: string }>> =
-        {};
-      for (const [engineId, engineLibraryInfos] of Object.entries(
-        downloadableLibraries.value
-      )) {
-        map[engineId] = {};
-        for (const engineLibraryInfo of engineLibraryInfos) {
-          const selectedStyleIndex: number | undefined =
-            selectedStyleIndexes.value[engineId][
-              engineLibraryInfo.downloadableModel.speaker.speakerUuid
-            ];
-          map[engineId][
-            engineLibraryInfo.downloadableModel.speaker.speakerUuid
-          ] = {
-            ...engineLibraryInfo.downloadableModel.speakerInfo.styleInfos[
-              selectedStyleIndex ?? 0
-            ],
-            name: engineLibraryInfo.downloadableModel.speaker.styles[
-              selectedStyleIndex ?? 0
-            ].name,
-          };
-        }
-      }
-      return map;
-    });
-
-    // 選択中のキャラクター
-    const selectedLibrary = ref(
-      Object.values(downloadableLibraries.value)[0]?.[0].downloadableModel
-        .speaker.speakerUuid
-    );
-    const selectedEngineId = ref(engineIdsWithDownloadableLibraries.value[0]);
-    const selectLibrary = (engineId: string, speakerUuid: string) => {
-      selectedEngineId.value = engineId;
-      selectedLibrary.value = speakerUuid;
-    };
-
-    // ダイアログが開かれたときに初期値を求める
-
-    const iconUris = ref<Record<string, string>>({});
-    const portraitUris = ref<Record<string, string>>({});
-    watch(
-      [engineIdsWithDownloadableLibraries, engineInfos, engineManifests],
-      () => {
-        for (const engineId of engineIdsWithDownloadableLibraries.value) {
-          if (
-            !engineManifests.value[engineId].downloadableLibrariesUrl ||
-            fetchStatus.value[engineId] ||
-            !engineInfos.value[engineId] ||
-            !engineManifests.value[engineId]
-          ) {
-            continue;
-          }
-          fetchStatus.value[engineId] = "fetching";
-          (async () => {
-            downloadableLibraries.value[engineId] = await fetch(
-              (
-                engineInfos.value[engineId].host +
-                "/" +
-                engineManifests.value[engineId].downloadableLibrariesUrl
-              ).replace(/(?<!:)\/\//g, "/")
-            ).then(async (res) => {
-              const response = await res.json();
-              fetchStatus.value[engineId] = "success";
-              const libraries = response.map(
-                (libraryInfo: {
-                  character_exists: boolean;
-                  latest_model_exists: boolean;
-                  current_version: string;
-                  downloadable_model: {
-                    download_path: string;
-                    volume: string;
-                    speaker: unknown;
-                    speaker_info: unknown;
-                  };
-                }) => ({
-                  characterExists: libraryInfo.character_exists,
-                  latestModelExists: libraryInfo.latest_model_exists,
-                  currentVersion: libraryInfo.current_version,
-                  downloadableModel: {
-                    downloadPath: libraryInfo.downloadable_model.download_path,
-                    volume: libraryInfo.downloadable_model.volume,
-                    speaker: SpeakerFromJSON(
-                      libraryInfo.downloadable_model.speaker
-                    ),
-                    speakerInfo: SpeakerInfoFromJSON(
-                      libraryInfo.downloadable_model.speaker_info
-                    ),
-                  },
-                })
-              ) as DownloadableLibrary[];
-
-              libraries.sort((a, b) => {
-                const toPrimaryOrder = (library: DownloadableLibrary) => {
-                  if (library.characterExists) {
-                    return 2;
-                  } else if (library.latestModelExists) {
-                    return 0;
-                  } else {
-                    return 1;
-                  }
-                };
-                return toPrimaryOrder(a) - toPrimaryOrder(b);
-              });
-
-              for (const library of libraries) {
-                const portraitUri = base64ImageToUri(
-                  library.downloadableModel.speakerInfo.portrait
-                );
-                portraitUris.value[
-                  `${engineId}:${library.downloadableModel.speaker.speakerUuid}`
-                ] = portraitUri;
-                for (const [index, style] of Object.entries(
-                  library.downloadableModel.speakerInfo.styleInfos
-                )) {
-                  const iconUri = base64ImageToUri(style.icon);
-                  iconUris.value[
-                    `${engineId}:${library.downloadableModel.speaker.speakerUuid}:${index}`
-                  ] = iconUri;
-                }
-              }
-
-              return libraries;
-            });
-          })().catch((e) => {
-            fetchStatus.value[engineId] = "error";
-            console.error(e);
-          });
-        }
-      },
-      { immediate: true }
-    );
-
-    // キャラクター枠のホバー状態を表示するかどうか
-    // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
-    const isHoverableItem = ref(true);
-
-    // 音声再生
-    const playing =
-      ref<{ speakerUuid: string; styleId: number; index: number }>();
-
-    const audio = new Audio();
-    audio.volume = 0.5;
-    audio.onended = () => stop();
-
-    const play = (
-      speakerUuid: string,
-      { id: styleId, voiceSamples }: StyleInfo,
-      index: number
-    ) => {
-      if (audio.src !== "") stop();
-
-      audio.src = "data:audio/wav;base64," + voiceSamples[index];
-      audio.play();
-      playing.value = { speakerUuid, styleId, index };
-    };
-    const stop = () => {
-      if (audio.src === "") return;
-
-      audio.pause();
-      audio.removeAttribute("src");
-      playing.value = undefined;
-    };
-
-    // 再生していたら停止、再生していなかったら再生
-    const togglePlayOrStop = (
-      speakerUuid: string,
-      styleInfo: StyleInfo,
-      index: number
-    ) => {
-      if (
-        playing.value === undefined ||
-        speakerUuid !== playing.value.speakerUuid ||
-        styleInfo.id !== playing.value.styleId ||
-        index !== playing.value.index
-      ) {
-        play(speakerUuid, styleInfo, index);
-      } else {
-        stop();
-      }
-    };
-
-    // スタイル番号をずらす
-    const rollStyleIndex = (
-      engineId: string,
-      speakerUuid: string,
-      diff: number
-    ) => {
-      // 0 <= index <= length に収める
-      const length =
-        downloadableLibrariesMap.value[engineId][speakerUuid].downloadableModel
-          .speaker.styles.length;
-      const selectedStyleIndex: number | undefined =
-        selectedStyleIndexes.value[engineId][speakerUuid];
-
-      let styleIndex = (selectedStyleIndex ?? 0) + diff;
-      styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
-
-      flatSelectedStyleIndexes.value[`${engineId}:${speakerUuid}`] = styleIndex;
-
-      // 音声を再生する。同じstyleIndexだったら停止する。
-      const selectedStyleInfo =
-        downloadableLibrariesMap.value[engineId][speakerUuid].downloadableModel
-          .speakerInfo.styleInfos[styleIndex];
-      togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
-    };
-
-    // ドラッグ中かどうか
-    const libraryOrderDragging = ref(false);
-
-    const closeDialog = () => {
-      stop();
-      modelValueComputed.value = false;
-    };
-
-    const isInstallingLibrary = ref(false);
-
-    const installLibrary = (engineId: string, library: DownloadableLibrary) => {
-      isInstallingLibrary.value = true;
-
-      selectLibrary(engineId, library.downloadableModel.speaker.speakerUuid);
-      stop();
-      setTimeout(() => {
-        isInstallingLibrary.value = false;
-      }, 10000);
-    };
-
-    return {
-      modelValueComputed,
-      engineIds,
-      engineInfos,
-      engineManifests,
-      engineIdsWithDownloadableLibraries,
-      fetchStatus,
-      downloadableLibraries,
-      downloadableLibrariesMap,
-      sampleLibraryOrder,
-      selectedStyleIndexes,
-      selectedEngineId,
-      selectedStyles,
-      selectedLibrary,
-      selectLibrary,
-      isHoverableItem,
-      playing,
-      togglePlayOrStop,
-      rollStyleIndex,
-      libraryOrderDragging,
-      isInstallingLibrary,
-      installLibrary,
-      closeDialog,
-      portraitUris,
-      iconUris,
-    };
-  },
+const engineIdsWithDownloadableLibraries = computed(() => {
+  return engineIds.value.filter((engineId) => {
+    return engineManifests.value[engineId]?.downloadableLibrariesUrl;
+  });
 });
+
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const downloadableLibraries = ref<Record<string, DownloadableLibrary[]>>({});
+
+const downloadableLibrariesMap = computed(() => {
+  const downloadableLibrariesMap: Record<
+    string,
+    Record<string, DownloadableLibrary>
+  > = {};
+
+  for (const engineId of engineIdsWithDownloadableLibraries.value) {
+    downloadableLibrariesMap[engineId] = {};
+    for (const library of downloadableLibraries.value[engineId] || []) {
+      downloadableLibrariesMap[engineId][
+        library.downloadableModel.speaker.speakerUuid
+      ] = library;
+    }
+  }
+  return downloadableLibrariesMap;
+});
+
+const fetchStatus = ref<Record<string, "fetching" | "success" | "error">>({});
+
+// 選択中のスタイル
+const flatSelectedStyleIndexes = ref<Record<string, number>>({});
+const selectedStyleIndexes = computed<Record<string, Record<string, number>>>(
+  () => {
+    const selectedStyleIndexes: Record<string, Record<string, number>> = {};
+    for (const engineId of engineIdsWithDownloadableLibraries.value) {
+      selectedStyleIndexes[engineId] = {};
+      for (const [selectedStyleIndexKey, selectedStyleIndex] of Object.entries(
+        flatSelectedStyleIndexes.value
+      )) {
+        const [engineId, speakerUuid] = selectedStyleIndexKey.split(":");
+        selectedStyleIndexes[engineId][speakerUuid] = selectedStyleIndex || 0;
+      }
+    }
+    return selectedStyleIndexes;
+  }
+);
+const selectedStyles = computed(() => {
+  const map: Record<string, Record<string, StyleInfo & { name: string }>> = {};
+  for (const [engineId, engineLibraryInfos] of Object.entries(
+    downloadableLibraries.value
+  )) {
+    map[engineId] = {};
+    for (const engineLibraryInfo of engineLibraryInfos) {
+      const selectedStyleIndex: number | undefined =
+        selectedStyleIndexes.value[engineId][
+          engineLibraryInfo.downloadableModel.speaker.speakerUuid
+        ];
+      map[engineId][engineLibraryInfo.downloadableModel.speaker.speakerUuid] = {
+        ...engineLibraryInfo.downloadableModel.speakerInfo.styleInfos[
+          selectedStyleIndex ?? 0
+        ],
+        name: engineLibraryInfo.downloadableModel.speaker.styles[
+          selectedStyleIndex ?? 0
+        ].name,
+      };
+    }
+  }
+  return map;
+});
+
+// 選択中のキャラクター
+const selectedLibrary = ref(
+  Object.values(downloadableLibraries.value)[0]?.[0].downloadableModel.speaker
+    .speakerUuid
+);
+const selectedEngineId = ref(engineIdsWithDownloadableLibraries.value[0]);
+const selectLibrary = (engineId: EngineId, speakerUuid: SpeakerId) => {
+  selectedEngineId.value = engineId;
+  selectedLibrary.value = speakerUuid;
+};
+
+// ダイアログが開かれたときに初期値を求める
+
+const iconUris = ref<Record<string, string>>({});
+const portraitUris = ref<Record<string, string>>({});
+watch(
+  [engineIdsWithDownloadableLibraries, engineInfos, engineManifests],
+  () => {
+    for (const engineId of engineIdsWithDownloadableLibraries.value) {
+      if (
+        !engineManifests.value[engineId].downloadableLibrariesUrl ||
+        fetchStatus.value[engineId] ||
+        !engineInfos.value[engineId] ||
+        !engineManifests.value[engineId]
+      ) {
+        continue;
+      }
+      fetchStatus.value[engineId] = "fetching";
+      (async () => {
+        downloadableLibraries.value[engineId] = await fetch(
+          (
+            engineInfos.value[engineId].host +
+            "/" +
+            engineManifests.value[engineId].downloadableLibrariesUrl
+          ).replace(/(?<!:)\/\//g, "/")
+        ).then(async (res) => {
+          const response = await res.json();
+          fetchStatus.value[engineId] = "success";
+          const libraries = response.map(
+            (libraryInfo: {
+              character_exists: boolean;
+              latest_model_exists: boolean;
+              current_version: string;
+              downloadable_model: {
+                download_path: string;
+                volume: string;
+                speaker: unknown;
+                speaker_info: unknown;
+              };
+            }) => ({
+              characterExists: libraryInfo.character_exists,
+              latestModelExists: libraryInfo.latest_model_exists,
+              currentVersion: libraryInfo.current_version,
+              downloadableModel: {
+                downloadPath: libraryInfo.downloadable_model.download_path,
+                volume: libraryInfo.downloadable_model.volume,
+                speaker: SpeakerFromJSON(
+                  libraryInfo.downloadable_model.speaker
+                ),
+                speakerInfo: SpeakerInfoFromJSON(
+                  libraryInfo.downloadable_model.speaker_info
+                ),
+              },
+            })
+          ) as DownloadableLibrary[];
+
+          libraries.sort((a, b) => {
+            const toPrimaryOrder = (library: DownloadableLibrary) => {
+              if (library.characterExists) {
+                return 2;
+              } else if (library.latestModelExists) {
+                return 0;
+              } else {
+                return 1;
+              }
+            };
+            return toPrimaryOrder(a) - toPrimaryOrder(b);
+          });
+
+          for (const library of libraries) {
+            const portraitUri = base64ImageToUri(
+              library.downloadableModel.speakerInfo.portrait
+            );
+            portraitUris.value[
+              `${engineId}:${library.downloadableModel.speaker.speakerUuid}`
+            ] = portraitUri;
+            for (const [index, style] of Object.entries(
+              library.downloadableModel.speakerInfo.styleInfos
+            )) {
+              const iconUri = base64ImageToUri(style.icon);
+              iconUris.value[
+                `${engineId}:${library.downloadableModel.speaker.speakerUuid}:${index}`
+              ] = iconUri;
+            }
+          }
+
+          return libraries;
+        });
+      })().catch((e) => {
+        fetchStatus.value[engineId] = "error";
+        console.error(e);
+      });
+    }
+  },
+  { immediate: true }
+);
+
+// キャラクター枠のホバー状態を表示するかどうか
+// 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
+const isHoverableItem = ref(true);
+
+// 音声再生
+const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+
+const audio = new Audio();
+audio.volume = 0.5;
+audio.onended = () => stop();
+
+const play = (
+  speakerUuid: string,
+  { id: styleId, voiceSamples }: StyleInfo,
+  index: number
+) => {
+  if (audio.src !== "") stop();
+
+  audio.src = "data:audio/wav;base64," + voiceSamples[index];
+  audio.play();
+  playing.value = { speakerUuid, styleId, index };
+};
+const stop = () => {
+  if (audio.src === "") return;
+
+  audio.pause();
+  audio.removeAttribute("src");
+  playing.value = undefined;
+};
+
+// 再生していたら停止、再生していなかったら再生
+const togglePlayOrStop = (
+  speakerUuid: string,
+  styleInfo: StyleInfo,
+  index: number
+) => {
+  if (
+    playing.value === undefined ||
+    speakerUuid !== playing.value.speakerUuid ||
+    styleInfo.id !== playing.value.styleId ||
+    index !== playing.value.index
+  ) {
+    play(speakerUuid, styleInfo, index);
+  } else {
+    stop();
+  }
+};
+
+// スタイル番号をずらす
+const rollStyleIndex = (
+  engineId: string,
+  speakerUuid: string,
+  diff: number
+) => {
+  // 0 <= index <= length に収める
+  const length =
+    downloadableLibrariesMap.value[engineId][speakerUuid].downloadableModel
+      .speaker.styles.length;
+  const selectedStyleIndex: number | undefined =
+    selectedStyleIndexes.value[engineId][speakerUuid];
+
+  let styleIndex = (selectedStyleIndex ?? 0) + diff;
+  styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
+
+  flatSelectedStyleIndexes.value[`${engineId}:${speakerUuid}`] = styleIndex;
+
+  // 音声を再生する。同じstyleIndexだったら停止する。
+  const selectedStyleInfo =
+    downloadableLibrariesMap.value[engineId][speakerUuid].downloadableModel
+      .speakerInfo.styleInfos[styleIndex];
+  togglePlayOrStop(speakerUuid, selectedStyleInfo, 0);
+};
+
+const closeDialog = () => {
+  stop();
+  modelValueComputed.value = false;
+};
+
+const isInstallingLibrary = ref(false);
+
+const installLibrary = (engineId: EngineId, library: DownloadableLibrary) => {
+  isInstallingLibrary.value = true;
+
+  selectLibrary(
+    engineId,
+    SpeakerId(library.downloadableModel.speaker.speakerUuid)
+  );
+  stop();
+  setTimeout(() => {
+    isInstallingLibrary.value = false;
+  }, 10000);
+};
 </script>
 
 <style scoped lang="scss">
