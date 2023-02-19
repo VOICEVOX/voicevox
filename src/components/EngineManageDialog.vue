@@ -452,7 +452,7 @@ export default defineComponent({
     };
 
     const getFeatureName = (name: keyof SupportedFeatures) => {
-      const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
+      const featureNameMap: { [key in keyof SupportedFeatures]?: string } = {
         adjustMoraPitch: "モーラごとの音高の調整",
         adjustPhonemeLength: "音素ごとの長さの調整",
         adjustSpeedScale: "全体の話速の調整",
@@ -461,6 +461,7 @@ export default defineComponent({
         adjustVolumeScale: "全体の音量の調整",
         interrogativeUpspeak: "疑問文の自動調整",
         synthesisMorphing: "2人の話者でモーフィングした音声を合成",
+        manageLibrary: "音声ライブラリの管理",
       };
       return featureNameMap[name];
     };

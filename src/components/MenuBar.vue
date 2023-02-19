@@ -501,7 +501,9 @@ async function updateEngines() {
     });
   }
   if (
-    Object.values(engineManifests.value).some((e) => e.downloadableLibrariesUrl)
+    Object.values(engineManifests.value).some(
+      (e) => e.supportedFeatures?.manageLibrary
+    )
   ) {
     engineMenu.subMenu.push({
       type: "button",

@@ -6,6 +6,7 @@ models/AudioQuery.ts
 models/DownloadableLibrary.ts
 models/EngineManifest.ts
 models/HTTPValidationError.ts
+models/LibrarySpeaker.ts
 models/LicenseInfo.ts
 models/Mora.ts
 models/MorphableTargetInfo.ts

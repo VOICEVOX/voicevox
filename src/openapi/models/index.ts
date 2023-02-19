@@ -5,6 +5,7 @@ export * from './AudioQuery';
 export * from './DownloadableLibrary';
 export * from './EngineManifest';
 export * from './HTTPValidationError';
+export * from './LibrarySpeaker';
 export * from './LicenseInfo';
 export * from './Mora';
 export * from './MorphableTargetInfo';
