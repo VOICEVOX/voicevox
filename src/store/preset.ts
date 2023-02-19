@@ -1,5 +1,5 @@
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
-import { Preset } from "@/type/preload";
+import { Preset, PresetKey } from "@/type/preload";
 import { createPartialStore } from "./vuex";
 
 import { v4 as uuidv4 } from "uuid";
@@ -11,13 +11,16 @@ export const presetStoreState: PresetStoreState = {
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_PRESET_ITEMS: {
-    mutation(state, { presetItems }: { presetItems: Record<string, Preset> }) {
+    mutation(
+      state,
+      { presetItems }: { presetItems: Record<PresetKey, Preset> }
+    ) {
       state.presetItems = presetItems;
     },
   },
 
   SET_PRESET_KEYS: {
-    mutation(state, { presetKeys }: { presetKeys: string[] }) {
+    mutation(state, { presetKeys }: { presetKeys: PresetKey[] }) {
       state.presetKeys = presetKeys;
     },
   },
@@ -41,7 +44,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   SAVE_PRESET_ORDER: {
-    action({ state, dispatch }, { presetKeys }: { presetKeys: string[] }) {
+    action({ state, dispatch }, { presetKeys }: { presetKeys: PresetKey[] }) {
       return dispatch("SAVE_PRESET_CONFIG", {
         presetItems: state.presetItems,
         presetKeys,
@@ -55,7 +58,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       {
         presetItems,
         presetKeys,
-      }: { presetItems: Record<string, Preset>; presetKeys: string[] }
+      }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] }
     ) {
       const result = await window.electron.setSetting("presets", {
         items: JSON.parse(JSON.stringify(presetItems)),
@@ -68,7 +71,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   ADD_PRESET: {
     async action(context, { presetData }: { presetData: Preset }) {
-      const newKey = uuidv4();
+      const newKey = PresetKey(uuidv4());
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,
@@ -87,7 +90,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   UPDATE_PRESET: {
     async action(
       context,
-      { presetKey, presetData }: { presetData: Preset; presetKey: string }
+      { presetKey, presetData }: { presetData: Preset; presetKey: PresetKey }
     ) {
       const newPresetItems = {
         ...context.state.presetItems,
@@ -105,7 +108,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   DELETE_PRESET: {
-    async action(context, { presetKey }: { presetKey: string }) {
+    async action(context, { presetKey }: { presetKey: PresetKey }) {
       const newPresetKeys = context.state.presetKeys.filter(
         (key) => key != presetKey
       );

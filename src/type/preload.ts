@@ -16,6 +16,10 @@ export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
+export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export type PresetKey = z.infer<typeof presetKeySchema>;
+export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -517,7 +521,7 @@ export const electronStoreSchema = z
       .object({
         items: z
           .record(
-            z.string().uuid(),
+            presetKeySchema,
             z
               .object({
                 name: z.string(),
@@ -540,7 +544,7 @@ export const electronStoreSchema = z
               .passthrough()
           )
           .default({}),
-        keys: z.string().uuid().array().default([]),
+        keys: presetKeySchema.array().default([]),
       })
       .passthrough()
       .default({}),
