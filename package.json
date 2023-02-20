@@ -19,7 +19,7 @@
     "fmt": "eslint --ext .js,.vue,.ts *.config.* src tests build --fix",
     "typecheck": "tsc --noEmit",
     "typecheck:vue-tsc": "vue-tsc --noEmit",
-    "markdownlint": "markdownlint *.md",
+    "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ ./",
     "electron:build": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js",
     "electron:build_dir": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js --dir",
     "electron:build_pnever": "cross-env VITE_IS_ELECTRON=true vite build && electron-builder --config electron-builder.config.js --publish never",

@@ -11,88 +11,73 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useStore } from "@/store";
 import { AudioKey } from "@/type/preload";
 
-export default defineComponent({
-  name: "CharacterPortrait",
+const store = useStore();
 
-  setup() {
-    const store = useStore();
+const characterInfo = computed(() => {
+  const activeAudioKey: AudioKey | undefined = store.getters.ACTIVE_AUDIO_KEY;
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
 
-    const characterInfo = computed(() => {
-      const activeAudioKey: AudioKey | undefined =
-        store.getters.ACTIVE_AUDIO_KEY;
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
+  const engineId = audioItem?.voice.engineId;
+  const styleId = audioItem?.voice.styleId;
 
-      const engineId = audioItem?.voice.engineId;
-      const styleId = audioItem?.voice.styleId;
+  if (
+    engineId === undefined ||
+    styleId === undefined ||
+    !store.state.engineIds.some((id) => id === engineId)
+  )
+    return undefined;
 
-      if (
-        engineId === undefined ||
-        styleId === undefined ||
-        !store.state.engineIds.some((id) => id === engineId)
-      )
-        return undefined;
-
-      return store.getters.CHARACTER_INFO(engineId, styleId);
-    });
-
-    const styleInfo = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
-
-      const styleId = audioItem?.voice.styleId;
-      const style = characterInfo.value?.metas.styles.find(
-        (style) => style.styleId === styleId
-      );
-      return style;
-    });
-
-    const characterName = computed(() => {
-      return styleInfo.value?.styleName
-        ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
-        : characterInfo.value?.metas.speakerName;
-    });
-
-    const engineName = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-      const audioItem = activeAudioKey
-        ? store.state.audioItems[activeAudioKey]
-        : undefined;
-      const engineId = audioItem?.voice.engineId ?? store.state.engineIds[0];
-      const engineManifest = store.state.engineManifests[engineId];
-      const engineInfo = store.state.engineInfos[engineId];
-      return engineManifest ? engineManifest.brandName : engineInfo.name;
-    });
-
-    const portraitPath = computed(
-      () => styleInfo.value?.portraitPath || characterInfo.value?.portraitPath
-    );
-
-    const isInitializingSpeaker = computed(() => {
-      const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
-      return store.state.audioKeyInitializingSpeaker === activeAudioKey;
-    });
-
-    const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
-
-    return {
-      characterName,
-      engineName,
-      portraitPath,
-      isInitializingSpeaker,
-      isMultipleEngine,
-    };
-  },
+  return store.getters.CHARACTER_INFO(engineId, styleId);
 });
+
+const styleInfo = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
+
+  const styleId = audioItem?.voice.styleId;
+  const style = characterInfo.value?.metas.styles.find(
+    (style) => style.styleId === styleId
+  );
+  return style;
+});
+
+const characterName = computed(() => {
+  return styleInfo.value?.styleName
+    ? `${characterInfo.value?.metas.speakerName} (${styleInfo.value?.styleName})`
+    : characterInfo.value?.metas.speakerName;
+});
+
+const engineName = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  const audioItem = activeAudioKey
+    ? store.state.audioItems[activeAudioKey]
+    : undefined;
+  const engineId = audioItem?.voice.engineId ?? store.state.engineIds[0];
+  const engineManifest = store.state.engineManifests[engineId];
+  const engineInfo = store.state.engineInfos[engineId];
+  return engineManifest ? engineManifest.brandName : engineInfo.name;
+});
+
+const portraitPath = computed(
+  () => styleInfo.value?.portraitPath || characterInfo.value?.portraitPath
+);
+
+const isInitializingSpeaker = computed(() => {
+  const activeAudioKey = store.getters.ACTIVE_AUDIO_KEY;
+  return store.state.audioKeyInitializingSpeaker === activeAudioKey;
+});
+
+const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 </script>
 
 <style scoped lang="scss">
