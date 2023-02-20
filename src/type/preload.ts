@@ -1,4 +1,3 @@
-import { Speaker, SpeakerInfo } from "@/openapi";
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
@@ -16,6 +15,10 @@ export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
+export const libraryIdSchema = z.string().uuid().brand<"LibraryId">();
+export type LibraryId = z.infer<typeof libraryIdSchema>;
+export const LibraryId = (id: string): LibraryId => libraryIdSchema.parse(id);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
@@ -625,15 +628,3 @@ export type LibraryInstallationState =
   | {
       state: "error";
     };
-
-export type DownloadableLibrary = {
-  downloadableModel: {
-    downloadPath: string;
-    volume: string;
-    speaker: Speaker;
-    speakerInfo: SpeakerInfo;
-  };
-  currentVersion: string;
-  characterExists: boolean;
-  latestModelExists: boolean;
-};
