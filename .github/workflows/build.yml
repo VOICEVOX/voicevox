@@ -219,7 +219,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
-        run: npm run electron:pack
+        run: npm run electron:build_dir
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -658,7 +658,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: |
-          PREPACKAGED="prepackage" npm run electron:build_packed
+          PREPACKAGED="prepackage" npm run electron:build_pnever_prepackaged
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.artifact_name, '-dmg') # macOS
@@ -666,7 +666,7 @@ jobs:
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
-          PREPACKAGED="prepackage/VOICEVOX.app" npm run electron:build_packed
+          PREPACKAGED="prepackage/VOICEVOX.app" npm run electron:build_pnever_prepackaged
 
       - name: Reset Code Signing Envs
         if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
