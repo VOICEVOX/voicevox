@@ -76,9 +76,9 @@
 import { useStore } from "@/store";
 import { computed, ref } from "vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import { EngineId } from "@/type/preload";
+import { EngineId, SpeakerId } from "@/type/preload";
 
-type DetailKey = { engine: EngineId; character: string };
+type DetailKey = { engine: EngineId; character: SpeakerId };
 
 const store = useStore();
 const md = useMarkdownIt();

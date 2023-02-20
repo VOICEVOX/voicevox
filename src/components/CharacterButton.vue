@@ -27,7 +27,7 @@
       <q-list style="min-width: max-content" class="character-item-container">
         <q-item
           v-if="selectedStyleInfo == undefined && !emptiable"
-          class="row no-wrap items-center"
+          class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >有効なスタイルが選択されていません</span
@@ -35,19 +35,19 @@
         </q-item>
         <q-item
           v-if="characterInfos.length === 0"
-          class="row no-wrap items-center"
+          class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >選択可能なスタイルがありません</span
           >
         </q-item>
-        <q-item v-if="emptiable" class="q-pa-none">
+        <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
           <q-btn
             flat
             no-caps
             v-close-popup
             class="full-width"
-            :class="selectedCharacter == undefined && 'selected-character-item'"
+            :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
           >
             <span>選択解除</span>
@@ -57,7 +57,7 @@
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
-          :class="isSelectedItem(characterInfo) && 'selected-row'"
+          :class="isSelectedItem(characterInfo) && 'selected-character-item'"
         >
           <q-btn-group flat class="col full-width">
             <q-btn
@@ -65,9 +65,6 @@
               no-caps
               v-close-popup
               class="col-grow"
-              :class="
-                isSelectedItem(characterInfo) && 'selected-character-item'
-              "
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
@@ -106,7 +103,7 @@
               <div
                 class="flex items-center q-px-sm q-py-none cursor-pointer"
                 :class="
-                  subMenuOpenFlags[characterIndex] && 'opened-character-item'
+                  subMenuOpenFlags[characterIndex] && 'selected-background'
                 "
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
@@ -127,7 +124,7 @@
                       :key="styleIndex"
                       clickable
                       v-close-popup
-                      active-class="selected-character-item"
+                      active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
@@ -372,13 +369,19 @@ export default defineComponent({
     }
   }
 
-  // 選択中のキャラを上にする
-  .selected-row {
-    order: -1;
+  .warning-item {
+    order: -3;
+  }
+  .to-unselect-item {
+    order: -2;
+  }
+  .selected-character-item {
+    order: -1; // 選択中のキャラを上にする
   }
 
   .selected-character-item,
-  .opened-character-item {
+  .selected-style-item,
+  .selected-background {
     background-color: rgba(colors.$primary-rgb, 0.2);
   }
 
