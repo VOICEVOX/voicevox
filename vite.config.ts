@@ -12,12 +12,14 @@ import checker from "vite-plugin-checker";
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_IS_ELECTRON === "true";
+const isDevelopment = process.env.NODE_ENV === "development";
 
 const config: UserConfig = {
   root: path.resolve(__dirname, "src"),
   build: {
     outDir: path.resolve(__dirname, "dist"),
     chunkSizeWarningLimit: 10000,
+    sourcemap: isDevelopment ? "inline" : false,
   },
   publicDir: path.resolve(__dirname, "public"),
   css: {
@@ -66,6 +68,7 @@ const config: UserConfig = {
           plugins: [tsconfigPaths({ root: __dirname })],
           build: {
             outDir: path.resolve(__dirname, "dist"),
+            sourcemap: isDevelopment ? "inline" : false,
           },
         },
       }),
