@@ -1,6 +1,5 @@
 /// <reference types="vitest" />
 import path from "path";
-import type { UserConfig } from "vite";
 import treeKill from "tree-kill";
 import { rmSync } from "fs";
 
@@ -8,7 +7,7 @@ import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
-import { defineConfig } from "rollup";
+import { defineConfig } from "vite";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
