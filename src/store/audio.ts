@@ -940,7 +940,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   SET_DEFAULT_PRESET: {
-    mutation(state, { audioKey }: { audioKey: string }) {
+    mutation(state, { audioKey }: { audioKey: AudioKey }) {
       const audioItem = state.audioItems[audioKey];
       if (audioItem === undefined || audioItem.voice === undefined) return;
 

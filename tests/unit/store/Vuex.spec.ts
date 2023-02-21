@@ -136,6 +136,7 @@ describe("store/vuex.js test", () => {
           tweakableSliderByScroll: false,
         },
         progress: -1,
+        defaultPresetKeyMap: {},
       },
       getters: {
         ...uiStore.getters,
