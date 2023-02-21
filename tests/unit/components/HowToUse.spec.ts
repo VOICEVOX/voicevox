@@ -5,7 +5,7 @@ import { createStore } from "vuex";
 import { storeKey } from "@/store";
 import { waitTicks, wrapQPage } from "../utils";
 import { Quasar } from "quasar";
-import { expect } from "chai";
+import { describe, it } from "vitest";
 
 const store = createStore({
   actions: {

@@ -1,8 +1,24 @@
-import { IpcRenderer, IpcRendererEvent } from "electron";
+import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
 
-export const isMac = process.platform === "darwin";
+export const isMac =
+  typeof process === "undefined"
+    ? navigator.userAgent.includes("Mac")
+    : process.platform === "darwin";
+
+export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export type EngineId = z.infer<typeof engineIdSchema>;
+export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
+
+export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export type SpeakerId = z.infer<typeof speakerIdSchema>;
+export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
+
+export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export type AudioKey = z.infer<typeof audioKeySchema>;
+export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -166,13 +182,14 @@ export interface Sandbox {
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(engineId: string): Promise<void>;
-  openEngineDirectory(engineId: string): void;
+  restartEngine(engineId: EngineId): Promise<void>;
+  openEngineDirectory(engineId: EngineId): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
   getDefaultHotkeySettings(): Promise<HotkeySetting[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSetting>;
+  setNativeTheme(source: NativeThemeType): void;
   theme(newData?: string): Promise<ThemeSetting | void>;
   vuexReady(): void;
   getSetting<Key extends keyof ElectronStoreType>(
@@ -182,10 +199,14 @@ export interface Sandbox {
     key: Key,
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
+  setEngineSetting(
+    engineId: EngineId,
+    engineSetting: EngineSetting
+  ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
-  uninstallVvppEngine(engineId: string): Promise<boolean>;
+  uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  restartApp(obj: { isSafeMode: boolean }): void;
+  restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
 
 export type AppInfos = {
@@ -198,20 +219,20 @@ export type StyleInfo = {
   styleId: number;
   iconPath: string;
   portraitPath: string | undefined;
-  engineId: string;
+  engineId: EngineId;
   voiceSamplePaths: string[];
 };
 
 export type MetasJson = {
   speakerName: string;
-  speakerUuid: string;
+  speakerUuid: SpeakerId;
   styles: Pick<StyleInfo, "styleName" | "styleId">[];
 };
 
 export type CharacterInfo = {
   portraitPath: string;
   metas: {
-    speakerUuid: string;
+    speakerUuid: SpeakerId;
     speakerName: string;
     styles: StyleInfo[];
     policy: string;
@@ -225,8 +246,8 @@ export type UpdateInfo = {
 };
 
 export type Voice = {
-  engineId: string;
-  speakerId: string;
+  engineId: EngineId;
+  speakerId: SpeakerId;
   styleId: number;
 };
 
@@ -254,25 +275,47 @@ export type SavingSetting = {
   avoidOverwrite: boolean;
   exportText: boolean;
   outputStereo: boolean;
-  outputSamplingRate: number | "engineDefault";
   audioOutputDevice: string;
 };
 
-// FIXME: engineIdを追加
+export type EngineSettings = Record<EngineId, EngineSetting>;
+
+export const engineSettingSchema = z
+  .object({
+    useGpu: z.boolean().default(false),
+    outputSamplingRate: z
+      .union([z.number(), z.literal("engineDefault")])
+      .default("engineDefault"),
+  })
+  .passthrough();
+export type EngineSetting = z.infer<typeof engineSettingSchema>;
+
 export type DefaultStyleId = {
-  speakerUuid: string;
+  engineId: EngineId;
+  speakerUuid: SpeakerId;
   defaultStyleId: number;
 };
 
-export type MinimumEngineManifest = {
-  name: string;
-  uuid: string;
-  command: string;
-  port: string;
-};
+export const supportedFeaturesItemSchema = z.object({
+  type: z.string(),
+  value: z.boolean(),
+  name: z.string(),
+});
+
+export const minimumEngineManifestSchema = z
+  .object({
+    name: z.string(),
+    uuid: engineIdSchema,
+    command: z.string(),
+    port: z.number(),
+    supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
+  })
+  .passthrough();
+
+export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
 export type EngineInfo = {
-  uuid: string;
+  uuid: EngineId;
   host: string;
   name: string;
   path?: string; // エンジンディレクトリのパス
@@ -299,14 +342,24 @@ export type Preset = {
 
 export type MorphingInfo = {
   rate: number;
-  targetEngineId: string;
-  targetSpeakerId: string;
+  targetEngineId: EngineId;
+  targetSpeakerId: SpeakerId;
   targetStyleId: number;
 };
 
 export type PresetConfig = {
   items: Record<string, Preset>;
   keys: string[];
+};
+
+export type MorphableTargetInfoTable = {
+  [baseStyleId: number]:
+    | undefined
+    | {
+        [targetStyleId: number]: {
+          isMorphable: boolean;
+        };
+      };
 };
 
 export const hotkeyActionSchema = z.enum([
@@ -338,10 +391,12 @@ export type HotkeyAction = z.infer<typeof hotkeyActionSchema>;
 
 export type HotkeyCombo = string;
 
-export const hotkeySettingSchema = z.object({
-  action: hotkeyActionSchema,
-  combination: z.string(),
-});
+export const hotkeySettingSchema = z
+  .object({
+    action: hotkeyActionSchema,
+    combination: z.string(),
+  })
+  .passthrough();
 export type HotkeySetting = z.infer<typeof hotkeySettingSchema>;
 
 export type HotkeyReturnType =
@@ -366,6 +421,8 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
+
+export type NativeThemeType = typeof nativeTheme["themeSource"];
 
 export type MoraDataType =
   | "consonant"
@@ -406,13 +463,16 @@ export type ExperimentalSetting = {
   enablePreset: boolean;
   enableInterrogativeUpspeak: boolean;
   enableMorphing: boolean;
+  enableMultiEngine: boolean;
 };
 
-export const splitterPositionSchema = z.object({
-  portraitPaneWidth: z.number().optional(),
-  audioInfoPaneWidth: z.number().optional(),
-  audioDetailPaneHeight: z.number().optional(),
-});
+export const splitterPositionSchema = z
+  .object({
+    portraitPaneWidth: z.number().optional(),
+    audioInfoPaneWidth: z.number().optional(),
+    audioDetailPaneHeight: z.number().optional(),
+  })
+  .passthrough();
 export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
@@ -420,7 +480,6 @@ export type ConfirmedTips = {
 };
 export const electronStoreSchema = z
   .object({
-    useGpu: z.boolean().default(false),
     inheritAudioInfo: z.boolean().default(true),
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
@@ -435,20 +494,26 @@ export const electronStoreSchema = z
         exportLab: z.boolean().default(false),
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
-        outputSamplingRate: z
-          .union([z.number(), z.literal("engineDefault")])
-          .default("engineDefault"),
         audioOutputDevice: z.string().default(""),
       })
-      .passthrough() // 別のブランチでの開発中の設定項目があるコンフィグで死ぬのを防ぐ
+      .passthrough()
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
-    userCharacterOrder: z.string().array().default([]),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+    userCharacterOrder: speakerIdSchema.array().default([]),
     defaultStyleIds: z
-      .object({ speakerUuid: z.string(), defaultStyleId: z.number() })
+      .object({
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
+        speakerUuid: speakerIdSchema,
+        defaultStyleId: z.number(),
+      })
+      .passthrough()
       .array()
       .default([]),
     presets: z
@@ -456,27 +521,31 @@ export const electronStoreSchema = z
         items: z
           .record(
             z.string().uuid(),
-            z.object({
-              name: z.string(),
-              speedScale: z.number(),
-              pitchScale: z.number(),
-              intonationScale: z.number(),
-              volumeScale: z.number(),
-              prePhonemeLength: z.number(),
-              postPhonemeLength: z.number(),
-              morphingInfo: z
-                .object({
-                  rate: z.number(),
-                  targetEngineId: z.string().uuid(),
-                  targetSpeakerId: z.string().uuid(),
-                  targetStyleId: z.number(),
-                })
-                .optional(),
-            })
+            z
+              .object({
+                name: z.string(),
+                speedScale: z.number(),
+                pitchScale: z.number(),
+                intonationScale: z.number(),
+                volumeScale: z.number(),
+                prePhonemeLength: z.number(),
+                postPhonemeLength: z.number(),
+                morphingInfo: z
+                  .object({
+                    rate: z.number(),
+                    targetEngineId: engineIdSchema,
+                    targetSpeakerId: speakerIdSchema,
+                    targetStyleId: z.number(),
+                  })
+                  .passthrough()
+                  .optional(),
+              })
+              .passthrough()
           )
           .default({}),
         keys: z.string().uuid().array().default([]),
       })
+      .passthrough()
       .default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
@@ -485,6 +554,7 @@ export const electronStoreSchema = z
         enablePreset: z.boolean().default(false),
         enableInterrogativeUpspeak: z.boolean().default(false),
         enableMorphing: z.boolean().default(false),
+        enableMultiEngine: z.boolean().default(false),
       })
       .passthrough()
       .default({}),
@@ -504,9 +574,9 @@ export const electronStoreSchema = z
       })
       .passthrough()
       .default({}),
-    engineDirs: z.string().array().default([]),
+    registeredEngineDirs: z.string().array().default([]),
   })
-  .passthrough(); // release-0.14直前で消す
+  .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。

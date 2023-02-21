@@ -11,7 +11,9 @@ import {
   AccentPhrase,
   AudioQuery,
   EngineManifest,
+  SupportedDevicesInfo,
   UserDictWord,
+  MorphableTargetInfo,
 } from "@/openapi";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -37,6 +39,13 @@ import {
   ConfirmedTips,
   EngineDirValidationResult,
   EditorFontType,
+  EngineSettings,
+  MorphableTargetInfoTable,
+  EngineSetting,
+  Voice,
+  EngineId,
+  SpeakerId,
+  AudioKey,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import { QVueGlobals } from "quasar";
@@ -48,11 +57,9 @@ export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
   outputSamplingRate: number | "engineDefault";
 };
 
-// FIXME: SpeakerIdを追加する
 export type AudioItem = {
   text: string;
-  engineId?: string;
-  styleId?: number;
+  voice: Voice;
   query?: EditorAudioQuery;
   presetKey?: string;
   morphingInfo?: MorphingInfo;
@@ -106,27 +113,28 @@ export type QuasarDialog = QVueGlobals["dialog"];
  */
 
 export type AudioStoreState = {
-  characterInfos: Record<string, CharacterInfo[]>;
+  characterInfos: Record<EngineId, CharacterInfo[]>;
+  morphableTargetsInfo: Record<EngineId, MorphableTargetInfoTable>;
   audioKeyInitializingSpeaker?: string;
-  audioItems: Record<string, AudioItem>;
-  audioKeys: string[];
-  audioStates: Record<string, AudioState>;
-  _activeAudioKey?: string;
+  audioItems: Record<AudioKey, AudioItem>;
+  audioKeys: AudioKey[];
+  audioStates: Record<AudioKey, AudioState>;
+  _activeAudioKey?: AudioKey;
   audioPlayStartPoint?: number;
   nowPlayingContinuously: boolean;
 };
 
 export type AudioStoreTypes = {
   ACTIVE_AUDIO_KEY: {
-    getter: string | undefined;
+    getter: AudioKey | undefined;
   };
 
   HAVE_AUDIO_QUERY: {
-    getter(audioKey: string): boolean;
+    getter(audioKey: AudioKey): boolean;
   };
 
   IS_ACTIVE: {
-    getter(audioKey: string): boolean;
+    getter(audioKey: AudioKey): boolean;
   };
 
   ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
@@ -134,15 +142,15 @@ export type AudioStoreTypes = {
   };
 
   LOAD_CHARACTER: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   SET_CHARACTER_INFOS: {
-    mutation: { engineId: string; characterInfos: CharacterInfo[] };
+    mutation: { engineId: EngineId; characterInfos: CharacterInfo[] };
   };
 
   CHARACTER_INFO: {
-    getter(engineId: string, styleId: number): CharacterInfo | undefined;
+    getter(engineId: EngineId, styleId: number): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -150,24 +158,24 @@ export type AudioStoreTypes = {
   };
 
   GENERATE_AUDIO_KEY: {
-    action(): string;
+    action(): AudioKey;
   };
 
   SETUP_SPEAKER: {
     action(payload: {
-      audioKey: string;
-      engineId: string;
+      audioKey: AudioKey;
+      engineId: EngineId;
       styleId: number;
     }): void;
   };
 
   SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation: { audioKey?: string };
+    mutation: { audioKey?: AudioKey };
   };
 
   SET_ACTIVE_AUDIO_KEY: {
-    mutation: { audioKey?: string };
-    action(payload: { audioKey?: string }): void;
+    mutation: { audioKey?: AudioKey };
+    action(payload: { audioKey?: AudioKey }): void;
   };
 
   SET_AUDIO_PLAY_START_POINT: {
@@ -176,11 +184,11 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_NOW_PLAYING: {
-    mutation: { audioKey: string; nowPlaying: boolean };
+    mutation: { audioKey: AudioKey; nowPlaying: boolean };
   };
 
   SET_AUDIO_NOW_GENERATING: {
-    mutation: { audioKey: string; nowGenerating: boolean };
+    mutation: { audioKey: AudioKey; nowGenerating: boolean };
   };
 
   SET_NOW_PLAYING_CONTINUOUSLY: {
@@ -190,8 +198,7 @@ export type AudioStoreTypes = {
   GENERATE_AUDIO_ITEM: {
     action(payload: {
       text?: string;
-      engineId?: string;
-      styleId?: number;
+      voice?: Voice;
       presetKey?: string;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
@@ -200,31 +207,31 @@ export type AudioStoreTypes = {
   REGISTER_AUDIO_ITEM: {
     action(payload: {
       audioItem: AudioItem;
-      prevAudioKey?: string;
-    }): Promise<string>;
+      prevAudioKey?: AudioKey;
+    }): Promise<AudioKey>;
   };
 
   INSERT_AUDIO_ITEM: {
     mutation: {
       audioItem: AudioItem;
-      audioKey: string;
-      prevAudioKey: string | undefined;
+      audioKey: AudioKey;
+      prevAudioKey: AudioKey | undefined;
     };
   };
 
   INSERT_AUDIO_ITEMS: {
     mutation: {
-      audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
-      prevAudioKey: string | undefined;
+      audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
+      prevAudioKey: AudioKey | undefined;
     };
   };
 
   REMOVE_AUDIO_ITEM: {
-    mutation: { audioKey: string };
+    mutation: { audioKey: AudioKey };
   };
 
   SET_AUDIO_KEYS: {
-    mutation: { audioKeys: string[] };
+    mutation: { audioKeys: AudioKey[] };
   };
 
   REMOVE_ALL_AUDIO_ITEM: {
@@ -232,7 +239,7 @@ export type AudioStoreTypes = {
   };
 
   GET_AUDIO_CACHE: {
-    action(payload: { audioKey: string }): Promise<Blob | null>;
+    action(payload: { audioKey: AudioKey }): Promise<Blob | null>;
   };
 
   GET_AUDIO_CACHE_FROM_AUDIO_ITEM: {
@@ -240,36 +247,51 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_TEXT: {
-    mutation: { audioKey: string; text: string };
+    mutation: { audioKey: AudioKey; text: string };
   };
 
   SET_AUDIO_SPEED_SCALE: {
-    mutation: { audioKey: string; speedScale: number };
+    mutation: { audioKey: AudioKey; speedScale: number };
   };
 
   SET_AUDIO_PITCH_SCALE: {
-    mutation: { audioKey: string; pitchScale: number };
+    mutation: { audioKey: AudioKey; pitchScale: number };
   };
 
   SET_AUDIO_INTONATION_SCALE: {
-    mutation: { audioKey: string; intonationScale: number };
+    mutation: { audioKey: AudioKey; intonationScale: number };
   };
 
   SET_AUDIO_VOLUME_SCALE: {
-    mutation: { audioKey: string; volumeScale: number };
+    mutation: { audioKey: AudioKey; volumeScale: number };
   };
 
   SET_AUDIO_PRE_PHONEME_LENGTH: {
-    mutation: { audioKey: string; prePhonemeLength: number };
+    mutation: { audioKey: AudioKey; prePhonemeLength: number };
   };
 
   SET_AUDIO_POST_PHONEME_LENGTH: {
-    mutation: { audioKey: string; postPhonemeLength: number };
+    mutation: { audioKey: AudioKey; postPhonemeLength: number };
+  };
+
+  LOAD_MORPHABLE_TARGETS: {
+    action(payload: { engineId: EngineId; baseStyleId: number }): void;
+  };
+
+  SET_MORPHABLE_TARGETS: {
+    mutation: {
+      engineId: EngineId;
+      baseStyleId: number;
+      morphableTargets?: Exclude<
+        { [key: number]: MorphableTargetInfo },
+        undefined
+      >;
+    };
   };
 
   SET_MORPHING_INFO: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       morphingInfo: MorphingInfo | undefined;
     };
   };
@@ -278,35 +300,35 @@ export type AudioStoreTypes = {
     getter: string[];
   };
 
-  VALID_MOPHING_INFO: {
+  VALID_MORPHING_INFO: {
     getter(audioItem: AudioItem): boolean;
   };
 
   SET_AUDIO_QUERY: {
-    mutation: { audioKey: string; audioQuery: AudioQuery };
-    action(payload: { audioKey: string; audioQuery: AudioQuery }): void;
+    mutation: { audioKey: AudioKey; audioQuery: AudioQuery };
+    action(payload: { audioKey: AudioKey; audioQuery: AudioQuery }): void;
   };
 
   FETCH_AUDIO_QUERY: {
     action(payload: {
       text: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): Promise<AudioQuery>;
   };
 
-  SET_AUDIO_STYLE_ID: {
-    mutation: { audioKey: string; engineId: string; styleId: number };
+  SET_AUDIO_VOICE: {
+    mutation: { audioKey: AudioKey; voice: Voice };
   };
 
   SET_ACCENT_PHRASES: {
-    mutation: { audioKey: string; accentPhrases: AccentPhrase[] };
+    mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
   };
 
   FETCH_ACCENT_PHRASES: {
     action(payload: {
       text: string;
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
@@ -314,7 +336,7 @@ export type AudioStoreTypes = {
 
   SET_SINGLE_ACCENT_PHRASE: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       accentPhrases: AccentPhrase[];
     };
@@ -322,7 +344,7 @@ export type AudioStoreTypes = {
 
   SET_AUDIO_MORA_DATA: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       moraIndex: number;
       data: number;
@@ -331,13 +353,13 @@ export type AudioStoreTypes = {
   };
 
   APPLY_AUDIO_PRESET: {
-    mutation: { audioKey: string };
+    mutation: { audioKey: AudioKey };
   };
 
   FETCH_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
     }): Promise<AccentPhrase[]>;
   };
@@ -345,22 +367,25 @@ export type AudioStoreTypes = {
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
-      engineId: string;
+      engineId: EngineId;
       styleId: number;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
   };
 
   GENERATE_LAB: {
-    action(payload: { audioKey: string; offset?: number }): string | undefined;
+    action(payload: {
+      audioKey: AudioKey;
+      offset?: number;
+    }): string | undefined;
   };
 
   GET_AUDIO_PLAY_OFFSETS: {
-    action(payload: { audioKey: string }): number[];
+    action(payload: { audioKey: AudioKey }): number[];
   };
 
   GENERATE_AUDIO: {
-    action(payload: { audioKey: string }): Promise<Blob>;
+    action(payload: { audioKey: AudioKey }): Promise<Blob>;
   };
 
   GENERATE_AUDIO_FROM_AUDIO_ITEM: {
@@ -373,7 +398,7 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       filePath?: string;
       encoding?: EncodingType;
     }): SaveResultObject;
@@ -403,24 +428,24 @@ export type AudioStoreTypes = {
   };
 
   PLAY_AUDIO: {
-    action(payload: { audioKey: string }): boolean;
+    action(payload: { audioKey: AudioKey }): boolean;
   };
 
   PLAY_AUDIO_BLOB: {
     action(payload: {
       audioBlob: Blob;
       audioElem: HTMLAudioElement;
-      audioKey?: string;
+      audioKey?: AudioKey;
     }): boolean;
   };
 
   STOP_AUDIO: {
-    action(payload: { audioKey: string }): void;
+    action(payload: { audioKey: AudioKey }): void;
   };
 
   SET_AUDIO_PRESET_KEY: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       presetKey: string | undefined;
     };
   };
@@ -454,62 +479,58 @@ export type AudioCommandStoreTypes = {
   COMMAND_REGISTER_AUDIO_ITEM: {
     mutation: {
       audioItem: AudioItem;
-      audioKey: string;
-      prevAudioKey: string | undefined;
+      audioKey: AudioKey;
+      prevAudioKey: AudioKey | undefined;
       applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
-      prevAudioKey: string | undefined;
+      prevAudioKey: AudioKey | undefined;
       applyPreset: boolean;
-    }): Promise<string>;
+    }): Promise<AudioKey>;
   };
 
   COMMAND_REMOVE_AUDIO_ITEM: {
-    mutation: { audioKey: string };
-    action(payload: { audioKey: string }): void;
+    mutation: { audioKey: AudioKey };
+    action(payload: { audioKey: AudioKey }): void;
   };
 
   COMMAND_SET_AUDIO_KEYS: {
-    mutation: { audioKeys: string[] };
-    action(payload: { audioKeys: string[] }): void;
+    mutation: { audioKeys: AudioKey[] };
+    action(payload: { audioKeys: AudioKey[] }): void;
   };
 
   COMMAND_CHANGE_AUDIO_TEXT: {
-    mutation: { audioKey: string; text: string } & (
+    mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: { audioKey: string; text: string }): void;
+    action(payload: { audioKey: AudioKey; text: string }): void;
   };
 
-  COMMAND_CHANGE_STYLE_ID: {
-    mutation: { engineId: string; styleId: number; audioKey: string } & (
+  COMMAND_CHANGE_VOICE: {
+    mutation: { audioKey: AudioKey; voice: Voice } & (
       | { update: "StyleId" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
       | { update: "AudioQuery"; query: AudioQuery }
     );
-    action(payload: {
-      audioKey: string;
-      engineId: string;
-      styleId: number;
-    }): void;
+    action(payload: { audioKey: AudioKey; voice: Voice }): void;
   };
 
   COMMAND_CHANGE_ACCENT: {
-    mutation: { audioKey: string; accentPhrases: AccentPhrase[] };
+    mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       accent: number;
     }): void;
   };
 
   COMMAND_CHANGE_ACCENT_PHRASE_SPLIT: {
-    mutation: { audioKey: string; accentPhrases: AccentPhrase[] };
+    mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(
-      payload: { audioKey: string; accentPhraseIndex: number } & (
+      payload: { audioKey: AudioKey; accentPhraseIndex: number } & (
         | { isPause: false; moraIndex: number }
         | { isPause: true }
       )
@@ -517,9 +538,9 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_CHANGE_SINGLE_ACCENT_PHRASE: {
-    mutation: { audioKey: string; accentPhrases: AccentPhrase[] };
+    mutation: { audioKey: AudioKey; accentPhrases: AccentPhrase[] };
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       newPronunciation: string;
       accentPhraseIndex: number;
       popUntilPause: boolean;
@@ -527,23 +548,23 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
-    action(payload: { audioKey: string }): void;
+    action(payload: { audioKey: AudioKey }): void;
   };
 
   COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH: {
-    action(payload: { audioKey: string; accentPhraseIndex: number }): void;
+    action(payload: { audioKey: AudioKey; accentPhraseIndex: number }): void;
   };
 
   COMMAND_SET_AUDIO_MORA_DATA: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       moraIndex: number;
       data: number;
       type: MoraDataType;
     };
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       moraIndex: number;
       data: number;
@@ -553,14 +574,14 @@ export type AudioCommandStoreTypes = {
 
   COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       moraIndex: number;
       data: number;
       type: MoraDataType;
     };
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       accentPhraseIndex: number;
       moraIndex: number;
       data: number;
@@ -569,57 +590,60 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_SET_AUDIO_SPEED_SCALE: {
-    mutation: { audioKey: string; speedScale: number };
-    action(payload: { audioKey: string; speedScale: number }): void;
+    mutation: { audioKey: AudioKey; speedScale: number };
+    action(payload: { audioKey: AudioKey; speedScale: number }): void;
   };
 
   COMMAND_SET_AUDIO_PITCH_SCALE: {
-    mutation: { audioKey: string; pitchScale: number };
-    action(payload: { audioKey: string; pitchScale: number }): void;
+    mutation: { audioKey: AudioKey; pitchScale: number };
+    action(payload: { audioKey: AudioKey; pitchScale: number }): void;
   };
 
   COMMAND_SET_AUDIO_INTONATION_SCALE: {
-    mutation: { audioKey: string; intonationScale: number };
-    action(payload: { audioKey: string; intonationScale: number }): void;
+    mutation: { audioKey: AudioKey; intonationScale: number };
+    action(payload: { audioKey: AudioKey; intonationScale: number }): void;
   };
 
   COMMAND_SET_AUDIO_VOLUME_SCALE: {
-    mutation: { audioKey: string; volumeScale: number };
-    action(payload: { audioKey: string; volumeScale: number }): void;
+    mutation: { audioKey: AudioKey; volumeScale: number };
+    action(payload: { audioKey: AudioKey; volumeScale: number }): void;
   };
 
   COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
-    mutation: { audioKey: string; prePhonemeLength: number };
-    action(payload: { audioKey: string; prePhonemeLength: number }): void;
+    mutation: { audioKey: AudioKey; prePhonemeLength: number };
+    action(payload: { audioKey: AudioKey; prePhonemeLength: number }): void;
   };
 
   COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
-    mutation: { audioKey: string; postPhonemeLength: number };
-    action(payload: { audioKey: string; postPhonemeLength: number }): void;
+    mutation: { audioKey: AudioKey; postPhonemeLength: number };
+    action(payload: { audioKey: AudioKey; postPhonemeLength: number }): void;
   };
 
   COMMAND_SET_MORPHING_INFO: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       morphingInfo: MorphingInfo | undefined;
     };
     action(payload: {
-      audioKey: string;
+      audioKey: AudioKey;
       morphingInfo: MorphingInfo | undefined;
     }): void;
   };
 
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
-      audioKey: string;
+      audioKey: AudioKey;
       presetKey: string | undefined;
     };
-    action(payload: { audioKey: string; presetKey: string | undefined }): void;
+    action(payload: {
+      audioKey: AudioKey;
+      presetKey: string | undefined;
+    }): void;
   };
 
   COMMAND_APPLY_AUDIO_PRESET: {
-    mutation: { audioKey: string };
-    action(payload: { audioKey: string }): void;
+    mutation: { audioKey: AudioKey };
+    action(payload: { audioKey: AudioKey }): void;
   };
 
   COMMAND_FULLY_APPLY_AUDIO_PRESET: {
@@ -629,22 +653,21 @@ export type AudioCommandStoreTypes = {
 
   COMMAND_IMPORT_FROM_FILE: {
     mutation: {
-      audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
+      audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
     action(payload: { filePath?: string }): string[] | void;
   };
 
   COMMAND_PUT_TEXTS: {
     mutation: {
-      audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
-      prevAudioKey: string;
+      audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
+      prevAudioKey: AudioKey;
     };
     action(payload: {
-      prevAudioKey: string;
+      prevAudioKey: AudioKey;
       texts: string[];
-      engineId: string;
-      styleId: number;
-    }): string[];
+      voice: Voice;
+    }): AudioKey[];
   };
 };
 
@@ -690,7 +713,8 @@ export type CommandStoreTypes = {
  */
 
 export type EngineStoreState = {
-  engineStates: Record<string, EngineState>;
+  engineStates: Record<EngineId, EngineState>;
+  engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
 };
 
 export type EngineStoreTypes = {
@@ -703,7 +727,7 @@ export type EngineStoreTypes = {
   };
 
   SET_ENGINE_MANIFESTS: {
-    mutation: { engineManifests: Record<string, EngineManifest> };
+    mutation: { engineManifests: Record<EngineId, EngineManifest> };
   };
 
   FETCH_AND_SET_ENGINE_MANIFESTS: {
@@ -715,42 +739,45 @@ export type EngineStoreTypes = {
   };
 
   IS_ENGINE_READY: {
-    getter(engineId: string): boolean;
+    getter(engineId: EngineId): boolean;
   };
 
   START_WAITING_ENGINE: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
-  // NOTE: 複数のengineIdを受け取ってバルク操作する関数にしてもいいかもしれない？
-  // NOTE: 個別にエンジンの状態を確認できるようにする？
-  // NOTE: boolean以外でエンジン状態を表現してもいいかもしれない？
-  RESTART_ENGINE_ALL: {
-    action(): Promise<boolean>;
+  RESTART_ENGINES: {
+    action(payload: { engineIds: EngineId[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
-  RESTART_ENGINE: {
-    action(payload: { engineId: string }): Promise<boolean>;
+  POST_ENGINE_START: {
+    action(payload: { engineIds: EngineId[] }): Promise<{
+      success: boolean;
+      anyNewCharacters: boolean;
+    }>;
   };
 
   DETECTED_ENGINE_ERROR: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   OPEN_ENGINE_DIRECTORY: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
   };
 
   SET_ENGINE_STATE: {
-    mutation: { engineId: string; engineState: EngineState };
+    mutation: { engineId: EngineId; engineState: EngineState };
   };
 
   IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): Promise<boolean>;
+    action(payload: { engineId: EngineId; styleId: number }): Promise<boolean>;
   };
 
   INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: string; styleId: number }): void;
+    action(payload: { engineId: EngineId; styleId: number }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -770,19 +797,31 @@ export type EngineStoreTypes = {
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    action: (engineId: string) => Promise<boolean>;
+    action: (engineId: EngineId) => Promise<boolean>;
   };
 
   SET_ENGINE_INFOS: {
-    mutation: { engineIds: string[]; engineInfos: EngineInfo[] };
+    mutation: { engineIds: EngineId[]; engineInfos: EngineInfo[] };
   };
 
   SET_ENGINE_MANIFEST: {
-    mutation: { engineId: string; engineManifest: EngineManifest };
+    mutation: { engineId: EngineId; engineManifest: EngineManifest };
   };
 
   FETCH_AND_SET_ENGINE_MANIFEST: {
-    action(payload: { engineId: string }): void;
+    action(payload: { engineId: EngineId }): void;
+  };
+
+  SET_ENGINE_SUPPORTED_DEVICES: {
+    mutation: { engineId: EngineId; supportedDevices: SupportedDevicesInfo };
+  };
+
+  FETCH_AND_SET_ENGINE_SUPPORTED_DEVICES: {
+    action(payload: { engineId: EngineId }): void;
+  };
+
+  ENGINE_CAN_USE_GPU: {
+    getter: (engineId: EngineId) => boolean;
   };
 };
 
@@ -792,13 +831,13 @@ export type EngineStoreTypes = {
 
 export type IndexStoreState = {
   defaultStyleIds: DefaultStyleId[];
-  userCharacterOrder: string[];
-  isSafeMode: boolean;
+  userCharacterOrder: SpeakerId[];
+  isMultiEngineOffMode: boolean;
 };
 
 export type IndexStoreTypes = {
   GET_ALL_CHARACTER_INFOS: {
-    getter: Map<string, CharacterInfo>;
+    getter: Map<SpeakerId, CharacterInfo>;
   };
 
   GET_ORDERED_ALL_CHARACTER_INFOS: {
@@ -851,12 +890,12 @@ export type IndexStoreTypes = {
   };
 
   SET_USER_CHARACTER_ORDER: {
-    mutation: { userCharacterOrder: string[] };
-    action(payload: string[]): void;
+    mutation: { userCharacterOrder: SpeakerId[] };
+    action(payload: SpeakerId[]): void;
   };
 
   GET_NEW_CHARACTERS: {
-    action(): string[];
+    action(): SpeakerId[];
   };
 
   LOG_ERROR: {
@@ -875,8 +914,8 @@ export type IndexStoreTypes = {
     action(): void;
   };
 
-  SET_IS_SAFE_MODE: {
-    mutation: { isSafeMode: boolean };
+  SET_IS_MULTI_ENGINE_OFF_MODE: {
+    mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
 };
@@ -904,7 +943,7 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string; confirm?: boolean }): void;
+    action(payload: { filePath?: string; confirm?: boolean }): boolean;
   };
 
   SAVE_PROJECT_FILE: {
@@ -928,9 +967,9 @@ export type SettingStoreState = {
   savingSetting: SavingSetting;
   hotkeySettings: HotkeySetting[];
   toolbarSetting: ToolbarSetting;
-  engineIds: string[];
-  engineInfos: Record<string, EngineInfo>;
-  engineManifests: Record<string, EngineManifest>;
+  engineIds: EngineId[];
+  engineInfos: Record<EngineId, EngineInfo>;
+  engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
@@ -938,6 +977,7 @@ export type SettingStoreState = {
   splitTextWhenPaste: SplitTextWhenPasteType;
   splitterPosition: SplitterPosition;
   confirmedTips: ConfirmedTips;
+  engineSettings: EngineSettings;
 };
 
 export type SettingStoreTypes = {
@@ -1002,8 +1042,16 @@ export type SettingStoreTypes = {
     action(payload: { confirmedTips: ConfirmedTips }): void;
   };
 
+  SET_ENGINE_SETTING: {
+    mutation: { engineSetting: EngineSetting; engineId: EngineId };
+    action(payload: {
+      engineSetting: EngineSetting;
+      engineId: EngineId;
+    }): Promise<void>;
+  };
+
   CHANGE_USE_GPU: {
-    action(payload: { useGpu: boolean }): void;
+    action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
   };
 };
 
@@ -1014,7 +1062,6 @@ export type SettingStoreTypes = {
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
-  useGpu: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
   isHelpDialogOpen: boolean;
@@ -1109,11 +1156,6 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SET_USE_GPU: {
-    mutation: { useGpu: boolean };
-    action(payload: { useGpu: boolean }): void;
-  };
-
   SET_INHERIT_AUDIOINFO: {
     mutation: { inheritAudioInfo: boolean };
     action(payload: { inheritAudioInfo: boolean }): void;
@@ -1163,7 +1205,7 @@ export type UiStoreTypes = {
   };
 
   RESTART_APP: {
-    action(obj: { isSafeMode?: boolean }): void;
+    action(obj: { isMultiEngineOffMode?: boolean }): void;
   };
 
   START_PROGRESS: {
@@ -1236,7 +1278,7 @@ export type DictionaryStoreState = Record<string, unknown>;
 export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
     action(payload: {
-      engineId: string;
+      engineId: EngineId;
     }): Promise<Record<string, UserDictWord>>;
   };
   LOAD_ALL_USER_DICT: {
@@ -1288,7 +1330,7 @@ type IEngineConnectorFactoryActionsMapper = <
 export type ProxyStoreTypes = {
   INSTANTIATE_ENGINE_CONNECTOR: {
     action(payload: {
-      engineId: string;
+      engineId: EngineId;
     }): Promise<{ invoke: IEngineConnectorFactoryActionsMapper }>;
   };
 };

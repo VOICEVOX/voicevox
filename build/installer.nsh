@@ -3,7 +3,7 @@
 !include "funcs.nsh"
 
 ; voicevox-X.X.X-x64.nsis.7z.ini などが配置されている場所
-; 開発中はここを一時的に差し替えて、out フォルダー内で npx http-server などとするとテストしやすい
+; 開発中はここを一時的に差し替えて、out フォルダ内で npx http-server などとするとテストしやすい
 ; !define DOWNLOAD_BASE_URL "http://127.0.0.1:8080"
 !define DOWNLOAD_BASE_URL "${APP_PACKAGE_URL}"
 
@@ -531,7 +531,7 @@ verifyPartedFile_finish${UniqueID}:
       ${EndIf}
     ${ElseIf} $0 == "No entry"
       ; ini ファイルから必要な情報が見つけられなかった
-      ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダー内のファイルを削除されると起こるかもしれない
+      ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダ内のファイルを削除されると起こるかもしれない
       MessageBox MB_OK|MB_ICONSTOP "ファイル検証に必要なデータが見つからなかったため処理を中断しました。$\r$\n時間を置いてからやり直してみてください。"
       ${myQuit}
     ${ElseIf} $0 == "Failed to get file size"
@@ -650,7 +650,7 @@ Function welcomePageLeave
         ${myQuit}
       ${ElseIf} $0 == "No entry"
         ; ini ファイルから必要な情報が見つけられなかった
-        ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダー内のファイルを削除されると起こるかもしれない
+        ; ウィルス対策ソフトや掃除系ソフトによって一時フォルダ内のファイルを削除されると起こるかもしれない
         MessageBox MB_OK|MB_ICONSTOP "ファイル検証に必要なデータが見つからなかったため処理を中断しました。$\r$\n時間を置いてからやり直してみてください。"
         ${myQuit}
       ${ElseIf} $0 != "OK"

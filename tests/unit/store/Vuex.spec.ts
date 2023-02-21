@@ -8,21 +8,25 @@ import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
-import { assert } from "chai";
+import { assert, describe, it } from "vitest";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
+import { EngineId } from "@/type/preload";
 const isDevelopment = process.env.NODE_ENV == "development";
 // TODO: Swap external files to Mock
 
 describe("store/vuex.js test", () => {
   it("create store", () => {
+    const engineId = EngineId("88022f86-c823-436e-85a3-500c629749c4");
     const store = createStore<State, AllGetters, AllActions, AllMutations>({
       state: {
         engineStates: {
-          "88022f86-c823-436e-85a3-500c629749c4": "STARTING",
+          [engineId]: "STARTING",
         },
+        engineSupportedDevices: {},
         characterInfos: {},
+        morphableTargetsInfo: {},
         defaultStyleIds: [],
         userCharacterOrder: [],
         audioItems: {},
@@ -34,7 +38,6 @@ describe("store/vuex.js test", () => {
         nowPlayingContinuously: false,
         undoCommands: [],
         redoCommands: [],
-        useGpu: false,
         inheritAudioInfo: true,
         activePointScrollMode: "OFF",
         isHelpDialogOpen: false,
@@ -48,7 +51,7 @@ describe("store/vuex.js test", () => {
         isAcceptRetrieveTelemetryDialogOpen: false,
         isAcceptTermsDialogOpen: false,
         isMaximized: false,
-        isSafeMode: false,
+        isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
         savingSetting: {
           fileEncoding: "UTF-8",
@@ -59,8 +62,13 @@ describe("store/vuex.js test", () => {
           exportLab: false,
           exportText: false,
           outputStereo: false,
-          outputSamplingRate: 24000,
           audioOutputDevice: "default",
+        },
+        engineSettings: {
+          [engineId]: {
+            outputSamplingRate: "engineDefault",
+            useGpu: false,
+          },
         },
         themeSetting: {
           currentTheme: "Default",
@@ -75,10 +83,10 @@ describe("store/vuex.js test", () => {
         toolbarSetting: [],
         acceptRetrieveTelemetry: "Unconfirmed",
         acceptTerms: "Unconfirmed",
-        engineIds: ["88022f86-c823-436e-85a3-500c629749c4"],
+        engineIds: [engineId],
         engineInfos: {
-          "88022f86-c823-436e-85a3-500c629749c4": {
-            uuid: "88022f86-c823-436e-85a3-500c629749c4",
+          [engineId]: {
+            uuid: engineId,
             name: "Engine 1",
             executionEnabled: false,
             executionFilePath: "",
@@ -88,7 +96,7 @@ describe("store/vuex.js test", () => {
           },
         },
         engineManifests: {
-          "88022f86-c823-436e-85a3-500c629749c4": {
+          [engineId]: {
             manifestVersion: "0.13.0",
             name: "DUMMY VOICEVOX ENGINE",
             brandName: "DUMMY VOICEVOX",
@@ -115,6 +123,7 @@ describe("store/vuex.js test", () => {
           enablePreset: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
+          enableMultiEngine: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -177,6 +186,7 @@ describe("store/vuex.js test", () => {
       assert.equal(store.state.engineStates[engineId], "STARTING")
     );
     assert.isObject(store.state.characterInfos);
+    assert.isObject(store.state.morphableTargetsInfo);
     assert.isArray(store.state.defaultStyleIds);
     assert.isObject(store.state.audioItems);
     assert.isEmpty(store.state.audioItems);
@@ -191,7 +201,6 @@ describe("store/vuex.js test", () => {
     assert.isEmpty(store.state.undoCommands);
     assert.isArray(store.state.redoCommands);
     assert.isEmpty(store.state.redoCommands);
-    assert.equal(store.state.useGpu, false);
     assert.equal(store.state.inheritAudioInfo, true);
     assert.equal(store.state.activePointScrollMode, "OFF");
     assert.equal(store.state.isHelpDialogOpen, false);

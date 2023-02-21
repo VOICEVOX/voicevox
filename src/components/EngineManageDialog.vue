@@ -111,8 +111,8 @@
               <div class="q-ma-sm">
                 <q-btn-toggle
                   :options="[
-                    { value: 'dir', label: 'フォルダ' },
                     { value: 'vvpp', label: 'VVPPファイル' },
+                    { value: 'dir', label: '既存エンジン' },
                   ]"
                   v-model="engineLoaderType"
                   color="surface"
@@ -124,53 +124,18 @@
               </div>
             </div>
 
-            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
-              <div class="text-h6 q-ma-sm">フォルダの場所</div>
-              <div class="q-ma-sm">
-                <q-input
-                  ref="newEngineDirInput"
-                  v-model="newEngineDir"
-                  dense
-                  readonly
-                  :error="
-                    newEngineDirValidationState &&
-                    newEngineDirValidationState !== 'ok'
-                  "
-                >
-                  <template v-slot:append>
-                    <q-btn
-                      square
-                      dense
-                      flat
-                      color="primary"
-                      icon="folder_open"
-                      @click="selectEngineDir"
-                    >
-                      <q-tooltip :delay="500" anchor="bottom left">
-                        フォルダ選択
-                      </q-tooltip>
-                    </q-btn>
-                  </template>
-                  <template v-slot:error>
-                    {{
-                      getEngineDirValidationMessage(newEngineDirValidationState)
-                    }}
-                  </template>
-                </q-input>
-              </div>
-              <div class="q-ma-sm">
-                既にインストールされているエンジンのフォルダを指定します。FIXME:
-                説明を良い感じにする
-              </div>
-            </div>
             <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'vvpp'">
-              <div class="text-h6 q-ma-sm">VVPPファイルの場所</div>
+              <div class="q-ma-sm">
+                VVPPファイルでエンジンをインストールします。
+              </div>
               <div class="q-ma-sm">
                 <q-input
                   ref="vvppFilePathInput"
                   v-model="vvppFilePath"
                   dense
                   readonly
+                  placeholder="VVPPファイルの場所"
+                  @click="selectVvppFile"
                 >
                   <template v-slot:append>
                     <q-btn
@@ -193,9 +158,42 @@
                   </template>
                 </q-input>
               </div>
+            </div>
+            <div class="no-wrap q-pl-md" v-if="engineLoaderType === 'dir'">
+              <div class="q-ma-sm">PC内にあるエンジンを追加します。</div>
               <div class="q-ma-sm">
-                VVPPファイルとして配布されているエンジンを追加します。FIXME:
-                説明を良い感じにする
+                <q-input
+                  ref="newEngineDirInput"
+                  v-model="newEngineDir"
+                  dense
+                  readonly
+                  :error="
+                    newEngineDirValidationState &&
+                    newEngineDirValidationState !== 'ok'
+                  "
+                  placeholder="エンジンフォルダの場所"
+                  @click="selectEngineDir"
+                >
+                  <template v-slot:append>
+                    <q-btn
+                      square
+                      dense
+                      flat
+                      color="primary"
+                      icon="folder_open"
+                      @click="selectEngineDir"
+                    >
+                      <q-tooltip :delay="500" anchor="bottom left">
+                        フォルダ選択
+                      </q-tooltip>
+                    </q-btn>
+                  </template>
+                  <template v-slot:error>
+                    {{
+                      getEngineDirValidationMessage(newEngineDirValidationState)
+                    }}
+                  </template>
+                </q-input>
               </div>
             </div>
             <div class="row q-px-md right-pane-buttons">
@@ -263,7 +261,12 @@
             </div>
             <div class="no-wrap q-pl-md">
               <div class="text-h6 q-ma-sm">機能</div>
-              <ul v-if="engineManifests[selectedId]">
+              <ul
+                v-if="
+                  engineManifests[selectedId] &&
+                  engineManifests[selectedId].supportedFeatures
+                "
+              >
                 <li
                   v-for="[feature, value] in Object.entries(
                     engineManifests[selectedId].supportedFeatures
@@ -335,7 +338,7 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import type { EngineDirValidationResult } from "@/type/preload";
+import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 
 type EngineLoaderType = "dir" | "vvpp";
@@ -360,7 +363,7 @@ export default defineComponent({
     const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
     const uiLocked = computed(() => uiLockedState.value !== null);
     const isAddingEngine = ref(false);
-    const engineLoaderType = ref<EngineLoaderType>("dir");
+    const engineLoaderType = ref<EngineLoaderType>("vvpp");
 
     const lockUi = function <T>(
       lockType: "addingEngine" | "deletingEngine",
@@ -397,12 +400,14 @@ export default defineComponent({
         ])
       )
     );
-    const engineVersions = ref<Record<string, string>>({});
+    const engineVersions = ref<Record<EngineId, string>>({});
 
     watch(
       [engineInfos, engineStates, engineManifests],
       async () => {
-        for (const id of Object.keys(engineInfos.value)) {
+        // FIXME: engineInfosをMapにする
+        for (const idStr of Object.keys(engineInfos.value)) {
+          const id = EngineId(idStr);
           if (engineStates.value[id] !== "READY") continue;
           if (engineVersions.value[id]) continue;
           const version = await store
@@ -420,14 +425,21 @@ export default defineComponent({
       { immediate: true }
     );
 
-    const selectedId = ref("");
+    const selectedId = ref<EngineId | undefined>(undefined);
+
     const isDeletable = computed(() => {
+      // FIXME: いたるところにエンジンが選択済みかを検証するコードがある。
+      // 選択後に現れる領域は別ComponentにしてselectedIdをpropで渡せばこれは不要になる
+      if (selectedId.value == undefined)
+        throw new Error("engine is not selected");
       return (
         engineInfos.value[selectedId.value] &&
         engineInfos.value[selectedId.value].type === "path"
       );
     });
     const engineDir = computed(() => {
+      if (selectedId.value == undefined)
+        throw new Error("engine is not selected");
       return engineInfos.value[selectedId.value]?.path || "（組み込み）";
     });
 
@@ -524,6 +536,8 @@ export default defineComponent({
           textColor: "warning",
         },
       }).onOk(async () => {
+        if (selectedId.value == undefined)
+          throw new Error("engine is not selected");
         switch (engineInfos.value[selectedId.value].type) {
           case "path": {
             const engineDir = store.state.engineInfos[selectedId.value].path;
@@ -558,16 +572,22 @@ export default defineComponent({
       });
     };
 
-    const selectEngine = (id: string) => {
+    const selectEngine = (id: EngineId) => {
       selectedId.value = id;
     };
 
     const openSelectedEngineDirectory = () => {
+      if (selectedId.value == undefined)
+        throw new Error("assert selectedId.value != undefined");
       store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
     };
 
     const restartSelectedEngine = () => {
-      store.dispatch("RESTART_ENGINE", { engineId: selectedId.value });
+      if (selectedId.value == undefined)
+        throw new Error("assert selectedId.value != undefined");
+      store.dispatch("RESTART_ENGINES", {
+        engineIds: [selectedId.value],
+      });
     };
 
     const requireRestart = (message: string) => {
@@ -644,13 +664,13 @@ export default defineComponent({
     // ステートの移動
     // 初期状態
     const toInitialState = () => {
-      selectedId.value = "";
+      selectedId.value = undefined;
       isAddingEngine.value = false;
     };
     // エンジン追加状態
     const toAddEngineState = () => {
       isAddingEngine.value = true;
-      selectedId.value = "";
+      selectedId.value = undefined;
       newEngineDirValidationState.value = null;
       newEngineDir.value = "";
       vvppFilePath.value = "";

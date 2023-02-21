@@ -14,12 +14,16 @@ import {
 } from "./type";
 import { createUILockAction, withProgress } from "./ui";
 import {
+  AudioKey,
   CharacterInfo,
   DefaultStyleId,
   Encoding as EncodingType,
+  EngineId,
   MoraDataType,
   MorphingInfo,
+  SpeakerId,
   StyleInfo,
+  Voice,
   WriteFileErrorResult,
 } from "@/type/preload";
 import Encoding from "encoding-japanese";
@@ -42,7 +46,8 @@ async function generateUniqueIdAndQuery(
   audioItem = JSON.parse(JSON.stringify(audioItem)) as AudioItem;
   const audioQuery = audioItem.query;
   if (audioQuery != undefined) {
-    audioQuery.outputSamplingRate = state.savingSetting.outputSamplingRate;
+    audioQuery.outputSamplingRate =
+      state.engineSettings[audioItem.voice.engineId].outputSamplingRate;
     audioQuery.outputStereo = state.savingSetting.outputStereo;
   }
 
@@ -50,8 +55,7 @@ async function generateUniqueIdAndQuery(
     JSON.stringify([
       audioItem.text,
       audioQuery,
-      audioItem.engineId,
-      audioItem.styleId,
+      audioItem.voice,
       audioItem.morphingInfo,
       state.experimentalSetting.enableInterrogativeUpspeak, // このフラグが違うと、同じAudioQueryで違う音声が生成されるので追加
     ])
@@ -66,76 +70,75 @@ async function generateUniqueIdAndQuery(
 function parseTextFile(
   body: string,
   defaultStyleIds: DefaultStyleId[],
-  userOrderedCharacterInfos: CharacterInfo[]
+  userOrderedCharacterInfos: CharacterInfo[],
+  initVoice?: Voice
 ): AudioItem[] {
-  const characters = new Map<string, number>();
-  const uuid2StyleIds = new Map<string, number>();
+  const name2Voice = new Map<string, Voice>();
+  const uuid2Voice = new Map<string, Voice>();
   for (const defaultStyleId of defaultStyleIds) {
-    const speakerUuid = defaultStyleId.speakerUuid;
+    const speakerId = defaultStyleId.speakerUuid;
+    const engineId = defaultStyleId.engineId;
     const styleId = defaultStyleId.defaultStyleId;
-    uuid2StyleIds.set(speakerUuid, styleId);
+    uuid2Voice.set(speakerId, { engineId, speakerId, styleId });
   }
   // setup default characters
   for (const characterInfo of userOrderedCharacterInfos) {
     const uuid = characterInfo.metas.speakerUuid;
-    const styleId = uuid2StyleIds.get(uuid);
+    const voice = uuid2Voice.get(uuid);
     const speakerName = characterInfo.metas.speakerName;
-    if (styleId == undefined)
-      throw new Error(`styleId is undefined. speakerUuid: ${uuid}`);
-    characters.set(speakerName, styleId);
+    if (voice == undefined)
+      throw new Error(`style is undefined. speakerUuid: ${uuid}`);
+    name2Voice.set(speakerName, voice);
   }
   // setup characters with style name
   for (const characterInfo of userOrderedCharacterInfos) {
     for (const style of characterInfo.metas.styles) {
-      characters.set(
+      name2Voice.set(
         `${characterInfo.metas.speakerName}(${style.styleName || "ノーマル"})`,
-        style.styleId
+        {
+          engineId: style.engineId,
+          speakerId: characterInfo.metas.speakerUuid,
+          styleId: style.styleId,
+        }
       );
     }
   }
-  if (!characters.size) return [];
+  if (!name2Voice.size) return [];
 
   const audioItems: AudioItem[] = [];
   const seps = [",", "\r\n", "\n"];
-  let lastStyleId = uuid2StyleIds.get(
-    userOrderedCharacterInfos[0].metas.speakerUuid
-  );
-  if (lastStyleId == undefined) throw new Error(`lastStyleId is undefined.`);
+  let lastVoice =
+    initVoice ?? uuid2Voice.get(userOrderedCharacterInfos[0].metas.speakerUuid);
+  if (lastVoice == undefined) throw new Error(`lastStyle is undefined.`);
   for (const splitText of body.split(new RegExp(`${seps.join("|")}`, "g"))) {
-    const styleId = characters.get(splitText);
-    if (styleId !== undefined) {
-      lastStyleId = styleId;
+    const voice = name2Voice.get(splitText);
+    if (voice !== undefined) {
+      lastVoice = voice;
       continue;
     }
 
-    // FIXME: engineIdの追加
-    audioItems.push({ text: splitText, styleId: lastStyleId });
+    audioItems.push({ text: splitText, voice: lastVoice });
   }
   return audioItems;
 }
 
 // TODO: GETTERに移動する
-function buildFileName(state: State, audioKey: string) {
+function buildFileName(state: State, audioKey: AudioKey) {
   const fileNamePattern = state.savingSetting.fileNamePattern;
 
   const index = state.audioKeys.indexOf(audioKey);
   const audioItem = state.audioItems[audioKey];
 
-  if (audioItem.engineId === undefined)
-    throw new Error("asssrt audioItem.engineId !== undefined");
-  if (audioItem.styleId === undefined)
-    throw new Error("assert audioItem.styleId !== undefined");
-
   const character = getCharacterInfo(
     state,
-    audioItem.engineId,
-    audioItem.styleId
+    audioItem.voice.engineId,
+    audioItem.voice.styleId
   );
   if (character === undefined)
     throw new Error("assert character !== undefined");
 
   const style = character.metas.styles.find(
-    (style) => style.styleId === audioItem.styleId
+    (style) => style.styleId === audioItem.voice.styleId
   );
   if (style === undefined) throw new Error("assert style !== undefined");
 
@@ -168,7 +171,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
 // TODO: GETTERに移動する。buildFileNameから参照されているので、そちらも一緒に移動する。
 export function getCharacterInfo(
   state: State,
-  engineId: string,
+  engineId: EngineId,
   styleId: number
 ): CharacterInfo | undefined {
   const engineCharacterInfos = state.characterInfos[engineId];
@@ -182,10 +185,11 @@ export function getCharacterInfo(
 }
 
 const audioBlobCache: Record<string, Blob> = {};
-const audioElements: Record<string, HTMLAudioElement> = {};
+const audioElements: Record<AudioKey, HTMLAudioElement> = {};
 
 export const audioStoreState: AudioStoreState = {
   characterInfos: {},
+  morphableTargetsInfo: {},
   audioItems: {},
   audioKeys: [],
   audioStates: {},
@@ -205,13 +209,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   HAVE_AUDIO_QUERY: {
-    getter: (state) => (audioKey: string) => {
+    getter: (state) => (audioKey: AudioKey) => {
       return state.audioItems[audioKey]?.query != undefined;
     },
   },
 
   IS_ACTIVE: {
-    getter: (state) => (audioKey: string) => {
+    getter: (state) => (audioKey: AudioKey) => {
       return state._activeAudioKey === audioKey;
     },
   },
@@ -281,7 +285,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const characterInfo: CharacterInfo = {
           portraitPath: base64ImageToUri(speakerInfo.portrait),
           metas: {
-            speakerUuid: speaker.speakerUuid,
+            speakerUuid: SpeakerId(speaker.speakerUuid),
             speakerName: speaker.name,
             styles,
             policy: speakerInfo.policy,
@@ -305,9 +309,61 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         engineId,
         characterInfos,
-      }: { engineId: string; characterInfos: CharacterInfo[] }
+      }: { engineId: EngineId; characterInfos: CharacterInfo[] }
     ) {
       state.characterInfos[engineId] = characterInfos;
+    },
+  },
+
+  LOAD_MORPHABLE_TARGETS: {
+    async action({ state, dispatch, commit }, { engineId, baseStyleId }) {
+      if (!state.engineManifests[engineId].supportedFeatures?.synthesisMorphing)
+        return;
+
+      if (state.morphableTargetsInfo[engineId]?.[baseStyleId]) return;
+
+      const rawMorphableTargets = (
+        await (
+          await dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId })
+        ).invoke("morphableTargetsMorphableTargetsPost")({
+          requestBody: [baseStyleId],
+        })
+      )[0];
+
+      // FIXME: 何故かis_morphableがCamelCaseに変換されないので変換する必要がある
+      const morphableTargets = Object.fromEntries(
+        Object.entries(rawMorphableTargets).map(([key, value]) => {
+          const isMorphable = (value as unknown as { is_morphable: boolean })
+            .is_morphable;
+          if (isMorphable === undefined || typeof isMorphable !== "boolean") {
+            throw Error(
+              "The is_morphable property does not exist, it is either CamelCase or the engine type is wrong."
+            );
+          }
+          return [
+            parseInt(key),
+            {
+              ...value,
+              isMorphable,
+            },
+          ];
+        })
+      );
+
+      commit("SET_MORPHABLE_TARGETS", {
+        engineId,
+        baseStyleId,
+        morphableTargets,
+      });
+    },
+  },
+
+  SET_MORPHABLE_TARGETS: {
+    mutation(state, { engineId, baseStyleId, morphableTargets }) {
+      if (!state.morphableTargetsInfo[engineId]) {
+        state.morphableTargetsInfo[engineId] = {};
+      }
+      state.morphableTargetsInfo[engineId][baseStyleId] = morphableTargets;
     },
   },
 
@@ -332,7 +388,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   GENERATE_AUDIO_KEY: {
     action() {
-      const audioKey = uuidv4();
+      const audioKey = AudioKey(uuidv4());
       audioElements[audioKey] = new Audio();
       return audioKey;
     },
@@ -364,16 +420,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   SET_AUDIO_KEY_INITIALIZING_SPEAKER: {
-    mutation(state, { audioKey }: { audioKey?: string }) {
+    mutation(state, { audioKey }: { audioKey?: AudioKey }) {
       state.audioKeyInitializingSpeaker = audioKey;
     },
   },
 
   SET_ACTIVE_AUDIO_KEY: {
-    mutation(state, { audioKey }: { audioKey?: string }) {
+    mutation(state, { audioKey }: { audioKey?: AudioKey }) {
       state._activeAudioKey = audioKey;
     },
-    action({ commit, dispatch }, { audioKey }: { audioKey?: string }) {
+    action({ commit, dispatch }, { audioKey }: { audioKey?: AudioKey }) {
       commit("SET_ACTIVE_AUDIO_KEY", { audioKey });
       // reset audio play start point
       dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint: undefined });
@@ -392,7 +448,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_NOW_PLAYING: {
     mutation(
       state,
-      { audioKey, nowPlaying }: { audioKey: string; nowPlaying: boolean }
+      { audioKey, nowPlaying }: { audioKey: AudioKey; nowPlaying: boolean }
     ) {
       state.audioStates[audioKey].nowPlaying = nowPlaying;
     },
@@ -401,7 +457,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_NOW_GENERATING: {
     mutation(
       state,
-      { audioKey, nowGenerating }: { audioKey: string; nowGenerating: boolean }
+      {
+        audioKey,
+        nowGenerating,
+      }: { audioKey: AudioKey; nowGenerating: boolean }
     ) {
       state.audioStates[audioKey].nowGenerating = nowGenerating;
     },
@@ -418,8 +477,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       { state, getters, dispatch },
       payload: {
         text?: string;
-        engineId?: string;
-        styleId?: number;
+        voice?: Voice;
         presetKey?: string;
         baseAudioItem?: AudioItem;
       }
@@ -431,36 +489,33 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         throw new Error("state.defaultStyleIds == undefined");
       if (getters.USER_ORDERED_CHARACTER_INFOS == undefined)
         throw new Error("state.characterInfos == undefined");
-      const userOrderedCharacterInfos = getters.USER_ORDERED_CHARACTER_INFOS;
 
       const text = payload.text ?? "";
 
-      const engineId = payload.engineId ?? state.engineIds[0];
+      const defaultSpeakerId =
+        getters.USER_ORDERED_CHARACTER_INFOS[0].metas.speakerUuid;
+      const defaultStyleId = state.defaultStyleIds.find(
+        (styleId) => styleId.speakerUuid === defaultSpeakerId
+      );
+      if (defaultStyleId == undefined)
+        throw new Error("defaultStyleId == undefined");
 
-      // FIXME: engineIdも含めて探査する
-      const styleId =
-        payload.styleId ??
-        state.defaultStyleIds[
-          state.defaultStyleIds.findIndex(
-            (x) =>
-              x.speakerUuid === userOrderedCharacterInfos[0].metas.speakerUuid // FIXME: defaultStyleIds内にspeakerUuidがない場合がある
-          )
-        ].defaultStyleId;
+      const voice = payload.voice ?? {
+        engineId: defaultStyleId.engineId,
+        speakerId: defaultStyleId.speakerUuid,
+        styleId: defaultStyleId.defaultStyleId,
+      };
       const baseAudioItem = payload.baseAudioItem;
 
-      const query = getters.IS_ENGINE_READY(engineId)
+      const query = getters.IS_ENGINE_READY(voice.engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", {
             text,
-            engineId,
-            styleId,
+            engineId: voice.engineId,
+            styleId: voice.styleId,
           }).catch(() => undefined)
         : undefined;
 
-      const audioItem: AudioItem = {
-        text,
-        engineId,
-        styleId,
-      };
+      const audioItem: AudioItem = { text, voice };
       if (query != undefined) {
         audioItem.query = query;
       }
@@ -492,7 +547,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioItem,
         prevAudioKey,
-      }: { audioItem: AudioItem; prevAudioKey?: string }
+      }: { audioItem: AudioItem; prevAudioKey?: AudioKey }
     ) {
       const audioKey = await dispatch("GENERATE_AUDIO_KEY");
       commit("INSERT_AUDIO_ITEM", { audioItem, audioKey, prevAudioKey });
@@ -509,8 +564,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         prevAudioKey,
       }: {
         audioItem: AudioItem;
-        audioKey: string;
-        prevAudioKey: string | undefined;
+        audioKey: AudioKey;
+        prevAudioKey: AudioKey | undefined;
       }
     ) {
       const index =
@@ -533,8 +588,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         prevAudioKey,
         audioKeyItemPairs,
       }: {
-        audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
-        prevAudioKey: string | undefined;
+        audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
+        prevAudioKey: AudioKey | undefined;
       }
     ) {
       const index =
@@ -554,7 +609,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   REMOVE_AUDIO_ITEM: {
-    mutation(state, { audioKey }: { audioKey: string }) {
+    mutation(state, { audioKey }: { audioKey: AudioKey }) {
       state.audioKeys.splice(state.audioKeys.indexOf(audioKey), 1);
       delete state.audioItems[audioKey];
       delete state.audioStates[audioKey];
@@ -562,7 +617,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   SET_AUDIO_KEYS: {
-    mutation(state, { audioKeys }: { audioKeys: string[] }) {
+    mutation(state, { audioKeys }: { audioKeys: AudioKey[] }) {
       state.audioKeys = audioKeys;
     },
   },
@@ -576,7 +631,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   GET_AUDIO_CACHE: {
-    async action({ state, dispatch }, { audioKey }: { audioKey: string }) {
+    async action({ state, dispatch }, { audioKey }: { audioKey: AudioKey }) {
       const audioItem = state.audioItems[audioKey];
       return dispatch("GET_AUDIO_CACHE_FROM_AUDIO_ITEM", { audioItem });
     },
@@ -595,7 +650,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   SET_AUDIO_TEXT: {
-    mutation(state, { audioKey, text }: { audioKey: string; text: string }) {
+    mutation(state, { audioKey, text }: { audioKey: AudioKey; text: string }) {
       state.audioItems[audioKey].text = text;
     },
   },
@@ -603,7 +658,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_SPEED_SCALE: {
     mutation(
       state,
-      { audioKey, speedScale }: { audioKey: string; speedScale: number }
+      { audioKey, speedScale }: { audioKey: AudioKey; speedScale: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -614,7 +669,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_PITCH_SCALE: {
     mutation(
       state,
-      { audioKey, pitchScale }: { audioKey: string; pitchScale: number }
+      { audioKey, pitchScale }: { audioKey: AudioKey; pitchScale: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -628,7 +683,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         intonationScale,
-      }: { audioKey: string; intonationScale: number }
+      }: { audioKey: AudioKey; intonationScale: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -639,7 +694,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_VOLUME_SCALE: {
     mutation(
       state,
-      { audioKey, volumeScale }: { audioKey: string; volumeScale: number }
+      { audioKey, volumeScale }: { audioKey: AudioKey; volumeScale: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -653,7 +708,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         prePhonemeLength,
-      }: { audioKey: string; prePhonemeLength: number }
+      }: { audioKey: AudioKey; prePhonemeLength: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -667,7 +722,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         postPhonemeLength,
-      }: { audioKey: string; postPhonemeLength: number }
+      }: { audioKey: AudioKey; postPhonemeLength: number }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -681,7 +736,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         morphingInfo,
-      }: { audioKey: string; morphingInfo: MorphingInfo | undefined }
+      }: { audioKey: AudioKey; morphingInfo: MorphingInfo | undefined }
     ) {
       const item = state.audioItems[audioKey];
       item.morphingInfo = morphingInfo;
@@ -696,28 +751,30 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       ),
   },
 
-  VALID_MOPHING_INFO: {
-    getter: (_, getters) => (audioItem: AudioItem) => {
-      if (
-        audioItem.morphingInfo == undefined ||
-        audioItem.engineId == undefined
-      )
-        return false;
-      return (
-        getters.MORPHING_SUPPORTED_ENGINES.includes(audioItem.engineId) &&
-        audioItem.engineId === audioItem.morphingInfo.targetEngineId
-      );
+  VALID_MORPHING_INFO: {
+    getter: (state) => (audioItem: AudioItem) => {
+      if (audioItem.morphingInfo?.targetStyleId == undefined) return false;
+      const { engineId, styleId } = audioItem.voice;
+      const info =
+        state.morphableTargetsInfo[engineId]?.[styleId]?.[
+          audioItem.morphingInfo.targetStyleId
+        ];
+      if (info == undefined) return false;
+      return info.isMorphable;
     },
   },
 
   SET_AUDIO_QUERY: {
     mutation(
       state,
-      { audioKey, audioQuery }: { audioKey: string; audioQuery: AudioQuery }
+      { audioKey, audioQuery }: { audioKey: AudioKey; audioQuery: AudioQuery }
     ) {
       state.audioItems[audioKey].query = audioQuery;
     },
-    action({ commit }, payload: { audioKey: string; audioQuery: AudioQuery }) {
+    action(
+      { commit },
+      payload: { audioKey: AudioKey; audioQuery: AudioQuery }
+    ) {
       commit("SET_AUDIO_QUERY", payload);
     },
   },
@@ -729,7 +786,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         text,
         engineId,
         styleId,
-      }: { text: string; engineId: string; styleId: number }
+      }: { text: string; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -750,17 +807,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_AUDIO_STYLE_ID: {
-    mutation(
-      state,
-      {
-        audioKey,
-        engineId,
-        styleId,
-      }: { audioKey: string; engineId: string; styleId: number }
-    ) {
-      state.audioItems[audioKey].engineId = engineId;
-      state.audioItems[audioKey].styleId = styleId;
+  SET_AUDIO_VOICE: {
+    mutation(state, { audioKey, voice }: { audioKey: AudioKey; voice: Voice }) {
+      state.audioItems[audioKey].voice = voice;
     },
   },
 
@@ -770,7 +819,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         accentPhrases,
-      }: { audioKey: string; accentPhrases: AccentPhrase[] }
+      }: { audioKey: AudioKey; accentPhrases: AccentPhrase[] }
     ) {
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
@@ -788,7 +837,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         isKana,
       }: {
         text: string;
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         isKana?: boolean;
       }
@@ -821,7 +870,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhraseIndex,
         accentPhrases,
       }: {
-        audioKey: string;
+        audioKey: AudioKey;
         accentPhraseIndex: number;
         accentPhrases: AccentPhrase[];
       }
@@ -842,7 +891,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         data,
         type,
       }: {
-        audioKey: string;
+        audioKey: AudioKey;
         accentPhraseIndex: number;
         moraIndex: number;
         data: number;
@@ -890,7 +939,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   APPLY_AUDIO_PRESET: {
-    mutation(state, { audioKey }: { audioKey: string }) {
+    mutation(state, { audioKey }: { audioKey: AudioKey }) {
       const audioItem = state.audioItems[audioKey];
       if (
         audioItem == undefined ||
@@ -923,7 +972,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases,
         engineId,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; engineId: string; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: number }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -956,7 +1005,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         copyIndexes,
       }: {
         accentPhrases: AccentPhrase[];
-        engineId: string;
+        engineId: EngineId;
         styleId: number;
         copyIndexes: number[];
       }
@@ -980,7 +1029,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action: createUILockAction(
       async (
         { state },
-        { audioKey, offset }: { audioKey: string; offset?: number }
+        { audioKey, offset }: { audioKey: AudioKey; offset?: number }
       ) => {
         const query = state.audioItems[audioKey].query;
         if (query == undefined) return;
@@ -1037,7 +1086,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   GET_AUDIO_PLAY_OFFSETS: {
-    action({ state }, { audioKey }: { audioKey: string }) {
+    action({ state }, { audioKey }: { audioKey: AudioKey }) {
       const query = state.audioItems[audioKey].query;
       const accentPhrases = query?.accentPhrases;
       if (query === undefined || accentPhrases === undefined)
@@ -1067,7 +1116,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   GENERATE_AUDIO: {
-    async action({ dispatch, state }, { audioKey }: { audioKey: string }) {
+    async action({ dispatch, state }, { audioKey }: { audioKey: AudioKey }) {
       const audioItem: AudioItem = JSON.parse(
         JSON.stringify(state.audioItems[audioKey])
       );
@@ -1081,9 +1130,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, getters, state },
         { audioItem }: { audioItem: AudioItem }
       ) => {
-        const engineId = audioItem.engineId;
-        if (engineId === undefined)
-          throw new Error("engineId is not defined for audioItem");
+        const engineId = audioItem.voice.engineId;
 
         const [id, audioQuery] = await generateUniqueIdAndQuery(
           state,
@@ -1092,9 +1139,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (audioQuery == undefined)
           throw new Error("audioQuery is not defined for audioItem");
 
-        const speaker = audioItem.styleId;
-        if (speaker == undefined)
-          throw new Error("speaker is not defined for audioItem");
+        const speaker = audioItem.voice.styleId;
 
         const engineAudioQuery = convertAudioQueryFromEditorToEngine(
           audioQuery,
@@ -1107,8 +1152,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let blob: Blob;
           // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
           if (audioItem.morphingInfo != undefined) {
-            if (!getters.VALID_MOPHING_INFO(audioItem))
-              throw new Error("VALID_MOPHING_ERROR"); //FIXME: エラーを変更した場合ハンドリング部分も修正する
+            if (!getters.VALID_MORPHING_INFO(audioItem))
+              throw new Error("VALID_MORPHING_ERROR"); //FIXME: エラーを変更した場合ハンドリング部分も修正する
             blob = await instance.invoke(
               "synthesisMorphingSynthesisMorphingPost"
             )({
@@ -1138,7 +1183,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         { dispatch, state },
         { encodedBlobs }: { encodedBlobs: string[] }
       ) => {
-        const engineId: string | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
+        const engineId: EngineId | undefined = state.engineIds[0]; // TODO: 複数エンジン対応, 暫定的に音声結合機能は0番目のエンジンのみを使用する
         if (engineId === undefined)
           throw new Error(`No such engine registered: index == 0`);
 
@@ -1170,7 +1215,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath,
           encoding,
         }: {
-          audioKey: string;
+          audioKey: AudioKey;
           filePath?: string;
           encoding?: EncodingType;
         }
@@ -1207,7 +1252,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           } catch (e) {
             let errorMessage = undefined;
             // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-            if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+            if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
               errorMessage = "モーフィングの設定が無効です。";
             } else {
               window.electron.logError(e);
@@ -1416,7 +1461,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             } catch (e) {
               let errorMessage = undefined;
               // FIXME: GENERATE_AUDIO_FROM_AUDIO_ITEMのエラーを変えた場合変更する
-              if (e instanceof Error && e.message === "VALID_MOPHING_ERROR") {
+              if (e instanceof Error && e.message === "VALID_MORPHING_ERROR") {
                 errorMessage = "モーフィングの設定が無効です。";
               } else {
                 window.electron.logError(e);
@@ -1572,8 +1617,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         const texts: string[] = [];
         for (const audioKey of state.audioKeys) {
-          const styleId = state.audioItems[audioKey].styleId;
-          const engineId = state.audioItems[audioKey].engineId;
+          const styleId = state.audioItems[audioKey].voice.styleId;
+          const engineId = state.audioItems[audioKey].voice.engineId;
           if (!engineId) {
             throw new Error("engineId is undefined");
           }
@@ -1619,7 +1664,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   PLAY_AUDIO: {
     action: createUILockAction(
-      async ({ commit, dispatch }, { audioKey }: { audioKey: string }) => {
+      async ({ commit, dispatch }, { audioKey }: { audioKey: AudioKey }) => {
         const audioElem = audioElements[audioKey];
         audioElem.pause();
 
@@ -1660,7 +1705,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           audioBlob,
           audioElem,
           audioKey,
-        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: string }
+        }: { audioBlob: Blob; audioElem: HTMLAudioElement; audioKey?: AudioKey }
       ) => {
         audioElem.src = URL.createObjectURL(audioBlob);
         // 途中再生用の処理
@@ -1726,7 +1771,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   STOP_AUDIO: {
-    action(_, { audioKey }: { audioKey: string }) {
+    action(_, { audioKey }: { audioKey: AudioKey }) {
       const audioElem = audioElements[audioKey];
       audioElem.pause();
     },
@@ -1738,7 +1783,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         presetKey,
-      }: { audioKey: string; presetKey: string | undefined }
+      }: { audioKey: AudioKey; presetKey: string | undefined }
     ) {
       if (presetKey === undefined) {
         delete state.audioItems[audioKey].presetKey;
@@ -1810,8 +1855,8 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: {
           audioItem: AudioItem;
-          audioKey: string;
-          prevAudioKey: string | undefined;
+          audioKey: AudioKey;
+          prevAudioKey: AudioKey | undefined;
           applyPreset: boolean;
         }
       ) {
@@ -1830,7 +1875,7 @@ export const audioCommandStore = transformCommandStore(
           applyPreset,
         }: {
           audioItem: AudioItem;
-          prevAudioKey: string | undefined;
+          prevAudioKey: AudioKey | undefined;
           applyPreset: boolean;
         }
       ) {
@@ -1846,19 +1891,19 @@ export const audioCommandStore = transformCommandStore(
     },
 
     COMMAND_REMOVE_AUDIO_ITEM: {
-      mutation(draft, payload: { audioKey: string }) {
+      mutation(draft, payload: { audioKey: AudioKey }) {
         audioStore.mutations.REMOVE_AUDIO_ITEM(draft, payload);
       },
-      action({ commit }, payload: { audioKey: string }) {
+      action({ commit }, payload: { audioKey: AudioKey }) {
         commit("COMMAND_REMOVE_AUDIO_ITEM", payload);
       },
     },
 
     COMMAND_SET_AUDIO_KEYS: {
-      mutation(draft, payload: { audioKeys: string[] }) {
+      mutation(draft, payload: { audioKeys: AudioKey[] }) {
         audioStore.mutations.SET_AUDIO_KEYS(draft, payload);
       },
-      action({ commit }, payload: { audioKeys: string[] }) {
+      action({ commit }, payload: { audioKeys: AudioKey[] }) {
         commit("COMMAND_SET_AUDIO_KEYS", payload);
       },
     },
@@ -1866,7 +1911,7 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_CHANGE_AUDIO_TEXT: {
       mutation(
         draft,
-        payload: { audioKey: string; text: string } & (
+        payload: { audioKey: AudioKey; text: string } & (
           | { update: "Text" }
           | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
           | { update: "AudioQuery"; query: AudioQuery }
@@ -1893,16 +1938,10 @@ export const audioCommandStore = transformCommandStore(
       },
       async action(
         { state, commit, dispatch },
-        { audioKey, text }: { audioKey: string; text: string }
+        { audioKey, text }: { audioKey: AudioKey; text: string }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
-
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
         const query = state.audioItems[audioKey].query;
         try {
           if (query !== undefined) {
@@ -1944,19 +1983,18 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_CHANGE_STYLE_ID: {
+    COMMAND_CHANGE_VOICE: {
       mutation(
         draft,
-        payload: { engineId: string; styleId: number; audioKey: string } & (
+        payload: { audioKey: AudioKey; voice: Voice } & (
           | { update: "StyleId" }
           | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
           | { update: "AudioQuery"; query: AudioQuery }
         )
       ) {
-        audioStore.mutations.SET_AUDIO_STYLE_ID(draft, {
+        audioStore.mutations.SET_AUDIO_VOICE(draft, {
           audioKey: payload.audioKey,
-          engineId: payload.engineId,
-          styleId: payload.styleId,
+          voice: payload.voice,
         });
         if (payload.update == "AccentPhrases") {
           audioStore.mutations.SET_ACCENT_PHRASES(draft, {
@@ -1975,13 +2013,11 @@ export const audioCommandStore = transformCommandStore(
       },
       async action(
         { state, dispatch, commit },
-        {
-          audioKey,
-          engineId,
-          styleId,
-        }: { audioKey: string; engineId: string; styleId: number }
+        { audioKey, voice }: { audioKey: AudioKey; voice: Voice }
       ) {
         const query = state.audioItems[audioKey].query;
+        const engineId = voice.engineId;
+        const styleId = voice.styleId;
         try {
           await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
 
@@ -1995,10 +2031,9 @@ export const audioCommandStore = transformCommandStore(
                 styleId,
               }
             );
-            commit("COMMAND_CHANGE_STYLE_ID", {
-              engineId,
-              styleId,
+            commit("COMMAND_CHANGE_VOICE", {
               audioKey,
+              voice,
               update: "AccentPhrases",
               accentPhrases: newAccentPhrases,
             });
@@ -2009,19 +2044,17 @@ export const audioCommandStore = transformCommandStore(
               engineId,
               styleId,
             });
-            commit("COMMAND_CHANGE_STYLE_ID", {
-              engineId,
-              styleId,
+            commit("COMMAND_CHANGE_VOICE", {
               audioKey,
+              voice,
               update: "AudioQuery",
               query,
             });
           }
         } catch (error) {
-          commit("COMMAND_CHANGE_STYLE_ID", {
-            engineId,
-            styleId,
+          commit("COMMAND_CHANGE_VOICE", {
             audioKey,
+            voice,
             update: "StyleId",
           });
           throw error;
@@ -2035,7 +2068,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           accentPhrases,
-        }: { audioKey: string; accentPhrases: AccentPhrase[] }
+        }: { audioKey: AudioKey; accentPhrases: AccentPhrase[] }
       ) {
         audioStore.mutations.SET_ACCENT_PHRASES(draft, {
           audioKey,
@@ -2048,7 +2081,7 @@ export const audioCommandStore = transformCommandStore(
           audioKey,
           accentPhraseIndex,
           accent,
-        }: { audioKey: string; accentPhraseIndex: number; accent: number }
+        }: { audioKey: AudioKey; accentPhraseIndex: number; accent: number }
       ) {
         const query = state.audioItems[audioKey].query;
         if (query !== undefined) {
@@ -2058,13 +2091,8 @@ export const audioCommandStore = transformCommandStore(
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
           try {
-            const engineId = state.audioItems[audioKey].engineId;
-            if (engineId === undefined)
-              throw new Error("assert engineId !== undefined");
-
-            const styleId = state.audioItems[audioKey].styleId;
-            if (styleId === undefined)
-              throw new Error("assert styleId !== undefined");
+            const engineId = state.audioItems[audioKey].voice.engineId;
+            const styleId = state.audioItems[audioKey].voice.styleId;
 
             const resultAccentPhrases: AccentPhrase[] = await dispatch(
               "FETCH_AND_COPY_MORA_DATA",
@@ -2095,7 +2123,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhrases: AccentPhrase[];
         }
       ) {
@@ -2104,20 +2132,15 @@ export const audioCommandStore = transformCommandStore(
       async action(
         { state, dispatch, commit },
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhraseIndex: number;
         } & ({ isPause: false; moraIndex: number } | { isPause: true })
       ) {
         const { audioKey, accentPhraseIndex } = payload;
         const query = state.audioItems[audioKey].query;
 
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         if (query === undefined) {
           throw Error(
@@ -2222,7 +2245,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhrases: AccentPhrase[];
         }
       ) {
@@ -2236,19 +2259,14 @@ export const audioCommandStore = transformCommandStore(
           accentPhraseIndex,
           popUntilPause,
         }: {
-          audioKey: string;
+          audioKey: AudioKey;
           newPronunciation: string;
           accentPhraseIndex: number;
           popUntilPause: boolean;
         }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         let newAccentPhrasesSegment: AccentPhrase[] | undefined = undefined;
 
@@ -2342,13 +2360,8 @@ export const audioCommandStore = transformCommandStore(
 
     COMMAND_RESET_MORA_PITCH_AND_LENGTH: {
       async action({ state, dispatch, commit }, { audioKey }) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId === undefined)
-          throw new Error("assert engineId !== undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId === undefined)
-          throw new Error("assert styleId !== undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         const query = state.audioItems[audioKey].query;
         if (query === undefined) throw new Error("assert query !== undefined");
@@ -2371,11 +2384,8 @@ export const audioCommandStore = transformCommandStore(
         { state, dispatch, commit },
         { audioKey, accentPhraseIndex }
       ) {
-        const engineId = state.audioItems[audioKey].engineId;
-        if (engineId == undefined) throw new Error("engineId == undefined");
-
-        const styleId = state.audioItems[audioKey].styleId;
-        if (styleId == undefined) throw new Error("styleId == undefined");
+        const engineId = state.audioItems[audioKey].voice.engineId;
+        const styleId = state.audioItems[audioKey].voice.styleId;
 
         const query = state.audioItems[audioKey].query;
         if (query == undefined) throw new Error("query == undefined");
@@ -2398,7 +2408,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhraseIndex: number;
           moraIndex: number;
           data: number;
@@ -2410,7 +2420,7 @@ export const audioCommandStore = transformCommandStore(
       action(
         { commit },
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhraseIndex: number;
           moraIndex: number;
           data: number;
@@ -2425,7 +2435,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhraseIndex: number;
           moraIndex: number;
           data: number;
@@ -2507,7 +2517,7 @@ export const audioCommandStore = transformCommandStore(
       action(
         { commit },
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           accentPhraseIndex: number;
           moraIndex: number;
           data: number;
@@ -2519,51 +2529,57 @@ export const audioCommandStore = transformCommandStore(
     },
 
     COMMAND_SET_AUDIO_SPEED_SCALE: {
-      mutation(draft, payload: { audioKey: string; speedScale: number }) {
+      mutation(draft, payload: { audioKey: AudioKey; speedScale: number }) {
         audioStore.mutations.SET_AUDIO_SPEED_SCALE(draft, payload);
       },
-      action({ commit }, payload: { audioKey: string; speedScale: number }) {
+      action({ commit }, payload: { audioKey: AudioKey; speedScale: number }) {
         commit("COMMAND_SET_AUDIO_SPEED_SCALE", payload);
       },
     },
 
     COMMAND_SET_AUDIO_PITCH_SCALE: {
-      mutation(draft, payload: { audioKey: string; pitchScale: number }) {
+      mutation(draft, payload: { audioKey: AudioKey; pitchScale: number }) {
         audioStore.mutations.SET_AUDIO_PITCH_SCALE(draft, payload);
       },
-      action({ commit }, payload: { audioKey: string; pitchScale: number }) {
+      action({ commit }, payload: { audioKey: AudioKey; pitchScale: number }) {
         commit("COMMAND_SET_AUDIO_PITCH_SCALE", payload);
       },
     },
 
     COMMAND_SET_AUDIO_INTONATION_SCALE: {
-      mutation(draft, payload: { audioKey: string; intonationScale: number }) {
+      mutation(
+        draft,
+        payload: { audioKey: AudioKey; intonationScale: number }
+      ) {
         audioStore.mutations.SET_AUDIO_INTONATION_SCALE(draft, payload);
       },
       action(
         { commit },
-        payload: { audioKey: string; intonationScale: number }
+        payload: { audioKey: AudioKey; intonationScale: number }
       ) {
         commit("COMMAND_SET_AUDIO_INTONATION_SCALE", payload);
       },
     },
 
     COMMAND_SET_AUDIO_VOLUME_SCALE: {
-      mutation(draft, payload: { audioKey: string; volumeScale: number }) {
+      mutation(draft, payload: { audioKey: AudioKey; volumeScale: number }) {
         audioStore.mutations.SET_AUDIO_VOLUME_SCALE(draft, payload);
       },
-      action({ commit }, payload: { audioKey: string; volumeScale: number }) {
+      action({ commit }, payload: { audioKey: AudioKey; volumeScale: number }) {
         commit("COMMAND_SET_AUDIO_VOLUME_SCALE", payload);
       },
     },
 
     COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH: {
-      mutation(draft, payload: { audioKey: string; prePhonemeLength: number }) {
+      mutation(
+        draft,
+        payload: { audioKey: AudioKey; prePhonemeLength: number }
+      ) {
         audioStore.mutations.SET_AUDIO_PRE_PHONEME_LENGTH(draft, payload);
       },
       action(
         { commit },
-        payload: { audioKey: string; prePhonemeLength: number }
+        payload: { audioKey: AudioKey; prePhonemeLength: number }
       ) {
         commit("COMMAND_SET_AUDIO_PRE_PHONEME_LENGTH", payload);
       },
@@ -2572,13 +2588,13 @@ export const audioCommandStore = transformCommandStore(
     COMMAND_SET_AUDIO_POST_PHONEME_LENGTH: {
       mutation(
         draft,
-        payload: { audioKey: string; postPhonemeLength: number }
+        payload: { audioKey: AudioKey; postPhonemeLength: number }
       ) {
         audioStore.mutations.SET_AUDIO_POST_PHONEME_LENGTH(draft, payload);
       },
       action(
         { commit },
-        payload: { audioKey: string; postPhonemeLength: number }
+        payload: { audioKey: AudioKey; postPhonemeLength: number }
       ) {
         commit("COMMAND_SET_AUDIO_POST_PHONEME_LENGTH", payload);
       },
@@ -2588,7 +2604,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           morphingInfo: MorphingInfo | undefined;
         }
       ) {
@@ -2597,7 +2613,7 @@ export const audioCommandStore = transformCommandStore(
       action(
         { commit },
         payload: {
-          audioKey: string;
+          audioKey: AudioKey;
           morphingInfo: MorphingInfo | undefined;
         }
       ) {
@@ -2611,7 +2627,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           presetKey,
-        }: { audioKey: string; presetKey: string | undefined }
+        }: { audioKey: AudioKey; presetKey: string | undefined }
       ) {
         audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
           audioKey,
@@ -2624,17 +2640,17 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           presetKey,
-        }: { audioKey: string; presetKey: string | undefined }
+        }: { audioKey: AudioKey; presetKey: string | undefined }
       ) {
         commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
       },
     },
 
     COMMAND_APPLY_AUDIO_PRESET: {
-      mutation(draft, payload: { audioKey: string }) {
+      mutation(draft, payload: { audioKey: AudioKey }) {
         audioStore.mutations.APPLY_AUDIO_PRESET(draft, payload);
       },
-      action({ commit }, payload: { audioKey: string }) {
+      action({ commit }, payload: { audioKey: AudioKey }) {
         commit("COMMAND_APPLY_AUDIO_PRESET", payload);
       },
     },
@@ -2658,7 +2674,7 @@ export const audioCommandStore = transformCommandStore(
         draft,
         {
           audioKeyItemPairs,
-        }: { audioKeyItemPairs: { audioKey: string; audioItem: AudioItem }[] }
+        }: { audioKeyItemPairs: { audioKey: AudioKey; audioItem: AudioItem }[] }
       ) {
         audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
           audioKeyItemPairs,
@@ -2694,23 +2710,23 @@ export const audioCommandStore = transformCommandStore(
 
           if (!getters.USER_ORDERED_CHARACTER_INFOS)
             throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
-          for (const { text, engineId, styleId } of parseTextFile(
+          for (const { text, voice } of parseTextFile(
             body,
             state.defaultStyleIds,
-            getters.USER_ORDERED_CHARACTER_INFOS
+            getters.USER_ORDERED_CHARACTER_INFOS,
+            baseAudioItem?.voice
           )) {
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             audioItems.push(
               await dispatch("GENERATE_AUDIO_ITEM", {
                 text,
-                engineId,
-                styleId,
+                voice,
                 baseAudioItem,
               })
             );
           }
-          const audioKeys: string[] = await Promise.all(
+          const audioKeys: AudioKey[] = await Promise.all(
             audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
           );
           const audioKeyItemPairs = audioItems.map((audioItem, index) => ({
@@ -2732,8 +2748,8 @@ export const audioCommandStore = transformCommandStore(
           audioKeyItemPairs,
           prevAudioKey,
         }: {
-          audioKeyItemPairs: { audioItem: AudioItem; audioKey: string }[];
-          prevAudioKey: string;
+          audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
+          prevAudioKey: AudioKey;
         }
       ) {
         audioStore.mutations.INSERT_AUDIO_ITEMS(draft, {
@@ -2747,17 +2763,15 @@ export const audioCommandStore = transformCommandStore(
           {
             prevAudioKey,
             texts,
-            engineId,
-            styleId,
+            voice,
           }: {
-            prevAudioKey: string;
+            prevAudioKey: AudioKey;
             texts: string[];
-            engineId: string;
-            styleId: number;
+            voice: Voice;
           }
         ) => {
           const audioKeyItemPairs: {
-            audioKey: string;
+            audioKey: AudioKey;
             audioItem: AudioItem;
           }[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;
@@ -2767,13 +2781,12 @@ export const audioCommandStore = transformCommandStore(
             basePresetKey = baseAudioItem.presetKey;
           }
           for (const text of texts.filter((value) => value != "")) {
-            const audioKey: string = await dispatch("GENERATE_AUDIO_KEY");
+            const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
-              engineId,
-              styleId,
+              voice,
               baseAudioItem,
               presetKey: basePresetKey,
             });

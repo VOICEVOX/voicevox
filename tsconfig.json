@@ -11,9 +11,9 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["webpack-env", "mocha", "chai"],
+    "types": ["vitest/globals"],
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["src/*"]
     },
     "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
   },
@@ -26,4 +26,3 @@
   ],
   "exclude": ["node_modules"]
 }
-

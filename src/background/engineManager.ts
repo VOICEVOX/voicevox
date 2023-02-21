@@ -14,6 +14,9 @@ import {
   ElectronStoreType,
   EngineDirValidationResult,
   MinimumEngineManifest,
+  EngineId,
+  engineIdSchema,
+  minimumEngineManifestSchema,
 } from "@/type/preload";
 
 import log from "electron-log";
@@ -33,7 +36,7 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 
   const envSchema = z
     .object({
-      uuid: z.string().uuid(),
+      uuid: engineIdSchema,
       host: z.string(),
       name: z.string(),
       executionEnabled: z.boolean(),
@@ -62,7 +65,7 @@ export class EngineManager {
   vvppEngineDir: string;
 
   defaultEngineInfos: EngineInfo[];
-  engineProcessContainers: Record<string, EngineProcessContainer>;
+  engineProcessContainers: Record<EngineId, EngineProcessContainer>;
 
   constructor({
     store,
@@ -83,7 +86,7 @@ export class EngineManager {
 
   /**
    * 追加エンジンの一覧を取得する。
-   * FIXME: store.get("engineDirs")への副作用をEngineManager外に移動する
+   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
   fetchAdditionalEngineInfos(): EngineInfo[] {
     const engines: EngineInfo[] = [];
@@ -94,8 +97,8 @@ export class EngineManager {
       }
       let manifest: MinimumEngineManifest;
       try {
-        manifest = JSON.parse(
-          fs.readFileSync(manifestPath, { encoding: "utf8" })
+        manifest = minimumEngineManifestSchema.parse(
+          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" }))
         );
       } catch (e) {
         return "manifestParseError";
@@ -129,8 +132,8 @@ export class EngineManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
-    // FIXME: この関数の引数でengineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
-    for (const engineDir of this.store.get("engineDirs")) {
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でstore.setする
+    for (const engineDir of this.store.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -141,8 +144,8 @@ export class EngineManager {
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`
         );
         this.store.set(
-          "engineDirs",
-          this.store.get("engineDirs").filter((p) => p !== engineDir)
+          "registeredEngineDirs",
+          this.store.get("registeredEngineDirs").filter((p) => p !== engineDir)
         );
       }
     }
@@ -160,7 +163,7 @@ export class EngineManager {
   /**
    * エンジンの情報を取得する。存在しない場合はエラーを返す。
    */
-  fetchEngineInfo(engineId: string): EngineInfo {
+  fetchEngineInfo(engineId: EngineId): EngineInfo {
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -174,7 +177,7 @@ export class EngineManager {
   /**
    * エンジンのディレクトリを取得する。存在しない場合はエラーを返す。
    */
-  fetchEngineDirectory(engineId: string): string {
+  fetchEngineDirectory(engineId: EngineId): string {
     const engineInfo = this.fetchEngineInfo(engineId);
     const engineDirectory = engineInfo.path;
     if (engineDirectory == null) {
@@ -202,7 +205,7 @@ export class EngineManager {
    * エンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngine(engineId: string, win: BrowserWindow) {
+  async runEngine(engineId: EngineId, win: BrowserWindow) {
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -233,8 +236,11 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const useGpu = this.store.get("useGpu");
+    const engineSetting = this.store.get("engineSettings")[engineId];
+    if (engineSetting == undefined)
+      throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
+    const useGpu = engineSetting.useGpu;
     log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
     // エンジンプロセスの起動
@@ -287,10 +293,12 @@ export class EngineManager {
   /**
    * 全てのエンジンに対し、各エンジンを終了するPromiseを返す。
    */
-  killEngineAll(): Record<string, Promise<void>> {
-    const killingProcessPromises: Record<string, Promise<void>> = {};
+  killEngineAll(): Record<EngineId, Promise<void>> {
+    const killingProcessPromises: Record<EngineId, Promise<void>> = {};
 
-    for (const engineId of Object.keys(this.engineProcessContainers)) {
+    // FIXME: engineProcessContainersをMapにする
+    for (const engineIdStr of Object.keys(this.engineProcessContainers)) {
+      const engineId = EngineId(engineIdStr);
       const promise = this.killEngine(engineId);
       if (promise === undefined) continue;
 
@@ -308,7 +316,7 @@ export class EngineManager {
    * Promise.reject: エンジンプロセスのキルに失敗した（非同期）
    * undefined: エンジンプロセスのキルが開始されなかった＝エンジンプロセスがすでに停止している（同期）
    */
-  killEngine(engineId: string): Promise<void> | undefined {
+  killEngine(engineId: EngineId): Promise<void> | undefined {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     if (!engineProcessContainer) {
       log.error(`No such engineProcessContainer: engineId == ${engineId}`);
@@ -365,7 +373,7 @@ export class EngineManager {
    * エンジンを再起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async restartEngine(engineId: string, win: BrowserWindow) {
+  async restartEngine(engineId: EngineId, win: BrowserWindow) {
     // FIXME: killEngine関数を使い回すようにする
     await new Promise<void>((resolve, reject) => {
       const engineProcessContainer: EngineProcessContainer | undefined =
@@ -448,16 +456,8 @@ export class EngineManager {
     );
     let manifestContent: MinimumEngineManifest;
     try {
-      manifestContent = JSON.parse(manifest);
+      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
     } catch (e) {
-      return "invalidManifest";
-    }
-
-    if (
-      ["name", "uuid", "port", "command", "icon"].some(
-        (key) => !(key in manifestContent)
-      )
-    ) {
       return "invalidManifest";
     }
 

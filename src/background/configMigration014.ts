@@ -29,7 +29,11 @@ export default function ({
         throw new Error("configMigration014: config.json is invalid");
       }
 
-      if (semver.satisfies(config.__internal__.migrations.version, ">=0.14")) {
+      if (
+        semver.satisfies(config.__internal__.migrations.version, ">=0.14", {
+          includePrerelease: true,
+        })
+      ) {
         _logInfo(`>=0.14 ${configPath} exists, do nothing`);
         return;
       }
