@@ -2,7 +2,10 @@ import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
 
-export const isMac = process.platform === "darwin";
+export const isMac =
+  typeof process === "undefined"
+    ? navigator.userAgent.includes("Mac")
+    : process.platform === "darwin";
 
 export const engineIdSchema = z.string().uuid().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
