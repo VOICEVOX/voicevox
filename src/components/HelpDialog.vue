@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, Component } from "vue";
+import { computed, ref, type Component } from "vue";
 import HelpPolicy from "@/components/HelpPolicy.vue";
 import LibraryPolicy from "@/components/LibraryPolicy.vue";
 import HowToUse from "@/components/HowToUse.vue";

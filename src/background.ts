@@ -12,7 +12,6 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
@@ -49,14 +48,20 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = import.meta.env.DEV;
+const isTest = import.meta.env.MODE === "test";
+
+let suffix = "";
+if (isTest) {
+  suffix = "-test";
+} else if (isDevelopment) {
+  suffix = "-dev";
+}
+console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
-const fixedUserDataDir = path.join(
-  app.getPath("appData"),
-  `voicevox${isDevelopment ? "-dev" : ""}`
-);
+const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -91,6 +96,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 let appDirPath: string;
+let __static: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -101,11 +107,13 @@ if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
+  __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
   process.chdir(appDirPath);
+  __static = __dirname;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -308,7 +316,6 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // 使い方テキストの読み込み
-declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -447,12 +454,13 @@ async function createWindow() {
     "&projectFilePath=" +
     projectFilePath;
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + parameter
-    );
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
   } else {
-    createProtocol("app");
+    protocol.registerFileProtocol("app", (request, callback) => {
+      const filePath = new URL(request.url).pathname;
+      callback(path.join(__dirname, filePath));
+    });
     win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();
@@ -982,7 +990,7 @@ app.on("ready", async () => {
 
   // 多重起動防止
   if (
-    // !isDevelopment &&
+    !isDevelopment &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)
