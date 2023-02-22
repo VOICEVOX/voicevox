@@ -125,7 +125,7 @@ const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
 if (!("properties" in electronStoreJsonSchema)) {
   throw new Error("electronStoreJsonSchema must be object");
 }
-let store: Store<ElectronStoreType>;
+let store : Store<ElectronStoreType>;
 try {
   store = new Store<ElectronStoreType>({
     schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
@@ -178,9 +178,12 @@ try {
   });
 } catch (e) {
   log.error(
-    "config ロードエラーです。config.json を消してみてください(設定がすべてリセットされます)"
+    `設定ファイルの読み込みに失敗しました。${app.getPath(
+      "userData"
+    )}にあるconfig.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
   );
   log.error(e);
+  process.exit(1);
 }
 
 // engine
