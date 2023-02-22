@@ -125,7 +125,7 @@ const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
 if (!("properties" in electronStoreJsonSchema)) {
   throw new Error("electronStoreJsonSchema must be object");
 }
-let store : Store<ElectronStoreType>;
+let store: Store<ElectronStoreType>;
 try {
   store = new Store<ElectronStoreType>({
     schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
