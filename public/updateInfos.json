@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.14.5",
+    "descriptions": [
+      "キャラクター「†聖騎士 紅桜†」「雀松朱司」「麒ヶ島宗麟」を追加",
+      "同時書き込みで辞書が破損する問題を修正"
+    ],
+    "contributors": ["Hiroshiba"]
+  },
+  {
     "version": "0.14.4",
     "descriptions": ["デフォルトスタイル選択ダイアログが閉じれないバグを修正"],
     "contributors": ["sevenc-nanashi"]
