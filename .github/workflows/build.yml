@@ -117,14 +117,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Cache Electron
         uses: actions/cache@v3
@@ -305,14 +298,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Install asar
         shell: bash
@@ -602,14 +588,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Cache Electron
         uses: actions/cache@v3
