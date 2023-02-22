@@ -1,8 +1,9 @@
 import { State } from "@/store/type";
+import { EngineId, SpeakerId } from "@/type/preload";
 import dummyImage from "./dummyImage";
 
-export const engineAUuid = "6403c196-4d7a-4f4a-aa02-a4cf75848e72";
-export const engineBUuid = "4b15fe97-0b55-4485-80e3-b8d30e99c22d";
+export const engineAUuid = EngineId("6403c196-4d7a-4f4a-aa02-a4cf75848e72");
+export const engineBUuid = EngineId("4b15fe97-0b55-4485-80e3-b8d30e99c22d");
 
 export const singleEngineState: Pick<
   State,
@@ -56,13 +57,13 @@ export const singleEngineState: Pick<
     [engineAUuid]: [
       {
         metas: {
-          speakerUuid: "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+          speakerUuid: SpeakerId("7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff"),
           speakerName: "CV1",
           styles: [
             {
               styleName: "ノーマル",
               styleId: 0,
-              engineId: "",
+              engineId: engineAUuid,
               iconPath: dummyImage,
               portraitPath: undefined,
 
@@ -162,7 +163,7 @@ export const multipleEngineState: Pick<
     [engineAUuid]: [
       {
         metas: {
-          speakerUuid: "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+          speakerUuid: SpeakerId("7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff"),
           speakerName: "CV1",
           styles: [
             {
@@ -184,7 +185,7 @@ export const multipleEngineState: Pick<
     [engineBUuid]: [
       {
         metas: {
-          speakerUuid: "fbffabe4-a3ad-4c6f-831e-fa6a0fb84e8c",
+          speakerUuid: SpeakerId("fbffabe4-a3ad-4c6f-831e-fa6a0fb84e8c"),
           speakerName: "CV2",
           styles: [
             {
