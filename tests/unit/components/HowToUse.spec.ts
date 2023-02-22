@@ -4,6 +4,7 @@ import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { createStore } from "vuex";
 import { storeKey } from "@/store";
 import { QPage } from "quasar";
+import { describe, it } from "vitest";
 
 const store = createStore({
   actions: {

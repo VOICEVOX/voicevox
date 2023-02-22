@@ -7,6 +7,8 @@ import { createPartialStore } from "./vuex";
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
 import {
+  AudioKey,
+  audioKeySchema,
   EngineId,
   engineIdSchema,
   speakerIdSchema,
@@ -289,7 +291,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice != undefined
+                parsedProjectData.audioItems[audioKey]?.voice != undefined
             )
           ) {
             throw new Error('Every audioItem should have a "voice" attribute.');
@@ -297,7 +299,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                parsedProjectData.audioItems[audioKey]?.voice.engineId !=
                 undefined
             )
           ) {
@@ -307,7 +309,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                parsedProjectData.audioItems[audioKey]?.voice.speakerId !=
                 undefined
             )
           ) {
@@ -316,7 +318,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                parsedProjectData.audioItems[audioKey]?.voice.styleId !=
                 undefined
             )
           ) {
@@ -497,14 +499,14 @@ const audioItemSchema = z.object({
 const projectSchema = z.object({
   appVersion: z.string(),
   // description: "Attribute keys of audioItems.",
-  audioKeys: z.array(z.string()),
+  audioKeys: z.array(audioKeySchema),
   // description: "VOICEVOX states per cell",
-  audioItems: z.record(audioItemSchema),
+  audioItems: z.record(audioKeySchema, audioItemSchema),
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
-  audioKeys: string[];
-  audioItems: Record<string, AudioItem>;
+  audioKeys: AudioKey[];
+  audioItems: Record<AudioKey, AudioItem>;
 }

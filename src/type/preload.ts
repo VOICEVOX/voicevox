@@ -2,7 +2,10 @@ import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { IpcSOData } from "./ipc";
 import { z } from "zod";
 
-export const isMac = process.platform === "darwin";
+export const isMac =
+  typeof process === "undefined"
+    ? navigator.userAgent.includes("Mac")
+    : process.platform === "darwin";
 
 export const engineIdSchema = z.string().uuid().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
@@ -15,6 +18,10 @@ export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 export const styleIdSchema = z.number().brand<"StyleId">();
 export type StyleId = z.infer<typeof styleIdSchema>;
 export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
+
+export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export type AudioKey = z.infer<typeof audioKeySchema>;
+export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [

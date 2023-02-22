@@ -486,7 +486,13 @@ import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
 import { useStore } from "@/store";
 
-import { CharacterInfo, MorphingInfo, Preset, Voice } from "@/type/preload";
+import {
+  AudioKey,
+  CharacterInfo,
+  MorphingInfo,
+  Preset,
+  Voice,
+} from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import CharacterButton from "./CharacterButton.vue";
 import PresetManageDialog from "./PresetManageDialog.vue";
@@ -494,7 +500,7 @@ import { EngineManifest } from "@/openapi";
 
 const props =
   defineProps<{
-    activeAudioKey: string;
+    activeAudioKey: AudioKey;
   }>();
 
 const store = useStore();

@@ -189,6 +189,7 @@ import { AudioItem, EngineState } from "@/store/type";
 import { QResizeObserver, useQuasar } from "quasar";
 import path from "path";
 import {
+  AudioKey,
   EngineId,
   HotkeyAction,
   HotkeyReturnType,
@@ -353,7 +354,7 @@ const updateAudioDetailPane = async (height: number) => {
 };
 
 // component
-let audioCellRefs: Record<string, typeof AudioCell> = {};
+let audioCellRefs: Record<AudioKey, typeof AudioCell> = {};
 const addAudioCellRef = (audioCellRef: typeof AudioCell) => {
   if (audioCellRef) {
     audioCellRefs[audioCellRef.audioKey] = audioCellRef;
@@ -366,12 +367,12 @@ onBeforeUpdate(() => {
 const resizeObserverRef = ref<QResizeObserver>();
 
 // DaD
-const updateAudioKeys = (audioKeys: string[]) =>
+const updateAudioKeys = (audioKeys: AudioKey[]) =>
   store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
 const itemKey = (key: string) => key;
 
 // セルを追加
-const activeAudioKey = computed<string | undefined>(
+const activeAudioKey = computed<AudioKey | undefined>(
   () => store.getters.ACTIVE_AUDIO_KEY
 );
 const addAudioItem = async () => {
@@ -468,7 +469,7 @@ watch(shouldShowPanes, (val, old) => {
 });
 
 // セルをフォーカス
-const focusCell = ({ audioKey }: { audioKey: string }) => {
+const focusCell = ({ audioKey }: { audioKey: AudioKey }) => {
   audioCellRefs[audioKey].focusTextField();
 };
 
@@ -544,7 +545,7 @@ onMounted(async () => {
     store.state.acceptRetrieveTelemetry === "Unconfirmed";
 
   isAcceptTermsDialogOpenComputed.value =
-    process.env.NODE_ENV == "production" &&
+    import.meta.env.MODE !== "development" &&
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
