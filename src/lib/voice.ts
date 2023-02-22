@@ -1,4 +1,4 @@
-import { EngineId, SpeakerId, Voice, VoiceId } from "@/type/preload";
+import { EngineId, SpeakerId, StyleId, Voice, VoiceId } from "@/type/preload";
 
 export const voiceToVoiceId = (voice: Voice): VoiceId =>
   VoiceId(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
@@ -8,6 +8,6 @@ export const voiceIdToVoice = (voiceId: VoiceId): Voice => {
   return {
     engineId: EngineId(engineId),
     speakerId: SpeakerId(speakerId),
-    styleId: Number(styleId),
+    styleId: StyleId(Number(styleId)),
   };
 };
