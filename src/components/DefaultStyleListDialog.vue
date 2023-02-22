@@ -96,156 +96,126 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, PropType, watch } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 
-export default defineComponent({
-  name: "DefaultStyleListDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+    characterInfos: CharacterInfo[];
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
 
-  components: {
-    DefaultStyleSelectDialog,
-  },
+const store = useStore();
 
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-    characterInfos: {
-      type: Object as PropType<CharacterInfo[]>,
-      required: true,
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-
-    const modelValueComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
-    });
-
-    // 選択中のキャラクター
-    const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
-    const selectCharacter = (speakerUuid: string) => {
-      selectedCharacter.value = speakerUuid;
-    };
-
-    const showStyleSelectDialog = ref<boolean>(false);
-    const selectedCharacterInfo = computed(() => {
-      return props.characterInfos.find(
-        (characterInfo) =>
-          characterInfo.metas.speakerUuid === selectedCharacter.value
-      );
-    });
-
-    const characterInfosMap = computed(() => {
-      const map: { [key: string]: CharacterInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
-        map[characterInfo.metas.speakerUuid] = characterInfo;
-      });
-      return map;
-    });
-
-    // サンプルボイス一覧のキャラクター順番
-    const speakerWithMultipleStyles = ref<CharacterInfo[]>([]);
-
-    // 選択中のスタイル
-    const selectedStyleIndexes = ref<Record<string, number>>({});
-    const selectedStyles = computed(() => {
-      const map: { [key: string]: StyleInfo } = {};
-      props.characterInfos.forEach((characterInfo) => {
-        const selectedStyleIndex: number | undefined =
-          selectedStyleIndexes.value[characterInfo.metas.speakerUuid];
-        map[characterInfo.metas.speakerUuid] =
-          characterInfo.metas.styles[selectedStyleIndex ?? 0];
-      });
-      return map;
-    });
-
-    // キャラクター表示順序
-    const characterOrder = ref<CharacterInfo[]>([]);
-
-    // ダイアログが開かれたときに初期値を求める
-    watch([() => props.modelValue], async ([newValue]) => {
-      if (newValue) {
-        speakerWithMultipleStyles.value = store.state.userCharacterOrder
-          .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-          .filter((characterInfo) => characterInfo !== undefined)
-          .filter(
-            (characterInfo) => characterInfo.metas.styles.length > 1
-          ) as CharacterInfo[];
-        // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
-        // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
-        selectedStyleIndexes.value = Object.fromEntries(
-          [
-            ...store.state.userCharacterOrder.map(
-              (speakerUuid) => [speakerUuid, 0] as const
-            ),
-            ...store.state.defaultStyleIds.map(
-              (defaultStyle) =>
-                [
-                  defaultStyle.speakerUuid,
-                  characterInfosMap.value[
-                    defaultStyle.speakerUuid
-                  ]?.metas.styles.findIndex(
-                    (style) => style.styleId === defaultStyle.defaultStyleId
-                  ),
-                ] as const
-            ),
-          ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value)
-        );
-      }
-    });
-
-    // キャラクター枠のホバー状態を表示するかどうか
-    // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
-    const isHoverableItem = ref(true);
-
-    const closeDialog = () => {
-      store.dispatch(
-        "SET_DEFAULT_STYLE_IDS",
-        Object.entries(selectedStyleIndexes.value).map(
-          ([speakerUuid, styleIndex]) => ({
-            speakerUuid,
-            defaultStyleId:
-              characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
-                .styleId,
-            engineId:
-              characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
-                .engineId,
-          })
-        )
-      );
-      stop();
-      modelValueComputed.value = false;
-    };
-    const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
-      stop();
-      selectedCharacter.value = characterInfo.metas.speakerUuid;
-      showStyleSelectDialog.value = true;
-    };
-
-    return {
-      modelValueComputed,
-      characterInfosMap,
-      showStyleSelectDialog,
-      selectedCharacterInfo,
-      speakerWithMultipleStyles,
-      selectedStyleIndexes,
-      selectedStyles,
-      selectedCharacter,
-      selectCharacter,
-      characterOrder,
-      isHoverableItem,
-      closeDialog,
-      openStyleSelectDialog,
-    };
-  },
+const modelValueComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
+
+// 選択中のキャラクター
+const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+
+const showStyleSelectDialog = ref<boolean>(false);
+const selectedCharacterInfo = computed(() => {
+  return props.characterInfos.find(
+    (characterInfo) =>
+      characterInfo.metas.speakerUuid === selectedCharacter.value
+  );
+});
+
+const characterInfosMap = computed(() => {
+  const map: { [key: SpeakerId]: CharacterInfo } = {};
+  props.characterInfos.forEach((characterInfo) => {
+    map[characterInfo.metas.speakerUuid] = characterInfo;
+  });
+  return map;
+});
+
+// サンプルボイス一覧のキャラクター順番
+const speakerWithMultipleStyles = ref<CharacterInfo[]>([]);
+
+// 選択中のスタイル
+const selectedStyleIndexes = ref<Record<SpeakerId, number>>({});
+const selectedStyles = computed(() => {
+  const map: { [key: string]: StyleInfo } = {};
+  props.characterInfos.forEach((characterInfo) => {
+    const selectedStyleIndex: number | undefined =
+      selectedStyleIndexes.value[characterInfo.metas.speakerUuid];
+    map[characterInfo.metas.speakerUuid] =
+      characterInfo.metas.styles[selectedStyleIndex ?? 0];
+  });
+  return map;
+});
+
+// ダイアログが開かれたときに初期値を求める
+watch([() => props.modelValue], async ([newValue]) => {
+  if (newValue) {
+    speakerWithMultipleStyles.value = store.state.userCharacterOrder
+      .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+      .filter((characterInfo) => characterInfo !== undefined)
+      .filter(
+        (characterInfo) => characterInfo.metas.styles.length > 1
+      ) as CharacterInfo[];
+    // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
+    // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
+    selectedStyleIndexes.value = Object.fromEntries(
+      [
+        ...store.state.userCharacterOrder.map(
+          (speakerUuid) => [speakerUuid, 0] as const
+        ),
+        ...store.state.defaultStyleIds.map(
+          (defaultStyle) =>
+            [
+              defaultStyle.speakerUuid,
+              characterInfosMap.value[
+                defaultStyle.speakerUuid
+              ]?.metas.styles.findIndex(
+                (style) => style.styleId === defaultStyle.defaultStyleId
+              ),
+            ] as const
+        ),
+      ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value)
+    );
+  }
+});
+
+// キャラクター枠のホバー状態を表示するかどうか
+// 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
+const isHoverableItem = ref(true);
+
+const closeDialog = () => {
+  store.dispatch(
+    "SET_DEFAULT_STYLE_IDS",
+    Object.entries(selectedStyleIndexes.value).map(
+      ([speakerUuidStr, styleIndex]) => {
+        const speakerUuid = SpeakerId(speakerUuidStr);
+        return {
+          speakerUuid,
+          defaultStyleId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .styleId,
+          engineId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .engineId,
+        };
+      }
+    )
+  );
+  stop();
+  modelValueComputed.value = false;
+};
+const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
+  stop();
+  selectedCharacter.value = characterInfo.metas.speakerUuid;
+  showStyleSelectDialog.value = true;
+};
 </script>
 
 <style scoped lang="scss">

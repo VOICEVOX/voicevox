@@ -271,13 +271,18 @@ import { useQuasar } from "quasar";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
+import {
+  AudioKey,
+  HotkeyAction,
+  HotkeyReturnType,
+  MoraDataType,
+} from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { EngineManifest, Mora } from "@/openapi/models";
 
 const props =
   defineProps<{
-    activeAudioKey: string;
+    activeAudioKey: AudioKey;
   }>();
 
 const store = useStore();
@@ -285,9 +290,11 @@ const $q = useQuasar();
 
 const supportedFeatures = computed(
   () =>
-    (audioItem.value?.engineId &&
-      store.state.engineIds.some((id) => id === audioItem.value.engineId) &&
-      store.state.engineManifests[audioItem.value?.engineId]
+    (audioItem.value?.voice.engineId &&
+      store.state.engineIds.some(
+        (id) => id === audioItem.value.voice.engineId
+      ) &&
+      store.state.engineManifests[audioItem.value.voice.engineId]
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined
 );
 

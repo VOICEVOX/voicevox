@@ -12,7 +12,6 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 
 import path from "path";
@@ -32,7 +31,8 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSetting,
+  engineSettingSchema,
+  EngineId,
 } from "./type/preload";
 
 import log from "electron-log";
@@ -48,14 +48,20 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = import.meta.env.DEV;
+const isTest = import.meta.env.MODE === "test";
+
+let suffix = "";
+if (isTest) {
+  suffix = "-test";
+} else if (isDevelopment) {
+  suffix = "-dev";
+}
+console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
-const fixedUserDataDir = path.join(
-  app.getPath("appData"),
-  `voicevox${isDevelopment ? "-dev" : ""}`
-);
+const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -90,6 +96,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 let appDirPath: string;
+let __static: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -100,11 +107,13 @@ if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
+  __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
   process.chdir(appDirPath);
+  __static = __dirname;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -133,15 +142,18 @@ const store = new Store<ElectronStoreType>({
     },
     ">=0.14": (store) => {
       // FIXME: できるならEngineManagerからEnginIDを取得したい
-      const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
-        .uuid;
+      if (process.env.DEFAULT_ENGINE_INFOS == undefined)
+        throw new Error("DEFAULT_ENGINE_INFOS == undefined");
+      const engineId = EngineId(
+        JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
+      );
       if (engineId == undefined)
         throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = store.get("defaultStyleIds");
       store.set(
         "defaultStyleIds",
         prevDefaultStyleIds.map((defaultStyle) => ({
-          engineId: engineId,
+          engineId,
           speakerUuid: defaultStyle.speakerUuid,
           defaultStyleId: defaultStyle.defaultStyleId,
         }))
@@ -178,7 +190,7 @@ const engineManager = new EngineManager({
 const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
-function openEngineDirectory(engineId: string) {
+function openEngineDirectory(engineId: EngineId) {
   const engineDirectory = engineManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
@@ -270,7 +282,7 @@ function checkMultiEngineEnabled(): boolean {
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
-async function uninstallVvppEngine(engineId: string) {
+async function uninstallVvppEngine(engineId: EngineId) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
     engineInfo = engineManager.fetchEngineInfo(engineId);
@@ -304,7 +316,6 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // 使い方テキストの読み込み
-declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -416,18 +427,41 @@ async function createWindow() {
     icon: path.join(__static, "icon.png"),
   });
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) +
-        "#/home?isMultiEngineOffMode=" +
-        appState.isMultiEngineOffMode
-    );
+  let projectFilePath: string | undefined = "";
+  if (isMac) {
+    if (filePathOnMac) {
+      if (filePathOnMac.endsWith(".vvproj")) {
+        projectFilePath = encodeURI(filePathOnMac);
+      }
+      filePathOnMac = undefined;
+    }
   } else {
-    createProtocol("app");
-    win.loadURL(
-      "app://./index.html#/home?isMultiEngineOffMode=" +
-        appState.isMultiEngineOffMode
-    );
+    if (process.argv.length >= 2) {
+      const filePath = process.argv[1];
+      if (
+        fs.existsSync(filePath) &&
+        fs.statSync(filePath).isFile() &&
+        filePath.endsWith(".vvproj")
+      ) {
+        projectFilePath = encodeURI(filePath);
+      }
+    }
+  }
+
+  const parameter =
+    "#/home?isMultiEngineOffMode=" +
+    appState.isMultiEngineOffMode +
+    "&projectFilePath=" +
+    projectFilePath;
+
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
+  } else {
+    protocol.registerFileProtocol("app", (request, callback) => {
+      const filePath = new URL(request.url).pathname;
+      callback(path.join(__dirname, filePath));
+    });
+    win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();
 
@@ -460,31 +494,6 @@ async function createWindow() {
     });
   });
 
-  win.webContents.once("did-finish-load", () => {
-    if (isMac) {
-      if (filePathOnMac) {
-        if (filePathOnMac.endsWith(".vvproj")) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", {
-            filePath: filePathOnMac,
-            confirm: false,
-          });
-        }
-        filePathOnMac = undefined;
-      }
-    } else {
-      if (process.argv.length >= 2) {
-        const filePath = process.argv[1];
-        if (
-          fs.existsSync(filePath) &&
-          fs.statSync(filePath).isFile() &&
-          filePath.endsWith(".vvproj")
-        ) {
-          ipcMainSend(win, "LOAD_PROJECT_FILE", { filePath, confirm: false });
-        }
-      }
-    }
-  });
-
   mainWindowState.manage(win);
 }
 
@@ -495,7 +504,7 @@ async function start() {
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSettings[engineInfo.uuid] = engineSetting.parse({});
+      engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
   store.set("engineSettings", engineSettings);
@@ -820,7 +829,7 @@ ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
   return await installVvppEngine(path);
 });
 
-ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: string) => {
+ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
   return await uninstallVvppEngine(engineId);
 });
 
@@ -981,7 +990,7 @@ app.on("ready", async () => {
 
   // 多重起動防止
   if (
-    // !isDevelopment &&
+    !isDevelopment &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)

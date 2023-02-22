@@ -6,6 +6,13 @@ import { createPartialStore } from "./vuex";
 
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
+import {
+  AudioKey,
+  audioKeySchema,
+  EngineId,
+  engineIdSchema,
+  speakerIdSchema,
+} from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -64,6 +71,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   LOAD_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     */
     action: createUILockAction(
       async (
         context,
@@ -75,7 +85,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "プロジェクトファイルの選択",
           });
           if (ret == undefined || ret?.length == 0) {
-            return;
+            return false;
           }
           filePath = ret[0];
         }
@@ -112,7 +122,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           };
 
           // Migration
-          const engineId = "074fc39e-678b-4c13-8916-ffca8d505d1d";
+          const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
           if (
             semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)
@@ -230,6 +240,41 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
           }
 
+          if (
+            semver.satisfies(projectAppVersion, "<0.15", semverSatisfiesOptions)
+          ) {
+            const characterInfos = context.getters.USER_ORDERED_CHARACTER_INFOS;
+            if (characterInfos == undefined)
+              throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+            for (const audioItemsKey in projectData.audioItems) {
+              const audioItem = projectData.audioItems[audioItemsKey];
+              if (audioItem.voice == undefined) {
+                const oldEngineId = audioItem.engineId;
+                const oldStyleId = audioItem.styleId;
+                const chracterinfo = characterInfos.find((characterInfo) =>
+                  characterInfo.metas.styles.some(
+                    (styeleinfo) =>
+                      styeleinfo.engineId === audioItem.engineId &&
+                      styeleinfo.styleId === audioItem.styleId
+                  )
+                );
+                if (chracterinfo == undefined)
+                  throw new Error(
+                    `chracterinfo == undefined: ${oldEngineId}, ${oldStyleId}`
+                  );
+                const speakerId = chracterinfo.metas.speakerUuid;
+                audioItem.voice = {
+                  engineId: oldEngineId,
+                  speakerId,
+                  styleId: oldStyleId,
+                };
+
+                delete audioItem.engineId;
+                delete audioItem.styleId;
+              }
+            }
+          }
+
           // Validation check
           const parsedProjectData = projectSchema.parse(projectData);
           if (
@@ -245,23 +290,38 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].engineId != undefined
+                parsedProjectData.audioItems[audioKey]?.voice != undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "engineId" attribute.'
-            );
+            throw new Error('Every audioItem should have a "voice" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey]?.voice.engineId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "engineId" attribute.');
           }
           // FIXME: assert engineId is registered
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].styleId != undefined
+                parsedProjectData.audioItems[audioKey]?.voice.speakerId !=
+                undefined
             )
           ) {
-            throw new Error(
-              'Every audioItem should have a "styleId" attribute.'
-            );
+            throw new Error('Every voice should have a "speakerId" attribute.');
+          }
+          if (
+            !parsedProjectData.audioKeys.every(
+              (audioKey) =>
+                parsedProjectData.audioItems[audioKey]?.voice.styleId !=
+                undefined
+            )
+          ) {
+            throw new Error('Every voice should have a "styleId" attribute.');
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
@@ -275,7 +335,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               cancelId: 1,
             });
             if (result == 1) {
-              return;
+              return false;
             }
           }
           await context.dispatch("REMOVE_ALL_AUDIO_ITEM");
@@ -293,6 +353,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
           context.commit("CLEAR_COMMANDS");
+          return true;
         } catch (err) {
           window.electron.logError(err);
           const message = (() => {
@@ -307,6 +368,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             title: "エラー",
             message,
           });
+          return false;
         }
       }
     ),
@@ -416,15 +478,18 @@ const audioQuerySchema = z.object({
 
 const morphingInfoSchema = z.object({
   rate: z.number(),
-  targetEngineId: z.string(),
-  targetSpeakerId: z.string(),
+  targetEngineId: engineIdSchema,
+  targetSpeakerId: speakerIdSchema,
   targetStyleId: z.number(),
 });
 
 const audioItemSchema = z.object({
   text: z.string(),
-  engineId: z.string().optional(),
-  styleId: z.number().optional(),
+  voice: z.object({
+    engineId: engineIdSchema,
+    speakerId: speakerIdSchema,
+    styleId: z.number(),
+  }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
   morphingInfo: morphingInfoSchema.optional(),
@@ -433,14 +498,14 @@ const audioItemSchema = z.object({
 const projectSchema = z.object({
   appVersion: z.string(),
   // description: "Attribute keys of audioItems.",
-  audioKeys: z.array(z.string()),
+  audioKeys: z.array(audioKeySchema),
   // description: "VOICEVOX states per cell",
-  audioItems: z.record(audioItemSchema),
+  audioItems: z.record(audioKeySchema, audioItemSchema),
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
-  audioKeys: string[];
-  audioItems: Record<string, AudioItem>;
+  audioKeys: AudioKey[];
+  audioItems: Record<AudioKey, AudioItem>;
 }
