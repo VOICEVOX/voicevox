@@ -46,6 +46,7 @@ import {
   EngineId,
   VoiceId,
   SpeakerId,
+  StyleId,
   AudioKey,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -155,7 +156,7 @@ export type AudioStoreTypes = {
   };
 
   CHARACTER_INFO: {
-    getter(engineId: EngineId, styleId: number): CharacterInfo | undefined;
+    getter(engineId: EngineId, styleId: StyleId): CharacterInfo | undefined;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -170,7 +171,7 @@ export type AudioStoreTypes = {
     action(payload: {
       audioKey: AudioKey;
       engineId: EngineId;
-      styleId: number;
+      styleId: StyleId;
     }): void;
   };
 
@@ -280,13 +281,13 @@ export type AudioStoreTypes = {
   };
 
   LOAD_MORPHABLE_TARGETS: {
-    action(payload: { engineId: EngineId; baseStyleId: number }): void;
+    action(payload: { engineId: EngineId; baseStyleId: StyleId }): void;
   };
 
   SET_MORPHABLE_TARGETS: {
     mutation: {
       engineId: EngineId;
-      baseStyleId: number;
+      baseStyleId: StyleId;
       morphableTargets?: Exclude<
         { [key: number]: MorphableTargetInfo },
         undefined
@@ -318,7 +319,7 @@ export type AudioStoreTypes = {
     action(payload: {
       text: string;
       engineId: EngineId;
-      styleId: number;
+      styleId: StyleId;
     }): Promise<AudioQuery>;
   };
 
@@ -334,7 +335,7 @@ export type AudioStoreTypes = {
     action(payload: {
       text: string;
       engineId: EngineId;
-      styleId: number;
+      styleId: StyleId;
       isKana?: boolean;
     }): Promise<AccentPhrase[]>;
   };
@@ -369,7 +370,7 @@ export type AudioStoreTypes = {
     action(payload: {
       accentPhrases: AccentPhrase[];
       engineId: EngineId;
-      styleId: number;
+      styleId: StyleId;
     }): Promise<AccentPhrase[]>;
   };
 
@@ -377,7 +378,7 @@ export type AudioStoreTypes = {
     action(payload: {
       accentPhrases: AccentPhrase[];
       engineId: EngineId;
-      styleId: number;
+      styleId: StyleId;
       copyIndexes: number[];
     }): Promise<AccentPhrase[]>;
   };
@@ -782,11 +783,11 @@ export type EngineStoreTypes = {
   };
 
   IS_INITIALIZED_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: number }): Promise<boolean>;
+    action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
   INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: number }): void;
+    action(payload: { engineId: EngineId; styleId: StyleId }): void;
   };
 
   VALIDATE_ENGINE_DIR: {

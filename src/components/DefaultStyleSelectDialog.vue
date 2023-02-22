@@ -127,6 +127,7 @@ import {
   CharacterInfo,
   DefaultStyleId,
   SpeakerId,
+  StyleId,
   StyleInfo,
 } from "@/type/preload";
 
@@ -186,7 +187,7 @@ const selectStyleIndex = (styleIndex: number) => {
 
 const isHoverableStyleItem = ref(true);
 
-const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+const playing = ref<{ speakerUuid: string; styleId: StyleId; index: number }>();
 
 const audio = new Audio();
 audio.volume = 0.5;

@@ -22,6 +22,7 @@ import {
   MoraDataType,
   MorphingInfo,
   SpeakerId,
+  StyleId,
   StyleInfo,
   Voice,
   WriteFileErrorResult,
@@ -75,7 +76,7 @@ function parseTextFile(
   initVoice?: Voice
 ): AudioItem[] {
   const name2Voice = new Map<string, Voice>();
-  const uuid2Voice = new Map<string, Voice>();
+  const uuid2Voice = new Map<SpeakerId, Voice>();
   for (const defaultStyleId of defaultStyleIds) {
     const speakerId = defaultStyleId.speakerUuid;
     const engineId = defaultStyleId.engineId;
@@ -173,7 +174,7 @@ function generateWriteErrorMessage(writeFileErrorResult: WriteFileErrorResult) {
 export function getCharacterInfo(
   state: State,
   engineId: EngineId,
-  styleId: number
+  styleId: StyleId
 ): CharacterInfo | undefined {
   const engineCharacterInfos = state.characterInfos[engineId];
 
@@ -259,7 +260,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
           styles[i] = {
             styleName: style.name,
-            styleId: style.id,
+            styleId: StyleId(style.id),
             engineId,
             iconPath: base64ImageToUri(styleInfo.icon),
             portraitPath:
@@ -787,7 +788,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         text,
         engineId,
         styleId,
-      }: { text: string; engineId: EngineId; styleId: number }
+      }: { text: string; engineId: EngineId; styleId: StyleId }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -839,7 +840,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }: {
         text: string;
         engineId: EngineId;
-        styleId: number;
+        styleId: StyleId;
         isKana?: boolean;
       }
     ) {
@@ -983,7 +984,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases,
         engineId,
         styleId,
-      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: number }
+      }: { accentPhrases: AccentPhrase[]; engineId: EngineId; styleId: StyleId }
     ) {
       return dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
         engineId,
@@ -1017,7 +1018,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       }: {
         accentPhrases: AccentPhrase[];
         engineId: EngineId;
-        styleId: number;
+        styleId: StyleId;
         copyIndexes: number[];
       }
     ) {
