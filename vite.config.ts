@@ -8,6 +8,7 @@ import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
+import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
@@ -37,6 +38,7 @@ const config: UserConfig = {
       path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
     ],
     environment: "happy-dom",
+    globals: true,
   },
 
   plugins: [
@@ -50,6 +52,7 @@ const config: UserConfig = {
       // FIXME: vue-tscの型エラーを解決したら有効化する
       // vueTsc: true,
     }),
+    quasar({}),
     isElectron &&
       electron({
         entry: ["./src/background.ts", "./src/electron/preload.ts"],

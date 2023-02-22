@@ -1,4 +1,5 @@
 import { VueWrapper } from "@vue/test-utils";
+import { QPageContainer, QLayout } from "quasar";
 import { Component, ComponentPublicInstance } from "vue";
 
 export const wrapQPage = (page: Component) => {
@@ -12,6 +13,8 @@ export const wrapQPage = (page: Component) => {
     `,
     components: {
       page,
+      QPageContainer,
+      QLayout,
     },
   };
 };
