@@ -122,15 +122,20 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
       const characterName = getters.CHARACTER_NAME(voice);
 
-      // 初期値は /audio_query から得るべきか
+      const audioQuery = await dispatch("FETCH_AUDIO_QUERY", {
+        engineId: voice.engineId,
+        styleId: voice.styleId,
+        text: "",
+      });
+
       const presetData: Preset = {
         name: `*${characterName}`,
-        speedScale: 1,
-        pitchScale: 0,
-        intonationScale: 1,
-        volumeScale: 1,
-        prePhonemeLength: 0.1,
-        postPhonemeLength: 0.1,
+        speedScale: audioQuery.speedScale,
+        pitchScale: audioQuery.pitchScale,
+        intonationScale: audioQuery.intonationScale,
+        volumeScale: audioQuery.volumeScale,
+        prePhonemeLength: audioQuery.prePhonemeLength,
+        postPhonemeLength: audioQuery.postPhonemeLength,
       };
       const newPresetKey = await dispatch("ADD_PRESET", { presetData });
 
