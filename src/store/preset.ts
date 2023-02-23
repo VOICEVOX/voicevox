@@ -94,11 +94,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   ADD_PRESET: {
-    async action(
-      context,
-      { presetData, presetKey }: { presetData: Preset; presetKey?: string }
-    ) {
-      const newKey = presetKey ?? uuidv4();
+    async action(context, { presetData }: { presetData: Preset }) {
+      const newKey = uuidv4();
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,
@@ -124,7 +121,6 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }
 
       const characterName = getters.CHARACTER_NAME(voice);
-      const presetKey = uuidv4();
 
       // 初期値は /audio_query から得るべきか
       const presetData: Preset = {
@@ -136,12 +132,12 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         prePhonemeLength: 0.1,
         postPhonemeLength: 0.1,
       };
-      await dispatch("ADD_PRESET", { presetData, presetKey });
+      const newPresetKey = await dispatch("ADD_PRESET", { presetData });
 
       await dispatch("SET_DEFAULT_PRESET_MAP", {
         defaultPresetKeyMap: {
           ...state.defaultPresetKeyMap,
-          [voiceId]: presetKey,
+          [voiceId]: newPresetKey,
         },
       });
     },

@@ -1280,10 +1280,7 @@ export type PresetStoreTypes = {
     }): void;
   };
   ADD_PRESET: {
-    action(payload: {
-      presetData: Preset;
-      presetKey?: string;
-    }): Promise<string>;
+    action(payload: { presetData: Preset }): Promise<string>;
   };
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
     action(payload: { voice: Voice }): void;
