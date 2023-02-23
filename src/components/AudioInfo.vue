@@ -3,7 +3,7 @@
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-btn dense flat icon="more_vert">
+        <q-btn dense flat icon="more_vert" :disable="uiLocked">
           <q-menu transition-duration="100">
             <q-list>
               <q-item
@@ -54,6 +54,7 @@
           dense
           transition-show="none"
           transition-hide="none"
+          :disable="uiLocked"
         >
           <template v-slot:selected-item="scope">
             <div class="preset-select-label">
