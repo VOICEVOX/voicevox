@@ -40,7 +40,7 @@
     "compounds": [
         {
             "name": "Launch Electron Main/Render",
-            "configurations": ["Attach to Render Process", "Launch Electron Main Process via NPM"],
+            "configurations": ["Attach to Renderer Process", "Launch Electron Main Process via NPM"],
             "stopAll": true
         }
     ]
