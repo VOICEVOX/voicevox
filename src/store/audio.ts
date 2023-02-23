@@ -959,16 +959,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  SET_DEFAULT_PRESET: {
-    mutation(state, { audioKey }: { audioKey: AudioKey }) {
-      const audioItem = state.audioItems[audioKey];
-      if (audioItem === undefined || audioItem.voice === undefined) return;
-
-      const voiceId = voiceToVoiceId(audioItem.voice);
-      audioItem.presetKey = state.defaultPresetKeyMap[voiceId];
-    },
-  },
-
   APPLY_AUDIO_PRESET: {
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       const audioItem = state.audioItems[audioKey];
