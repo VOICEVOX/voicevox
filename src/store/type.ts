@@ -94,10 +94,6 @@ export type ErrorTypeForSaveAllResultDialog = {
   message: string;
 };
 
-export type DefaultPreset = Voice & {
-  defaultPresetKey: string;
-};
-
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
     ? never
