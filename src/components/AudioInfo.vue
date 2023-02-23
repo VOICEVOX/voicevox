@@ -959,7 +959,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
-    .filter(isDefaultPresetKey)
+    .filter((presetKey) => !isDefaultPresetKey(presetKey))
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {
