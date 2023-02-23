@@ -887,7 +887,6 @@ const presetSelectModel = computed<PresetSelectModelType>({
         label: "プリセット選択",
         key: undefined,
       };
-
     if (audioPresetKey.value == undefined)
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
 
@@ -1037,11 +1036,11 @@ const updatePreset = async (fullApply: boolean) => {
   if (key === undefined) return;
 
   const title = presetName.value;
-  const presetData = createPresetData(title);
-  if (presetData == undefined) return;
+  const newPreset = createPresetData(title);
+  if (newPreset == undefined) return;
 
   await store.dispatch("UPDATE_PRESET", {
-    presetData,
+    presetData: newPreset,
     presetKey: key,
   });
 
