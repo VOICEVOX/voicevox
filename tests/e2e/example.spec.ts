@@ -16,7 +16,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
       await fs.access("./dist/background.js");
       break;
     } catch (e) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 

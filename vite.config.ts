@@ -13,8 +13,8 @@ rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
-export default defineConfig(({ mode }) => {
-  const isDevelopment = mode === "development";
+export default defineConfig((options) => {
+  const isDevelopment = options.mode === "development";
   const sourcemap: BuildOptions["sourcemap"] = isDevelopment ? "inline" : false;
   return {
     root: path.resolve(__dirname, "src"),
@@ -45,26 +45,30 @@ export default defineConfig(({ mode }) => {
 
     plugins: [
       vue(),
-      checker({
-        overlay: false,
-        eslint: {
-          lintCommand: "eslint --ext .ts,.vue .",
-        },
-        typescript: true,
-        // FIXME: vue-tscの型エラーを解決したら有効化する
-        // vueTsc: true,
-      }),
+      options.mode !== "test" &&
+        checker({
+          overlay: false,
+          eslint: {
+            lintCommand: "eslint --ext .ts,.vue .",
+          },
+          typescript: true,
+          // FIXME: vue-tscの型エラーを解決したら有効化する
+          // vueTsc: true,
+        }),
       isElectron &&
         electron({
           entry: ["./src/background.ts", "./src/electron/preload.ts"],
           // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
-          onstart: (options) => {
-            // @ts-expect-error vite-electron-pluginがprocess.electronAppを定義していない
+          onstart: ({ startup }) => {
+            // @ts-expect-error vite-electron-pluginはprocess.electronAppにelectronのプロセスを格納している。
+            //   しかし、型定義はないので、ts-expect-errorで回避する。
             const pid = process.electronApp?.pid;
             if (pid) {
               treeKill(pid);
             }
-            options.startup([".", "--no-sandbox"]);
+            if (options.mode !== "test") {
+              startup([".", "--no-sandbox"]);
+            }
           },
           vite: {
             plugins: [tsconfigPaths({ root: __dirname })],
