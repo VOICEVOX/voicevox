@@ -42,7 +42,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
-      // Branded typeがkeyのrecordのinfer結果がPartialで包まれてしまうのでキャストが必要、つらい
+      // z.record(z.string().brand(), ...) のinfer結果がPartialで包まれてしまうのでキャスト
       const defaultPresetKeyMap = (await window.electron.getSetting(
         "defaultPresetKeyMap"
       )) as Record<VoiceId, string>;
