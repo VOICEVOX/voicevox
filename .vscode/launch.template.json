@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Attach to Render Process",
+            "name": "Attach to Renderer Process",
             // NOTE: background.tsで指定しているremote-debugging-port
             "port": 13579,
             "request": "attach",
