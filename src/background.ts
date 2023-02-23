@@ -52,7 +52,7 @@ const isDevelopment = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === "test";
 
 if (isDevelopment) {
-  app.commandLine.appendSwitch("remote-debugging-port", "13579");
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
 }
 
 let suffix = "";

@@ -7,7 +7,7 @@
         {
             "name": "Attach to Renderer Process",
             // NOTE: background.tsで指定しているremote-debugging-port
-            "port": 13579,
+            "port": 9222,
             "request": "attach",
             "type": "chrome",
             "webRoot": "${workspaceFolder}",
