@@ -86,7 +86,7 @@
     "@vue/test-utils": "2.0.0-rc.6",
     "cross-env": "7.0.3",
     "cross-var": "1.1.0",
-    "electron": "20.3.3",
+    "electron": "20.3.12",
     "electron-builder": "24.0.0-alpha.12",
     "electron-devtools-installer": "3.2.0",
     "eslint": "8.24.0",

@@ -15,6 +15,10 @@ export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
+export const styleIdSchema = z.number().brand<"StyleId">();
+export type StyleId = z.infer<typeof styleIdSchema>;
+export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
+
 export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
@@ -224,7 +228,7 @@ export type AppInfos = {
 
 export type StyleInfo = {
   styleName?: string;
-  styleId: number;
+  styleId: StyleId;
   iconPath: string;
   portraitPath: string | undefined;
   engineId: EngineId;
@@ -256,7 +260,7 @@ export type UpdateInfo = {
 export type Voice = {
   engineId: EngineId;
   speakerId: SpeakerId;
-  styleId: number;
+  styleId: StyleId;
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";
@@ -301,7 +305,7 @@ export type EngineSetting = z.infer<typeof engineSettingSchema>;
 export type DefaultStyleId = {
   engineId: EngineId;
   speakerUuid: SpeakerId;
-  defaultStyleId: number;
+  defaultStyleId: StyleId;
 };
 
 export const supportedFeaturesItemSchema = z.object({
@@ -352,7 +356,7 @@ export type MorphingInfo = {
   rate: number;
   targetEngineId: EngineId;
   targetSpeakerId: SpeakerId;
-  targetStyleId: number;
+  targetStyleId: StyleId;
 };
 
 export type PresetConfig = {
@@ -361,10 +365,10 @@ export type PresetConfig = {
 };
 
 export type MorphableTargetInfoTable = {
-  [baseStyleId: number]:
+  [baseStyleId: StyleId]:
     | undefined
     | {
-        [targetStyleId: number]: {
+        [targetStyleId: StyleId]: {
           isMorphable: boolean;
         };
       };
@@ -519,7 +523,7 @@ export const electronStoreSchema = z
           .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
           .default(EngineId("00000000-0000-0000-0000-000000000000")),
         speakerUuid: speakerIdSchema,
-        defaultStyleId: z.number(),
+        defaultStyleId: styleIdSchema,
       })
       .passthrough()
       .array()
@@ -543,7 +547,7 @@ export const electronStoreSchema = z
                     rate: z.number(),
                     targetEngineId: engineIdSchema,
                     targetSpeakerId: speakerIdSchema,
-                    targetStyleId: z.number(),
+                    targetStyleId: styleIdSchema,
                   })
                   .passthrough()
                   .optional(),
