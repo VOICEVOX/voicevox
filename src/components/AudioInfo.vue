@@ -789,10 +789,10 @@ const isRegisteredPreset = computed(
     presetItems.value[audioPresetKey.value] != undefined
 );
 
-const { isDefaultPresetKey, getDefaultPresetKey } = useDefaultPreset();
+const { isDefaultPresetKey, getDefaultPresetKeyForVoice } = useDefaultPreset();
 
 const currentDefaultPresetKey = computed(() =>
-  getDefaultPresetKey(audioItem.value.voice)
+  getDefaultPresetKeyForVoice(audioItem.value.voice)
 );
 
 // 入力パラメータがプリセットから変更されたか

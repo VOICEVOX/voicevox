@@ -11,7 +11,7 @@ export const useDefaultPreset = () => {
     () => new Set(Object.values(store.state.defaultPresetKeyMap))
   );
 
-  const getDefaultPresetKey = (voice: Voice): string => {
+  const getDefaultPresetKeyForVoice = (voice: Voice): string => {
     const voiceId = voiceToVoiceId(voice);
     return defaultPresetKeyMap.value[voiceId];
   };
@@ -21,7 +21,7 @@ export const useDefaultPreset = () => {
   };
 
   return {
-    getDefaultPresetKey,
+    getDefaultPresetKeyForVoice,
     isDefaultPresetKey,
   };
 };
