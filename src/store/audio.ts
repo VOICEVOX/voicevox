@@ -2029,7 +2029,7 @@ export const audioCommandStore = transformCommandStore(
         });
 
         if (draft.experimentalSetting.enableDefaultPreset) {
-          // デフォルトプリセットを適用する
+          // デフォルトプリセットを適用
           audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
             audioKey: payload.audioKey,
             presetKey: draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)],
@@ -2065,6 +2065,7 @@ export const audioCommandStore = transformCommandStore(
           await dispatch("SETUP_SPEAKER", { audioKey, engineId, styleId });
 
           // Voice切り替えのタイミングでデフォルトプリセットがなければ作る
+          // mutationの方で作ったデフォルトプリセットを(必要なら)適用
           await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", { voice });
 
           if (query !== undefined) {

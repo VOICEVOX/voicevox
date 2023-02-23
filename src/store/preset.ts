@@ -112,12 +112,12 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    async action({ state, dispatch, getters }, { voice }: { voice: Voice }) {
+    async action({ state, dispatch, getters }, { voice }) {
       const voiceId = voiceToVoiceId(voice);
       const defaultPresetKey = state.defaultPresetKeyMap[voiceId];
 
       if (state.presetKeys.includes(defaultPresetKey)) {
-        return;
+        return defaultPresetKey;
       }
 
       const characterName = getters.CHARACTER_NAME(voice);
@@ -140,6 +140,23 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           [voiceId]: newPresetKey,
         },
       });
+
+      return newPresetKey;
+    },
+  },
+
+  CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED: {
+    async action({ state, dispatch, commit }, { voice, audioKey }) {
+      const presetKey = await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+        voice,
+      });
+
+      if (state.experimentalSetting.enableDefaultPreset) {
+        // デフォルトプリセットを適用する
+        // undoされたくないのでCOMMAND_APPLY_AUDIO_PRESETは使わない
+        commit("SET_AUDIO_PRESET_KEY", { audioKey, presetKey });
+        commit("APPLY_AUDIO_PRESET", { audioKey });
+      }
     },
   },
 

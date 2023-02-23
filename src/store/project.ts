@@ -64,20 +64,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         const audioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
         });
-        // 話者初期化のタイミングでデフォルトプリセットがなければ作る
-        await context.dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+
+        await context.dispatch("CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED", {
           voice: audioItem.voice,
+          audioKey,
         });
-        if (context.state.experimentalSetting.enableDefaultPreset) {
-          // デフォルトプリセットを適用する
-          await context.dispatch("COMMAND_SET_AUDIO_PRESET", {
-            audioKey,
-            presetKey:
-              context.state.defaultPresetKeyMap[
-                voiceToVoiceId(audioItem.voice)
-              ],
-          });
-        }
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
         context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);

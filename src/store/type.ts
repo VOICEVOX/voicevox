@@ -1283,7 +1283,10 @@ export type PresetStoreTypes = {
     action(payload: { presetData: Preset }): Promise<string>;
   };
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    action(payload: { voice: Voice }): void;
+    action(payload: { voice: Voice }): Promise<string>;
+  };
+  CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED: {
+    action(payload: { voice: Voice; audioKey: AudioKey }): void;
   };
   UPDATE_PRESET: {
     action(payload: { presetData: Preset; presetKey: string }): void;

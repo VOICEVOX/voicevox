@@ -534,18 +534,10 @@ onMounted(async () => {
       styleId: audioItem.voice.styleId,
     });
 
-    // 話者初期化のタイミングでデフォルトプリセットがなければ作る
-    await store.dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
+    await store.dispatch("CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED", {
       voice: audioItem.voice,
+      audioKey: newAudioKey,
     });
-    if (store.state.experimentalSetting.enableDefaultPreset) {
-      // デフォルトプリセットを適用する
-      await store.dispatch("COMMAND_SET_AUDIO_PRESET", {
-        audioKey: newAudioKey,
-        presetKey:
-          store.state.defaultPresetKeyMap[voiceToVoiceId(audioItem.voice)],
-      });
-    }
   }
 
   // ショートカットキーの設定
