@@ -159,6 +159,10 @@ export type AudioStoreTypes = {
     getter(engineId: EngineId, styleId: StyleId): CharacterInfo | undefined;
   };
 
+  CHARACTER_NAME: {
+    getter(voice: Voice): string;
+  };
+
   USER_ORDERED_CHARACTER_INFOS: {
     getter: CharacterInfo[] | undefined;
   };

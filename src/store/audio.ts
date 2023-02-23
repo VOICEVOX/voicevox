@@ -375,6 +375,25 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  CHARACTER_NAME: {
+    getter: (_state, getters) => (voice: Voice) => {
+      const characterInfo = getters.CHARACTER_INFO(
+        voice.engineId,
+        voice.styleId
+      );
+      if (characterInfo === undefined)
+        throw new Error("assert characterInfo !== undefined");
+
+      const style = characterInfo.metas.styles.find(
+        (style) => style.styleId === voice.styleId
+      );
+      if (style === undefined) throw new Error("assert style !== undefined");
+
+      const styleName = style.styleName ?? "ノーマル";
+      return `${characterInfo.metas.speakerName} (${styleName})`;
+    },
+  },
+
   USER_ORDERED_CHARACTER_INFOS: {
     getter: (state, getters) => {
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
