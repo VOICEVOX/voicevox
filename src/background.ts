@@ -183,6 +183,7 @@ try {
       "userData"
     )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
   );
+  app.exit(1);
   throw e;
 }
 
