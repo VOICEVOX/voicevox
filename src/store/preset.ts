@@ -35,7 +35,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       )
         return;
       commit("SET_PRESET_ITEMS", {
-        presetItems: presetConfig.items,
+        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        presetItems: presetConfig.items as Record<PresetKey, Preset>,
       });
       commit("SET_PRESET_KEYS", {
         presetKeys: presetConfig.keys,
@@ -64,7 +65,10 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
       });
-      context.commit("SET_PRESET_ITEMS", { presetItems: result.items });
+      context.commit("SET_PRESET_ITEMS", {
+        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        presetItems: result.items as Record<PresetKey, Preset>,
+      });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
     },
   },

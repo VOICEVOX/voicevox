@@ -193,6 +193,7 @@ import {
   EngineId,
   HotkeyAction,
   HotkeyReturnType,
+  PresetKey,
   SplitterPosition,
   Voice,
 } from "@/type/preload";

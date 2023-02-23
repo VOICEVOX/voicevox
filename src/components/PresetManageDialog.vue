@@ -45,7 +45,7 @@ import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import draggable from "vuedraggable";
 
-import { Preset } from "@/type/preload";
+import { Preset, PresetKey } from "@/type/preload";
 
 export default defineComponent({
   name: "PresetManageDialog",
@@ -92,7 +92,9 @@ export default defineComponent({
         : presetList.value
     );
 
-    const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
+    const reorderPreset = (
+      featurePresetList: (Preset & { key: PresetKey })[]
+    ) => {
       const newPresetKeys = featurePresetList.map((item) => item.key);
       previewPresetKeys.value = newPresetKeys;
       isPreview.value = true;
@@ -103,7 +105,7 @@ export default defineComponent({
         .finally(() => (isPreview.value = false));
     };
 
-    const deletePreset = (key: string) => {
+    const deletePreset = (key: PresetKey) => {
       $q.dialog({
         title: "プリセット削除の確認",
         message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,

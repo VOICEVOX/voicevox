@@ -491,6 +491,7 @@ import {
   CharacterInfo,
   MorphingInfo,
   Preset,
+  PresetKey,
   Voice,
 } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
@@ -821,24 +822,18 @@ const isChangedPreset = computed(() => {
 
 type PresetSelectModelType = {
   label: string;
-  key: string | undefined;
+  key: PresetKey | undefined;
 };
 
 // プリセットの変更
-const changePreset = (
-  presetOrPresetKey: PresetSelectModelType | string
-): void => {
-  const presetKey =
-    typeof presetOrPresetKey === "string"
-      ? presetOrPresetKey
-      : presetOrPresetKey.key;
+const changePreset = (presetKey: PresetKey | undefined): void => {
   store.dispatch("COMMAND_SET_AUDIO_PRESET", {
     audioKey: props.activeAudioKey,
     presetKey,
   });
 };
 
-const presetList = computed<{ label: string; key: string }[]>(() =>
+const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
   presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
     .map((key) => ({
@@ -875,7 +870,7 @@ const presetSelectModel = computed<PresetSelectModelType>({
     };
   },
   set: (newVal) => {
-    changePreset(newVal);
+    changePreset(newVal.key);
   },
 });
 
@@ -895,7 +890,7 @@ const setPresetByScroll = (event: WheelEvent) => {
 
   if (selectablePresetList.value[newIndex] === undefined) return;
 
-  changePreset(selectablePresetList.value[newIndex]);
+  changePreset(selectablePresetList.value[newIndex].key);
 };
 
 // プリセットの登録・再登録

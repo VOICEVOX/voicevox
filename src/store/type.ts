@@ -1262,7 +1262,7 @@ export type PresetStoreTypes = {
     }): void;
   };
   ADD_PRESET: {
-    action(payload: { presetData: Preset }): Promise<string>;
+    action(payload: { presetData: Preset }): Promise<PresetKey>;
   };
   UPDATE_PRESET: {
     action(payload: { presetData: Preset; presetKey: PresetKey }): void;
