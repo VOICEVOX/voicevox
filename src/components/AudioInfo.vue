@@ -845,37 +845,38 @@ const changePreset = (
   });
 };
 
-const presetList = computed<{ label: string; key: string }[]>(() => {
-  return presetKeys.value
+const presetList = computed<{ label: string; key: string }[]>(() =>
+  presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
     .map((key) => ({
       key,
-      label:
-        currentDefaultPresetKey.value === key
-          ? "*デフォルト" // FIXME: defaultPreset作成の時点でちゃんとした名前をつけるのかどうか検討
-          : presetItems.value[key].name,
-    }));
-});
+      label: presetItems.value[key].name,
+    }))
+);
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  const restPresetList = [];
+  const topPresetList: { key: string | undefined; label: string }[] = [];
 
   if (isRegisteredPreset.value) {
-    restPresetList.push({
+    topPresetList.push({
       key: undefined,
       label: "プリセット解除",
     });
   }
 
-  const defaultPresetForCurrentStyle = presetList.value
-    .filter((preset) => preset.key === currentDefaultPresetKey.value)
-    .map((preset) => ({ ...preset, label: "*デフォルト" }));
+  // 選択中のstyleのデフォルトプリセットは常に一番上
+  topPresetList.push(
+    ...presetList.value.filter(
+      (preset) => preset.key === currentDefaultPresetKey.value
+    )
+  );
+  // 他のstyleのデフォルトプリセットを除外
   const commonPresets = presetList.value.filter(
     (preset) => !isDefaultPresetKey(preset.key)
   );
 
-  return [...restPresetList, ...defaultPresetForCurrentStyle, ...commonPresets];
+  return [...topPresetList, ...commonPresets];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
@@ -890,10 +891,7 @@ const presetSelectModel = computed<PresetSelectModelType>({
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
 
     return {
-      label:
-        audioPresetKey.value === currentDefaultPresetKey.value
-          ? "*デフォルト"
-          : presetItems.value[audioPresetKey.value].name,
+      label: presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
     };
   },
@@ -1034,10 +1032,7 @@ const addPreset = () => {
 
 const updatePreset = async (fullApply: boolean) => {
   const key = presetList.value.find(
-    (preset) =>
-      // デフォルトプリセットは表示名を変更しておりlabelとの比較ではマッチしない
-      // key === nameになっているのでそれでチェックする
-      preset.label === presetName.value || preset.key === presetName.value
+    (preset) => preset.label === presetName.value
   )?.key;
   if (key === undefined) return;
 
