@@ -115,7 +115,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    async action({ state, dispatch }, { voice }: { voice: Voice }) {
+    async action({ state, dispatch, getters }, { voice }: { voice: Voice }) {
       const voiceId = voiceToVoiceId(voice);
       const defaultPresetKey = state.defaultPresetKeyMap[voiceId];
 
@@ -123,12 +123,12 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         return;
       }
 
+      const characterName = getters.CHARACTER_NAME(voice);
       const presetKey = uuidv4();
 
-      // 1. 初期値は /audio_query から得るべきか？
-      // 2. プリセット名はhuman readableに名付けるべきか？
+      // 初期値は /audio_query から得た方が良いのかどうか
       const presetData: Preset = {
-        name: presetKey,
+        name: `*${characterName}`,
         speedScale: 1,
         pitchScale: 0,
         intonationScale: 1,
