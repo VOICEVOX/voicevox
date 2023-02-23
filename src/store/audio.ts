@@ -2018,7 +2018,7 @@ export const audioCommandStore = transformCommandStore(
           voice: payload.voice,
         });
 
-        if (draft.experimentalSetting.enableDefaultPreset) {
+        if (draft.experimentalSetting.enableAutoApplyDefaultPreset) {
           // デフォルトプリセットを適用
           audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
             audioKey: payload.audioKey,

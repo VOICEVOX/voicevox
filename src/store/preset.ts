@@ -156,7 +156,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         voice,
       });
 
-      if (state.experimentalSetting.enableDefaultPreset) {
+      if (state.experimentalSetting.enableAutoApplyDefaultPreset) {
         // デフォルトプリセットを適用する
         // undoされたくないのでCOMMAND_APPLY_AUDIO_PRESETは使わない
         commit("SET_AUDIO_PRESET_KEY", { audioKey, presetKey });

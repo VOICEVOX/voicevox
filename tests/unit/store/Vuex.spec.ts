@@ -121,7 +121,7 @@ describe("store/vuex.js test", () => {
         },
         experimentalSetting: {
           enablePreset: false,
-          enableDefaultPreset: false,
+          enableAutoApplyDefaultPreset: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
           enableMultiEngine: false,
