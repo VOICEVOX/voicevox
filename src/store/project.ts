@@ -12,6 +12,7 @@ import {
   EngineId,
   engineIdSchema,
   speakerIdSchema,
+  styleIdSchema,
 } from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
@@ -480,7 +481,7 @@ const morphingInfoSchema = z.object({
   rate: z.number(),
   targetEngineId: engineIdSchema,
   targetSpeakerId: speakerIdSchema,
-  targetStyleId: z.number(),
+  targetStyleId: styleIdSchema,
 });
 
 const audioItemSchema = z.object({
@@ -488,7 +489,7 @@ const audioItemSchema = z.object({
   voice: z.object({
     engineId: engineIdSchema,
     speakerId: speakerIdSchema,
-    styleId: z.number(),
+    styleId: styleIdSchema,
   }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
