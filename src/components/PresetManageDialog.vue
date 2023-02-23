@@ -101,7 +101,7 @@ export default defineComponent({
       previewPresetKeys.value = newPresetKeys;
       isPreview.value = true;
 
-      // デフォルトプリセットはlistから除外しているので末尾に追加しておかないと消える
+      // デフォルトプリセットは表示するlistから除外しているので、末尾に追加しておかないと失われる
       const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
 
       store

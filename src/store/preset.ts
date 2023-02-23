@@ -126,7 +126,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       const characterName = getters.CHARACTER_NAME(voice);
       const presetKey = uuidv4();
 
-      // 初期値は /audio_query から得た方が良いのかどうか
+      // 初期値は /audio_query から得るべきか
       const presetData: Preset = {
         name: `*${characterName}`,
         speedScale: 1,
