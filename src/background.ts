@@ -177,13 +177,13 @@ try {
     },
   });
 } catch (e) {
-  log.error(
-    `設定ファイルの読み込みに失敗しました。${app.getPath(
+  dialog.showErrorBox(
+    "設定ファイルの読み込みに失敗しました。",
+    `${app.getPath(
       "userData"
-    )}にあるconfig.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
+    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
   );
-  log.error(e);
-  process.exit(1);
+  throw e;
 }
 
 // engine
