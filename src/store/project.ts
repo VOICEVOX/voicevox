@@ -65,7 +65,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           audioItem,
         });
 
-        await context.dispatch("CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED", {
+        await context.dispatch("APPLY_DEFAULT_PRESET", {
           voice: audioItem.voice,
           audioKey,
         });

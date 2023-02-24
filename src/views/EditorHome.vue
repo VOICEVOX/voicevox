@@ -534,7 +534,7 @@ onMounted(async () => {
       styleId: audioItem.voice.styleId,
     });
 
-    await store.dispatch("CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED", {
+    await store.dispatch("APPLY_DEFAULT_PRESET", {
       voice: audioItem.voice,
       audioKey: newAudioKey,
     });

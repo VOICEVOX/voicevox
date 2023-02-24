@@ -150,11 +150,9 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
     },
   },
 
-  CREATE_AND_APPLY_DEFAULT_PRESET_IF_NEEDED: {
-    async action({ state, dispatch, commit }, { voice, audioKey }) {
-      const presetKey = await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", {
-        voice,
-      });
+  APPLY_DEFAULT_PRESET: {
+    async action({ state, commit }, { voice, audioKey }) {
+      const presetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
 
       if (state.experimentalSetting.enableAutoApplyDefaultPreset) {
         // デフォルトプリセットを適用する
