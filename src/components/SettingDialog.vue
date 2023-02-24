@@ -607,13 +607,7 @@
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enablePreset"
-                  @update:model-value="
-                    changeExperimentalSetting('enablePreset', $event);
-                    changeExperimentalSetting(
-                      'enableAutoApplyDefaultPreset',
-                      false
-                    );
-                  "
+                  @update:model-value="changeEnablePreset"
                 >
                 </q-toggle>
               </q-card-actions>
@@ -940,6 +934,17 @@ export default defineComponent({
       store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
     };
 
+    const changeEnablePreset = (value: boolean) => {
+      if (value) {
+        // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
+        changeExperimentalSetting("enablePreset", true);
+        changeExperimentalSetting("enableAutoApplyDefaultPreset", true);
+      } else {
+        changeExperimentalSetting("enablePreset", false);
+        changeExperimentalSetting("enableAutoApplyDefaultPreset", false);
+      }
+    };
+
     const changeExperimentalSetting = async (
       key: keyof ExperimentalSetting,
       data: boolean
@@ -1088,6 +1093,7 @@ export default defineComponent({
       availableAudioOutputDevices,
       changeinheritAudioInfo,
       changeExperimentalSetting,
+      changeEnablePreset,
       savingSetting,
       samplingRateOptions,
       renderSamplingRateLabel,
