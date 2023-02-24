@@ -111,6 +111,18 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
     },
   },
 
+  CREATE_ALL_DEFAULT_PRESET: {
+    async action({ dispatch, getters }) {
+      window.electron.getSetting("defaultPresetKeyMap");
+
+      const voices = getters.GET_ALL_VOICES;
+
+      for await (const voice of voices) {
+        await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", { voice });
+      }
+    },
+  },
+
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
     async action({ state, dispatch, getters }, { voice }) {
       const voiceId = voiceToVoiceId(voice);

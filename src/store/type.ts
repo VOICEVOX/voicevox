@@ -858,6 +858,10 @@ export type IndexStoreTypes = {
     getter: CharacterInfo[];
   };
 
+  GET_ALL_VOICES: {
+    getter: Voice[];
+  };
+
   GET_HOW_TO_USE_TEXT: {
     action(): Promise<string>;
   };
@@ -1281,6 +1285,9 @@ export type PresetStoreTypes = {
   };
   ADD_PRESET: {
     action(payload: { presetData: Preset }): Promise<string>;
+  };
+  CREATE_ALL_DEFAULT_PRESET: {
+    action(): void;
   };
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
     action(payload: { voice: Voice }): Promise<string>;

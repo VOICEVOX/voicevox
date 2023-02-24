@@ -24,7 +24,13 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
-import { DefaultStyleId } from "@/type/preload";
+import {
+  DefaultStyleId,
+  EngineId,
+  SpeakerId,
+  StyleId,
+  Voice,
+} from "@/type/preload";
 import { engineStoreState, engineStore } from "./engine";
 
 export const storeKey: InjectionKey<
@@ -105,6 +111,23 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         };
       });
       return flattenCharacterInfos;
+    },
+  },
+
+  GET_ALL_VOICES: {
+    getter(state) {
+      const flattenCharacters = Object.values(state.characterInfos).flatMap(
+        (characterInfos) => characterInfos
+      );
+      const flattenVoices: Voice[] = flattenCharacters.flatMap((c) =>
+        c.metas.styles.map((s) => ({
+          engineId: EngineId(s.engineId),
+          speakerId: SpeakerId(c.metas.speakerUuid),
+          styleId: StyleId(s.styleId),
+        }))
+      );
+
+      return flattenVoices;
     },
   },
 
