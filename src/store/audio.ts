@@ -2028,12 +2028,15 @@ export const audioCommandStore = transformCommandStore(
 
         if (payload.update === "StyleId") return;
 
+        let presetChanged = false;
+
         if (draft.experimentalSetting.enableAutoApplyDefaultPreset) {
           // デフォルトプリセットを適用
           audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
             audioKey: payload.audioKey,
             presetKey: draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)],
           });
+          presetChanged = true;
         } else {
           // 変更前がデフォルトプリセットなら割り当てを外す
           // 引き継ぐと別スタイルのデフォルトプリセットを割り当ててしまうことになるため
@@ -2046,6 +2049,7 @@ export const audioCommandStore = transformCommandStore(
               audioKey: payload.audioKey,
               presetKey: undefined,
             });
+            presetChanged = true;
           }
         }
 
@@ -2059,6 +2063,9 @@ export const audioCommandStore = transformCommandStore(
             audioKey: payload.audioKey,
             audioQuery: payload.query,
           });
+          presetChanged = true;
+        }
+        if (presetChanged) {
           audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
             audioKey: payload.audioKey,
           });
