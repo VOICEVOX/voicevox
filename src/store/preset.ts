@@ -129,7 +129,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
 
       const presetData: Preset = {
-        name: `*${characterName}`,
+        name: `デフォルト：${characterName}`,
         speedScale: audioQuery.speedScale,
         pitchScale: audioQuery.pitchScale,
         intonationScale: audioQuery.intonationScale,
