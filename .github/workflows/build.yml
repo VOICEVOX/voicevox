@@ -22,8 +22,8 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.14.1
-  VOICEVOX_RESOURCE_VERSION: 0.14.0
+  VOICEVOX_ENGINE_VERSION: 0.14.3
+  VOICEVOX_RESOURCE_VERSION: 0.14.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999が入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
@@ -113,36 +113,11 @@ jobs:
 
           "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
-      # NOTE: The extraFiles of electron-builder uses VOICEVOX.app/Contents/ as the file copy destination.
-      #       However, since the executable file is located in VOICEVOX.app/Contents/MacOS/,
-      #       it is inappropriate to copy the extraFiles to the VOICEVOX.app/Contents/ directory.
-      #       Fix it so that it is copied to the VOICEVOX.app/Contents/MacOS/ directory.
-      #       cf. https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
-      - name: Replace the extraFiles setting in vue.config.js for macOS
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: |
-          "${{ matrix.sed_name }}" -i 's/from: "build\/README.txt", to: "README.txt"/from: "build\/README.txt", to: "MacOS\/README.txt"/' vue.config.js
-          "${{ matrix.sed_name }}" -i 's/from: ".env.production", to: ".env"/from: ".env.production", to: "MacOS\/.env"/' vue.config.js
-
-          # In order to replace two lines with sed, we need to replace LF with \n and treat it as one line. Finally, undo it.
-          # cf. https://deep.tacoskingdom.com/blog/15
-          str_config="$(cat vue.config.js)"
-          echo "${str_config//$'\n'/\\n}" | "${{ matrix.sed_name }}" -e 's/from: VOICEVOX_ENGINE_DIR,\\n[ ]*to: ""/from: VOICEVOX_ENGINE_DIR, to: "MacOS\/"/' -e s/'\\n'/\\$'\n'/g > vue.config.js
-          cat vue.config.js
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Cache Electron
         uses: actions/cache@v3
@@ -201,8 +176,8 @@ jobs:
         shell: bash
         run: |
           # GTM ID
-          gtm_id=$(jq -r '.VUE_APP_GTM_CONTAINER_ID' resource/editor/metas.json)
-          "${{ matrix.sed_name }}" -i 's/VUE_APP_GTM_CONTAINER_ID=.*/VUE_APP_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
+          gtm_id=$(jq -r '.gtm_container_id' resource/editor/metas.json)
+          "${{ matrix.sed_name }}" -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
         shell: bash
@@ -237,7 +212,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
-        run: npm run electron:build_pnever -- --dir
+        run: npm run electron:build_dir
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -323,14 +298,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Install asar
         shell: bash
@@ -403,7 +371,7 @@ jobs:
           rm "${{ matrix.app_asar_dir }}/app.asar"
 
           mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
-          npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/licenses.json"
+          npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
 
           # Repack asar
           asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
@@ -620,14 +588,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version-file: ".node-version"
-
-      - name: Cache Node packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ env.cache-version }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-node-
+          cache: "npm"
 
       - name: Cache Electron
         uses: actions/cache@v3
@@ -675,14 +636,16 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
-        run: npm run electron:build_pnever -- --prepackaged "prepackage/"
+        run: |
+          PREPACKAGED="prepackage" npm run electron:build_pnever_prepackaged
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.artifact_name, '-dmg') # macOS
         shell: bash
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
-        run: npm run electron:build_pnever -- --prepackaged "prepackage/VOICEVOX.app"
+        run: |
+          PREPACKAGED="prepackage/VOICEVOX.app" npm run electron:build_pnever_prepackaged
 
       - name: Reset Code Signing Envs
         if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'

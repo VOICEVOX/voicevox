@@ -6,7 +6,14 @@ import { createPartialStore } from "./vuex";
 
 import { AccentPhrase } from "@/openapi";
 import { z } from "zod";
-import { EngineId, engineIdSchema, speakerIdSchema } from "@/type/preload";
+import {
+  AudioKey,
+  audioKeySchema,
+  EngineId,
+  engineIdSchema,
+  speakerIdSchema,
+  styleIdSchema,
+} from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -284,7 +291,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice != undefined
+                parsedProjectData.audioItems[audioKey]?.voice != undefined
             )
           ) {
             throw new Error('Every audioItem should have a "voice" attribute.');
@@ -292,7 +299,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                parsedProjectData.audioItems[audioKey]?.voice.engineId !=
                 undefined
             )
           ) {
@@ -302,7 +309,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                parsedProjectData.audioItems[audioKey]?.voice.speakerId !=
                 undefined
             )
           ) {
@@ -311,7 +318,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                parsedProjectData.audioItems[audioKey]?.voice.styleId !=
                 undefined
             )
           ) {
@@ -474,7 +481,7 @@ const morphingInfoSchema = z.object({
   rate: z.number(),
   targetEngineId: engineIdSchema,
   targetSpeakerId: speakerIdSchema,
-  targetStyleId: z.number(),
+  targetStyleId: styleIdSchema,
 });
 
 const audioItemSchema = z.object({
@@ -482,7 +489,7 @@ const audioItemSchema = z.object({
   voice: z.object({
     engineId: engineIdSchema,
     speakerId: speakerIdSchema,
-    styleId: z.number(),
+    styleId: styleIdSchema,
   }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
@@ -492,14 +499,14 @@ const audioItemSchema = z.object({
 const projectSchema = z.object({
   appVersion: z.string(),
   // description: "Attribute keys of audioItems.",
-  audioKeys: z.array(z.string()),
+  audioKeys: z.array(audioKeySchema),
   // description: "VOICEVOX states per cell",
-  audioItems: z.record(audioItemSchema),
+  audioItems: z.record(audioKeySchema, audioItemSchema),
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
-  audioKeys: string[];
-  audioItems: Record<string, AudioItem>;
+  audioKeys: AudioKey[];
+  audioItems: Record<AudioKey, AudioItem>;
 }
