@@ -520,8 +520,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (query != undefined) {
         audioItem.query = query;
       }
-      if (payload.presetKey != undefined)
+
+      // presetKeyが指定されていても、プリセット機能が有効でない場合は無視する
+      if (
+        payload.presetKey != undefined &&
+        state.experimentalSetting.enablePreset
+      ) {
         audioItem.presetKey = payload.presetKey;
+      }
 
       if (baseAudioItem && baseAudioItem.query && audioItem.query) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
