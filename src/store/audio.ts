@@ -2009,8 +2009,16 @@ export const audioCommandStore = transformCommandStore(
         draft,
         payload: { audioKey: AudioKey; voice: Voice } & (
           | { update: "StyleId" }
-          | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-          | { update: "AudioQuery"; query: AudioQuery }
+          | {
+              update: "AccentPhrases";
+              accentPhrases: AccentPhrase[];
+              presetKey: string | undefined;
+            }
+          | {
+              update: "AudioQuery";
+              query: AudioQuery;
+              presetKey: string | undefined;
+            }
         )
       ) {
         audioStore.mutations.SET_AUDIO_VOICE(draft, {
@@ -2018,15 +2026,27 @@ export const audioCommandStore = transformCommandStore(
           voice: payload.voice,
         });
 
+        if (payload.update === "StyleId") return;
+
         if (draft.experimentalSetting.enableAutoApplyDefaultPreset) {
           // デフォルトプリセットを適用
           audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
             audioKey: payload.audioKey,
             presetKey: draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)],
           });
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
-          });
+        } else {
+          // 変更前がデフォルトプリセットなら割り当てを外す
+          // 引き継ぐと別スタイルのデフォルトプリセットを割り当ててしまうことになるため
+          const isDefaultPreset = Object.values(draft.defaultPresetKeyMap).some(
+            (key) => key === payload.presetKey
+          );
+
+          if (isDefaultPreset) {
+            audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+              audioKey: payload.audioKey,
+              presetKey: undefined,
+            });
+          }
         }
 
         if (payload.update == "AccentPhrases") {
@@ -2073,6 +2093,7 @@ export const audioCommandStore = transformCommandStore(
               voice,
               update: "AccentPhrases",
               accentPhrases: newAccentPhrases,
+              presetKey: state.audioItems[audioKey].presetKey,
             });
           } else {
             const text = state.audioItems[audioKey].text;
@@ -2086,6 +2107,7 @@ export const audioCommandStore = transformCommandStore(
               voice,
               update: "AudioQuery",
               query,
+              presetKey: state.audioItems[audioKey].presetKey,
             });
           }
         } catch (error) {

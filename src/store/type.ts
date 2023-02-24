@@ -518,8 +518,16 @@ export type AudioCommandStoreTypes = {
   COMMAND_CHANGE_VOICE: {
     mutation: { audioKey: AudioKey; voice: Voice } & (
       | { update: "StyleId" }
-      | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-      | { update: "AudioQuery"; query: AudioQuery }
+      | {
+          update: "AccentPhrases";
+          accentPhrases: AccentPhrase[];
+          presetKey: string | undefined;
+        }
+      | {
+          update: "AudioQuery";
+          query: AudioQuery;
+          presetKey: string | undefined;
+        }
     );
     action(payload: { audioKey: AudioKey; voice: Voice }): void;
   };
