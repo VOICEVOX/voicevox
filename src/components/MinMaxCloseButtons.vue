@@ -87,8 +87,8 @@
 
 <script lang="ts">
 import { defineComponent, computed } from "vue";
-import { useStore } from "@/store";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "MinMaxCloseButtons",

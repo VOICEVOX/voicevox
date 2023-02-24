@@ -721,8 +721,9 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
-import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import FileNamePatternDialog from "./FileNamePatternDialog.vue";
+import { useStore } from "@/store";
 import {
   SavingSetting,
   EngineSetting,
@@ -732,7 +733,6 @@ import {
   EditorFontType,
   EngineId,
 } from "@/type/preload";
-import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 
 type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
