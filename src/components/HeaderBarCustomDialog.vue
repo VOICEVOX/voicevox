@@ -111,11 +111,11 @@
 
 <script lang="ts">
 import { computed, defineComponent, ref, watch, Ref } from "vue";
+import { useQuasar } from "quasar";
+import draggable from "vuedraggable";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
-import { useQuasar } from "quasar";
 import { getToolbarButtonName } from "@/store/utility";
-import draggable from "vuedraggable";
 
 export default defineComponent({
   name: "HeaderBarCustomDialog",

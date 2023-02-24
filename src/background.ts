@@ -1,8 +1,8 @@
 "use strict";
 
-import dotenv from "dotenv";
-import Store, { Schema } from "electron-store";
+import path from "path";
 
+import fs from "fs";
 import {
   app,
   protocol,
@@ -13,13 +13,15 @@ import {
   nativeTheme,
 } from "electron";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import Store, { Schema } from "electron-store";
+import dotenv from "dotenv";
 
-import path from "path";
-import { textEditContextMenu } from "./electron/contextMenu";
+import log from "electron-log";
+import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
+import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
-import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-
-import fs from "fs";
+import { textEditContextMenu } from "./electron/contextMenu";
 import {
   HotkeySetting,
   ThemeConf,
@@ -35,14 +37,10 @@ import {
   EngineId,
 } from "./type/preload";
 
-import log from "electron-log";
-import dayjs from "dayjs";
-import windowStateKeeper from "electron-window-state";
-import zodToJsonSchema from "zod-to-json-schema";
-
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
