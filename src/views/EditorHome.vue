@@ -189,7 +189,6 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
-import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import {
   AudioKey,
   EngineId,
@@ -212,8 +211,6 @@ const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
-
-const { getDefaultPresetKeyForVoice } = useDefaultPreset();
 
 // hotkeys handled by Mousetrap
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
