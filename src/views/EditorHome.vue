@@ -399,10 +399,13 @@ const addAudioItem = async () => {
     baseAudioItem,
   });
 
+  // パラメータ引継ぎがOFFの場合のみ、プリセット適用を行う
+  const applyPreset = !store.state.inheritAudioInfo;
+
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset: true,
+    applyPreset,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };
