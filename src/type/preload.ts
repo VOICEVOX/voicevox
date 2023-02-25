@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
-import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { IpcSOData } from "./ipc";
 
 export const isMac =
   typeof process === "undefined"

@@ -73,8 +73,8 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
 import { computed, ref } from "vue";
+import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
 

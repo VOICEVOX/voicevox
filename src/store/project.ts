@@ -1,11 +1,11 @@
-import { createUILockAction } from "@/store/ui";
-import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
+import { z } from "zod";
 import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "@/store/ui";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import { z } from "zod";
 import {
   AudioKey,
   audioKeySchema,

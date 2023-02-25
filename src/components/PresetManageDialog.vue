@@ -42,8 +42,8 @@
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
 import { useQuasar } from "quasar";
-import { useStore } from "@/store";
 import draggable from "vuedraggable";
+import { useStore } from "@/store";
 
 import { Preset, PresetKey } from "@/type/preload";
 
