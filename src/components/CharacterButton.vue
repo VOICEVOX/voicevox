@@ -27,7 +27,7 @@
       <q-list style="min-width: max-content" class="character-item-container">
         <q-item
           v-if="selectedStyleInfo == undefined && !emptiable"
-          class="row no-wrap items-center"
+          class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >有効なスタイルが選択されていません</span
@@ -35,19 +35,19 @@
         </q-item>
         <q-item
           v-if="characterInfos.length === 0"
-          class="row no-wrap items-center"
+          class="warning-item row no-wrap items-center"
         >
           <span class="text-warning vertical-middle"
             >選択可能なスタイルがありません</span
           >
         </q-item>
-        <q-item v-if="emptiable" class="q-pa-none">
+        <q-item v-if="emptiable" class="to-unselect-item q-pa-none">
           <q-btn
             flat
             no-caps
             v-close-popup
             class="full-width"
-            :class="selectedCharacter == undefined && 'selected-character-item'"
+            :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
           >
             <span>選択解除</span>
@@ -57,7 +57,7 @@
           v-for="(characterInfo, characterIndex) in characterInfos"
           :key="characterIndex"
           class="q-pa-none"
-          :class="isSelectedItem(characterInfo) && 'selected-row'"
+          :class="isSelectedItem(characterInfo) && 'selected-character-item'"
         >
           <q-btn-group flat class="col full-width">
             <q-btn
@@ -65,9 +65,6 @@
               no-caps
               v-close-popup
               class="col-grow"
-              :class="
-                isSelectedItem(characterInfo) && 'selected-character-item'
-              "
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
               @mouseleave="reassignSubMenuOpen.cancel()"
@@ -106,7 +103,7 @@
               <div
                 class="flex items-center q-px-sm q-py-none cursor-pointer"
                 :class="
-                  subMenuOpenFlags[characterIndex] && 'opened-character-item'
+                  subMenuOpenFlags[characterIndex] && 'selected-background'
                 "
                 @mouseover="reassignSubMenuOpen(characterIndex)"
                 @mouseleave="reassignSubMenuOpen.cancel()"
@@ -127,7 +124,7 @@
                       :key="styleIndex"
                       clickable
                       v-close-popup
-                      active-class="selected-character-item"
+                      active-class="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
@@ -181,133 +178,119 @@
   </q-btn>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { debounce } from "quasar";
+import { computed, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
-import { CharacterInfo, Voice } from "@/type/preload";
-import { debounce } from "quasar";
-import { computed, defineComponent, PropType, ref } from "vue";
+import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 
-export default defineComponent({
-  name: "CharacterButton",
+const props = withDefaults(
+  defineProps<{
+    characterInfos: CharacterInfo[];
+    loading?: boolean;
+    selectedVoice: Voice | undefined;
+    showEngineInfo?: boolean;
+    emptiable?: boolean;
+    uiLocked: boolean;
+  }>(),
+  {
+    loading: false,
+    showEngineInfo: false,
+    emptiable: false,
+  }
+);
 
-  props: {
-    characterInfos: {
-      type: Array as PropType<CharacterInfo[]>,
-      required: true,
-    },
-    loading: { type: Boolean, default: false },
-    selectedVoice: { type: Object as PropType<Voice> },
-    showEngineInfo: { type: Boolean, default: false },
-    emptiable: { type: Boolean, default: false },
-    uiLocked: { type: Boolean, required: true },
-  },
-
-  emits: {
-    "update:selectedVoice"(selectedVoice: Voice | undefined) {
-      return (
-        selectedVoice == undefined ||
-        (typeof selectedVoice.engineId === "string" &&
-          typeof selectedVoice.speakerId === "string" &&
-          typeof selectedVoice.styleId === "number")
-      );
-    },
-  },
-
-  setup(props, { emit }) {
-    const store = useStore();
-
-    const selectedCharacter = computed(() => {
-      const selectedVoice = props.selectedVoice;
-      if (selectedVoice == undefined) return undefined;
-      const character = props.characterInfos.find(
-        (characterInfo) =>
-          characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
-          characterInfo.metas.styles.some(
-            (style) =>
-              style.engineId === selectedVoice.engineId &&
-              style.styleId === selectedVoice.styleId
-          )
-      );
-      return character;
-    });
-
-    const isSelectedItem = (characterInfo: CharacterInfo) =>
-      selectedCharacter.value != undefined &&
-      characterInfo.metas.speakerUuid ===
-        selectedCharacter.value?.metas.speakerUuid;
-
-    const selectedStyleInfo = computed(() => {
-      const selectedVoice = props.selectedVoice;
-      const style = selectedCharacter.value?.metas.styles.find(
-        (style) =>
-          style.engineId === selectedVoice?.engineId &&
-          style.styleId === selectedVoice.styleId
-      );
-      return style;
-    });
-
-    const engineIcons = computed(() =>
-      Object.fromEntries(
-        store.state.engineIds.map((engineId) => [
-          engineId,
-          base64ImageToUri(store.state.engineManifests[engineId].icon),
-        ])
-      )
+const emit = defineEmits({
+  "update:selectedVoice": (selectedVoice: Voice | undefined) => {
+    return (
+      selectedVoice == undefined ||
+      (typeof selectedVoice.engineId === "string" &&
+        typeof selectedVoice.speakerId === "string" &&
+        typeof selectedVoice.styleId === "number")
     );
-
-    const getDefaultStyle = (speakerUuid: string) => {
-      // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-      const characterInfo = props.characterInfos.find(
-        (info) => info.metas.speakerUuid === speakerUuid
-      );
-      const defaultStyleId = store.state.defaultStyleIds.find(
-        (x) => x.speakerUuid === speakerUuid
-      )?.defaultStyleId;
-
-      const defaultStyle =
-        characterInfo?.metas.styles.find(
-          (style) => style.styleId === defaultStyleId
-        ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
-
-      if (defaultStyle == undefined)
-        throw new Error("defaultStyle == undefined");
-
-      return defaultStyle;
-    };
-
-    const onSelectSpeaker = (speakerUuid: string) => {
-      const style = getDefaultStyle(speakerUuid);
-      emit("update:selectedVoice", {
-        engineId: style.engineId,
-        speakerId: speakerUuid,
-        styleId: style.styleId,
-      });
-    };
-
-    const subMenuOpenFlags = ref(
-      [...Array(props.characterInfos.length)].map(() => false)
-    );
-
-    const reassignSubMenuOpen = debounce((idx: number) => {
-      if (subMenuOpenFlags.value[idx]) return;
-      const arr = [...Array(props.characterInfos.length)].map(() => false);
-      arr[idx] = true;
-      subMenuOpenFlags.value = arr;
-    }, 100);
-
-    return {
-      selectedCharacter,
-      selectedStyleInfo,
-      engineIcons,
-      isSelectedItem,
-      getDefaultStyle,
-      onSelectSpeaker,
-      subMenuOpenFlags,
-      reassignSubMenuOpen,
-    };
   },
 });
+
+const store = useStore();
+
+const selectedCharacter = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  if (selectedVoice == undefined) return undefined;
+  const character = props.characterInfos.find(
+    (characterInfo) =>
+      characterInfo.metas.speakerUuid === selectedVoice?.speakerId &&
+      characterInfo.metas.styles.some(
+        (style) =>
+          style.engineId === selectedVoice.engineId &&
+          style.styleId === selectedVoice.styleId
+      )
+  );
+  return character;
+});
+
+const isSelectedItem = (characterInfo: CharacterInfo) =>
+  selectedCharacter.value != undefined &&
+  characterInfo.metas.speakerUuid ===
+    selectedCharacter.value?.metas.speakerUuid;
+
+const selectedStyleInfo = computed(() => {
+  const selectedVoice = props.selectedVoice;
+  const style = selectedCharacter.value?.metas.styles.find(
+    (style) =>
+      style.engineId === selectedVoice?.engineId &&
+      style.styleId === selectedVoice.styleId
+  );
+  return style;
+});
+
+const engineIcons = computed(() =>
+  Object.fromEntries(
+    store.state.engineIds.map((engineId) => [
+      engineId,
+      base64ImageToUri(store.state.engineManifests[engineId].icon),
+    ])
+  )
+);
+
+const getDefaultStyle = (speakerUuid: SpeakerId) => {
+  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
+  const characterInfo = props.characterInfos.find(
+    (info) => info.metas.speakerUuid === speakerUuid
+  );
+  const defaultStyleId = store.state.defaultStyleIds.find(
+    (x) => x.speakerUuid === speakerUuid
+  )?.defaultStyleId;
+
+  const defaultStyle =
+    characterInfo?.metas.styles.find(
+      (style) => style.styleId === defaultStyleId
+    ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
+
+  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
+
+  return defaultStyle;
+};
+
+const onSelectSpeaker = (speakerUuid: SpeakerId) => {
+  const style = getDefaultStyle(speakerUuid);
+  emit("update:selectedVoice", {
+    engineId: style.engineId,
+    speakerId: speakerUuid,
+    styleId: style.styleId,
+  });
+};
+
+const subMenuOpenFlags = ref(
+  [...Array(props.characterInfos.length)].map(() => false)
+);
+
+const reassignSubMenuOpen = debounce((idx: number) => {
+  if (subMenuOpenFlags.value[idx]) return;
+  const arr = [...Array(props.characterInfos.length)].map(() => false);
+  arr[idx] = true;
+  subMenuOpenFlags.value = arr;
+}, 100);
 </script>
 
 <style scoped lang="scss">
@@ -372,13 +355,19 @@ export default defineComponent({
     }
   }
 
-  // 選択中のキャラを上にする
-  .selected-row {
-    order: -1;
+  .warning-item {
+    order: -3;
+  }
+  .to-unselect-item {
+    order: -2;
+  }
+  .selected-character-item {
+    order: -1; // 選択中のキャラを上にする
   }
 
   .selected-character-item,
-  .opened-character-item {
+  .selected-style-item,
+  .selected-background {
     background-color: rgba(colors.$primary-rgb, 0.2);
   }
 

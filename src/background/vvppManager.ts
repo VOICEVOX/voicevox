@@ -2,16 +2,17 @@ import fs from "fs";
 import path from "path";
 import log from "electron-log";
 import { moveFile } from "move-file";
+// FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
 import { Extract } from "unzipper";
 import { dialog } from "electron";
+import MultiStream from "multistream";
+import glob, { glob as callbackGlob } from "glob";
 import {
   EngineId,
   EngineInfo,
   minimumEngineManifestSchema,
   MinimumEngineManifest,
 } from "@/type/preload";
-import MultiStream from "multistream";
-import glob, { glob as callbackGlob } from "glob";
 
 const isNotWin = process.platform !== "win32";
 
@@ -146,24 +147,36 @@ export class VvppManager {
     }
 
     log.log("Extracting vvpp to", outputDir);
-    await new Promise((resolve, reject) => {
-      new MultiStream(streams)
-        .pipe(Extract({ path: outputDir }))
-        .on("close", resolve)
-        .on("error", reject);
-    });
-    const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
-      JSON.parse(
-        await fs.promises.readFile(
-          path.join(outputDir, "engine_manifest.json"),
-          "utf-8"
+    try {
+      await new Promise((resolve, reject) => {
+        new MultiStream(streams)
+          .pipe(Extract({ path: outputDir }))
+          .on("close", resolve)
+          .on("error", reject);
+      });
+      const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
+        JSON.parse(
+          await fs.promises.readFile(
+            path.join(outputDir, "engine_manifest.json"),
+            "utf-8"
+          )
         )
-      )
-    );
-    return {
-      outputDir,
-      manifest,
-    };
+      );
+      return {
+        outputDir,
+        manifest,
+      };
+    } catch (e) {
+      if (fs.existsSync(outputDir)) {
+        log.log("Failed to extract vvpp, removing", outputDir);
+        await fs.promises.rm(outputDir, { recursive: true });
+      }
+      throw e;
+    } finally {
+      for (const stream of streams) {
+        stream.close();
+      }
+    }
   }
 
   async install(vvppPath: string) {

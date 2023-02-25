@@ -20,8 +20,8 @@
 
 <script lang="ts">
 import { defineComponent, computed, ComputedRef } from "vue";
-import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
   HotkeyAction,
@@ -132,8 +132,10 @@ export default defineComponent({
       store.dispatch("STOP_CONTINUOUSLY_AUDIO");
     };
     const generateAndSaveOneAudio = async () => {
+      if (activeAudioKey.value == undefined)
+        throw new Error("activeAudioKey is undefined");
       await generateAndSaveOneAudioWithDialog({
-        audioKey: activeAudioKey.value as string,
+        audioKey: activeAudioKey.value,
         quasarDialog: $q.dialog,
         dispatch: store.dispatch,
         encoding: store.state.savingSetting.fileEncoding,

@@ -1,12 +1,19 @@
-import { createUILockAction } from "@/store/ui";
-import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
+import { z } from "zod";
 import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "@/store/ui";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import { z } from "zod";
-import { EngineId, engineIdSchema } from "@/type/preload";
+import {
+  AudioKey,
+  audioKeySchema,
+  EngineId,
+  engineIdSchema,
+  speakerIdSchema,
+  styleIdSchema,
+} from "@/type/preload";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -284,7 +291,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice != undefined
+                parsedProjectData.audioItems[audioKey]?.voice != undefined
             )
           ) {
             throw new Error('Every audioItem should have a "voice" attribute.');
@@ -292,7 +299,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.engineId !=
+                parsedProjectData.audioItems[audioKey]?.voice.engineId !=
                 undefined
             )
           ) {
@@ -302,7 +309,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.speakerId !=
+                parsedProjectData.audioItems[audioKey]?.voice.speakerId !=
                 undefined
             )
           ) {
@@ -311,7 +318,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           if (
             !parsedProjectData.audioKeys.every(
               (audioKey) =>
-                parsedProjectData.audioItems[audioKey].voice.styleId !=
+                parsedProjectData.audioItems[audioKey]?.voice.styleId !=
                 undefined
             )
           ) {
@@ -473,16 +480,16 @@ const audioQuerySchema = z.object({
 const morphingInfoSchema = z.object({
   rate: z.number(),
   targetEngineId: engineIdSchema,
-  targetSpeakerId: z.string(),
-  targetStyleId: z.number(),
+  targetSpeakerId: speakerIdSchema,
+  targetStyleId: styleIdSchema,
 });
 
 const audioItemSchema = z.object({
   text: z.string(),
   voice: z.object({
     engineId: engineIdSchema,
-    speakerId: z.string().uuid(),
-    styleId: z.number(),
+    speakerId: speakerIdSchema,
+    styleId: styleIdSchema,
   }),
   query: audioQuerySchema.optional(),
   presetKey: z.string().optional(),
@@ -492,14 +499,14 @@ const audioItemSchema = z.object({
 const projectSchema = z.object({
   appVersion: z.string(),
   // description: "Attribute keys of audioItems.",
-  audioKeys: z.array(z.string()),
+  audioKeys: z.array(audioKeySchema),
   // description: "VOICEVOX states per cell",
-  audioItems: z.record(audioItemSchema),
+  audioItems: z.record(audioKeySchema, audioItemSchema),
 });
 
 export type LatestProjectType = z.infer<typeof projectSchema>;
 interface ProjectType {
   appVersion: string;
-  audioKeys: string[];
-  audioItems: Record<string, AudioItem>;
+  audioKeys: AudioKey[];
+  audioItems: Record<AudioKey, AudioItem>;
 }

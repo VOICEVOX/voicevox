@@ -199,10 +199,10 @@
 
 <script lang="ts">
 import { defineComponent, computed, ref } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { parseCombo } from "@/store/setting";
 import { HotkeyAction, HotkeySetting } from "@/type/preload";
-import { useQuasar } from "quasar";
 
 export default defineComponent({
   name: "HotkeySettingDialog",
@@ -337,12 +337,12 @@ export default defineComponent({
         ok: {
           label: "初期値に戻す",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
         cancel: {
           label: "初期値に戻さない",
           flat: true,
-          textColor: "secondary",
+          textColor: "display",
         },
       }).onOk(() => {
         window.electron
