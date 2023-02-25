@@ -426,15 +426,6 @@ watch(
 
 const selectedId = ref<EngineId | undefined>(undefined);
 
-const isDeletable = computed(() => {
-  // FIXME: いたるところにエンジンが選択済みかを検証するコードがある。
-  // 選択後に現れる領域は別ComponentにしてselectedIdをpropで渡せばこれは不要になる
-  if (selectedId.value == undefined) throw new Error("engine is not selected");
-  return (
-    engineInfos.value[selectedId.value] &&
-    engineInfos.value[selectedId.value].type === "path"
-  );
-});
 const engineDir = computed(() => {
   if (selectedId.value == undefined) throw new Error("engine is not selected");
   return engineInfos.value[selectedId.value]?.path || "（組み込み）";

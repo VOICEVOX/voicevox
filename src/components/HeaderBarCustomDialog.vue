@@ -190,27 +190,6 @@ const isDefault = computed(() => {
   );
 });
 
-const moveLeftButton = () => {
-  if (selectedButton.value === undefined) return;
-  const index = toolbarButtons.value.indexOf(selectedButton.value);
-  toolbarButtons.value[index] = toolbarButtons.value[index - 1];
-  toolbarButtons.value[index - 1] = selectedButton.value;
-};
-const moveRightButton = () => {
-  if (selectedButton.value === undefined) return;
-  const index = toolbarButtons.value.indexOf(selectedButton.value);
-  toolbarButtons.value[index] = toolbarButtons.value[index + 1];
-  toolbarButtons.value[index + 1] = selectedButton.value;
-};
-const removeButton = () => {
-  if (selectedButton.value === undefined) return;
-  const index = toolbarButtons.value.indexOf(selectedButton.value);
-  toolbarButtons.value = [
-    ...toolbarButtons.value.slice(0, index),
-    ...toolbarButtons.value.slice(index + 1),
-  ];
-};
-
 // ボタンが追加されたときはそれをフォーカスし、
 // 削除されたときは一番最初のボタンをフォーカスするようにする
 watch(

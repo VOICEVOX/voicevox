@@ -720,7 +720,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent, computed, ref } from "vue";
+import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
@@ -801,12 +801,6 @@ const currentThemeNameComputed = computed({
     store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
   },
 });
-
-const currentThemeComputed = computed(() =>
-  store.state.themeSetting.availableThemes.find((value) => {
-    return value.name == currentThemeNameComputed.value;
-  })
-);
 
 const availableThemeNameComputed = computed(() => {
   return [...store.state.themeSetting.availableThemes]
