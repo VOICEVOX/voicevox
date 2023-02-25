@@ -1,6 +1,6 @@
 import dummyImage from "./dummyImage";
 import { State } from "@/store/type";
-import { EngineId, SpeakerId } from "@/type/preload";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 export const engineAUuid = EngineId("6403c196-4d7a-4f4a-aa02-a4cf75848e72");
 export const engineBUuid = EngineId("4b15fe97-0b55-4485-80e3-b8d30e99c22d");
@@ -62,7 +62,7 @@ export const singleEngineState: Pick<
           styles: [
             {
               styleName: "ノーマル",
-              styleId: 0,
+              styleId: StyleId(0),
               engineId: engineAUuid,
               iconPath: dummyImage,
               portraitPath: undefined,
@@ -86,115 +86,46 @@ export const multipleEngineState: Pick<
   | "engineManifests"
   | "characterInfos"
 > = {
-  engineIds: [engineAUuid, engineBUuid],
+  engineIds: [...singleEngineState.engineIds, engineBUuid],
 
   engineStates: {
-    [engineAUuid]: "STARTING",
+    ...singleEngineState.engineStates,
     [engineBUuid]: "STARTING",
   },
+
   engineInfos: {
-    [engineAUuid]: {
-      uuid: engineAUuid,
-      name: "Engine 1",
-      executionEnabled: false,
-      executionFilePath: "",
-      executionArgs: [],
-      host: "http://localhost:50021",
-      type: "default",
-    },
+    ...singleEngineState.engineInfos,
     [engineBUuid]: {
+      ...singleEngineState.engineInfos[engineAUuid],
       uuid: engineBUuid,
       name: "Engine 2",
-      executionEnabled: false,
-      executionFilePath: "",
-      executionArgs: [],
-      host: "http://localhost:50022",
-      type: "vvpp",
     },
   },
-  engineManifests: {
-    [engineAUuid]: {
-      manifestVersion: "0.13.0",
-      name: "Engine 1",
-      brandName: "Engine 1",
-      uuid: engineAUuid,
-      url: "https://github.com/VOICEVOX/voicevox_engine",
-      icon: "engine_manifest_assets/icon.png",
-      defaultSamplingRate: 24000,
-      termsOfService: "engine_manifest_assets/terms_of_service.md",
-      updateInfos: [],
-      dependencyLicenses: [],
-      supportedFeatures: {
-        adjustMoraPitch: true,
-        adjustPhonemeLength: true,
-        adjustSpeedScale: true,
-        adjustPitchScale: true,
-        adjustIntonationScale: true,
-        adjustVolumeScale: true,
-        interrogativeUpspeak: true,
-        synthesisMorphing: true,
-      },
-    },
 
+  engineManifests: {
+    ...singleEngineState.engineManifests,
     [engineBUuid]: {
-      manifestVersion: "0.13.0",
+      ...singleEngineState.engineManifests[engineAUuid],
+      uuid: engineBUuid,
       name: "Engine 2",
       brandName: "Engine 2",
-      uuid: engineBUuid,
-      url: "https://github.com/VOICEVOX/voicevox_engine",
-      icon: "engine_manifest_assets/icon.png",
-      defaultSamplingRate: 24000,
-      termsOfService: "engine_manifest_assets/terms_of_service.md",
-      updateInfos: [],
-      dependencyLicenses: [],
-      supportedFeatures: {
-        adjustMoraPitch: true,
-        adjustPhonemeLength: true,
-        adjustSpeedScale: true,
-        adjustPitchScale: true,
-        adjustIntonationScale: true,
-        adjustVolumeScale: true,
-        interrogativeUpspeak: true,
-        synthesisMorphing: true,
-      },
     },
   },
+
   characterInfos: {
-    [engineAUuid]: [
-      {
-        metas: {
-          speakerUuid: SpeakerId("7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff"),
-          speakerName: "CV1",
-          styles: [
-            {
-              styleName: "ノーマル",
-              styleId: 0,
-              engineId: engineAUuid,
-              iconPath: dummyImage,
-              portraitPath: undefined,
-
-              voiceSamplePaths: [],
-            },
-          ],
-          policy: "CV1の利用規約",
-        },
-        portraitPath: dummyImage,
-      },
-    ],
-
+    ...singleEngineState.characterInfos,
     [engineBUuid]: [
       {
         metas: {
-          speakerUuid: SpeakerId("fbffabe4-a3ad-4c6f-831e-fa6a0fb84e8c"),
+          speakerUuid: SpeakerId("b88fdd17-9a10-415d-b8d6-041bebf5c46d"),
           speakerName: "CV2",
           styles: [
             {
               styleName: "ノーマル",
-              styleId: 0,
+              styleId: StyleId(0),
               engineId: engineBUuid,
               iconPath: dummyImage,
               portraitPath: undefined,
-
               voiceSamplePaths: [],
             },
           ],
