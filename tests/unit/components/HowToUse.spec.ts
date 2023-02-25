@@ -1,8 +1,8 @@
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { createStore } from "vuex";
 import { describe, it } from "vitest";
 import { Quasar } from "quasar";
-import { waitTicks, wrapQPage } from "../utils";
+import { wrapQPage } from "../utils";
 import HowToUse from "@/components/HowToUse.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { storeKey } from "@/store";
@@ -31,7 +31,7 @@ describe("HowToUse.vue", () => {
       },
     });
 
-    await waitTicks(wrapper, 2); // onMounted、store.dispatch("GET_HOW_TO_USE_TEXT")
+    await flushPromises();
 
     expect(wrapper.find(".markdown").text()).to.equal("test string");
   });

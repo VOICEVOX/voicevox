@@ -1,6 +1,5 @@
-import { VueWrapper } from "@vue/test-utils";
 import { QPageContainer, QLayout } from "quasar";
-import { Component, ComponentPublicInstance } from "vue";
+import { Component } from "vue";
 
 // QPageContainerとQLayoutで囲うためのヘルパー関数。
 // QPageはQLayout > QPageContainer > QPageの構造にしないとエラーになるため必要。
@@ -19,13 +18,4 @@ export const wrapQPage = (page: Component) => {
       QLayout,
     },
   };
-};
-
-export const waitTicks = async (
-  wrapper: VueWrapper<ComponentPublicInstance>,
-  ticks: number
-) => {
-  for (let i = 0; i < ticks; i++) {
-    await wrapper.vm.$nextTick();
-  }
 };
