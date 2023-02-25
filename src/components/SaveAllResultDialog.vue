@@ -53,9 +53,9 @@
 </template>
 
 <script lang="ts">
-import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 import { useDialogPluginComponent } from "quasar";
 import { defineComponent, PropType } from "vue";
+import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 
 export default defineComponent({
   name: "SaveAllResultDialog",

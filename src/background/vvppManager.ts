@@ -5,14 +5,14 @@ import { moveFile } from "move-file";
 // FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
 import { Extract } from "unzipper";
 import { dialog } from "electron";
+import MultiStream from "multistream";
+import glob, { glob as callbackGlob } from "glob";
 import {
   EngineId,
   EngineInfo,
   minimumEngineManifestSchema,
   MinimumEngineManifest,
 } from "@/type/preload";
-import MultiStream from "multistream";
-import glob, { glob as callbackGlob } from "glob";
 
 const isNotWin = process.platform !== "win32";
 

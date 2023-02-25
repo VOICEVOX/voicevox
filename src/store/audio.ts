@@ -1,6 +1,7 @@
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import Encoding from "encoding-japanese";
+import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
   SaveResultObject,
@@ -12,7 +13,16 @@ import {
   AudioCommandStoreTypes,
   transformCommandStore,
 } from "./type";
-import { createUILockAction, withProgress } from "./ui";
+import {
+  buildFileNameFromRawData,
+  buildProjectFileName,
+  convertHiraToKana,
+  convertLongVowel,
+  createKanaRegex,
+  currentDateString,
+} from "./utility";
+import { convertAudioQueryFromEditorToEngine } from "./proxy";
+import { createPartialStore } from "./vuex";
 import {
   AudioKey,
   CharacterInfo,
@@ -27,17 +37,7 @@ import {
   Voice,
   WriteFileErrorResult,
 } from "@/type/preload";
-import Encoding from "encoding-japanese";
-import {
-  buildFileNameFromRawData,
-  buildProjectFileName,
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
-  currentDateString,
-} from "./utility";
-import { convertAudioQueryFromEditorToEngine } from "./proxy";
-import { createPartialStore } from "./vuex";
+import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { voiceToVoiceId } from "@/lib/voice";
 

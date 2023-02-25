@@ -165,9 +165,12 @@
 </template>
 
 <script setup lang="ts">
+import path from "path";
 import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
-import { useStore } from "@/store";
 import draggable from "vuedraggable";
+import { QResizeObserver, useQuasar } from "quasar";
+import cloneDeep from "clone-deep";
+import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -186,8 +189,6 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
-import { QResizeObserver, useQuasar } from "quasar";
-import path from "path";
 import {
   AudioKey,
   EngineId,

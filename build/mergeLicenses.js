@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const process = require("process");
+const fs = require("fs");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
+
 const argv = yargs(hideBin(process.argv))
   .option("output_path", {
     alias: "o",
@@ -16,8 +18,6 @@ const argv = yargs(hideBin(process.argv))
   })
   .help()
   .parse();
-
-const fs = require("fs");
 
 const inputPathList =
   typeof argv.input_path === "string" ? [argv.input_path] : argv.input_path;

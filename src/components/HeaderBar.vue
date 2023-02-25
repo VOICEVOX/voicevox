@@ -20,8 +20,8 @@
 
 <script lang="ts">
 import { defineComponent, computed, ComputedRef } from "vue";
-import { useStore } from "@/store";
 import { useQuasar } from "quasar";
+import { useStore } from "@/store";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
   HotkeyAction,

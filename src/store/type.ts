@@ -1,3 +1,5 @@
+import { Patch } from "immer";
+import { QVueGlobals } from "quasar";
 import {
   MutationTree,
   MutationsBase,
@@ -6,7 +8,7 @@ import {
   StoreOptions,
   PayloadFunction,
 } from "./vuex";
-import { Patch } from "immer";
+import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   AccentPhrase,
   AudioQuery,
@@ -15,7 +17,6 @@ import {
   UserDictWord,
   MorphableTargetInfo,
 } from "@/openapi";
-import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   CharacterInfo,
   DefaultStyleId,
@@ -50,7 +51,6 @@ import {
   AudioKey,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
-import { QVueGlobals } from "quasar";
 
 /**
  * エディタ用のAudioQuery

@@ -485,6 +485,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
+import CharacterButton from "./CharacterButton.vue";
+import PresetManageDialog from "./PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
@@ -495,8 +497,6 @@ import {
   Voice,
 } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import CharacterButton from "./CharacterButton.vue";
-import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 

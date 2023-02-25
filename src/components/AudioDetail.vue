@@ -266,11 +266,11 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import { useStore } from "@/store";
 import {
   AudioKey,
   HotkeyAction,

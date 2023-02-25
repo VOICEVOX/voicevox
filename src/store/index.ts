@@ -32,6 +32,7 @@ import {
   Voice,
 } from "@/type/preload";
 import { engineStoreState, engineStore } from "./engine";
+import { DefaultStyleId } from "@/type/preload";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>
