@@ -612,7 +612,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>デフォルトプリセットを自動で適用する</div>
+                <div>デフォルトプリセットを自動で割り当てる</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
