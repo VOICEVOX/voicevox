@@ -1,6 +1,6 @@
+import dummyImage from "./dummyImage";
 import { State } from "@/store/type";
 import { EngineId, SpeakerId } from "@/type/preload";
-import dummyImage from "./dummyImage";
 
 export const engineAUuid = EngineId("6403c196-4d7a-4f4a-aa02-a4cf75848e72");
 export const engineBUuid = EngineId("4b15fe97-0b55-4485-80e3-b8d30e99c22d");

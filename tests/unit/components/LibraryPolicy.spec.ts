@@ -1,13 +1,13 @@
 import { mount, VueWrapper } from "@vue/test-utils";
-import LibraryPolicy from "@/components/LibraryPolicy.vue";
-import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { createStore } from "vuex";
-import { storeKey } from "@/store";
 import { Quasar, QBtn, QItem, QItemLabel } from "quasar";
 import { describe, it, beforeEach, expect } from "vitest";
+import { ComponentPublicInstance } from "vue";
 import { multipleEngineState, singleEngineState } from "../engines";
 import { wrapQPage } from "../utils";
-import { ComponentPublicInstance } from "vue";
+import { storeKey } from "@/store";
+import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import LibraryPolicy from "@/components/LibraryPolicy.vue";
 
 const actions = {};
 const getters = {};
