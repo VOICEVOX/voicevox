@@ -747,8 +747,8 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import { useStore } from "@/store";
@@ -764,354 +764,303 @@ import {
 
 type SamplingRateOption = EngineSetting["outputSamplingRate"];
 
-export default defineComponent({
-  name: "SettingDialog",
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
 
-  components: {
-    FileNamePatternDialog,
+const store = useStore();
+const $q = useQuasar();
+
+const settingDialogOpenedComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const engineUseGpu = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value].useGpu;
   },
-
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
+  set: (mode: boolean) => {
+    changeUseGpu(mode);
   },
-
-  setup(props, { emit }) {
-    const store = useStore();
-    const $q = useQuasar();
-
-    const settingDialogOpenedComputed = computed({
-      get: () => props.modelValue,
-      set: (val) => emit("update:modelValue", val),
+});
+const engineIds = computed(() => store.state.engineIds);
+const engineInfos = computed(() => store.state.engineInfos);
+const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
+const activePointScrollMode = computed({
+  get: () => store.state.activePointScrollMode,
+  set: (activePointScrollMode: ActivePointScrollMode) => {
+    store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+      activePointScrollMode,
     });
+  },
+});
+const activePointScrollModeOptions: Record<
+  ActivePointScrollMode,
+  {
+    label: string;
+    desc: string;
+  }
+> = {
+  CONTINUOUSLY: {
+    label: "連続",
+    desc: "再生位置を真ん中に表示します。",
+  },
+  PAGE: {
+    label: "ページめくり",
+    desc: "再生位置が表示範囲外にある場合にスクロールします。",
+  },
+  OFF: {
+    label: "オフ",
+    desc: "自動でスクロールしません。",
+  },
+};
 
-    const engineUseGpu = computed({
-      get: () => {
-        return store.state.engineSettings[selectedEngineId.value].useGpu;
-      },
-      set: (mode: boolean) => {
-        changeUseGpu(mode);
-      },
+const experimentalSetting = computed(() => store.state.experimentalSetting);
+
+const currentThemeNameComputed = computed({
+  get: () => store.state.themeSetting.currentTheme,
+  set: (currentTheme: string) => {
+    store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+  },
+});
+
+const availableThemeNameComputed = computed(() => {
+  return [...store.state.themeSetting.availableThemes]
+    .sort((a, b) => a.order - b.order)
+    .map((theme) => {
+      return { label: theme.displayName, value: theme.name };
     });
-    const engineIds = computed(() => store.state.engineIds);
-    const engineInfos = computed(() => store.state.engineInfos);
-    const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
-    const activePointScrollMode = computed({
-      get: () => store.state.activePointScrollMode,
-      set: (activePointScrollMode: ActivePointScrollMode) => {
-        store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
-          activePointScrollMode,
-        });
-      },
-    });
-    const activePointScrollModeOptions: Record<
-      ActivePointScrollMode,
-      {
-        label: string;
-        desc: string;
-      }
-    > = {
-      CONTINUOUSLY: {
-        label: "連続",
-        desc: "再生位置を真ん中に表示します。",
-      },
-      PAGE: {
-        label: "ページめくり",
-        desc: "再生位置が表示範囲外にある場合にスクロールします。",
-      },
-      OFF: {
-        label: "オフ",
-        desc: "自動でスクロールしません。",
-      },
-    };
+});
 
-    const experimentalSetting = computed(() => store.state.experimentalSetting);
-
-    const currentThemeNameComputed = computed({
-      get: () => store.state.themeSetting.currentTheme,
-      set: (currentTheme: string) => {
-        store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
-      },
-    });
-
-    const currentThemeComputed = computed(() =>
-      store.state.themeSetting.availableThemes.find((value) => {
-        return value.name == currentThemeNameComputed.value;
-      })
+const currentAudioOutputDeviceComputed = computed<{
+  key: string;
+  label: string;
+} | null>({
+  get: () => {
+    // 再生デバイスが見つからなかったらデフォルト値に戻す
+    const device = availableAudioOutputDevices.value?.find(
+      (device) => device.key === store.state.savingSetting.audioOutputDevice
     );
+    if (device) {
+      return device;
+    } else {
+      handleSavingSettingChange("audioOutputDevice", "default");
+      return null;
+    }
+  },
+  set: (device) => {
+    if (device) {
+      handleSavingSettingChange("audioOutputDevice", device.key);
+    }
+  },
+});
 
-    const availableThemeNameComputed = computed(() => {
-      return [...store.state.themeSetting.availableThemes]
-        .sort((a, b) => a.order - b.order)
-        .map((theme) => {
-          return { label: theme.displayName, value: theme.name };
-        });
+const availableAudioOutputDevices = ref<{ key: string; label: string }[]>();
+const updateAudioOutputDevices = async () => {
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  availableAudioOutputDevices.value = devices
+    .filter((device) => device.kind === "audiooutput")
+    .map((device) => {
+      return { label: device.label, key: device.deviceId };
+    });
+};
+navigator.mediaDevices.addEventListener(
+  "devicechange",
+  updateAudioOutputDevices
+);
+updateAudioOutputDevices();
+
+const acceptRetrieveTelemetryComputed = computed({
+  get: () => store.state.acceptRetrieveTelemetry == "Accepted",
+  set: (acceptRetrieveTelemetry: boolean) => {
+    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+      acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
     });
 
-    const currentAudioOutputDeviceComputed = computed<{
-      key: string;
-      label: string;
-    } | null>({
-      get: () => {
-        // 再生デバイスが見つからなかったらデフォルト値に戻す
-        const device = availableAudioOutputDevices.value?.find(
-          (device) => device.key === store.state.savingSetting.audioOutputDevice
-        );
-        if (device) {
-          return device;
-        } else {
-          handleSavingSettingChange("audioOutputDevice", "default");
-          return null;
-        }
-      },
-      set: (device) => {
-        if (device) {
-          handleSavingSettingChange("audioOutputDevice", device.key);
-        }
+    if (acceptRetrieveTelemetry) {
+      return;
+    }
+
+    $q.dialog({
+      title: "ソフトウェア利用状況のデータ収集の無効化",
+      message:
+        "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+      ok: {
+        flat: true,
+        textColor: "display",
       },
     });
+  },
+});
 
-    const availableAudioOutputDevices = ref<{ key: string; label: string }[]>();
-    const updateAudioOutputDevices = async () => {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      availableAudioOutputDevices.value = devices
-        .filter((device) => device.kind === "audiooutput")
-        .map((device) => {
-          return { label: device.label, key: device.deviceId };
-        });
-    };
-    navigator.mediaDevices.addEventListener(
-      "devicechange",
-      updateAudioOutputDevices
-    );
-    updateAudioOutputDevices();
+const changeUseGpu = async (useGpu: boolean) => {
+  $q.loading.show({
+    spinnerColor: "primary",
+    spinnerSize: 50,
+    boxClass: "bg-background text-display",
+    message: "起動モードを変更中です",
+  });
 
-    const acceptRetrieveTelemetryComputed = computed({
-      get: () => store.state.acceptRetrieveTelemetry == "Accepted",
-      set: (acceptRetrieveTelemetry: boolean) => {
-        store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
-          acceptRetrieveTelemetry: acceptRetrieveTelemetry
-            ? "Accepted"
-            : "Refused",
-        });
+  await store.dispatch("CHANGE_USE_GPU", {
+    useGpu,
+    engineId: selectedEngineId.value,
+  });
 
-        if (acceptRetrieveTelemetry) {
-          return;
-        }
+  $q.loading.hide();
+};
 
+const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
+  if (store.state.inheritAudioInfo === inheritAudioInfo) return;
+  store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+};
+
+const changeEnablePreset = (value: boolean) => {
+  if (value) {
+    // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
+    changeExperimentalSetting("enablePreset", true);
+    changeExperimentalSetting("enableAutoApplyDefaultPreset", true);
+  } else {
+    changeExperimentalSetting("enablePreset", false);
+    changeExperimentalSetting("enableAutoApplyDefaultPreset", false);
+  }
+};
+
+const changeExperimentalSetting = async (
+  key: keyof ExperimentalSetting,
+  data: boolean
+) => {
+  store.dispatch("SET_EXPERIMENTAL_SETTING", {
+    experimentalSetting: { ...experimentalSetting.value, [key]: data },
+  });
+};
+
+const savingSetting = computed(() => store.state.savingSetting);
+
+const engineUseGpuOptions = [
+  { label: "CPU", value: false },
+  { label: "GPU", value: true },
+];
+
+const gpuSwitchEnabled = (engineId: EngineId) => {
+  // CPU版でもGPUモードからCPUモードに変更できるようにする
+  return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
+};
+
+const samplingRateOptions: SamplingRateOption[] = [
+  "engineDefault",
+  24000,
+  44100,
+  48000,
+  88200,
+  96000,
+];
+const renderSamplingRateLabel = (value: SamplingRateOption): string => {
+  if (value === "engineDefault") {
+    return "デフォルト";
+  } else {
+    return `${value / 1000} kHz`;
+  }
+};
+
+const handleSavingSettingChange = (
+  key: keyof SavingSetting,
+  data: string | boolean | number
+) => {
+  store.dispatch("SET_SAVING_SETTING", {
+    data: { ...savingSetting.value, [key]: data },
+  });
+};
+
+const outputSamplingRate = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value]
+      .outputSamplingRate;
+  },
+  set: async (outputSamplingRate: SamplingRateOption) => {
+    if (outputSamplingRate !== "engineDefault") {
+      const confirmChange = await new Promise((resolve) => {
         $q.dialog({
-          title: "ソフトウェア利用状況のデータ収集の無効化",
+          title: "出力サンプリングレートを変更します",
           message:
-            "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
+            "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
+          html: true,
+          persistent: true,
           ok: {
+            label: "変更する",
             flat: true,
             textColor: "display",
           },
-        });
-      },
-    });
-
-    const changeUseGpu = async (useGpu: boolean) => {
-      $q.loading.show({
-        spinnerColor: "primary",
-        spinnerSize: 50,
-        boxClass: "bg-background text-display",
-        message: "起動モードを変更中です",
-      });
-
-      await store.dispatch("CHANGE_USE_GPU", {
-        useGpu,
-        engineId: selectedEngineId.value,
-      });
-
-      $q.loading.hide();
-    };
-
-    const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
-      if (store.state.inheritAudioInfo === inheritAudioInfo) return;
-      store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
-    };
-
-    const changeEnablePreset = (value: boolean) => {
-      if (value) {
-        // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
-        changeExperimentalSetting("enablePreset", true);
-        changeExperimentalSetting("enableAutoApplyDefaultPreset", true);
-      } else {
-        changeExperimentalSetting("enablePreset", false);
-        changeExperimentalSetting("enableAutoApplyDefaultPreset", false);
-      }
-    };
-
-    const changeExperimentalSetting = async (
-      key: keyof ExperimentalSetting,
-      data: boolean
-    ) => {
-      store.dispatch("SET_EXPERIMENTAL_SETTING", {
-        experimentalSetting: { ...experimentalSetting.value, [key]: data },
-      });
-    };
-
-    const savingSetting = computed(() => store.state.savingSetting);
-
-    const engineUseGpuOptions = [
-      { label: "CPU", value: false },
-      { label: "GPU", value: true },
-    ];
-
-    const gpuSwitchEnabled = (engineId: EngineId) => {
-      // CPU版でもGPUモードからCPUモードに変更できるようにする
-      return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
-    };
-
-    const samplingRateOptions: SamplingRateOption[] = [
-      "engineDefault",
-      24000,
-      44100,
-      48000,
-      88200,
-      96000,
-    ];
-    const renderSamplingRateLabel = (value: SamplingRateOption): string => {
-      if (value === "engineDefault") {
-        return "デフォルト";
-      } else {
-        return `${value / 1000} kHz`;
-      }
-    };
-
-    const handleSavingSettingChange = (
-      key: keyof SavingSetting,
-      data: string | boolean | number
-    ) => {
-      store.dispatch("SET_SAVING_SETTING", {
-        data: { ...savingSetting.value, [key]: data },
-      });
-    };
-
-    const outputSamplingRate = computed({
-      get: () => {
-        return store.state.engineSettings[selectedEngineId.value]
-          .outputSamplingRate;
-      },
-      set: async (outputSamplingRate: SamplingRateOption) => {
-        if (outputSamplingRate !== "engineDefault") {
-          const confirmChange = await new Promise((resolve) => {
-            $q.dialog({
-              title: "出力サンプリングレートを変更します",
-              message:
-                "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-              html: true,
-              persistent: true,
-              ok: {
-                label: "変更する",
-                flat: true,
-                textColor: "display",
-              },
-              cancel: {
-                label: "変更しない",
-                flat: true,
-                textColor: "display",
-              },
-            })
-              .onOk(() => {
-                resolve(true);
-              })
-              .onCancel(() => {
-                resolve(false);
-              });
-          });
-          if (!confirmChange) {
-            return;
-          }
-        }
-
-        store.dispatch("SET_ENGINE_SETTING", {
-          engineId: selectedEngineId.value,
-          engineSetting: {
-            ...store.state.engineSettings[selectedEngineId.value],
-            outputSamplingRate,
+          cancel: {
+            label: "変更しない",
+            flat: true,
+            textColor: "display",
           },
-        });
-      },
-    });
-
-    const openFileExplore = async () => {
-      const path = await window.electron.showOpenDirectoryDialog({
-        title: "書き出し先のフォルダを選択",
+        })
+          .onOk(() => {
+            resolve(true);
+          })
+          .onCancel(() => {
+            resolve(false);
+          });
       });
-      if (path) {
-        store.dispatch("SET_SAVING_SETTING", {
-          data: { ...savingSetting.value, fixedExportDir: path },
-        });
+      if (!confirmChange) {
+        return;
       }
-    };
+    }
 
-    const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
-    const changeSplitTextWhenPaste = (
-      splitTextWhenPaste: SplitTextWhenPasteType
-    ) => {
-      store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
-    };
-
-    const editorFont = computed(() => store.state.editorFont);
-    const changeEditorFont = (editorFont: EditorFontType) => {
-      store.dispatch("SET_EDITOR_FONT", { editorFont });
-    };
-
-    const showsFilePatternEditDialog = ref(false);
-
-    const selectedEngineIdRaw = ref<EngineId | undefined>(undefined);
-    const selectedEngineId = computed({
-      get: () => {
-        return selectedEngineIdRaw.value || engineIds.value[0];
-      },
-      set: (engineId: EngineId) => {
-        selectedEngineIdRaw.value = engineId;
+    store.dispatch("SET_ENGINE_SETTING", {
+      engineId: selectedEngineId.value,
+      engineSetting: {
+        ...store.state.engineSettings[selectedEngineId.value],
+        outputSamplingRate,
       },
     });
-    const renderEngineNameLabel = (engineId: EngineId) => {
-      return engineInfos.value[engineId].name;
-    };
-
-    return {
-      settingDialogOpenedComputed,
-      engineUseGpu,
-      gpuSwitchEnabled,
-      engineIds,
-      engineInfos,
-      selectedEngineId,
-      engineUseGpuOptions,
-      renderEngineNameLabel,
-      inheritAudioInfoMode,
-      activePointScrollMode,
-      activePointScrollModeOptions,
-      experimentalSetting,
-      currentAudioOutputDeviceComputed,
-      availableAudioOutputDevices,
-      changeinheritAudioInfo,
-      changeExperimentalSetting,
-      changeEnablePreset,
-      savingSetting,
-      samplingRateOptions,
-      renderSamplingRateLabel,
-      handleSavingSettingChange,
-      outputSamplingRate,
-      openFileExplore,
-      currentThemeNameComputed,
-      currentThemeComputed,
-      availableThemeNameComputed,
-      acceptRetrieveTelemetryComputed,
-      splitTextWhenPaste,
-      changeSplitTextWhenPaste,
-      editorFont,
-      changeEditorFont,
-      showsFilePatternEditDialog,
-    };
   },
 });
+
+const openFileExplore = async () => {
+  const path = await window.electron.showOpenDirectoryDialog({
+    title: "書き出し先のフォルダを選択",
+  });
+  if (path) {
+    store.dispatch("SET_SAVING_SETTING", {
+      data: { ...savingSetting.value, fixedExportDir: path },
+    });
+  }
+};
+
+const splitTextWhenPaste = computed(() => store.state.splitTextWhenPaste);
+const changeSplitTextWhenPaste = (
+  splitTextWhenPaste: SplitTextWhenPasteType
+) => {
+  store.dispatch("SET_SPLIT_TEXT_WHEN_PASTE", { splitTextWhenPaste });
+};
+
+const editorFont = computed(() => store.state.editorFont);
+const changeEditorFont = (editorFont: EditorFontType) => {
+  store.dispatch("SET_EDITOR_FONT", { editorFont });
+};
+
+const showsFilePatternEditDialog = ref(false);
+
+const selectedEngineIdRaw = ref<EngineId | undefined>(undefined);
+const selectedEngineId = computed({
+  get: () => {
+    return selectedEngineIdRaw.value || engineIds.value[0];
+  },
+  set: (engineId: EngineId) => {
+    selectedEngineIdRaw.value = engineId;
+  },
+});
+const renderEngineNameLabel = (engineId: EngineId) => {
+  return engineInfos.value[engineId].name;
+};
 </script>
 
 <style scoped lang="scss">
