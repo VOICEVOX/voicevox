@@ -39,9 +39,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed, reactive } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { MoraDataType } from "@/type/preload";
-import { computed, reactive } from "vue";
 
 const props = withDefaults(
   defineProps<{

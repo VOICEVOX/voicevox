@@ -1,11 +1,11 @@
 import { mount } from "@vue/test-utils";
-import HowToUse from "@/components/HowToUse.vue";
-import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { createStore } from "vuex";
-import { storeKey } from "@/store";
-import { waitTicks, wrapQPage } from "../utils";
 import { describe, it } from "vitest";
 import { Quasar } from "quasar";
+import { waitTicks, wrapQPage } from "../utils";
+import HowToUse from "@/components/HowToUse.vue";
+import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { storeKey } from "@/store";
 
 const store = createStore({
   actions: {

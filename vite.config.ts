@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import path from "path";
-import treeKill from "tree-kill";
 import { rmSync } from "fs";
+import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
