@@ -377,7 +377,6 @@ const activeAudioKey = computed<AudioKey | undefined>(
 );
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
-  const enablePreset = store.state.experimentalSetting.enablePreset;
 
   let voice: Voice | undefined = undefined;
   let presetKey: string | undefined = undefined;
@@ -400,14 +399,12 @@ const addAudioItem = async () => {
     baseAudioItem,
   });
 
-  // プリセット機能がOFFの時は適用を行わない
-  // また、プリセット機能がONでもパラメータ引継ぎがONの場合はプリセット適用を行わない
-  const applyPreset = enablePreset && !store.state.inheritAudioInfo;
+  const shouldApplyPreset = store.getters.SHOULD_APPLY_PRESET(audioItem);
 
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset,
+    applyPreset: shouldApplyPreset,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };

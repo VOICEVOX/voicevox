@@ -230,6 +230,26 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SHOULD_APPLY_PRESET: {
+    getter: (state) => (audioItem: AudioItem) => {
+      // パラメータ引継ぎがONの場合はプリセット適用を行わない
+      if (state.inheritAudioInfo) {
+        return false;
+      }
+
+      // デフォルトプリセットが割り当たっていたら「デフォルトプリセットを自動で割り当てる」項目を参照する
+      const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
+        (key) => key === audioItem.presetKey
+      );
+      if (isDefaultPreset) {
+        return state.experimentalSetting.enableAutoApplyDefaultPreset;
+      }
+
+      // それ以外はプリセット機能のON/OFFで決める
+      return state.experimentalSetting.enablePreset;
+    },
+  },
+
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
@@ -541,8 +561,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query = query;
       }
 
-      // プリセット機能がOFFのときは指定を無視してデフォルトプリセットを割り当てる
-      if (!state.experimentalSetting.enablePreset) {
+      // パラメータ引継ぎがOFFの場合は指定を無視してデフォルトプリセットを割り当てる
+      if (!state.inheritAudioInfo) {
         audioItem.presetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
       } else {
         if (payload.presetKey != undefined)
