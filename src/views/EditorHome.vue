@@ -189,6 +189,7 @@ import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
 import { AudioItem, EngineState } from "@/store/type";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import {
   AudioKey,
   EngineId,
@@ -211,6 +212,8 @@ const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
+
+const { getDefaultPresetKeyForVoice } = useDefaultPreset();
 
 // hotkeys handled by Mousetrap
 const hotkeyMap = new Map<HotkeyAction, () => HotkeyReturnType>([
@@ -377,12 +380,21 @@ const activeAudioKey = computed<AudioKey | undefined>(
 );
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
+  const enablePreset = store.state.experimentalSetting.enablePreset;
+
   let voice: Voice | undefined = undefined;
   let presetKey: string | undefined = undefined;
   if (prevAudioKey !== undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
-    presetKey = store.state.audioItems[prevAudioKey].presetKey;
+
+    // プリセット機能がOFFのときはデフォルトプリセットを割り当てる
+    if (!enablePreset) {
+      presetKey = getDefaultPresetKeyForVoice(voice);
+    } else {
+      presetKey = store.state.audioItems[prevAudioKey].presetKey;
+    }
   }
+
   let baseAudioItem: AudioItem | undefined = undefined;
   if (store.state.inheritAudioInfo) {
     baseAudioItem = prevAudioKey
@@ -397,8 +409,9 @@ const addAudioItem = async () => {
     baseAudioItem,
   });
 
-  // パラメータ引継ぎがOFFの場合のみ、プリセット適用を行う
-  const applyPreset = !store.state.inheritAudioInfo;
+  // プリセット機能がOFFの時は適用を行わない
+  // また、プリセット機能がONでもパラメータ引継ぎがONの場合はプリセット適用を行わない
+  const applyPreset = enablePreset && !store.state.inheritAudioInfo;
 
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
