@@ -24,6 +24,7 @@ import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
+import { engineStoreState, engineStore } from "./engine";
 import {
   DefaultStyleId,
   EngineId,
@@ -31,8 +32,6 @@ import {
   StyleId,
   Voice,
 } from "@/type/preload";
-import { engineStoreState, engineStore } from "./engine";
-import { DefaultStyleId } from "@/type/preload";
 
 export const storeKey: InjectionKey<
   Store<State, AllGetters, AllActions, AllMutations>

@@ -2,9 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
 import { Preset, VoiceId } from "@/type/preload";
-import { createPartialStore } from "./vuex";
 
-import { v4 as uuidv4 } from "uuid";
 import { voiceToVoiceId } from "@/lib/voice";
 
 export const presetStoreState: PresetStoreState = {

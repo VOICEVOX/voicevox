@@ -198,8 +198,6 @@ import {
   Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import cloneDeep from "clone-deep";
-import { voiceToVoiceId } from "@/lib/voice";
 
 const props =
   defineProps<{

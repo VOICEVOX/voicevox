@@ -1,6 +1,6 @@
+import { describe, expect, it } from "vitest";
 import { voiceIdToVoice, voiceToVoiceId } from "@/lib/voice";
 import { EngineId, SpeakerId, StyleId, Voice } from "@/type/preload";
-import { describe, expect, it } from "vitest";
 
 describe("voiceIdToVoice, voiceToVoiceId", () => {
   it("VoiceとVoiceIdは互いに変換可能", () => {
