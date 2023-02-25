@@ -540,8 +540,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (query != undefined) {
         audioItem.query = query;
       }
-      if (payload.presetKey != undefined)
-        audioItem.presetKey = payload.presetKey;
+
+      // プリセット機能がOFFのときは指定を無視してデフォルトプリセットを割り当てる
+      if (!state.experimentalSetting.enablePreset) {
+        audioItem.presetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
+      } else {
+        if (payload.presetKey != undefined)
+          audioItem.presetKey = payload.presetKey;
+      }
 
       if (baseAudioItem && baseAudioItem.query && audioItem.query) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す

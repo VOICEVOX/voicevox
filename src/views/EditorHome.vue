@@ -386,13 +386,7 @@ const addAudioItem = async () => {
   let presetKey: string | undefined = undefined;
   if (prevAudioKey !== undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
-
-    // プリセット機能がOFFのときはデフォルトプリセットを割り当てる
-    if (!enablePreset) {
-      presetKey = getDefaultPresetKeyForVoice(voice);
-    } else {
-      presetKey = store.state.audioItems[prevAudioKey].presetKey;
-    }
+    presetKey = store.state.audioItems[prevAudioKey].presetKey;
   }
 
   let baseAudioItem: AudioItem | undefined = undefined;
