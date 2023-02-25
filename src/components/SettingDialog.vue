@@ -125,7 +125,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
+                      テキスト欄を追加する際、現在の話速等のパラメータ（プリセットも含む）を引き継ぎます
                     </q-tooltip>
                   </q-icon>
                 </div>
@@ -612,7 +612,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>デフォルトプリセットを自動で割り当てる</div>
+                <div>デフォルトプリセットを自動で適用</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -622,7 +622,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      キャラクター変更時に自動的にデフォルトプリセットが割り当てられます
+                      初期値の代わりにデフォルトプリセットが自動で適用されます
                     </q-tooltip>
                   </q-icon>
                 </div>
