@@ -3,7 +3,7 @@ import { createStore } from "vuex";
 import { Quasar, QBtn, QItem, QItemLabel } from "quasar";
 import { describe, it, beforeEach, expect } from "vitest";
 import { ComponentPublicInstance } from "vue";
-import { multipleEngineState, singleEngineState } from "../engines";
+import { multipleEngineState, singleEngineState } from "../dummyEngines";
 import { wrapQPage } from "../utils";
 import { storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
