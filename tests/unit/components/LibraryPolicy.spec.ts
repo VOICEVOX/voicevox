@@ -9,13 +9,9 @@ import { storeKey } from "@/store";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import LibraryPolicy from "@/components/LibraryPolicy.vue";
 
-const actions = {};
-const getters = {};
-
 const singleStore = createStore({
   state: singleEngineState,
   getters: {
-    ...getters,
     GET_SORTED_ENGINE_INFOS: () => {
       return [...Object.values(singleEngineState.engineInfos)];
     },
@@ -23,10 +19,8 @@ const singleStore = createStore({
 });
 
 const multipleEngineStore = createStore({
-  actions,
   state: multipleEngineState,
   getters: {
-    ...getters,
     GET_SORTED_ENGINE_INFOS: () => {
       return [...Object.values(multipleEngineState.engineInfos)];
     },
