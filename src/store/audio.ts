@@ -2054,29 +2054,40 @@ export const audioCommandStore = transformCommandStore(
 
         if (payload.update === "StyleId") return;
 
-        let presetChanged = false;
+        let shouldApplyPreset = false;
+        const defaultPresetKey =
+          draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)];
 
-        if (draft.experimentalSetting.enableAutoApplyDefaultPreset) {
-          // デフォルトプリセットを適用
-          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-            audioKey: payload.audioKey,
-            presetKey: draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)],
-          });
-          presetChanged = true;
-        } else {
-          // 変更前がデフォルトプリセットなら割り当てを外す
-          // 引き継ぐと別スタイルのデフォルトプリセットを割り当ててしまうことになるため
+        if (draft.inheritAudioInfo) {
+          // パラメータの継承がONなので引き継ぐ
           const isDefaultPreset = Object.values(draft.defaultPresetKeyMap).some(
             (key) => key === payload.presetKey
           );
 
           if (isDefaultPreset) {
+            // 別キャラのデフォルトプリセットを引き継がないようにする
+            // 継承がONなので割り当てるが適用はしない
             audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
               audioKey: payload.audioKey,
-              presetKey: undefined,
+              presetKey: defaultPresetKey,
             });
-            presetChanged = true;
+          } else {
+            // デフォルトプリセットでないなら引き継ぐ
+            audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+              audioKey: payload.audioKey,
+              presetKey: payload.presetKey,
+            });
           }
+        } else {
+          // パラメータ継承がOFFなので
+          // 変更後のキャラのデフォルトプリセットを割り当てる
+          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+            audioKey: payload.audioKey,
+            presetKey: defaultPresetKey,
+          });
+          // 適用するかどうかは設定値による
+          shouldApplyPreset =
+            draft.experimentalSetting.enableAutoApplyDefaultPreset;
         }
 
         if (payload.update == "AccentPhrases") {
@@ -2089,9 +2100,8 @@ export const audioCommandStore = transformCommandStore(
             audioKey: payload.audioKey,
             audioQuery: payload.query,
           });
-          presetChanged = true;
         }
-        if (presetChanged) {
+        if (shouldApplyPreset) {
           audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
             audioKey: payload.audioKey,
           });
