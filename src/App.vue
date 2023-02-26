@@ -5,11 +5,11 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
-import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { watch, computed } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { useRoute } from "vue-router";
+import ErrorBoundary from "@/components/ErrorBoundary.vue";
+import { useStore } from "@/store";
 
 const store = useStore();
 store.dispatch("INIT_VUEX");

@@ -11,7 +11,6 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
-
     "types": ["vitest/globals"],
     "paths": {
       "@/*": ["src/*"]
@@ -27,4 +26,3 @@
   ],
   "exclude": ["node_modules"]
 }
-

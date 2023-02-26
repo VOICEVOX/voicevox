@@ -1,10 +1,11 @@
-import { shallowMount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
+import { createStore } from "vuex";
+import { describe, it } from "vitest";
+import { Quasar } from "quasar";
+import { wrapQPage } from "../utils";
 import HowToUse from "@/components/HowToUse.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { createStore } from "vuex";
 import { storeKey } from "@/store";
-import { QPage } from "quasar";
-import { describe, it } from "vitest";
 
 const store = createStore({
   actions: {
@@ -16,13 +17,22 @@ const store = createStore({
 
 describe("HowToUse.vue", () => {
   it("can mount", () => {
-    shallowMount(HowToUse, {
+    mount(wrapQPage(HowToUse), {
       global: {
-        plugins: [markdownItPlugin, [store, storeKey]],
-        components: {
-          QPage: QPage,
-        },
+        plugins: [markdownItPlugin, [store, storeKey], Quasar],
       },
     });
+  });
+
+  it("has how to use text", async () => {
+    const wrapper = mount(wrapQPage(HowToUse), {
+      global: {
+        plugins: [markdownItPlugin, [store, storeKey], Quasar],
+      },
+    });
+
+    await flushPromises();
+
+    expect(wrapper.find(".markdown").text()).to.equal("test string");
   });
 });

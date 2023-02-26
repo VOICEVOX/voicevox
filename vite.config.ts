@@ -1,13 +1,14 @@
 /// <reference types="vitest" />
 import path from "path";
-import treeKill from "tree-kill";
 import { rmSync } from "fs";
+import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
 import { defineConfig } from "vite";
+import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
@@ -38,10 +39,12 @@ export default defineConfig((options) => {
         path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
       ],
       environment: "happy-dom",
+      globals: true,
     },
 
     plugins: [
       vue(),
+      quasar(),
       options.mode !== "test" &&
         checker({
           overlay: false,

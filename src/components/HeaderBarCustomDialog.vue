@@ -109,203 +109,157 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref, watch, Ref } from "vue";
+<script setup lang="ts">
+import { computed, ref, watch, Ref } from "vue";
+import { useQuasar } from "quasar";
+import draggable from "vuedraggable";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSetting } from "@/type/preload";
-import { useQuasar } from "quasar";
 import { getToolbarButtonName } from "@/store/utility";
-import draggable from "vuedraggable";
 
-export default defineComponent({
-  name: "HeaderBarCustomDialog",
-  components: {
-    draggable,
-  },
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true,
-    },
-  },
+const props =
+  defineProps<{
+    modelValue: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:modelValue", val: boolean): void;
+  }>();
 
-  setup(props, { emit }) {
-    const store = useStore();
-    const $q = useQuasar();
+const store = useStore();
+const $q = useQuasar();
 
-    // computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
-    const toolbarButtons = ref([...store.state.toolbarSetting]);
-    const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
-    const toolbarButtonDragging = ref(false);
-    const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
-      toolbarButtons.value[0]
-    );
-    watch(
-      () => store.state.toolbarSetting,
-      (newData) => {
-        // このwatchはToolbar Setting更新時にも機能するが、
-        // 以下の処理はVOICEVOX起動時のみ機能してほしいので、toolbarButtonsのlengthが0の時だけ機能させる
-        if (!toolbarButtons.value.length) {
-          toolbarButtons.value = [...newData];
-          selectedButton.value = newData[0];
-        }
-      }
-    );
+// computedだと値の編集ができないが、refにすると起動時に読み込まれる設定が反映されないので、watchしている
+const toolbarButtons = ref([...store.state.toolbarSetting]);
+const toolbarButtonKey = (button: ToolbarButtonTagType) => button;
+const toolbarButtonDragging = ref(false);
+const selectedButton: Ref<ToolbarButtonTagType | undefined> = ref(
+  toolbarButtons.value[0]
+);
+watch(
+  () => store.state.toolbarSetting,
+  (newData) => {
+    // このwatchはToolbar Setting更新時にも機能するが、
+    // 以下の処理はVOICEVOX起動時のみ機能してほしいので、toolbarButtonsのlengthが0の時だけ機能させる
+    if (!toolbarButtons.value.length) {
+      toolbarButtons.value = [...newData];
+      selectedButton.value = newData[0];
+    }
+  }
+);
 
-    const defaultSetting: ToolbarSetting = [];
-    window.electron.getDefaultToolbarSetting().then((setting) => {
-      defaultSetting.push(...setting);
-    });
-
-    const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
-      PLAY_CONTINUOUSLY:
-        "選択されているテキスト以降のすべてのテキストを読み上げます。",
-      STOP: "テキストが読み上げられているときに、それを止めます。",
-      EXPORT_AUDIO_ONE:
-        "選択されているテキストの読み上げを音声ファイルに書き出します。",
-      EXPORT_AUDIO_ALL:
-        "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
-      EXPORT_AUDIO_CONNECT_ALL:
-        "入力されているすべてのテキストの読み上げを一つの音声ファイルに繋げて書き出します。",
-      SAVE_PROJECT: "プロジェクトを上書き保存します。",
-      UNDO: "操作を一つ戻します。",
-      REDO: "元に戻した操作をやり直します。",
-      IMPORT_TEXT: "テキストファイル(.txt)を読み込みます。",
-      EMPTY:
-        "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
-    };
-
-    const headerBarCustomDialogOpenComputed = computed({
-      get: () => props.modelValue || isChanged.value,
-      set: (val) => emit("update:modelValue", val),
-    });
-
-    const isChanged = computed(() => {
-      const nowSetting = store.state.toolbarSetting;
-      return (
-        toolbarButtons.value.length != nowSetting.length ||
-        toolbarButtons.value.some((e, i) => e != nowSetting[i])
-      );
-    });
-    const isDefault = computed(() => {
-      return (
-        toolbarButtons.value.length == defaultSetting.length &&
-        toolbarButtons.value.every((e, i) => e == defaultSetting[i])
-      );
-    });
-
-    const moveLeftButton = () => {
-      if (selectedButton.value === undefined) return;
-      const index = toolbarButtons.value.indexOf(selectedButton.value);
-      toolbarButtons.value[index] = toolbarButtons.value[index - 1];
-      toolbarButtons.value[index - 1] = selectedButton.value;
-    };
-    const moveRightButton = () => {
-      if (selectedButton.value === undefined) return;
-      const index = toolbarButtons.value.indexOf(selectedButton.value);
-      toolbarButtons.value[index] = toolbarButtons.value[index + 1];
-      toolbarButtons.value[index + 1] = selectedButton.value;
-    };
-    const removeButton = () => {
-      if (selectedButton.value === undefined) return;
-      const index = toolbarButtons.value.indexOf(selectedButton.value);
-      toolbarButtons.value = [
-        ...toolbarButtons.value.slice(0, index),
-        ...toolbarButtons.value.slice(index + 1),
-      ];
-    };
-
-    // ボタンが追加されたときはそれをフォーカスし、
-    // 削除されたときは一番最初のボタンをフォーカスするようにする
-    watch(
-      () => toolbarButtons.value,
-      (newData, oldData) => {
-        if (oldData.length < newData.length) {
-          selectedButton.value = newData[newData.length - 1];
-        } else if (
-          selectedButton.value !== undefined &&
-          oldData.includes(selectedButton.value) &&
-          !newData.includes(selectedButton.value)
-        ) {
-          selectedButton.value = newData[0];
-        }
-      }
-    );
-
-    const applyDefaultSetting = () => {
-      $q.dialog({
-        title: "ツールバーをデフォルトに戻します",
-        message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
-        html: true,
-        ok: {
-          label: "はい",
-          flat: true,
-          textColor: "display",
-        },
-        cancel: {
-          label: "いいえ",
-          flat: true,
-          textColor: "display",
-        },
-      }).onOk(() => {
-        toolbarButtons.value = [...defaultSetting];
-        selectedButton.value = toolbarButtons.value[0];
-      });
-    };
-    const saveCustomToolbar = () => {
-      store.dispatch("SET_TOOLBAR_SETTING", {
-        data: [...toolbarButtons.value],
-      });
-    };
-
-    const finishOrNotDialog = () => {
-      if (isChanged.value) {
-        $q.dialog({
-          title: "カスタマイズを終了しますか？",
-          message:
-            "このまま終了すると、カスタマイズは破棄されてリセットされます。",
-          persistent: true,
-          focus: "cancel",
-          ok: {
-            label: "終了",
-            flat: true,
-            textColor: "display",
-          },
-          cancel: {
-            label: "キャンセル",
-            flat: true,
-            textColor: "display",
-          },
-        }).onOk(() => {
-          toolbarButtons.value = [...store.state.toolbarSetting];
-          selectedButton.value = toolbarButtons.value[0];
-          headerBarCustomDialogOpenComputed.value = false;
-        });
-      } else {
-        selectedButton.value = toolbarButtons.value[0];
-        headerBarCustomDialogOpenComputed.value = false;
-      }
-    };
-
-    return {
-      headerBarCustomDialogOpenComputed,
-      toolbarButtons,
-      toolbarButtonKey,
-      toolbarButtonDragging,
-      selectedButton,
-      isChanged,
-      isDefault,
-      moveLeftButton,
-      moveRightButton,
-      removeButton,
-      saveCustomToolbar,
-      usableButtonsDesc,
-      getToolbarButtonName,
-      applyDefaultSetting,
-      finishOrNotDialog,
-    };
-  },
+const defaultSetting: ToolbarSetting = [];
+window.electron.getDefaultToolbarSetting().then((setting) => {
+  defaultSetting.push(...setting);
 });
+
+const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
+  PLAY_CONTINUOUSLY:
+    "選択されているテキスト以降のすべてのテキストを読み上げます。",
+  STOP: "テキストが読み上げられているときに、それを止めます。",
+  EXPORT_AUDIO_ONE:
+    "選択されているテキストの読み上げを音声ファイルに書き出します。",
+  EXPORT_AUDIO_ALL:
+    "入力されているすべてのテキストの読み上げを音声ファイルに書き出します。",
+  EXPORT_AUDIO_CONNECT_ALL:
+    "入力されているすべてのテキストの読み上げを一つの音声ファイルに繋げて書き出します。",
+  SAVE_PROJECT: "プロジェクトを上書き保存します。",
+  UNDO: "操作を一つ戻します。",
+  REDO: "元に戻した操作をやり直します。",
+  IMPORT_TEXT: "テキストファイル(.txt)を読み込みます。",
+  EMPTY:
+    "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
+};
+
+const headerBarCustomDialogOpenComputed = computed({
+  get: () => props.modelValue || isChanged.value,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const isChanged = computed(() => {
+  const nowSetting = store.state.toolbarSetting;
+  return (
+    toolbarButtons.value.length != nowSetting.length ||
+    toolbarButtons.value.some((e, i) => e != nowSetting[i])
+  );
+});
+const isDefault = computed(() => {
+  return (
+    toolbarButtons.value.length == defaultSetting.length &&
+    toolbarButtons.value.every((e, i) => e == defaultSetting[i])
+  );
+});
+
+// ボタンが追加されたときはそれをフォーカスし、
+// 削除されたときは一番最初のボタンをフォーカスするようにする
+watch(
+  () => toolbarButtons.value,
+  (newData, oldData) => {
+    if (oldData.length < newData.length) {
+      selectedButton.value = newData[newData.length - 1];
+    } else if (
+      selectedButton.value !== undefined &&
+      oldData.includes(selectedButton.value) &&
+      !newData.includes(selectedButton.value)
+    ) {
+      selectedButton.value = newData[0];
+    }
+  }
+);
+
+const applyDefaultSetting = () => {
+  $q.dialog({
+    title: "ツールバーをデフォルトに戻します",
+    message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
+    html: true,
+    ok: {
+      label: "はい",
+      flat: true,
+      textColor: "display",
+    },
+    cancel: {
+      label: "いいえ",
+      flat: true,
+      textColor: "display",
+    },
+  }).onOk(() => {
+    toolbarButtons.value = [...defaultSetting];
+    selectedButton.value = toolbarButtons.value[0];
+  });
+};
+const saveCustomToolbar = () => {
+  store.dispatch("SET_TOOLBAR_SETTING", {
+    data: [...toolbarButtons.value],
+  });
+};
+
+const finishOrNotDialog = () => {
+  if (isChanged.value) {
+    $q.dialog({
+      title: "カスタマイズを終了しますか？",
+      message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
+      persistent: true,
+      focus: "cancel",
+      ok: {
+        label: "終了",
+        flat: true,
+        textColor: "display",
+      },
+      cancel: {
+        label: "キャンセル",
+        flat: true,
+        textColor: "display",
+      },
+    }).onOk(() => {
+      toolbarButtons.value = [...store.state.toolbarSetting];
+      selectedButton.value = toolbarButtons.value[0];
+      headerBarCustomDialogOpenComputed.value = false;
+    });
+  } else {
+    selectedButton.value = toolbarButtons.value[0];
+    headerBarCustomDialogOpenComputed.value = false;
+  }
+};
 </script>
 
 <style lang="scss" scoped>
