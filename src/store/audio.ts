@@ -2829,12 +2829,13 @@ export const audioCommandStore = transformCommandStore(
           )) {
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
-            const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
-              text,
-              voice,
-              baseAudioItem,
-            });
-            audioItems.push(audioItem);
+            audioItems.push(
+              await dispatch("GENERATE_AUDIO_ITEM", {
+                text,
+                voice,
+                baseAudioItem,
+              })
+            );
           }
           const audioKeys: AudioKey[] = await Promise.all(
             audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
