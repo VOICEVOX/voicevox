@@ -187,7 +187,7 @@ export function getCharacterInfo(
 }
 
 /**
- * 指定するPresetKeyを上書きする
+ * configを参照して割り当てるべきpresetKeyを返す
  */
 export function determineNextPresetKey(
   state: State,
