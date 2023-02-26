@@ -14,7 +14,6 @@ import {
   speakerIdSchema,
   styleIdSchema,
 } from "@/type/preload";
-import { voiceToVoiceId } from "@/lib/voice";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -61,13 +60,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           "GENERATE_AUDIO_ITEM",
           {}
         );
-        const audioKey = await context.dispatch("REGISTER_AUDIO_ITEM", {
+        await context.dispatch("REGISTER_AUDIO_ITEM", {
           audioItem,
-        });
-
-        await context.dispatch("APPLY_DEFAULT_PRESET", {
-          voice: audioItem.voice,
-          audioKey,
         });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
