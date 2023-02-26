@@ -599,10 +599,14 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query = query;
       }
 
+      // baseAudioItemが与えられているときはpresetKeyの指定は無視
+      const presetKeyCandidate =
+        payload.baseAudioItem?.presetKey ?? payload.presetKey;
+
       const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
         state,
         voice,
-        payload.presetKey
+        presetKeyCandidate
       );
       audioItem.presetKey = nextPresetKey;
 
@@ -2901,10 +2905,8 @@ export const audioCommandStore = transformCommandStore(
             audioItem: AudioItem;
           }[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;
-          let basePresetKey: string | undefined = undefined;
           if (state.inheritAudioInfo && state._activeAudioKey) {
             baseAudioItem = state.audioItems[state._activeAudioKey];
-            basePresetKey = baseAudioItem.presetKey;
           }
           for (const text of texts.filter((value) => value != "")) {
             const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
@@ -2914,7 +2916,6 @@ export const audioCommandStore = transformCommandStore(
               text,
               voice,
               baseAudioItem,
-              presetKey: basePresetKey,
             });
 
             audioKeyItemPairs.push({
