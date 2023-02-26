@@ -143,10 +143,6 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
-  SHOULD_APPLY_PRESET: {
-    getter(audioItem: AudioItem): boolean;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };
