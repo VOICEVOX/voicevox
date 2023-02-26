@@ -377,14 +377,12 @@ const activeAudioKey = computed<AudioKey | undefined>(
 );
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
-
   let voice: Voice | undefined = undefined;
   let presetKey: string | undefined = undefined;
   if (prevAudioKey !== undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;
   }
-
   let baseAudioItem: AudioItem | undefined = undefined;
   if (store.state.inheritAudioInfo) {
     baseAudioItem = prevAudioKey
