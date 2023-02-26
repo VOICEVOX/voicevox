@@ -985,9 +985,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  APPLY_AUDIO_PRESET: {
-    mutation(state, { audioKey }: { audioKey: AudioKey }) {
-      const audioItem = state.audioItems[audioKey];
+  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
+    mutation(state, { audioItem }) {
       if (
         audioItem == undefined ||
         audioItem.presetKey == undefined ||
@@ -1009,6 +1008,17 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       audioItem.query = { ...audioItem.query, ...audioInfos };
 
       audioItem.morphingInfo = morphingInfo;
+    },
+    action({ commit }, { audioItem }) {
+      commit("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
+    },
+  },
+
+  APPLY_AUDIO_PRESET: {
+    mutation(state, { audioKey }: { audioKey: AudioKey }) {
+      audioStore.mutations.APPLY_AUDIO_PRESET_TO_AUDIO_ITEM(state, {
+        audioItem: state.audioItems[audioKey],
+      });
     },
   },
 
