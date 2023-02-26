@@ -186,6 +186,44 @@ export function getCharacterInfo(
   );
 }
 
+/**
+ * 指定するPresetKeyを上書きする
+ */
+export function determineNextPresetKey(
+  state: State,
+  voice: Voice,
+  presetKey: string | undefined
+): {
+  nextPresetKey: string | undefined;
+  shouldApplyPreset: boolean;
+} {
+  const defaultPresetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
+
+  let nextPresetKey = presetKey;
+  let shouldApplyPreset = false;
+
+  if (state.inheritAudioInfo) {
+    // パラメータの継承がONなので引き継ぐ
+    const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
+      (key) => key === presetKey
+    );
+
+    if (isDefaultPreset) {
+      // 別キャラのデフォルトプリセットを引き継がないようにする
+      // 継承がONなので割り当てるが適用はしない
+      nextPresetKey = defaultPresetKey;
+    }
+  } else {
+    // パラメータ継承がOFFなので
+    // 変更後のキャラのデフォルトプリセットを割り当てる
+    nextPresetKey = defaultPresetKey;
+    // 適用するかどうかは設定値による
+    shouldApplyPreset = state.experimentalSetting.enableAutoApplyDefaultPreset;
+  }
+
+  return { nextPresetKey, shouldApplyPreset };
+}
+
 const audioBlobCache: Record<string, Blob> = {};
 const audioElements: Record<AudioKey, HTMLAudioElement> = {};
 
@@ -2064,41 +2102,16 @@ export const audioCommandStore = transformCommandStore(
 
         if (payload.update === "StyleId") return;
 
-        let shouldApplyPreset = false;
-        const defaultPresetKey =
-          draft.defaultPresetKeyMap[voiceToVoiceId(payload.voice)];
+        const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+          draft,
+          payload.voice,
+          payload.presetKey
+        );
 
-        if (draft.inheritAudioInfo) {
-          // パラメータの継承がONなので引き継ぐ
-          const isDefaultPreset = Object.values(draft.defaultPresetKeyMap).some(
-            (key) => key === payload.presetKey
-          );
-
-          if (isDefaultPreset) {
-            // 別キャラのデフォルトプリセットを引き継がないようにする
-            // 継承がONなので割り当てるが適用はしない
-            audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-              audioKey: payload.audioKey,
-              presetKey: defaultPresetKey,
-            });
-          } else {
-            // デフォルトプリセットでないなら引き継ぐ
-            audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-              audioKey: payload.audioKey,
-              presetKey: payload.presetKey,
-            });
-          }
-        } else {
-          // パラメータ継承がOFFなので
-          // 変更後のキャラのデフォルトプリセットを割り当てる
-          audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
-            audioKey: payload.audioKey,
-            presetKey: defaultPresetKey,
-          });
-          // 適用するかどうかは設定値による
-          shouldApplyPreset =
-            draft.experimentalSetting.enableAutoApplyDefaultPreset;
-        }
+        audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
+          audioKey: payload.audioKey,
+          presetKey: nextPresetKey,
+        });
 
         if (payload.update == "AccentPhrases") {
           audioStore.mutations.SET_ACCENT_PHRASES(draft, {
@@ -2111,6 +2124,7 @@ export const audioCommandStore = transformCommandStore(
             audioQuery: payload.query,
           });
         }
+
         if (shouldApplyPreset) {
           audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
             audioKey: payload.audioKey,
@@ -2826,13 +2840,12 @@ export const audioCommandStore = transformCommandStore(
           )) {
             //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
             //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
-            audioItems.push(
-              await dispatch("GENERATE_AUDIO_ITEM", {
-                text,
-                voice,
-                baseAudioItem,
-              })
-            );
+            const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
+              text,
+              voice,
+              baseAudioItem,
+            });
+            audioItems.push(audioItem);
           }
           const audioKeys: AudioKey[] = await Promise.all(
             audioItems.map(() => dispatch("GENERATE_AUDIO_KEY"))
