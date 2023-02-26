@@ -599,13 +599,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query = query;
       }
 
-      // パラメータ引継ぎがOFFの場合は指定を無視してデフォルトプリセットを割り当てる
-      if (!state.inheritAudioInfo) {
-        audioItem.presetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
-      } else {
-        if (payload.presetKey != undefined)
-          audioItem.presetKey = payload.presetKey;
-      }
+      const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
+        state,
+        voice,
+        payload.presetKey
+      );
+      audioItem.presetKey = nextPresetKey;
 
       if (baseAudioItem && baseAudioItem.query && audioItem.query) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
@@ -622,6 +621,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
         audioItem.morphingInfo = baseAudioItem.morphingInfo;
       }
+
+      // audioItemに対してプリセットを適用する
+      if (shouldApplyPreset) {
+        dispatch("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
+      }
+
       return audioItem;
     },
   },

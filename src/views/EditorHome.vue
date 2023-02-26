@@ -399,12 +399,10 @@ const addAudioItem = async () => {
     baseAudioItem,
   });
 
-  const shouldApplyPreset = store.getters.SHOULD_APPLY_PRESET(audioItem);
-
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset: shouldApplyPreset,
+    applyPreset: false,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };
@@ -535,11 +533,6 @@ onMounted(async () => {
       audioKey: newAudioKey,
       engineId: audioItem.voice.engineId,
       styleId: audioItem.voice.styleId,
-    });
-
-    await store.dispatch("APPLY_DEFAULT_PRESET", {
-      voice: audioItem.voice,
-      audioKey: newAudioKey,
     });
   }
 
