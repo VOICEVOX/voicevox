@@ -139,11 +139,10 @@ export default defineComponent({
       beatTypeInputBuffer.value = beatType;
     };
 
-    const playbackPositionStr = ref("");
+    const playPos = ref(0);
 
-    const updatePlayPos = () => {
-      const playPos = store.getters.GET_PLAYBACK_POSITION();
-      const playTime = store.getters.POSITION_TO_TIME(playPos);
+    const playbackPositionStr = computed(() => {
+      const playTime = store.getters.POSITION_TO_TIME(playPos.value);
 
       const intPlayTime = Math.floor(playTime);
       const min = Math.floor(intPlayTime / 60);
@@ -152,8 +151,8 @@ export default defineComponent({
       const match = String(playTime).match(/\.(\d+)$/);
       const milliSecStr = (match?.[1] ?? "0").padEnd(3, "0").substring(0, 3);
 
-      playbackPositionStr.value = `${minStr}:${secStr}.${milliSecStr}`;
-    };
+      return `${minStr}:${secStr}.${milliSecStr}`;
+    });
 
     const tempos = computed(() => store.state.score?.tempos);
     const timeSignatures = computed(() => store.state.score?.timeSignatures);
@@ -163,7 +162,6 @@ export default defineComponent({
       tempos,
       () => {
         tempoInputBuffer.value = tempos.value?.[0].tempo ?? 0;
-        updatePlayPos();
       },
       { deep: true }
     );
@@ -172,7 +170,6 @@ export default defineComponent({
       () => {
         beatsInputBuffer.value = timeSignatures.value?.[0].beats ?? 0;
         beatTypeInputBuffer.value = timeSignatures.value?.[0].beatType ?? 0;
-        updatePlayPos();
       },
       { deep: true }
     );
@@ -181,7 +178,7 @@ export default defineComponent({
     watch(nowPlaying, (newState) => {
       if (newState) {
         const updateView = () => {
-          updatePlayPos();
+          playPos.value = store.getters.GET_PLAYBACK_POSITION();
           requestId = window.requestAnimationFrame(updateView);
         };
         updateView();
@@ -225,7 +222,7 @@ export default defineComponent({
 
     const seek = async (position: number) => {
       await store.dispatch("SET_PLAYBACK_POSITION", { position });
-      updatePlayPos();
+      playPos.value = position;
     };
 
     const volume = computed({
