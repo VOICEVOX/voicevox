@@ -537,7 +537,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       payload: {
         text?: string;
         voice?: Voice;
-        presetKey?: string;
         baseAudioItem?: AudioItem;
       }
     ) {
@@ -579,9 +578,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioItem.query = query;
       }
 
-      // baseAudioItemが与えられているときはpresetKeyの指定は無視
-      const presetKeyCandidate =
-        payload.baseAudioItem?.presetKey ?? payload.presetKey;
+      const presetKeyCandidate = payload.baseAudioItem?.presetKey;
 
       const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
         state,
