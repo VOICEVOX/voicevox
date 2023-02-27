@@ -123,17 +123,17 @@ export default defineComponent({
     const beatsInputBuffer = ref(0);
     const beatTypeInputBuffer = ref(0);
 
-    const setTempoInputBuffer = (tempoStr: string) => {
+    const setTempoInputBuffer = (tempoStr: string | number | null) => {
       const tempo = Number(tempoStr);
       if (!Number.isFinite(tempo) || tempo <= 0) return;
       tempoInputBuffer.value = tempo;
     };
-    const setBeatsInputBuffer = (beatsStr: string) => {
+    const setBeatsInputBuffer = (beatsStr: string | number | null) => {
       const beats = Number(beatsStr);
       if (!Number.isInteger(beats) || beats <= 0) return;
       beatsInputBuffer.value = beats;
     };
-    const setBeatTypeInputBuffer = (beatTypeStr: string) => {
+    const setBeatTypeInputBuffer = (beatTypeStr: string | number | null) => {
       const beatType = Number(beatTypeStr);
       if (!Number.isInteger(beatType) || beatType <= 0) return;
       beatTypeInputBuffer.value = beatType;
