@@ -108,6 +108,31 @@
                 >
                 </q-select>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-sm bg-surface">
+                <div>その他の高度な設定</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      エンジン固有の高度な設定を変更します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-btn
+                  label="ブラウザで開く"
+                  unelevated
+                  color="background"
+                  text-color="display"
+                  class="text-no-wrap q-mr-sm"
+                  @click="openSelectedEngineSettingWindow(selectedEngineId)"
+                />
+              </q-card-actions>
             </q-card>
             <!-- Preservation Setting -->
             <q-card flat class="setting-card">
@@ -984,6 +1009,10 @@ const outputSamplingRate = computed({
     });
   },
 });
+
+const openSelectedEngineSettingWindow = (engineId: EngineId) => {
+  store.dispatch("OPEN_ENGINE_SETTING_URL", { engineId });
+};
 
 const openFileExplore = async () => {
   const path = await window.electron.showOpenDirectoryDialog({

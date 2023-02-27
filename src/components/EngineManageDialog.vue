@@ -321,14 +321,6 @@
                 outline
                 text-color="display"
                 class="text-no-wrap text-bold q-mr-sm"
-                @click="openSelectedEngineSettingWindow"
-                :disable="uiLocked || engineStates[selectedId] !== 'READY'"
-                >設定を開く</q-btn
-              >
-              <q-btn
-                outline
-                text-color="display"
-                class="text-no-wrap text-bold q-mr-sm"
                 @click="restartSelectedEngine"
                 :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
                 >再起動</q-btn
@@ -574,14 +566,6 @@ const openSelectedEngineDirectory = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
   store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
-};
-
-const openSelectedEngineSettingWindow = () => {
-  if (selectedId.value == undefined)
-    throw new Error("assert selectedId.value != undefined");
-  store.dispatch("OPEN_ENGINE_SETTING_URL", {
-    engineId: selectedId.value,
-  });
 };
 
 const restartSelectedEngine = () => {

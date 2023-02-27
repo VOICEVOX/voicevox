@@ -440,16 +440,6 @@ async function updateEngines() {
         },
         disableWhenUiLocked: false,
       },
-      {
-        type: "button",
-        label: "エンジンの設定を開く",
-        onClick: () => {
-          store.dispatch("OPEN_ENGINE_SETTING_URL", {
-            engineId: engineInfo.uuid,
-          });
-        },
-        disableWhenUiLocked: true,
-      },
     ].filter((x) => x) as MenuItemData[];
   } else {
     engineMenu.subMenu = [
@@ -481,16 +471,6 @@ async function updateEngines() {
                   });
                 },
                 disableWhenUiLocked: false,
-              },
-              {
-                type: "button",
-                label: "エンジンの設定を開く",
-                onClick: () => {
-                  store.dispatch("OPEN_ENGINE_SETTING_URL", {
-                    engineId: engineInfo.uuid,
-                  });
-                },
-                disableWhenUiLocked: true,
               },
             ].filter((x) => x),
           } as MenuItemRoot)
