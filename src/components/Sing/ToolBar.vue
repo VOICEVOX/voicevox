@@ -142,7 +142,10 @@ export default defineComponent({
     const playPos = ref(0);
 
     const playbackPositionStr = computed(() => {
-      const playTime = store.getters.POSITION_TO_TIME(playPos.value);
+      let playTime = 0;
+      if (store.state.score) {
+        playTime = store.getters.POSITION_TO_TIME(playPos.value);
+      }
 
       const intPlayTime = Math.floor(playTime);
       const min = Math.floor(intPlayTime / 60);
