@@ -952,7 +952,9 @@ export type ProjectStoreTypes = {
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {
-    action(): "saved" | "discarded" | "canceled";
+    action(palyoad: {
+      additionalMessage?: string;
+    }): "saved" | "discarded" | "canceled";
   };
 
   IS_EDITED: {

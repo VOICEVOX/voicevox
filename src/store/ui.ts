@@ -300,7 +300,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   CHECK_EDITED_AND_NOT_SAVE: {
     async action({ dispatch, getters }) {
       if (getters.IS_EDITED) {
-        const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE");
+        const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
         if (result == "canceled") {
           return;
         }

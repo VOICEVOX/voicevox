@@ -40,7 +40,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
-          const result = await context.dispatch("SAVE_OR_DISCARD_PROJECT_FILE");
+          const result = await context.dispatch(
+            "SAVE_OR_DISCARD_PROJECT_FILE",
+            {}
+          );
           if (result == "canceled") {
             return;
           }
@@ -319,7 +322,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           if (confirm !== false && context.getters.IS_EDITED) {
             const result = await context.dispatch(
-              "SAVE_OR_DISCARD_PROJECT_FILE"
+              "SAVE_OR_DISCARD_PROJECT_FILE",
+              {
+                additionalMessage:
+                  "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
+              }
             );
             if (result == "canceled") {
               return false;
@@ -427,12 +434,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
    * 保存に失敗した場合はキャンセル扱いになる。
    */
   SAVE_OR_DISCARD_PROJECT_FILE: {
-    action: createUILockAction(async ({ dispatch }) => {
+    action: createUILockAction(async ({ dispatch }, { additionalMessage }) => {
+      let message = "プロジェクトの変更が保存されていません。";
+      if (additionalMessage) {
+        message += "\n" + additionalMessage;
+      }
+      message += "\n変更を保存しますか？";
+
       const result: number = await window.electron.showQuestionDialog({
         type: "info",
         title: "警告",
-        message:
-          "プロジェクトの変更が保存されていません。\n" + "変更を保存しますか？",
+        message,
         buttons: ["保存", "破棄", "キャンセル"],
         cancelId: 2,
         defaultId: 2,
