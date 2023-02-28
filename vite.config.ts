@@ -8,6 +8,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig } from "vite";
+import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
