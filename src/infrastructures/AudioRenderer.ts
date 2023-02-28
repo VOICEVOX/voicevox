@@ -50,6 +50,7 @@ class SoundScheduler {
     return this.startContextTime + (time - this.startTime);
   }
 
+  // `time`から`time + period`までの範囲のイベントをスケジュールする
   scheduleEvents(time: number, period: number) {
     if (time < this.startTime) {
       throw new Error("The specified time is invalid.");
@@ -71,6 +72,9 @@ class SoundScheduler {
   }
 }
 
+/**
+ * 登録されているシーケンスのイベントをスケジュールし、再生を行います。
+ */
 export class Transport {
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
@@ -107,6 +111,11 @@ export class Transport {
     }
   }
 
+  /**
+   * @param audioContext コンテキスト時間の取得に使用するAudioContext。
+   * @param interval スケジューリングを行う間隔。
+   * @param lookAhead スケジューリングで先読みする時間。スケジューリングが遅れた場合でも正しく再生されるように、スケジューリングを行う間隔より長く設定する必要があります。
+   */
   constructor(audioContext: AudioContext, interval: number, lookAhead: number) {
     if (lookAhead <= interval) {
       throw new Error("Look-ahead time must be longer than the interval.");
@@ -245,6 +254,7 @@ export class NoteSequence implements SoundSequence {
     this.noteEvents = noteEvents;
   }
 
+  // スケジュール可能なイベントを生成する
   generateEvents(startTime: number) {
     return this.noteEvents
       .sort((a, b) => a.noteOnTime - b.noteOnTime)
@@ -267,6 +277,7 @@ export class NoteSequence implements SoundSequence {
       .sort((a, b) => a.time - b.time);
   }
 
+  // シーケンス（楽器）の停止をスケジュールする
   scheduleStop(contextTime: number) {
     this.instrument.allSoundOff(contextTime);
   }
@@ -385,6 +396,9 @@ export type SynthOptions = {
   readonly envelope: Envelope;
 };
 
+/**
+ * ポリフォニックなシンセサイザー。
+ */
 export class Synth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly gainNode: GainNode;
