@@ -29,8 +29,8 @@
 </template>
 
 <script lang="ts">
-import { useStore } from "@/store";
 import { computed, defineComponent, onUnmounted, ref, watch } from "vue";
+import { useStore } from "@/store";
 
 export default defineComponent({
   name: "ProgressDialog",

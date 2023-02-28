@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
-import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { IpcSOData } from "./ipc";
 
 export const isMac =
   typeof process === "undefined"
@@ -165,6 +165,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {

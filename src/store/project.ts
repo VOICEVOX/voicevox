@@ -1,11 +1,11 @@
-import { createUILockAction } from "@/store/ui";
-import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
+import { z } from "zod";
 import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "@/store/ui";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import { z } from "zod";
 import {
   AudioKey,
   audioKeySchema,
@@ -376,6 +376,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   SAVE_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを保存する。保存の成否が返る。
+     */
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
@@ -396,7 +399,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             defaultPath,
           });
           if (ret == undefined) {
-            return;
+            return false;
           }
           filePath = ret;
         }
@@ -427,7 +430,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
           context.getters.LAST_COMMAND_UNIX_MILLISEC
         );
-        return;
+        return true;
       }
     ),
   },

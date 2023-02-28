@@ -1,14 +1,16 @@
 import { spawn, ChildProcess } from "child_process";
+import path from "path";
+import fs from "fs";
 import treeKill from "tree-kill";
 import Store from "electron-store";
 import shlex from "shlex";
 
 import { BrowserWindow, dialog } from "electron";
 
-import path from "path";
+import log from "electron-log";
+import { z } from "zod";
 import { ipcMainSend } from "@/electron/ipc";
 
-import fs from "fs";
 import {
   EngineInfo,
   ElectronStoreType,
@@ -18,9 +20,6 @@ import {
   engineIdSchema,
   minimumEngineManifestSchema,
 } from "@/type/preload";
-
-import log from "electron-log";
-import { z } from "zod";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
