@@ -123,13 +123,21 @@ const api: Sandbox = {
     return ipcRendererInvoke("SHOW_MESSAGE_DIALOG", { type, title, message });
   },
 
-  showQuestionDialog: ({ type, title, message, buttons, cancelId }) => {
+  showQuestionDialog: ({
+    type,
+    title,
+    message,
+    buttons,
+    cancelId,
+    defaultId,
+  }) => {
     return ipcRendererInvoke("SHOW_QUESTION_DIALOG", {
       type,
       title,
       message,
       buttons,
       cancelId,
+      defaultId,
     });
   },
 
