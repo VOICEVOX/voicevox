@@ -66,7 +66,7 @@ class SoundScheduler {
     }
   }
 
-  stopScheduling(contextTime: number) {
+  stop(contextTime: number) {
     this.sequence.scheduleStop(contextTime);
   }
 }
@@ -98,7 +98,6 @@ export class Transport {
   }
 
   set time(value: number) {
-    // 再生中の場合は一度再生を停止して、再生時間を設定後に再び再生を開始
     if (this._state === "started") {
       this.stop();
       this._time = value;
@@ -138,13 +137,13 @@ export class Transport {
     const time = this.calculateTime(contextTime);
 
     this.schedulersToBeStopped.forEach((value) => {
-      value.stopScheduling(contextTime);
+      value.stop(contextTime);
     });
     this.schedulersToBeStopped = [];
 
     this.sequences.forEach((value) => {
       let scheduler = this.getScheduler(value);
-      if (scheduler === undefined) {
+      if (!scheduler) {
         scheduler = new SoundScheduler(value, contextTime, time);
         this.schedulers.push(scheduler);
       }
@@ -210,10 +209,10 @@ export class Transport {
     this._state = "stopped";
 
     this.schedulers.forEach((value) => {
-      value.stopScheduling(contextTime);
+      value.stop(contextTime);
     });
     this.schedulersToBeStopped.forEach((value) => {
-      value.stopScheduling(contextTime);
+      value.stop(contextTime);
     });
   }
 
@@ -228,7 +227,7 @@ export class Transport {
 export interface Instrument {
   noteOn(contextTime: number, midi: number): void;
   noteOff(contextTime: number, midi: number): void;
-  allStop(contextTime?: number): void;
+  allSoundOff(contextTime?: number): void;
 }
 
 export type NoteEvent = {
@@ -246,11 +245,11 @@ export class NoteSequence implements SoundSequence {
     this.noteEvents = noteEvents;
   }
 
-  generateEvents(startTime: number): SchedulableEvent[] {
+  generateEvents(startTime: number) {
     return this.noteEvents
       .sort((a, b) => a.noteOnTime - b.noteOnTime)
       .filter((value) => value.noteOffTime > startTime)
-      .map((value) => [
+      .map((value): SchedulableEvent[] => [
         {
           time: Math.max(value.noteOnTime, startTime),
           schedule: (contextTime: number) => {
@@ -269,7 +268,7 @@ export class NoteSequence implements SoundSequence {
   }
 
   scheduleStop(contextTime: number) {
-    this.instrument.allStop(contextTime);
+    this.instrument.allSoundOff(contextTime);
   }
 }
 
@@ -344,27 +343,39 @@ class SynthVoice {
   }
 
   noteOff(contextTime: number) {
+    const t0 = contextTime;
+    const rel = this.envelope.release;
+    const stopContextTime = t0 + rel * 4;
+
     if (
       this.stopContextTime === undefined ||
-      contextTime < this.stopContextTime
+      stopContextTime < this.stopContextTime
     ) {
-      const t0 = contextTime;
-      const rel = this.envelope.release;
-
       this.gainNode.gain.cancelAndHoldAtTime(t0);
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
-      this.oscillatorNode.stop(t0 + rel * 4);
+      this.oscillatorNode.stop(stopContextTime);
       this._isActive = false;
 
-      this.stopContextTime = contextTime;
+      this.stopContextTime = stopContextTime;
+    }
+  }
+
+  soundOff(contextTime?: number) {
+    if (
+      contextTime === undefined ||
+      this.stopContextTime === undefined ||
+      contextTime < this.stopContextTime
+    ) {
+      this.oscillatorNode.stop(contextTime);
+      this._isActive = false;
+
+      this.stopContextTime = contextTime ?? 0;
     }
   }
 
   dispose() {
-    this.stopContextTime = 0;
-    this.oscillatorNode.stop();
-    this._isActive = false;
+    this.soundOff();
   }
 }
 
@@ -434,12 +445,12 @@ export class Synth implements Instrument {
     const voice = this.voices.find((value) => {
       return value.isActive && value.midi === midi;
     });
-    if (voice === undefined) return;
+    if (!voice) return;
 
     voice.noteOff(contextTime);
   }
 
-  allStop(contextTime?: number) {
+  allSoundOff(contextTime?: number) {
     if (contextTime === undefined) {
       this.voices.forEach((value) => {
         value.dispose();
@@ -447,13 +458,13 @@ export class Synth implements Instrument {
       this.voices = [];
     } else {
       this.voices.forEach((value) => {
-        value.noteOff(contextTime);
+        value.soundOff(contextTime);
       });
     }
   }
 
   dispose() {
-    this.allStop();
+    this.allSoundOff();
   }
 }
 
