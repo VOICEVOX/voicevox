@@ -177,17 +177,18 @@ export default defineComponent({
       { deep: true }
     );
 
-    let requestId: number | undefined = undefined;
+    const timeout = 1 / 60;
+    let timeoutId: number | undefined = undefined;
     watch(nowPlaying, (newState) => {
       if (newState) {
         const updateView = () => {
           playPos.value = store.getters.GET_PLAYBACK_POSITION();
-          requestId = window.requestAnimationFrame(updateView);
+          timeoutId = window.setTimeout(updateView, timeout);
         };
         updateView();
-      } else if (requestId !== undefined) {
-        window.cancelAnimationFrame(requestId);
-        requestId = undefined;
+      } else if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+        timeoutId = undefined;
       }
     });
 
