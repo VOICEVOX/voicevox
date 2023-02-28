@@ -949,7 +949,7 @@ export type ProjectStoreTypes = {
   };
 
   SAVE_PROJECT_FILE: {
-    action(payload: { overwrite?: boolean }): void;
+    action(payload: { overwrite?: boolean }): boolean;
   };
 
   IS_EDITED: {
