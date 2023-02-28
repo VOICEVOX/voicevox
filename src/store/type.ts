@@ -951,6 +951,10 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_OR_DISCARD_PROJECT_FILE: {
+    action(): "saved" | "discarded" | "canceled";
+  };
+
   IS_EDITED: {
     getter: boolean;
   };

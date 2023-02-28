@@ -300,23 +300,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   CHECK_EDITED_AND_NOT_SAVE: {
     async action({ dispatch, getters }) {
       if (getters.IS_EDITED) {
-        const result: number = await window.electron.showQuestionDialog({
-          type: "info",
-          title: "警告",
-          message:
-            "プロジェクトの変更が保存されていません。\n" +
-            "変更を保存しますか？",
-          buttons: ["保存", "破棄", "キャンセル"],
-          cancelId: 2,
-          defaultId: 2,
-        });
-        if (result == 0) {
-          const saved = await dispatch("SAVE_PROJECT_FILE", {
-            overwrite: true,
-          });
-          if (saved == false) return;
-        }
-        if (result == 2) {
+        const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE");
+        if (result == "canceled") {
           return;
         }
       }
