@@ -15,8 +15,10 @@ rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
 export default defineConfig((options) => {
-  const isDevelopment = options.mode === "development";
-  const sourcemap: BuildOptions["sourcemap"] = isDevelopment ? "inline" : false;
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
+    ? "inline"
+    : false;
   return {
     root: path.resolve(__dirname, "src"),
     build: {
