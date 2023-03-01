@@ -193,12 +193,14 @@ export function getCharacterInfo(
 export function determineNextPresetKey(
   state: State,
   voice: Voice,
-  presetKey: PresetKey | undefined
+  presetKey: PresetKey | undefined,
+  hasBaseAudioItem: boolean
 ): {
   nextPresetKey: PresetKey | undefined;
   shouldApplyPreset: boolean;
 } {
-  const defaultPresetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
+  const defaultPresetKeyForCurrentVoice =
+    state.defaultPresetKeyMap[voiceToVoiceId(voice)];
 
   let nextPresetKey = presetKey;
   let shouldApplyPreset = false;
@@ -208,16 +210,19 @@ export function determineNextPresetKey(
     const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
       (key) => key === presetKey
     );
+    const isNotMyDefaultPreset =
+      presetKey !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
 
-    if (isDefaultPreset) {
+    if (presetKey === undefined || isNotMyDefaultPreset || hasBaseAudioItem) {
       // 別キャラのデフォルトプリセットを引き継がないようにする
+      // 引き継ぎ元がない場合もデフォルトプリセットを割り当てる
       // 継承がONなので割り当てるが適用はしない
-      nextPresetKey = defaultPresetKey;
+      nextPresetKey = defaultPresetKeyForCurrentVoice;
     }
   } else {
     // パラメータ継承がOFFなので
     // 変更後のキャラのデフォルトプリセットを割り当てる
-    nextPresetKey = defaultPresetKey;
+    nextPresetKey = defaultPresetKeyForCurrentVoice;
     // 適用するかどうかは設定値による
     shouldApplyPreset = state.experimentalSetting.enableAutoApplyDefaultPreset;
   }
@@ -588,7 +593,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
         state,
         voice,
-        presetKeyCandidate
+        presetKeyCandidate,
+        baseAudioItem !== undefined
       );
       audioItem.presetKey = nextPresetKey;
 
@@ -2096,7 +2102,8 @@ export const audioCommandStore = transformCommandStore(
         const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
           draft,
           payload.voice,
-          payload.presetKey
+          payload.presetKey,
+          true
         );
 
         audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
