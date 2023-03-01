@@ -49,6 +49,10 @@ type SingleInstanceLockData = {
 const isDevelopment = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === "test";
 
+if (isDevelopment) {
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
+}
+
 let suffix = "";
 if (isTest) {
   suffix = "-test";
