@@ -564,7 +564,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         speakerId: defaultStyleId.speakerUuid,
         styleId: defaultStyleId.defaultStyleId,
       };
-      const baseAudioItem = payload.baseAudioItem;
+
+      // パラメータ引継ぎがOFFなら渡されたbaseAudioItemは無視
+      const baseAudioItem = state.inheritAudioInfo
+        ? payload.baseAudioItem
+        : undefined;
 
       const query = getters.IS_ENGINE_READY(voice.engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", {
@@ -2811,10 +2815,8 @@ export const audioCommandStore = transformCommandStore(
           }
           const audioItems: AudioItem[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;
-          if (state.inheritAudioInfo) {
-            baseAudioItem = state._activeAudioKey
-              ? state.audioItems[state._activeAudioKey]
-              : undefined;
+          if (state._activeAudioKey !== undefined) {
+            baseAudioItem = state.audioItems[state._activeAudioKey];
           }
 
           if (!getters.USER_ORDERED_CHARACTER_INFOS)
@@ -2825,8 +2827,6 @@ export const audioCommandStore = transformCommandStore(
             getters.USER_ORDERED_CHARACTER_INFOS,
             baseAudioItem?.voice
           )) {
-            //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-            //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             audioItems.push(
               await dispatch("GENERATE_AUDIO_ITEM", {
                 text,
@@ -2884,14 +2884,12 @@ export const audioCommandStore = transformCommandStore(
             audioItem: AudioItem;
           }[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;
-
-          if (state.inheritAudioInfo && state._activeAudioKey) {
+          if (state._activeAudioKey) {
             baseAudioItem = state.audioItems[state._activeAudioKey];
           }
+
           for (const text of texts.filter((value) => value != "")) {
             const audioKey: AudioKey = await dispatch("GENERATE_AUDIO_KEY");
-            //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-            //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
             const audioItem = await dispatch("GENERATE_AUDIO_ITEM", {
               text,
               voice,
