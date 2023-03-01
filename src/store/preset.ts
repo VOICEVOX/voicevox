@@ -35,6 +35,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         return;
       commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: presetConfig.items as Record<PresetKey, Preset>,
       });
       commit("SET_PRESET_KEYS", {
@@ -66,6 +67,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
       context.commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: result.items as Record<PresetKey, Preset>,
       });
       context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
