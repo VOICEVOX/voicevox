@@ -593,6 +593,7 @@ const requireRestart = (message: string) => {
     },
   })
     .onOk(() => {
+      toInitialState();
       store.dispatch("RESTART_APP", {});
     })
     .onCancel(() => {
