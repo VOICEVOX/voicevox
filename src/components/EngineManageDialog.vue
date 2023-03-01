@@ -153,7 +153,11 @@
                   </template>
                   <template v-slot:error>
                     {{
-                      getEngineDirValidationMessage(newEngineDirValidationState)
+                      newEngineDirValidationState
+                        ? getEngineDirValidationMessage(
+                            newEngineDirValidationState
+                          )
+                        : undefined
                     }}
                   </template>
                 </q-input>
@@ -168,7 +172,7 @@
                   dense
                   readonly
                   :error="
-                    newEngineDirValidationState &&
+                    newEngineDirValidationState != undefined &&
                     newEngineDirValidationState !== 'ok'
                   "
                   placeholder="エンジンフォルダの場所"
@@ -190,7 +194,11 @@
                   </template>
                   <template v-slot:error>
                     {{
-                      getEngineDirValidationMessage(newEngineDirValidationState)
+                      newEngineDirValidationState
+                        ? getEngineDirValidationMessage(
+                            newEngineDirValidationState
+                          )
+                        : undefined
                     }}
                   </template>
                 </q-input>
