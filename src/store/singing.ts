@@ -142,7 +142,6 @@ class SingChannel {
     if (this.sequence) {
       this.context.transport.removeSequence(this.sequence);
     }
-    this.synth.dispose();
   }
 }
 
@@ -181,10 +180,10 @@ const isValidNote = (note: Note) => {
 /**
  * ノートオンの時間とノートオフの時間を計算し、ノートイベントを生成します。
  */
-const generateNoteEvents = (score: Score, notes: Note[]): NoteEvent[] => {
+const generateNoteEvents = (score: Score, notes: Note[]) => {
   const resolution = score.resolution;
   const tempos = score.tempos;
-  return notes.map((value) => {
+  return notes.map((value): NoteEvent => {
     const noteOnPos = value.position;
     const noteOffPos = value.position + value.duration;
     return {

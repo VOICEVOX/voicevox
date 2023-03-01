@@ -384,10 +384,6 @@ class SynthVoice {
       this.stopContextTime = contextTime ?? 0;
     }
   }
-
-  dispose() {
-    this.soundOff();
-  }
 }
 
 export type SynthOptions = {
@@ -467,7 +463,7 @@ export class Synth implements Instrument {
   allSoundOff(contextTime?: number) {
     if (contextTime === undefined) {
       this.voices.forEach((value) => {
-        value.dispose();
+        value.soundOff();
       });
       this.voices = [];
     } else {
@@ -475,10 +471,6 @@ export class Synth implements Instrument {
         value.soundOff(contextTime);
       });
     }
-  }
-
-  dispose() {
-    this.allSoundOff();
   }
 }
 
