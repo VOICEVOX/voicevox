@@ -165,6 +165,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {

@@ -672,7 +672,7 @@ ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
 
 ipcMainHandle(
   "SHOW_QUESTION_DIALOG",
-  (_, { type, title, message, buttons, cancelId }) => {
+  (_, { type, title, message, buttons, cancelId, defaultId }) => {
     return dialog
       .showMessageBox(win, {
         type,
@@ -681,6 +681,7 @@ ipcMainHandle(
         message,
         noLink: true,
         cancelId,
+        defaultId,
       })
       .then((value) => {
         return value.response;
