@@ -30,14 +30,18 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_DEFAULT_PRESET_MAP: {
     action(
       { commit },
-      { defaultPresetKeyMap }: { defaultPresetKeyMap: Record<VoiceId, string> }
+      {
+        defaultPresetKeyMap,
+      }: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }
     ) {
       window.electron.setSetting("defaultPresetKeyMap", defaultPresetKeyMap);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeyMap });
     },
     mutation(
       state,
-      { defaultPresetKeyMap }: { defaultPresetKeyMap: Record<VoiceId, string> }
+      {
+        defaultPresetKeyMap,
+      }: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }
     ) {
       state.defaultPresetKeyMap = defaultPresetKeyMap;
     },
@@ -45,10 +49,11 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
-      // z.record(z.string().brand(), ...) のinfer結果がPartialで包まれてしまうのでキャスト
       const defaultPresetKeyMap = (await window.electron.getSetting(
         "defaultPresetKeyMap"
-      )) as Record<VoiceId, string>;
+        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
+      )) as Record<VoiceId, PresetKey>;
 
       commit("SET_DEFAULT_PRESET_MAP", {
         defaultPresetKeyMap,

@@ -527,12 +527,12 @@ export type AudioCommandStoreTypes = {
       | {
           update: "AccentPhrases";
           accentPhrases: AccentPhrase[];
-          presetKey: string | undefined;
+          presetKey: PresetKey | undefined;
         }
       | {
           update: "AudioQuery";
           query: AudioQuery;
-          presetKey: string | undefined;
+          presetKey: PresetKey | undefined;
         }
     );
     action(payload: { audioKey: AudioKey; voice: Voice }): void;
@@ -1278,9 +1278,9 @@ export type PresetStoreTypes = {
     };
   };
   SET_DEFAULT_PRESET_MAP: {
-    action(payload: { defaultPresetKeyMap: Record<VoiceId, string> }): void;
+    action(payload: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }): void;
     mutation: {
-      defaultPresetKeyMap: Record<VoiceId, string>;
+      defaultPresetKeyMap: Record<VoiceId, PresetKey>;
     };
   };
   HYDRATE_PRESET_STORE: {

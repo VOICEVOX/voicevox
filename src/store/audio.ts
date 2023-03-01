@@ -193,9 +193,9 @@ export function getCharacterInfo(
 export function determineNextPresetKey(
   state: State,
   voice: Voice,
-  presetKey: string | undefined
+  presetKey: PresetKey | undefined
 ): {
-  nextPresetKey: string | undefined;
+  nextPresetKey: PresetKey | undefined;
   shouldApplyPreset: boolean;
 } {
   const defaultPresetKey = state.defaultPresetKeyMap[voiceToVoiceId(voice)];
@@ -2073,12 +2073,12 @@ export const audioCommandStore = transformCommandStore(
           | {
               update: "AccentPhrases";
               accentPhrases: AccentPhrase[];
-              presetKey: string | undefined;
+              presetKey: PresetKey | undefined;
             }
           | {
               update: "AudioQuery";
               query: AudioQuery;
-              presetKey: string | undefined;
+              presetKey: PresetKey | undefined;
             }
         )
       ) {

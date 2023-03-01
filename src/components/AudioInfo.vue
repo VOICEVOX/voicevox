@@ -852,7 +852,7 @@ const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  const topPresetList: { key: string | undefined; label: string }[] = [];
+  const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
 
   if (isRegisteredPreset.value) {
     topPresetList.push({

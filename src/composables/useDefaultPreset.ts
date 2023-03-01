@@ -1,7 +1,7 @@
 import { computed } from "vue";
 import { voiceToVoiceId } from "@/lib/voice";
 import { useStore } from "@/store";
-import { Voice } from "@/type/preload";
+import { PresetKey, Voice } from "@/type/preload";
 
 export const useDefaultPreset = () => {
   const store = useStore();
@@ -16,7 +16,7 @@ export const useDefaultPreset = () => {
     return defaultPresetKeyMap.value[voiceId];
   };
 
-  const isDefaultPresetKey = (presetKey: string): boolean => {
+  const isDefaultPresetKey = (presetKey: PresetKey): boolean => {
     return defaultPresetKeys.value.has(presetKey);
   };
 
