@@ -951,6 +951,12 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_OR_DISCARD_PROJECT_FILE: {
+    action(palyoad: {
+      additionalMessage?: string;
+    }): "saved" | "discarded" | "canceled";
+  };
+
   IS_EDITED: {
     getter: boolean;
   };
