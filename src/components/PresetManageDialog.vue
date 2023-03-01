@@ -43,13 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
+import { computed, ref } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
 
-import { Preset } from "@/type/preload";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
+import { Preset, PresetKey } from "@/type/preload";
 
 const props =
   defineProps<{
@@ -94,7 +94,7 @@ const previewPresetList = computed(() =>
     : presetList.value
 );
 
-const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
+const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
   const newPresetKeys = featurePresetList.map((item) => item.key);
   previewPresetKeys.value = newPresetKeys;
   isPreview.value = true;
@@ -109,7 +109,7 @@ const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
     .finally(() => (isPreview.value = false));
 };
 
-const deletePreset = (key: string) => {
+const deletePreset = (key: PresetKey) => {
   $q.dialog({
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,

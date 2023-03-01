@@ -23,6 +23,10 @@ export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
+export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export type PresetKey = z.infer<typeof presetKeySchema>;
+export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
+
 export const voiceIdSchema = z.string().brand<"VoiceId">();
 export type VoiceId = z.infer<typeof voiceIdSchema>;
 export const VoiceId = (id: string): VoiceId => voiceIdSchema.parse(id);
@@ -169,6 +173,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {
@@ -532,7 +537,7 @@ export const electronStoreSchema = z
       .object({
         items: z
           .record(
-            z.string().uuid(),
+            presetKeySchema,
             z
               .object({
                 name: z.string(),
@@ -555,11 +560,11 @@ export const electronStoreSchema = z
               .passthrough()
           )
           .default({}),
-        keys: z.string().uuid().array().default([]),
+        keys: presetKeySchema.array().default([]),
       })
       .passthrough()
       .default({}),
-    defaultPresetKeyMap: z.record(voiceIdSchema, z.string().uuid()).default({}),
+    defaultPresetKeyMap: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),

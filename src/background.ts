@@ -49,6 +49,10 @@ type SingleInstanceLockData = {
 const isDevelopment = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === "test";
 
+if (isDevelopment) {
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
+}
+
 let suffix = "";
 if (isTest) {
   suffix = "-test";
@@ -672,7 +676,7 @@ ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
 
 ipcMainHandle(
   "SHOW_QUESTION_DIALOG",
-  (_, { type, title, message, buttons, cancelId }) => {
+  (_, { type, title, message, buttons, cancelId, defaultId }) => {
     return dialog
       .showMessageBox(win, {
         type,
@@ -681,6 +685,7 @@ ipcMainHandle(
         message,
         noLink: true,
         cancelId,
+        defaultId,
       })
       .then((value) => {
         return value.response;
