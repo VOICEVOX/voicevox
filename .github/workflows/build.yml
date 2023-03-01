@@ -288,6 +288,7 @@ jobs:
           # remove downloads to free space
           rm -rf voicevox_engine/download voicevox_engine/tmp
 
+      # FIXME: asarをextract/packせず、ビルド前にengine_licenses.jsonとlicenses.jsonを結合する
       - name: Merge licenses.json (ENGINE, VOICEVOX)
         shell: bash
         run: |
