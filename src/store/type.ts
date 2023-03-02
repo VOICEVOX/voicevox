@@ -48,6 +48,7 @@ import {
   SpeakerId,
   StyleId,
   AudioKey,
+  PresetKey,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
@@ -62,7 +63,7 @@ export type AudioItem = {
   text: string;
   voice: Voice;
   query?: EditorAudioQuery;
-  presetKey?: string;
+  presetKey?: PresetKey;
   morphingInfo?: MorphingInfo;
 };
 
@@ -200,7 +201,7 @@ export type AudioStoreTypes = {
     action(payload: {
       text?: string;
       voice?: Voice;
-      presetKey?: string;
+      presetKey?: PresetKey;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
@@ -447,7 +448,7 @@ export type AudioStoreTypes = {
   SET_AUDIO_PRESET_KEY: {
     mutation: {
       audioKey: AudioKey;
-      presetKey: string | undefined;
+      presetKey: PresetKey | undefined;
     };
   };
 
@@ -634,11 +635,11 @@ export type AudioCommandStoreTypes = {
   COMMAND_SET_AUDIO_PRESET: {
     mutation: {
       audioKey: AudioKey;
-      presetKey: string | undefined;
+      presetKey: PresetKey | undefined;
     };
     action(payload: {
       audioKey: AudioKey;
-      presetKey: string | undefined;
+      presetKey: PresetKey | undefined;
     }): void;
   };
 
@@ -648,8 +649,8 @@ export type AudioCommandStoreTypes = {
   };
 
   COMMAND_FULLY_APPLY_AUDIO_PRESET: {
-    mutation: { presetKey: string };
-    action(payload: { presetKey: string }): void;
+    mutation: { presetKey: PresetKey };
+    action(payload: { presetKey: PresetKey }): void;
   };
 
   COMMAND_IMPORT_FROM_FILE: {
@@ -951,6 +952,12 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_OR_DISCARD_PROJECT_FILE: {
+    action(palyoad: {
+      additionalMessage?: string;
+    }): "saved" | "discarded" | "canceled";
+  };
+
   IS_EDITED: {
     getter: boolean;
   };
@@ -1232,41 +1239,41 @@ export type UiStoreTypes = {
 */
 
 export type PresetStoreState = {
-  presetKeys: string[];
-  presetItems: Record<string, Preset>;
+  presetKeys: PresetKey[];
+  presetItems: Record<PresetKey, Preset>;
 };
 
 export type PresetStoreTypes = {
   SET_PRESET_ITEMS: {
     mutation: {
-      presetItems: Record<string, Preset>;
+      presetItems: Record<PresetKey, Preset>;
     };
   };
   SET_PRESET_KEYS: {
     mutation: {
-      presetKeys: string[];
+      presetKeys: PresetKey[];
     };
   };
   HYDRATE_PRESET_STORE: {
     action(): void;
   };
   SAVE_PRESET_ORDER: {
-    action(payload: { presetKeys: string[] }): void;
+    action(payload: { presetKeys: PresetKey[] }): void;
   };
   SAVE_PRESET_CONFIG: {
     action(payload: {
       presetItems: Record<string, Preset>;
-      presetKeys: string[];
+      presetKeys: PresetKey[];
     }): void;
   };
   ADD_PRESET: {
-    action(payload: { presetData: Preset }): Promise<string>;
+    action(payload: { presetData: Preset }): Promise<PresetKey>;
   };
   UPDATE_PRESET: {
-    action(payload: { presetData: Preset; presetKey: string }): void;
+    action(payload: { presetData: Preset; presetKey: PresetKey }): void;
   };
   DELETE_PRESET: {
-    action(payload: { presetKey: string }): void;
+    action(payload: { presetKey: PresetKey }): void;
   };
 };
 

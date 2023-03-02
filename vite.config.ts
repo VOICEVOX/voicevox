@@ -7,7 +7,7 @@ import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
-import { defineConfig } from "vite";
+import { BuildOptions, defineConfig } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
@@ -15,11 +15,16 @@ rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
 export default defineConfig((options) => {
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
+    ? "inline"
+    : false;
   return {
     root: path.resolve(__dirname, "src"),
     build: {
       outDir: path.resolve(__dirname, "dist"),
       chunkSizeWarningLimit: 10000,
+      sourcemap,
     },
     publicDir: path.resolve(__dirname, "public"),
     css: {
@@ -74,6 +79,7 @@ export default defineConfig((options) => {
             plugins: [tsconfigPaths({ root: __dirname })],
             build: {
               outDir: path.resolve(__dirname, "dist"),
+              sourcemap,
             },
           },
         }),
