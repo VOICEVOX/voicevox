@@ -474,7 +474,7 @@ export type ThemeSetting = {
 
 export const experimentalSettingSchema = z.object({
   enablePreset: z.boolean().default(false),
-  enableAutoApplyDefaultPreset: z.boolean().default(false),
+  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiEngine: z.boolean().default(false),

@@ -224,7 +224,8 @@ export function determineNextPresetKey(
     // 変更後のキャラのデフォルトプリセットを割り当てる
     nextPresetKey = defaultPresetKeyForCurrentVoice;
     // 適用するかどうかは設定値による
-    shouldApplyPreset = state.experimentalSetting.enableAutoApplyDefaultPreset;
+    shouldApplyPreset =
+      state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
   }
 
   return { nextPresetKey, shouldApplyPreset };

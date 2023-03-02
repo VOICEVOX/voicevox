@@ -612,7 +612,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>デフォルトプリセットを自動で適用</div>
+                <div>キャラ変更時にデフォルトプリセットを自動で適用</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -622,18 +622,18 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      初期値の代わりにデフォルトプリセットが自動で適用されます
+                      キャラ変更時、設定中のプリセットを引き継がずデフォルトプリセットを適用します
                     </q-tooltip>
                   </q-icon>
                 </div>
                 <q-space />
                 <q-toggle
                   :model-value="
-                    experimentalSetting.enableAutoApplyDefaultPreset
+                    experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
                   "
                   @update:model-value="
                     changeExperimentalSetting(
-                      'enableAutoApplyDefaultPreset',
+                      'shouldApplyDefaultPresetOnVoiceChanged',
                       $event
                     )
                   "
@@ -924,10 +924,10 @@ const changeEnablePreset = (value: boolean) => {
   if (value) {
     // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
     changeExperimentalSetting("enablePreset", true);
-    changeExperimentalSetting("enableAutoApplyDefaultPreset", true);
+    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", true);
   } else {
     changeExperimentalSetting("enablePreset", false);
-    changeExperimentalSetting("enableAutoApplyDefaultPreset", false);
+    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", false);
   }
 };
 
