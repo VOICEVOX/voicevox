@@ -211,16 +211,9 @@ export function determineNextPresetKey(
 
   // BaseAudioItemがない＝初回作成時
   if (!hasBaseAudioItem) {
-    if (state.experimentalSetting.enablePreset) {
-      return {
-        nextPresetKey: defaultPresetKeyForCurrentVoice,
-        shouldApplyPreset: true,
-      };
-    }
-
     return {
       nextPresetKey: defaultPresetKeyForCurrentVoice,
-      shouldApplyPreset: false,
+      shouldApplyPreset: state.experimentalSetting.enablePreset,
     };
   }
 
@@ -234,16 +227,13 @@ export function determineNextPresetKey(
       };
     }
 
-    if (isOthersDefaultPreset) {
-      // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
-      // 別キャラのデフォルトプリセットを引き継がないようにする
-      return {
-        nextPresetKey: defaultPresetKeyForCurrentVoice,
-        shouldApplyPreset: false,
-      };
-    }
+    // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
+    // 別キャラのデフォルトプリセットを引き継がないようにする
+    // それ以外は指定そのまま
     return {
-      nextPresetKey: presetKey,
+      nextPresetKey: isOthersDefaultPreset
+        ? defaultPresetKeyForCurrentVoice
+        : presetKey,
       shouldApplyPreset: false,
     };
   }
@@ -258,7 +248,7 @@ export function determineNextPresetKey(
     };
   }
 
-  // それ以外はデフォルトプリセットで、適用するかはプリセットのON/OFFに依存
+  // それ以外はデフォルトプリセットを割り当て、適用するかはプリセットのON/OFFに依存
   return {
     nextPresetKey: defaultPresetKeyForCurrentVoice,
     shouldApplyPreset: state.experimentalSetting.enablePreset,
