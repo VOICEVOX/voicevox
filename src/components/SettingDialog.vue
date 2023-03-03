@@ -612,7 +612,7 @@
                 </q-toggle>
               </q-card-actions>
               <q-card-actions class="q-px-md q-py-none bg-surface">
-                <div>キャラ変更時にデフォルトプリセットを自動で適用</div>
+                <div>スタイル変更時にデフォルトプリセットを自動で適用</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
                     <q-tooltip
@@ -622,7 +622,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      キャラ変更時、設定中のプリセットを引き継がずデフォルトプリセットを適用します
+                      キャラやスタイルの変更時にデフォルトプリセットを適用します
                     </q-tooltip>
                   </q-icon>
                 </div>
