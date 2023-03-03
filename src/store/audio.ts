@@ -193,7 +193,7 @@ export function getCharacterInfo(
 export function determineNextPresetKey(
   state: State,
   voice: Voice,
-  presetKey: PresetKey | undefined,
+  presetKeyCandidate: PresetKey | undefined,
   hasBaseAudioItem: boolean,
   isVoiceChanged = false
 ): {
@@ -204,10 +204,10 @@ export function determineNextPresetKey(
     state.defaultPresetKeyMap[voiceToVoiceId(voice)];
 
   const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
-    (key) => key === presetKey
+    (key) => key === presetKeyCandidate
   );
   const isOthersDefaultPreset =
-    presetKey !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
+    presetKeyCandidate !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
 
   // BaseAudioItemがない＝初回作成時
   if (!hasBaseAudioItem) {
@@ -233,7 +233,7 @@ export function determineNextPresetKey(
     return {
       nextPresetKey: isOthersDefaultPreset
         ? defaultPresetKeyForCurrentVoice
-        : presetKey,
+        : presetKeyCandidate,
       shouldApplyPreset: false,
     };
   }
@@ -243,7 +243,7 @@ export function determineNextPresetKey(
   if (state.inheritAudioInfo) {
     // パラメータ引継ぎがONならそのまま引き継ぐ
     return {
-      nextPresetKey: presetKey,
+      nextPresetKey: presetKeyCandidate,
       shouldApplyPreset: false,
     };
   }
