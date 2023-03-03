@@ -203,9 +203,6 @@ export function determineNextPresetKey(
   const defaultPresetKeyForCurrentVoice =
     state.defaultPresetKeyMap[voiceToVoiceId(voice)];
 
-  let nextPresetKey = presetKey;
-  let shouldApplyPreset = false;
-
   const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
     (key) => key === presetKey
   );
@@ -214,13 +211,17 @@ export function determineNextPresetKey(
 
   // BaseAudioItemがない＝初回作成時
   if (!hasBaseAudioItem) {
-    nextPresetKey = defaultPresetKeyForCurrentVoice;
-
     if (state.experimentalSetting.enablePreset) {
-      shouldApplyPreset = true;
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: true,
+      };
     }
 
-    return { nextPresetKey, shouldApplyPreset };
+    return {
+      nextPresetKey: defaultPresetKeyForCurrentVoice,
+      shouldApplyPreset: false,
+    };
   }
 
   // ボイス切り替え時
@@ -236,10 +237,13 @@ export function determineNextPresetKey(
     if (isOthersDefaultPreset) {
       // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
       // 別キャラのデフォルトプリセットを引き継がないようにする
-      nextPresetKey = defaultPresetKeyForCurrentVoice;
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: false,
+      };
     }
     return {
-      nextPresetKey,
+      nextPresetKey: presetKey,
       shouldApplyPreset: false,
     };
   }
