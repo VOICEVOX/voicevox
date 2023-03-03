@@ -188,13 +188,14 @@ export function getCharacterInfo(
 }
 
 /**
- * configを参照して割り当てるべきpresetKeyを返す
+ * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
  */
 export function determineNextPresetKey(
   state: State,
   voice: Voice,
   presetKey: PresetKey | undefined,
-  hasBaseAudioItem: boolean
+  hasBaseAudioItem: boolean,
+  isVoiceChanged = false
 ): {
   nextPresetKey: PresetKey | undefined;
   shouldApplyPreset: boolean;
@@ -205,30 +206,59 @@ export function determineNextPresetKey(
   let nextPresetKey = presetKey;
   let shouldApplyPreset = false;
 
-  if (state.inheritAudioInfo) {
-    // パラメータの継承がONなので引き継ぐ
-    const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
-      (key) => key === presetKey
-    );
-    const isNotMyDefaultPreset =
-      presetKey !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
+  const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
+    (key) => key === presetKey
+  );
+  const isOthersDefaultPreset =
+    presetKey !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
 
-    if (presetKey === undefined || isNotMyDefaultPreset || hasBaseAudioItem) {
-      // 別キャラのデフォルトプリセットを引き継がないようにする
-      // 引き継ぎ元がない場合もデフォルトプリセットを割り当てる
-      // 継承がONなので割り当てるが適用はしない
-      nextPresetKey = defaultPresetKeyForCurrentVoice;
-    }
-  } else {
-    // パラメータ継承がOFFなので
-    // 変更後のキャラのデフォルトプリセットを割り当てる
+  // BaseAudioItemがない＝初回作成時
+  if (!hasBaseAudioItem) {
     nextPresetKey = defaultPresetKeyForCurrentVoice;
-    // 適用するかどうかは設定値による
-    shouldApplyPreset =
-      state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
+
+    if (state.experimentalSetting.enablePreset) {
+      shouldApplyPreset = true;
+    }
+
+    return { nextPresetKey, shouldApplyPreset };
   }
 
-  return { nextPresetKey, shouldApplyPreset };
+  // ボイス切り替え時
+  if (isVoiceChanged) {
+    if (state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged) {
+      // デフォルトプリセットを適用する
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: true,
+      };
+    }
+
+    if (isOthersDefaultPreset) {
+      // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
+      // 別キャラのデフォルトプリセットを引き継がないようにする
+      nextPresetKey = defaultPresetKeyForCurrentVoice;
+    }
+    return {
+      nextPresetKey,
+      shouldApplyPreset: false,
+    };
+  }
+
+  // 以下はAudioItemコピー時
+
+  if (state.inheritAudioInfo) {
+    // パラメータ引継ぎがONならそのまま引き継ぐ
+    return {
+      nextPresetKey: presetKey,
+      shouldApplyPreset: false,
+    };
+  }
+
+  // それ以外はデフォルトプリセットで、適用するかはプリセットのON/OFFに依存
+  return {
+    nextPresetKey: defaultPresetKeyForCurrentVoice,
+    shouldApplyPreset: state.experimentalSetting.enablePreset,
+  };
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -2104,6 +2134,7 @@ export const audioCommandStore = transformCommandStore(
           draft,
           payload.voice,
           payload.presetKey,
+          true,
           true
         );
 
