@@ -1,29 +1,27 @@
 <template>
   <q-dialog persistent ref="dialogRef">
-    <!-- 仮デザイン -->
     <q-layout container class="q-dialog-plugin bg-background">
-      <q-header>
-        <q-toolbar>
-          <q-toolbar-title class="text-display"
-            >音声書き出し結果</q-toolbar-title
-          >
-        </q-toolbar>
-        <q-space />
-      </q-header>
       <q-page-container>
-        <q-page>
-          <q-list separator v-if="writeErrorArray.length > 0">
-            <div class="error">失敗（書き込みエラー）:</div>
-            <q-item v-for="(value, index) in writeErrorArray" :key="index">
+        <q-page class="q-px-md">
+          <h5 class="text-h5 q-my-md">音声書き出し結果</h5>
+          <q-list separator v-if="props.writeErrorArray.length > 0">
+            <div class="text-warning">失敗（書き込みエラー）:</div>
+            <q-item
+              v-for="(value, index) in props.writeErrorArray"
+              :key="index"
+            >
               <q-item-section>
                 <q-item-label>{{ value.path }}</q-item-label>
                 <q-item-label>詳細：{{ value.message }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list separator v-if="engineErrorArray.length > 0">
-            <div class="error">失敗（エンジンエラー）:</div>
-            <q-item v-for="(value, index) in engineErrorArray" :key="index">
+          <q-list separator v-if="props.engineErrorArray.length > 0">
+            <div class="text-warning">失敗（エンジンエラー）:</div>
+            <q-item
+              v-for="(value, index) in props.engineErrorArray"
+              :key="index"
+            >
               <q-item-section>
                 <q-item-label>{{ value.path }}</q-item-label>
                 <q-item-label v-if="value.message"
@@ -32,9 +30,9 @@
               </q-item-section>
             </q-item>
           </q-list>
-          <q-list separator v-if="successArray.length > 0">
-            <div class="success">成功:</div>
-            <q-item v-for="(value, index) in successArray" :key="index">
+          <q-list separator v-if="props.successArray.length > 0">
+            <div class="text-primary">成功:</div>
+            <q-item v-for="(value, index) in props.successArray" :key="index">
               <q-item-section>
                 <q-item-label>{{ value }}</q-item-label>
               </q-item-section>
@@ -52,56 +50,34 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { defineComponent, PropType } from "vue";
 import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 
-export default defineComponent({
-  name: "SaveAllResultDialog",
-  props: {
-    successArray: {
-      type: Array as PropType<string | undefined[]>,
-      required: true,
-    },
-    writeErrorArray: {
-      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
-      required: true,
-    },
-    engineErrorArray: {
-      type: Array as PropType<ErrorTypeForSaveAllResultDialog[]>,
-      required: true,
-    },
-  },
-  emits: {
-    ...useDialogPluginComponent.emits,
-  },
-  setup() {
-    const { dialogRef, onDialogOK } = useDialogPluginComponent();
-    const close = () => onDialogOK();
-    return {
-      dialogRef,
-      close,
-    };
-  },
-});
+const props =
+  defineProps<{
+    successArray: string | undefined[];
+    writeErrorArray: ErrorTypeForSaveAllResultDialog[];
+    engineErrorArray: ErrorTypeForSaveAllResultDialog[];
+  }>();
+
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
+const close = () => onDialogOK();
 </script>
 
 <style scoped lang="scss">
 @use '@/styles/colors' as colors;
 
 .q-page-container {
-  margin-top: 1em;
+  margin-top: 0;
+  padding-bottom: 34px !important;
 }
-
-.q-item {
-  border-bottom: solid 0.1rem colors.$primary;
+.q-item:not(.q-item:last-child) {
+  border-bottom: solid 0.1rem rgba(colors.$display-rgb, 0.15);
 }
-
-.success {
-  color: green;
-}
-.error {
-  color: red;
+.q-list:not(.q-list:last-child) {
+  border-bottom: solid 0.1rem rgba(colors.$primary-rgb, 0.5);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>
