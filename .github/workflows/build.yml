@@ -363,7 +363,11 @@ jobs:
         if: startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
-          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz" --transform s/prepackage/VOICEVOX/
+          name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
+          7z a -ttar $name.tar prepackage/
+          7z rn $name.tar prepackage/ VOICEVOX/
+          7z a -tgzip $name.tar.tar.gz $name.tar
+          rm $name.tar
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
@@ -376,9 +380,9 @@ jobs:
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
-          filename="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
-          7z a -tzip $filename prepackage/
-          7z rn $filename prepackage/ VOICEVOX/
+          name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
+          7z a -tzip $name.zip prepackage/
+          7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
