@@ -366,7 +366,7 @@ jobs:
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
           7z a -ttar $name.tar prepackage/
           7z rn $name.tar prepackage/ VOICEVOX/
-          7z a -tgzip $name.tar.tar.gz $name.tar
+          7z a -tgzip $name.tar.gz $name.tar
           rm $name.tar
 
       - name: Upload Linux tar.gz artifact
