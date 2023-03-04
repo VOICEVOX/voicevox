@@ -29,7 +29,7 @@ env:
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
-  build-prepackage:
+  build:
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       ELECTRON_CACHE: .cache/electron
@@ -481,7 +481,7 @@ jobs:
 
   upload-distributable-to-release:
     if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
-    needs: [build-distributable]
+    needs: [build]
     strategy:
       fail-fast: false
       matrix:
