@@ -82,29 +82,18 @@
   <min-max-close-buttons v-if="!$q.platform.is.mac" />
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { useStore } from "@/store";
 import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 
-export default defineComponent({
-  name: "TitleBarButtons",
-  components: { MinMaxCloseButtons },
-  setup() {
-    const store = useStore();
+const store = useStore();
 
-    const changePinWindow = () => {
-      window.electron.changePinWindow();
-    };
+const changePinWindow = () => {
+  window.electron.changePinWindow();
+};
 
-    const isPinned = computed(() => store.state.isPinned);
-
-    return {
-      changePinWindow,
-      isPinned,
-    };
-  },
-});
+const isPinned = computed(() => store.state.isPinned);
 </script>
 
 <style scoped lang="scss">
