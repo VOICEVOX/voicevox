@@ -72,10 +72,15 @@ class SoundScheduler {
   }
 }
 
+export interface BaseTransport {
+  addSequence(sequence: SoundSequence): void;
+  removeSequence(sequence: SoundSequence): void;
+}
+
 /**
  * 登録されているシーケンスのイベントをスケジュールし、再生を行います。
  */
-export class Transport {
+export class Transport implements BaseTransport {
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
   private readonly lookAhead: number;
@@ -230,6 +235,38 @@ export class Transport {
       this.stop();
     }
     this.timer.dispose();
+  }
+}
+
+export class OfflineTransport implements BaseTransport {
+  private sequences: SoundSequence[] = [];
+
+  addSequence(sequence: SoundSequence) {
+    const exists = this.sequences.some((value) => {
+      return value === sequence;
+    });
+    if (exists) {
+      throw new Error("The specified sequence has already been added.");
+    }
+    this.sequences.push(sequence);
+  }
+
+  removeSequence(sequence: SoundSequence) {
+    const index = this.sequences.findIndex((value) => {
+      return value === sequence;
+    });
+    if (index === -1) {
+      throw new Error("The specified sequence does not exist.");
+    }
+    this.sequences.splice(index, 1);
+  }
+
+  scheduleEvents(startTime: number, period: number) {
+    this.sequences.forEach((value) => {
+      const scheduler = new SoundScheduler(value, 0, startTime);
+      scheduler.scheduleEvents(0, period);
+      scheduler.stop(period);
+    });
   }
 }
 
@@ -476,7 +513,7 @@ export class Synth implements Instrument {
 
 export type Context = {
   readonly audioContext: BaseAudioContext;
-  readonly transport: Transport;
+  readonly transport: BaseTransport;
 };
 
 export class AudioRenderer {
@@ -500,6 +537,25 @@ export class AudioRenderer {
     const audioContext = new AudioContext();
     const transport = new Transport(audioContext, 0.2, 0.6);
     this.onlineContext = { audioContext, transport };
+  }
+
+  renderToBuffer(
+    startTime: number,
+    duration: number,
+    callback: (context: Context) => void
+  ) {
+    if (this.onlineContext.transport.state === "started") {
+      this.onlineContext.transport.stop();
+    }
+
+    const sampleRate = this.context.audioContext.sampleRate;
+    const length = sampleRate * duration;
+    const audioContext = new OfflineAudioContext(2, length, sampleRate);
+    const transport = new OfflineTransport();
+
+    callback({ audioContext, transport });
+    transport.scheduleEvents(startTime, duration);
+    return audioContext.startRendering();
   }
 
   dispose() {

@@ -708,6 +708,8 @@ export type SingingStoreState = {
   sequencerSnapSize: number;
   nowPlaying: boolean;
   volume: number;
+  leftLocatorPosition: number;
+  rightLocatorPosition: number;
 };
 
 export type SingingStoreTypes = {
@@ -793,6 +795,10 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): void;
   };
 
+  EXPORT_WAVE_FILE: {
+    action(payload: { filePath?: string }): SaveResultObject;
+  };
+
   POSITION_TO_TIME: {
     getter(position: number): number;
   };
@@ -806,6 +812,16 @@ export type SingingStoreTypes = {
   };
 
   SET_PLAYBACK_POSITION: {
+    action(payload: { position: number }): void;
+  };
+
+  SET_LEFT_LOCATOR_POSITION: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_RIGHT_LOCATOR_POSITION: {
+    mutation: { position: number };
     action(payload: { position: number }): void;
   };
 
