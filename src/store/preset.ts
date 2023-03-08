@@ -120,47 +120,41 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   CREATE_ALL_DEFAULT_PRESET: {
-    async action({ dispatch, getters }) {
+    async action({ state, dispatch, getters }) {
       window.electron.getSetting("defaultPresetKeys");
 
       const voices = getters.GET_ALL_VOICES;
 
       for await (const voice of voices) {
-        await dispatch("CREATE_DEFAULT_PRESET_IF_NEEDED", { voice });
+        const voiceId = VoiceId(voice);
+        const defaultPresetKey = state.defaultPresetKeys[voiceId];
+
+        if (state.presetKeys.includes(defaultPresetKey)) {
+          return defaultPresetKey;
+        }
+
+        const characterName = getters.CHARACTER_NAME(voice);
+
+        const presetData: Preset = {
+          name: `デフォルト：${characterName}`,
+          speedScale: 1.0,
+          pitchScale: 0.0,
+          intonationScale: 1.0,
+          volumeScale: 1.0,
+          prePhonemeLength: 0.1,
+          postPhonemeLength: 0.1,
+        };
+        const newPresetKey = await dispatch("ADD_PRESET", { presetData });
+
+        await dispatch("SET_DEFAULT_PRESET_MAP", {
+          defaultPresetKeys: {
+            ...state.defaultPresetKeys,
+            [voiceId]: newPresetKey,
+          },
+        });
+
+        return newPresetKey;
       }
-    },
-  },
-
-  CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    async action({ state, dispatch, getters }, { voice }) {
-      const voiceId = VoiceId(voice);
-      const defaultPresetKey = state.defaultPresetKeys[voiceId];
-
-      if (state.presetKeys.includes(defaultPresetKey)) {
-        return defaultPresetKey;
-      }
-
-      const characterName = getters.CHARACTER_NAME(voice);
-
-      const presetData: Preset = {
-        name: `デフォルト：${characterName}`,
-        speedScale: 1.0,
-        pitchScale: 0.0,
-        intonationScale: 1.0,
-        volumeScale: 1.0,
-        prePhonemeLength: 0.1,
-        postPhonemeLength: 0.1,
-      };
-      const newPresetKey = await dispatch("ADD_PRESET", { presetData });
-
-      await dispatch("SET_DEFAULT_PRESET_MAP", {
-        defaultPresetKeys: {
-          ...state.defaultPresetKeys,
-          [voiceId]: newPresetKey,
-        },
-      });
-
-      return newPresetKey;
     },
   },
 

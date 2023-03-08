@@ -1301,9 +1301,6 @@ export type PresetStoreTypes = {
   CREATE_ALL_DEFAULT_PRESET: {
     action(): void;
   };
-  CREATE_DEFAULT_PRESET_IF_NEEDED: {
-    action(payload: { voice: Voice }): Promise<string>;
-  };
   UPDATE_PRESET: {
     action(payload: { presetData: Preset; presetKey: PresetKey }): void;
   };
