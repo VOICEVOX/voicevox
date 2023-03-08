@@ -595,10 +595,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         styleId: defaultStyleId.defaultStyleId,
       };
 
-      // パラメータ引継ぎがOFFなら渡されたbaseAudioItemは無視
-      const baseAudioItem = state.inheritAudioInfo
-        ? payload.baseAudioItem
-        : undefined;
+      const baseAudioItem = payload.baseAudioItem;
 
       const query = getters.IS_ENGINE_READY(voice.engineId)
         ? await dispatch("FETCH_AUDIO_QUERY", {
@@ -619,11 +616,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         state,
         voice,
         presetKeyCandidate,
-        baseAudioItem !== undefined
+        state.inheritAudioInfo && baseAudioItem !== undefined
       );
       audioItem.presetKey = nextPresetKey;
 
-      if (baseAudioItem && baseAudioItem.query && audioItem.query) {
+      if (
+        state.inheritAudioInfo &&
+        baseAudioItem &&
+        baseAudioItem.query &&
+        audioItem.query
+      ) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
         //baseAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
         audioItem.query.speedScale = baseAudioItem.query.speedScale;
