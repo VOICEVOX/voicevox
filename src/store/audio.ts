@@ -206,8 +206,6 @@ export function determineNextPresetKey(
   const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
     (key) => key === presetKeyCandidate
   );
-  const isOthersDefaultPreset =
-    presetKeyCandidate !== defaultPresetKeyForCurrentVoice && isDefaultPreset;
 
   // BaseAudioItemがない＝初回作成時
   if (!hasBaseAudioItem) {
@@ -231,7 +229,7 @@ export function determineNextPresetKey(
     // 別キャラのデフォルトプリセットを引き継がないようにする
     // それ以外は指定そのまま
     return {
-      nextPresetKey: isOthersDefaultPreset
+      nextPresetKey: isDefaultPreset
         ? defaultPresetKeyForCurrentVoice
         : presetKeyCandidate,
       shouldApplyPreset: false,
