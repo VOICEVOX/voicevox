@@ -125,7 +125,7 @@
                       transition-show="jump-left"
                       transition-hide="jump-right"
                     >
-                      テキスト欄を追加する際、現在の話速等のパラメータ（プリセットも含む）を引き継ぎます
+                      テキスト欄を追加する際、現在の話速等のパラメータを引き継ぎます
                     </q-tooltip>
                   </q-icon>
                 </div>
