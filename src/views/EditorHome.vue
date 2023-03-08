@@ -397,7 +397,6 @@ const addAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset: false,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };
@@ -412,7 +411,6 @@ const duplicateAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
-    applyPreset: false,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };

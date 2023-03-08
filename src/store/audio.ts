@@ -1974,26 +1974,18 @@ export const audioCommandStore = transformCommandStore(
           audioItem: AudioItem;
           audioKey: AudioKey;
           prevAudioKey: AudioKey | undefined;
-          applyPreset: boolean;
         }
       ) {
         audioStore.mutations.INSERT_AUDIO_ITEM(draft, payload);
-        if (payload.applyPreset) {
-          audioStore.mutations.APPLY_AUDIO_PRESET(draft, {
-            audioKey: payload.audioKey,
-          });
-        }
       },
       async action(
         { dispatch, commit },
         {
           audioItem,
           prevAudioKey,
-          applyPreset,
         }: {
           audioItem: AudioItem;
           prevAudioKey: AudioKey | undefined;
-          applyPreset: boolean;
         }
       ) {
         const audioKey = await dispatch("GENERATE_AUDIO_KEY");
@@ -2001,7 +1993,6 @@ export const audioCommandStore = transformCommandStore(
           audioItem,
           audioKey,
           prevAudioKey,
-          applyPreset,
         });
         return audioKey;
       },

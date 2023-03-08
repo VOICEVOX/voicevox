@@ -493,12 +493,10 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: AudioKey;
       prevAudioKey: AudioKey | undefined;
-      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: AudioKey | undefined;
-      applyPreset: boolean;
     }): Promise<AudioKey>;
   };
 
