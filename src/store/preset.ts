@@ -121,8 +121,6 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_ALL_DEFAULT_PRESET: {
     async action({ state, dispatch, getters }) {
-      window.electron.getSetting("defaultPresetKeys");
-
       const voices = getters.GET_ALL_VOICES;
 
       for await (const voice of voices) {
