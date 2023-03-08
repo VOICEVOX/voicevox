@@ -527,12 +527,10 @@ export type AudioCommandStoreTypes = {
       | {
           update: "AccentPhrases";
           accentPhrases: AccentPhrase[];
-          presetKey: PresetKey | undefined;
         }
       | {
           update: "AudioQuery";
           query: AudioQuery;
-          presetKey: PresetKey | undefined;
         }
     );
     action(payload: { audioKey: AudioKey; voice: Voice }): void;

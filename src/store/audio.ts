@@ -2108,12 +2108,10 @@ export const audioCommandStore = transformCommandStore(
           | {
               update: "AccentPhrases";
               accentPhrases: AccentPhrase[];
-              presetKey: PresetKey | undefined;
             }
           | {
               update: "AudioQuery";
               query: AudioQuery;
-              presetKey: PresetKey | undefined;
             }
         )
       ) {
@@ -2124,10 +2122,12 @@ export const audioCommandStore = transformCommandStore(
 
         if (payload.update === "RollbackStyleId") return;
 
+        const presetKey = draft.audioItems[payload.audioKey].presetKey;
+
         const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
           draft,
           payload.voice,
-          payload.presetKey,
+          presetKey,
           true,
           true
         );
@@ -2180,7 +2180,6 @@ export const audioCommandStore = transformCommandStore(
               voice,
               update: "AccentPhrases",
               accentPhrases: newAccentPhrases,
-              presetKey: state.audioItems[audioKey].presetKey,
             });
           } else {
             const text = state.audioItems[audioKey].text;
@@ -2194,7 +2193,6 @@ export const audioCommandStore = transformCommandStore(
               voice,
               update: "AudioQuery",
               query,
-              presetKey: state.audioItems[audioKey].presetKey,
             });
           }
         } catch (error) {
