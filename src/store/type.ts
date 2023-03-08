@@ -523,7 +523,7 @@ export type AudioCommandStoreTypes = {
 
   COMMAND_CHANGE_VOICE: {
     mutation: { audioKey: AudioKey; voice: Voice } & (
-      | { update: "StyleId" }
+      | { update: "RollbackStyleId" }
       | {
           update: "AccentPhrases";
           accentPhrases: AccentPhrase[];

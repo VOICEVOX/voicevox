@@ -2104,7 +2104,7 @@ export const audioCommandStore = transformCommandStore(
       mutation(
         draft,
         payload: { audioKey: AudioKey; voice: Voice } & (
-          | { update: "StyleId" }
+          | { update: "RollbackStyleId" }
           | {
               update: "AccentPhrases";
               accentPhrases: AccentPhrase[];
@@ -2122,7 +2122,7 @@ export const audioCommandStore = transformCommandStore(
           voice: payload.voice,
         });
 
-        if (payload.update === "StyleId") return;
+        if (payload.update === "RollbackStyleId") return;
 
         const { nextPresetKey, shouldApplyPreset } = determineNextPresetKey(
           draft,
@@ -2201,7 +2201,7 @@ export const audioCommandStore = transformCommandStore(
           commit("COMMAND_CHANGE_VOICE", {
             audioKey,
             voice,
-            update: "StyleId",
+            update: "RollbackStyleId",
           });
           throw error;
         }
