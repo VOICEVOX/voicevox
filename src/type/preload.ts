@@ -29,7 +29,8 @@ export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
 export const voiceIdSchema = z.string().brand<"VoiceId">();
 export type VoiceId = z.infer<typeof voiceIdSchema>;
-export const VoiceId = (id: string): VoiceId => voiceIdSchema.parse(id);
+export const VoiceId = (voice: Voice): VoiceId =>
+  voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [

@@ -36,11 +36,11 @@ import {
   StyleId,
   StyleInfo,
   Voice,
+  VoiceId,
   WriteFileErrorResult,
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { voiceToVoiceId } from "@/lib/voice";
 
 async function generateUniqueIdAndQuery(
   state: State,
@@ -201,7 +201,7 @@ export function determineNextPresetKey(
   shouldApplyPreset: boolean;
 } {
   const defaultPresetKeyForCurrentVoice =
-    state.defaultPresetKeys[voiceToVoiceId(voice)];
+    state.defaultPresetKeys[VoiceId(voice)];
 
   const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
     (key) => key === presetKeyCandidate

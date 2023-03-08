@@ -3,8 +3,6 @@ import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
 import { Preset, PresetKey, VoiceId } from "@/type/preload";
 
-import { voiceToVoiceId } from "@/lib/voice";
-
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
   presetKeys: [],
@@ -135,7 +133,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
     async action({ state, dispatch, getters }, { voice }) {
-      const voiceId = voiceToVoiceId(voice);
+      const voiceId = VoiceId(voice);
       const defaultPresetKey = state.defaultPresetKeys[voiceId];
 
       if (state.presetKeys.includes(defaultPresetKey)) {
