@@ -643,7 +643,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       // audioItemに対してプリセットを適用する
       if (shouldApplyPreset) {
-        dispatch("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
+        await dispatch("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
       }
 
       return audioItem;
