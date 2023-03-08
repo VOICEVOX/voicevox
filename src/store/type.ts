@@ -1263,7 +1263,7 @@ export type UiStoreTypes = {
 export type PresetStoreState = {
   presetKeys: PresetKey[];
   presetItems: Record<PresetKey, Preset>;
-  defaultPresetKeyMap: Record<VoiceId, PresetKey>;
+  defaultPresetKeys: Record<VoiceId, PresetKey>;
 };
 
 export type PresetStoreTypes = {
@@ -1278,9 +1278,9 @@ export type PresetStoreTypes = {
     };
   };
   SET_DEFAULT_PRESET_MAP: {
-    action(payload: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }): void;
+    action(payload: { defaultPresetKeys: Record<VoiceId, PresetKey> }): void;
     mutation: {
-      defaultPresetKeyMap: Record<VoiceId, PresetKey>;
+      defaultPresetKeys: Record<VoiceId, PresetKey>;
     };
   };
   HYDRATE_PRESET_STORE: {

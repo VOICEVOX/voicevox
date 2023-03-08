@@ -8,7 +8,7 @@ import { voiceToVoiceId } from "@/lib/voice";
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
   presetKeys: [],
-  defaultPresetKeyMap: {},
+  defaultPresetKeys: {},
 };
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
@@ -30,33 +30,29 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   SET_DEFAULT_PRESET_MAP: {
     action(
       { commit },
-      {
-        defaultPresetKeyMap,
-      }: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
     ) {
-      window.electron.setSetting("defaultPresetKeyMap", defaultPresetKeyMap);
-      commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeyMap });
+      window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
+      commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(
       state,
-      {
-        defaultPresetKeyMap,
-      }: { defaultPresetKeyMap: Record<VoiceId, PresetKey> }
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
     ) {
-      state.defaultPresetKeyMap = defaultPresetKeyMap;
+      state.defaultPresetKeys = defaultPresetKeys;
     },
   },
 
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
-      const defaultPresetKeyMap = (await window.electron.getSetting(
-        "defaultPresetKeyMap"
+      const defaultPresetKeys = (await window.electron.getSetting(
+        "defaultPresetKeys"
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
       )) as Record<VoiceId, PresetKey>;
 
       commit("SET_DEFAULT_PRESET_MAP", {
-        defaultPresetKeyMap,
+        defaultPresetKeys,
       });
 
       const presetConfig = await window.electron.getSetting("presets");
@@ -127,7 +123,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   CREATE_ALL_DEFAULT_PRESET: {
     async action({ dispatch, getters }) {
-      window.electron.getSetting("defaultPresetKeyMap");
+      window.electron.getSetting("defaultPresetKeys");
 
       const voices = getters.GET_ALL_VOICES;
 
@@ -140,7 +136,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   CREATE_DEFAULT_PRESET_IF_NEEDED: {
     async action({ state, dispatch, getters }, { voice }) {
       const voiceId = voiceToVoiceId(voice);
-      const defaultPresetKey = state.defaultPresetKeyMap[voiceId];
+      const defaultPresetKey = state.defaultPresetKeys[voiceId];
 
       if (state.presetKeys.includes(defaultPresetKey)) {
         return defaultPresetKey;
@@ -166,8 +162,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       const newPresetKey = await dispatch("ADD_PRESET", { presetData });
 
       await dispatch("SET_DEFAULT_PRESET_MAP", {
-        defaultPresetKeyMap: {
-          ...state.defaultPresetKeyMap,
+        defaultPresetKeys: {
+          ...state.defaultPresetKeys,
           [voiceId]: newPresetKey,
         },
       });

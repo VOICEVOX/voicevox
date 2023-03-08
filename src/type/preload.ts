@@ -564,7 +564,7 @@ export const electronStoreSchema = z
       })
       .passthrough()
       .default({}),
-    defaultPresetKeyMap: z.record(voiceIdSchema, presetKeySchema).default({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),

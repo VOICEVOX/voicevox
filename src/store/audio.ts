@@ -201,9 +201,9 @@ export function determineNextPresetKey(
   shouldApplyPreset: boolean;
 } {
   const defaultPresetKeyForCurrentVoice =
-    state.defaultPresetKeyMap[voiceToVoiceId(voice)];
+    state.defaultPresetKeys[voiceToVoiceId(voice)];
 
-  const isDefaultPreset = Object.values(state.defaultPresetKeyMap).some(
+  const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
     (key) => key === presetKeyCandidate
   );
   const isOthersDefaultPreset =
