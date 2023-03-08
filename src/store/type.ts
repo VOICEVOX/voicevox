@@ -156,7 +156,7 @@ export type AudioStoreTypes = {
     getter(engineId: EngineId, styleId: StyleId): CharacterInfo | undefined;
   };
 
-  CHARACTER_NAME: {
+  VOICE_NAME: {
     getter(voice: Voice): string;
   };
 

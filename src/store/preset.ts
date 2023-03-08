@@ -131,7 +131,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           return defaultPresetKey;
         }
 
-        const characterName = getters.CHARACTER_NAME(voice);
+        const characterName = getters.VOICE_NAME(voice);
 
         const presetData: Preset = {
           name: `デフォルト：${characterName}`,

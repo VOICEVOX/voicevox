@@ -444,7 +444,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  CHARACTER_NAME: {
+  VOICE_NAME: {
     getter: (_state, getters) => (voice: Voice) => {
       const characterInfo = getters.CHARACTER_INFO(
         voice.engineId,
