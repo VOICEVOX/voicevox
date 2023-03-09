@@ -194,7 +194,7 @@ export function determineNextPresetKey(
   state: State,
   voice: Voice,
   presetKeyCandidate: PresetKey | undefined,
-  hasBaseAudioItem: boolean,
+  shouldCopyBaseAudioItem: boolean,
   isVoiceChanged = false
 ): {
   nextPresetKey: PresetKey | undefined;
@@ -207,8 +207,8 @@ export function determineNextPresetKey(
     (key) => key === presetKeyCandidate
   );
 
-  // BaseAudioItemがない＝初回作成時
-  if (!hasBaseAudioItem) {
+  // コピーすべきBaseAudioItemがない＝初回作成時
+  if (!shouldCopyBaseAudioItem) {
     return {
       nextPresetKey: defaultPresetKeyForCurrentVoice,
       shouldApplyPreset: state.experimentalSetting.enablePreset,
