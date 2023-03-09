@@ -1046,6 +1046,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
+    // FIXME: audioItemを直接書き換えないようにするか、関数化する
     mutation(state, { audioItem }) {
       if (
         audioItem == undefined ||
