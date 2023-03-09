@@ -18,9 +18,11 @@ describe("voiceToVoiceId", () => {
       styleId: StyleId(0),
     };
 
-    expect(VoiceId(voice)).toEqual(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
+    expect(VoiceId(voice)).toEqual(
+      `${voice.engineId}:${voice.speakerId}:${voice.styleId}`
+    );
   });
-}
+});
 
 describe("voiceIdToVoice", () => {
   it("VoiceとVoiceIdは互いに変換可能", () => {
