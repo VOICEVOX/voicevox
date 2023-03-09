@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EngineId, SpeakerId, StyleId, Voice, VoiceId } from "@/type/preload";
 
-export const voiceIdToVoice = (voiceId: VoiceId): Voice => {
+const voiceIdToVoice = (voiceId: VoiceId): Voice => {
   const [engineId, speakerId, styleId] = voiceId.split(":");
   return {
     engineId: EngineId(engineId),
