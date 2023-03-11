@@ -46,15 +46,20 @@
                     .speakerUuid
                 }:${
                   selectedStyleIndexes[selectedEngineId][selectedLibrary][
-                    selectedSpeakersIndexes[selectedEngineId][selectedLibrary]
+                    selectedSpeakersIndexes[selectedEngineId]
+                      ? selectedSpeakersIndexes[selectedEngineId][
+                          selectedLibrary
+                        ]
+                      : 0
                   ]
                 }`
-              ] ||
-              portraitUris[
-                `${selectedEngineId}:${selectedLibrary}:${selectedSpeakersIndexes[selectedEngineId][selectedLibrary]}`
               ]
             "
-            v-if="selectedLibrary"
+            v-if="
+              selectedLibrary &&
+              selectedSpeakersMap[selectedEngineId] &&
+              selectedSpeakersMap[selectedEngineId][selectedLibrary]
+            "
             class="library-portrait"
           />
         </div>
@@ -83,7 +88,7 @@
             >
               <q-item
                 v-for="library of downloadableLibraries[engineId]"
-                :key="library.speakers[0].speaker.speakerUuid"
+                :key="library.uuid"
                 clickable
                 v-ripple="
                   isHoverableItem &&
@@ -96,18 +101,16 @@
                   selectedLibrary === library.uuid && 'selected-library-item',
                 ]"
                 :disable="isLatest(engineId, library) || isInstallingLibrary"
-                @click="
-                  selectLibrary(engineId, library.uuid);
-                  togglePlayOrStop(library.uuid, 0);
-                "
+                @click="selectLibrary(engineId, library.uuid)"
               >
                 <div class="library-item-inner">
                   <img
                     :src="
                       iconUris[
                         `${engineId}:${library.uuid}:${
-                          selectedStyleIndexes[engineId][library.uuid] || 0
-                        }`
+                          selectedSpeakersMap[engineId][library.uuid].speaker
+                            .speakerUuid
+                        }:${selectedStyleIndexes[engineId][library.uuid] || 0}`
                       ]
                     "
                     class="style-icon"
@@ -122,17 +125,28 @@
                       icon="chevron_left"
                       text-color="display"
                       class="style-select-button"
-                      :disable="library.speakers[0].speaker.styles.length <= 1"
+                      :disable="
+                        !selectedSpeakersMap[engineId][library.uuid] ||
+                        selectedSpeakersMap[engineId][library.uuid].speaker
+                          .styles.length <= 1
+                      "
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
                       @click.stop="
                         selectLibrary(engineId, library.uuid);
-                        rollStyleIndex(engineId, library.uuid, -1);
+                        rollStyleIndex(
+                          engineId,
+                          library.uuid,
+                          selectedSpeakersIndexes[engineId][library.uuid],
+                          -1
+                        );
                       "
                     />
                     <span>{{
                       (selectedStyles[engineId] &&
                         selectedStyles[engineId][library.uuid] &&
+                        selectedSpeakersIndexes[engineId] &&
+                        selectedSpeakersIndexes[engineId][library.uuid] &&
                         selectedStyles[engineId][library.uuid][
                           selectedSpeakersIndexes[engineId][library.uuid]
                         ] &&
@@ -147,12 +161,21 @@
                       icon="chevron_right"
                       text-color="display"
                       class="style-select-button"
-                      :disable="library.speakers[0].speaker.styles.length <= 1"
+                      :disable="
+                        !selectedSpeakersMap[engineId][library.uuid] ||
+                        selectedSpeakersMap[engineId][library.uuid].speaker
+                          .styles.length <= 1
+                      "
                       @mouseenter="isHoverableItem = false"
                       @mouseleave="isHoverableItem = true"
                       @click.stop="
                         selectLibrary(engineId, library.uuid);
-                        rollStyleIndex(engineId, library.uuid, 1);
+                        rollStyleIndex(
+                          engineId,
+                          library.uuid,
+                          selectedSpeakersIndexes[engineId][library.uuid],
+                          1
+                        );
                       "
                     />
                   </div>
@@ -165,8 +188,6 @@
                       :icon="
                         playing != undefined &&
                         library.uuid === playing.speakerUuid &&
-                        selectedStyles[engineId][library.uuid].id ===
-                          playing.styleId &&
                         voiceSampleIndex === playing.index
                           ? 'stop'
                           : 'play_arrow'
@@ -178,8 +199,15 @@
                       @click.stop="
                         selectLibrary(engineId, library.uuid);
                         togglePlayOrStop(
+                          engineId,
                           library.uuid,
-                          selectedStyles[engineId][library.uuid],
+                          SpeakerId(
+                            selectedSpeakersMap[engineId][library.uuid].speaker
+                              .speakerUuid
+                          ),
+                          selectedStyles[engineId][library.uuid][
+                            selectedSpeakersIndexes[engineId][library.uuid]
+                          ],
                           voiceSampleIndex
                         );
                       "
@@ -198,8 +226,8 @@
                       isLatest(engineId, library)
                         ? "最新版です"
                         : installedLibrariesMap[engineId][library.uuid]
-                        ? `アップデート：${library.bytes}`
-                        : `インストール：${library.bytes}`
+                        ? `アップデート：${bytesToSize(library.bytes)}`
+                        : `インストール：${bytesToSize(library.bytes)}`
                     }}
                   </q-btn>
                 </div>
@@ -223,11 +251,12 @@
 
 <script setup lang="ts">
 import { computed, Ref, ref, watch } from "vue";
+import semver from "semver";
 import { useStore } from "@/store";
 import { DownloadableLibrary, LibrarySpeaker, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
+import { bytesToSize } from "@/helpers/sizeHelper";
 import { EngineId, LibraryId, SpeakerId } from "@/type/preload";
-import semver from "semver";
 
 type BrandedDownloadableLibrary = DownloadableLibrary & {
   uuid: LibraryId;
@@ -328,6 +357,13 @@ const selectedStyleIndexes = computed<
     {};
   for (const engineId of engineIdsWithDownloadableLibraries.value) {
     selectedStyleIndexes[engineId] = {};
+    for (const library of downloadableLibraries.value[engineId] || []) {
+      selectedStyleIndexes[engineId][library.uuid] = [];
+      for (let i = 0; i < library.speakers.length; i++) {
+        selectedStyleIndexes[engineId][library.uuid].push(0);
+      }
+    }
+    console.log(selectedStyleIndexes);
     for (const [selectedStyleIndexKey, selectedStyleIndex] of Object.entries(
       flatSelectedStyleIndexes.value
     )) {
@@ -337,12 +373,6 @@ const selectedStyleIndexes = computed<
       const libraryId = LibraryId(libraryIdRaw);
       const speakerIndex = parseInt(speakerIndexRaw);
 
-      if (!selectedStyleIndexes[engineId]) {
-        selectedStyleIndexes[engineId] = {};
-      }
-      if (!selectedStyleIndexes[engineId][libraryId]) {
-        selectedStyleIndexes[engineId][libraryId] = [];
-      }
       selectedStyleIndexes[engineId][libraryId][speakerIndex] =
         selectedStyleIndex;
     }
@@ -386,10 +416,7 @@ const selectedSpeakersMap = computed(() => {
     map[engineId] = {};
     for (const engineLibraryInfo of engineLibraryInfos) {
       const selectedSpeakerIndex: number | undefined =
-        selectedSpeakersIndexes[engineId]?.[engineLibraryInfo.uuid];
-      if (selectedSpeakerIndex === undefined) {
-        continue;
-      }
+        selectedSpeakersIndexes[engineId]?.[engineLibraryInfo.uuid] ?? 0;
       map[engineId][engineLibraryInfo.uuid] =
         engineLibraryInfo.speakers[selectedSpeakerIndex];
     }
@@ -485,9 +512,6 @@ watch(
               continue;
             }
             const defaultPortraitUri = base64ImageToUri(speakerInfo.portrait);
-            portraitUris.value[
-              `${engineId}:${library.uuid}:${speaker.speakerUuid}`
-            ] = defaultPortraitUri;
             for (const [index, style] of Object.entries(
               speakerInfo.styleInfos
             )) {
@@ -495,12 +519,11 @@ watch(
               iconUris.value[
                 `${engineId}:${library.uuid}:${speaker.speakerUuid}:${index}`
               ] = iconUri;
-              if (style.portrait) {
-                const portraitUri = base64ImageToUri(style.portrait);
-                portraitUris.value[
-                  `${engineId}:${library.uuid}:${speaker.speakerUuid}:${index}`
-                ] = portraitUri;
-              }
+              portraitUris.value[
+                `${engineId}:${library.uuid}:${speaker.speakerUuid}:${index}`
+              ] = style.portrait
+                ? base64ImageToUri(style.portrait)
+                : defaultPortraitUri;
             }
           }
         }
@@ -525,15 +548,23 @@ audio.volume = 0.5;
 audio.onended = () => stop();
 
 const play = (
-  speakerUuid: string,
-  { id: styleId, voiceSamples }: StyleInfo,
+  engineId: EngineId,
+  libraryId: LibraryId,
+  speakerUuid: SpeakerId,
   index: number
 ) => {
   if (audio.src !== "") stop();
 
+  const speaker = downloadableLibraries.value[engineId]
+    ?.find((l) => l.uuid === libraryId)
+    ?.speakers.find((s) => s.speaker.speakerUuid === speakerUuid);
+  if (!speaker) return;
+
+  const styleInfo = speaker.speakerInfo.styleInfos[index];
+  const voiceSamples = styleInfo.voiceSamples;
   audio.src = "data:audio/wav;base64," + voiceSamples[index];
   audio.play();
-  playing.value = { speakerUuid, styleId, index };
+  playing.value = { speakerUuid, styleId: styleInfo.id, index };
 };
 const stop = () => {
   if (audio.src === "") return;
@@ -545,6 +576,7 @@ const stop = () => {
 
 // 再生していたら停止、再生していなかったら再生
 const togglePlayOrStop = (
+  engineId: EngineId,
   libraryId: LibraryId,
   speakerUuid: SpeakerId,
   styleInfo: StyleInfo,
@@ -553,10 +585,9 @@ const togglePlayOrStop = (
   if (
     playing.value === undefined ||
     speakerUuid !== playing.value.speakerUuid ||
-    styleInfo.id !== playing.value.styleId ||
     index !== playing.value.index
   ) {
-    play(speakerUuid, styleInfo, index);
+    play(engineId, libraryId, speakerUuid, index);
   } else {
     stop();
   }
@@ -569,9 +600,13 @@ const rollStyleIndex = (
   speakerIndex: number,
   diff: number
 ) => {
+  const speaker =
+    downloadableLibrariesMap.value[engineId]?.[libraryId].speakers[
+      speakerIndex
+    ];
+  if (!speaker) return;
   // 0 <= index <= length に収める
-  const length =
-    downloadableSpeakersMap.value[engineId][libraryId].speaker.styles.length;
+  const length = speaker.speakerInfo.styleInfos.length;
   const selectedStyleIndex: number | undefined =
     selectedStyleIndexes.value[engineId][libraryId][speakerIndex];
 
@@ -633,24 +668,20 @@ const installLibrary = (engineId: EngineId, library: DownloadableLibrary) => {
     100vh - #{vars.$menubar-height + vars.$header-height +
       vars.$window-border-width}
   );
-
-  display: flex;
-  flex-direction: row;
   width: 100%;
+  overflow-y: scroll;
   > div {
     width: 100%;
   }
 }
 
 .library-items-container {
-  height: 100%;
   padding: 5px 16px;
 
   flex-grow: 1;
 
   display: flex;
   flex-direction: column;
-  overflow-y: scroll;
 
   > div.q-circular-progress {
     margin: auto;

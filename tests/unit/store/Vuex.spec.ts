@@ -117,6 +117,7 @@ describe("store/vuex.js test", () => {
               adjustVolumeScale: true,
               interrogativeUpspeak: true,
               synthesisMorphing: true,
+              manageLibrary: true,
             },
           },
         },

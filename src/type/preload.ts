@@ -7,11 +7,11 @@ export const isMac =
     ? navigator.userAgent.includes("Mac")
     : process.platform === "darwin";
 
-export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export const engineIdSchema = z.string().brand<"EngineId">();
 export type EngineId = z.infer<typeof engineIdSchema>;
 export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
 
-export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export const speakerIdSchema = z.string().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
@@ -19,15 +19,15 @@ export const styleIdSchema = z.number().brand<"StyleId">();
 export type StyleId = z.infer<typeof styleIdSchema>;
 export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
 
-export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
-export const libraryIdSchema = z.string().uuid().brand<"LibraryId">();
+export const libraryIdSchema = z.string().brand<"LibraryId">();
 export type LibraryId = z.infer<typeof libraryIdSchema>;
 export const LibraryId = (id: string): LibraryId => libraryIdSchema.parse(id);
 
-export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
