@@ -359,11 +359,6 @@ export type AudioStoreTypes = {
     };
   };
 
-  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
-    mutation: { audioItem: AudioItem };
-    action(payload: { audioItem: AudioItem }): void;
-  };
-
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: AudioKey };
   };

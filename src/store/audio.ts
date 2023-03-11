@@ -31,6 +31,7 @@ import {
   EngineId,
   MoraDataType,
   MorphingInfo,
+  Preset,
   PresetKey,
   SpeakerId,
   StyleId,
@@ -251,6 +252,38 @@ export function determineNextPresetKey(
     nextPresetKey: defaultPresetKeyForCurrentVoice,
     shouldApplyPreset: state.experimentalSetting.enablePreset,
   };
+}
+
+/**
+ * 与えたAudioItemを元に、Presetを適用した新しいAudioItemを返す
+ */
+export function applyAudioPresetToAudioItem(
+  audioItem: AudioItem | undefined,
+  presetItem: Preset | undefined
+) {
+  if (
+    audioItem == undefined ||
+    audioItem.presetKey == undefined ||
+    audioItem.query == undefined
+  )
+    return;
+  if (presetItem == undefined) return;
+
+  const newAudioItem = { ...audioItem };
+
+  // Filter name property from presetItem in order to extract audioInfos.
+  const { name: _, morphingInfo, ...presetAudioInfos } = presetItem;
+
+  // Type Assertion
+  const audioInfos: Omit<
+    AudioQuery,
+    "accentPhrases" | "outputSamplingRate" | "outputStereo" | "kana"
+  > = presetAudioInfos;
+
+  newAudioItem.query = { ...audioItem.query, ...audioInfos };
+  newAudioItem.morphingInfo = morphingInfo;
+
+  return newAudioItem;
 }
 
 const audioBlobCache: Record<string, Blob> = {};
@@ -603,9 +636,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }).catch(() => undefined)
         : undefined;
 
-      const audioItem: AudioItem = { text, voice };
+      let newAudioItem: AudioItem = { text, voice };
       if (query != undefined) {
-        audioItem.query = query;
+        newAudioItem.query = query;
       }
 
       const presetKeyCandidate = payload.baseAudioItem?.presetKey;
@@ -616,35 +649,44 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         presetKeyCandidate,
         state.inheritAudioInfo && baseAudioItem !== undefined
       );
-      audioItem.presetKey = nextPresetKey;
+      newAudioItem.presetKey = nextPresetKey;
 
       if (
         state.inheritAudioInfo &&
         baseAudioItem &&
         baseAudioItem.query &&
-        audioItem.query
+        newAudioItem.query
       ) {
         //引数にbaseAudioItemがある場合、話速等のパラメータを引き継いだAudioItemを返す
         //baseAudioItem.queryが未設定の場合は引き継がない(起動直後等？)
-        audioItem.query.speedScale = baseAudioItem.query.speedScale;
-        audioItem.query.pitchScale = baseAudioItem.query.pitchScale;
-        audioItem.query.intonationScale = baseAudioItem.query.intonationScale;
-        audioItem.query.volumeScale = baseAudioItem.query.volumeScale;
-        audioItem.query.prePhonemeLength = baseAudioItem.query.prePhonemeLength;
-        audioItem.query.postPhonemeLength =
+        newAudioItem.query.speedScale = baseAudioItem.query.speedScale;
+        newAudioItem.query.pitchScale = baseAudioItem.query.pitchScale;
+        newAudioItem.query.intonationScale =
+          baseAudioItem.query.intonationScale;
+        newAudioItem.query.volumeScale = baseAudioItem.query.volumeScale;
+        newAudioItem.query.prePhonemeLength =
+          baseAudioItem.query.prePhonemeLength;
+        newAudioItem.query.postPhonemeLength =
           baseAudioItem.query.postPhonemeLength;
-        audioItem.query.outputSamplingRate =
+        newAudioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
-        audioItem.query.outputStereo = baseAudioItem.query.outputStereo;
-        audioItem.morphingInfo = baseAudioItem.morphingInfo;
+        newAudioItem.query.outputStereo = baseAudioItem.query.outputStereo;
+        newAudioItem.morphingInfo = baseAudioItem.morphingInfo;
       }
 
       // audioItemに対してプリセットを適用する
       if (shouldApplyPreset) {
-        await dispatch("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
+        if (nextPresetKey) {
+          const preset = state.presetItems[nextPresetKey];
+          const result = applyAudioPresetToAudioItem(newAudioItem, preset);
+
+          if (result) {
+            newAudioItem = result;
+          }
+        }
       }
 
-      return audioItem;
+      return newAudioItem;
     },
   },
 
@@ -1045,41 +1087,18 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
-    // FIXME: audioItemを直接書き換えないようにするか、関数化する
-    mutation(state, { audioItem }) {
-      if (
-        audioItem == undefined ||
-        audioItem.presetKey == undefined ||
-        audioItem.query == undefined
-      )
-        return;
-      const presetItem = state.presetItems[audioItem.presetKey];
-      if (presetItem == undefined) return;
-
-      // Filter name property from presetItem in order to extract audioInfos.
-      const { name: _, morphingInfo, ...presetAudioInfos } = presetItem;
-
-      // Type Assertion
-      const audioInfos: Omit<
-        AudioQuery,
-        "accentPhrases" | "outputSamplingRate" | "outputStereo" | "kana"
-      > = presetAudioInfos;
-
-      audioItem.query = { ...audioItem.query, ...audioInfos };
-
-      audioItem.morphingInfo = morphingInfo;
-    },
-    action({ commit }, { audioItem }) {
-      commit("APPLY_AUDIO_PRESET_TO_AUDIO_ITEM", { audioItem });
-    },
-  },
-
   APPLY_AUDIO_PRESET: {
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
-      audioStore.mutations.APPLY_AUDIO_PRESET_TO_AUDIO_ITEM(state, {
-        audioItem: state.audioItems[audioKey],
-      });
+      const audioItem = state.audioItems[audioKey];
+
+      if (!audioItem || !audioItem.presetKey) return;
+
+      const presetItem = state.presetItems[audioItem.presetKey];
+      const newAudioItem = applyAudioPresetToAudioItem(audioItem, presetItem);
+
+      if (newAudioItem) {
+        state.audioItems[audioKey] = newAudioItem;
+      }
     },
   },
 
