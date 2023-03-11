@@ -192,7 +192,10 @@ export function getCharacterInfo(
  * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
  */
 export function determineNextPresetKey(
-  state: State,
+  state: Pick<
+    State,
+    "defaultPresetKeys" | "experimentalSetting" | "inheritAudioInfo"
+  >,
   voice: Voice,
   presetKeyCandidate: PresetKey | undefined,
   operation: "generate" | "copy" | "changeVoice"
