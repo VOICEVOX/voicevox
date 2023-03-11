@@ -195,8 +195,7 @@ export function determineNextPresetKey(
   state: State,
   voice: Voice,
   presetKeyCandidate: PresetKey | undefined,
-  shouldCopyBaseAudioItem: boolean,
-  isVoiceChanged = false
+  operation: "generate" | "copy" | "changeVoice"
 ): {
   nextPresetKey: PresetKey | undefined;
   shouldApplyPreset: boolean;
@@ -204,54 +203,55 @@ export function determineNextPresetKey(
   const defaultPresetKeyForCurrentVoice =
     state.defaultPresetKeys[VoiceId(voice)];
 
-  const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
-    (key) => key === presetKeyCandidate
-  );
-
-  // コピーすべきBaseAudioItemがない＝初回作成時
-  if (!shouldCopyBaseAudioItem) {
-    return {
-      nextPresetKey: defaultPresetKeyForCurrentVoice,
-      shouldApplyPreset: state.experimentalSetting.enablePreset,
-    };
-  }
-
-  // ボイス切り替え時
-  if (isVoiceChanged) {
-    if (state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged) {
-      // デフォルトプリセットを適用する
+  switch (operation) {
+    case "generate": {
+      // 初回作成時
       return {
         nextPresetKey: defaultPresetKeyForCurrentVoice,
-        shouldApplyPreset: true,
+        shouldApplyPreset: state.experimentalSetting.enablePreset,
       };
     }
+    case "copy": {
+      // 元となるAudioItemがある場合
+      if (state.inheritAudioInfo) {
+        // パラメータ引継ぎがONならそのまま引き継ぐ
+        return {
+          nextPresetKey: presetKeyCandidate,
+          shouldApplyPreset: false,
+        };
+      }
 
-    // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
-    // 別キャラのデフォルトプリセットを引き継がないようにする
-    // それ以外は指定そのまま
-    return {
-      nextPresetKey: isDefaultPreset
-        ? defaultPresetKeyForCurrentVoice
-        : presetKeyCandidate,
-      shouldApplyPreset: false,
-    };
+      // それ以外はデフォルトプリセットを割り当て、適用するかはプリセットのON/OFFに依存
+      return {
+        nextPresetKey: defaultPresetKeyForCurrentVoice,
+        shouldApplyPreset: state.experimentalSetting.enablePreset,
+      };
+    }
+    case "changeVoice": {
+      // ボイス切り替え時
+      if (state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged) {
+        // デフォルトプリセットを適用する
+        return {
+          nextPresetKey: defaultPresetKeyForCurrentVoice,
+          shouldApplyPreset: true,
+        };
+      }
+
+      const isDefaultPreset = Object.values(state.defaultPresetKeys).some(
+        (key) => key === presetKeyCandidate
+      );
+
+      // 引き継ぎ元が他スタイルのデフォルトプリセットだった場合
+      // 別キャラのデフォルトプリセットを引き継がないようにする
+      // それ以外は指定そのまま
+      return {
+        nextPresetKey: isDefaultPreset
+          ? defaultPresetKeyForCurrentVoice
+          : presetKeyCandidate,
+        shouldApplyPreset: false,
+      };
+    }
   }
-
-  // 以下はAudioItemコピー時
-
-  if (state.inheritAudioInfo) {
-    // パラメータ引継ぎがONならそのまま引き継ぐ
-    return {
-      nextPresetKey: presetKeyCandidate,
-      shouldApplyPreset: false,
-    };
-  }
-
-  // それ以外はデフォルトプリセットを割り当て、適用するかはプリセットのON/OFFに依存
-  return {
-    nextPresetKey: defaultPresetKeyForCurrentVoice,
-    shouldApplyPreset: state.experimentalSetting.enablePreset,
-  };
 }
 
 /**
@@ -636,7 +636,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           }).catch(() => undefined)
         : undefined;
 
-      let newAudioItem: AudioItem = { text, voice };
+      const newAudioItem: AudioItem = { text, voice };
       if (query != undefined) {
         newAudioItem.query = query;
       }
@@ -647,10 +647,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         state,
         voice,
         presetKeyCandidate,
-        state.inheritAudioInfo && baseAudioItem !== undefined
+        baseAudioItem ? "copy" : "generate"
       );
       newAudioItem.presetKey = nextPresetKey;
 
+      // audioItemに対してプリセットを適用する
+      if (shouldApplyPreset) {
+        if (nextPresetKey) {
+          const preset = state.presetItems[nextPresetKey];
+          const result = applyAudioPresetToAudioItem(newAudioItem, preset);
+
+          if (result) {
+            return result;
+          }
+        }
+      }
+
+      // プリセットを適用しないならパラメータを引き継ぐ
       if (
         state.inheritAudioInfo &&
         baseAudioItem &&
@@ -672,18 +685,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           baseAudioItem.query.outputSamplingRate;
         newAudioItem.query.outputStereo = baseAudioItem.query.outputStereo;
         newAudioItem.morphingInfo = baseAudioItem.morphingInfo;
-      }
-
-      // audioItemに対してプリセットを適用する
-      if (shouldApplyPreset) {
-        if (nextPresetKey) {
-          const preset = state.presetItems[nextPresetKey];
-          const result = applyAudioPresetToAudioItem(newAudioItem, preset);
-
-          if (result) {
-            newAudioItem = result;
-          }
-        }
       }
 
       return newAudioItem;
@@ -2139,8 +2140,7 @@ export const audioCommandStore = transformCommandStore(
           draft,
           payload.voice,
           presetKey,
-          true,
-          true
+          "changeVoice"
         );
 
         audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
