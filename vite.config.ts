@@ -1,25 +1,32 @@
 /// <reference types="vitest" />
 import path from "path";
-import treeKill from "tree-kill";
 import { rmSync } from "fs";
+import treeKill from "tree-kill";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
-import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { BuildOptions, defineConfig } from "vite";
+import { quasar } from "@quasar/vite-plugin";
 
 rmSync(path.resolve(__dirname, "dist"), { recursive: true, force: true });
 
 const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
 export default defineConfig((options) => {
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
+    ? "inline"
+    : false;
   return {
     root: path.resolve(__dirname, "src"),
     build: {
       outDir: path.resolve(__dirname, "dist"),
       sourcemap: "inline",
       chunkSizeWarningLimit: 10000,
+      sourcemap,
     },
     publicDir: path.resolve(__dirname, "public"),
     css: {
@@ -39,10 +46,13 @@ export default defineConfig((options) => {
         path.resolve(__dirname, "tests/unit/**/*.spec.ts").replace(/\\/g, "/"),
       ],
       environment: "happy-dom",
+      globals: true,
     },
 
     plugins: [
       vue(),
+      quasar(),
+      nodePolyfills(),
       options.mode !== "test" &&
         checker({
           overlay: false,
@@ -72,6 +82,7 @@ export default defineConfig((options) => {
             plugins: [tsconfigPaths({ root: __dirname })],
             build: {
               outDir: path.resolve(__dirname, "dist"),
+              sourcemap,
             },
           },
         }),

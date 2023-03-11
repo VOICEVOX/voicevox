@@ -6,8 +6,8 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { ActivePointScrollMode } from "@/type/preload";
 import { createPartialStore } from "./vuex";
+import { ActivePointScrollMode } from "@/type/preload";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -300,18 +300,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   CHECK_EDITED_AND_NOT_SAVE: {
-    async action({ getters }) {
+    async action({ dispatch, getters }) {
       if (getters.IS_EDITED) {
-        const result: number = await window.electron.showQuestionDialog({
-          type: "info",
-          title: "警告",
-          message:
-            "プロジェクトの変更が保存されていません。\n" +
-            "変更を破棄してもよろしいですか？",
-          buttons: ["破棄", "キャンセル"],
-          cancelId: 1,
-        });
-        if (result == 1) {
+        const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {});
+        if (result == "canceled") {
           return;
         }
       }

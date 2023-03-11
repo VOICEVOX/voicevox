@@ -1,3 +1,4 @@
+import { QVueGlobals } from "quasar";
 import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
@@ -5,7 +6,6 @@ import {
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
-import { QVueGlobals } from "quasar";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 

@@ -1,11 +1,11 @@
-import { createUILockAction } from "@/store/ui";
-import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 import semver from "semver";
+import { z } from "zod";
 import { buildProjectFileName, getBaseName } from "./utility";
 import { createPartialStore } from "./vuex";
+import { createUILockAction } from "@/store/ui";
+import { AudioItem, ProjectStoreState, ProjectStoreTypes } from "@/store/type";
 
 import { AccentPhrase } from "@/openapi";
-import { z } from "zod";
 import {
   AudioKey,
   audioKeySchema,
@@ -40,16 +40,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (context, { confirm }: { confirm?: boolean }) => {
         if (confirm !== false && context.getters.IS_EDITED) {
-          const result: number = await window.electron.showQuestionDialog({
-            type: "info",
-            title: "警告",
-            message:
-              "プロジェクトの変更が保存されていません。\n" +
-              "変更を破棄してもよろしいですか？",
-            buttons: ["破棄", "キャンセル"],
-            cancelId: 1,
-          });
-          if (result == 1) {
+          const result = await context.dispatch(
+            "SAVE_OR_DISCARD_PROJECT_FILE",
+            {}
+          );
+          if (result == "canceled") {
             return;
           }
         }
@@ -326,16 +321,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
 
           if (confirm !== false && context.getters.IS_EDITED) {
-            const result: number = await window.electron.showQuestionDialog({
-              type: "info",
-              title: "警告",
-              message:
-                "プロジェクトをロードすると現在のプロジェクトは破棄されます。\n" +
-                "変更を破棄してもよろしいですか？",
-              buttons: ["破棄", "キャンセル"],
-              cancelId: 1,
-            });
-            if (result == 1) {
+            const result = await context.dispatch(
+              "SAVE_OR_DISCARD_PROJECT_FILE",
+              {
+                additionalMessage:
+                  "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
+              }
+            );
+            if (result == "canceled") {
               return false;
             }
           }
@@ -376,6 +369,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   SAVE_PROJECT_FILE: {
+    /**
+     * プロジェクトファイルを保存する。保存の成否が返る。
+     */
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
@@ -396,7 +392,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             defaultPath,
           });
           if (ret == undefined) {
-            return;
+            return false;
           }
           filePath = ret;
         }
@@ -427,9 +423,43 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
           context.getters.LAST_COMMAND_UNIX_MILLISEC
         );
-        return;
+        return true;
       }
     ),
+  },
+
+  /**
+   * プロジェクトファイルを保存するか破棄するかキャンセルするかのダイアログを出して、保存する場合は保存する。
+   * 何を選択したかが返る。
+   * 保存に失敗した場合はキャンセル扱いになる。
+   */
+  SAVE_OR_DISCARD_PROJECT_FILE: {
+    action: createUILockAction(async ({ dispatch }, { additionalMessage }) => {
+      let message = "プロジェクトの変更が保存されていません。";
+      if (additionalMessage) {
+        message += "\n" + additionalMessage;
+      }
+      message += "\n変更を保存しますか？";
+
+      const result: number = await window.electron.showQuestionDialog({
+        type: "info",
+        title: "警告",
+        message,
+        buttons: ["保存", "破棄", "キャンセル"],
+        cancelId: 2,
+        defaultId: 2,
+      });
+      if (result == 0) {
+        const saved = await dispatch("SAVE_PROJECT_FILE", {
+          overwrite: true,
+        });
+        return saved ? "saved" : "canceled";
+      } else if (result == 1) {
+        return "discarded";
+      } else {
+        return "canceled";
+      }
+    }),
   },
 
   IS_EDITED: {

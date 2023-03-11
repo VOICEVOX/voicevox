@@ -1,6 +1,7 @@
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import Encoding from "encoding-japanese";
+import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
   SaveResultObject,
@@ -12,22 +13,6 @@ import {
   AudioCommandStoreTypes,
   transformCommandStore,
 } from "./type";
-import { createUILockAction, withProgress } from "./ui";
-import {
-  AudioKey,
-  CharacterInfo,
-  DefaultStyleId,
-  Encoding as EncodingType,
-  EngineId,
-  MoraDataType,
-  MorphingInfo,
-  SpeakerId,
-  StyleId,
-  StyleInfo,
-  Voice,
-  WriteFileErrorResult,
-} from "@/type/preload";
-import Encoding from "encoding-japanese";
 import {
   buildFileNameFromRawData,
   buildProjectFileName,
@@ -38,6 +23,22 @@ import {
 } from "./utility";
 import { convertAudioQueryFromEditorToEngine } from "./proxy";
 import { createPartialStore } from "./vuex";
+import {
+  AudioKey,
+  CharacterInfo,
+  DefaultStyleId,
+  Encoding as EncodingType,
+  EngineId,
+  MoraDataType,
+  MorphingInfo,
+  PresetKey,
+  SpeakerId,
+  StyleId,
+  StyleInfo,
+  Voice,
+  WriteFileErrorResult,
+} from "@/type/preload";
+import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 
 async function generateUniqueIdAndQuery(
@@ -479,7 +480,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       payload: {
         text?: string;
         voice?: Voice;
-        presetKey?: string;
+        presetKey?: PresetKey;
         baseAudioItem?: AudioItem;
       }
     ) {
@@ -1784,7 +1785,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       {
         audioKey,
         presetKey,
-      }: { audioKey: AudioKey; presetKey: string | undefined }
+      }: { audioKey: AudioKey; presetKey: PresetKey | undefined }
     ) {
       if (presetKey === undefined) {
         delete state.audioItems[audioKey].presetKey;
@@ -2628,7 +2629,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           presetKey,
-        }: { audioKey: AudioKey; presetKey: string | undefined }
+        }: { audioKey: AudioKey; presetKey: PresetKey | undefined }
       ) {
         audioStore.mutations.SET_AUDIO_PRESET_KEY(draft, {
           audioKey,
@@ -2641,7 +2642,7 @@ export const audioCommandStore = transformCommandStore(
         {
           audioKey,
           presetKey,
-        }: { audioKey: AudioKey; presetKey: string | undefined }
+        }: { audioKey: AudioKey; presetKey: PresetKey | undefined }
       ) {
         commit("COMMAND_SET_AUDIO_PRESET", { audioKey, presetKey });
       },
@@ -2657,7 +2658,7 @@ export const audioCommandStore = transformCommandStore(
     },
 
     COMMAND_FULLY_APPLY_AUDIO_PRESET: {
-      mutation(draft, { presetKey }: { presetKey: string }) {
+      mutation(draft, { presetKey }: { presetKey: PresetKey }) {
         const targetAudioKeys = draft.audioKeys.filter(
           (audioKey) => draft.audioItems[audioKey].presetKey === presetKey
         );
@@ -2665,7 +2666,7 @@ export const audioCommandStore = transformCommandStore(
           audioStore.mutations.APPLY_AUDIO_PRESET(draft, { audioKey });
         }
       },
-      action({ commit }, payload: { presetKey: string }) {
+      action({ commit }, payload: { presetKey: PresetKey }) {
         commit("COMMAND_FULLY_APPLY_AUDIO_PRESET", payload);
       },
     },
@@ -2776,7 +2777,7 @@ export const audioCommandStore = transformCommandStore(
             audioItem: AudioItem;
           }[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;
-          let basePresetKey: string | undefined = undefined;
+          let basePresetKey: PresetKey | undefined = undefined;
           if (state.inheritAudioInfo && state._activeAudioKey) {
             baseAudioItem = state.audioItems[state._activeAudioKey];
             basePresetKey = baseAudioItem.presetKey;

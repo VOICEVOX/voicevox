@@ -122,6 +122,7 @@ export type IpcIHData = {
         message: string;
         buttons: string[];
         cancelId?: number;
+        defaultId?: number;
       }
     ];
     return: number;

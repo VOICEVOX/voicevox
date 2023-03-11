@@ -29,7 +29,7 @@ env:
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
-  build-noengine-prepackage:
+  build-prepackage:
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       ELECTRON_CACHE: .cache/electron
@@ -39,54 +39,72 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
-          - linux-noengine-prepackage
-          - linux-noengine-cpu-prepackage
-          - windows-noengine-prepackage
-          - windows-noengine-cpu-prepackage
-          - windows-noengine-directml-prepackage
-          - macos-noengine-cpu-prepackage
+          - linux-nvidia-prepackage
+          - linux-cpu-prepackage
+          - windows-nvidia-prepackage
+          - windows-cpu-prepackage
+          - windows-directml-prepackage
+          - macos-cpu-prepackage
         include:
           # Linux NVIDIA GPU
-          - artifact_name: linux-noengine-prepackage
+          - artifact_name: linux-nvidia-prepackage
             artifact_path: dist_electron/linux-unpacked
+            voicevox_engine_asset_name: linux-nvidia
             package_name: voicevox
+            compressed_artifact_name: voicevox-linux-nvidia
+            app_asar_dir: prepackage/resources
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
             os: ubuntu-18.04
           # Linux CPU
-          - artifact_name: linux-noengine-cpu-prepackage
+          - artifact_name: linux-cpu-prepackage
             artifact_path: dist_electron/linux-unpacked
+            voicevox_engine_asset_name: linux-cpu
             package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-linux-cpu
+            app_asar_dir: prepackage/resources
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
             os: ubuntu-18.04
           # Windows CUDA
-          - artifact_name: windows-noengine-prepackage
+          - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-nvidia
             package_name: voicevox-cuda
+            compressed_artifact_name: voicevox-windows-nvidia
+            app_asar_dir: prepackage/resources
             nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # Windows CPU
-          - artifact_name: windows-noengine-cpu-prepackage
+          - artifact_name: windows-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-cpu
             package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-windows-cpu
+            app_asar_dir: prepackage/resources
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # Windows DirectML
-          - artifact_name: windows-noengine-directml-prepackage
+          - artifact_name: windows-directml-prepackage
             artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-directml
             package_name: voicevox
+            compressed_artifact_name: voicevox-windows-directml
+            app_asar_dir: prepackage/resources
             nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
           # macOS CPU
-          - artifact_name: macos-noengine-cpu-prepackage
+          - artifact_name: macos-cpu-prepackage
             artifact_path: dist_electron/mac
+            voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-macos-cpu
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             macos_artifact_name: "VOICEVOX.${ext}"
             sed_name: gsed
             os: macos-11
@@ -221,103 +239,10 @@ jobs:
           echo 'CSC_LINK=' >> $GITHUB_ENV
           echo 'CSC_KEY_PASSWORD=' >> $GITHUB_ENV
 
-      - name: Upload NoEngine Prepackage
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            ${{ matrix.artifact_path }}
-
-  build-engine-prepackage:
-    env:
-      cache-version: v2
-
-    needs: [build-noengine-prepackage]
-    strategy:
-      fail-fast: false
-      matrix:
-        # FIXME: env cannot be referenced in matrix
-        # voicevox_engine_repo_url:
-        #   - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
-        # voicevox_engine_version:
-        #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
-        os: [ubuntu-18.04]
-        artifact_name:
-          - linux-nvidia-prepackage
-          - linux-cpu-prepackage
-          - windows-nvidia-prepackage
-          - windows-cpu-prepackage
-          - windows-directml-prepackage
-          - macos-cpu-prepackage
-        include:
-          # Linux NVIDIA GPU
-          - artifact_name: linux-nvidia-prepackage
-            noengine_artifact_name: linux-noengine-prepackage
-            voicevox_engine_asset_name: linux-nvidia
-            linux_executable_name: voicevox
-            compressed_artifact_name: voicevox-linux-nvidia
-            app_asar_dir: prepackage/resources
-          # Linux CPU
-          - artifact_name: linux-cpu-prepackage
-            noengine_artifact_name: linux-noengine-cpu-prepackage
-            voicevox_engine_asset_name: linux-cpu
-            linux_executable_name: voicevox
-            compressed_artifact_name: voicevox-linux-cpu
-            app_asar_dir: prepackage/resources
-          # Windows NVIDIA GPU
-          - artifact_name: windows-nvidia-prepackage
-            noengine_artifact_name: windows-noengine-prepackage
-            voicevox_engine_asset_name: windows-nvidia
-            compressed_artifact_name: voicevox-windows-nvidia
-            app_asar_dir: prepackage/resources
-          # Windows CPU
-          - artifact_name: windows-cpu-prepackage
-            noengine_artifact_name: windows-noengine-cpu-prepackage
-            voicevox_engine_asset_name: windows-cpu
-            compressed_artifact_name: voicevox-windows-cpu
-            app_asar_dir: prepackage/resources
-          # Windows DirectML
-          - artifact_name: windows-directml-prepackage
-            noengine_artifact_name: windows-noengine-directml-prepackage
-            voicevox_engine_asset_name: windows-directml
-            compressed_artifact_name: voicevox-windows-directml
-            app_asar_dir: prepackage/resources
-          # macOS CPU
-          - artifact_name: macos-cpu-prepackage
-            noengine_artifact_name: macos-noengine-cpu-prepackage
-            voicevox_engine_asset_name: macos-x64
-            macos_executable_name: VOICEVOX
-            compressed_artifact_name: voicevox-macos-cpu
-            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: ".node-version"
-          cache: "npm"
-
-      - name: Install asar
-        shell: bash
-        run: npm install -g asar
-
-      - name: Install dependencies
-        shell: bash
-        run: npm ci
-
-      - name: Show disk space (debug info)
+      - name: Rename NoEngine Prepackage
         shell: bash
         run: |
-          df -h
-
-      - name: Download and extract noengine-prepackage artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.noengine_artifact_name }}
-          path: ./prepackage
+          mv ${{ matrix.artifact_path }} ./prepackage
 
       # Download VOICEVOX ENGINE
       - name: Create directory voicevox_engine/download
@@ -363,18 +288,19 @@ jobs:
           # remove downloads to free space
           rm -rf voicevox_engine/download voicevox_engine/tmp
 
+      # FIXME: asarをextract/packせず、ビルド前にengine_licenses.jsonとlicenses.jsonを結合する
       - name: Merge licenses.json (ENGINE, VOICEVOX)
         shell: bash
         run: |
           # Unpack asar
-          asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
+          npx asar extract "${{ matrix.app_asar_dir }}/app.asar" "${{ matrix.app_asar_dir }}/app"
           rm "${{ matrix.app_asar_dir }}/app.asar"
 
           mv voicevox_engine/voicevox_engine/licenses.json engine_licenses.json
           npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
 
           # Repack asar
-          asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
+          npx asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
           rm -rf "${{ matrix.app_asar_dir }}/app"
 
       - name: Merge VOICEVOX ENGINE into prepackage/
@@ -447,7 +373,7 @@ jobs:
         shell: bash
         run: |
           mv prepackage VOICEVOX
-          zip "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip" -r VOICEVOX
+          7z a -tzip "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip" VOICEVOX/
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
@@ -458,7 +384,7 @@ jobs:
 
   build-distributable:
     if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
-    needs: [build-engine-prepackage]
+    needs: [build-prepackage]
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment
     env:
       ELECTRON_CACHE: .cache/electron

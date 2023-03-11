@@ -12,6 +12,7 @@ module.exports = {
     "@vue/eslint-config-typescript",
     "@vue/eslint-config-prettier",
   ],
+  plugins: ["import"],
   parser: "vue-eslint-parser",
   parserOptions: {
     ecmaVersion: 2020,
@@ -50,6 +51,7 @@ module.exports = {
         order: ["template", "script", "style"],
       },
     ],
+    "import/order": "error",
   },
   overrides: [
     {

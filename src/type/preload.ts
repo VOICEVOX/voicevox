@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
-import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { IpcSOData } from "./ipc";
 
 export const isMac =
   typeof process === "undefined"
@@ -26,6 +26,10 @@ export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 export const libraryIdSchema = z.string().uuid().brand<"LibraryId">();
 export type LibraryId = z.infer<typeof libraryIdSchema>;
 export const LibraryId = (id: string): LibraryId => libraryIdSchema.parse(id);
+
+export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export type PresetKey = z.infer<typeof presetKeySchema>;
+export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
@@ -169,6 +173,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {
@@ -532,7 +537,7 @@ export const electronStoreSchema = z
       .object({
         items: z
           .record(
-            z.string().uuid(),
+            presetKeySchema,
             z
               .object({
                 name: z.string(),
@@ -555,7 +560,7 @@ export const electronStoreSchema = z
               .passthrough()
           )
           .default({}),
-        keys: z.string().uuid().array().default([]),
+        keys: presetKeySchema.array().default([]),
       })
       .passthrough()
       .default({}),

@@ -1,5 +1,8 @@
 <template>
-  <q-dialog :model-value="openDialog" @update:model-value="updateOpenDialog">
+  <q-dialog
+    :model-value="props.openDialog"
+    @update:model-value="updateOpenDialog"
+  >
     <q-card class="setting-card q-pa-md dialog-card">
       <q-card-section>
         <div class="text-h5">プリセット管理</div>
@@ -39,91 +42,76 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
-import { useStore } from "@/store";
 import draggable from "vuedraggable";
+import { useStore } from "@/store";
 
-import { Preset } from "@/type/preload";
+import { Preset, PresetKey } from "@/type/preload";
 
-export default defineComponent({
-  name: "PresetManageDialog",
-  components: {
-    draggable,
-  },
+const props =
+  defineProps<{
+    openDialog: boolean;
+  }>();
+const emit =
+  defineEmits<{
+    (e: "update:openDialog", val: boolean): void;
+  }>();
 
-  props: {
-    openDialog: Boolean,
-  },
+const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
-  emits: ["update:openDialog"],
+const store = useStore();
+const $q = useQuasar();
 
-  setup(props, context) {
-    const updateOpenDialog = (isOpen: boolean) =>
-      context.emit("update:openDialog", isOpen);
+const presetItems = computed(() => store.state.presetItems);
+const presetKeys = computed(() => store.state.presetKeys);
 
-    const store = useStore();
-    const $q = useQuasar();
+const presetList = computed(() =>
+  presetKeys.value
+    .filter((key) => presetItems.value[key] != undefined)
+    .map((key) => ({
+      key,
+      ...presetItems.value[key],
+    }))
+);
 
-    const presetItems = computed(() => store.state.presetItems);
-    const presetKeys = computed(() => store.state.presetKeys);
+const isPreview = ref(false);
+const previewPresetKeys = ref(store.state.presetKeys);
 
-    const presetList = computed(() =>
-      presetKeys.value
+const previewPresetList = computed(() =>
+  isPreview.value
+    ? previewPresetKeys.value
         .filter((key) => presetItems.value[key] != undefined)
         .map((key) => ({
           key,
           ...presetItems.value[key],
         }))
-    );
+    : presetList.value
+);
 
-    const isPreview = ref(false);
-    const previewPresetKeys = ref(store.state.presetKeys);
+const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
+  const newPresetKeys = featurePresetList.map((item) => item.key);
+  previewPresetKeys.value = newPresetKeys;
+  isPreview.value = true;
+  store
+    .dispatch("SAVE_PRESET_ORDER", {
+      presetKeys: newPresetKeys,
+    })
+    .finally(() => (isPreview.value = false));
+};
 
-    const previewPresetList = computed(() =>
-      isPreview.value
-        ? previewPresetKeys.value
-            .filter((key) => presetItems.value[key] != undefined)
-            .map((key) => ({
-              key,
-              ...presetItems.value[key],
-            }))
-        : presetList.value
-    );
-
-    const reorderPreset = (featurePresetList: (Preset & { key: string })[]) => {
-      const newPresetKeys = featurePresetList.map((item) => item.key);
-      previewPresetKeys.value = newPresetKeys;
-      isPreview.value = true;
-      store
-        .dispatch("SAVE_PRESET_ORDER", {
-          presetKeys: newPresetKeys,
-        })
-        .finally(() => (isPreview.value = false));
-    };
-
-    const deletePreset = (key: string) => {
-      $q.dialog({
-        title: "プリセット削除の確認",
-        message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
-        cancel: true,
-      }).onOk(async () => {
-        await store.dispatch("DELETE_PRESET", {
-          presetKey: key,
-        });
-      });
-    };
-
-    return {
-      updateOpenDialog,
-      presetList,
-      previewPresetList,
-      deletePreset,
-      reorderPreset,
-    };
-  },
-});
+const deletePreset = (key: PresetKey) => {
+  $q.dialog({
+    title: "プリセット削除の確認",
+    message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
+    cancel: true,
+  }).onOk(async () => {
+    await store.dispatch("DELETE_PRESET", {
+      presetKey: key,
+    });
+  });
+};
 </script>
 
 <style>

@@ -85,33 +85,20 @@
   </q-badge>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from "vue";
-import { useStore } from "@/store";
+<script setup lang="ts">
+import { computed } from "vue";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { useStore } from "@/store";
 
-export default defineComponent({
-  name: "MinMaxCloseButtons",
-  setup() {
-    const store = useStore();
+const store = useStore();
 
-    const closeWindow = async () => {
-      store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
-    };
-    const minimizeWindow = () => window.electron.minimizeWindow();
-    const maximizeWindow = () => window.electron.maximizeWindow();
+const closeWindow = async () => {
+  store.dispatch("CHECK_EDITED_AND_NOT_SAVE");
+};
+const minimizeWindow = () => window.electron.minimizeWindow();
+const maximizeWindow = () => window.electron.maximizeWindow();
 
-    const isMaximized = computed(() => store.state.isMaximized);
-
-    return {
-      closeWindow,
-      minimizeWindow,
-      maximizeWindow,
-      mdiWindowRestore,
-      isMaximized,
-    };
-  },
-});
+const isMaximized = computed(() => store.state.isMaximized);
 </script>
 
 <style scoped lang="scss">

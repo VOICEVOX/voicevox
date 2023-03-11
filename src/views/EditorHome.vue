@@ -166,9 +166,12 @@
 </template>
 
 <script setup lang="ts">
+import path from "path";
 import { computed, onBeforeUpdate, onMounted, ref, watch } from "vue";
-import { useStore } from "@/store";
 import draggable from "vuedraggable";
+import { QResizeObserver, useQuasar } from "quasar";
+import cloneDeep from "clone-deep";
+import { useStore } from "@/store";
 import HeaderBar from "@/components/HeaderBar.vue";
 import AudioCell from "@/components/AudioCell.vue";
 import AudioDetail from "@/components/AudioDetail.vue";
@@ -189,18 +192,16 @@ import ProgressDialog from "@/components/ProgressDialog.vue";
 import LibraryDownloadDialog from "@/components/LibraryDownloadDialog.vue";
 
 import { AudioItem, EngineState } from "@/store/type";
-import { QResizeObserver, useQuasar } from "quasar";
-import path from "path";
 import {
   AudioKey,
   EngineId,
   HotkeyAction,
   HotkeyReturnType,
+  PresetKey,
   SplitterPosition,
   Voice,
 } from "@/type/preload";
 import { parseCombo, setHotkeyFunctions } from "@/store/setting";
-import cloneDeep from "clone-deep";
 
 const props =
   defineProps<{
@@ -381,7 +382,7 @@ const activeAudioKey = computed<AudioKey | undefined>(
 const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
-  let presetKey: string | undefined = undefined;
+  let presetKey: PresetKey | undefined = undefined;
   if (prevAudioKey !== undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;

@@ -27,10 +27,10 @@
 
 <script setup lang="ts">
 import { ref, computed, ComputedRef, watch } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
 import TitleBarButtons from "@/components/TitleBarButtons.vue";
-import { useQuasar } from "quasar";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import {
