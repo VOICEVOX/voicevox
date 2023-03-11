@@ -24,7 +24,6 @@ export default defineConfig((options) => {
     root: path.resolve(__dirname, "src"),
     build: {
       outDir: path.resolve(__dirname, "dist"),
-      sourcemap: "inline",
       chunkSizeWarningLimit: 10000,
       sourcemap,
     },
