@@ -144,6 +144,10 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: Set<PresetKey>;
+  };
+
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };

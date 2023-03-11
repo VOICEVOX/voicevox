@@ -333,6 +333,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: (state) => {
+      return new Set(Object.values(state.defaultPresetKeys));
+    },
+  },
+
   LOAD_CHARACTER: {
     action: createUILockAction(async ({ commit, dispatch }, { engineId }) => {
       const speakers = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
