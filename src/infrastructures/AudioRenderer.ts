@@ -540,6 +540,7 @@ export class AudioRenderer {
   }
 
   renderToBuffer(
+    sampleRate: number,
     startTime: number,
     duration: number,
     callback: (context: Context) => void
@@ -548,7 +549,6 @@ export class AudioRenderer {
       this.onlineContext.transport.stop();
     }
 
-    const sampleRate = this.context.audioContext.sampleRate;
     const length = sampleRate * duration;
     const audioContext = new OfflineAudioContext(2, length, sampleRate);
     const transport = new OfflineTransport();

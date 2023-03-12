@@ -1241,6 +1241,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // TODO: レンダリングで使用したノードはdisconnectしなくても解放されるはずですが、
         // 念のため歌声合成周りを実装後に確認した方が良いかも
         const audioBuffer = await audioRenderer.renderToBuffer(
+          48000, // TODO: 設定できるようにする
           renderStartTime,
           renderDuration,
           (context) => {
