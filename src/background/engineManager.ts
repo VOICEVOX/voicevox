@@ -269,9 +269,9 @@ export class EngineManager {
     });
 
     engineProcess.on("error", (err) => {
+      log.error(`ENGINE ${engineId} ERROR: ${err}`);
       this.closeSplashBeforeCallback(
         () => {
-          log.error(`ENGINE ${engineId} ERROR: ${err}`);
           // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
           // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
           dialog.showErrorBox(
@@ -291,14 +291,13 @@ export class EngineManager {
       log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
       if (!engineProcessContainer.willQuitEngine) {
+        ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+        const dialogMessage =
+          engineInfos.length === 1
+            ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
         this.closeSplashBeforeCallback(
           () => {
-            ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-            const dialogMessage =
-              engineInfos.length === 1
-                ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-                : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
-
             dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
           },
           win,
