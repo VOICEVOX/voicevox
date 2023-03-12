@@ -550,6 +550,8 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
+
+  store.dispatch("CLOSE_SPLASH");
 });
 
 // エンジン待機

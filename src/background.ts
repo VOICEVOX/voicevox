@@ -550,7 +550,7 @@ async function start() {
   store.set("engineSettings", engineSettings);
 
   await createWindow();
-  await engineManager.runEngineAll(win);
+  await engineManager.runEngineAll(win, splash);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -771,7 +771,7 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
-
+engineManager;
 ipcMainHandle("LOG_WARN", (_, ...params) => {
   log.warn(...params);
 });

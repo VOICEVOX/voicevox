@@ -189,22 +189,28 @@ export class EngineManager {
   /**
    * 全てのエンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
+   * FIXME: splashを受け取らなくても良いようにする
    */
-  async runEngineAll(win: BrowserWindow) {
+  async runEngineAll(win: BrowserWindow, splash: BrowserWindow) {
     const engineInfos = this.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
-      await this.runEngine(engineInfo.uuid, win);
+      await this.runEngine(engineInfo.uuid, win, splash); // we send the splash only on starting
     }
   }
 
   /**
    * エンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
+   * FIXME: splashを受け取らなくても良いようにする
    */
-  async runEngine(engineId: EngineId, win: BrowserWindow) {
+  async runEngine(
+    engineId: EngineId,
+    win: BrowserWindow,
+    splash?: BrowserWindow
+  ) {
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -263,12 +269,18 @@ export class EngineManager {
     });
 
     engineProcess.on("error", (err) => {
-      log.error(`ENGINE ${engineId} ERROR: ${err}`);
-      // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
-      // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
-      dialog.showErrorBox(
-        "音声合成エンジンエラー",
-        `音声合成エンジンが異常終了しました。${err}`
+      this.closeSplashBeforeCallback(
+        () => {
+          log.error(`ENGINE ${engineId} ERROR: ${err}`);
+          // FIXME: "close"イベントでダイアログが表示されて２回表示されてしまうのを防ぐ
+          // 詳細 https://github.com/VOICEVOX/voicevox/pull/1053/files#r1051436950
+          dialog.showErrorBox(
+            "音声合成エンジンエラー",
+            `音声合成エンジンが異常終了しました。${err}`
+          );
+        },
+        win,
+        splash
       );
     });
 
@@ -279,14 +291,36 @@ export class EngineManager {
       log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
       if (!engineProcessContainer.willQuitEngine) {
-        ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
-        const dialogMessage =
-          engineInfos.length === 1
-            ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-            : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
-        dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
+        this.closeSplashBeforeCallback(
+          () => {
+            ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+            const dialogMessage =
+              engineInfos.length === 1
+                ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+                : `${engineInfo.name}が異常終了しました。エンジンを再起動してください。`;
+
+            dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
+          },
+          win,
+          splash
+        );
       }
     });
+  }
+
+  closeSplashBeforeCallback(
+    callback: () => void,
+    win: BrowserWindow,
+    splash?: BrowserWindow
+  ) {
+    if (splash) {
+      splash.close();
+    }
+    win.show();
+    // force the error box to show exactly after the `if(splash)` block finished
+    // this trick is found on `setImmediate`'s `MDN` page
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/setImmediate
+    setImmediate(() => setTimeout(callback, 0));
   }
 
   /**
@@ -393,7 +427,7 @@ export class EngineManager {
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`
         );
 
-        this.runEngine(engineId, win);
+        this.runEngine(engineId, win); // we don't send in splash on resterting
         resolve();
         return;
       }
@@ -406,7 +440,7 @@ export class EngineManager {
       const restartEngineOnProcessClosedCallback = () => {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
-        this.runEngine(engineId, win);
+        this.runEngine(engineId, win); // we don't send in splash on resterting
         resolve();
       };
 
