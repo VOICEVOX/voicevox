@@ -73,11 +73,12 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
 import { computed, ref } from "vue";
+import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { EngineId, SpeakerId } from "@/type/preload";
 
-type DetailKey = { engine: string; character: string };
+type DetailKey = { engine: EngineId; character: SpeakerId };
 
 const store = useStore();
 const md = useMarkdownIt();
@@ -88,16 +89,19 @@ const engineInfos = computed(
   () =>
     new Map(
       Object.entries(store.state.characterInfos).map(
-        ([engineId, characterInfos]) => [
-          engineId,
-          {
+        ([engineIdStr, characterInfos]) => {
+          const engineId = EngineId(engineIdStr);
+          return [
             engineId,
-            name: store.state.engineManifests[engineId].name,
-            characterInfos: new Map(
-              characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
-            ),
-          },
-        ]
+            {
+              engineId,
+              name: store.state.engineManifests[engineId].name,
+              characterInfos: new Map(
+                characterInfos.map((ci) => [ci.metas.speakerUuid, ci])
+              ),
+            },
+          ];
+        }
       )
     )
 );

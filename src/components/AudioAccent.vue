@@ -60,9 +60,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { AccentPhrase } from "@/openapi";
-import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{

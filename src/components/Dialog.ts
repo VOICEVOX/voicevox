@@ -1,11 +1,11 @@
-import { Encoding as EncodingType } from "@/type/preload";
+import { QVueGlobals } from "quasar";
+import { AudioKey, Encoding as EncodingType } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import SaveAllResultDialog from "@/components/SaveAllResultDialog.vue";
-import { QVueGlobals } from "quasar";
 import { Dispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 
@@ -18,7 +18,7 @@ export async function generateAndSaveOneAudioWithDialog({
   filePath,
   encoding,
 }: {
-  audioKey: string;
+  audioKey: AudioKey;
   quasarDialog: QuasarDialog;
   dispatch: Dispatch<AllActions>;
   filePath?: string;

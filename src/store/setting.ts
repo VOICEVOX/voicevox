@@ -1,3 +1,9 @@
+import Mousetrap from "mousetrap";
+import { Dark, setCssVar, colors } from "quasar";
+import { SettingStoreState, SettingStoreTypes } from "./type";
+import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
+import { useStore } from "@/store";
 import {
   HotkeyAction,
   HotkeyReturnType,
@@ -7,13 +13,8 @@ import {
   ThemeColorType,
   ThemeConf,
   ToolbarSetting,
+  EngineId,
 } from "@/type/preload";
-import { SettingStoreState, SettingStoreTypes } from "./type";
-import Mousetrap from "mousetrap";
-import { useStore } from "@/store";
-import { Dark, setCssVar, colors } from "quasar";
-import { createUILockAction } from "./ui";
-import { createPartialStore } from "./vuex";
 
 const hotkeyFunctionCache: Record<string, () => HotkeyReturnType> = {};
 
@@ -118,11 +119,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips: await window.electron.getSetting("confirmedTips"),
       });
 
-      for (const [engineId, engineSetting] of Object.entries(
+      // FIXME: engineSettingsをMapにする
+      for (const [engineIdStr, engineSetting] of Object.entries(
         await window.electron.getSetting("engineSettings")
       )) {
+        if (engineSetting == undefined)
+          throw new Error(
+            `engineSetting is undefined. engineIdStr: ${engineIdStr}`
+          );
         commit("SET_ENGINE_SETTING", {
-          engineId,
+          engineId: EngineId(engineIdStr),
           engineSetting,
         });
       }

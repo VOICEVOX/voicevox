@@ -1,8 +1,8 @@
 "use strict";
 
-import dotenv from "dotenv";
-import Store, { Schema } from "electron-store";
+import path from "path";
 
+import fs from "fs";
 import {
   app,
   protocol,
@@ -12,15 +12,16 @@ import {
   shell,
   nativeTheme,
 } from "electron";
-import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
+import Store, { Schema } from "electron-store";
+import dotenv from "dotenv";
 
-import path from "path";
-import { textEditContextMenu } from "./electron/contextMenu";
+import log from "electron-log";
+import dayjs from "dayjs";
+import windowStateKeeper from "electron-window-state";
+import zodToJsonSchema from "zod-to-json-schema";
 import { hasSupportedGpu } from "./electron/device";
-import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
-
-import fs from "fs";
+import { textEditContextMenu } from "./electron/contextMenu";
 import {
   HotkeySetting,
   ThemeConf,
@@ -32,30 +33,37 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSetting,
+  engineSettingSchema,
+  EngineId,
 } from "./type/preload";
-
-import log from "electron-log";
-import dayjs from "dayjs";
-import windowStateKeeper from "electron-window-state";
-import zodToJsonSchema from "zod-to-json-schema";
 
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = import.meta.env.DEV;
+const isTest = import.meta.env.MODE === "test";
+
+if (isDevelopment) {
+  app.commandLine.appendSwitch("remote-debugging-port", "9222");
+}
+
+let suffix = "";
+if (isTest) {
+  suffix = "-test";
+} else if (isDevelopment) {
+  suffix = "-dev";
+}
+console.log(`Environment: ${import.meta.env.MODE}, appData: voicevox${suffix}`);
 
 // Electronの設定ファイルの保存場所を変更
 const beforeUserDataDir = app.getPath("userData"); // 設定ファイルのマイグレーション用
-const fixedUserDataDir = path.join(
-  app.getPath("appData"),
-  `voicevox${isDevelopment ? "-dev" : ""}`
-);
+const fixedUserDataDir = path.join(app.getPath("appData"), `voicevox${suffix}`);
 if (!fs.existsSync(fixedUserDataDir)) {
   fs.mkdirSync(fixedUserDataDir);
 }
@@ -91,6 +99,7 @@ process.on("unhandledRejection", (reason) => {
 
 // .envから設定をprocess.envに読み込み
 let appDirPath: string;
+let __static: string;
 
 // NOTE: 開発版では、カレントディレクトリにある .env ファイルを読み込む。
 //       一方、配布パッケージ版では .env ファイルが実行ファイルと同じディレクトリに配置されているが、
@@ -101,11 +110,13 @@ if (isDevelopment) {
   // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
   appDirPath = path.resolve(__dirname, "..");
   dotenv.config({ override: true });
+  __static = path.join(appDirPath, "public");
 } else {
   appDirPath = path.dirname(app.getPath("exe"));
   const envPath = path.join(appDirPath, ".env");
   dotenv.config({ path: envPath });
   process.chdir(appDirPath);
+  __static = __dirname;
 }
 
 protocol.registerSchemesAsPrivileged([
@@ -117,52 +128,67 @@ const electronStoreJsonSchema = zodToJsonSchema(electronStoreSchema);
 if (!("properties" in electronStoreJsonSchema)) {
   throw new Error("electronStoreJsonSchema must be object");
 }
-const store = new Store<ElectronStoreType>({
-  schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
-  migrations: {
-    ">=0.13": (store) => {
-      // acceptTems -> acceptTerms
-      const prevIdentifier = "acceptTems";
-      const prevValue = store.get(prevIdentifier, undefined) as
-        | AcceptTermsStatus
-        | undefined;
-      if (prevValue) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        store.delete(prevIdentifier as any);
-        store.set("acceptTerms", prevValue);
-      }
-    },
-    ">=0.14": (store) => {
-      // FIXME: できるならEngineManagerからEnginIDを取得したい
-      const engineId = JSON.parse(process.env.DEFAULT_ENGINE_INFOS ?? "[]")[0]
-        .uuid;
-      if (engineId == undefined)
-        throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
-      const prevDefaultStyleIds = store.get("defaultStyleIds");
-      store.set(
-        "defaultStyleIds",
-        prevDefaultStyleIds.map((defaultStyle) => ({
-          engineId: engineId,
-          speakerUuid: defaultStyle.speakerUuid,
-          defaultStyleId: defaultStyle.defaultStyleId,
-        }))
-      );
+let store: Store<ElectronStoreType>;
+try {
+  store = new Store<ElectronStoreType>({
+    schema: electronStoreJsonSchema.properties as Schema<ElectronStoreType>,
+    migrations: {
+      ">=0.13": (store) => {
+        // acceptTems -> acceptTerms
+        const prevIdentifier = "acceptTems";
+        const prevValue = store.get(prevIdentifier, undefined) as
+          | AcceptTermsStatus
+          | undefined;
+        if (prevValue) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          store.delete(prevIdentifier as any);
+          store.set("acceptTerms", prevValue);
+        }
+      },
+      ">=0.14": (store) => {
+        // FIXME: できるならEngineManagerからEnginIDを取得したい
+        if (process.env.DEFAULT_ENGINE_INFOS == undefined)
+          throw new Error("DEFAULT_ENGINE_INFOS == undefined");
+        const engineId = EngineId(
+          JSON.parse(process.env.DEFAULT_ENGINE_INFOS)[0].uuid
+        );
+        if (engineId == undefined)
+          throw new Error("DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+        const prevDefaultStyleIds = store.get("defaultStyleIds");
+        store.set(
+          "defaultStyleIds",
+          prevDefaultStyleIds.map((defaultStyle) => ({
+            engineId,
+            speakerUuid: defaultStyle.speakerUuid,
+            defaultStyleId: defaultStyle.defaultStyleId,
+          }))
+        );
 
-      const outputSamplingRate: number =
+        const outputSamplingRate: number =
+          // @ts-expect-error 削除されたパラメータ。
+          store.get("savingSetting").outputSamplingRate;
+        store.set(`engineSettings.${engineId}`, {
+          useGpu: store.get("useGpu"),
+          outputSamplingRate:
+            outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
+        });
         // @ts-expect-error 削除されたパラメータ。
-        store.get("savingSetting").outputSamplingRate;
-      store.set(`engineSettings.${engineId}`, {
-        useGpu: store.get("useGpu"),
-        outputSamplingRate:
-          outputSamplingRate === 24000 ? "engineDefault" : outputSamplingRate,
-      });
-      // @ts-expect-error 削除されたパラメータ。
-      store.delete("savingSetting.outputSamplingRate");
-      // @ts-expect-error 削除されたパラメータ。
-      store.delete("useGpu");
+        store.delete("savingSetting.outputSamplingRate");
+        // @ts-expect-error 削除されたパラメータ。
+        store.delete("useGpu");
+      },
     },
-  },
-});
+  });
+} catch (e) {
+  dialog.showErrorBox(
+    "設定ファイルの読み込みに失敗しました。",
+    `${app.getPath(
+      "userData"
+    )} にある config.json の名前を変えることで解決することがあります（ただし設定がすべてリセットされます）。`
+  );
+  app.exit(1);
+  throw e;
+}
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -179,7 +205,7 @@ const engineManager = new EngineManager({
 const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
-function openEngineDirectory(engineId: string) {
+function openEngineDirectory(engineId: EngineId) {
   const engineDirectory = engineManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
@@ -271,7 +297,7 @@ function checkMultiEngineEnabled(): boolean {
  * VVPPエンジンをアンインストールする。
  * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
  */
-async function uninstallVvppEngine(engineId: string) {
+async function uninstallVvppEngine(engineId: EngineId) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
     engineInfo = engineManager.fetchEngineInfo(engineId);
@@ -305,7 +331,6 @@ if (!fs.existsSync(tempDir)) {
 }
 
 // 使い方テキストの読み込み
-declare let __static: string;
 const howToUseText = fs.readFileSync(
   path.join(__static, "howtouse.md"),
   "utf-8"
@@ -469,12 +494,13 @@ async function createWindow() {
     "&projectFilePath=" +
     projectFilePath;
 
-  if (process.env.WEBPACK_DEV_SERVER_URL) {
-    await win.loadURL(
-      (process.env.WEBPACK_DEV_SERVER_URL as string) + parameter
-    );
+  if (process.env.VITE_DEV_SERVER_URL) {
+    await win.loadURL((process.env.VITE_DEV_SERVER_URL as string) + parameter);
   } else {
-    createProtocol("app");
+    protocol.registerFileProtocol("app", (request, callback) => {
+      const filePath = new URL(request.url).pathname;
+      callback(path.join(__dirname, filePath));
+    });
     win.loadURL("app://./index.html" + parameter);
   }
   if (isDevelopment) win.webContents.openDevTools();
@@ -518,7 +544,7 @@ async function start() {
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
       // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSettings[engineInfo.uuid] = engineSetting.parse({});
+      engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
   store.set("engineSettings", engineSettings);
@@ -676,7 +702,7 @@ ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
 
 ipcMainHandle(
   "SHOW_QUESTION_DIALOG",
-  (_, { type, title, message, buttons, cancelId }) => {
+  (_, { type, title, message, buttons, cancelId, defaultId }) => {
     return dialog
       .showMessageBox(win, {
         type,
@@ -685,6 +711,7 @@ ipcMainHandle(
         message,
         noLink: true,
         cancelId,
+        defaultId,
       })
       .then((value) => {
         return value.response;
@@ -864,7 +891,7 @@ ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
   return await installVvppEngine(path);
 });
 
-ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: string) => {
+ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
   return await uninstallVvppEngine(engineId);
 });
 
@@ -1025,7 +1052,7 @@ app.on("ready", async () => {
 
   // 多重起動防止
   if (
-    // !isDevelopment &&
+    !isDevelopment &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)

@@ -1,15 +1,13 @@
-import "source-map-support/register";
-
 import { createApp } from "vue";
+import { createGtm } from "@gtm-support/vue-gtm";
+import { Quasar, Dialog, Loading } from "quasar";
+import iconSet from "quasar/icon-set/material-icons";
 import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { createGtm } from "@gtm-support/vue-gtm";
 
-import { Quasar, Dialog, Loading } from "quasar";
-import iconSet from "quasar/icon-set/material-icons";
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "./styles/_index.scss";
@@ -23,7 +21,7 @@ createApp(App)
   .use(router)
   .use(
     createGtm({
-      id: process.env.VUE_APP_GTM_CONTAINER_ID ?? "GTM-DUMMY",
+      id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
       vueRouter: router,
       // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
       enabled: false,

@@ -17,35 +17,26 @@
   </div>
 </template>
 
-<script lang="ts">
-import { PropType, defineComponent, computed } from "vue";
+<script setup lang="ts">
+import { computed } from "vue";
 import { ConfirmedTips } from "@/type/preload";
 import { useStore } from "@/store";
 
-export default defineComponent({
-  name: "ToolTip",
+const props =
+  defineProps<{
+    tipKey: keyof ConfirmedTips;
+  }>();
 
-  props: {
-    tipKey: { type: String as PropType<keyof ConfirmedTips>, required: true },
-  },
+const store = useStore();
 
-  setup(props) {
-    const store = useStore();
-
-    const tipConfirmed = computed({
-      get: () => store.state.confirmedTips[props.tipKey],
-      set: (value) =>
-        store.dispatch("SET_CONFIRMED_TIPS", {
-          confirmedTips: {
-            ...store.state.confirmedTips,
-            [props.tipKey]: value,
-          },
-        }),
-    });
-
-    return {
-      tipConfirmed,
-    };
-  },
+const tipConfirmed = computed({
+  get: () => store.state.confirmedTips[props.tipKey],
+  set: (value) =>
+    store.dispatch("SET_CONFIRMED_TIPS", {
+      confirmedTips: {
+        ...store.state.confirmedTips,
+        [props.tipKey]: value,
+      },
+    }),
 });
 </script>

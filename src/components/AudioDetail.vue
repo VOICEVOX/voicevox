@@ -266,18 +266,23 @@ import {
   ref,
   watch,
 } from "vue";
-import { useStore } from "@/store";
 import { useQuasar } from "quasar";
 import ToolTip from "./ToolTip.vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
-import { HotkeyAction, HotkeyReturnType, MoraDataType } from "@/type/preload";
+import { useStore } from "@/store";
+import {
+  AudioKey,
+  HotkeyAction,
+  HotkeyReturnType,
+  MoraDataType,
+} from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 import { EngineManifest, Mora } from "@/openapi/models";
 
 const props =
   defineProps<{
-    activeAudioKey: string;
+    activeAudioKey: AudioKey;
   }>();
 
 const store = useStore();

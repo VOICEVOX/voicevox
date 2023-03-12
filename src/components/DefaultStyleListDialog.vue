@@ -99,7 +99,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { CharacterInfo, StyleInfo } from "@/type/preload";
+import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 import DefaultStyleSelectDialog from "@/components/DefaultStyleSelectDialog.vue";
 
 const props =
@@ -131,7 +131,7 @@ const selectedCharacterInfo = computed(() => {
 });
 
 const characterInfosMap = computed(() => {
-  const map: { [key: string]: CharacterInfo } = {};
+  const map: { [key: SpeakerId]: CharacterInfo } = {};
   props.characterInfos.forEach((characterInfo) => {
     map[characterInfo.metas.speakerUuid] = characterInfo;
   });
@@ -142,7 +142,7 @@ const characterInfosMap = computed(() => {
 const speakerWithMultipleStyles = ref<CharacterInfo[]>([]);
 
 // 選択中のスタイル
-const selectedStyleIndexes = ref<Record<string, number>>({});
+const selectedStyleIndexes = ref<Record<SpeakerId, number>>({});
 const selectedStyles = computed(() => {
   const map: { [key: string]: StyleInfo } = {};
   props.characterInfos.forEach((characterInfo) => {
@@ -163,17 +163,26 @@ watch([() => props.modelValue], async ([newValue]) => {
       .filter(
         (characterInfo) => characterInfo.metas.styles.length > 1
       ) as CharacterInfo[];
-    selectedStyleIndexes.value = Object.fromEntries([
-      ...store.state.userCharacterOrder.map((speakerUuid) => [speakerUuid, 0]),
-      ...store.state.defaultStyleIds.map((defaultStyle) => [
-        defaultStyle.speakerUuid,
-        characterInfosMap.value[
-          defaultStyle.speakerUuid
-        ]?.metas.styles.findIndex(
-          (style) => style.styleId === defaultStyle.defaultStyleId
-        ) ?? 0,
-      ]),
-    ]);
+    // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
+    // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
+    selectedStyleIndexes.value = Object.fromEntries(
+      [
+        ...store.state.userCharacterOrder.map(
+          (speakerUuid) => [speakerUuid, 0] as const
+        ),
+        ...store.state.defaultStyleIds.map(
+          (defaultStyle) =>
+            [
+              defaultStyle.speakerUuid,
+              characterInfosMap.value[
+                defaultStyle.speakerUuid
+              ]?.metas.styles.findIndex(
+                (style) => style.styleId === defaultStyle.defaultStyleId
+              ),
+            ] as const
+        ),
+      ].filter(([speakerUuid]) => speakerUuid in characterInfosMap.value)
+    );
   }
 });
 
@@ -185,14 +194,18 @@ const closeDialog = () => {
   store.dispatch(
     "SET_DEFAULT_STYLE_IDS",
     Object.entries(selectedStyleIndexes.value).map(
-      ([speakerUuid, styleIndex]) => ({
-        speakerUuid,
-        defaultStyleId:
-          characterInfosMap.value[speakerUuid].metas.styles[styleIndex].styleId,
-        engineId:
-          characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
-            .engineId,
-      })
+      ([speakerUuidStr, styleIndex]) => {
+        const speakerUuid = SpeakerId(speakerUuidStr);
+        return {
+          speakerUuid,
+          defaultStyleId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .styleId,
+          engineId:
+            characterInfosMap.value[speakerUuid].metas.styles[styleIndex]
+              .engineId,
+        };
+      }
     )
   );
   stop();

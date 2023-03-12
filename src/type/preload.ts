@@ -1,8 +1,32 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
-import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { IpcSOData } from "./ipc";
 
-export const isMac = process.platform === "darwin";
+export const isMac =
+  typeof process === "undefined"
+    ? navigator.userAgent.includes("Mac")
+    : process.platform === "darwin";
+
+export const engineIdSchema = z.string().uuid().brand<"EngineId">();
+export type EngineId = z.infer<typeof engineIdSchema>;
+export const EngineId = (id: string): EngineId => engineIdSchema.parse(id);
+
+export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
+export type SpeakerId = z.infer<typeof speakerIdSchema>;
+export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
+
+export const styleIdSchema = z.number().brand<"StyleId">();
+export type StyleId = z.infer<typeof styleIdSchema>;
+export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
+
+export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
+export type AudioKey = z.infer<typeof audioKeySchema>;
+export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
+export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export type PresetKey = z.infer<typeof presetKeySchema>;
+export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -145,6 +169,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {
@@ -166,8 +191,8 @@ export interface Sandbox {
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
   engineInfos(): Promise<EngineInfo[]>;
-  restartEngine(engineId: string): Promise<void>;
-  openEngineDirectory(engineId: string): void;
+  restartEngine(engineId: EngineId): Promise<void>;
+  openEngineDirectory(engineId: EngineId): void;
   hotkeySettings(newData?: HotkeySetting): Promise<HotkeySetting[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
@@ -184,11 +209,11 @@ export interface Sandbox {
     newValue: ElectronStoreType[Key]
   ): Promise<ElectronStoreType[Key]>;
   setEngineSetting(
-    engineId: string,
+    engineId: EngineId,
     engineSetting: EngineSetting
   ): Promise<void>;
   installVvppEngine(path: string): Promise<boolean>;
-  uninstallVvppEngine(engineId: string): Promise<boolean>;
+  uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
@@ -200,23 +225,23 @@ export type AppInfos = {
 
 export type StyleInfo = {
   styleName?: string;
-  styleId: number;
+  styleId: StyleId;
   iconPath: string;
   portraitPath: string | undefined;
-  engineId: string;
+  engineId: EngineId;
   voiceSamplePaths: string[];
 };
 
 export type MetasJson = {
   speakerName: string;
-  speakerUuid: string;
+  speakerUuid: SpeakerId;
   styles: Pick<StyleInfo, "styleName" | "styleId">[];
 };
 
 export type CharacterInfo = {
   portraitPath: string;
   metas: {
-    speakerUuid: string;
+    speakerUuid: SpeakerId;
     speakerName: string;
     styles: StyleInfo[];
     policy: string;
@@ -230,9 +255,9 @@ export type UpdateInfo = {
 };
 
 export type Voice = {
-  engineId: string;
-  speakerId: string;
-  styleId: number;
+  engineId: EngineId;
+  speakerId: SpeakerId;
+  styleId: StyleId;
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";
@@ -262,9 +287,9 @@ export type SavingSetting = {
   audioOutputDevice: string;
 };
 
-export type EngineSettings = Record<string, EngineSetting>;
+export type EngineSettings = Record<EngineId, EngineSetting>;
 
-export const engineSetting = z
+export const engineSettingSchema = z
   .object({
     useGpu: z.boolean().default(false),
     outputSamplingRate: z
@@ -272,23 +297,34 @@ export const engineSetting = z
       .default("engineDefault"),
   })
   .passthrough();
-export type EngineSetting = z.infer<typeof engineSetting>;
+export type EngineSetting = z.infer<typeof engineSettingSchema>;
 
 export type DefaultStyleId = {
-  engineId: string;
-  speakerUuid: string;
-  defaultStyleId: number;
+  engineId: EngineId;
+  speakerUuid: SpeakerId;
+  defaultStyleId: StyleId;
 };
 
-export type MinimumEngineManifest = {
-  name: string;
-  uuid: string;
-  command: string;
-  port: string;
-};
+export const supportedFeaturesItemSchema = z.object({
+  type: z.string(),
+  value: z.boolean(),
+  name: z.string(),
+});
+
+export const minimumEngineManifestSchema = z
+  .object({
+    name: z.string(),
+    uuid: engineIdSchema,
+    command: z.string(),
+    port: z.number(),
+    supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
+  })
+  .passthrough();
+
+export type MinimumEngineManifest = z.infer<typeof minimumEngineManifestSchema>;
 
 export type EngineInfo = {
-  uuid: string;
+  uuid: EngineId;
   host: string;
   name: string;
   path?: string; // エンジンディレクトリのパス
@@ -315,9 +351,9 @@ export type Preset = {
 
 export type MorphingInfo = {
   rate: number;
-  targetEngineId: string;
-  targetSpeakerId: string;
-  targetStyleId: number;
+  targetEngineId: EngineId;
+  targetSpeakerId: SpeakerId;
+  targetStyleId: StyleId;
 };
 
 export type PresetConfig = {
@@ -326,10 +362,10 @@ export type PresetConfig = {
 };
 
 export type MorphableTargetInfoTable = {
-  [baseStyleId: number]:
+  [baseStyleId: StyleId]:
     | undefined
     | {
-        [targetStyleId: number]: {
+        [targetStyleId: StyleId]: {
           isMorphable: boolean;
         };
       };
@@ -475,14 +511,16 @@ export const electronStoreSchema = z
     toolbarSetting: toolbarSettingSchema
       .array()
       .default(defaultToolbarButtonSetting),
-    engineSettings: z.record(engineSetting).default({}),
-    userCharacterOrder: z.string().array().default([]),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+    userCharacterOrder: speakerIdSchema.array().default([]),
     defaultStyleIds: z
       .object({
-        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら".or(z.literal("")).default("")"を外す
-        engineId: z.string().uuid().or(z.literal("")).default(""),
-        speakerUuid: z.string().uuid(),
-        defaultStyleId: z.number(),
+        // FIXME: マイグレーション前にバリテーションされてしまう問題に対処したら.or(z.literal)を外す
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
+        speakerUuid: speakerIdSchema,
+        defaultStyleId: styleIdSchema,
       })
       .passthrough()
       .array()
@@ -491,7 +529,7 @@ export const electronStoreSchema = z
       .object({
         items: z
           .record(
-            z.string().uuid(),
+            presetKeySchema,
             z
               .object({
                 name: z.string(),
@@ -504,9 +542,9 @@ export const electronStoreSchema = z
                 morphingInfo: z
                   .object({
                     rate: z.number(),
-                    targetEngineId: z.string().uuid(),
-                    targetSpeakerId: z.string().uuid(),
-                    targetStyleId: z.number(),
+                    targetEngineId: engineIdSchema,
+                    targetSpeakerId: speakerIdSchema,
+                    targetStyleId: styleIdSchema,
                   })
                   .passthrough()
                   .optional(),
@@ -514,7 +552,7 @@ export const electronStoreSchema = z
               .passthrough()
           )
           .default({}),
-        keys: z.string().uuid().array().default([]),
+        keys: presetKeySchema.array().default([]),
       })
       .passthrough()
       .default({}),

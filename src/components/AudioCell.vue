@@ -52,19 +52,19 @@
 
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
-import { useStore } from "@/store";
-import { Voice } from "@/type/preload";
 import { QInput } from "quasar";
 import CharacterButton from "./CharacterButton.vue";
+import { useStore } from "@/store";
+import { AudioKey, Voice } from "@/type/preload";
 
 const props =
   defineProps<{
-    audioKey: string;
+    audioKey: AudioKey;
   }>();
 
 const emit =
   defineEmits<{
-    (e: "focusCell", payload: { audioKey: string }): void;
+    (e: "focusCell", payload: { audioKey: AudioKey }): void;
   }>();
 
 defineExpose({
