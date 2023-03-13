@@ -780,7 +780,6 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 ipcMainHandle("LOG_ERROR", (_, ...params) => {
   log.error(...params);
 });
-engineManager;
 ipcMainHandle("LOG_WARN", (_, ...params) => {
   log.warn(...params);
 });
