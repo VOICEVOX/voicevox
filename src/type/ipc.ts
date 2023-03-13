@@ -1,3 +1,4 @@
+import { DownloadableLibrary } from "@/openapi";
 import {
   AppInfos,
   ElectronStoreType,
@@ -307,7 +308,7 @@ export type IpcIHData = {
   };
 
   START_LIBRARY_INSTALL: {
-    args: [obj: { engineId: string; url: string }];
+    args: [obj: { engineId: string; library: DownloadableLibrary }];
     return: void;
   };
 };

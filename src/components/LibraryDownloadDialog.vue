@@ -38,30 +38,7 @@
         :breakpoint="0"
       >
         <div class="library-portrait-wrapper">
-          <img
-            :src="
-              portraitUris[
-                `${selectedEngineId}:${selectedLibrary}:${
-                  selectedSpeakersMap[selectedEngineId][selectedLibrary].speaker
-                    .speakerUuid
-                }:${
-                  selectedStyleIndexes[selectedEngineId][selectedLibrary][
-                    selectedSpeakersIndexes[selectedEngineId]
-                      ? selectedSpeakersIndexes[selectedEngineId][
-                          selectedLibrary
-                        ]
-                      : 0
-                  ]
-                }`
-              ]
-            "
-            v-if="
-              selectedLibrary &&
-              selectedSpeakersMap[selectedEngineId] &&
-              selectedSpeakersMap[selectedEngineId][selectedLibrary]
-            "
-            class="library-portrait"
-          />
+          <img :src="portraitUri" class="library-portrait" />
         </div>
       </q-drawer>
 
@@ -110,9 +87,18 @@
                         `${engineId}:${library.uuid}:${
                           selectedSpeakersMap[engineId][library.uuid].speaker
                             .speakerUuid
-                        }:${selectedStyleIndexes[engineId][library.uuid] || 0}`
+                        }:${
+                          selectedStyleIndexes[engineId][library.uuid][
+                            selectedSpeakersMap[engineId][library.uuid].speaker
+                              .speakerUuid
+                          ] || 0
+                        }`
                       ]
                     "
+                    :alt="`${engineId}:${library.uuid}:${
+                      selectedSpeakersMap[engineId][library.uuid].speaker
+                        .speakerUuid
+                    }:${selectedStyleIndexes[engineId][library.uuid] || 0}`"
                     class="style-icon"
                   />
                   <span class="text-subtitle1 q-ma-sm">{{
@@ -137,7 +123,10 @@
                         rollStyleIndex(
                           engineId,
                           library.uuid,
-                          selectedSpeakersIndexes[engineId][library.uuid],
+                          SpeakerId(
+                            selectedSpeakersMap[engineId][library.uuid].speaker
+                              .speakerUuid
+                          ),
                           -1
                         );
                       "
@@ -173,7 +162,10 @@
                         rollStyleIndex(
                           engineId,
                           library.uuid,
-                          selectedSpeakersIndexes[engineId][library.uuid],
+                          SpeakerId(
+                            selectedSpeakersMap[engineId][library.uuid].speaker
+                              .speakerUuid
+                          ),
                           1
                         );
                       "
@@ -187,7 +179,9 @@
                       outline
                       :icon="
                         playing != undefined &&
-                        library.uuid === playing.speakerUuid &&
+                        library.uuid === playing.libraryId &&
+                        selectedSpeakersMap[engineId][library.uuid].speaker
+                          .speakerUuid === playing.speakerUuid &&
                         voiceSampleIndex === playing.index
                           ? 'stop'
                           : 'play_arrow'
@@ -205,9 +199,12 @@
                             selectedSpeakersMap[engineId][library.uuid].speaker
                               .speakerUuid
                           ),
-                          selectedStyles[engineId][library.uuid][
-                            selectedSpeakersIndexes[engineId][library.uuid]
-                          ],
+                          StyleId(
+                            selectedStyleIndexes[engineId][library.uuid][
+                              selectedSpeakersMap[engineId][library.uuid]
+                                .speaker.speakerUuid
+                            ] || 0
+                          ),
                           voiceSampleIndex
                         );
                       "
@@ -226,8 +223,8 @@
                       isLatest(engineId, library)
                         ? "最新版です"
                         : installedLibrariesMap[engineId][library.uuid]
-                        ? `アップデート：${bytesToSize(library.bytes)}`
-                        : `インストール：${bytesToSize(library.bytes)}`
+                        ? `アップデート`
+                        : `インストール`
                     }}
                   </q-btn>
                 </div>
@@ -255,8 +252,7 @@ import semver from "semver";
 import { useStore } from "@/store";
 import { DownloadableLibrary, LibrarySpeaker, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { bytesToSize } from "@/helpers/sizeHelper";
-import { EngineId, LibraryId, SpeakerId } from "@/type/preload";
+import { EngineId, LibraryId, SpeakerId, StyleId } from "@/type/preload";
 
 type BrandedDownloadableLibrary = DownloadableLibrary & {
   uuid: LibraryId;
@@ -321,15 +317,20 @@ const installedLibrariesMap = computed(
 const downloadableSpeakersMap = computed(() => {
   const downloadableSpeakersMap: Record<
     string,
-    Record<string, BrandedDownloadableLibrary["speakers"][number]>
+    Record<
+      string,
+      Record<string, BrandedDownloadableLibrary["speakers"][number]>
+    >
   > = {};
 
   for (const engineId of engineIdsWithDownloadableLibraries.value) {
     downloadableSpeakersMap[engineId] = {};
     for (const library of downloadableLibraries.value[engineId] || []) {
+      downloadableSpeakersMap[engineId][library.uuid] = {};
       for (const speaker of library.speakers) {
-        downloadableSpeakersMap[engineId][speaker.speaker.speakerUuid] =
-          speaker;
+        downloadableSpeakersMap[engineId][library.uuid][
+          speaker.speaker.speakerUuid
+        ] = speaker;
       }
     }
   }
@@ -351,29 +352,32 @@ const fetchStatus = ref<Record<string, "fetching" | "success" | "error">>({});
 // 選択中のスタイル
 const flatSelectedStyleIndexes = ref<Record<string, number>>({});
 const selectedStyleIndexes = computed<
-  Record<EngineId, Record<LibraryId, number[]>>
+  Record<EngineId, Record<LibraryId, Record<SpeakerId, number>>>
 >(() => {
-  const selectedStyleIndexes: Record<EngineId, Record<LibraryId, number[]>> =
-    {};
+  const selectedStyleIndexes: Record<
+    EngineId,
+    Record<LibraryId, Record<SpeakerId, number>>
+  > = {};
   for (const engineId of engineIdsWithDownloadableLibraries.value) {
     selectedStyleIndexes[engineId] = {};
     for (const library of downloadableLibraries.value[engineId] || []) {
-      selectedStyleIndexes[engineId][library.uuid] = [];
-      for (let i = 0; i < library.speakers.length; i++) {
-        selectedStyleIndexes[engineId][library.uuid].push(0);
+      selectedStyleIndexes[engineId][library.uuid] = {};
+      for (const speaker of library.speakers) {
+        selectedStyleIndexes[engineId][library.uuid][
+          speaker.speaker.speakerUuid
+        ] = 0;
       }
     }
-    console.log(selectedStyleIndexes);
     for (const [selectedStyleIndexKey, selectedStyleIndex] of Object.entries(
       flatSelectedStyleIndexes.value
     )) {
-      const [engineIdRaw, libraryIdRaw, speakerIndexRaw] =
+      const [engineIdRaw, libraryIdRaw, speakerUuidRaw] =
         selectedStyleIndexKey.split(":");
       const engineId = EngineId(engineIdRaw);
       const libraryId = LibraryId(libraryIdRaw);
-      const speakerIndex = parseInt(speakerIndexRaw);
+      const speakerUuid = SpeakerId(speakerUuidRaw);
 
-      selectedStyleIndexes[engineId][libraryId][speakerIndex] =
+      selectedStyleIndexes[engineId][libraryId][speakerUuid] =
         selectedStyleIndex;
     }
   }
@@ -391,9 +395,11 @@ const selectedStyles = computed(() => {
     map[engineId] = {};
     for (const engineLibraryInfo of engineLibraryInfos) {
       map[engineId][engineLibraryInfo.uuid] = engineLibraryInfo.speakers.map(
-        (speaker, i) => {
+        (speaker) => {
           const selectedStyleIndex: number | undefined =
-            selectedStyleIndexes.value[engineId]?.[engineLibraryInfo.uuid]?.[i];
+            selectedStyleIndexes.value[engineId]?.[engineLibraryInfo.uuid]?.[
+              SpeakerId(speaker.speaker.speakerUuid)
+            ];
 
           return {
             ...speaker.speakerInfo.styleInfos[selectedStyleIndex ?? 0],
@@ -409,7 +415,10 @@ const selectedStyles = computed(() => {
 // 選択中の話者
 const selectedSpeakersIndexes: Record<string, Record<string, number>> = {};
 const selectedSpeakersMap = computed(() => {
-  const map: Record<string, Record<string, LibrarySpeaker>> = {};
+  const map: Record<
+    string,
+    Record<string, BrandedDownloadableLibrary["speakers"][number]>
+  > = {};
   for (const [engineId, engineLibraryInfos] of Object.entries(
     downloadableLibraries.value
   )) {
@@ -503,10 +512,12 @@ watch(
               return 0;
             }
           };
-          return toPrimaryOrder(a) - toPrimaryOrder(b);
+          return toPrimaryOrder(b) - toPrimaryOrder(a);
         });
 
+        selectedSpeakersIndexes[engineId] = {};
         for (const library of libraries) {
+          selectedSpeakersIndexes[engineId][library.uuid] = 0;
           for (const { speaker, speakerInfo } of library.speakers) {
             if (!speaker || !speakerInfo) {
               continue;
@@ -536,12 +547,38 @@ watch(
   { immediate: true }
 );
 
+const portraitUri = computed(() => {
+  if (!selectedEngineId.value || !selectedLibrary.value) {
+    return "";
+  }
+  return portraitUris.value[
+    `${selectedEngineId.value}:${selectedLibrary.value}:${
+      selectedSpeakersMap.value[selectedEngineId.value][selectedLibrary.value]
+        .speaker.speakerUuid
+    }:${
+      selectedStyleIndexes.value[selectedEngineId.value][selectedLibrary.value][
+        SpeakerId(
+          selectedSpeakersMap.value[selectedEngineId.value]?.[
+            selectedLibrary.value
+          ]?.speaker.speakerUuid
+        )
+      ]
+    }`
+  ];
+});
+
 // キャラクター枠のホバー状態を表示するかどうか
 // 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
 const isHoverableItem = ref(true);
 
 // 音声再生
-const playing = ref<{ speakerUuid: string; styleId: number; index: number }>();
+const playing =
+  ref<{
+    libraryId: LibraryId;
+    speakerUuid: SpeakerId;
+    styleId: StyleId;
+    index: number;
+  }>();
 
 const audio = new Audio();
 audio.volume = 0.5;
@@ -551,6 +588,7 @@ const play = (
   engineId: EngineId,
   libraryId: LibraryId,
   speakerUuid: SpeakerId,
+  styleId: StyleId,
   index: number
 ) => {
   if (audio.src !== "") stop();
@@ -564,7 +602,13 @@ const play = (
   const voiceSamples = styleInfo.voiceSamples;
   audio.src = "data:audio/wav;base64," + voiceSamples[index];
   audio.play();
-  playing.value = { speakerUuid, styleId: styleInfo.id, index };
+  playing.value = {
+    speakerUuid,
+    libraryId,
+    styleId,
+    index,
+  };
+  console.log("play", playing.value);
 };
 const stop = () => {
   if (audio.src === "") return;
@@ -579,15 +623,16 @@ const togglePlayOrStop = (
   engineId: EngineId,
   libraryId: LibraryId,
   speakerUuid: SpeakerId,
-  styleInfo: StyleInfo,
+  styleId: StyleId,
   index: number
 ) => {
   if (
     playing.value === undefined ||
     speakerUuid !== playing.value.speakerUuid ||
+    styleId !== playing.value.styleId ||
     index !== playing.value.index
   ) {
-    play(engineId, libraryId, speakerUuid, index);
+    play(engineId, libraryId, speakerUuid, styleId, index);
   } else {
     stop();
   }
@@ -597,34 +642,41 @@ const togglePlayOrStop = (
 const rollStyleIndex = (
   engineId: EngineId,
   libraryId: LibraryId,
-  speakerIndex: number,
+  speakerUuid: SpeakerId,
   diff: number
 ) => {
-  const speaker =
-    downloadableLibrariesMap.value[engineId]?.[libraryId].speakers[
-      speakerIndex
-    ];
+  const speaker = downloadableLibrariesMap.value[engineId]?.[
+    libraryId
+  ].speakers.find((s) => s.speaker.speakerUuid === speakerUuid);
   if (!speaker) return;
   // 0 <= index <= length に収める
   const length = speaker.speakerInfo.styleInfos.length;
   const selectedStyleIndex: number | undefined =
-    selectedStyleIndexes.value[engineId][libraryId][speakerIndex];
+    selectedStyleIndexes.value[engineId][libraryId][speakerUuid];
 
   let styleIndex = (selectedStyleIndex ?? 0) + diff;
   styleIndex = styleIndex < 0 ? length - 1 : styleIndex % length;
 
-  flatSelectedStyleIndexes.value[`${engineId}:${libraryId}:${speakerIndex}`] =
+  flatSelectedStyleIndexes.value[`${engineId}:${libraryId}:${speakerUuid}`] =
     styleIndex;
 
   // 音声を再生する。同じstyleIndexだったら停止する。
   const selectedStyleInfo =
-    downloadableSpeakersMap.value[engineId][libraryId].speakerInfo.styleInfos[
-      styleIndex
-    ];
+    downloadableSpeakersMap.value[engineId][libraryId][speakerUuid].speakerInfo
+      .styleInfos[styleIndex];
 
-  const speakerUuid =
-    downloadableSpeakersMap.value[engineId][libraryId].speaker.speakerUuid;
-  togglePlayOrStop(libraryId, speakerUuid, selectedStyleInfo, 0);
+  if (playing.value) {
+    if (
+      playing.value.speakerUuid === speakerUuid &&
+      playing.value.styleId === StyleId(selectedStyleInfo.id)
+    ) {
+      stop();
+      return;
+    }
+  }
+
+  const styleId = StyleId(selectedStyleInfo.id);
+  togglePlayOrStop(engineId, libraryId, speakerUuid, styleId, 0);
 };
 
 const closeDialog = () => {

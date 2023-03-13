@@ -1,3 +1,4 @@
+import { DownloadableLibrary } from "@/openapi";
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
@@ -221,7 +222,7 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   startLibraryInstall(obj: {
     engineId: string;
-    libraryId: string;
+    library: DownloadableLibrary;
   }): Promise<void>;
   restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
