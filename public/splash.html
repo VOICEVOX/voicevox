@@ -50,13 +50,16 @@
         flex-direction: column;
       }
       .title {
-        font-family: "Rounded M+ 1p", sans-serif;
-        font-weight: 1000;
-        font-size: 3rem;
         margin-left: auto;
         margin-right: auto;
         margin-bottom: 0.5rem;
-        color: var(--primary);
+        height: 3.5rem;
+        width: 80%;
+        background-color: var(--primary);
+        mask: url(logo.svg);
+        -webkit-mask: url(logo.svg);
+        mask-size: 100% 100%;
+        -webkit-mask-size: 100% 100%;
       }
 
       /* Copied from quasar's Linear Progress Component, MIT Licence */
@@ -136,7 +139,7 @@
   </head>
   <body>
     <div class="root">
-      <div class="title">VOICEVOX</div>
+      <div class="title"></div>
 
       <div class="progress">
         <div class="progressbar"></div>
