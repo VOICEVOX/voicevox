@@ -56,7 +56,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
             artifact_path: dist_electron/linux-unpacked
@@ -67,7 +67,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -408,7 +408,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Linux CPU
           - artifact_name: linux-cpu-appimage
             engine_artifact_name: linux-cpu-prepackage
@@ -416,7 +416,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Windows NVIDIA GPU
           - artifact_name: windows-nvidia-nsis-web
             engine_artifact_name: windows-nvidia-prepackage
@@ -634,7 +634,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
         artifact_name:
           - linux-nvidia-appimage
           - linux-cpu-appimage
