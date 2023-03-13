@@ -462,7 +462,16 @@ async function createWindow() {
 
   const version = app.getVersion();
 
-  const fullURL = `file://${splashURL}?primary=${primary}&display=${display}&background=${background}&version=${version}`;
+  const urlParam = new URLSearchParams();
+
+  urlParam.append("primary", primary);
+  urlParam.append("display", display);
+  urlParam.append("background", background);
+  urlParam.append("version", version);
+
+  const baseURL = `file://${splashURL}?`;
+
+  const fullURL = baseURL + urlParam.toString();
 
   splash.loadURL(fullURL);
   splash.once("ready-to-show", splash.show);
