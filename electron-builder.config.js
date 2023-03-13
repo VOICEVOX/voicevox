@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const which = require("which");
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
@@ -17,6 +18,13 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 const isMac = process.platform === "darwin";
+
+let sevenZipPath = "";
+if (process.platform === "win32") {
+  sevenZipPath = "./build/7zr.exe";
+} else {
+  sevenZipPath = which.sync("7z");
+}
 
 // electron-builderのextraFilesは、ファイルのコピー先としてVOICEVOX.app/Contents/を使用する。
 // しかし、実行ファイルはVOICEVOX.app/Contents/MacOS/にあるため、extraFilesをVOICEVOX.app/Contents/ディレクトリにコピーするのは正しくない。
@@ -67,6 +75,10 @@ const builderOptions = {
     {
       from: ".env.production",
       to: extraFilePrefix + ".env",
+    },
+    {
+      from: sevenZipPath,
+      to: extraFilePrefix + "7z" + (process.platform === "win32" ? ".exe" : ""),
     },
     {
       from: VOICEVOX_ENGINE_DIR,
