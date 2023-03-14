@@ -238,6 +238,9 @@ export class Transport implements BaseTransport {
   }
 }
 
+/**
+ * 登録されているシーケンスのイベントをスケジュールします。主に保存用途です。
+ */
 export class OfflineTransport implements BaseTransport {
   private sequences: SoundSequence[] = [];
 
