@@ -1,5 +1,7 @@
 import fs from "fs";
 import path from "path";
+import { spawn } from "child_process";
+import { promisify } from "util";
 import log from "electron-log";
 import { moveFile } from "move-file";
 // FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
@@ -7,6 +9,7 @@ import { Extract } from "unzipper";
 import { dialog } from "electron";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
+import which from "which";
 import {
   EngineId,
   EngineInfo,
@@ -15,6 +18,13 @@ import {
 } from "@/type/preload";
 
 const isNotWin = process.platform !== "win32";
+
+// https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+  0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+]);
+
+const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
@@ -116,6 +126,7 @@ export class VvppManager {
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     const streams: fs.ReadStream[] = [];
+    let format;
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
     if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
@@ -138,22 +149,76 @@ export class VvppManager {
         }
         return parseInt(aMatch[1]) - parseInt(bMatch[1]);
       });
+      format = await this.detectFileFormat(filePaths[0]);
+      if (!format) {
+        throw new Error(`Unknown file format: ${filePaths[0]}`);
+      }
       for (const p of filePaths) {
         streams.push(fs.createReadStream(p));
       }
     } else {
       log.log("Not a split file");
+      format = await this.detectFileFormat(vvppLikeFilePath);
+      if (!format) {
+        throw new Error(`Unknown file format: ${vvppLikeFilePath}`);
+      }
       streams.push(fs.createReadStream(vvppLikeFilePath));
     }
 
+    log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
-      await new Promise((resolve, reject) => {
-        new MultiStream(streams)
-          .pipe(Extract({ path: outputDir }))
-          .on("close", resolve)
-          .on("error", reject);
-      });
+      switch (format) {
+        case "zip": {
+          await new Promise((resolve, reject) => {
+            new MultiStream(streams)
+              .pipe(Extract({ path: outputDir }))
+              .on("close", resolve)
+              .on("error", reject);
+          });
+          break;
+        }
+        case "7z": {
+          let sevenZipPath = "7z";
+          if (import.meta.env.DEV) {
+            if (process.platform === "win32") {
+              // Windows: build/7za.exe
+              sevenZipPath = path.resolve(__dirname, "..", "build", "7za.exe");
+            } else {
+              // Mac/Linux: PATH上に7zがあると想定、なければエラーになる
+              await promisify(which)("7z");
+            }
+          } else {
+            // ビルド時に7zをバンドルする
+            if (process.platform === "win32") {
+              // Windows: 7z.exe
+              sevenZipPath = path.resolve(__dirname, "7z.exe");
+            } else {
+              // Mac/Linux: 7z
+              sevenZipPath = path.resolve(__dirname, "7z");
+            }
+          }
+
+          await new Promise<void>((resolve, reject) => {
+            const child = spawn(sevenZipPath, ["x", "-o" + outputDir, "-si"], {
+              stdio: ["pipe", "ignore", "inherit"],
+            });
+
+            new MultiStream(streams).pipe(child.stdin).on("error", reject);
+            child.on("exit", (code) => {
+              if (code === 0) {
+                resolve();
+              } else {
+                reject(new Error(`7z exited with code ${code}`));
+              }
+            });
+          });
+          break;
+        }
+        default: {
+          throw new Error("Unreachable!");
+        }
+      }
       const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
         JSON.parse(
           await fs.promises.readFile(
@@ -262,6 +327,23 @@ export class VvppManager {
       })
     );
     this.willReplaceEngineDirs = [];
+  }
+
+  private async detectFileFormat(
+    filePath: string
+  ): Promise<"zip" | "7z" | undefined> {
+    const file = await fs.promises.open(filePath, "r");
+
+    const buffer = Buffer.alloc(8);
+    await file.read(buffer, 0, 8, 0);
+    await file.close();
+
+    if (buffer.compare(SEVEN_ZIP_MAGIC_NUMBER, 0, 6, 0, 6) === 0) {
+      return "7z";
+    } else if (buffer.compare(ZIP_MAGIC_NUMBER, 0, 4, 0, 4) === 0) {
+      return "zip";
+    }
+    return undefined;
   }
 }
 
