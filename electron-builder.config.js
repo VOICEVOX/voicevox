@@ -78,7 +78,7 @@ const builderOptions = {
     },
     {
       from: sevenZipPath,
-      to: extraFilePrefix + "7z" + (process.platform === "win32" ? ".exe" : ""),
+      to: extraFilePrefix + (process.platform === "win32" ? "7zr.exe" : "7z"),
     },
     {
       from: VOICEVOX_ENGINE_DIR,

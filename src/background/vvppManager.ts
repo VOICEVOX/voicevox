@@ -189,7 +189,7 @@ export class VvppManager {
           let sevenZipPath = "7z";
           if (import.meta.env.DEV) {
             if (process.platform === "win32") {
-              // Windows: build/7za.exe
+              // Windows: build/7zr.exe
               sevenZipPath = path.resolve(__dirname, "..", "build", "7zr.exe");
             } else {
               // Mac/Linux: PATH上に7zがあると想定、なければエラーにする
@@ -198,7 +198,7 @@ export class VvppManager {
           } else {
             // ビルド時に7zをexeと同じディレクトリにバンドルする
             sevenZipPath = path.join(
-              app.getPath("exe"),
+              path.dirname(app.getPath("exe")),
               process.platform === "win32" ? "7zr.exe" : "7z"
             );
           }
@@ -243,7 +243,15 @@ export class VvppManager {
                 args.map((a) => JSON.stringify(a)).join(" ")
               );
               const child = spawn(sevenZipPath, args, {
-                stdio: ["pipe", "inherit", "inherit"],
+                stdio: ["pipe", "pipe", "pipe"],
+              });
+
+              child.stdout?.on("data", (data) => {
+                log.info(`7z STDOUT: ${data.toString("utf-8")}`);
+              });
+
+              child.stderr?.on("data", (data) => {
+                log.error(`7z STDERR: ${data.toString("utf-8")}`);
               });
 
               child.on("exit", (code) => {
