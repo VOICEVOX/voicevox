@@ -56,6 +56,12 @@ export default defineComponent({
 
       await store.dispatch("SET_VOLUME", { volume: 0.3 });
       await store.dispatch("SET_PLAYBACK_POSITION", { position: 0 });
+      await store.dispatch("SET_LEFT_LOCATOR_POSITION", {
+        position: 0,
+      });
+      await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
+        position: 480 * 4 * 16,
+      });
       return {};
     });
   },

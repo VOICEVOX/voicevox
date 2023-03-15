@@ -126,6 +126,8 @@ describe("store/vuex.js test", () => {
         sequencerSnapSize: 120,
         nowPlaying: false,
         volume: 0,
+        leftLocatorPosition: 0,
+        rightLocatorPosition: 0,
       },
       getters: {
         ...uiStore.getters,
