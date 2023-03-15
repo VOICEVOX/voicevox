@@ -207,6 +207,8 @@ export class VvppManager {
           let file: string;
           try {
             if (files.length > 1) {
+              // Windows環境では-siオプションを使うとエラーになるので、（「実装されていません」）
+              // ファイルを連結してそれを7zで解凍する。
               log.log(`Concatenating ${files.length} files...`);
               tmpFile = path.join(
                 app.getPath("temp"),
