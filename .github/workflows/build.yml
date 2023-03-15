@@ -29,7 +29,7 @@ env:
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
-  build-prepackage:
+  build:
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       ELECTRON_CACHE: .cache/electron
@@ -53,10 +53,11 @@ jobs:
             package_name: voicevox
             compressed_artifact_name: voicevox-linux-nvidia
             app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-nvidia-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
             artifact_path: dist_electron/linux-unpacked
@@ -64,10 +65,11 @@ jobs:
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-cpu
             app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-cpu-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             sed_name: sed
-            os: ubuntu-18.04
+            os: ubuntu-20.04
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -75,6 +77,7 @@ jobs:
             package_name: voicevox-cuda
             compressed_artifact_name: voicevox-windows-nvidia
             app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-nvidia-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
@@ -85,6 +88,7 @@ jobs:
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-windows-cpu
             app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-cpu-nsis-web
             nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
@@ -95,6 +99,7 @@ jobs:
             package_name: voicevox
             compressed_artifact_name: voicevox-windows-directml
             app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-directml-nsis-web
             nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
             sed_name: sed
             os: windows-2019
@@ -105,6 +110,7 @@ jobs:
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-macos-cpu
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-cpu-dmg
             macos_artifact_name: "VOICEVOX.${ext}"
             sed_name: gsed
             os: macos-11
@@ -123,6 +129,12 @@ jobs:
           brew install gnu-sed
 
       # Rename executable file
+      # NOTE: If the CPU/DirectML/GPU builds have the same package name,
+      #       the NSIS installers and the 7z files have duplicate names.
+      #       For Linux, If they have the same product name,
+      #       the AppImages have duplicate names.
+      #       Files with the same name cannot be uploaded to a single GitHub Release,
+      #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         shell: bash
         run: |
@@ -322,13 +334,6 @@ jobs:
         run: |
           df -h
 
-      - name: Upload prepackage artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            prepackage/
-
       - name: Recover file permissions
         if: startsWith(matrix.artifact_name, 'linux-') # linux
         shell: bash
@@ -358,8 +363,11 @@ jobs:
         if: startsWith(matrix.artifact_name, 'linux-')
         shell: bash
         run: |
-          mv prepackage VOICEVOX
-          tar cfz "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz" VOICEVOX/
+          name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
+          7z a -ttar $name.tar prepackage/
+          7z rn $name.tar prepackage/ VOICEVOX/
+          7z a -tgzip $name.tar.gz $name.tar
+          rm $name.tar
 
       - name: Upload Linux tar.gz artifact
         if: startsWith(matrix.artifact_name, 'linux-')
@@ -372,8 +380,9 @@ jobs:
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
         shell: bash
         run: |
-          mv prepackage VOICEVOX
-          7z a -tzip "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip" VOICEVOX/
+          name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
+          7z a -tzip $name.zip prepackage/
+          7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip artifact
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
@@ -381,160 +390,6 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
-
-  build-distributable:
-    if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
-    needs: [build-prepackage]
-    environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment
-    env:
-      ELECTRON_CACHE: .cache/electron
-      ELECTRON_BUILDER_CACHE: .cache/electron-builder
-      cache-version: v2
-    strategy:
-      fail-fast: false
-      matrix:
-        artifact_name:
-          - linux-nvidia-appimage
-          - linux-cpu-appimage
-          - windows-nvidia-nsis-web
-          - windows-cpu-nsis-web
-          - windows-directml-nsis-web
-          - macos-cpu-dmg
-        include:
-          # Linux NVIDIA GPU
-          - artifact_name: linux-nvidia-appimage
-            engine_artifact_name: linux-nvidia-prepackage
-            package_name: voicevox
-            linux_artifact_name: "VOICEVOX.${ext}"
-            linux_executable_name: voicevox
-            sed_name: sed
-            os: ubuntu-18.04
-          # Linux CPU
-          - artifact_name: linux-cpu-appimage
-            engine_artifact_name: linux-cpu-prepackage
-            package_name: voicevox-cpu
-            linux_artifact_name: "VOICEVOX.${ext}"
-            linux_executable_name: voicevox
-            sed_name: sed
-            os: ubuntu-18.04
-          # Windows NVIDIA GPU
-          - artifact_name: windows-nvidia-nsis-web
-            engine_artifact_name: windows-nvidia-prepackage
-            package_name: voicevox-cuda
-            nsis_web_artifact_name: "VOICEVOX-CUDA Web Setup ${version}.${ext}"
-            sed_name: sed
-            os: windows-2019
-          # Windows CPU
-          - artifact_name: windows-cpu-nsis-web
-            engine_artifact_name: windows-cpu-prepackage
-            package_name: voicevox-cpu
-            nsis_web_artifact_name: "VOICEVOX-CPU Web Setup ${version}.${ext}"
-            sed_name: sed
-            os: windows-2019
-          # Windows DirectML
-          - artifact_name: windows-directml-nsis-web
-            engine_artifact_name: windows-directml-prepackage
-            package_name: voicevox
-            nsis_web_artifact_name: "VOICEVOX Web Setup ${version}.${ext}"
-            sed_name: sed
-            os: windows-2019
-          # macOS CPU
-          - artifact_name: macos-cpu-dmg
-            engine_artifact_name: macos-cpu-prepackage
-            package_name: voicevox-cpu
-            macos_artifact_name: "VOICEVOX ${version}.${ext}"
-            macos_executable_name: VOICEVOX
-            sed_name: gsed
-            os: macos-11
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-
-      # NOTE: The default sed of macOS is BSD sed.
-      #       There is a difference in specification between BSD sed and GNU sed,
-      #       so you need to install GNU sed.
-      - name: Install GNU sed on macOS
-        if: startsWith(matrix.os, 'macos-')
-        shell: bash
-        run: |
-          brew install gnu-sed
-
-      # NOTE: If the CPU/DirectML/GPU builds have the same package name,
-      #       the NSIS installers and the 7z files have duplicate names.
-      #       For Linux, If they have the same product name,
-      #       the AppImages have duplicate names.
-      #       Files with the same name cannot be uploaded to a single GitHub Release,
-      #       so different package/product names should be used for CPU/DirectML/GPU builds.
-      - name: Replace package name & version
-        shell: bash
-        run: |
-          "${{ matrix.sed_name }}" -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
-          # "${{ matrix.sed_name }}" -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
-
-          "${{ matrix.sed_name }}" -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
-
-      - name: Download and extract engine-prepackage artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.engine_artifact_name }}
-          path: ./prepackage
-
-      - name: Recover file permissions
-        if: endsWith(matrix.artifact_name, '-appimage') # linux
-        shell: bash
-        run: |
-          chmod +x "prepackage/${{ matrix.linux_executable_name }}"
-          chmod +x "prepackage/run"
-
-      - name: Recover file permissions for macOS build
-        if: endsWith(matrix.artifact_name, '-dmg') # macOS
-        shell: bash
-        run: |
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/${{ matrix.macos_executable_name }}"
-          chmod +x "prepackage/VOICEVOX.app/Contents/MacOS/run"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (GPU).app/Contents/MacOS/VOICEVOX Helper (GPU)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Plugin).app/Contents/MacOS/VOICEVOX Helper (Plugin)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper (Renderer).app/Contents/MacOS/VOICEVOX Helper (Renderer)"
-          chmod +x "prepackage/VOICEVOX.app/Contents/Frameworks/VOICEVOX Helper.app/Contents/MacOS/VOICEVOX Helper"
-
-      # NOTE: actions/upload-artifact@v3 does not upload `**.lproj` directories, which are an empty directory.
-      #       Make `ja.lproj` directory because it is necessary for Japanese localization on macOS.
-      - name: Make .lproj directories in Resources directory of VOICEVOX.app
-        if: endsWith(matrix.artifact_name, '-dmg')
-        shell: bash
-        run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
-
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: ".node-version"
-          cache: "npm"
-
-      - name: Cache Electron
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
-
-      - name: Cache Electron-Builder
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
-
-      - name: Install dependencies
-        shell: bash
-        run: npm ci
 
       - name: Show disk space (debug info)
         shell: bash
@@ -544,7 +399,7 @@ jobs:
       # build electronでコード署名するには環境変数を指定が必要だけど、
       # コード署名しない場合に環境変数を定義するとエラーになるので、動的に環境変数を足す
       - name: Define Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           # 複数行の文字列を環境変数に代入
@@ -556,7 +411,7 @@ jobs:
 
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
-        if: endsWith(matrix.artifact_name, '-nsis-web') || endsWith(matrix.artifact_name, '-appimage') # windows and linux
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') || endsWith(matrix.installer_artifact_name, '-appimage') # windows and linux
         shell: bash
         env:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
@@ -566,7 +421,7 @@ jobs:
           PREPACKAGED="prepackage" npm run electron:build_pnever_prepackaged
 
       - name: Build Electron (for macOS)
-        if: endsWith(matrix.artifact_name, '-dmg') # macOS
+        if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         shell: bash
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
@@ -574,7 +429,7 @@ jobs:
           PREPACKAGED="prepackage/VOICEVOX.app" npm run electron:build_pnever_prepackaged
 
       - name: Reset Code Signing Envs
-        if: endsWith(matrix.artifact_name, '-nsis-web') && github.event.inputs.code_signing == 'true'
+        if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         shell: bash
         run: |
           echo 'CSC_LINK=' >> $GITHUB_ENV
@@ -586,23 +441,23 @@ jobs:
           df -h
 
       - name: Upload Linux AppImage artifact
-        if: endsWith(matrix.artifact_name, '-appimage')
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.installer_artifact_name }}
           path: |
             dist_electron/*.AppImage
 
       - name: Upload macOS dmg artifact
-        if: endsWith(matrix.artifact_name, '-dmg')
+        if: endsWith(matrix.installer_artifact_name, '-dmg')
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.installer_artifact_name }}
           path: |
             dist_electron/*.dmg
 
       - name: Create Windows NSIS Web artifact directory
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         shell: bash
         run: |
           mkdir -p nsis-web-artifact
@@ -611,7 +466,7 @@ jobs:
 
       # Rename file name like "VOICEVOX Web Setup X.X.X.exe" to "VOICEVOX.Web.Setup.X.X.X.exe".
       - name: Rename Windows NSIS Web Installer
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         shell: bash
         run: |
           cd nsis-web-artifact
@@ -621,20 +476,20 @@ jobs:
           mv "${OLD_NAME}" $NEW_NAME
 
       - name: Upload Windows NSIS Web artifact
-        if: endsWith(matrix.artifact_name, '-nsis-web')
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.artifact_name }}
+          name: ${{ matrix.installer_artifact_name }}
           path: |
             nsis-web-artifact/*
 
   upload-distributable-to-release:
     if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
-    needs: [build-distributable]
+    needs: [build]
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
         artifact_name:
           - linux-nvidia-appimage
           - linux-cpu-appimage
