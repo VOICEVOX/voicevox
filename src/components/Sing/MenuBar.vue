@@ -11,6 +11,8 @@
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
       "
     />
+    <q-space />
+    <min-max-close-buttons v-if="!$q.platform.is.mac" />
   </q-bar>
 </template>
 
@@ -18,6 +20,7 @@
 import { defineComponent, ref, computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import MenuButton from "@/components/MenuButton.vue";
+import MinMaxCloseButtons from "@/components/MinMaxCloseButtons.vue";
 import { HotkeyAction, HotkeyReturnType } from "@/type/preload";
 import { setHotkeyFunctions } from "@/store/setting";
 
@@ -57,6 +60,7 @@ export default defineComponent({
 
   components: {
     MenuButton,
+    MinMaxCloseButtons,
   },
 
   setup() {

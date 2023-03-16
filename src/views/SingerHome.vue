@@ -62,6 +62,7 @@ export default defineComponent({
       await store.dispatch("SET_RIGHT_LOCATOR_POSITION", {
         position: 480 * 4 * 16,
       });
+      await store.dispatch("SET_RENDERING_ENABLED", { renderingEnabled: true });
       return {};
     });
   },

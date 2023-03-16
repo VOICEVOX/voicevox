@@ -292,7 +292,7 @@ export type IpcSOData = {
     return: void;
   };
 
-  CHECK_EDITED_AND_NOT_SAVE: {
+  PROCESS_BEFORE_QUITTING: {
     args: [];
     return: void;
   };

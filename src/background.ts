@@ -861,7 +861,7 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+      ipcMainSend(win, "PROCESS_BEFORE_QUITTING");
       return;
     }
   });
@@ -1214,7 +1214,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", (event) => {
   if (!willQuit) {
     event.preventDefault();
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE");
+    ipcMainSend(win, "PROCESS_BEFORE_QUITTING");
     return;
   }
 

@@ -87,7 +87,9 @@ export default defineComponent({
       store.dispatch("SET_ACCEPT_TERMS", {
         acceptTerms: acceptTerms ? "Accepted" : "Rejected",
       });
-      !acceptTerms ? store.dispatch("CHECK_EDITED_AND_NOT_SAVE") : undefined;
+      if (!acceptTerms) {
+        store.dispatch("PROCESS_BEFORE_QUITTING");
+      }
 
       modelValueComputed.value = false;
     };
