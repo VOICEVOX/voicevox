@@ -4,8 +4,6 @@ import { spawn } from "child_process";
 import { promisify } from "util";
 import log from "electron-log";
 import { moveFile } from "move-file";
-// FIXME: 正式版が出たら切り替える。https://github.com/VOICEVOX/voicevox_project/issues/2#issuecomment-1401721286
-import { Extract } from "unzipper";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
@@ -126,7 +124,7 @@ export class VvppManager {
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     let files: string[];
-    let format;
+    let format: string | undefined;
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
     if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
@@ -166,113 +164,87 @@ export class VvppManager {
     log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
-      switch (format) {
-        case "zip": {
-          await new Promise((resolve, reject) => {
-            const streams = [];
-            try {
-              for (const file of files) {
-                streams.push(fs.createReadStream(file));
-              }
+      let sevenZipPath = "7z";
+      if (import.meta.env.DEV) {
+        if (process.platform === "win32") {
+          // Windows: build/7za.exe
+          sevenZipPath = path.resolve(__dirname, "..", "build", "7za.exe");
+        } else {
+          // Mac/Linux: PATH上に7zがあると想定、なければエラーにする
+          await promisify(which)("7z");
+        }
+      } else {
+        // ビルド時に7zをexeと同じディレクトリにバンドルする
+        sevenZipPath = path.join(
+          path.dirname(app.getPath("exe")),
+          process.platform === "win32" ? "7za.exe" : "7z"
+        );
+      }
 
-              new MultiStream(streams)
-                .pipe(Extract({ path: outputDir }))
-                .on("close", resolve)
-                .on("error", reject);
-            } finally {
-              streams.forEach((s) => s.close());
+      let tmpFile: string | undefined;
+      let file: string;
+      try {
+        if (files.length > 1) {
+          // Windows環境では-siオプションを使うとエラーになるので、（「実装されていません」）
+          // ファイルを連結してそれを7zで解凍する。
+          log.log(`Concatenating ${files.length} files...`);
+          tmpFile = path.join(
+            app.getPath("temp"),
+            `vvpp-${new Date().getTime()}.${format}`
+          );
+          log.log("Temporary file:", tmpFile);
+          file = tmpFile;
+          await new Promise<void>((resolve, reject) => {
+            if (!tmpFile) throw new Error("tmpFile is undefined");
+            const inputStreams = files.map((f) => fs.createReadStream(f));
+            const outputStream = fs.createWriteStream(tmpFile);
+            new MultiStream(inputStreams)
+              .pipe(outputStream)
+              .on("close", () => {
+                outputStream.close();
+                resolve();
+              })
+              .on("error", reject);
+          });
+          log.log("Concatenated");
+        } else {
+          file = files[0];
+          log.log("Single file, not concatenating");
+        }
+
+        const args = ["x", "-o" + outputDir, file, "-t" + format];
+
+        log.log(
+          "Spawning 7z:",
+          sevenZipPath,
+          args.map((a) => JSON.stringify(a)).join(" ")
+        );
+        await new Promise<void>((resolve, reject) => {
+          const child = spawn(sevenZipPath, args, {
+            stdio: ["pipe", "pipe", "pipe"],
+          });
+
+          child.stdout?.on("data", (data) => {
+            log.info(`7z STDOUT: ${data.toString("utf-8")}`);
+          });
+
+          child.stderr?.on("data", (data) => {
+            log.error(`7z STDERR: ${data.toString("utf-8")}`);
+          });
+
+          child.on("exit", (code) => {
+            if (code === 0) {
+              resolve();
+            } else {
+              reject(new Error(`7z exited with code ${code}`));
             }
           });
-          break;
-        }
-        case "7z": {
-          let sevenZipPath = "7z";
-          if (import.meta.env.DEV) {
-            if (process.platform === "win32") {
-              // Windows: build/7zr.exe
-              sevenZipPath = path.resolve(__dirname, "..", "build", "7zr.exe");
-            } else {
-              // Mac/Linux: PATH上に7zがあると想定、なければエラーにする
-              await promisify(which)("7z");
-            }
-          } else {
-            // ビルド時に7zをexeと同じディレクトリにバンドルする
-            sevenZipPath = path.join(
-              path.dirname(app.getPath("exe")),
-              process.platform === "win32" ? "7zr.exe" : "7z"
-            );
-          }
-
-          let tmpFile: string | undefined;
-          let file: string;
-          try {
-            if (files.length > 1) {
-              // Windows環境では-siオプションを使うとエラーになるので、（「実装されていません」）
-              // ファイルを連結してそれを7zで解凍する。
-              log.log(`Concatenating ${files.length} files...`);
-              tmpFile = path.join(
-                app.getPath("temp"),
-                `vvpp-${new Date().getTime()}.7z`
-              );
-              log.log("Temporary file:", tmpFile);
-              file = tmpFile;
-              await new Promise<void>((resolve, reject) => {
-                if (!tmpFile) throw new Error("tmpFile is undefined");
-                const inputStreams = files.map((f) => fs.createReadStream(f));
-                const outputStream = fs.createWriteStream(tmpFile);
-                new MultiStream(inputStreams)
-                  .pipe(outputStream)
-                  .on("close", () => {
-                    outputStream.close();
-                    resolve();
-                  })
-                  .on("error", reject);
-              });
-              log.log("Concatenated");
-            } else {
-              file = files[0];
-              log.log("Single file, not concatenating");
-            }
-
-            await new Promise<void>((resolve, reject) => {
-              const args = ["x", "-o" + outputDir, file, "-t7z"];
-
-              log.log(
-                "Spawning 7z:",
-                sevenZipPath,
-                args.map((a) => JSON.stringify(a)).join(" ")
-              );
-              const child = spawn(sevenZipPath, args, {
-                stdio: ["pipe", "pipe", "pipe"],
-              });
-
-              child.stdout?.on("data", (data) => {
-                log.info(`7z STDOUT: ${data.toString("utf-8")}`);
-              });
-
-              child.stderr?.on("data", (data) => {
-                log.error(`7z STDERR: ${data.toString("utf-8")}`);
-              });
-
-              child.on("exit", (code) => {
-                if (code === 0) {
-                  resolve();
-                } else {
-                  reject(new Error(`7z exited with code ${code}`));
-                }
-              });
-              child.on("error", reject);
-            });
-          } finally {
-            if (tmpFile) {
-              log.log("Removing temporary file", tmpFile);
-              await fs.promises.rm(tmpFile);
-            }
-          }
-          break;
-        }
-        default: {
-          throw new Error("Unreachable!");
+          child.on("error", reject);
+        });
+      } finally {
+        if (tmpFile) {
+          log.log("Removing temporary file", tmpFile);
+          await fs.promises.rm(tmpFile);
         }
       }
       const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(

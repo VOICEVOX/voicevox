@@ -21,7 +21,7 @@ const isMac = process.platform === "darwin";
 
 let sevenZipPath = "";
 if (process.platform === "win32") {
-  sevenZipPath = "./build/7zr.exe";
+  sevenZipPath = "./build/7za.exe";
 } else {
   sevenZipPath = which.sync("7z");
 }
@@ -78,7 +78,7 @@ const builderOptions = {
     },
     {
       from: sevenZipPath,
-      to: extraFilePrefix + (process.platform === "win32" ? "7zr.exe" : "7z"),
+      to: extraFilePrefix + (process.platform === "win32" ? "7za.exe" : "7z"),
     },
     {
       from: VOICEVOX_ENGINE_DIR,
