@@ -19,18 +19,27 @@ const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 const isMac = process.platform === "darwin";
 
-let sevenZipPath = "";
-if (process.platform === "win32") {
-  sevenZipPath = "./build/7za.exe";
-} else {
-  sevenZipPath = which.sync("7z");
-}
-
 // electron-builderのextraFilesは、ファイルのコピー先としてVOICEVOX.app/Contents/を使用する。
 // しかし、実行ファイルはVOICEVOX.app/Contents/MacOS/にあるため、extraFilesをVOICEVOX.app/Contents/ディレクトリにコピーするのは正しくない。
 // VOICEVOX.app/Contents/MacOS/ディレクトリにコピーされるように修正する。
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
+
+/** @type {import("electron-builder").FileSet[]} */
+let sevenZipFiles = [];
+if (process.platform === "win32") {
+  sevenZipFiles = ["7za.exe", "7za.dll", "7zxa.dll"].map((fileName) => ({
+    from: path.resolve(__dirname, "build", fileName),
+    to: fileName,
+  }));
+} else {
+  sevenZipFiles = [
+    {
+      from: which.sync("7z"),
+      to: extraFilePrefix + "7z",
+    },
+  ];
+}
 
 /** @type {import("electron-builder").Configuration} */
 const builderOptions = {
@@ -77,13 +86,10 @@ const builderOptions = {
       to: extraFilePrefix + ".env",
     },
     {
-      from: sevenZipPath,
-      to: extraFilePrefix + (process.platform === "win32" ? "7za.exe" : "7z"),
-    },
-    {
       from: VOICEVOX_ENGINE_DIR,
       to: extraFilePrefix,
     },
+    ...sevenZipFiles,
   ],
   // electron-builder installer
   productName: "VOICEVOX",
