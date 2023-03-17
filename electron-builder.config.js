@@ -28,7 +28,7 @@ const extraFilePrefix = isMac ? "MacOS/" : "";
 /** @type {import("electron-builder").FileSet[]} */
 let sevenZipFiles = [];
 sevenZipFiles = fs
-  .readdirSync(path.resolve(__dirname, "vendored", "7z"))
+  .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
   .filter(
     // 拡張子なし（Linux/Macバイナリ）と.exe/.dllのみを埋め込み
     (fileName) =>
@@ -37,7 +37,7 @@ sevenZipFiles = fs
       fileName.endsWith(".dll")
   )
   .map((fileName) => ({
-    from: path.resolve(__dirname, "build", "7z", fileName),
+    from: path.resolve(__dirname, "build", "vendored", "7z", fileName),
     to: extraFilePrefix + fileName,
   }));
 
