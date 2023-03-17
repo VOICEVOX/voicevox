@@ -1,6 +1,5 @@
 const path = require("path");
 const fs = require("fs");
-const which = require("which");
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/run.dist/";
@@ -30,11 +29,8 @@ let sevenZipFiles = [];
 sevenZipFiles = fs
   .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
   .filter(
-    // 拡張子なし（Linux/Macバイナリ）と.exe/.dllのみを埋め込み
-    (fileName) =>
-      !fileName.includes(".") ||
-      fileName.endsWith(".exe") ||
-      fileName.endsWith(".dll")
+    // 拡張子なし（Linux/Macバイナリ）と.exeのみを埋め込み
+    (fileName) => !fileName.includes(".") || fileName.endsWith(".exe")
   )
   .map((fileName) => ({
     from: path.resolve(__dirname, "build", "vendored", "7z", fileName),
