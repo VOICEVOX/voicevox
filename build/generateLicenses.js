@@ -60,42 +60,38 @@ const checkerLicenses = JSON.parse(licenseJson);
 
 const externalLicenses = [];
 
-if (process.platform === "win32") {
-  externalLicenses.push({
-    name: "7-Zip",
-    version: execFileSync(
-      path.join(
-        __dirname,
-        "vendored",
-        "7z",
-        {
-          win32: "7za.exe",
-          linux: "7zzs",
-          darwin: "7zz",
-        }[process.platform]
-      ),
-
-      ["-version"],
+externalLicenses.push({
+  name: "7-Zip",
+  version: execFileSync(
+    path.join(
+      __dirname,
+      "vendored",
+      "7z",
       {
-        encoding: "utf-8",
-      }
+        win32: "7za.exe",
+        linux: "7zzs",
+        darwin: "7zz",
+      }[process.platform]
     ),
-    license: "LGPL-2.1",
-    text: fs.readFileSync(
-      path.join(__dirname, "vendored", "7z", "License.txt"),
-      {
-        encoding: "utf-8",
-      }
-    ),
-  });
-}
 
-const licenses = Object.entries(checkerLicenses).map(([, license]) => ({
-  name: license.name,
-  version: license.version,
-  license: license.licenses,
-  text: license.licenseText,
-}));
+    {
+      encoding: "utf-8",
+    }
+  ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/)[1],
+  license: "LGPL-2.1",
+  text: fs.readFileSync(path.join(__dirname, "vendored", "7z", "License.txt"), {
+    encoding: "utf-8",
+  }),
+});
+
+const licenses = Object.entries(checkerLicenses)
+  .map(([, license]) => ({
+    name: license.name,
+    version: license.version,
+    license: license.licenses,
+    text: license.licenseText,
+  }))
+  .concat(externalLicenses);
 
 const outputPath = argv.output_path;
 fs.writeFileSync(outputPath, JSON.stringify(licenses));
