@@ -1,13 +1,11 @@
 import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
-import { promisify } from "util";
 import log from "electron-log";
 import { moveFile } from "move-file";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
 import glob, { glob as callbackGlob } from "glob";
-import which from "which";
 import {
   EngineId,
   EngineInfo,
