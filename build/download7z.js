@@ -11,7 +11,10 @@ const { spawnSync } = require("child_process");
   switch (process.platform) {
     case "win32": {
       url = "https://www.7-zip.org/a/7z2201-extra.7z";
-      filesToExtract = ["7za.exe", "7za.dll", "7zxa.dll", "License.txt"];
+      // 7za.dll、7zxa.dllはなくても動くので、除外する
+      // filesToExtract = ["7za.exe", "7za.dll", "7zxa.dll", "License.txt"];
+      filesToExtract = ["7za.exe", "License.txt"];
+
       break;
     }
     case "linux": {
