@@ -17,6 +17,19 @@ const isElectron = process.env.VITE_IS_ELECTRON === "true";
 
 export default defineConfig((options) => {
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  process.env.VITE_7Z_BIN_NAME = (
+    options.mode === "development"
+      ? {
+          win32: path.join(__dirname, "build", "vendored", "7z", "7za.exe"),
+          linux: "7z",
+          darwin: "7z",
+        }
+      : {
+          win32: "7za.exe",
+          linux: "7zzs",
+          darwin: "7zz",
+        }
+  )[process.platform];
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;

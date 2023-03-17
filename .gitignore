@@ -38,3 +38,5 @@ electron-builder.yml
 
 # generated licenses.json
 /*licenses.json
+build/vendored/*/*
+!build/vendored/*/.gitkeep

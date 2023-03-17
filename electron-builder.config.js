@@ -27,19 +27,19 @@ const extraFilePrefix = isMac ? "MacOS/" : "";
 
 /** @type {import("electron-builder").FileSet[]} */
 let sevenZipFiles = [];
-if (process.platform === "win32") {
-  sevenZipFiles = ["7za.exe", "7za.dll", "7zxa.dll"].map((fileName) => ({
-    from: path.resolve(__dirname, "build", fileName),
-    to: fileName,
+sevenZipFiles = fs
+  .readdirSync(path.resolve(__dirname, "vendored", "7z"))
+  .filter(
+    // 拡張子なし（Linux/Macバイナリ）と.exe/.dllのみを埋め込み
+    (fileName) =>
+      !fileName.includes(".") ||
+      fileName.endsWith(".exe") ||
+      fileName.endsWith(".dll")
+  )
+  .map((fileName) => ({
+    from: path.resolve(__dirname, "build", "7z", fileName),
+    to: extraFilePrefix + fileName,
   }));
-} else {
-  sevenZipFiles = [
-    {
-      from: which.sync("7z"),
-      to: extraFilePrefix + "7z",
-    },
-  ];
-}
 
 /** @type {import("electron-builder").Configuration} */
 const builderOptions = {

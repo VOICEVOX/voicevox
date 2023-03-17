@@ -164,23 +164,6 @@ export class VvppManager {
     log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
-      let sevenZipPath = "7z";
-      if (import.meta.env.DEV) {
-        if (process.platform === "win32") {
-          // Windows: build/7za.exe
-          sevenZipPath = path.resolve(__dirname, "..", "build", "7za.exe");
-        } else {
-          // Mac/Linux: PATH上に7zがあると想定、なければエラーにする
-          await promisify(which)("7z");
-        }
-      } else {
-        // ビルド時に7zをexeと同じディレクトリにバンドルする
-        sevenZipPath = path.join(
-          path.dirname(app.getPath("exe")),
-          process.platform === "win32" ? "7za.exe" : "7z"
-        );
-      }
-
       let tmpFile: string | undefined;
       let file: string;
       try {
@@ -214,6 +197,16 @@ export class VvppManager {
 
         const args = ["x", "-o" + outputDir, file, "-t" + format];
 
+        let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME as string;
+        if (!sevenZipPath) {
+          throw new Error("7z path is not defined");
+        }
+        if (import.meta.env.PROD) {
+          sevenZipPath = path.join(
+            path.dirname(app.getPath("exe")),
+            sevenZipPath
+          );
+        }
         log.log(
           "Spawning 7z:",
           sevenZipPath,
