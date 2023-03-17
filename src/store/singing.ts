@@ -201,18 +201,21 @@ class SingChannel {
 
     this.phrases.push(phrase);
 
-    let sequence: SoundSequence | undefined;
-    if (audioEvents.length !== 0) {
-      const audioPlayer = new AudioPlayer(this.context);
-      audioPlayer.connect(this.gainNode);
-      sequence = new AudioSequence(audioPlayer, audioEvents);
-    } else {
+    if (audioEvents.length === 0) {
       const synth = new Synth(this.context);
       synth.connect(this.gainNode);
-      sequence = new NoteSequence(synth, noteEvents);
+      const sequence = new NoteSequence(synth, noteEvents);
+
+      this.context.transport.addSequence(sequence);
+      this.sequences.push(sequence);
+    } else {
+      const audioPlayer = new AudioPlayer(this.context);
+      audioPlayer.connect(this.gainNode);
+      const sequence = new AudioSequence(audioPlayer, audioEvents);
+
+      this.context.transport.addSequence(sequence);
+      this.sequences.push(sequence);
     }
-    this.context.transport.addSequence(sequence);
-    this.sequences.push(sequence);
   }
 
   removePhrase(phrase: Phrase) {
@@ -771,20 +774,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_RENDERING_ENABLED: {
-    mutation(state, { renderingEnabled }) {
-      state.renderingEnabled = renderingEnabled;
-    },
-    async action({ commit, dispatch }, { renderingEnabled }) {
-      if (renderingEnabled) {
-        dispatch("RENDER");
-      } else {
-        await dispatch("STOP_RENDERING");
-      }
-      commit("SET_RENDERING_ENABLED", { renderingEnabled });
-    },
-  },
-
   SET_RENDERING_REQUESTED: {
     mutation(state, { renderingRequested }) {
       state.renderingRequested = renderingRequested;
@@ -1080,6 +1069,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         console.log("Rendering stopped.");
       }
     }),
+  },
+
+  SET_RENDERING_ENABLED: {
+    mutation(state, { renderingEnabled }) {
+      state.renderingEnabled = renderingEnabled;
+    },
+    async action({ commit, dispatch }, { renderingEnabled }) {
+      if (renderingEnabled) {
+        dispatch("RENDER");
+      } else {
+        await dispatch("STOP_RENDERING");
+      }
+      commit("SET_RENDERING_ENABLED", { renderingEnabled });
+    },
   },
 
   IMPORT_MIDI_FILE: {

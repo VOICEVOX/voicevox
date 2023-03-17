@@ -840,11 +840,6 @@ export type SingingStoreTypes = {
     action(payload: { volume: number }): void;
   };
 
-  SET_RENDERING_ENABLED: {
-    mutation: { renderingEnabled: boolean };
-    action(payload: { renderingEnabled: boolean }): void;
-  };
-
   SET_RENDERING_REQUESTED: {
     mutation: { renderingRequested: boolean };
   };
@@ -863,6 +858,11 @@ export type SingingStoreTypes = {
 
   STOP_RENDERING: {
     action(): void;
+  };
+
+  SET_RENDERING_ENABLED: {
+    mutation: { renderingEnabled: boolean };
+    action(payload: { renderingEnabled: boolean }): void;
   };
 };
 
