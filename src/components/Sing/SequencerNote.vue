@@ -95,8 +95,7 @@ export default defineComponent({
     });
 
     const removeNote = () => {
-      const noteIndices = [props.index];
-      store.dispatch("REMOVE_NOTES", { noteIndices });
+      store.dispatch("REMOVE_NOTE", { index: props.index });
     };
 
     const setLyric = (event: InputEvent) => {

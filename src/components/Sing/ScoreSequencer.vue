@@ -138,6 +138,7 @@ export default defineComponent({
     const cursorX = ref(0);
     const cursorY = ref(0);
     // ドラッグ状態
+    const isDrag = ref(false);
     const dragId = ref(0);
     const dragMode = ref();
     const dragMoveStartX = ref();
@@ -214,7 +215,7 @@ export default defineComponent({
     // マウス移動
     // ドラッグ中の場合はカーソル位置を保持
     const handleMouseMove = (event: MouseEvent) => {
-      if (state.isDrag) {
+      if (isDrag.value) {
         cursorX.value = event.clientX;
         cursorY.value = event.clientY;
       }
@@ -224,7 +225,7 @@ export default defineComponent({
     // ドラッグしていた場合はドラッグを終了
     const handleMouseUp = () => {
       cancelAnimationFrame(dragId.value);
-      store.dispatch("SET_IS_DRAG", { isDrag: false });
+      isDrag.value = false;
       return;
     };
 
@@ -269,7 +270,7 @@ export default defineComponent({
         dragId.value = requestAnimationFrame(dragMove);
         return;
       } else {
-        store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+        store.dispatch("SET_NOTES", { notes: newNotes });
         dragId.value = requestAnimationFrame(dragMove);
       }
     };
@@ -277,10 +278,10 @@ export default defineComponent({
     // ノートドラッグ開始
     const handleDragMoveStart = (event: MouseEvent) => {
       if (state.selectedNotes.length) {
+        isDrag.value = true;
         dragMode.value = "move";
         dragMoveStartX.value = event.clientX;
         dragMoveStartY.value = event.clientY;
-        store.dispatch("SET_IS_DRAG", { isDrag: true });
         dragId.value = requestAnimationFrame(dragMove);
       }
     };
@@ -320,7 +321,7 @@ export default defineComponent({
           dragId.value = requestAnimationFrame(dragRight);
           return;
         } else {
-          store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+          store.dispatch("SET_NOTES", { notes: newNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragRight);
@@ -328,9 +329,9 @@ export default defineComponent({
 
     // ノート右ドラッグ開始
     const handleDragRightStart = (event: MouseEvent) => {
+      isDrag.value = true;
       dragMode.value = "note-right";
       dragDurationStartX.value = event.clientX;
-      store.dispatch("SET_IS_DRAG", { isDrag: true });
       dragId.value = requestAnimationFrame(dragRight);
     };
 
@@ -373,7 +374,7 @@ export default defineComponent({
           dragId.value = requestAnimationFrame(dragLeft);
           return;
         } else {
-          store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+          store.dispatch("SET_NOTES", { notes: newNotes });
         }
       }
       dragId.value = requestAnimationFrame(dragLeft);
@@ -381,9 +382,9 @@ export default defineComponent({
 
     // ノート左ドラッグ開始
     const handleDragLeftStart = (event: MouseEvent) => {
+      isDrag.value = true;
       dragMode.value = "note-left";
       dragDurationStartX.value = event.clientX;
-      store.dispatch("SET_IS_DRAG", { isDrag: true });
       dragId.value = requestAnimationFrame(dragLeft);
     };
 
@@ -423,7 +424,7 @@ export default defineComponent({
       if (newNotes.some((note) => note.midi > 127)) {
         return;
       }
-      store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+      store.dispatch("SET_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowDown = () => {
@@ -441,7 +442,7 @@ export default defineComponent({
       if (newNotes.some((note) => note.midi < 0)) {
         return;
       }
-      store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+      store.dispatch("SET_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowRight = () => {
@@ -456,7 +457,7 @@ export default defineComponent({
           return note;
         }
       });
-      store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+      store.dispatch("SET_NOTES", { notes: newNotes });
     };
 
     const handleNotesArrowLeft = () => {
@@ -474,11 +475,11 @@ export default defineComponent({
       if (newNotes.some((note) => note.position < 0)) {
         return;
       }
-      store.dispatch("SET_ALL_NOTES", { notes: newNotes });
+      store.dispatch("SET_NOTES", { notes: newNotes });
     };
 
     const handleNotesBackspaceOrDelete = () => {
-      store.dispatch("REMOVE_NOTES", { noteIndices: selectedNotes.value });
+      store.dispatch("CLEAR_SELECTED_NOTES");
     };
 
     const handleNotesKeydown = (event: KeyboardEvent) => {
@@ -495,7 +496,10 @@ export default defineComponent({
         case "ArrowLeft":
           handleNotesArrowLeft();
           break;
-        case "Backspace" || "Delete":
+        case "Backspace":
+          handleNotesBackspaceOrDelete();
+          break;
+        case "Delete":
           handleNotesBackspaceOrDelete();
           break;
         default:

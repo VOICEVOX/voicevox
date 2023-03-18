@@ -706,8 +706,11 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
-  isDrag: boolean;
   selectedNotes: number[];
+  nowPlaying: boolean;
+  volume: number;
+  leftLocatorPosition: number;
+  rightLocatorPosition: number;
 };
 
 export type SingingStoreTypes = {
@@ -750,16 +753,6 @@ export type SingingStoreTypes = {
     action(payload: { position: number }): void;
   };
 
-  SET_SELECTED_NOTES: {
-    mutation: { noteIndices: number[] };
-    action(payload: { noteIndices: number[] }): void;
-  };
-
-  CLEAR_SELECTED_NOTES: {
-    mutation: void;
-    action(): void;
-  };
-
   ADD_NOTE: {
     mutation: { note: Note };
     action(payload: { note: Note }): void;
@@ -770,14 +763,24 @@ export type SingingStoreTypes = {
     action(payload: { index: number; note: Note }): void;
   };
 
-  SET_ALL_NOTES: {
+  REMOVE_NOTE: {
+    mutation: { index: number };
+    action(payload: { index: number }): void;
+  };
+
+  SET_NOTES: {
     mutation: { notes: Note[] };
     action(payload: { notes: Note[] }): void;
   };
 
-  REMOVE_NOTES: {
+  SET_SELECTED_NOTES: {
     mutation: { noteIndices: number[] };
     action(payload: { noteIndices: number[] }): void;
+  };
+
+  CLEAR_SELECTED_NOTES: {
+    mutation: void;
+    action(): void;
   };
 
   SET_ZOOM_X: {
@@ -811,6 +814,53 @@ export type SingingStoreTypes = {
 
   IMPORT_MUSICXML_FILE: {
     action(payload: { filePath?: string }): void;
+  };
+
+  EXPORT_WAVE_FILE: {
+    action(payload: { filePath?: string }): SaveResultObject;
+  };
+
+  POSITION_TO_TIME: {
+    getter(position: number): number;
+  };
+
+  TIME_TO_POSITION: {
+    getter(time: number): number;
+  };
+
+  GET_PLAYBACK_POSITION: {
+    getter(): number;
+  };
+
+  SET_PLAYBACK_POSITION: {
+    action(payload: { position: number }): void;
+  };
+
+  SET_LEFT_LOCATOR_POSITION: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_RIGHT_LOCATOR_POSITION: {
+    mutation: { position: number };
+    action(payload: { position: number }): void;
+  };
+
+  SET_PLAYBACK_STATE: {
+    mutation: { nowPlaying: boolean };
+  };
+
+  SING_PLAY_AUDIO: {
+    action(): void;
+  };
+
+  SING_STOP_AUDIO: {
+    action(): void;
+  };
+
+  SET_VOLUME: {
+    mutation: { volume: number };
+    action(payload: { volume: number }): void;
   };
 };
 
