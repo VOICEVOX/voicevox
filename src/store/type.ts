@@ -696,7 +696,7 @@ export type AudioCommandStoreTypes = {
 export type SingingStoreState = {
   engineId?: string;
   styleId?: number;
-  score: Score;
+  score?: Score;
   renderPhrases: RenderPhrase[];
   // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
   isShowSinger: boolean;
@@ -706,7 +706,7 @@ export type SingingStoreState = {
   sequencerScrollX: number;
   sequencerScrollY: number;
   sequencerSnapSize: number;
-  selectedNotes: number[];
+  selectedNotes: Set<number>;
   nowPlaying: boolean;
   volume: number;
   leftLocatorPosition: number;
@@ -774,11 +774,16 @@ export type SingingStoreTypes = {
   };
 
   SET_SELECTED_NOTES: {
-    mutation: { noteIndices: number[] };
-    action(payload: { noteIndices: number[] }): void;
+    mutation: { noteIndices: Set<number> };
+    action(payload: { noteIndices: Set<number> }): void;
   };
 
   CLEAR_SELECTED_NOTES: {
+    mutation: void;
+    action(): void;
+  };
+
+  REMOVE_SELECTED_NOTES: {
     mutation: void;
     action(): void;
   };

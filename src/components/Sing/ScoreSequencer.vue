@@ -123,6 +123,7 @@ import {
   getDoremiFromMidi,
   BASE_GRID_SIZE_X as sizeX,
   BASE_GRID_SIZE_Y as sizeY,
+  DragMode,
 } from "@/helpers/singHelper";
 
 export default defineComponent({
@@ -138,19 +139,18 @@ export default defineComponent({
     const cursorX = ref(0);
     const cursorY = ref(0);
     // ドラッグ状態
-    const isDrag = ref(false);
+    const dragMode = ref<DragMode>(DragMode.NONE);
     const dragId = ref(0);
-    const dragMode = ref();
     const dragMoveStartX = ref();
     const dragMoveStartY = ref();
     const dragDurationStartX = ref();
     // シーケンサグリッド
     const gridY = midiKeys;
     const gridX = computed(() => {
-      const resolution = state.score.resolution || 480;
+      const resolution = state.score?.resolution || 480;
       // NOTE: 最低長: 仮32小節...MIDI長さ(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
       const minDuration = resolution * 4 * 32;
-      const lastNote = state.score.notes.slice(-1)[0];
+      const lastNote = state.score?.notes.slice(-1)[0];
       // Score長さ: スコア長もしくは最低長のうち長い方
       const totalDuration = lastNote
         ? Math.max(lastNote.position + lastNote.duration, minDuration)
@@ -164,7 +164,7 @@ export default defineComponent({
       );
     });
     // ノート
-    const notes = computed(() => state.score.notes);
+    const notes = computed(() => state.score?.notes);
     // 表紙
     const timeSignatures = computed(() => state.score?.timeSignatures);
     // ズーム状態
@@ -183,7 +183,7 @@ export default defineComponent({
 
     // ノートの追加
     const addNote = (event: MouseEvent) => {
-      const resolution = state.score.resolution;
+      const resolution = state.score?.resolution;
       const gridXSize = resolution ? resolution / 4 : snapSize.value;
       const position =
         gridXSize * Math.floor(event.offsetX / (sizeX * zoomX.value));
@@ -207,7 +207,7 @@ export default defineComponent({
     // マウスダウン
     // 選択中のノートがある場合は選択リセット / 無い場合はノート追加
     const handleMouseDown = () => {
-      if (0 < selectedNotes.value.length) {
+      if (0 < selectedNotes.value.size) {
         store.dispatch("CLEAR_SELECTED_NOTES");
       }
     };
@@ -215,7 +215,7 @@ export default defineComponent({
     // マウス移動
     // ドラッグ中の場合はカーソル位置を保持
     const handleMouseMove = (event: MouseEvent) => {
-      if (isDrag.value) {
+      if (dragMode.value !== DragMode.NONE) {
         cursorX.value = event.clientX;
         cursorY.value = event.clientY;
       }
@@ -225,18 +225,24 @@ export default defineComponent({
     // ドラッグしていた場合はドラッグを終了
     const handleMouseUp = () => {
       cancelAnimationFrame(dragId.value);
-      isDrag.value = false;
+      dragMode.value = DragMode.NONE;
       return;
     };
 
     // ドラッグでのノートの移動
     const dragMove = () => {
-      if (dragMode.value !== "move") {
+      if (!state.score) {
+        return;
+      }
+      if (dragMode.value !== DragMode.MOVE) {
         cancelAnimationFrame(dragId.value);
         return;
       }
+      // X方向, Y方向の移動距離
       const distanceX = cursorX.value - dragMoveStartX.value;
       const distanceY = cursorY.value - dragMoveStartY.value;
+
+      // カーソル位置に応じてノート移動量を計算
       let amountPositionX = 0;
       if (gridWidth.value <= Math.abs(distanceX)) {
         amountPositionX = 0 < distanceX ? snapSize.value : -snapSize.value;
@@ -253,8 +259,10 @@ export default defineComponent({
           (0 > amountPositionY ? gridHeight.value : -gridHeight.value);
         dragMoveStartY.value = dragStartYNext;
       }
+
+      // 選択中のノートのpositionとmidiを変更
       const newNotes = [...state.score.notes].map((note, index) => {
-        if (selectedNotes.value.includes(index)) {
+        if (selectedNotes.value.has(index)) {
           const position = note.position + amountPositionX;
           const midi = note.midi + amountPositionY;
           return {
@@ -266,20 +274,20 @@ export default defineComponent({
           return note;
         }
       });
+
+      // 左端より前はドラッグしない
       if (newNotes.some((note) => note.position < 0)) {
         dragId.value = requestAnimationFrame(dragMove);
         return;
-      } else {
-        store.dispatch("SET_NOTES", { notes: newNotes });
-        dragId.value = requestAnimationFrame(dragMove);
       }
+      store.dispatch("SET_NOTES", { notes: newNotes });
+      dragId.value = requestAnimationFrame(dragMove);
     };
 
     // ノートドラッグ開始
     const handleDragMoveStart = (event: MouseEvent) => {
-      if (state.selectedNotes.length) {
-        isDrag.value = true;
-        dragMode.value = "move";
+      if (state.selectedNotes.size > 0) {
+        dragMode.value = DragMode.MOVE;
         dragMoveStartX.value = event.clientX;
         dragMoveStartY.value = event.clientY;
         dragId.value = requestAnimationFrame(dragMove);
@@ -288,14 +296,17 @@ export default defineComponent({
 
     // ノート右ドラッグ
     const dragRight = () => {
-      if (dragMode.value !== "note-right") {
+      if (!state.score) {
+        return;
+      }
+      if (dragMode.value !== DragMode.NOTE_RIGHT) {
         cancelAnimationFrame(dragId.value);
         return;
       }
       const distanceX = cursorX.value - dragDurationStartX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         const newNotes = [...state.score.notes].map((note, index) => {
-          if (selectedNotes.value.includes(index)) {
+          if (selectedNotes.value.has(index)) {
             const duration =
               note.duration +
               (0 < distanceX ? snapSize.value : -snapSize.value);
@@ -329,22 +340,24 @@ export default defineComponent({
 
     // ノート右ドラッグ開始
     const handleDragRightStart = (event: MouseEvent) => {
-      isDrag.value = true;
-      dragMode.value = "note-right";
+      dragMode.value = DragMode.NOTE_RIGHT;
       dragDurationStartX.value = event.clientX;
       dragId.value = requestAnimationFrame(dragRight);
     };
 
     // ノート左ドラッグ
     const dragLeft = () => {
-      if (dragMode.value !== "note-left") {
+      if (!state.score) {
+        return;
+      }
+      if (dragMode.value !== DragMode.NOTE_LEFT) {
         cancelAnimationFrame(dragId.value);
         return;
       }
       const distanceX = cursorX.value - dragDurationStartX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
         const newNotes = [...state.score.notes].map((note, index) => {
-          if (selectedNotes.value.includes(index)) {
+          if (selectedNotes.value.has(index)) {
             const position =
               note.position +
               (0 < distanceX ? snapSize.value : -snapSize.value);
@@ -382,8 +395,7 @@ export default defineComponent({
 
     // ノート左ドラッグ開始
     const handleDragLeftStart = (event: MouseEvent) => {
-      isDrag.value = true;
-      dragMode.value = "note-left";
+      dragMode.value = DragMode.NOTE_LEFT;
       dragDurationStartX.value = event.clientX;
       dragId.value = requestAnimationFrame(dragLeft);
     };
@@ -410,8 +422,11 @@ export default defineComponent({
 
     // キーボードイベント
     const handleNotesArrowUp = () => {
+      if (!state.score) {
+        return;
+      }
       const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.includes(index)) {
+        if (selectedNotes.value.has(index)) {
           const midi = Math.min(note.midi + 1, 127);
           return {
             ...note,
@@ -428,8 +443,11 @@ export default defineComponent({
     };
 
     const handleNotesArrowDown = () => {
+      if (!state.score) {
+        return;
+      }
       const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.includes(index)) {
+        if (selectedNotes.value.has(index)) {
           const midi = Math.max(note.midi - 1, 0);
           return {
             ...note,
@@ -446,8 +464,11 @@ export default defineComponent({
     };
 
     const handleNotesArrowRight = () => {
+      if (!state.score) {
+        return;
+      }
       const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.includes(index)) {
+        if (selectedNotes.value.has(index)) {
           const position = note.position + snapSize.value;
           return {
             ...note,
@@ -461,8 +482,11 @@ export default defineComponent({
     };
 
     const handleNotesArrowLeft = () => {
+      if (!state.score) {
+        return;
+      }
       const newNotes = state.score.notes.map((note, index) => {
-        if (selectedNotes.value.includes(index)) {
+        if (selectedNotes.value.has(index)) {
           const position = note.position - snapSize.value;
           return {
             ...note,
@@ -479,7 +503,7 @@ export default defineComponent({
     };
 
     const handleNotesBackspaceOrDelete = () => {
-      store.dispatch("CLEAR_SELECTED_NOTES");
+      store.dispatch("REMOVE_SELECTED_NOTES");
     };
 
     const handleNotesKeydown = (event: KeyboardEvent) => {

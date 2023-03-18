@@ -124,7 +124,7 @@ describe("store/vuex.js test", () => {
         sequencerScrollX: 0,
         sequencerScrollY: 60,
         sequencerSnapSize: 120,
-        selectedNotes: [],
+        selectedNotes: new Set(),
         nowPlaying: false,
         volume: 0,
         leftLocatorPosition: 0,

@@ -91,7 +91,7 @@ export default defineComponent({
     const barHeight = computed(() => sizeY * zoomY.value);
     const barWidth = computed(() => (props.note.duration / 4) * zoomX.value);
     const isSelected = computed(() => {
-      return store.state.selectedNotes.includes(props.index);
+      return store.state.selectedNotes.has(props.index);
     });
 
     const removeNote = () => {
@@ -120,12 +120,11 @@ export default defineComponent({
     };
 
     const handleMouseDown = (event: MouseEvent) => {
-      if (!store.state.selectedNotes.includes(props.index)) {
-        const selectedNotes = [...store.state.selectedNotes];
-        const index = props.index;
-        selectedNotes.push(index);
+      if (!store.state.selectedNotes.has(props.index)) {
+        const newSelectedNotes = new Set(store.state.selectedNotes);
+        newSelectedNotes.add(props.index);
         store.dispatch("SET_SELECTED_NOTES", {
-          noteIndices: Array.from(new Set(selectedNotes)),
+          noteIndices: newSelectedNotes,
         });
       } else {
         emit("handleDragMoveStart", event);
@@ -133,21 +132,19 @@ export default defineComponent({
     };
 
     const handleDragRightStart = (event: MouseEvent) => {
-      const selectedNotes = [...store.state.selectedNotes];
-      const index = props.index;
-      selectedNotes.push(index);
+      const newSelectedNotes = new Set(store.state.selectedNotes);
+      newSelectedNotes.add(props.index);
       store.dispatch("SET_SELECTED_NOTES", {
-        noteIndices: Array.from(new Set(selectedNotes)),
+        noteIndices: newSelectedNotes,
       });
       emit("handleDragRightStart", event);
     };
 
     const handleDragLeftStart = (event: MouseEvent) => {
-      const selectedNotes = [...store.state.selectedNotes];
-      const index = props.index;
-      selectedNotes.push(index);
+      const newSelectedNotes = new Set(store.state.selectedNotes);
+      newSelectedNotes.add(props.index);
       store.dispatch("SET_SELECTED_NOTES", {
-        noteIndices: Array.from(new Set(selectedNotes)),
+        noteIndices: newSelectedNotes,
       });
       emit("handleDragLeftStart", event);
     };

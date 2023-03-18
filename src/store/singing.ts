@@ -225,12 +225,7 @@ let playbackPosition = 0;
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
   styleId: undefined,
-  score: {
-    resolution: 480,
-    tempos: [] as Tempo[],
-    notes: [] as Note[],
-    timeSignatures: [] as TimeSignature[],
-  } as Score,
+  score: undefined,
   renderPhrases: [],
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
@@ -239,7 +234,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
   sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
-  selectedNotes: [], // 選択中のノート
+  selectedNotes: new Set<number>(), // 選択中のノート
   nowPlaying: false,
   volume: 0,
   leftLocatorPosition: 0,
@@ -507,14 +502,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_SELECTED_NOTES: {
-    mutation(state, { noteIndices }: { noteIndices: number[] }) {
+    mutation(state, { noteIndices }: { noteIndices: Set<number> }) {
       if (state.score) {
         state.selectedNotes = noteIndices;
       }
     },
     async action(
       { state, commit },
-      { noteIndices }: { noteIndices: number[] }
+      { noteIndices }: { noteIndices: Set<number> }
     ) {
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
@@ -526,7 +521,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   CLEAR_SELECTED_NOTES: {
     mutation(state) {
       if (state.score) {
-        state.selectedNotes.splice(0);
+        state.selectedNotes.clear();
       }
     },
     async action({ commit }) {
@@ -537,19 +532,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   ADD_NOTE: {
     mutation(state, { note }: { note: Note }) {
       if (state.score) {
-        const notes = [...state.score.notes];
-        notes.push(note);
-        const addIndex = notes.length - 1;
-        const selectedNotes = [...state.selectedNotes].map((selectedIndex) => {
-          if (selectedIndex >= addIndex) {
-            return selectedIndex + 1;
-          } else {
-            return selectedIndex;
-          }
+        const notes = state.score.notes.concat(note).sort((a, b) => {
+          return a.position - b.position;
         });
-        selectedNotes.push(addIndex);
+        const addIndex = notes.indexOf(note);
+        state.selectedNotes.add(addIndex);
         state.score.notes = notes;
-        state.selectedNotes = selectedNotes;
       }
     },
     // ノートを追加する
@@ -613,6 +601,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
+      if (notes.some((note) => !isValidNote(note))) {
+        throw new Error("Invalid notes");
+      }
       commit("SET_NOTES", { notes });
     },
   },
@@ -620,18 +611,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REMOVE_NOTE: {
     mutation(state, { index }: { index: number }) {
       if (state.score) {
-        const notes = [...state.score.notes];
-        let selectedNotes = [...state.selectedNotes];
-        selectedNotes = selectedNotes.map((selectedIndex) => {
-          if (selectedIndex < index) {
-            return selectedIndex - 1;
-          } else {
-            return selectedIndex;
-          }
-        });
-        notes.splice(index, 1);
-        state.score.notes = notes;
-        state.selectedNotes = selectedNotes;
+        state.score.notes.splice(index, 1);
+        state.selectedNotes.delete(index);
       }
     },
     async action({ state, commit }, { index }: { index: number }) {
@@ -647,6 +628,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const score = getFromOptional(state.score);
       const noteEvents = generateNoteEvents(score, score.notes);
       singChannel.setNoteEvents(noteEvents);
+    },
+  },
+
+  REMOVE_SELECTED_NOTES: {
+    mutation(state) {
+      if (state.score) {
+        const notes = state.score.notes.filter(
+          (_, index) => !state.selectedNotes.has(index)
+        );
+        state.score.notes = notes;
+      }
+    },
+    async action({ commit }) {
+      commit("REMOVE_SELECTED_NOTES");
+      commit("CLEAR_SELECTED_NOTES");
     },
   },
 
