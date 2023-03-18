@@ -20,7 +20,7 @@ on:
         description: "コード署名する"
         type: boolean
       upload_artifact:
-        description: "デバッグ用に青果物をartifactにアップロードするか"
+        description: "デバッグ用に成果物をartifactにアップロードするか"
         type: boolean
         default: false
 
@@ -365,8 +365,8 @@ jobs:
         shell: bash
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
-      - name: Create Linux tar.gz
-        if: startsWith(matrix.artifact_name, 'linux-')
+      - name: Create Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
@@ -375,8 +375,8 @@ jobs:
           7z a -tgzip $name.tar.gz $name.tar
           rm $name.tar
 
-      - name: Uplaod Linux tar.gz
-        if: startsWith(matrix.artifact_name, 'linux-')
+      - name: Uplaod Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         uses: ./.github/actions/upload-release-and-artifact
         with:
           files: |-
@@ -388,22 +388,22 @@ jobs:
           target_commitish: ${{ github.sha }}
           artifact_name: ${{ matrix.artifact_name }}-targz
 
-      - name: Delete Linux tar.gz
-        if: startsWith(matrix.artifact_name, 'linux-')
+      - name: Delete Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
 
-      - name: Create Windows & Mac zip
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
+      - name: Create Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
           7z a -tzip $name.zip prepackage/
           7z rn $name.zip prepackage/ VOICEVOX/
 
-      - name: Upload Windows & Mac zip
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
+      - name: Upload Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         uses: ./.github/actions/upload-release-and-artifact
         with:
           files: |-
@@ -415,8 +415,8 @@ jobs:
           target_commitish: ${{ github.sha }}
           artifact_name: ${{ matrix.artifact_name }}-zip
 
-      - name: Delete Windows & Mac zip
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
+      - name: Delete Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
