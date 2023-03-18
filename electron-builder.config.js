@@ -29,8 +29,8 @@ let sevenZipFiles = [];
 sevenZipFiles = fs
   .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
   .filter(
-    // 拡張子なし（Linux/Macバイナリ）と.exeのみを埋め込み
-    (fileName) => !fileName.includes(".") || fileName.endsWith(".exe")
+    // 拡張子なし（Linux/Macバイナリ）と7za.exeのみを埋め込み
+    (fileName) => !fileName.includes(".") || fileName === "7za.exe"
   )
   .map((fileName) => ({
     from: path.resolve(__dirname, "build", "vendored", "7z", fileName),

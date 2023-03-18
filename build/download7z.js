@@ -10,6 +10,16 @@ const { spawnSync } = require("child_process");
   let filesToExtract;
   switch (process.platform) {
     case "win32": {
+      const sevenzrUrl = "https://www.7-zip.org/a/7zr.exe";
+      const sevenzrPath = path.resolve(distPath, "7zr.exe");
+      if (!fs.existsSync(sevenzrPath)) {
+        console.log("Downloading 7zr from " + sevenzrUrl);
+        const res = await fetch(sevenzrUrl);
+        const buffer = await res.arrayBuffer();
+
+        await fs.promises.writeFile(sevenzrPath, Buffer.from(buffer));
+      }
+
       url = "https://www.7-zip.org/a/7z2201-extra.7z";
       // 7za.dll、7zxa.dllはなくても動くので、除外する
       // filesToExtract = ["7za.exe", "7za.dll", "7zxa.dll", "License.txt"];
@@ -52,7 +62,7 @@ const { spawnSync } = require("child_process");
   console.log("Extracting 7z");
   const extractor = url.endsWith(".7z")
     ? spawnSync(
-        path.resolve(__dirname, "7zr.exe"),
+        path.resolve(distPath, "7zr.exe"),
         ["x", "-y", "-o" + distPath, sevenZipPath, ...filesToExtract],
         {
           stdio: ["ignore", "inherit", "inherit"],
