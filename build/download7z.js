@@ -10,6 +10,10 @@ const { spawnSync } = require("child_process");
   let filesToExtract;
   switch (process.platform) {
     case "win32": {
+      // 7za.exeは7z形式で圧縮されているので、7zr.exeが必要になる。
+      // Mac/Linuxと違い、インストーラー以外には7z形式でしか配布されていない。
+      // Actionsでインストーラーを動かすことはできないので、単独で配布されている7zr.exeを使い、
+      // 7z形式で圧縮されている7za.exeを展開する。
       const sevenzrUrl = "https://www.7-zip.org/a/7zr.exe";
       const sevenzrPath = path.resolve(distPath, "7zr.exe");
       if (!fs.existsSync(sevenzrPath)) {
