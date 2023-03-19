@@ -121,7 +121,7 @@ export class VvppManager {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
-    let files: string[];
+    let archiveFileParts: string[];
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
     if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
@@ -144,36 +144,38 @@ export class VvppManager {
         }
         return parseInt(aMatch[1]) - parseInt(bMatch[1]);
       });
-      files = filePaths;
+      archiveFileParts = filePaths;
     } else {
       log.log("Not a split file");
-      files = [vvppLikeFilePath];
+      archiveFileParts = [vvppLikeFilePath];
     }
 
-    const format = await this.detectFileFormat(files[0]);
+    const format = await this.detectFileFormat(archiveFileParts[0]);
     if (!format) {
-      throw new Error(`Unknown file format: ${files[0]}`);
+      throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
     }
     log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
-      let tmpFile: string | undefined;
-      let file: string;
+      let tmpConcatenatedFile: string | undefined;
+      let archiveFile: string;
       try {
-        if (files.length > 1) {
+        if (archiveFileParts.length > 1) {
           // -siオプションでの7z解凍はサポートされていないため、
           // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-          log.log(`Concatenating ${files.length} files...`);
-          tmpFile = path.join(
+          log.log(`Concatenating ${archiveFileParts.length} files...`);
+          tmpConcatenatedFile = path.join(
             app.getPath("temp"),
             `vvpp-${new Date().getTime()}.${format}`
           );
-          log.log("Temporary file:", tmpFile);
-          file = tmpFile;
+          log.log("Temporary file:", tmpConcatenatedFile);
+          archiveFile = tmpConcatenatedFile;
           await new Promise<void>((resolve, reject) => {
-            if (!tmpFile) throw new Error("tmpFile is undefined");
-            const inputStreams = files.map((f) => fs.createReadStream(f));
-            const outputStream = fs.createWriteStream(tmpFile);
+            if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
+            const inputStreams = archiveFileParts.map((f) =>
+              fs.createReadStream(f)
+            );
+            const outputStream = fs.createWriteStream(tmpConcatenatedFile);
             new MultiStream(inputStreams)
               .pipe(outputStream)
               .on("close", () => {
@@ -184,11 +186,11 @@ export class VvppManager {
           });
           log.log("Concatenated");
         } else {
-          file = files[0];
+          archiveFile = archiveFileParts[0];
           log.log("Single file, not concatenating");
         }
 
-        const args = ["x", "-o" + outputDir, file, "-t" + format];
+        const args = ["x", "-o" + outputDir, archiveFile, "-t" + format];
 
         let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME as string;
         if (!sevenZipPath) {
@@ -228,9 +230,9 @@ export class VvppManager {
           child.on("error", reject);
         });
       } finally {
-        if (tmpFile) {
-          log.log("Removing temporary file", tmpFile);
-          await fs.promises.rm(tmpFile);
+        if (tmpConcatenatedFile) {
+          log.log("Removing temporary file", tmpConcatenatedFile);
+          await fs.promises.rm(tmpConcatenatedFile);
         }
       }
       const manifest: MinimumEngineManifest = minimumEngineManifestSchema.parse(
