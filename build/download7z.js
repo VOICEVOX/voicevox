@@ -1,3 +1,7 @@
+// @ts-check
+/**
+ * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
+ */
 const path = require("path");
 const fs = require("fs");
 const { spawnSync } = require("child_process");
