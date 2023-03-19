@@ -122,7 +122,6 @@ export class VvppManager {
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
     let files: string[];
-    let format: string | undefined;
     // 名前.数値.vvpppの場合は分割されているとみなして連結する
     if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
       log.log("vvpp is split, finding other parts...");
@@ -145,20 +144,16 @@ export class VvppManager {
         }
         return parseInt(aMatch[1]) - parseInt(bMatch[1]);
       });
-      format = await this.detectFileFormat(filePaths[0]);
-      if (!format) {
-        throw new Error(`Unknown file format: ${filePaths[0]}`);
-      }
       files = filePaths;
     } else {
       log.log("Not a split file");
-      format = await this.detectFileFormat(vvppLikeFilePath);
-      if (!format) {
-        throw new Error(`Unknown file format: ${vvppLikeFilePath}`);
-      }
       files = [vvppLikeFilePath];
     }
 
+    const format = await this.detectFileFormat(files[0]);
+    if (!format) {
+      throw new Error(`Unknown file format: ${files[0]}`);
+    }
     log.log("Format:", format);
     log.log("Extracting vvpp to", outputDir);
     try {
