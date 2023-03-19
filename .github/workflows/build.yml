@@ -375,7 +375,7 @@ jobs:
           7z a -tgzip $name.tar.gz $name.tar
           rm $name.tar
 
-      - name: Uplaod Linux tar.gz (without nvidia)
+      - name: Upload Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         uses: ./.github/actions/upload-release-and-artifact
         with:
@@ -470,7 +470,7 @@ jobs:
         run: |
           df -h
 
-      - name: Create Linux AppImage splitted
+      - name: Create Linux AppImage split
         if: endsWith(matrix.installer_artifact_name, '-appimage')
         shell: bash
         run: |
@@ -482,7 +482,7 @@ jobs:
             # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             7z -v1g a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
 
-            # Output splitted archive name<TAB>size<TAB>hash list to myartifact.7z.txt
+            # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
             ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
             stat --printf="%s\n" "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_size.txt
             md5sum "${{ matrix.linux_appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
@@ -492,7 +492,7 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage splitted
+      - name: Upload Linux AppImage split
         if: endsWith(matrix.installer_artifact_name, '-appimage')
         uses: ./.github/actions/upload-release-and-artifact
         with:
