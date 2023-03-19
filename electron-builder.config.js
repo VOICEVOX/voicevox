@@ -1,3 +1,4 @@
+// @ts-check
 const path = require("path");
 const fs = require("fs");
 
@@ -24,18 +25,18 @@ const isMac = process.platform === "darwin";
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
 
-/** @type {import("electron-builder").FileSet[]} */
-let sevenZipFiles = [];
-sevenZipFiles = fs
+const sevenZipFile = fs
   .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
-  .filter(
+  .find(
     // 拡張子なし（Linux/Macバイナリ）と7za.exeのみを埋め込み
     (fileName) => !fileName.includes(".") || fileName === "7za.exe"
-  )
-  .map((fileName) => ({
-    from: path.resolve(__dirname, "build", "vendored", "7z", fileName),
-    to: extraFilePrefix + fileName,
-  }));
+  );
+
+if (!sevenZipFile) {
+  throw new Error(
+    "7z binary file not found. Run `node ./build/download7z.js` first."
+  );
+}
 
 /** @type {import("electron-builder").Configuration} */
 const builderOptions = {
@@ -85,7 +86,10 @@ const builderOptions = {
       from: VOICEVOX_ENGINE_DIR,
       to: extraFilePrefix,
     },
-    ...sevenZipFiles,
+    {
+      from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
+      to: extraFilePrefix + sevenZipFile,
+    },
   ],
   // electron-builder installer
   productName: "VOICEVOX",
