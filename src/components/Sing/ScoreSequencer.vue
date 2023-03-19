@@ -5,6 +5,7 @@
     @mousedown="handleMouseDown"
     @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
+    @dblclick="addNote"
   >
     <!-- 鍵盤 -->
     <sequencer-keys />
@@ -208,8 +209,6 @@ export default defineComponent({
     const handleMouseDown = (event: MouseEvent) => {
       if (0 < selectedNotes.value.size) {
         store.dispatch("CLEAR_SELECTED_NOTES");
-      } else {
-        addNote(event);
       }
     };
 

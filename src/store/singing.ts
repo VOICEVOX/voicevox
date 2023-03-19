@@ -230,7 +230,7 @@ export const singingStoreState: SingingStoreState = {
   // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
   isShowSinger: true,
   sequencerZoomX: 0.5,
-  sequencerZoomY: 0.5,
+  sequencerZoomY: 0.75,
   sequencerScrollY: 60, // Y軸 midi number
   sequencerScrollX: 0, // X軸 midi duration(仮)
   sequencerSnapSize: 120, // スナップサイズ 試行用で1/18(ppq=480)のmidi durationで固定
