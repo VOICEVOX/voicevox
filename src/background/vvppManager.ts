@@ -227,6 +227,7 @@ export class VvppManager {
               reject(new Error(`7z exited with code ${code}`));
             }
           });
+          // FIXME: rejectが2回呼ばれることがある
           child.on("error", reject);
         });
       } finally {
