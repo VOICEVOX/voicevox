@@ -121,6 +121,7 @@ describe("store/vuex.js test", () => {
         },
         experimentalSetting: {
           enablePreset: false,
+          shouldApplyDefaultPresetOnVoiceChanged: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
           enableMultiEngine: false,
@@ -135,6 +136,7 @@ describe("store/vuex.js test", () => {
           tweakableSliderByScroll: false,
         },
         progress: -1,
+        defaultPresetKeys: {},
       },
       getters: {
         ...uiStore.getters,

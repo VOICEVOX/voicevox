@@ -43,11 +43,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
 import { useQuasar } from "quasar";
+import { computed, ref } from "vue";
 import draggable from "vuedraggable";
 import { useStore } from "@/store";
 
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { Preset, PresetKey } from "@/type/preload";
 
 const props =
@@ -63,6 +64,7 @@ const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
 const store = useStore();
 const $q = useQuasar();
+const { isDefaultPresetKey } = useDefaultPreset();
 
 const presetItems = computed(() => store.state.presetItems);
 const presetKeys = computed(() => store.state.presetKeys);
@@ -70,6 +72,7 @@ const presetKeys = computed(() => store.state.presetKeys);
 const presetList = computed(() =>
   presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
+    .filter((key) => !isDefaultPresetKey(key))
     .map((key) => ({
       key,
       ...presetItems.value[key],
@@ -83,6 +86,7 @@ const previewPresetList = computed(() =>
   isPreview.value
     ? previewPresetKeys.value
         .filter((key) => presetItems.value[key] != undefined)
+        .filter((key) => !isDefaultPresetKey(key))
         .map((key) => ({
           key,
           ...presetItems.value[key],
@@ -94,9 +98,13 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
   const newPresetKeys = featurePresetList.map((item) => item.key);
   previewPresetKeys.value = newPresetKeys;
   isPreview.value = true;
+
+  // デフォルトプリセットは表示するlistから除外しているので、末尾に追加しておかないと失われる
+  const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
+
   store
     .dispatch("SAVE_PRESET_ORDER", {
-      presetKeys: newPresetKeys,
+      presetKeys: [...newPresetKeys, ...defaultPresetKeys],
     })
     .finally(() => (isPreview.value = false));
 };
