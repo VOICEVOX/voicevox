@@ -27,7 +27,7 @@ inputs:
     description: "タグを付けるコミットID。"
     type: string
   artifact_name:
-    description: "artifactの名前"
+    description: "artifact名。"
     type: string
 
 runs:
