@@ -601,10 +601,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.score === undefined) {
         throw new Error("Score is not initialized.");
       }
+      if (!singChannel) {
+        throw new Error("singChannel is undefined.");
+      }
       if (notes.some((note) => !isValidNote(note))) {
         throw new Error("Invalid notes");
       }
       commit("SET_NOTES", { notes });
+
+      const score = getFromOptional(state.score);
+      const noteEvents = generateNoteEvents(score, score.notes);
+      singChannel.setNoteEvents(noteEvents);
     },
   },
 
@@ -631,6 +638,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  // 選択中のノートを削除する
   REMOVE_SELECTED_NOTES: {
     mutation(state) {
       if (state.score) {
@@ -640,9 +648,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.score.notes = notes;
       }
     },
-    async action({ commit }) {
+    async action({ state, commit }) {
+      if (!singChannel) {
+        throw new Error("singChannel is undefined.");
+      }
+
       commit("REMOVE_SELECTED_NOTES");
       commit("CLEAR_SELECTED_NOTES");
+
+      const score = getFromOptional(state.score);
+      const noteEvents = generateNoteEvents(score, score.notes);
+      singChannel.setNoteEvents(noteEvents);
     },
   },
 

@@ -33,19 +33,19 @@
           @mousedown.stop="handleMouseDown"
         />
         <rect
-          y="0"
+          y="-25%"
           x="-4"
-          height="100%"
+          height="150%"
           width="12"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
           @mousedown.stop="handleDragLeftStart"
         />
         <rect
-          y="0"
+          y="-25%"
           :x="`${(note.duration / 4) * zoomX - 4}`"
           width="16"
-          height="100%"
+          height="150%"
           fill-opacity="0"
           class="sequencer-note-bar-draghandle"
           @mousedown.stop="handleDragRightStart"

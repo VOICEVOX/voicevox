@@ -3,9 +3,8 @@
     class="score-sequencer"
     id="score-sequencer"
     @mousedown="handleMouseDown"
-    @mousemove.stop="handleMouseMove"
+    @mousemove="handleMouseMove"
     @mouseup="handleMouseUp"
-    @dblclick.prevent="addNote"
   >
     <!-- 鍵盤 -->
     <sequencer-keys />
@@ -141,9 +140,9 @@ export default defineComponent({
     // ドラッグ状態
     const dragMode = ref<DragMode>(DragMode.NONE);
     const dragId = ref(0);
-    const dragMoveStartX = ref();
-    const dragMoveStartY = ref();
-    const dragDurationStartX = ref();
+    const dragMoveCurrentX = ref();
+    const dragMoveCurrentY = ref();
+    const dragDurationCurrentX = ref();
     // シーケンサグリッド
     const gridY = midiKeys;
     const gridX = computed(() => {
@@ -205,10 +204,12 @@ export default defineComponent({
     };
 
     // マウスダウン
-    // 選択中のノートがある場合は選択リセット / 無い場合はノート追加
-    const handleMouseDown = () => {
+    // 選択中のノートがある場合は選択リセット
+    const handleMouseDown = (event: MouseEvent) => {
       if (0 < selectedNotes.value.size) {
         store.dispatch("CLEAR_SELECTED_NOTES");
+      } else {
+        addNote(event);
       }
     };
 
@@ -222,11 +223,13 @@ export default defineComponent({
     };
 
     // マウスアップ
-    // ドラッグしていた場合はドラッグを終了
+    // ドラッグしていなければノート追加 / ドラッグしていた場合はドラッグを終了
     const handleMouseUp = () => {
-      cancelAnimationFrame(dragId.value);
-      dragMode.value = DragMode.NONE;
-      return;
+      if (dragMode.value !== DragMode.NONE) {
+        cancelAnimationFrame(dragId.value);
+        dragMode.value = DragMode.NONE;
+        return;
+      }
     };
 
     // ドラッグでのノートの移動
@@ -239,30 +242,35 @@ export default defineComponent({
         return;
       }
       // X方向, Y方向の移動距離
-      const distanceX = cursorX.value - dragMoveStartX.value;
-      const distanceY = cursorY.value - dragMoveStartY.value;
+      const distanceX = cursorX.value - dragMoveCurrentX.value;
+      const distanceY = cursorY.value - dragMoveCurrentY.value;
 
       // カーソル位置に応じてノート移動量を計算
       let amountPositionX = 0;
       if (gridWidth.value <= Math.abs(distanceX)) {
         amountPositionX = 0 < distanceX ? snapSize.value : -snapSize.value;
-        const dragStartXNext =
-          dragMoveStartX.value +
+        const dragMoveCurrentXNext =
+          dragMoveCurrentX.value +
           (0 < amountPositionX ? gridWidth.value : -gridWidth.value);
-        dragMoveStartX.value = dragStartXNext;
+        dragMoveCurrentX.value = dragMoveCurrentXNext;
       }
       let amountPositionY = 0;
       if (gridHeight.value <= Math.abs(distanceY)) {
         amountPositionY = 0 < distanceY ? -1 : 1;
-        const dragStartYNext =
-          dragMoveStartY.value +
+        const dragMoveCurrentYNext =
+          dragMoveCurrentY.value +
           (0 > amountPositionY ? gridHeight.value : -gridHeight.value);
-        dragMoveStartY.value = dragStartYNext;
+        dragMoveCurrentY.value = dragMoveCurrentYNext;
       }
 
       // 選択中のノートのpositionとmidiを変更
+      let isNotesChanged = false;
       const newNotes = [...state.score.notes].map((note, index) => {
         if (selectedNotes.value.has(index)) {
+          if (amountPositionX === 0 && amountPositionY === 0) {
+            return note;
+          }
+          isNotesChanged = true;
           const position = note.position + amountPositionX;
           const midi = note.midi + amountPositionY;
           return {
@@ -280,7 +288,9 @@ export default defineComponent({
         dragId.value = requestAnimationFrame(dragMove);
         return;
       }
-      store.dispatch("SET_NOTES", { notes: newNotes });
+      if (isNotesChanged) {
+        store.dispatch("SET_NOTES", { notes: newNotes });
+      }
       dragId.value = requestAnimationFrame(dragMove);
     };
 
@@ -288,9 +298,11 @@ export default defineComponent({
     const handleDragMoveStart = (event: MouseEvent) => {
       if (state.selectedNotes.size > 0) {
         dragMode.value = DragMode.MOVE;
-        dragMoveStartX.value = event.clientX;
-        dragMoveStartY.value = event.clientY;
-        dragId.value = requestAnimationFrame(dragMove);
+        setTimeout(() => {
+          dragMoveCurrentX.value = event.clientX;
+          dragMoveCurrentY.value = event.clientY;
+          dragId.value = requestAnimationFrame(dragMove);
+        }, 360);
       }
     };
 
@@ -303,35 +315,33 @@ export default defineComponent({
         cancelAnimationFrame(dragId.value);
         return;
       }
-      const distanceX = cursorX.value - dragDurationStartX.value;
+      const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
+        let isNotesChanged = false;
         const newNotes = [...state.score.notes].map((note, index) => {
           if (selectedNotes.value.has(index)) {
             const duration =
               note.duration +
               (0 < distanceX ? snapSize.value : -snapSize.value);
-            return {
-              ...note,
-              duration,
-            };
+            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              return note;
+            } else {
+              isNotesChanged = true;
+              return {
+                ...note,
+                duration,
+              };
+            }
           } else {
             return note;
           }
         });
-        const dragDurationStartXNext =
-          dragDurationStartX.value +
+        const dragDurationCurrentXNext =
+          dragDurationCurrentX.value +
           (0 < distanceX ? snapWidth.value : -snapWidth.value);
-        dragDurationStartX.value = dragDurationStartXNext;
-        // NOTE: スナップサイズやマイナス長さになるのを防ぐ
-        if (
-          newNotes.some(
-            (note) =>
-              note.duration < Math.max(snapSize.value, 0) || note.position < 0
-          )
-        ) {
-          dragId.value = requestAnimationFrame(dragRight);
-          return;
-        } else {
+        dragDurationCurrentX.value = dragDurationCurrentXNext;
+        dragId.value = requestAnimationFrame(dragRight);
+        if (isNotesChanged) {
           store.dispatch("SET_NOTES", { notes: newNotes });
         }
       }
@@ -341,8 +351,10 @@ export default defineComponent({
     // ノート右ドラッグ開始
     const handleDragRightStart = (event: MouseEvent) => {
       dragMode.value = DragMode.NOTE_RIGHT;
-      dragDurationStartX.value = event.clientX;
-      dragId.value = requestAnimationFrame(dragRight);
+      setTimeout(() => {
+        dragDurationCurrentX.value = event.clientX;
+        dragId.value = requestAnimationFrame(dragRight);
+      }, 360);
     };
 
     // ノート左ドラッグ
@@ -354,8 +366,9 @@ export default defineComponent({
         cancelAnimationFrame(dragId.value);
         return;
       }
-      const distanceX = cursorX.value - dragDurationStartX.value;
+      const distanceX = cursorX.value - dragDurationCurrentX.value;
       if (snapWidth.value <= Math.abs(distanceX)) {
+        let isNotesChanged = false;
         const newNotes = [...state.score.notes].map((note, index) => {
           if (selectedNotes.value.has(index)) {
             const position =
@@ -364,29 +377,26 @@ export default defineComponent({
             const duration =
               note.duration +
               (0 > distanceX ? snapSize.value : -snapSize.value);
-            return {
-              ...note,
-              position,
-              duration,
-            };
+            if (duration < Math.max(snapSize.value, 0) || note.position < 0) {
+              return note;
+            } else {
+              isNotesChanged = true;
+              return {
+                ...note,
+                position,
+                duration,
+              };
+            }
           } else {
             return note;
           }
         });
-        const dragDurationStartXNext =
-          dragDurationStartX.value +
+        const dragDurationCurrentXNext =
+          dragDurationCurrentX.value +
           (0 < distanceX ? snapWidth.value : -snapWidth.value);
-        dragDurationStartX.value = dragDurationStartXNext;
-        // NOTE: スナップサイズやマイナス長さになるのを防ぐ
-        if (
-          newNotes.some(
-            (note) =>
-              note.duration < Math.max(snapSize.value, 0) || note.position < 0
-          )
-        ) {
-          dragId.value = requestAnimationFrame(dragLeft);
-          return;
-        } else {
+        dragDurationCurrentX.value = dragDurationCurrentXNext;
+        dragId.value = requestAnimationFrame(dragLeft);
+        if (isNotesChanged) {
           store.dispatch("SET_NOTES", { notes: newNotes });
         }
       }
@@ -396,8 +406,10 @@ export default defineComponent({
     // ノート左ドラッグ開始
     const handleDragLeftStart = (event: MouseEvent) => {
       dragMode.value = DragMode.NOTE_LEFT;
-      dragDurationStartX.value = event.clientX;
-      dragId.value = requestAnimationFrame(dragLeft);
+      setTimeout(() => {
+        dragDurationCurrentX.value = event.clientX;
+        dragId.value = requestAnimationFrame(dragLeft);
+      }, 360);
     };
 
     // X軸ズーム
@@ -578,6 +590,10 @@ export default defineComponent({
   padding-bottom: 164px;
   position: relative;
   width: 100%;
+
+  &.move {
+    cursor: move;
+  }
 }
 
 .sequencer-body {
