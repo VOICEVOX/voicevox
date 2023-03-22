@@ -54,3 +54,5 @@
   - VOICEVOX API 準拠エンジンのことは「エンジン」
     - VOICEVOX のエンジンなのか準拠エンジンなのかわからない場合は「VOICEVOX 準拠エンジン」
   - VVPP ファイルはそのまま「VVPP ファイル」、説明が必要なら「VOICEVOX 準拠エンジンパッケージ」
+- VOICEVOX の UI ソフトの総称は「VOICEVOX 系ソフトウェア」
+  - 正式名称は「VOICEVOX 系統 UI ソフトウェア」、長いのでほぼ使わない
