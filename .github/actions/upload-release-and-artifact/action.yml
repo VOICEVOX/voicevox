@@ -1,0 +1,49 @@
+name: "Upload Release Aassets and Artifacts"
+description: |
+  releaseのassetとartifactにアップロードする。
+  release・artifactにアップロードするかはそれぞれ制御できる。
+
+inputs:
+  files:
+    description: "アップロードするファイルのパス。ワイルドカードも使える。複数指定する場合は改行で区切る。"
+    type: string
+    required: true
+  upload_release:
+    description: "releaseにアップロードするか。"
+    type: boolean
+    default: false
+  upload_artifact:
+    description: "artifactにアップロードするか。"
+    type: boolean
+    default: false
+  prerelease:
+    description: "pre-releaseかどうか。"
+    type: boolean
+    default: false
+  tag_name:
+    description: "タグ名。"
+    type: string
+  target_commitish:
+    description: "タグを付けるコミットID。"
+    type: string
+  artifact_name:
+    description: "artifact名。"
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Upload to Artifacts
+      if: inputs.artifact_name != ''
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact_name }}
+        path: ${{ inputs.files }}
+
+    - name: Upload to Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        prerelease: ${{ inputs.prerelease }}
+        tag_name: ${{ inputs.tag_name }}
+        files: ${{ inputs.files }}
+        target_commitish: ${{ inputs.target_commitish }}

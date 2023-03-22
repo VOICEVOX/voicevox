@@ -16,3 +16,5 @@ jobs:
 
       - name: typos-action
         uses: crate-ci/typos@v1.12.12
+        with:
+          files: ". .github"
