@@ -375,18 +375,23 @@ jobs:
           7z a -tgzip $name.tar.gz $name.tar
           rm $name.tar
 
-      - name: Upload Linux tar.gz (without nvidia)
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
-        uses: ./.github/actions/upload-release-and-artifact
+      - name: Upload Linux tar.gz (without nvidia) to Artifacts
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        uses: actions/upload-artifact@v3
         with:
-          files: |-
+          name: ${{ matrix.artifact_name }}-targz
+          path: |-
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
-          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
-          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+
+      - name: Upload Linux tar.gz (without nvidia) to Release Assets
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        uses: softprops/action-gh-release@v1
+        with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
           target_commitish: ${{ github.sha }}
-          artifact_name: ${{ matrix.artifact_name }}-targz
 
       - name: Delete Linux tar.gz (without nvidia)
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
@@ -402,18 +407,23 @@ jobs:
           7z a -tzip $name.zip prepackage/
           7z rn $name.zip prepackage/ VOICEVOX/
 
-      - name: Upload Windows & Mac zip (without nvidia)
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
-        uses: ./.github/actions/upload-release-and-artifact
+      - name: Upload Windows & Mac zip (without nvidia) to Artifacts
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        uses: actions/upload-artifact@v3
         with:
-          files: |-
+          name: ${{ matrix.artifact_name }}-zip
+          path: |-
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
-          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
-          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+
+      - name: Upload Windows & Mac zip (without nvidia) to Release Assets
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        uses: softprops/action-gh-release@v1
+        with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          files: |-
+            ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
           target_commitish: ${{ github.sha }}
-          artifact_name: ${{ matrix.artifact_name }}-zip
 
       - name: Delete Windows & Mac zip (without nvidia)
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
@@ -492,31 +502,41 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split
-        if: endsWith(matrix.installer_artifact_name, '-appimage')
-        uses: ./.github/actions/upload-release-and-artifact
+      - name: Upload Linux AppImage split to Artifacts
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.installer_artifact_name }}-release
+          path: |-
+            dist_electron/*.7z.*
+
+      - name: Upload Linux AppImage split to Release Assets
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
             dist_electron/*.7z.*
-          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
-          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+          target_commitish: ${{ github.sha }}
+
+      - name: Upload macOS dmg to Artifacts
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.installer_artifact_name }}-release
+          path: |-
+            dist_electron/*.dmg
+
+      - name: Upload macOS dmg to Release Assets
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact
+        uses: softprops/action-gh-release@v1
+        with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          target_commitish: ${{ github.sha }}
-          artifact_name: ${{ matrix.installer_artifact_name }}-release
-
-      - name: Upload macOS dmg
-        if: endsWith(matrix.installer_artifact_name, '-dmg')
-        uses: ./.github/actions/upload-release-and-artifact
-        with:
           files: |-
             dist_electron/*.dmg
-          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
-          upload_artifact: ${{ github.event.inputs.upload_artifact }}
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           target_commitish: ${{ github.sha }}
-          artifact_name: ${{ matrix.installer_artifact_name }}
 
       - name: Create Windows NSIS Web artifact directory
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
@@ -537,16 +557,22 @@ jobs:
           NEW_NAME=${OLD_NAME// /.}
           mv "${OLD_NAME}" $NEW_NAME
 
-      - name: Upload Windows NSIS Web
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
-        uses: ./.github/actions/upload-release-and-artifact
+      - name: Upload Windows NSIS Web to Artifacts
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        uses: actions/upload-artifact@v3
         with:
+          name: ${{ matrix.installer_artifact_name }}-release
+          path: |-
+            nsis-web-artifact/*.7z.*
+            nsis-web-artifact/*.exe
+
+      - name: Upload Windows NSIS Web to Release Assets
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
             nsis-web-artifact/*.7z.*
             nsis-web-artifact/*.exe
-          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
-          upload_artifact: ${{ github.event.inputs.upload_artifact }}
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           target_commitish: ${{ github.sha }}
-          artifact_name: ${{ matrix.installer_artifact_name }}
