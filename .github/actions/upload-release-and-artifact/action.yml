@@ -19,7 +19,7 @@ inputs:
   prerelease:
     description: "pre-releaseかどうか。"
     type: boolean
-    default: false
+    default: true
   tag_name:
     description: "タグ名。"
     type: string
