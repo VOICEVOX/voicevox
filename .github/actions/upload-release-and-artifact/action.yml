@@ -34,13 +34,14 @@ runs:
   using: "composite"
   steps:
     - name: Upload to Artifacts
-      if: inputs.artifact_name != ''
+      if: ${{ inputs.upload_artifact }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.files }}
 
     - name: Upload to Release Assets
+      if: ${{ inputs.upload_release }}
       uses: softprops/action-gh-release@v1
       with:
         prerelease: ${{ inputs.prerelease }}
