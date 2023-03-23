@@ -376,7 +376,7 @@ jobs:
           rm $name.tar
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-targz
@@ -384,7 +384,7 @@ jobs:
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -408,7 +408,7 @@ jobs:
           7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}-zip
@@ -416,7 +416,7 @@ jobs:
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -503,7 +503,7 @@ jobs:
           done
 
       - name: Upload Linux AppImage split to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
@@ -511,7 +511,7 @@ jobs:
             dist_electron/*.7z.*
 
       - name: Upload Linux AppImage split to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -521,7 +521,7 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
@@ -529,7 +529,7 @@ jobs:
             dist_electron/*.dmg
 
       - name: Upload macOS dmg to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -558,7 +558,7 @@ jobs:
           mv "${OLD_NAME}" $NEW_NAME
 
       - name: Upload Windows NSIS Web to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.installer_artifact_name }}-release
@@ -567,7 +567,7 @@ jobs:
             nsis-web-artifact/*.exe
 
       - name: Upload Windows NSIS Web to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
