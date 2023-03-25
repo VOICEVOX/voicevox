@@ -19,6 +19,10 @@ on:
       code_signing:
         description: "コード署名する"
         type: boolean
+      upload_artifact:
+        description: "デバッグ用に成果物をartifactにアップロードするか"
+        type: boolean
+        default: false
 
 env:
   VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
@@ -29,7 +33,7 @@ env:
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999' }}
 
 jobs:
-  build:
+  build-and-upload:
     environment: ${{ github.event.inputs.code_signing == 'true' && 'code_signing' || '' }} # コード署名用のenvironment（false時の挙動は2022年7月10日時点で未定義動作）
     env:
       ELECTRON_CACHE: .cache/electron
@@ -56,6 +60,7 @@ jobs:
             installer_artifact_name: linux-nvidia-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
+            linux_appimage_7z_name: VOICEVOX.AppImage
             sed_name: sed
             os: ubuntu-20.04
           # Linux CPU
@@ -68,6 +73,7 @@ jobs:
             installer_artifact_name: linux-cpu-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
+            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
             sed_name: sed
             os: ubuntu-20.04
           # Windows CUDA
@@ -359,8 +365,8 @@ jobs:
         shell: bash
         run: mkdir -p prepackage/VOICEVOX.app/Contents/Resources/ja.lproj prepackage/VOICEVOX.app/Contents/Resources/en.lproj
 
-      - name: Create Linux tar.gz
-        if: startsWith(matrix.artifact_name, 'linux-')
+      - name: Create Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
@@ -369,27 +375,51 @@ jobs:
           7z a -tgzip $name.tar.gz $name.tar
           rm $name.tar
 
-      - name: Upload Linux tar.gz artifact
-        if: startsWith(matrix.artifact_name, 'linux-')
-        uses: actions/upload-artifact@v3
+      - name: Upload Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
+        uses: ./.github/actions/upload-release-and-artifact
         with:
-          name: ${{ matrix.artifact_name }}-targz
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz"
+          files: |-
+            ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
+          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
+          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          target_commitish: ${{ github.sha }}
+          artifact_name: ${{ matrix.artifact_name }}-targz
 
-      - name: Create Windows & Mac zip
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
+      - name: Delete Linux tar.gz (without nvidia)
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
+        shell: bash
+        run: |
+          rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
+
+      - name: Create Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         shell: bash
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
           7z a -tzip $name.zip prepackage/
           7z rn $name.zip prepackage/ VOICEVOX/
 
-      - name: Upload Windows & Mac zip artifact
-        if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')
-        uses: actions/upload-artifact@v3
+      - name: Upload Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
+        uses: ./.github/actions/upload-release-and-artifact
         with:
-          name: ${{ matrix.artifact_name }}-zip
-          path: "${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip"
+          files: |-
+            ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
+          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
+          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          target_commitish: ${{ github.sha }}
+          artifact_name: ${{ matrix.artifact_name }}-zip
+
+      - name: Delete Windows & Mac zip (without nvidia)
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
+        shell: bash
+        run: |
+          rm ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
       - name: Show disk space (debug info)
         shell: bash
@@ -440,21 +470,53 @@ jobs:
         run: |
           df -h
 
-      - name: Upload Linux AppImage artifact
+      - name: Create Linux AppImage split
         if: endsWith(matrix.installer_artifact_name, '-appimage')
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.installer_artifact_name }}
-          path: |
-            dist_electron/*.AppImage
+        shell: bash
+        run: |
+          cd dist_electron/
 
-      - name: Upload macOS dmg artifact
-        if: endsWith(matrix.installer_artifact_name, '-dmg')
-        uses: actions/upload-artifact@v3
+          for appImageFile in *.AppImage; do
+            echo "Splitting ${appImageFile}"
+
+            # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
+            7z -v1g a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
+
+            # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
+            ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
+            stat --printf="%s\n" "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_size.txt
+            md5sum "${{ matrix.linux_appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
+
+            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
+
+            mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
+          done
+
+      - name: Upload Linux AppImage split
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
+        uses: ./.github/actions/upload-release-and-artifact
         with:
-          name: ${{ matrix.installer_artifact_name }}
-          path: |
+          files: |-
+            dist_electron/*.7z.*
+          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
+          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          target_commitish: ${{ github.sha }}
+          artifact_name: ${{ matrix.installer_artifact_name }}-release
+
+      - name: Upload macOS dmg
+        if: endsWith(matrix.installer_artifact_name, '-dmg')
+        uses: ./.github/actions/upload-release-and-artifact
+        with:
+          files: |-
             dist_electron/*.dmg
+          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
+          upload_artifact: ${{ github.event.inputs.upload_artifact }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
+          target_commitish: ${{ github.sha }}
+          artifact_name: ${{ matrix.installer_artifact_name }}
 
       - name: Create Windows NSIS Web artifact directory
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
@@ -475,150 +537,16 @@ jobs:
           NEW_NAME=${OLD_NAME// /.}
           mv "${OLD_NAME}" $NEW_NAME
 
-      - name: Upload Windows NSIS Web artifact
+      - name: Upload Windows NSIS Web
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
-        uses: actions/upload-artifact@v3
+        uses: ./.github/actions/upload-release-and-artifact
         with:
-          name: ${{ matrix.installer_artifact_name }}
-          path: |
-            nsis-web-artifact/*
-
-  upload-distributable-to-release:
-    if: (github.event.release.tag_name || github.event.inputs.version) != '' # If release
-    needs: [build]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-20.04]
-        artifact_name:
-          - linux-nvidia-appimage
-          - linux-cpu-appimage
-          - linux-nvidia-prepackage-targz
-          - linux-cpu-prepackage-targz
-          - windows-nvidia-nsis-web
-          - windows-cpu-nsis-web
-          - windows-directml-nsis-web
-          - windows-nvidia-prepackage-zip
-          - windows-cpu-prepackage-zip
-          - windows-directml-prepackage-zip
-          - macos-cpu-dmg
-          - macos-cpu-prepackage-zip
-        include:
-          - artifact_name: linux-nvidia-appimage
-            appimage_7z_name: VOICEVOX.AppImage
-          - artifact_name: linux-cpu-appimage
-            appimage_7z_name: VOICEVOX-CPU.AppImage
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Download and extract distributable artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: ./artifact
-
-      - name: Show disk space (debug info)
-        shell: bash
-        run: |
-          df -h
-
-      # Linux AppImage
-      - name: Install dependencies for Linux AppImage Upload
-        if: endsWith(matrix.artifact_name, '-appimage')
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y p7zip-full
-
-      - name: Split AppImage artifact
-        if: endsWith(matrix.artifact_name, '-appimage')
-        shell: bash
-        run: |
-          cd artifact/
-
-          for appImageFile in *.AppImage; do
-            echo "Splitting ${appImageFile}"
-
-            # compressed to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
-            7z -v1g a "${{ matrix.appimage_7z_name }}.7z" "${appImageFile}"
-
-            # Output splitted archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls "${{ matrix.appimage_7z_name }}.7z".* > archives_name.txt
-            stat --printf="%s\n" "${{ matrix.appimage_7z_name }}.7z".* > archives_size.txt
-            md5sum "${{ matrix.appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
-
-            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
-
-            mv archives.txt "${{ matrix.artifact_name }}.7z.txt"
-          done
-
-      - name: Show disk space (debug info)
-        if: endsWith(matrix.artifact_name, '-appimage')
-        shell: bash
-        run: |
-          df -h
-
-      - name: Upload Linux AppImage Release artifact
-        if: endsWith(matrix.artifact_name, '-appimage')
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.artifact_name }}-release
-          path: |
-            artifact/*.7z.*
-
-      - name: Upload Linux AppImage splitted archives to Release assets
-        if: endsWith(matrix.artifact_name, '-appimage')
-        uses: softprops/action-gh-release@v1
-        with:
+          files: |-
+            nsis-web-artifact/*.7z.*
+            nsis-web-artifact/*.exe
+          upload_release: ${{ (github.event.release.tag_name || github.event.inputs.version) != '' }}
+          upload_artifact: ${{ github.event.inputs.upload_artifact }}
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: |-
-            artifact/*.7z.*
           target_commitish: ${{ github.sha }}
-
-      # Windows NSIS Web
-      - name: Upload Windows nsis-web archives to Release assets
-        if: endsWith(matrix.artifact_name, '-nsis-web')
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: |-
-            artifact/*.7z.*
-            artifact/*.exe
-          target_commitish: ${{ github.sha }}
-
-      # macOS dmg
-      - name: Upload macOS dmg to Release assets
-        if: endsWith(matrix.artifact_name, '-dmg')
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: |-
-            artifact/*.dmg
-          target_commitish: ${{ github.sha }}
-
-      # targz
-      - name: Upload targz to Release assets
-        if: endsWith(matrix.artifact_name, '-targz')
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: |-
-            artifact/*.tar.gz
-          target_commitish: ${{ github.sha }}
-
-      # zip
-      - name: Upload zip to Release assets
-        if: endsWith(matrix.artifact_name, '-zip')
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: ${{ github.event.inputs.prerelease }}
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: |-
-            artifact/*.zip
-          target_commitish: ${{ github.sha }}
+          artifact_name: ${{ matrix.installer_artifact_name }}

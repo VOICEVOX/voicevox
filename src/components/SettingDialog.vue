@@ -607,9 +607,37 @@
                 <q-space />
                 <q-toggle
                   :model-value="experimentalSetting.enablePreset"
-                  @update:model-value="
-                    changeExperimentalSetting('enablePreset', $event)
+                  @update:model-value="changeEnablePreset"
+                >
+                </q-toggle>
+              </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>スタイル変更時にデフォルトプリセットを自動で適用</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      キャラやスタイルの変更時にデフォルトプリセットを適用します
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="
+                    experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
                   "
+                  @update:model-value="
+                    changeExperimentalSetting(
+                      'shouldApplyDefaultPresetOnVoiceChanged',
+                      $event
+                    )
+                  "
+                  :disable="!experimentalSetting.enablePreset"
                 >
                 </q-toggle>
               </q-card-actions>
@@ -890,6 +918,17 @@ const changeUseGpu = async (useGpu: boolean) => {
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
   if (store.state.inheritAudioInfo === inheritAudioInfo) return;
   store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+};
+
+const changeEnablePreset = (value: boolean) => {
+  if (value) {
+    // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
+    changeExperimentalSetting("enablePreset", true);
+    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", true);
+  } else {
+    changeExperimentalSetting("enablePreset", false);
+    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", false);
+  }
 };
 
 const changeExperimentalSetting = async (

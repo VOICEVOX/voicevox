@@ -1,11 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes } from "@/store/type";
-import { Preset, PresetKey } from "@/type/preload";
+import { Preset, PresetKey, VoiceId } from "@/type/preload";
 
 export const presetStoreState: PresetStoreState = {
   presetItems: {},
   presetKeys: [],
+  defaultPresetKeys: {},
 };
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
@@ -24,8 +25,34 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
     },
   },
 
+  SET_DEFAULT_PRESET_MAP: {
+    action(
+      { commit },
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
+    ) {
+      window.electron.setSetting("defaultPresetKeys", defaultPresetKeys);
+      commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
+    },
+    mutation(
+      state,
+      { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> }
+    ) {
+      state.defaultPresetKeys = defaultPresetKeys;
+    },
+  },
+
   HYDRATE_PRESET_STORE: {
     async action({ commit }) {
+      const defaultPresetKeys = (await window.electron.getSetting(
+        "defaultPresetKeys"
+        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
+        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
+      )) as Record<VoiceId, PresetKey>;
+
+      commit("SET_DEFAULT_PRESET_MAP", {
+        defaultPresetKeys,
+      });
+
       const presetConfig = await window.electron.getSetting("presets");
       if (
         presetConfig === undefined ||
@@ -89,6 +116,43 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
 
       return newKey;
+    },
+  },
+
+  CREATE_ALL_DEFAULT_PRESET: {
+    async action({ state, dispatch, getters }) {
+      const voices = getters.GET_ALL_VOICES;
+
+      for await (const voice of voices) {
+        const voiceId = VoiceId(voice);
+        const defaultPresetKey = state.defaultPresetKeys[voiceId];
+
+        if (state.presetKeys.includes(defaultPresetKey)) {
+          return defaultPresetKey;
+        }
+
+        const characterName = getters.VOICE_NAME(voice);
+
+        const presetData: Preset = {
+          name: `デフォルト：${characterName}`,
+          speedScale: 1.0,
+          pitchScale: 0.0,
+          intonationScale: 1.0,
+          volumeScale: 1.0,
+          prePhonemeLength: 0.1,
+          postPhonemeLength: 0.1,
+        };
+        const newPresetKey = await dispatch("ADD_PRESET", { presetData });
+
+        await dispatch("SET_DEFAULT_PRESET_MAP", {
+          defaultPresetKeys: {
+            ...state.defaultPresetKeys,
+            [voiceId]: newPresetKey,
+          },
+        });
+
+        return newPresetKey;
+      }
     },
   },
 

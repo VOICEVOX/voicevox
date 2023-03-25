@@ -3,7 +3,7 @@
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-btn dense flat icon="more_vert">
+        <q-btn dense flat icon="more_vert" :disable="uiLocked">
           <q-menu transition-duration="100">
             <q-list>
               <q-item
@@ -54,6 +54,7 @@
           dense
           transition-show="none"
           transition-hide="none"
+          :disable="uiLocked"
         >
           <template v-slot:selected-item="scope">
             <div class="preset-select-label">
@@ -498,6 +499,7 @@ import {
 } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
 import { EngineManifest } from "@/openapi";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 
 const props =
   defineProps<{
@@ -789,6 +791,12 @@ const isRegisteredPreset = computed(
     presetItems.value[audioPresetKey.value] != undefined
 );
 
+const { isDefaultPresetKey, getDefaultPresetKeyForVoice } = useDefaultPreset();
+
+const currentDefaultPresetKey = computed(() =>
+  getDefaultPresetKeyForVoice(audioItem.value.voice)
+);
+
 // 入力パラメータがプリセットから変更されたか
 const isChangedPreset = computed(() => {
   if (!isRegisteredPreset.value) return false;
@@ -844,14 +852,27 @@ const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  const restPresetList = [];
+  const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
+
   if (isRegisteredPreset.value) {
-    restPresetList.push({
+    topPresetList.push({
       key: undefined,
       label: "プリセット解除",
     });
   }
-  return [...restPresetList, ...presetList.value];
+
+  // 選択中のstyleのデフォルトプリセットは常に一番上
+  topPresetList.push(
+    ...presetList.value.filter(
+      (preset) => preset.key === currentDefaultPresetKey.value
+    )
+  );
+  // 他のstyleのデフォルトプリセットを除外
+  const commonPresets = presetList.value.filter(
+    (preset) => !isDefaultPresetKey(preset.key)
+  );
+
+  return [...topPresetList, ...commonPresets];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
@@ -861,9 +882,9 @@ const presetSelectModel = computed<PresetSelectModelType>({
         label: "プリセット選択",
         key: undefined,
       };
-
     if (audioPresetKey.value == undefined)
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+
     return {
       label: presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
@@ -933,6 +954,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
+    .filter((presetKey) => !isDefaultPresetKey(presetKey))
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {
