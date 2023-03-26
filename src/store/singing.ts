@@ -1082,6 +1082,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  /**
+   * レンダリング停止をリクエストし、停止するまで待機する
+   */
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
