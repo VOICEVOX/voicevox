@@ -133,7 +133,14 @@ const copyScore = (score: Score): Score => {
   };
 };
 
-const generateHash = async <T>(obj: T) => {
+type PhraseHashSource = {
+  readonly singer: Singer | undefined;
+  readonly resolution: number;
+  readonly tempos: Tempo[];
+  readonly notes: Note[];
+};
+
+const generatePhraseHash = async (obj: PhraseHashSource) => {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));
   const digest = await crypto.subtle.digest("SHA-256", data);
@@ -160,11 +167,12 @@ type Singer = {
 };
 
 type Phrase = {
-  readonly hash: string;
   readonly singer: Singer | undefined;
+  readonly resolution: number;
+  readonly tempos: Tempo[];
   readonly notes: Note[];
-  readonly noteEvents: NoteEvent[];
-  readonly audioEvents: AudioEvent[];
+  startTime?: number;
+  buffer?: AudioBuffer;
 };
 
 type ChannelOptions = {
@@ -196,26 +204,32 @@ class SingChannel {
   }
 
   addPhrase(phrase: Phrase) {
-    const noteEvents = phrase.noteEvents;
-    const audioEvents = phrase.audioEvents;
-
     this.phrases.push(phrase);
 
-    if (audioEvents.length === 0) {
-      const synth = new Synth(this.context);
-      synth.connect(this.gainNode);
-      const sequence = new NoteSequence(synth, noteEvents);
-
-      this.context.transport.addSequence(sequence);
-      this.sequences.push(sequence);
-    } else {
+    let sequence: SoundSequence | undefined;
+    if (phrase.startTime !== undefined && phrase.buffer) {
+      const audioEvents: AudioEvent[] = [
+        {
+          time: phrase.startTime,
+          buffer: phrase.buffer,
+        },
+      ];
       const audioPlayer = new AudioPlayer(this.context);
       audioPlayer.connect(this.gainNode);
-      const sequence = new AudioSequence(audioPlayer, audioEvents);
-
-      this.context.transport.addSequence(sequence);
-      this.sequences.push(sequence);
+      sequence = new AudioSequence(audioPlayer, audioEvents);
+    } else {
+      const noteEvents = generateNoteEvents(
+        phrase.resolution,
+        phrase.tempos,
+        phrase.notes
+      );
+      const synth = new Synth(this.context);
+      synth.connect(this.gainNode);
+      sequence = new NoteSequence(synth, noteEvents);
     }
+
+    this.context.transport.addSequence(sequence);
+    this.sequences.push(sequence);
   }
 
   removePhrase(phrase: Phrase) {
@@ -294,8 +308,9 @@ if (window.AudioContext) {
   singChannel = new SingChannel(audioRenderer.context);
 }
 
+const phraseCache = new Map<string, Phrase>();
+
 let playbackPosition = 0;
-let phrases: Phrase[] = [];
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -407,7 +422,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.score = score;
     },
     async action({ state, getters, commit, dispatch }, { score }) {
-      console.log(score);
       if (!transport) {
         throw new Error("transport is undefined.");
       }
@@ -806,7 +820,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos = score.tempos;
         const notes = score.notes;
 
-        console.log("Updating phrases...");
+        console.info("Updating phrases...");
 
         // 重複するノートを除く
         for (let i = 0; i < notes.length; i++) {
@@ -840,59 +854,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         // フレーズを更新する
-        const newPhrases: Phrase[] = [];
+        const newPhrases = new Map<string, Phrase>();
         let phraseNotes: Note[] = [];
         for (let i = 0; i < notes.length; i++) {
           const note = notes[i];
-          const noteOffPos = note.position + note.duration;
 
           phraseNotes.push(note);
 
-          if (i === notes.length - 1 || noteOffPos !== notes[i + 1].position) {
-            const hash = await generateHash({
+          if (
+            i === notes.length - 1 ||
+            note.position + note.duration !== notes[i + 1].position
+          ) {
+            const hash = await generatePhraseHash({
+              singer,
+              resolution,
+              tempos,
+              notes: phraseNotes,
+            });
+            newPhrases.set(hash, {
               singer,
               resolution,
               tempos,
               notes: phraseNotes,
             });
 
-            const existingPhrase = phrases.find((value) => {
-              return value.hash === hash;
-            });
-            if (existingPhrase) {
-              newPhrases.push(existingPhrase);
-            } else {
-              const noteEvents = generateNoteEvents(
-                resolution,
-                tempos,
-                phraseNotes
-              );
-              const newPhrase: Phrase = {
-                hash,
-                singer,
-                notes: phraseNotes,
-                noteEvents,
-                audioEvents: [],
-              };
-              newPhrases.push(newPhrase);
-              singChannelRef.addPhrase(newPhrase);
-            }
-
             phraseNotes = [];
           }
         }
-        for (const phrase of phrases) {
-          const exists = newPhrases.some((value) => {
-            return value.hash === phrase.hash;
-          });
-          if (!exists) {
+        for (const [hash, phrase] of newPhrases) {
+          if (!phraseCache.has(hash)) {
+            phraseCache.set(hash, phrase);
+            singChannelRef.addPhrase(phrase);
+          }
+        }
+        for (const [hash, phrase] of phraseCache) {
+          if (!newPhrases.has(hash)) {
+            phraseCache.delete(hash);
             singChannelRef.removePhrase(phrase);
           }
         }
 
-        phrases = newPhrases;
-
-        console.log("Phrases updated.");
+        console.info("Phrases updated.");
       };
 
       const editQuery = (query: AudioQuery, phrase: Phrase) => {
@@ -901,10 +903,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const accentPhrase = query.accentPhrases[i];
           const moras = accentPhrase.moras;
           for (let j = 0; j < moras.length; j++) {
-            const noteEvent = phrase.noteEvents[noteIndex];
             const mora = moras[j];
-            const noteOnTime = noteEvent.noteOnTime;
-            const noteOffTime = noteEvent.noteOffTime;
+            const note = phrase.notes[noteIndex];
+
+            const noteOnTime = ticksToSeconds(
+              phrase.resolution,
+              phrase.tempos,
+              note.position
+            );
+            const noteOffTime = ticksToSeconds(
+              phrase.resolution,
+              phrase.tempos,
+              note.position + note.duration
+            );
 
             // 長さを編集
             let vowelLength = noteOffTime - noteOnTime;
@@ -923,7 +934,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             mora.vowelLength = Math.max(0.001, vowelLength);
 
             // 音高を編集
-            const freq = midiToFrequency(noteEvent.midi);
+            const freq = midiToFrequency(note.midi);
             mora.pitch = Math.log(freq);
 
             noteIndex++;
@@ -941,16 +952,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const audioContext = audioRenderer.audioContext;
         const singChannelRef = singChannel;
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
-          console.log("Engine not ready.");
-          return;
+          throw new Error("Engine not ready.");
         }
 
         const text = phrase.notes
           .map((value) => value.lyric)
-          .map((value) => value.replace("は", "ハ"))
+          .map((value) => value.replace("は", "ハ")) // TODO: 助詞の扱いはあとで考える
+          .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
           .join("");
 
-        console.log(`Synthesizing... text: ${text}`);
+        console.info(`Synthesizing... text: ${text}`);
 
         const query = await dispatch("FETCH_AUDIO_QUERY", {
           text,
@@ -962,18 +973,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return acc + value.moras.length;
         }, 0);
         if (numberOfMoras !== phrase.notes.length) {
-          console.log(
+          console.info(
             "The number of moras and the number of notes do not match."
           );
           return;
         }
 
-        const firstMora = query.accentPhrases[0].moras[0];
-        let time = phrase.noteEvents[0].noteOnTime;
-        time -= query.prePhonemeLength;
-        time -= firstMora.consonantLength ?? 0;
-
         editQuery(query, phrase);
+
+        const firstMora = query.accentPhrases[0].moras[0];
+        let startTime = ticksToSeconds(
+          phrase.resolution,
+          phrase.tempos,
+          phrase.notes[0].position
+        );
+        startTime -= query.prePhonemeLength;
+        startTime -= firstMora.consonantLength ?? 0;
+        phrase.startTime = startTime;
 
         const buffer = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
           engineId: singer.engineId,
@@ -989,19 +1005,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .then((value) => value.arrayBuffer())
           .then((value) => audioContext.decodeAudioData(value))
           .catch((e) => {
-            // TODO: ちゃんと例外処理する
             window.electron.logError(e);
-            console.log("Synthesis failed.");
-            return undefined;
+            throw e;
           });
-        if (buffer) {
-          phrase.audioEvents.push({ time, buffer });
-        }
+        phrase.buffer = buffer;
 
         singChannelRef.removePhrase(phrase);
         singChannelRef.addPhrase(phrase);
 
-        console.log("Synthesized.");
+        console.info("Synthesized.");
       };
 
       const getSinger = (): Singer | undefined => {
@@ -1011,6 +1023,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return { engineId: state.engineId, styleId: state.styleId };
       };
 
+      // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const renderingRequested = () => state.renderingRequested;
       const renderingStopRequested = () => state.renderingStopRequested;
 
@@ -1026,8 +1039,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (renderingRequested() || renderingStopRequested()) {
           return;
         }
-        for (const phrase of phrases) {
-          if (!phrase.singer || phrase.audioEvents.length !== 0) {
+        for (const phrase of phraseCache.values()) {
+          if (!phrase.singer || phrase.buffer) {
             continue;
           }
           await synthesize(phrase);
@@ -1042,18 +1055,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.renderingEnabled && !state.nowRendering) {
         commit("SET_NOW_RENDERING", { nowRendering: true });
 
-        while (renderingRequested() && !renderingStopRequested()) {
-          commit("SET_RENDERING_REQUESTED", { renderingRequested: false });
-          await render();
-        }
-        if (renderingStopRequested()) {
-          commit("SET_RENDERING_REQUESTED", { renderingRequested: true });
+        try {
+          while (renderingRequested() && !renderingStopRequested()) {
+            commit("SET_RENDERING_REQUESTED", { renderingRequested: false });
+            await render();
+          }
+        } finally {
           commit("SET_RENDERING_STOP_REQUESTED", {
             renderingStopRequested: false,
           });
-        }
 
-        commit("SET_NOW_RENDERING", { nowRendering: false });
+          commit("SET_NOW_RENDERING", { nowRendering: false });
+        }
       }
     },
   },
@@ -1061,12 +1074,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        console.log("Waiting for rendering to stop...");
+        console.info("Waiting for rendering to stop...");
         commit("SET_RENDERING_STOP_REQUESTED", {
           renderingStopRequested: true,
         });
         await createWaitFor(() => !state.nowRendering);
-        console.log("Rendering stopped.");
+        console.info("Rendering stopped.");
       }
     }),
   },
@@ -1613,7 +1626,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // コンテキストにはノードや発音が登録されているので問題なくレンダリングされます
             // TODO: 分かりにくいので後でリファクタリングしたい
             const channel = new SingChannel(context);
-            phrases.forEach((value) => channel.addPhrase(value));
+            phraseCache.forEach((value) => channel.addPhrase(value));
           }
         );
         const waveFileData = convertToWavFileData(audioBuffer);
