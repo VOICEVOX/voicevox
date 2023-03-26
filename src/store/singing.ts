@@ -820,7 +820,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const tempos = score.tempos;
         const notes = score.notes;
 
-        console.info("Updating phrases...");
+        window.electron.logInfo("Updating phrases...");
 
         // 重複するノートを除く
         for (let i = 0; i < notes.length; i++) {
@@ -894,7 +894,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        console.info("Phrases updated.");
+        window.electron.logInfo("Phrases updated.");
       };
 
       const editQuery = (query: AudioQuery, phrase: Phrase) => {
@@ -961,7 +961,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           .map((value) => value.replace("へ", "ヘ")) // TODO: 助詞の扱いはあとで考える
           .join("");
 
-        console.info(`Synthesizing... text: ${text}`);
+        window.electron.logInfo(`Synthesizing...`);
 
         const query = await dispatch("FETCH_AUDIO_QUERY", {
           text,
@@ -969,11 +969,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           styleId: singer.styleId,
         });
 
-        const numberOfMoras = query.accentPhrases.reduce((acc, value) => {
-          return acc + value.moras.length;
-        }, 0);
-        if (numberOfMoras !== phrase.notes.length) {
-          console.info(
+        const moras = query.accentPhrases.map((value) => value.moras).flat();
+
+        const phonemes = moras
+          .map((value) => {
+            if (value.consonant === undefined) {
+              return [value.vowel];
+            } else {
+              return [value.consonant, value.vowel];
+            }
+          })
+          .flat()
+          .join(" ");
+        window.electron.logInfo(`  phonemes: ${phonemes}`);
+
+        if (moras.length !== phrase.notes.length) {
+          window.electron.logInfo(
             "The number of moras and the number of notes do not match."
           );
           return;
@@ -1013,7 +1024,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         singChannelRef.removePhrase(phrase);
         singChannelRef.addPhrase(phrase);
 
-        console.info("Synthesized.");
+        window.electron.logInfo("Synthesized.");
       };
 
       const getSinger = (): Singer | undefined => {
@@ -1074,12 +1085,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, commit }) => {
       if (state.nowRendering) {
-        console.info("Waiting for rendering to stop...");
+        window.electron.logInfo("Waiting for rendering to stop...");
         commit("SET_RENDERING_STOP_REQUESTED", {
           renderingStopRequested: true,
         });
         await createWaitFor(() => !state.nowRendering);
-        console.info("Rendering stopped.");
+        window.electron.logInfo("Rendering stopped.");
       }
     }),
   },
