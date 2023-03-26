@@ -1080,11 +1080,11 @@ export type SettingStoreTypes = {
     action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
   };
 
-  GET_RECENTLY_USED_PROJECTS: {
+  GET_RECENTLY_OPENED_PROJECTS: {
     action(): Promise<string[]>;
   };
 
-  APPEND_RECENTLY_USED_PROJECT: {
+  APPEND_RECENTLY_OPENED_PROJECT: {
     action(payload: { filePath: string }): Promise<void>;
   };
 };

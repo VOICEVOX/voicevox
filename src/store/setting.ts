@@ -385,21 +385,23 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     ),
   },
 
-  GET_RECENTLY_USED_PROJECTS: {
+  GET_RECENTLY_OPENED_PROJECTS: {
     async action() {
-      return await window.electron.getSetting("recentlyUsedProjects");
+      return await window.electron.getSetting("recentlyOpenedProjects");
     },
   },
 
-  APPEND_RECENTLY_USED_PROJECT: {
+  APPEND_RECENTLY_OPENED_PROJECT: {
     async action({ dispatch }, { filePath }) {
-      const recentlyUsedProjects = await dispatch("GET_RECENTLY_USED_PROJECTS");
+      const recentlyOpenedProjects = await dispatch(
+        "GET_RECENTLY_OPENED_PROJECTS"
+      );
       const newRecentlyUsedProjects = [
         filePath,
-        ...recentlyUsedProjects.filter((value) => value != filePath),
+        ...recentlyOpenedProjects.filter((value) => value != filePath),
       ].slice(0, 10);
       await window.electron.setSetting(
-        "recentlyUsedProjects",
+        "recentlyOpenedProjects",
         newRecentlyUsedProjects
       );
     },

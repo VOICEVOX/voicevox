@@ -541,11 +541,11 @@ async function updateRecentProjects() {
     (x) => x.type === "root" && x.label === "最近開いたプロジェクト"
   ) as MenuItemRoot;
 
-  const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS"
+  const recentlyOpenedProjects = await store.dispatch(
+    "GET_RECENTLY_OPENED_PROJECTS"
   );
   recentProjectsMenu.subMenu =
-    recentlyUsedProjects.length === 0
+    recentlyOpenedProjects.length === 0
       ? [
           {
             type: "button",
@@ -558,7 +558,7 @@ async function updateRecentProjects() {
           },
         ]
       : await Promise.all(
-          recentlyUsedProjects.map(
+          recentlyOpenedProjects.map(
             async (projectFilePath) =>
               ({
                 type: "button",
