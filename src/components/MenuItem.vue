@@ -5,6 +5,7 @@
     v-else-if="menudata.type === 'root'"
     clickable
     dense
+    :disable="menudata.disabled"
     :class="selected && 'active-menu'"
   >
     <q-item-section side class="q-py-2" v-if="menudata.icon">
@@ -40,6 +41,7 @@
     v-ripple
     v-close-popup
     class="bg-background"
+    :disable="menudata.disabled"
     @click="menudata.onClick"
   >
     <q-item-section v-if="menudata.type === 'checkbox'" side class="q-pr-sm">
