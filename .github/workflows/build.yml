@@ -271,7 +271,7 @@ jobs:
         #   - ${{ env.VOICEVOX_ENGINE_REPO_URL }}
         # voicevox_engine_version:
         #   - ${{ env.VOICEVOX_ENGINE_VERSION }}
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04]
         artifact_name:
           - linux-nvidia-prepackage
           - linux-cpu-prepackage
