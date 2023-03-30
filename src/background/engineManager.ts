@@ -232,13 +232,17 @@ export class EngineManager {
       `ENGINE ${engineId}: Checking whether port ${portManager.port} assignable...`
     );
 
-    if (!(await portManager.isPortAssignable())) {
+    const processId = await portManager.getProcessIdFromPort();
+
+    // port is already in use
+    if (processId !== undefined) {
+      const processName = await portManager.getProcessNameFromPid(processId);
       log.warn(
-        `ENGINE ${engineId}: Port ${portManager.port} has already been assigned `
+        `ENGINE ${engineId}: Port ${portManager.port} has already been assigned by ${processName} (pid=${processId})`
       );
       dialog.showErrorBox(
         "エンジンの起動に失敗しました",
-        `ポート${portManager.port}はすでに使用されています。`
+        `${portManager.port}番ポートは、${processName} (pid=${processId}) によってすでに使用されています。`
       );
       process.exit(1);
     }

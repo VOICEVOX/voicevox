@@ -78,7 +78,6 @@
     "@types/mousetrap": "1.6.8",
     "@types/multistream": "4.1.0",
     "@types/semver": "7.3.9",
-    "@types/tcp-port-used": "1.0.1",
     "@types/unzipper": "0.10.5",
     "@types/uuid": "8.3.4",
     "@typescript-eslint/eslint-plugin": "5.38.1",
