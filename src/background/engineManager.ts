@@ -5,7 +5,7 @@ import treeKill from "tree-kill";
 import Store from "electron-store";
 import shlex from "shlex";
 
-import { BrowserWindow, dialog } from "electron";
+import { app, BrowserWindow, dialog } from "electron";
 
 import log from "electron-log";
 import { z } from "zod";
@@ -251,7 +251,14 @@ export class EngineManager {
       // > XXXXX番ポートが使用中であるため、〇〇はYYYYY番ポートで起動しました
 
       // 代替ポートが見つからないとき
-      if (!altPort) throw new Error("No alternative port found");
+      if (!altPort) {
+        dialog.showErrorBox(
+          `${engineInfo.name} の起動に失敗しました`,
+          `${engineInfoUrl.port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`
+        );
+        app.exit(1);
+        throw new Error("No Alternative Port Found");
+      }
 
       // 代替ポートを設定
       engineInfo.host = new PortManager(
@@ -259,7 +266,7 @@ export class EngineManager {
         altPort
       ).getUrl();
       log.warn(
-        `ENGINE ${engineId}: Applied Alterative Port: ${engineInfoUrl.port} -> ${altPort}`
+        `ENGINE ${engineId}: Applied Alternative Port: ${engineInfoUrl.port} -> ${altPort}`
       );
     }
 
