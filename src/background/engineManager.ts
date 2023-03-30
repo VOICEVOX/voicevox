@@ -226,25 +226,41 @@ export class EngineManager {
       return;
     }
 
-    const portManager = new PortManager(engineInfo.host);
-
-    log.info(
-      `ENGINE ${engineId}: Checking whether port ${portManager.port} assignable...`
+    const engineInfoUrl = new URL(engineInfo.host);
+    const portManager = new PortManager(
+      engineInfoUrl.hostname,
+      parseInt(engineInfoUrl.port)
     );
 
+    log.info(
+      `ENGINE ${engineId}: Checking whether port ${engineInfoUrl.port} is assignable...`
+    );
+
+    // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
     const processId = await portManager.getProcessIdFromPort();
 
-    // port is already in use
     if (processId !== undefined) {
       const processName = await portManager.getProcessNameFromPid(processId);
       log.warn(
-        `ENGINE ${engineId}: Port ${portManager.port} has already been assigned by ${processName} (pid=${processId})`
+        `ENGINE ${engineId}: Port ${engineInfoUrl.port} has already been assigned by ${processName} (pid=${processId})`
       );
-      dialog.showErrorBox(
-        "エンジンの起動に失敗しました",
-        `${portManager.port}番ポートは、${processName} (pid=${processId}) によってすでに使用されています。`
+
+      const altPort = await portManager.findAltPort();
+
+      // TODO: エディターでトースト通知を出す:
+      // > XXXXX番ポートが使用中であるため、〇〇はYYYYY番ポートで起動しました
+
+      // 代替ポートが見つからないとき
+      if (!altPort) throw new Error("No alternative port found");
+
+      // 代替ポートを設定
+      engineInfo.host = new PortManager(
+        engineInfoUrl.hostname,
+        altPort
+      ).getUrl();
+      log.warn(
+        `ENGINE ${engineId}: Applied Alterative Port: ${engineInfoUrl.port} -> ${altPort}`
       );
-      process.exit(1);
     }
 
     log.info(`ENGINE ${engineId}: Starting process`);
@@ -267,7 +283,12 @@ export class EngineManager {
 
     // エンジンプロセスの起動
     const enginePath = engineInfo.executionFilePath;
-    const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : []);
+    const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
+      "--host",
+      new URL(engineInfo.host).hostname,
+      "--port",
+      new URL(engineInfo.host).port,
+    ]);
 
     log.info(`ENGINE ${engineId} path: ${enginePath}`);
     log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);

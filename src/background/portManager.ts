@@ -4,23 +4,25 @@ import log from "electron-log";
 const isWindows = process.platform === "win32";
 
 export class PortManager {
-  constructor(private url: string) {}
+  constructor(private hostname: string, private port: number) {}
 
   /**
    * ex) url: `http://localhost:50021`
    *  host -> `localhost`
    *  port -> `50021`
    */
-  public host = this.url.split(":")[1].slice(2);
-  public port = parseInt(this.url.split(":")[2]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   portLog = (...message: any) => log.info(`PORT ${this.port}: ${message}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   portWarn = (...message: any) => log.warn(`PORT ${this.port}: ${message}`);
 
+  public getUrl(isHttps = false): string {
+    return `${isHttps ? "https" : "http"}://${this.hostname}:${this.port}`;
+  }
+
   /**
-   * Parses stdout from `netstat -ano` command and returns process id
+   * "netstat -ano" の stdout から, 指定したポートを使用しているプロセスの process id を取得する
    *
    * ex) stdout:
    * ``` cmd
@@ -30,13 +32,13 @@ export class PortManager {
    * ```
    * -> `17320`
    *
-   * @param stdout stdout from netstat command
-   * @returns `process id` or `undefined`
+   * @param stdout netstat の stdout
+   * @returns `process id` or `undefined` (ポートが使用されていないとき)
    */
   private stdout2processId(stdout: string): number | undefined {
     const lines = stdout.split("\n");
     for (const line of lines) {
-      if (line.includes(`${this.host}:${this.port}`)) {
+      if (line.includes(`${this.hostname}:${this.port}`)) {
         const parts = line.trim().split(/\s+/);
         return parseInt(parts[parts.length - 1], 10);
       }
@@ -45,7 +47,7 @@ export class PortManager {
   }
 
   async getProcessIdFromPort(): Promise<number | undefined> {
-    this.portLog("Getting process id ...");
+    this.portLog("Getting process id...");
     const exec = isWindows
       ? {
           cmd: "netstat",
@@ -58,19 +60,13 @@ export class PortManager {
 
     this.portLog(`Running command: "${exec.cmd} ${exec.args.join(" ")}"`);
 
-    const stdout = execFileSync(exec.cmd, exec.args, {
+    let stdout = execFileSync(exec.cmd, exec.args, {
       shell: true,
     }).toString();
 
     // windows
     if (isWindows) {
-      const result = this.stdout2processId(stdout);
-      if (!result) {
-        this.portLog("Assignable; Nobody uses this port!");
-        return undefined;
-      }
-      this.portWarn(`Nonassignable; pid=${result} uses this port!`);
-      return result;
+      stdout = this.stdout2processId(stdout)?.toString() ?? "";
     }
 
     // bash
@@ -85,11 +81,13 @@ export class PortManager {
   async getProcessNameFromPid(pid: number): Promise<string> {
     this.portLog(`Getting process name from pid=${pid}...`);
     const exec = isWindows
-      ? {
+      ? // TODO: `TCPポートの除外範囲` というものがあって, そこに該当しているかを確認する
+        {
           cmd: "wmic",
           args: ["process", "where", `"ProcessID=${pid}"`, "get", "name"],
         }
-      : {
+      : // TODO: MacOS だとroot権限が必要かも？  場合によって, 代替コマンド `ss` や `fuser` を使うかも
+        {
           cmd: "ps",
           args: ["-p", pid.toString(), "-o", "comm="],
         };
@@ -111,5 +109,29 @@ export class PortManager {
     this.portLog(`Found process name: ${stdout}`);
 
     return stdout.trim();
+  }
+
+  /**
+   * 割り当て可能な他のポートを探します
+   *
+   * @returns 割り当て可能なポート番号 or `undefined` (割り当て可能なポートが見つからなかったとき)
+   */
+  async findAltPort(): Promise<number | undefined> {
+    this.portLog(`Find another assignable port from ${this.port}...`);
+    const altPortMax = 50100;
+
+    for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
+      this.portLog(`Trying whether port ${altPort} is assignable...`);
+      const altPid = await new PortManager(
+        this.hostname,
+        altPort
+      ).getProcessIdFromPort();
+
+      // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
+      if (altPid === undefined) return altPort;
+    }
+
+    this.portWarn(`No alternative port found! ${this.port}...${altPortMax}`);
+    return undefined;
   }
 }
