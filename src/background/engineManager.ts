@@ -9,6 +9,7 @@ import { BrowserWindow, dialog } from "electron";
 
 import log from "electron-log";
 import { z } from "zod";
+import { PortManager } from "./portManager";
 import { ipcMainSend } from "@/electron/ipc";
 
 import {
@@ -209,6 +210,7 @@ export class EngineManager {
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
     );
+
     if (!engineInfo)
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
 
@@ -222,6 +224,23 @@ export class EngineManager {
         `ENGINE ${engineId}: Skipped engineInfo execution: empty executionFilePath`
       );
       return;
+    }
+
+    const portManager = new PortManager(engineInfo.host);
+
+    log.info(
+      `ENGINE ${engineId}: Checking whether port ${portManager.port} assignable...`
+    );
+
+    if (!(await portManager.isPortAssignable())) {
+      log.warn(
+        `ENGINE ${engineId}: Port ${portManager.port} has already been assigned `
+      );
+      dialog.showErrorBox(
+        "エンジンの起動に失敗しました",
+        `ポート${portManager.port}はすでに使用されています。`
+      );
+      process.exit(1);
     }
 
     log.info(`ENGINE ${engineId}: Starting process`);
