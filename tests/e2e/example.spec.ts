@@ -1,7 +1,7 @@
+import { promises as fs } from "fs";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
 import { createServer } from "vite";
-import { promises as fs } from "fs";
 
 test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
   dotenv.config(); // FIXME: エンジンの設定直読み
@@ -16,7 +16,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
       await fs.access("./dist/background.js");
       break;
     } catch (e) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 

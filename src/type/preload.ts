@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
-import { IpcSOData } from "./ipc";
 import { z } from "zod";
+import { IpcSOData } from "./ipc";
 
 export const isMac =
   typeof process === "undefined"
@@ -15,9 +15,22 @@ export const speakerIdSchema = z.string().uuid().brand<"SpeakerId">();
 export type SpeakerId = z.infer<typeof speakerIdSchema>;
 export const SpeakerId = (id: string): SpeakerId => speakerIdSchema.parse(id);
 
+export const styleIdSchema = z.number().brand<"StyleId">();
+export type StyleId = z.infer<typeof styleIdSchema>;
+export const StyleId = (id: number): StyleId => styleIdSchema.parse(id);
+
 export const audioKeySchema = z.string().uuid().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
+
+export const presetKeySchema = z.string().uuid().brand<"PresetKey">();
+export type PresetKey = z.infer<typeof presetKeySchema>;
+export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
+
+export const voiceIdSchema = z.string().brand<"VoiceId">();
+export type VoiceId = z.infer<typeof voiceIdSchema>;
+export const VoiceId = (voice: Voice): VoiceId =>
+  voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
 
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
@@ -161,6 +174,7 @@ export interface Sandbox {
     message: string;
     buttons: string[];
     cancelId?: number;
+    defaultId?: number;
   }): Promise<number>;
   showImportFileDialog(obj: { title: string }): Promise<string | undefined>;
   writeFile(obj: {
@@ -216,7 +230,7 @@ export type AppInfos = {
 
 export type StyleInfo = {
   styleName?: string;
-  styleId: number;
+  styleId: StyleId;
   iconPath: string;
   portraitPath: string | undefined;
   engineId: EngineId;
@@ -248,7 +262,7 @@ export type UpdateInfo = {
 export type Voice = {
   engineId: EngineId;
   speakerId: SpeakerId;
-  styleId: number;
+  styleId: StyleId;
 };
 
 export type Encoding = "UTF-8" | "Shift_JIS";
@@ -293,7 +307,7 @@ export type EngineSetting = z.infer<typeof engineSettingSchema>;
 export type DefaultStyleId = {
   engineId: EngineId;
   speakerUuid: SpeakerId;
-  defaultStyleId: number;
+  defaultStyleId: StyleId;
 };
 
 export const supportedFeaturesItemSchema = z.object({
@@ -344,7 +358,7 @@ export type MorphingInfo = {
   rate: number;
   targetEngineId: EngineId;
   targetSpeakerId: SpeakerId;
-  targetStyleId: number;
+  targetStyleId: StyleId;
 };
 
 export type PresetConfig = {
@@ -353,10 +367,10 @@ export type PresetConfig = {
 };
 
 export type MorphableTargetInfoTable = {
-  [baseStyleId: number]:
+  [baseStyleId: StyleId]:
     | undefined
     | {
-        [targetStyleId: number]: {
+        [targetStyleId: StyleId]: {
           isMorphable: boolean;
         };
       };
@@ -459,12 +473,15 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
-export type ExperimentalSetting = {
-  enablePreset: boolean;
-  enableInterrogativeUpspeak: boolean;
-  enableMorphing: boolean;
-  enableMultiEngine: boolean;
-};
+export const experimentalSettingSchema = z.object({
+  enablePreset: z.boolean().default(false),
+  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
+  enableInterrogativeUpspeak: z.boolean().default(false),
+  enableMorphing: z.boolean().default(false),
+  enableMultiEngine: z.boolean().default(false),
+});
+
+export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
 
 export const splitterPositionSchema = z
   .object({
@@ -478,6 +495,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
 };
+
 export const electronStoreSchema = z
   .object({
     inheritAudioInfo: z.boolean().default(true),
@@ -511,7 +529,7 @@ export const electronStoreSchema = z
           .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
           .default(EngineId("00000000-0000-0000-0000-000000000000")),
         speakerUuid: speakerIdSchema,
-        defaultStyleId: z.number(),
+        defaultStyleId: styleIdSchema,
       })
       .passthrough()
       .array()
@@ -520,7 +538,7 @@ export const electronStoreSchema = z
       .object({
         items: z
           .record(
-            z.string().uuid(),
+            presetKeySchema,
             z
               .object({
                 name: z.string(),
@@ -535,7 +553,7 @@ export const electronStoreSchema = z
                     rate: z.number(),
                     targetEngineId: engineIdSchema,
                     targetSpeakerId: speakerIdSchema,
-                    targetStyleId: z.number(),
+                    targetStyleId: styleIdSchema,
                   })
                   .passthrough()
                   .optional(),
@@ -543,21 +561,14 @@ export const electronStoreSchema = z
               .passthrough()
           )
           .default({}),
-        keys: z.string().uuid().array().default([]),
+        keys: presetKeySchema.array().default([]),
       })
       .passthrough()
       .default({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
-    experimentalSetting: z
-      .object({
-        enablePreset: z.boolean().default(false),
-        enableInterrogativeUpspeak: z.boolean().default(false),
-        enableMorphing: z.boolean().default(false),
-        enableMultiEngine: z.boolean().default(false),
-      })
-      .passthrough()
-      .default({}),
+    experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
       .default("Unconfirmed"),

@@ -179,11 +179,11 @@
 </template>
 
 <script setup lang="ts">
+import { debounce } from "quasar";
+import { computed, ref } from "vue";
 import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
-import { debounce } from "quasar";
-import { computed, ref } from "vue";
 
 const props = withDefaults(
   defineProps<{

@@ -1,7 +1,7 @@
-import { State } from "@/store/type";
-import { ToolbarButtonTagType } from "@/type/preload";
 import path from "path";
 import { Platform } from "quasar";
+import { State } from "@/store/type";
+import { ToolbarButtonTagType } from "@/type/preload";
 
 export function sanitizeFileName(fileName: string): string {
   // \x00 - \x1f: ASCII 制御文字

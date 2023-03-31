@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const process = require("process");
+const { execFileSync } = require("child_process");
+const fs = require("fs");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
 const argv = yargs(hideBin(process.argv))
@@ -12,8 +14,6 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .parse();
 
-const { execFileSync } = require("child_process");
-const fs = require("fs");
 const tmp = require("tmp");
 
 const isWindows = process.platform === "win32";

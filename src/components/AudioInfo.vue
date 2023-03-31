@@ -3,7 +3,7 @@
     <div v-if="enablePreset" class="q-px-md">
       <div class="row items-center no-wrap q-mb-xs">
         <div class="text-body1">プリセット</div>
-        <q-btn dense flat icon="more_vert">
+        <q-btn dense flat icon="more_vert" :disable="uiLocked">
           <q-menu transition-duration="100">
             <q-list>
               <q-item
@@ -54,6 +54,7 @@
           dense
           transition-show="none"
           transition-hide="none"
+          :disable="uiLocked"
         >
           <template v-slot:selected-item="scope">
             <div class="preset-select-label">
@@ -484,6 +485,8 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
+import CharacterButton from "./CharacterButton.vue";
+import PresetManageDialog from "./PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
@@ -491,12 +494,12 @@ import {
   CharacterInfo,
   MorphingInfo,
   Preset,
+  PresetKey,
   Voice,
 } from "@/type/preload";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import CharacterButton from "./CharacterButton.vue";
-import PresetManageDialog from "./PresetManageDialog.vue";
 import { EngineManifest } from "@/openapi";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
 
 const props =
   defineProps<{
@@ -788,6 +791,12 @@ const isRegisteredPreset = computed(
     presetItems.value[audioPresetKey.value] != undefined
 );
 
+const { isDefaultPresetKey, getDefaultPresetKeyForVoice } = useDefaultPreset();
+
+const currentDefaultPresetKey = computed(() =>
+  getDefaultPresetKeyForVoice(audioItem.value.voice)
+);
+
 // 入力パラメータがプリセットから変更されたか
 const isChangedPreset = computed(() => {
   if (!isRegisteredPreset.value) return false;
@@ -821,24 +830,18 @@ const isChangedPreset = computed(() => {
 
 type PresetSelectModelType = {
   label: string;
-  key: string | undefined;
+  key: PresetKey | undefined;
 };
 
 // プリセットの変更
-const changePreset = (
-  presetOrPresetKey: PresetSelectModelType | string
-): void => {
-  const presetKey =
-    typeof presetOrPresetKey === "string"
-      ? presetOrPresetKey
-      : presetOrPresetKey.key;
+const changePreset = (presetKey: PresetKey | undefined): void => {
   store.dispatch("COMMAND_SET_AUDIO_PRESET", {
     audioKey: props.activeAudioKey,
     presetKey,
   });
 };
 
-const presetList = computed<{ label: string; key: string }[]>(() =>
+const presetList = computed<{ label: string; key: PresetKey }[]>(() =>
   presetKeys.value
     .filter((key) => presetItems.value[key] != undefined)
     .map((key) => ({
@@ -849,14 +852,27 @@ const presetList = computed<{ label: string; key: string }[]>(() =>
 
 // セルへのプリセットの設定
 const selectablePresetList = computed<PresetSelectModelType[]>(() => {
-  const restPresetList = [];
+  const topPresetList: { key: PresetKey | undefined; label: string }[] = [];
+
   if (isRegisteredPreset.value) {
-    restPresetList.push({
+    topPresetList.push({
       key: undefined,
       label: "プリセット解除",
     });
   }
-  return [...restPresetList, ...presetList.value];
+
+  // 選択中のstyleのデフォルトプリセットは常に一番上
+  topPresetList.push(
+    ...presetList.value.filter(
+      (preset) => preset.key === currentDefaultPresetKey.value
+    )
+  );
+  // 他のstyleのデフォルトプリセットを除外
+  const commonPresets = presetList.value.filter(
+    (preset) => !isDefaultPresetKey(preset.key)
+  );
+
+  return [...topPresetList, ...commonPresets];
 });
 
 const presetSelectModel = computed<PresetSelectModelType>({
@@ -866,16 +882,16 @@ const presetSelectModel = computed<PresetSelectModelType>({
         label: "プリセット選択",
         key: undefined,
       };
-
     if (audioPresetKey.value == undefined)
       throw new Error("audioPresetKey is undefined"); // 次のコードが何故かコンパイルエラーになるチェック
+
     return {
       label: presetItems.value[audioPresetKey.value].name,
       key: audioPresetKey.value,
     };
   },
   set: (newVal) => {
-    changePreset(newVal);
+    changePreset(newVal.key);
   },
 });
 
@@ -895,7 +911,7 @@ const setPresetByScroll = (event: WheelEvent) => {
 
   if (selectablePresetList.value[newIndex] === undefined) return;
 
-  changePreset(selectablePresetList.value[newIndex]);
+  changePreset(selectablePresetList.value[newIndex].key);
 };
 
 // プリセットの登録・再登録
@@ -938,6 +954,7 @@ const filterPresetOptionsList: QSelectProps["onFilter"] = (
   doneFn
 ) => {
   const presetNames = presetKeys.value
+    .filter((presetKey) => !isDefaultPresetKey(presetKey))
     .map((presetKey) => presetItems.value[presetKey]?.name)
     .filter((value) => value != undefined);
   doneFn(() => {

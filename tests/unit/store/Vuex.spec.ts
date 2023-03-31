@@ -1,4 +1,5 @@
 import { createLogger } from "vuex";
+import { assert, describe, it } from "vitest";
 import { indexStore } from "@/store/index";
 import { createStore } from "@/store/vuex";
 import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
@@ -8,7 +9,6 @@ import { projectStore } from "@/store/project";
 import { uiStore } from "@/store/ui";
 import { settingStore } from "@/store/setting";
 import { presetStore } from "@/store/preset";
-import { assert, describe, it } from "vitest";
 import { proxyStore } from "@/store/proxy";
 import { dictionaryStore } from "@/store/dictionary";
 import { engineStore } from "@/store/engine";
@@ -121,6 +121,7 @@ describe("store/vuex.js test", () => {
         },
         experimentalSetting: {
           enablePreset: false,
+          shouldApplyDefaultPresetOnVoiceChanged: false,
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
           enableMultiEngine: false,
@@ -135,6 +136,7 @@ describe("store/vuex.js test", () => {
           tweakableSliderByScroll: false,
         },
         progress: -1,
+        defaultPresetKeys: {},
       },
       getters: {
         ...uiStore.getters,
