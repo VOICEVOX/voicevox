@@ -125,6 +125,7 @@ describe("store/vuex.js test", () => {
           enableInterrogativeUpspeak: false,
           enableMorphing: false,
           enableMultiEngine: false,
+          showAudioCellLineNumber: false,
         },
         splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
         splitterPosition: {
@@ -239,6 +240,10 @@ describe("store/vuex.js test", () => {
     assert.equal(store.state.experimentalSetting.enablePreset, false);
     assert.equal(
       store.state.experimentalSetting.enableInterrogativeUpspeak,
+      false
+    );
+    assert.equal(
+      store.state.experimentalSetting.showAudioCellLineNumber,
       false
     );
     assert.propertyVal(

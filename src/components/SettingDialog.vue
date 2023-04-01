@@ -716,6 +716,30 @@
                 >
                 </q-toggle>
               </q-card-actions>
+              <q-card-actions class="q-px-md q-py-none bg-surface">
+                <div>行番号の表示</div>
+                <div>
+                  <q-icon name="help_outline" size="sm" class="help-hover-icon">
+                    <q-tooltip
+                      :delay="500"
+                      anchor="center left"
+                      self="center right"
+                      transition-show="jump-left"
+                      transition-hide="jump-right"
+                    >
+                      テキスト欄の左側に行番号を表示します。
+                    </q-tooltip>
+                  </q-icon>
+                </div>
+                <q-space />
+                <q-toggle
+                  :model-value="experimentalSetting.showAudioCellLineNumber"
+                  @update:model-value="
+                    changeExperimentalSetting('showAudioCellLineNumber', $event)
+                  "
+                >
+                </q-toggle>
+              </q-card-actions>
             </q-card>
             <q-card flat class="setting-card">
               <q-card-actions>

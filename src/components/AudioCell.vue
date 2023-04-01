@@ -7,8 +7,12 @@
       size="sm"
       class="absolute active-arrow"
     />
-    <!-- TODO: デフォでオフ, 設定項目の追加 -->
-    <div class="line-number" :class="{ active: isActiveAudioCell }">
+
+    <div
+      class="line-number"
+      :class="{ active: isActiveAudioCell }"
+      v-if="showLineNumbers"
+    >
       {{ lineNumberIndex }}
     </div>
     <character-button
@@ -190,6 +194,10 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
   }
 };
 
+const showLineNumbers = computed(
+  () => store.state.experimentalSetting.showAudioCellLineNumber
+);
+
 // 行番号
 const lineNumberIndex = computed(() => {
   return audioKeys.value.indexOf(props.audioKey) + 1;
@@ -198,7 +206,7 @@ const lineNumberIndex = computed(() => {
 // 行番号の幅: 3桁はデフォで入るように, 4桁以上は1remずつ広げる
 const lineNumberWidth = computed(() => {
   const indexDigits = String(audioKeys.value.length).length;
-  if (indexDigits <= 3) return "3rem";
+  if (indexDigits <= 3) return "2rem";
   return `${indexDigits - 1}rem`;
 });
 
@@ -294,6 +302,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   .line-number {
     height: 2rem;
     width: v-bind(lineNumberWidth);
+    margin-left: 5px;
     line-height: 2rem;
     opacity: 0.6;
     text-align: right;
