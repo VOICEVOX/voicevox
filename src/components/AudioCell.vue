@@ -7,7 +7,6 @@
       size="sm"
       class="absolute active-arrow"
     />
-
     <div
       class="line-number"
       :class="{ active: isActiveAudioCell }"
@@ -194,15 +193,14 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
   }
 };
 
+// 行番号を表示するかどうか
 const showLineNumbers = computed(
   () => store.state.experimentalSetting.showAudioCellLineNumber
 );
-
 // 行番号
 const lineNumberIndex = computed(() => {
   return audioKeys.value.indexOf(props.audioKey) + 1;
 });
-
 // 行番号の幅: 3桁はデフォで入るように, 4桁以上は1remずつ広げる
 const lineNumberWidth = computed(() => {
   const indexDigits = String(audioKeys.value.length).length;
