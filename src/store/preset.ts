@@ -5,6 +5,10 @@ import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
 
 /**
  * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
+ *
+ * generate: プロジェクト新規作成時、空のAudioItemを作成する場合
+ * copy: 元となるAudioItemがある場合（＋ボタンで作成したとき）
+ * changeVoice: ボイス切り替え時
  */
 export function determineNextPresetKey(
   state: Pick<
