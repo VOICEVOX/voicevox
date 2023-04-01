@@ -7,6 +7,10 @@
       size="sm"
       class="absolute active-arrow"
     />
+    <!-- TODO: デフォでオフ, 設定項目の追加 -->
+    <div class="line-number" :class="{ active: isActiveAudioCell }">
+      {{ lineNumberIndex }}
+    </div>
     <character-button
       :character-infos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
@@ -186,6 +190,18 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
   }
 };
 
+// 行番号
+const lineNumberIndex = computed(() => {
+  return audioKeys.value.indexOf(props.audioKey) + 1;
+});
+
+// 行番号の幅: 3桁はデフォで入るように, 4桁以上は1remずつ広げる
+const lineNumberWidth = computed(() => {
+  const indexDigits = String(audioKeys.value.length).length;
+  if (indexDigits <= 3) return "3rem";
+  return `${indexDigits - 1}rem`;
+});
+
 // 上下に移動
 const audioKeys = computed(() => store.state.audioKeys);
 const moveUpCell = (e?: KeyboardEvent) => {
@@ -273,6 +289,20 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   .active-arrow {
     left: -5px;
     height: 2rem;
+  }
+
+  .line-number {
+    height: 2rem;
+    width: v-bind(lineNumberWidth);
+    line-height: 2rem;
+    opacity: 0.6;
+    text-align: right;
+    color: colors.$display;
+    &.active {
+      opacity: 1;
+      font-weight: bold;
+      color: colors.$primary;
+    }
   }
 
   .q-input {
