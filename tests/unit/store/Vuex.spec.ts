@@ -128,8 +128,8 @@ describe("store/vuex.js test", () => {
         leftLocatorPosition: 0,
         rightLocatorPosition: 0,
         renderingEnabled: false,
-        renderingRequested: false,
-        renderingStopRequested: false,
+        startRenderingRequested: false,
+        stopRenderingRequested: false,
         nowRendering: false,
       },
       getters: {

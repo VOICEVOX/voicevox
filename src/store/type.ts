@@ -705,8 +705,8 @@ export type SingingStoreState = {
   leftLocatorPosition: number;
   rightLocatorPosition: number;
   renderingEnabled: boolean;
-  renderingRequested: boolean;
-  renderingStopRequested: boolean;
+  startRenderingRequested: boolean;
+  stopRenderingRequested: boolean;
   nowRendering: boolean;
 };
 
@@ -840,12 +840,12 @@ export type SingingStoreTypes = {
     action(payload: { volume: number }): void;
   };
 
-  SET_RENDERING_REQUESTED: {
-    mutation: { renderingRequested: boolean };
+  SET_START_RENDERING_REQUESTED: {
+    mutation: { startRenderingRequested: boolean };
   };
 
-  SET_RENDERING_STOP_REQUESTED: {
-    mutation: { renderingStopRequested: boolean };
+  SET_STOP_RENDERING_REQUESTED: {
+    mutation: { stopRenderingRequested: boolean };
   };
 
   SET_NOW_RENDERING: {

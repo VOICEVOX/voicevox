@@ -674,7 +674,14 @@ export class AudioRenderer {
     this.onlineContext = { audioContext, transport };
   }
 
-  renderToBuffer(
+  async createAudioBuffer(blob: Blob) {
+    const audioContext = this.onlineContext.audioContext;
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    return audioBuffer;
+  }
+
+  async renderToBuffer(
     sampleRate: number,
     startTime: number,
     duration: number,
@@ -690,7 +697,8 @@ export class AudioRenderer {
 
     callback({ audioContext, transport });
     transport.scheduleEvents(startTime, duration);
-    return audioContext.startRendering();
+    const audioBuffer = await audioContext.startRendering();
+    return audioBuffer;
   }
 
   dispose() {
