@@ -40,6 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
+  showAudioCellLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -47,7 +48,6 @@ export const settingStoreState: SettingStoreState = {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     enableMultiEngine: false,
-    showAudioCellLineNumber: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -250,6 +250,19 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { editorFont }) {
       window.electron.setSetting("editorFont", editorFont);
       commit("SET_EDITOR_FONT", { editorFont });
+    },
+  },
+
+  SET_SHOW_AUDIO_CELL_LINE_NUMBER: {
+    mutation(state, { showAudioCellLineNumber }) {
+      state.showAudioCellLineNumber = showAudioCellLineNumber;
+    },
+    action({ commit }, { showAudioCellLineNumber }) {
+      window.electron.setSetting(
+        "showAudioCellLineNumber",
+        showAudioCellLineNumber
+      );
+      commit("SET_SHOW_AUDIO_CELL_LINE_NUMBER", { showAudioCellLineNumber });
     },
   },
 

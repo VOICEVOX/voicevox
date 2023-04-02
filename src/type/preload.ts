@@ -479,7 +479,6 @@ export const experimentalSettingSchema = z.object({
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiEngine: z.boolean().default(false),
-  showAudioCellLineNumber: z.boolean().default(false),
 });
 
 export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
@@ -569,6 +568,7 @@ export const electronStoreSchema = z
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
+    showAudioCellLineNumber: z.boolean().default(false),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
@@ -587,7 +587,6 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
-    showAudioCellLineNumber: z.boolean().default(false),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;

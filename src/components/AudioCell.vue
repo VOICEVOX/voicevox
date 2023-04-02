@@ -194,9 +194,7 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
 };
 
 // 行番号を表示するかどうか
-const showLineNumbers = computed(
-  () => store.state.experimentalSetting.showAudioCellLineNumber
-);
+const showLineNumbers = computed(() => store.state.showAudioCellLineNumber);
 // 行番号
 const lineNumberIndex = computed(() => {
   return audioKeys.value.indexOf(props.audioKey) + 1;
