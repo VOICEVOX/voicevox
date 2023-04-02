@@ -1,6 +1,7 @@
 import { get, set } from "idb-keyval";
 import {
   defaultHotkeySettings,
+  defaultToolbarButtonSetting,
   electronStoreSchema,
   EngineId,
   EngineInfo,
@@ -163,7 +164,7 @@ const loadMock = async () => {
       return Promise.resolve(defaultHotkeySettings);
     },
     getDefaultToolbarSetting() {
-      return Promise.resolve(this.getDefaultToolbarSetting());
+      return Promise.resolve(defaultToolbarButtonSetting);
     },
     setNativeTheme(source) {
       const resolvedSource =

@@ -42,7 +42,7 @@
                   />
                 </template>
               </q-card-actions>
-              <q-card-actions class="q-px-md q-py-sm bg-surface">
+              <q-card-actions class="q-px-md q-py-sm bg-surface" v-if="!isMock">
                 <div>エンジンモード</div>
                 <div>
                   <q-icon name="help_outline" size="sm" class="help-hover-icon">
@@ -523,7 +523,7 @@
                   toggle-text-color="display-on-primary"
                   :options="[
                     { label: 'デフォルト', value: 'default' },
-                    { label: 'OS標準', value: 'os' },
+                    { label: isMock ? 'ブラウザ標準' : 'OS標準', value: 'os' },
                   ]"
                 />
               </q-card-actions>
@@ -775,6 +775,8 @@ const emit =
 
 const store = useStore();
 const $q = useQuasar();
+
+const isMock = window.electron.isMock;
 
 const settingDialogOpenedComputed = computed({
   get: () => props.modelValue,
