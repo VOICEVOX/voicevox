@@ -30,6 +30,8 @@ function ipcRendererOn(
 let tempDir: string;
 
 const api: Sandbox = {
+  isMock: false,
+
   getAppInfos: async () => {
     return await ipcRendererInvoke("GET_APP_INFOS");
   },
@@ -166,7 +168,7 @@ const api: Sandbox = {
   },
 
   onReceivedIPCMsg: (channel, callback) => {
-    return ipcRendererOn(channel, callback);
+    ipcRendererOn(channel, callback);
   },
 
   closeWindow: () => {

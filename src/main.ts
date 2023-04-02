@@ -6,6 +6,7 @@ import App from "./App.vue";
 import router from "./router";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
+import loadMock from "./electron/mock";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
@@ -16,31 +17,33 @@ import "./styles/_index.scss";
 //       ため、それを防止するため自前でdataLayerをあらかじめ用意する
 window.dataLayer = [];
 
-createApp(App)
-  .use(store, storeKey)
-  .use(router)
-  .use(
-    createGtm({
-      id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
-      vueRouter: router,
-      // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
-      enabled: false,
-    })
-  )
-  .use(Quasar, {
-    config: {
-      brand: {
-        primary: "#a5d4ad",
-        secondary: "#212121",
-        negative: "var(--color-warning)",
+loadMock().then(() => {
+  createApp(App)
+    .use(store, storeKey)
+    .use(router)
+    .use(
+      createGtm({
+        id: import.meta.env.VITE_GTM_CONTAINER_ID ?? "GTM-DUMMY",
+        vueRouter: router,
+        // NOTE: 最初はgtm.jsを読まず、プライバシーポリシーに同意後に読み込む
+        enabled: false,
+      })
+    )
+    .use(Quasar, {
+      config: {
+        brand: {
+          primary: "#a5d4ad",
+          secondary: "#212121",
+          negative: "var(--color-warning)",
+        },
       },
-    },
-    iconSet,
-    plugins: {
-      Dialog,
-      Loading,
-    },
-  })
-  .use(ipcMessageReceiver, { store })
-  .use(markdownItPlugin)
-  .mount("#app");
+      iconSet,
+      plugins: {
+        Dialog,
+        Loading,
+      },
+    })
+    .use(ipcMessageReceiver, { store })
+    .use(markdownItPlugin)
+    .mount("#app");
+});

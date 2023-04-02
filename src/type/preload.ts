@@ -1,4 +1,4 @@
-import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
+import { IpcRendererEvent, nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 
@@ -134,6 +134,7 @@ export const defaultToolbarButtonSetting: ToolbarSetting = [
 ];
 
 export interface Sandbox {
+  isMock: boolean;
   getAppInfos(): Promise<AppInfos>;
   getHowToUseText(): Promise<string>;
   getPolicyText(): Promise<string>;
@@ -188,7 +189,7 @@ export interface Sandbox {
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
     listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
-  ): IpcRenderer;
+  ): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
