@@ -199,11 +199,11 @@ const showLineNumbers = computed(() => store.state.showAudioCellLineNumber);
 const lineNumberIndex = computed(() => {
   return audioKeys.value.indexOf(props.audioKey) + 1;
 });
-// 行番号の幅: 3桁はデフォで入るように, 4桁以上は1remずつ広げる
+// 行番号の幅: 2桁はデフォで入るように, 3桁以上は1remずつ広げる
 const lineNumberWidth = computed(() => {
   const indexDigits = String(audioKeys.value.length).length;
-  if (indexDigits <= 3) return "2rem";
-  return `${indexDigits - 1}rem`;
+  if (indexDigits <= 2) return "1.5rem";
+  return `${indexDigits - 0.5}rem`;
 });
 
 // 上下に移動
@@ -298,7 +298,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   .line-number {
     height: 2rem;
     width: v-bind(lineNumberWidth);
-    margin-left: 5px;
     line-height: 2rem;
     opacity: 0.6;
     text-align: right;
