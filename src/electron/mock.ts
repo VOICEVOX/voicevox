@@ -1,6 +1,6 @@
+import { get, set } from "idb-keyval";
 import {
   defaultHotkeySettings,
-  defaultToolbarButtonSetting,
   electronStoreSchema,
   EngineId,
   EngineInfo,
@@ -12,12 +12,6 @@ import {
 declare const __availableThemes: ThemeConf[];
 
 const storeName = "voicevox";
-
-const getSetting = () => {
-  return electronStoreSchema.parse(
-    JSON.parse(localStorage.getItem(storeName) || "{}")
-  );
-};
 
 const engineInfos: EngineInfo[] = [
   {
@@ -169,7 +163,7 @@ const loadMock = async () => {
       return Promise.resolve(defaultHotkeySettings);
     },
     getDefaultToolbarSetting() {
-      return Promise.resolve(defaultToolbarButtonSetting);
+      return Promise.resolve(this.getDefaultToolbarSetting());
     },
     setNativeTheme(source) {
       const resolvedSource =
@@ -199,15 +193,15 @@ const loadMock = async () => {
     vuexReady() {
       console.log("vuexReady");
     },
-    getSetting(key) {
-      const setting = getSetting();
+    async getSetting(key) {
+      const setting = electronStoreSchema.parse(await get(storeName));
       return Promise.resolve(setting[key]);
     },
-    setSetting(key, newValue) {
-      const setting = getSetting();
+    async setSetting(key, newValue) {
+      const setting = electronStoreSchema.parse(await get(storeName));
       setting[key] = newValue;
-      localStorage.setItem(storeName, JSON.stringify(setting));
-      return Promise.resolve(setting[key]);
+      set("voicevox", setting);
+      return setting[key];
     },
     async setEngineSetting(engineId, engineSetting) {
       await this.setSetting("engineSettings", {
@@ -230,18 +224,11 @@ const loadMock = async () => {
     },
   };
 
-  const currentSettingRaw = localStorage.getItem(storeName);
-  const currentSetting = currentSettingRaw ? JSON.parse(currentSettingRaw) : {};
-
-  const parseResult = electronStoreSchema.safeParse(currentSetting);
-  if (!parseResult.success) {
-    console.warn("Invalid setting, reset to default");
-    localStorage.setItem(
-      storeName,
-      JSON.stringify(electronStoreSchema.parse({}))
-    );
-  } else {
-    console.log("Valid setting");
+  try {
+    set(storeName, electronStoreSchema.parse(await get(storeName)));
+  } catch (e) {
+    console.error(e);
+    set(storeName, electronStoreSchema.parse({}));
   }
 
   const engineSettings = await electronMock.getSetting("engineSettings");
@@ -251,7 +238,7 @@ const loadMock = async () => {
       engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
-  electronMock.setSetting("engineSettings", engineSettings);
+  await electronMock.setSetting("engineSettings", engineSettings);
 
   // @ts-expect-error 仮のelectronを定義
   window.electron = electronMock;

@@ -21,7 +21,7 @@
       {{ titleText }}
     </div>
     <q-space />
-    <title-bar-buttons v-if="!isMock" />
+    <title-bar-buttons />
   </q-bar>
 </template>
 
@@ -93,7 +93,6 @@ const engineManifests = computed(() => store.state.engineManifests);
 const enableMultiEngine = computed(
   () => store.state.experimentalSetting.enableMultiEngine
 );
-const isMock = window.electron.isMock;
 
 const titleText = computed(
   () =>
