@@ -83,6 +83,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
+      dispatch("SET_SHOW_AUDIO_CELL_LINE_NUMBER", {
+        showAudioCellLineNumber: await window.electron.getSetting(
+          "showAudioCellLineNumber"
+        ),
+      });
+
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
           "acceptRetrieveTelemetry"
