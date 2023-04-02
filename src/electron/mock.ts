@@ -13,6 +13,12 @@ declare const __availableThemes: ThemeConf[];
 
 const storeName = "voicevox";
 
+const getSetting = () => {
+  return electronStoreSchema.parse(
+    JSON.parse(localStorage.getItem(storeName) || "{}")
+  );
+};
+
 const engineInfos: EngineInfo[] = [
   {
     executionArgs: [],
@@ -194,15 +200,11 @@ const loadMock = async () => {
       console.log("vuexReady");
     },
     getSetting(key) {
-      const setting = electronStoreSchema.parse(
-        localStorage.getItem(storeName)
-      );
+      const setting = getSetting();
       return Promise.resolve(setting[key]);
     },
     setSetting(key, newValue) {
-      const setting = electronStoreSchema.parse(
-        localStorage.getItem(storeName)
-      );
+      const setting = getSetting();
       setting[key] = newValue;
       localStorage.setItem(storeName, JSON.stringify(setting));
       return Promise.resolve(setting[key]);
@@ -228,17 +230,18 @@ const loadMock = async () => {
     },
   };
 
-  try {
-    localStorage.setItem(
-      storeName,
-      JSON.stringify(electronStoreSchema.parse(localStorage.getItem(storeName)))
-    );
-  } catch (e) {
-    console.error(e);
+  const currentSettingRaw = localStorage.getItem(storeName);
+  const currentSetting = currentSettingRaw ? JSON.parse(currentSettingRaw) : {};
+
+  const parseResult = electronStoreSchema.safeParse(currentSetting);
+  if (!parseResult.success) {
+    console.warn("Invalid setting, reset to default");
     localStorage.setItem(
       storeName,
       JSON.stringify(electronStoreSchema.parse({}))
     );
+  } else {
+    console.log("Valid setting");
   }
 
   const engineSettings = await electronMock.getSetting("engineSettings");
