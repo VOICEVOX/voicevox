@@ -50,6 +50,7 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  ToastNotification,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
@@ -1104,6 +1105,7 @@ export type UiStoreState = {
   isPinned: boolean;
   isFullscreen: boolean;
   progress: number;
+  toastNotifications: ToastNotification[];
 };
 
 export type UiStoreTypes = {
@@ -1248,6 +1250,27 @@ export type UiStoreTypes = {
   };
 
   RESET_PROGRESS: {
+    action(): void;
+  };
+
+  TOAST_NOTIFICATIONS: {
+    getter: ToastNotification[];
+  };
+
+  SET_TOAST_NOTIFICATIONS: {
+    mutation: { toastNotifications: ToastNotification[] };
+    action(payload: { toastNotifications: ToastNotification[] }): void;
+  };
+
+  PUSH_TOAST_NOTIFICATION: {
+    action(payload: { toastNotification: ToastNotification }): void;
+  };
+
+  POP_TOAST_NOTIFICATION: {
+    action(): void;
+  };
+
+  CLEAR_TOAST_NOTIFICATIONS: {
     action(): void;
   };
 };

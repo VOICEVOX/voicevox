@@ -20,6 +20,7 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
+import { useStore } from "vuex";
 import { hasSupportedGpu } from "./electron/device";
 import { textEditContextMenu } from "./electron/contextMenu";
 import {
@@ -524,7 +525,10 @@ async function start() {
   store.set("engineSettings", engineSettings);
 
   await createWindow();
-  await engineManager.runEngineAll(win);
+
+  const altPortInfos = await engineManager.runEngineAll(win);
+  console.log("altPortInfos => ", altPortInfos);
+  store.set("altPortInfo", altPortInfos);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [

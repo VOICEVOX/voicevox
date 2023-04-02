@@ -162,6 +162,7 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
+  <toast-notification v-model="toastNotificationsComputed" />
 </template>
 
 <script setup lang="ts">
@@ -188,6 +189,7 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
+import ToastNotification from "@/components/ToastNotification.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -377,6 +379,15 @@ const activeAudioKey = computed<AudioKey | undefined>(
   () => store.getters.ACTIVE_AUDIO_KEY
 );
 const addAudioItem = async () => {
+  store.dispatch("PUSH_TOAST_NOTIFICATION", {
+    toastNotification: {
+      text: "こんにちは",
+      showMs: 3000,
+    },
+  });
+  console.log("we");
+  console.log(store.state.toastNotifications);
+
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
   let presetKey: PresetKey | undefined = undefined;
@@ -687,6 +698,12 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     store.dispatch("SET_DIALOG_OPEN", {
       isAcceptRetrieveTelemetryDialogOpen: val,
     }),
+});
+
+const toastNotificationsComputed = computed({
+  get: () => store.state.toastNotifications,
+  set: (val) =>
+    store.dispatch("SET_TOAST_NOTIFICATIONS", { toastNotifications: val }),
 });
 
 // ドラッグ＆ドロップ

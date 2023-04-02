@@ -27,6 +27,14 @@ type EngineProcessContainer = {
   engineProcess?: ChildProcess;
 };
 
+type AltPortInfo = {
+  engineInfo: EngineInfo;
+  port: {
+    origin: number;
+    alt: number;
+  };
+};
+
 /**
  * デフォルトエンジンの情報を作成する
  */
@@ -191,21 +199,31 @@ export class EngineManager {
    * 全てのエンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngineAll(win: BrowserWindow) {
+  async runEngineAll(win: BrowserWindow): Promise<AltPortInfo[]> {
     const engineInfos = this.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
+    const altPortInfos: AltPortInfo[] = [];
+
     for (const engineInfo of engineInfos) {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
-      await this.runEngine(engineInfo.uuid, win);
+      const altPortInfo = await this.runEngine(engineInfo.uuid, win);
+
+      if (altPortInfo) altPortInfos.push(altPortInfo);
     }
+    return altPortInfos;
   }
 
   /**
    * エンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngine(engineId: EngineId, win: BrowserWindow) {
+  async runEngine(
+    engineId: EngineId,
+    win: BrowserWindow
+  ): Promise<AltPortInfo | undefined> {
+    let altPortInfo: AltPortInfo | undefined = undefined;
+
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -252,6 +270,7 @@ export class EngineManager {
 
       // 代替ポートが見つからないとき
       if (!altPort) {
+        log.warn(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,
           `${engineInfoUrl.port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`
@@ -259,6 +278,14 @@ export class EngineManager {
         app.exit(1);
         throw new Error("No Alternative Port Found");
       }
+
+      altPortInfo = {
+        engineInfo,
+        port: {
+          origin: parseInt(engineInfoUrl.port),
+          alt: altPort,
+        },
+      };
 
       // 代替ポートを設定
       engineInfo.host = new PortManager(
@@ -338,6 +365,8 @@ export class EngineManager {
         dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
       }
     });
+
+    return altPortInfo;
   }
 
   /**
