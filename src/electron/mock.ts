@@ -1,4 +1,3 @@
-import { get, set } from "idb-keyval";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
@@ -194,15 +193,19 @@ const loadMock = async () => {
     vuexReady() {
       console.log("vuexReady");
     },
-    async getSetting(key) {
-      const setting = electronStoreSchema.parse(await get(storeName));
+    getSetting(key) {
+      const setting = electronStoreSchema.parse(
+        localStorage.getItem(storeName)
+      );
       return Promise.resolve(setting[key]);
     },
-    async setSetting(key, newValue) {
-      const setting = electronStoreSchema.parse(await get(storeName));
+    setSetting(key, newValue) {
+      const setting = electronStoreSchema.parse(
+        localStorage.getItem(storeName)
+      );
       setting[key] = newValue;
-      set("voicevox", setting);
-      return setting[key];
+      localStorage.setItem(storeName, JSON.stringify(setting));
+      return Promise.resolve(setting[key]);
     },
     async setEngineSetting(engineId, engineSetting) {
       await this.setSetting("engineSettings", {
@@ -226,10 +229,16 @@ const loadMock = async () => {
   };
 
   try {
-    set(storeName, electronStoreSchema.parse(await get(storeName)));
+    localStorage.setItem(
+      storeName,
+      JSON.stringify(electronStoreSchema.parse(localStorage.getItem(storeName)))
+    );
   } catch (e) {
     console.error(e);
-    set(storeName, electronStoreSchema.parse({}));
+    localStorage.setItem(
+      storeName,
+      JSON.stringify(electronStoreSchema.parse({}))
+    );
   }
 
   const engineSettings = await electronMock.getSetting("engineSettings");
@@ -239,7 +248,7 @@ const loadMock = async () => {
       engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
     }
   }
-  await electronMock.setSetting("engineSettings", engineSettings);
+  electronMock.setSetting("engineSettings", engineSettings);
 
   // @ts-expect-error 仮のelectronを定義
   window.electron = electronMock;
