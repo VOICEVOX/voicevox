@@ -296,16 +296,11 @@ const menudata = ref<MenuItemData[]>([
         disableWhenUiLocked: true,
       },
       {
-        type: "button",
+        type: "root",
         label: "プロジェクト読み込み",
         onClick: () => {
           importProject();
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "root",
-        label: "最近開いたプロジェクト",
         disableWhenUiLocked: true,
         subMenu: [],
       },
@@ -538,7 +533,7 @@ async function updateRecentProjects() {
     (x) => x.type === "root" && x.label === "ファイル"
   ) as MenuItemRoot;
   const recentProjectsMenu = projectsMenu.subMenu.find(
-    (x) => x.type === "root" && x.label === "最近開いたプロジェクト"
+    (x) => x.type === "root" && x.label === "プロジェクト読み込み"
   ) as MenuItemRoot;
 
   const recentlyOpenedProjects = await store.dispatch(

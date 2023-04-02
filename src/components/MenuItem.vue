@@ -7,13 +7,16 @@
     dense
     :disable="menudata.disabled"
     :class="selected && 'active-menu'"
+    @click="menudata.onClick"
   >
     <q-item-section side class="q-py-2" v-if="menudata.icon">
       <img :src="menudata.icon" class="engine-icon" />
     </q-item-section>
 
     <q-item-section>{{ menudata.label }}</q-item-section>
-
+    <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
+      {{ getMenuBarHotkey(menudata.label) }}
+    </q-item-section>
     <q-item-section side>
       <q-icon name="keyboard_arrow_right" />
     </q-item-section>
