@@ -28,116 +28,116 @@ const engineInfos: EngineInfo[] = [
 const loadMock = () => {
   const electronMock: Sandbox = {
     isMock: true,
-    getAppInfos() {
-      return Promise.resolve({
+    async getAppInfos() {
+      return {
         name: "VOICEVOX Web",
         version: "0.0.0",
-      });
+      };
     },
-    getHowToUseText() {
-      return Promise.resolve("# How to use\ndummy");
+    async getHowToUseText() {
+      return "# How to use\ndummy";
     },
-    getPolicyText() {
-      return Promise.resolve("# Policy\ndummy");
+    async getPolicyText() {
+      return "# Policy\ndummy";
     },
-    getOssLicenses() {
-      return Promise.resolve([]);
+    async getOssLicenses() {
+      return [];
     },
-    getUpdateInfos() {
-      return Promise.resolve([]);
+    async getUpdateInfos() {
+      return [];
     },
-    getOssCommunityInfos() {
-      return Promise.resolve("");
+    async getOssCommunityInfos() {
+      return "";
     },
-    getQAndAText() {
-      return Promise.resolve("# Q&A\ndummy");
+    async getQAndAText() {
+      return "# Q&A\ndummy";
     },
-    getContactText() {
-      return Promise.resolve("# Contact\ndummy");
+    async getContactText() {
+      return "# Contact\ndummy";
     },
-    getPrivacyPolicyText() {
-      return Promise.resolve("# Privacy Policy\ndummy");
+    async getPrivacyPolicyText() {
+      return "# Privacy Policy\ndummy";
     },
-    saveTempAudioFile(obj) {
+    async saveTempAudioFile(obj) {
       throw new Error(`Not implemented: saveTempAudioFile ${obj}`);
     },
-    loadTempFile() {
+    async loadTempFile() {
       throw new Error("Not implemented: loadTempFile");
     },
-    showAudioSaveDialog(obj) {
+    async showAudioSaveDialog(obj) {
       throw new Error(`Not implemented: showAudioSaveDialog ${obj}`);
     },
-    showTextSaveDialog(obj) {
+    async showTextSaveDialog(obj) {
       throw new Error(`Not implemented: showTextSaveDialog ${obj}`);
     },
-    showVvppOpenDialog(obj) {
+    async showVvppOpenDialog(obj) {
       throw new Error(`Not implemented: showVvppOpenDialog ${obj}`);
     },
-    showOpenDirectoryDialog(obj) {
+    async showOpenDirectoryDialog(obj) {
       throw new Error(`Not implemented: showOpenDirectoryDialog ${obj}`);
     },
-    showProjectSaveDialog(obj) {
+    async showProjectSaveDialog(obj) {
       throw new Error(`Not implemented: showProjectSaveDialog ${obj}`);
     },
-    showProjectLoadDialog(obj) {
+    async showProjectLoadDialog(obj) {
       throw new Error(`Not implemented: showProjectLoadDialog ${obj}`);
     },
-    showMessageDialog(obj) {
+    async showMessageDialog(obj) {
       throw new Error(`Not implemented: showMessageDialog ${obj}`);
     },
-    showQuestionDialog(obj) {
+    async showQuestionDialog(obj) {
       throw new Error(`Not implemented: showQuestionDialog ${obj}`);
     },
-    showImportFileDialog(obj) {
+    async showImportFileDialog(obj) {
       throw new Error(`Not implemented: showImportFileDialog ${obj}`);
     },
-    writeFile(obj) {
+    async writeFile(obj) {
       throw new Error(`Not implemented: writeFile ${obj}`);
     },
-    readFile(obj) {
+    async readFile(obj) {
       throw new Error(`Not implemented: readFile ${obj}`);
     },
-    openTextEditContextMenu() {
+    async openTextEditContextMenu() {
       throw new Error("Not implemented: openTextEditContextMenu");
     },
-    isAvailableGPUMode() {
-      return Promise.resolve(false);
+    async isAvailableGPUMode() {
+      return false;
     },
-    isMaximizedWindow() {
-      return Promise.resolve(false);
+    async isMaximizedWindow() {
+      return false;
     },
-    onReceivedIPCMsg(channel, listener) {
+    async onReceivedIPCMsg(channel, listener) {
       window.addEventListener("message", (event) => {
         if (event.data.channel === channel) {
           listener(event.data.args);
         }
       });
     },
-    closeWindow() {
+    async closeWindow() {
       throw new Error("Not implemented: closeWindow");
     },
-    minimizeWindow() {
+    async minimizeWindow() {
       throw new Error("Not implemented: minimizeWindow");
     },
-    maximizeWindow() {
+    async maximizeWindow() {
       throw new Error("Not implemented: maximizeWindow");
     },
-    logError(...params) {
+    async logError(...params) {
       console.error(...params);
     },
-    logWarn(...params) {
+    async logWarn(...params) {
       console.warn(...params);
     },
-    logInfo(...params) {
+    async logInfo(...params) {
       console.info(...params);
     },
-    engineInfos() {
-      return Promise.resolve(engineInfos);
+    async engineInfos() {
+      return engineInfos;
     },
-    restartEngine(engineId) {
+    async restartEngine(engineId) {
       throw new Error(`Not implemented: restartEngine ${engineId}`);
     },
-    openEngineDirectory(engineId) {
+    async openEngineDirectory(engineId) {
       throw new Error(`Not implemented: openEngineDirectory ${engineId}`);
     },
     async hotkeySettings(newData) {
@@ -153,17 +153,17 @@ const loadMock = () => {
       }
       return this.getSetting("hotkeySettings");
     },
-    checkFileExists(file) {
-      return Promise.resolve(false);
+    async checkFileExists(file) {
+      return false;
     },
-    changePinWindow() {
+    async changePinWindow() {
       throw new Error("Not implemented: changePinWindow");
     },
-    getDefaultHotkeySettings() {
-      return Promise.resolve(defaultHotkeySettings);
+    async getDefaultHotkeySettings() {
+      return defaultHotkeySettings;
     },
-    getDefaultToolbarSetting() {
-      return Promise.resolve(defaultToolbarButtonSetting);
+    async getDefaultToolbarSetting() {
+      return defaultToolbarButtonSetting;
     },
     setNativeTheme(source) {
       const resolvedSource =
@@ -197,6 +197,7 @@ const loadMock = () => {
       const setting = electronStoreSchema.parse(
         JSON.parse(localStorage.getItem(storeName) || "{}")
       );
+      // 同期でも使いたいので、async functionではなく手動でPromise.resolveを返す
       return Promise.resolve(setting[key]);
     },
     setSetting(key, newValue) {
@@ -205,6 +206,7 @@ const loadMock = () => {
       );
       setting[key] = newValue;
       localStorage.setItem(storeName, JSON.stringify(setting));
+      // 同期でも使いたいので、async functionではなく手動でPromise.resolveを返す
       return Promise.resolve(setting[key]);
     },
     async setEngineSetting(engineId, engineSetting) {
@@ -214,16 +216,16 @@ const loadMock = () => {
       });
       return;
     },
-    installVvppEngine(path) {
+    async installVvppEngine(path) {
       throw new Error(`Not implemented: installVvppEngine ${path}`);
     },
-    uninstallVvppEngine(engineId) {
+    async uninstallVvppEngine(engineId) {
       throw new Error(`Not implemented: uninstallVvppEngine ${engineId}`);
     },
-    validateEngineDir(engineDir) {
+    async validateEngineDir(engineDir) {
       throw new Error(`Not implemented: validateEngineDir ${engineDir}`);
     },
-    restartApp(obj) {
+    async restartApp(obj) {
       window.location.reload();
     },
   };
@@ -256,7 +258,7 @@ const loadMock = () => {
   }
   electronMock.setSetting("engineSettings", engineSettings);
 
-  // @ts-expect-error 仮のelectronを定義
+  // @ts-expect-error readonlyなので代入できないが、モックのため問題ない
   window.electron = electronMock;
 };
 
