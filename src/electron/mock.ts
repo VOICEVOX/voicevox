@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
@@ -166,19 +167,7 @@ const loadMock = () => {
       return defaultToolbarButtonSetting;
     },
     setNativeTheme(source) {
-      const resolvedSource =
-        source === "system"
-          ? window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light"
-          : source;
-
-      document
-        .querySelector("meta[name=theme-color]")
-        ?.setAttribute(
-          "content",
-          resolvedSource === "dark" ? "#1f1f1f" : "#a5d4ad"
-        );
+      // 何もしない
     },
     async theme(newData) {
       if (newData) {
