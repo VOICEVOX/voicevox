@@ -9,14 +9,15 @@
     "npm": ">=8.11.0 <9"
   },
   "scripts": {
-    "preserve": "rimraf dist",
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test:e2e:playwright": "wait-on dist/background.js && playwright test",
     "test:e2e:vite": "cross-env VITE_IS_ELECTRON=true vite --mode test",
+    "pretest:e2e": "rimraf dist",
     "test:e2e": "run-p -r test:e2e:vite test:e2e:playwright",
+    "pretest-watch:e2e": "rimraf dist",
     "test-watch:e2e": "run-p -r test:e2e:vite test-watch:e2e:playwright",
     "test-watch:e2e:playwright": "nodemon --watch src --watch tests/e2e --ext ts,vue --exec \"npm run test:e2e:playwright\"",
     "lint": "eslint --ext .js,.vue,.ts *.config.* src tests build",
