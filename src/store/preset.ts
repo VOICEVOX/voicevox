@@ -83,6 +83,12 @@ export const presetStoreState: PresetStoreState = {
 };
 
 export const presetStore = createPartialStore<PresetStoreTypes>({
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: (state) => {
+      return new Set(Object.values(state.defaultPresetKeys));
+    },
+  },
+
   SET_PRESET_ITEMS: {
     mutation(
       state,

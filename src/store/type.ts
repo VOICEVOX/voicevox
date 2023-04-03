@@ -144,10 +144,6 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
-  DEFAULT_PRESET_KEY_SETS: {
-    getter: Set<PresetKey>;
-  };
-
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };
@@ -1262,6 +1258,9 @@ export type PresetStoreState = {
 };
 
 export type PresetStoreTypes = {
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: Set<PresetKey>;
+  };
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<PresetKey, Preset>;
