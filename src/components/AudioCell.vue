@@ -305,7 +305,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
     &.active {
       opacity: 1;
       font-weight: bold;
-      color: colors.$primary;
+      color: colors.$primary-light;
     }
   }
 
