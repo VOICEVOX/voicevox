@@ -410,6 +410,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           });
         }
 
+        await context.dispatch("APPEND_RECENTLY_OPENED_PROJECT", {
+          filePath,
+        });
         const appInfos = await window.electron.getAppInfos();
         const { audioItems, audioKeys } = context.state;
         const projectData: ProjectType = {
