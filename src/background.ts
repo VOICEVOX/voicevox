@@ -477,7 +477,7 @@ async function createWindow() {
     });
     win.loadURL("app://./index.html" + parameter);
   }
-  if (isDevelopment) win.webContents.openDevTools();
+  if (isDevelopment && !isTest) win.webContents.openDevTools();
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
