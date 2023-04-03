@@ -544,7 +544,7 @@ async function updateRecentProjects() {
       ? [
           {
             type: "button",
-            label: "最近開いたプロジェクトはありません",
+            label: "最近使ったプロジェクトはありません",
             onClick: () => {
               // 何もしない
             },
@@ -552,21 +552,35 @@ async function updateRecentProjects() {
             disableWhenUiLocked: false,
           },
         ]
-      : await Promise.all(
-          recentlyOpenedProjects.map(
-            async (projectFilePath) =>
-              ({
-                type: "button",
-                label: projectFilePath,
-                onClick: () => {
-                  store.dispatch("LOAD_PROJECT_FILE", {
-                    filePath: projectFilePath,
-                  });
-                },
-                disableWhenUiLocked: false,
-              } as MenuItemData)
-          )
-        );
+      : [
+          {
+            type: "button",
+            label: "最近使ったプロジェクト",
+            onClick: () => {
+              // 何もしない
+            },
+            disabled: true,
+            disableWhenUiLocked: false,
+          },
+          {
+            type: "separator",
+          },
+          ...(await Promise.all(
+            recentlyOpenedProjects.map(
+              async (projectFilePath) =>
+                ({
+                  type: "button",
+                  label: projectFilePath,
+                  onClick: () => {
+                    store.dispatch("LOAD_PROJECT_FILE", {
+                      filePath: projectFilePath,
+                    });
+                  },
+                  disableWhenUiLocked: false,
+                } as MenuItemData)
+            )
+          )),
+        ];
 }
 
 const projectFilePath = computed(() => store.state.projectFilePath);
