@@ -618,7 +618,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         newAudioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         newAudioItem.query.outputStereo = baseAudioItem.query.outputStereo;
-        newAudioItem.morphingInfo = baseAudioItem.morphingInfo;
+        newAudioItem.morphingInfo = baseAudioItem.morphingInfo
+          ? { ...baseAudioItem.morphingInfo }
+          : undefined;
       }
 
       return newAudioItem;
