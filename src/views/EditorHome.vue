@@ -479,6 +479,37 @@ const disableDefaultUndoRedo = (event: KeyboardEvent) => {
   }
 };
 
+const userOrderedCharacterInfos = computed(
+  () => store.state.userCharacterOrder
+);
+
+const userOrderCharacterInfosUnWatch = watch(
+  userOrderedCharacterInfos,
+  (n, o) => {
+    if (Object.keys(audioCellRefs).length !== 1) return;
+    const first = Object.keys(audioCellRefs)[0] as AudioKey;
+    const audioCell = audioCellRefs[first];
+
+    if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return;
+
+    const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0];
+    const speakerId = characterInfo.metas.speakerUuid;
+    const defaultStyleId = store.state.defaultStyleIds.find(
+      (styleId) => styleId.speakerUuid === speakerId
+    );
+    if (!defaultStyleId) return;
+
+    const voice: Voice = {
+      engineId: defaultStyleId.engineId,
+      speakerId: defaultStyleId.speakerUuid,
+      styleId: defaultStyleId.defaultStyleId,
+    };
+
+    audioCell.updateFirstCharacter(voice);
+    userOrderCharacterInfosUnWatch();
+  }
+);
+
 // ソフトウェアを初期化
 const isCompletedInitialStartup = ref(false);
 onMounted(async () => {

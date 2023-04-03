@@ -75,6 +75,9 @@ defineExpose({
   removeCell: () => {
     removeCell();
   },
+  updateFirstCharacter: (voice: Voice) => {
+    selectedVoice.value = voice;
+  },
 });
 
 const store = useStore();
