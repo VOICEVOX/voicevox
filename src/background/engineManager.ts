@@ -21,18 +21,11 @@ import {
   engineIdSchema,
   minimumEngineManifestSchema,
 } from "@/type/preload";
+import { AltPortInfo } from "@/store/type";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
   engineProcess?: ChildProcess;
-};
-
-type AltPortInfo = {
-  engineInfo: EngineInfo;
-  port: {
-    origin: number;
-    alt: number;
-  };
 };
 
 /**
@@ -74,6 +67,8 @@ export class EngineManager {
 
   defaultEngineInfos: EngineInfo[];
   engineProcessContainers: Record<EngineId, EngineProcessContainer>;
+
+  public altPortInfos: AltPortInfo = {};
 
   constructor({
     store,
@@ -199,31 +194,21 @@ export class EngineManager {
    * 全てのエンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngineAll(win: BrowserWindow): Promise<AltPortInfo[]> {
+  async runEngineAll(win: BrowserWindow) {
     const engineInfos = this.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
-    const altPortInfos: AltPortInfo[] = [];
-
     for (const engineInfo of engineInfos) {
       log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
-      const altPortInfo = await this.runEngine(engineInfo.uuid, win);
-
-      if (altPortInfo) altPortInfos.push(altPortInfo);
+      await this.runEngine(engineInfo.uuid, win);
     }
-    return altPortInfos;
   }
 
   /**
    * エンジンを起動する。
    * FIXME: winを受け取らなくても良いようにする
    */
-  async runEngine(
-    engineId: EngineId,
-    win: BrowserWindow
-  ): Promise<AltPortInfo | undefined> {
-    let altPortInfo: AltPortInfo | undefined = undefined;
-
+  async runEngine(engineId: EngineId, win: BrowserWindow) {
     const engineInfos = this.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId
@@ -256,17 +241,14 @@ export class EngineManager {
 
     // ポートを既に割り当てられているプロセスidの取得: undefined → ポートが空いている
     const processId = await portManager.getProcessIdFromPort();
-
     if (processId !== undefined) {
       const processName = await portManager.getProcessNameFromPid(processId);
       log.warn(
         `ENGINE ${engineId}: Port ${engineInfoUrl.port} has already been assigned by ${processName} (pid=${processId})`
       );
 
+      // 代替ポート検索
       const altPort = await portManager.findAltPort();
-
-      // TODO: エディターでトースト通知を出す:
-      // > XXXXX番ポートが使用中であるため、〇〇はYYYYY番ポートで起動しました
 
       // 代替ポートが見つからないとき
       if (!altPort) {
@@ -279,12 +261,10 @@ export class EngineManager {
         throw new Error("No Alternative Port Found");
       }
 
-      altPortInfo = {
-        engineInfo,
-        port: {
-          origin: parseInt(engineInfoUrl.port),
-          alt: altPort,
-        },
+      // 代替ポートの情報
+      this.altPortInfos[engineId] = {
+        origin: parseInt(engineInfoUrl.port),
+        alt: altPort,
       };
 
       // 代替ポートを設定
@@ -365,8 +345,6 @@ export class EngineManager {
         dialog.showErrorBox("音声合成エンジンエラー", dialogMessage);
       }
     });
-
-    return altPortInfo;
   }
 
   /**

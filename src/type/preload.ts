@@ -586,15 +586,6 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
-    altPortInfos: z.array(
-      z.object({
-        engineInfo: z.string(),
-        port: z.object({
-          old: z.number(),
-          alt: z.number(),
-        }),
-      })
-    ),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
@@ -628,8 +619,3 @@ export type EngineDirValidationResult =
   | "alreadyExists";
 
 export type VvppFilePathValidationResult = "ok" | "fileNotFound";
-
-export type ToastNotification = {
-  text: string;
-  showMs?: number;
-};

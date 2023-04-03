@@ -4,17 +4,17 @@
       v-for="(toast, index) in props.modelValue"
       :key="index"
       class="toast"
-      :ref="(el: any) => {if (el) refs[index] = el}"
+      :ref="skipUnwrap.refs"
     >
-      {{ toast.text }}<br />
+      {{ toast.text }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useStore } from "vuex";
-import { ToastNotification } from "@/type/preload";
+import { computed, ref, watchEffect } from "vue";
+import { useStore } from "@/store";
+import { ToastNotification } from "@/store/type";
 
 const props = defineProps<{ modelValue: ToastNotification[] }>();
 
@@ -24,37 +24,41 @@ const emit =
   }>();
 
 const store = useStore();
-const refs = ref<any[]>([]);
+const refs = ref<HTMLDivElement[]>();
+const skipUnwrap = { refs }; // https://stackoverflow.com/questions/71414977
 
 const modelValueComputed = computed({
   get: () => props.modelValue,
   set: (value: ToastNotification[]) => emit("update:modelValue", value),
 });
 
-watch(
-  () => modelValueComputed.value,
-  (newToast) => {
-    if (!newToast.length) return;
-    const lastIndex = newToast.length - 1;
-    console.log(lastIndex);
-    console.log(refs.value.at(lastIndex));
-    const refClass = refs.value[lastIndex].classList;
+const wait = async (ms: number) =>
+  await new Promise((resolve) => setTimeout(resolve, ms));
 
-    // fade-in
-    refClass.add("show");
+watchEffect(async () => {
+  const toastRefs = skipUnwrap.refs.value;
+  const toastBodies = modelValueComputed.value;
+  const lastIndex = toastBodies.length - 1;
 
-    setTimeout(() => {
-      // Fade-out
-      refClass.remove("show");
-      refClass.add("hide");
+  if (!toastRefs || !toastRefs[lastIndex]) return;
+  const toastRef = toastRefs[lastIndex];
+  const toastBody = toastBodies[lastIndex];
+  const refClass = toastRef.classList;
 
-      // Remove toast
-      setTimeout(() => {
-        store.dispatch("POP_TOAST_NOTIFICATION");
-      }, 300);
-    }, newToast[lastIndex].showMs ?? 3000);
-  }
-);
+  // fade-in
+  await wait(1); // これがないと, なぜかfade-inが効かない
+  refClass.add("show");
+
+  await wait(toastBody.showMs ?? 5000);
+
+  // Fade-out
+  refClass.remove("show");
+  refClass.add("hide");
+
+  // Remove toast
+  await wait(300);
+  store.dispatch("POP_TOAST_NOTIFICATION");
+});
 </script>
 
 <style scoped lang="scss">
@@ -63,20 +67,23 @@ watch(
 .toast-notification {
   position: absolute;
   bottom: 0;
-  left: 0;
   width: 100%;
-  padding: 1rem;
-  z-index: 1000;
+  padding-bottom: 1rem;
   text-align: center;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
 
   .toast {
+    width: fit-content;
     display: inline-block;
     justify-content: center;
     padding: 1rem;
-    margin: 1rem;
-    background-color: rgba(var(--color-primary-light-rgb), 0.4);
+    margin-bottom: 1rem;
+    background-color: rgba(colors.$primary-light-rgb, 0.4);
     border-radius: 0.5rem;
     transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 0.5rem rgba(colors.$display, 0.4);
     transform: scale(0);
     opacity: 0;
 

@@ -380,13 +380,8 @@ const activeAudioKey = computed<AudioKey | undefined>(
 );
 const addAudioItem = async () => {
   store.dispatch("PUSH_TOAST_NOTIFICATION", {
-    toastNotification: {
-      text: "こんにちは",
-      showMs: 3000,
-    },
+    toastNotification: { text: "こんにちは" },
   });
-  console.log("we");
-  console.log(store.state.toastNotifications);
 
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
@@ -555,6 +550,24 @@ onMounted(async () => {
     store.state.acceptTerms !== "Accepted";
 
   isCompletedInitialStartup.value = true;
+
+  // 代替ポートをトースト通知する
+  const altPortInfo = store.state.altPortInfo;
+  for (const engineId of store.state.engineIds) {
+    const portInfo = altPortInfo[engineId];
+    // if (portInfo) {
+    //   store.dispatch("PUSH_TOAST_NOTIFICATION", {
+    //     toastNotification: {
+    //       text: `${portInfo.origin}番ポートが使用中であるため、${engineId} は ${portInfo.alt}番ポートで起動しました`,
+    //     },
+    //   });
+    // }
+  }
+  store.dispatch("PUSH_TOAST_NOTIFICATION", {
+    toastNotification: {
+      text: "XXXXX番ポートが使用中であるため、〇〇はYYYYY番ポートで起動しました",
+    },
+  });
 });
 
 // エンジン待機

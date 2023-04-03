@@ -526,9 +526,8 @@ async function start() {
 
   await createWindow();
 
-  const altPortInfos = await engineManager.runEngineAll(win);
-  console.log("altPortInfos => ", altPortInfos);
-  store.set("altPortInfo", altPortInfos);
+  await engineManager.runEngineAll(win);
+  console.log("altPortInfos => ", engineManager.altPortInfos);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [

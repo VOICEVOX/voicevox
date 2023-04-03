@@ -50,7 +50,6 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
-  ToastNotification,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
@@ -81,6 +80,8 @@ export type Command = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+export type AltPortInfo = Record<EngineId, { origin: number; alt: number }>;
+
 export type SaveResult =
   | "SUCCESS"
   | "WRITE_ERROR"
@@ -94,6 +95,11 @@ export type SaveResultObject = {
 export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
+};
+
+export type ToastNotification = {
+  text: string;
+  showMs?: number;
 };
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
@@ -732,6 +738,7 @@ export type CommandStoreTypes = {
 export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
+  altPortInfo: AltPortInfo;
 };
 
 export type EngineStoreTypes = {
@@ -743,8 +750,16 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
+  GET_ALT_PORT_INFO: {
+    getter: AltPortInfo;
+  };
+
   SET_ENGINE_MANIFESTS: {
     mutation: { engineManifests: Record<EngineId, EngineManifest> };
+  };
+
+  SET_ALT_PORT_INFO: {
+    mutation: { altPortInfo: AltPortInfo };
   };
 
   FETCH_AND_SET_ENGINE_MANIFESTS: {
