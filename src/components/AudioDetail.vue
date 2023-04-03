@@ -264,6 +264,7 @@ import {
   onUnmounted,
   reactive,
   ref,
+  VNodeRef,
   watch,
 } from "vue";
 import { useQuasar } from "quasar";
@@ -529,8 +530,8 @@ const nowPlayingContinuously = computed(
 
 const audioDetail = ref<HTMLElement>();
 let accentPhraseElems: HTMLElement[] = [];
-const addAccentPhraseElem = (elem: HTMLElement) => {
-  if (elem) {
+const addAccentPhraseElem: VNodeRef = (elem) => {
+  if (elem instanceof HTMLElement) {
     accentPhraseElems.push(elem);
   }
 };
