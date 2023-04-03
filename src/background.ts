@@ -1006,6 +1006,7 @@ app.on("ready", async () => {
   // 多重起動防止
   if (
     !isDevelopment &&
+    !isTest &&
     !app.requestSingleInstanceLock({
       filePath,
     } as SingleInstanceLockData)
