@@ -619,3 +619,10 @@ export type EngineDirValidationResult =
   | "alreadyExists";
 
 export type VvppFilePathValidationResult = "ok" | "fileNotFound";
+
+// base: Electron.MessageBoxReturnValue
+// FIXME: MessageBoxUIの戻り値として使用したい値が決まったら書き換える
+export interface MessageBoxReturnValue {
+  response: number;
+  checkboxChecked: boolean;
+}
