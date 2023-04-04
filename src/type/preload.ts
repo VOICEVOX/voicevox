@@ -626,3 +626,5 @@ export interface MessageBoxReturnValue {
   response: number;
   checkboxChecked: boolean;
 }
+
+export const SandboxKey = "electron" as const;

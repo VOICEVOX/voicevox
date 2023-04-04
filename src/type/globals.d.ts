@@ -1,5 +1,6 @@
 // Include global variables to build immer source code
 export * from "immer/src/types/globals";
+import { SandboxKey } from "./preload";
 
 declare global {
   interface HTMLAudioElement {
@@ -7,6 +8,6 @@ declare global {
   }
 
   interface Window {
-    readonly electron: import("./preload").Sandbox;
+    readonly [SandboxKey]: import("./preload").Sandbox;
   }
 }
