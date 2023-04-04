@@ -1,4 +1,4 @@
-import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
+import { nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 
@@ -187,8 +187,8 @@ export interface Sandbox {
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg<T extends keyof IpcSOData>(
     channel: T,
-    listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void
-  ): IpcRenderer;
+    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void
+  ): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
