@@ -1,4 +1,3 @@
-import { nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
 
@@ -436,7 +435,8 @@ export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
 export const toolbarSettingSchema = toolbarButtonTagSchema;
 export type ToolbarSetting = z.infer<typeof toolbarSettingSchema>[];
 
-export type NativeThemeType = typeof nativeTheme["themeSource"];
+// base: typeof electron.nativeTheme["themeSource"];
+export type NativeThemeType = "system" | "light" | "dark";
 
 export type MoraDataType =
   | "consonant"
