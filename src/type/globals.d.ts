@@ -5,4 +5,8 @@ declare global {
   interface HTMLAudioElement {
     setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
   }
+
+  interface Window {
+    readonly electron: import("./preload").Sandbox;
+  }
 }
