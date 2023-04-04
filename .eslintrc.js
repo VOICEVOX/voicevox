@@ -52,6 +52,18 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["electron"],
+            message:
+              "electronに依存する型はelectronで動作するコード内にのみ含みます",
+          },
+        ],
+      },
+    ],
   },
   overrides: [
     {
@@ -62,6 +74,16 @@ module.exports = {
       ],
       rules: {
         "no-console": "off",
+      },
+    },
+    {
+      files: [
+        "./src/background.ts",
+        "./src/background/*.ts",
+        "./src/electron/*.ts",
+      ],
+      rules: {
+        "no-restricted-imports": "off",
       },
     },
   ],
