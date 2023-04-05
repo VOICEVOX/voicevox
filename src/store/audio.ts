@@ -192,15 +192,12 @@ export function getCharacterInfo(
  * 与えたAudioItemを元に、Presetを適用した新しいAudioItemを返す
  */
 export function applyAudioPresetToAudioItem(
-  audioItem: AudioItem | undefined,
-  presetItem: Preset | undefined
+  audioItem: AudioItem,
+  presetItem: Preset
 ) {
-  if (
-    audioItem == undefined ||
-    audioItem.presetKey == undefined ||
-    audioItem.query == undefined
-  )
-    return;
+  if (audioItem.query == undefined) {
+    throw new Error("audioItem.query is undefined");
+  }
   if (presetItem == undefined) return;
 
   const newAudioItem = { ...audioItem };
