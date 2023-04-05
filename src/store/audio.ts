@@ -584,11 +584,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       if (shouldApplyPreset) {
         if (nextPresetKey) {
           const preset = state.presetItems[nextPresetKey];
-          const result = applyAudioPresetToAudioItem(newAudioItem, preset);
-
-          if (result) {
-            return result;
-          }
+          return applyAudioPresetToAudioItem(newAudioItem, preset);
         }
       }
 
@@ -1028,9 +1024,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const presetItem = state.presetItems[audioItem.presetKey];
       const newAudioItem = applyAudioPresetToAudioItem(audioItem, presetItem);
 
-      if (newAudioItem) {
-        state.audioItems[audioKey] = newAudioItem;
-      }
+      state.audioItems[audioKey] = newAudioItem;
     },
   },
 
