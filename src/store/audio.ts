@@ -199,8 +199,6 @@ export function applyAudioPresetToAudioItem(
     throw new Error("audioItem.query is undefined");
   }
 
-  const newAudioItem = { ...audioItem };
-
   // Filter name property from presetItem in order to extract audioInfos.
   const { name: _, morphingInfo, ...presetAudioInfos } = presetItem;
 
@@ -210,6 +208,7 @@ export function applyAudioPresetToAudioItem(
     "accentPhrases" | "outputSamplingRate" | "outputStereo" | "kana"
   > = presetAudioInfos;
 
+  const newAudioItem = { ...audioItem };
   newAudioItem.query = { ...audioItem.query, ...audioInfos };
   newAudioItem.morphingInfo = morphingInfo;
 
