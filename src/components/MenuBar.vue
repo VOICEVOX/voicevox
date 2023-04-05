@@ -296,11 +296,16 @@ const menudata = ref<MenuItemData[]>([
         disableWhenUiLocked: true,
       },
       {
-        type: "root",
+        type: "button",
         label: "プロジェクト読み込み",
         onClick: () => {
           importProject();
         },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "root",
+        label: "最近使ったプロジェクト",
         disableWhenUiLocked: true,
         subMenu: [],
       },
@@ -533,7 +538,7 @@ async function updateRecentProjects() {
     (x) => x.type === "root" && x.label === "ファイル"
   ) as MenuItemRoot;
   const recentProjectsMenu = projectsMenu.subMenu.find(
-    (x) => x.type === "root" && x.label === "プロジェクト読み込み"
+    (x) => x.type === "root" && x.label === "最近使ったプロジェクト"
   ) as MenuItemRoot;
 
   const recentlyOpenedProjects = await store.dispatch(
@@ -552,35 +557,21 @@ async function updateRecentProjects() {
             disableWhenUiLocked: false,
           },
         ]
-      : [
-          {
-            type: "button",
-            label: "最近使ったプロジェクト",
-            onClick: () => {
-              // 何もしない
-            },
-            disabled: true,
-            disableWhenUiLocked: false,
-          },
-          {
-            type: "separator",
-          },
-          ...(await Promise.all(
-            recentlyOpenedProjects.map(
-              async (projectFilePath) =>
-                ({
-                  type: "button",
-                  label: projectFilePath,
-                  onClick: () => {
-                    store.dispatch("LOAD_PROJECT_FILE", {
-                      filePath: projectFilePath,
-                    });
-                  },
-                  disableWhenUiLocked: false,
-                } as MenuItemData)
-            )
-          )),
-        ];
+      : await Promise.all(
+          recentlyOpenedProjects.map(
+            async (projectFilePath) =>
+              ({
+                type: "button",
+                label: projectFilePath,
+                onClick: () => {
+                  store.dispatch("LOAD_PROJECT_FILE", {
+                    filePath: projectFilePath,
+                  });
+                },
+                disableWhenUiLocked: false,
+              } as MenuItemData)
+          )
+        );
 }
 
 const projectFilePath = computed(() => store.state.projectFilePath);
