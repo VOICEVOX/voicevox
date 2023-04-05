@@ -544,8 +544,8 @@
                 </div>
                 <q-space />
                 <q-toggle
-                  :model-value="showAudioCellLineNumber"
-                  @update:model-value="changeShowAudioCellLineNumber($event)"
+                  :model-value="showLineNumber"
+                  @update:model-value="changeShowLineNumber($event)"
                 >
                 </q-toggle>
               </q-card-actions>
@@ -866,12 +866,10 @@ const changeEditorFont = (editorFont: EditorFontType) => {
   store.dispatch("SET_EDITOR_FONT", { editorFont });
 };
 
-const showAudioCellLineNumber = computed(
-  () => store.state.showAudioCellLineNumber
-);
-const changeShowAudioCellLineNumber = (showAudioCellLineNumber: boolean) => {
-  store.dispatch("SET_SHOW_AUDIO_CELL_LINE_NUMBER", {
-    showAudioCellLineNumber,
+const showLineNumber = computed(() => store.state.showLineNumber);
+const changeShowLineNumber = (showLineNumber: boolean) => {
+  store.dispatch("SET_SHOW_LINE_NUMBER", {
+    showLineNumber,
   });
 };
 

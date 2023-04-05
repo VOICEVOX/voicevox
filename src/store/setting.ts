@@ -40,7 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
-  showAudioCellLineNumber: false,
+  showLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -83,10 +83,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
-      dispatch("SET_SHOW_AUDIO_CELL_LINE_NUMBER", {
-        showAudioCellLineNumber: await window.electron.getSetting(
-          "showAudioCellLineNumber"
-        ),
+      dispatch("SET_SHOW_LINE_NUMBER", {
+        showLineNumber: await window.electron.getSetting("showLineNumber"),
       });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
@@ -259,16 +257,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_SHOW_AUDIO_CELL_LINE_NUMBER: {
-    mutation(state, { showAudioCellLineNumber }) {
-      state.showAudioCellLineNumber = showAudioCellLineNumber;
+  SET_SHOW_LINE_NUMBER: {
+    mutation(state, { showLineNumber }) {
+      state.showLineNumber = showLineNumber;
     },
-    action({ commit }, { showAudioCellLineNumber }) {
-      window.electron.setSetting(
-        "showAudioCellLineNumber",
-        showAudioCellLineNumber
-      );
-      commit("SET_SHOW_AUDIO_CELL_LINE_NUMBER", { showAudioCellLineNumber });
+    action({ commit }, { showLineNumber }) {
+      window.electron.setSetting("showLineNumber", showLineNumber);
+      commit("SET_SHOW_LINE_NUMBER", { showLineNumber });
     },
   },
 

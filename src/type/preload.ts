@@ -568,7 +568,7 @@ export const electronStoreSchema = z
     defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
-    showAudioCellLineNumber: z.boolean().default(false),
+    showLineNumber: z.boolean().default(false),
     experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])

@@ -998,7 +998,7 @@ export type SettingStoreState = {
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
-  showAudioCellLineNumber: boolean;
+  showLineNumber: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1037,9 +1037,9 @@ export type SettingStoreTypes = {
     action(payload: { editorFont: EditorFontType }): void;
   };
 
-  SET_SHOW_AUDIO_CELL_LINE_NUMBER: {
-    mutation: { showAudioCellLineNumber: boolean };
-    action(payload: { showAudioCellLineNumber: boolean }): void;
+  SET_SHOW_LINE_NUMBER: {
+    mutation: { showLineNumber: boolean };
+    action(payload: { showLineNumber: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

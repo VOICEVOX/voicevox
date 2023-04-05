@@ -75,7 +75,7 @@ describe("store/vuex.js test", () => {
           availableThemes: [],
         },
         editorFont: "default",
-        showAudioCellLineNumber: false,
+        showLineNumber: false,
         isPinned: false,
         isFullscreen: false,
         presetItems: {},
@@ -242,7 +242,7 @@ describe("store/vuex.js test", () => {
       store.state.experimentalSetting.enableInterrogativeUpspeak,
       false
     );
-    assert.equal(store.state.showAudioCellLineNumber, false);
+    assert.equal(store.state.showLineNumber, false);
     assert.propertyVal(
       store.state.splitterPosition,
       "audioDetailPaneHeight",
