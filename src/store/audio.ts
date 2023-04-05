@@ -198,7 +198,6 @@ export function applyAudioPresetToAudioItem(
   if (audioItem.query == undefined) {
     throw new Error("audioItem.query is undefined");
   }
-  if (presetItem == undefined) return;
 
   const newAudioItem = { ...audioItem };
 
