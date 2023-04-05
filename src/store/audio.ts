@@ -194,7 +194,7 @@ export function getCharacterInfo(
 export function applyAudioPresetToAudioItem(
   audioItem: AudioItem,
   presetItem: Preset
-) {
+): AudioItem {
   if (audioItem.query == undefined) {
     throw new Error("audioItem.query is undefined");
   }
