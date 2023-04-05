@@ -16,6 +16,7 @@ test.beforeAll(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
+  console.log("background.js is built.");
 
   // cf: https://www.electronjs.org/ja/docs/latest/api/app#:~:text=appdata%20-%20%E6%97%A2%E5%AE%9A%E3%81%AE%E3%83%A6%E3%83%BC%E3%82%B5%E3%82%99%E6%AF%8E%E3%81%AE%E3%82%A2%E3%83%95%E3%82%9A%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%83%86%E3%82%99%E3%83%BC%E3%82%BF%E3%83%86%E3%82%99%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%80%82
   const appDataMap: Partial<Record<NodeJS.Platform, string>> = {
@@ -43,6 +44,7 @@ test("起動したら「利用規約に関するお知らせ」が表示され�
     },
   });
   const sut = await app.firstWindow();
+
   // エンジンが起動し「利用規約に関するお知らせ」が表示されるのを待つ
   await sut.waitForSelector("text=利用規約に関するお知らせ");
   await app.close();
