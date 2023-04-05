@@ -47,5 +47,12 @@ jobs:
       - run: npm run lint
       - run: npm run markdownlint
       - run: npm run test:unit
-      - run: npm run test:e2e
+      - shell: bash
+        run: |
+          if [ -n "${{ runner.debug }}" ]; then
+            DEBUG=pw:browser* npm run test:e2e
+          else
+            npm run test:e2e
+          fi
+          npm run test:e2e
       - run: npm run electron:build_pnever
