@@ -210,7 +210,7 @@ export function applyAudioPresetToAudioItem(
 
   const newAudioItem = { ...audioItem };
   newAudioItem.query = { ...audioItem.query, ...audioInfos };
-  newAudioItem.morphingInfo = morphingInfo;
+  newAudioItem.morphingInfo = morphingInfo ? { ...morphingInfo } : undefined;
 
   return newAudioItem;
 }
