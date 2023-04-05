@@ -38,6 +38,12 @@ const config: PlaywrightTestConfig = {
 
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
+
+  webServer: {
+    command: "cross-env VITE_IS_ELECTRON=true vite --mode test",
+    port: 5173,
+    reuseExistingServer: !process.env.CI,
+  },
 };
 
 export default config;
