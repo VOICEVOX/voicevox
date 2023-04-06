@@ -14,6 +14,7 @@
   },
   "scripts": {
     "serve": "cross-env VITE_IS_ELECTRON=false vite",
+    "serve:browser": "cross-env VITE_IS_ELECTRON=false VITE_IS_BROWSER=true vite",
     "build": "cross-env VITE_IS_ELECTRON=false vite build",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
