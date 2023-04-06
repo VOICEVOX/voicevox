@@ -142,7 +142,10 @@ const _generateHash = async <T>(obj: T) => {
     .join("");
 };
 
-const createWaitFor = (condition: () => boolean, interval = 200) => {
+const createPromiseThatResolvesWhen = (
+  condition: () => boolean,
+  interval = 200
+) => {
   return new Promise<void>((resolve) => {
     const checkCondition = () => {
       if (condition()) {
@@ -162,6 +165,7 @@ type Singer = {
 type Phrase = {
   readonly singer: Singer | undefined;
   readonly score: Score;
+  // renderingが進むに連れてデータが代入されていく
   query?: AudioQuery;
   queryHash?: string; // queryの変更を検知するためのハッシュ
   buffer?: AudioBuffer;
@@ -312,11 +316,10 @@ if (window.AudioContext) {
   singChannel = new SingChannel(audioRenderer.context);
 }
 
-const allPhrases = new Map<string, Phrase>();
-const audioQueryCache = new Map<string, AudioQuery>();
-const audioBufferCache = new Map<string, AudioBuffer>();
-
 let playbackPosition = 0;
+const allPhrases = new Map<string, Phrase>();
+
+const audioBufferCache = new Map<string, AudioBuffer>();
 
 export const singingStoreState: SingingStoreState = {
   engineId: undefined,
@@ -1030,6 +1033,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         preProcessing(score);
 
+        // Score -> Phrases
+
         window.electron.logInfo("Updating phrases...");
 
         const foundPhrases = await searchPhrases(singer, score);
@@ -1052,31 +1057,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return;
         }
 
-        for (const [hash, phrase] of allPhrases) {
+        for (const phrase of allPhrases.values()) {
           if (!phrase.singer) {
             continue;
           }
 
+          // Phrase -> AudioQuery
+
           if (!phrase.query) {
-            phrase.query = audioQueryCache.get(hash);
-            if (phrase.query) {
-              window.electron.logInfo(`Query loaded from cache.`);
-            } else {
-              window.electron.logInfo(`Generating query...`);
+            window.electron.logInfo(`Generating query...`);
 
-              phrase.query = await generateAndEditQuery(
-                phrase.singer,
-                phrase.score
-              );
-              audioQueryCache.set(hash, phrase.query);
+            phrase.query = await generateAndEditQuery(
+              phrase.singer,
+              phrase.score
+            );
 
-              window.electron.logInfo(`Query generated.`);
-            }
+            window.electron.logInfo(`Query generated.`);
           }
 
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
           }
+
+          // AudioQuery -> AudioBuffer
+          // Phrase & AudioQuery -> startTime
 
           const queryHash = await generateAudioQueryHash(phrase.query);
           // クエリが変更されていたら再合成
@@ -1096,7 +1100,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.queryHash = queryHash;
             phrase.startTime = calculateStartTime(phrase.score, phrase.query);
 
+            // NoteSequenceが削除される
             singChannelRef.removePhrase(phrase);
+            // AudioBufferとstartTimeを元にAudioSequenceが作成され、追加される
+            // TODO: 分かりにくいのでリファクタリングする
             singChannelRef.addPhrase(phrase);
           }
 
@@ -1114,13 +1121,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       commit("SET_NOW_RENDERING", { nowRendering: true });
-
       try {
-        while (startRenderingRequested() && !stopRenderingRequested()) {
+        while (startRenderingRequested()) {
           commit("SET_START_RENDERING_REQUESTED", {
             startRenderingRequested: false,
           });
           await render();
+          if (stopRenderingRequested()) {
+            break;
+          }
         }
       } catch (e) {
         window.electron.logError(e);
@@ -1129,7 +1138,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: false,
         });
-
         commit("SET_NOW_RENDERING", { nowRendering: false });
       }
     },
@@ -1145,7 +1153,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         commit("SET_STOP_RENDERING_REQUESTED", {
           stopRenderingRequested: true,
         });
-        await createWaitFor(() => !state.nowRendering);
+        await createPromiseThatResolvesWhen(() => !state.nowRendering);
         window.electron.logInfo("Rendering stopped.");
       }
     }),
