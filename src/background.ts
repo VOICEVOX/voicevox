@@ -20,7 +20,6 @@ import log from "electron-log";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import zodToJsonSchema from "zod-to-json-schema";
-import { useStore } from "vuex";
 import { hasSupportedGpu } from "./electron/device";
 import { textEditContextMenu } from "./electron/contextMenu";
 import {
@@ -523,11 +522,8 @@ async function start() {
     }
   }
   store.set("engineSettings", engineSettings);
-
   await createWindow();
-
   await engineManager.runEngineAll(win);
-  console.log("altPortInfos => ", engineManager.altPortInfos);
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -599,6 +595,10 @@ ipcMainHandle("GET_Q_AND_A_TEXT", () => {
 
 ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
   return privacyPolicyText;
+});
+
+ipcMainHandle("GET_ALT_PORT_INFO", () => {
+  return engineManager.altPortInfo;
 });
 
 ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {

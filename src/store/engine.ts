@@ -1,9 +1,4 @@
-import {
-  AltPortInfo,
-  EngineState,
-  EngineStoreState,
-  EngineStoreTypes,
-} from "./type";
+import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import type { EngineManifest } from "@/openapi";
@@ -12,7 +7,6 @@ import type { EngineId, EngineInfo } from "@/type/preload";
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
-  altPortInfo: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -52,7 +46,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   GET_ALT_PORT_INFO: {
-    getter: (state) => state.altPortInfo,
+    getter: () => async (engineId) =>
+      (await window.electron.getAltPortInfo())[engineId],
   },
 
   SET_ENGINE_INFOS: {
@@ -70,12 +65,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       state.engineStates = Object.fromEntries(
         engineInfos.map((engineInfo) => [engineInfo.uuid, "STARTING"])
       );
-    },
-  },
-
-  SET_ALT_PORT_INFO: {
-    mutation(state, { altPortInfo }: { altPortInfo: AltPortInfo }) {
-      state.altPortInfo = altPortInfo;
     },
   },
 

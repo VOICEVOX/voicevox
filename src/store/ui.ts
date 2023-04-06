@@ -52,7 +52,6 @@ export const uiStoreState: UiStoreState = {
   isPinned: false,
   isFullscreen: false,
   progress: -1,
-  toastNotifications: [],
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
@@ -345,45 +344,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     action({ dispatch }) {
       // -1で非表示
       dispatch("SET_PROGRESS", { progress: -1 });
-    },
-  },
-
-  TOAST_NOTIFICATIONS: {
-    getter(state) {
-      return state.toastNotifications;
-    },
-  },
-
-  SET_TOAST_NOTIFICATIONS: {
-    mutation(state, { toastNotifications }) {
-      state.toastNotifications = toastNotifications;
-    },
-    action({ commit }, { toastNotifications }) {
-      commit("SET_TOAST_NOTIFICATIONS", { toastNotifications });
-    },
-  },
-
-  PUSH_TOAST_NOTIFICATION: {
-    action({ dispatch, getters }, { toastNotification }) {
-      const toastNotifications = getters.TOAST_NOTIFICATIONS;
-      dispatch("SET_TOAST_NOTIFICATIONS", {
-        toastNotifications: [...toastNotifications, toastNotification],
-      });
-    },
-  },
-
-  POP_TOAST_NOTIFICATION: {
-    action({ dispatch, getters }) {
-      const toastNotifications = getters.TOAST_NOTIFICATIONS;
-      dispatch("SET_TOAST_NOTIFICATIONS", {
-        toastNotifications: toastNotifications.slice(1),
-      });
-    },
-  },
-
-  CLEAR_TOAST_NOTIFICATIONS: {
-    action({ dispatch }) {
-      dispatch("SET_TOAST_NOTIFICATIONS", { toastNotifications: [] });
     },
   },
 });

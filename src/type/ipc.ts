@@ -1,3 +1,4 @@
+import { AltPortInfo } from "@/store/type";
 import {
   AppInfos,
   ElectronStoreType,
@@ -65,6 +66,11 @@ export type IpcIHData = {
   GET_PRIVACY_POLICY_TEXT: {
     args: [];
     return: string;
+  };
+
+  GET_ALT_PORT_INFO: {
+    args: [];
+    return: AltPortInfo;
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {

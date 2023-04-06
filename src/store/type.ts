@@ -80,6 +80,7 @@ export type Command = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
+
 export type AltPortInfo = Record<EngineId, { origin: number; alt: number }>;
 
 export type SaveResult =
@@ -95,11 +96,6 @@ export type SaveResultObject = {
 export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
-};
-
-export type ToastNotification = {
-  text: string;
-  showMs?: number;
 };
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
@@ -738,7 +734,6 @@ export type CommandStoreTypes = {
 export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
-  altPortInfo: AltPortInfo;
 };
 
 export type EngineStoreTypes = {
@@ -751,15 +746,11 @@ export type EngineStoreTypes = {
   };
 
   GET_ALT_PORT_INFO: {
-    getter: AltPortInfo;
+    getter(engineId: EngineId): Promise<AltPortInfo[EngineId]>;
   };
 
   SET_ENGINE_MANIFESTS: {
     mutation: { engineManifests: Record<EngineId, EngineManifest> };
-  };
-
-  SET_ALT_PORT_INFO: {
-    mutation: { altPortInfo: AltPortInfo };
   };
 
   FETCH_AND_SET_ENGINE_MANIFESTS: {
@@ -1120,7 +1111,6 @@ export type UiStoreState = {
   isPinned: boolean;
   isFullscreen: boolean;
   progress: number;
-  toastNotifications: ToastNotification[];
 };
 
 export type UiStoreTypes = {
@@ -1265,27 +1255,6 @@ export type UiStoreTypes = {
   };
 
   RESET_PROGRESS: {
-    action(): void;
-  };
-
-  TOAST_NOTIFICATIONS: {
-    getter: ToastNotification[];
-  };
-
-  SET_TOAST_NOTIFICATIONS: {
-    mutation: { toastNotifications: ToastNotification[] };
-    action(payload: { toastNotifications: ToastNotification[] }): void;
-  };
-
-  PUSH_TOAST_NOTIFICATION: {
-    action(payload: { toastNotification: ToastNotification }): void;
-  };
-
-  POP_TOAST_NOTIFICATION: {
-    action(): void;
-  };
-
-  CLEAR_TOAST_NOTIFICATIONS: {
     action(): void;
   };
 };

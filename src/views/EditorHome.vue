@@ -162,7 +162,6 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <accept-terms-dialog v-model="isAcceptTermsDialogOpenComputed" />
-  <toast-notification v-model="toastNotificationsComputed" />
 </template>
 
 <script setup lang="ts">
@@ -189,7 +188,6 @@ import AcceptTermsDialog from "@/components/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/EngineManageDialog.vue";
 import ProgressDialog from "@/components/ProgressDialog.vue";
-import ToastNotification from "@/components/ToastNotification.vue";
 import { AudioItem, EngineState } from "@/store/type";
 import {
   AudioKey,
@@ -379,8 +377,11 @@ const activeAudioKey = computed<AudioKey | undefined>(
   () => store.getters.ACTIVE_AUDIO_KEY
 );
 const addAudioItem = async () => {
-  store.dispatch("PUSH_TOAST_NOTIFICATION", {
-    toastNotification: { text: "こんにちは" },
+  $q.notify({
+    message: "とーーーーーーすと",
+    type: "info",
+    textColor: "display",
+    timeout: 5000,
   });
 
   const prevAudioKey = activeAudioKey.value;
@@ -552,22 +553,17 @@ onMounted(async () => {
   isCompletedInitialStartup.value = true;
 
   // 代替ポートをトースト通知する
-  const altPortInfo = store.state.altPortInfo;
   for (const engineId of store.state.engineIds) {
-    const portInfo = altPortInfo[engineId];
-    // if (portInfo) {
-    //   store.dispatch("PUSH_TOAST_NOTIFICATION", {
-    //     toastNotification: {
-    //       text: `${portInfo.origin}番ポートが使用中であるため、${engineId} は ${portInfo.alt}番ポートで起動しました`,
-    //     },
-    //   });
-    // }
+    const portInfo = await store.getters.GET_ALT_PORT_INFO(engineId);
+    const engineName = store.state.engineInfos[engineId].name;
+    if (!portInfo || !engineName) return;
+    $q.notify({
+      message: `${portInfo.origin}番ポートが使用中であるため、${engineName} は ${portInfo.alt}番ポートで起動しました`,
+      type: "info",
+      textColor: "display",
+      timeout: 5000,
+    });
   }
-  store.dispatch("PUSH_TOAST_NOTIFICATION", {
-    toastNotification: {
-      text: "XXXXX番ポートが使用中であるため、〇〇はYYYYY番ポートで起動しました",
-    },
-  });
 });
 
 // エンジン待機
@@ -711,12 +707,6 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     store.dispatch("SET_DIALOG_OPEN", {
       isAcceptRetrieveTelemetryDialogOpen: val,
     }),
-});
-
-const toastNotificationsComputed = computed({
-  get: () => store.state.toastNotifications,
-  set: (val) =>
-    store.dispatch("SET_TOAST_NOTIFICATIONS", { toastNotifications: val }),
 });
 
 // ドラッグ＆ドロップ

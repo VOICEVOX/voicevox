@@ -137,7 +137,6 @@ describe("store/vuex.js test", () => {
         },
         progress: -1,
         defaultPresetKeys: {},
-        toastNotifications: [],
         altPortInfo: {},
       },
       getters: {

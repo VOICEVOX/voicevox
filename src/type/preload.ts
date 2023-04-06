@@ -1,6 +1,7 @@
 import { IpcRenderer, IpcRendererEvent, nativeTheme } from "electron";
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
+import { AltPortInfo } from "@/store/type";
 
 export const isMac =
   typeof process === "undefined"
@@ -143,6 +144,7 @@ export interface Sandbox {
   getQAndAText(): Promise<string>;
   getContactText(): Promise<string>;
   getPrivacyPolicyText(): Promise<string>;
+  getAltPortInfo(): Promise<AltPortInfo>;
   saveTempAudioFile(obj: { relativePath: string; buffer: ArrayBuffer }): void;
   loadTempFile(): Promise<string>;
   showAudioSaveDialog(obj: {
