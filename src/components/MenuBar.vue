@@ -557,20 +557,18 @@ async function updateRecentProjects() {
             disableWhenUiLocked: false,
           },
         ]
-      : await Promise.all(
-          recentlyOpenedProjects.map(
-            async (projectFilePath) =>
-              ({
-                type: "button",
-                label: projectFilePath,
-                onClick: () => {
-                  store.dispatch("LOAD_PROJECT_FILE", {
-                    filePath: projectFilePath,
-                  });
-                },
-                disableWhenUiLocked: false,
-              } as MenuItemData)
-          )
+      : recentlyOpenedProjects.map(
+          (projectFilePath) =>
+            ({
+              type: "button",
+              label: projectFilePath,
+              onClick: () => {
+                store.dispatch("LOAD_PROJECT_FILE", {
+                  filePath: projectFilePath,
+                });
+              },
+              disableWhenUiLocked: false,
+            } as MenuItemData)
         );
 }
 
