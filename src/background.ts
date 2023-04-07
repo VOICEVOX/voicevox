@@ -46,8 +46,8 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-const isDevelopment = import.meta.env.DEV;
 const isTest = import.meta.env.MODE === "test";
+const isDevelopment = import.meta.env.DEV && !isTest;
 
 if (isDevelopment) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
@@ -477,7 +477,7 @@ async function createWindow() {
     });
     win.loadURL("app://./index.html" + parameter);
   }
-  if (isDevelopment && !isTest) win.webContents.openDevTools();
+  if (isDevelopment) win.webContents.openDevTools();
 
   win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
   win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
