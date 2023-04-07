@@ -542,7 +542,7 @@ async function updateRecentProjects() {
   ) as MenuItemRoot;
 
   const recentlyOpenedProjects = await store.dispatch(
-    "GET_RECENTLY_OPENED_PROJECTS"
+    "GET_RECENTLY_USED_PROJECTS"
   );
   recentProjectsMenu.subMenu =
     recentlyOpenedProjects.length === 0
