@@ -179,6 +179,7 @@ try {
     },
   });
 } catch (e) {
+  log.error(e);
   dialog.showErrorBox(
     "設定ファイルの読み込みに失敗しました。",
     `${app.getPath(
