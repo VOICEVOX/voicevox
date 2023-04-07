@@ -50,7 +50,7 @@ jobs:
 
       - shell: bash
         run: |
-          wget -q https://github.com/VOICEVOX/voicevox_engine/releases/download/0.14.4/voicevox_engine-windows-cpu-0.14.4.7z.001
+          curl https://github.com/VOICEVOX/voicevox_engine/releases/download/0.14.4/voicevox_engine-windows-cpu-0.14.4.7z.001 -fOsSL
           7z x voicevox_engine-windows-cpu-0.14.4.7z.001
           mv windows-cpu voicevox_engine
           cp .env.test .env
