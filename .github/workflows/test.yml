@@ -55,7 +55,7 @@ jobs:
           7z x voicevox_engine-windows-cpu-0.14.4.7z.001
           mv windows-cpu voicevox_engine
           cp .env.test .env
-          sed -i -e 's|"../voicevox_engine/run.exe"|"'$(pwd | sed -e 's|^/\([a-z]\)/|\1:/|')'/voicevox_engine/run.exe"|' .env
+          sed -i -e 's|"../voicevox_engine/run.exe"|"'$(pwd | sed -Ee 's_^/([a-z])/_\1:/_')'/voicevox_engine/run.exe"|' .env
           if [ -n "${{ runner.debug }}" ]; then
             DEBUG=pw:browser* npm run test:e2e
           else
