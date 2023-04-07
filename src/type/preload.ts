@@ -32,6 +32,11 @@ export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
 
+export const voiceIdSchema = z.string().brand<"VoiceId">();
+export type VoiceId = z.infer<typeof voiceIdSchema>;
+export const VoiceId = (voice: Voice): VoiceId =>
+  voiceIdSchema.parse(`${voice.engineId}:${voice.speakerId}:${voice.styleId}`);
+
 // ホットキーを追加したときは設定のマイグレーションが必要
 export const defaultHotkeySettings: HotkeySetting[] = [
   {
@@ -477,12 +482,15 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
-export type ExperimentalSetting = {
-  enablePreset: boolean;
-  enableInterrogativeUpspeak: boolean;
-  enableMorphing: boolean;
-  enableMultiEngine: boolean;
-};
+export const experimentalSettingSchema = z.object({
+  enablePreset: z.boolean().default(false),
+  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
+  enableInterrogativeUpspeak: z.boolean().default(false),
+  enableMorphing: z.boolean().default(false),
+  enableMultiEngine: z.boolean().default(false),
+});
+
+export type ExperimentalSetting = z.infer<typeof experimentalSettingSchema>;
 
 export const splitterPositionSchema = z
   .object({
@@ -496,6 +504,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
 };
+
 export const electronStoreSchema = z
   .object({
     inheritAudioInfo: z.boolean().default(true),
@@ -565,17 +574,10 @@ export const electronStoreSchema = z
       })
       .passthrough()
       .default({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
     currentTheme: z.string().default("Default"),
     editorFont: z.enum(["default", "os"]).default("default"),
-    experimentalSetting: z
-      .object({
-        enablePreset: z.boolean().default(false),
-        enableInterrogativeUpspeak: z.boolean().default(false),
-        enableMorphing: z.boolean().default(false),
-        enableMultiEngine: z.boolean().default(false),
-      })
-      .passthrough()
-      .default({}),
+    experimentalSetting: experimentalSettingSchema.passthrough().default({}),
     acceptRetrieveTelemetry: z
       .enum(["Unconfirmed", "Accepted", "Refused"])
       .default("Unconfirmed"),

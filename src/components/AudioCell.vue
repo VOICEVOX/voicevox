@@ -72,6 +72,9 @@ defineExpose({
   focusTextField: () => {
     textfield.value?.focus();
   },
+  removeCell: () => {
+    removeCell();
+  },
 });
 
 const store = useStore();

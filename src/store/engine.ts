@@ -206,6 +206,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           }
 
           await dispatch("LOAD_DEFAULT_STYLE_IDS");
+          await dispatch("CREATE_ALL_DEFAULT_PRESET");
           const newCharacters = await dispatch("GET_NEW_CHARACTERS");
           const result = {
             success: state.engineStates[engineId] === "READY",

@@ -46,6 +46,7 @@ import {
   EngineSetting,
   Voice,
   EngineId,
+  VoiceId,
   SpeakerId,
   StyleId,
   AudioKey,
@@ -154,6 +155,10 @@ export type AudioStoreTypes = {
 
   CHARACTER_INFO: {
     getter(engineId: EngineId, styleId: StyleId): CharacterInfo | undefined;
+  };
+
+  VOICE_NAME: {
+    getter(voice: Voice): string;
   };
 
   USER_ORDERED_CHARACTER_INFOS: {
@@ -355,6 +360,11 @@ export type AudioStoreTypes = {
     };
   };
 
+  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
+    mutation: { audioItem: AudioItem };
+    action(payload: { audioItem: AudioItem }): void;
+  };
+
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: AudioKey };
   };
@@ -484,12 +494,10 @@ export type AudioCommandStoreTypes = {
       audioItem: AudioItem;
       audioKey: AudioKey;
       prevAudioKey: AudioKey | undefined;
-      applyPreset: boolean;
     };
     action(payload: {
       audioItem: AudioItem;
       prevAudioKey: AudioKey | undefined;
-      applyPreset: boolean;
     }): Promise<AudioKey>;
   };
 
@@ -514,9 +522,15 @@ export type AudioCommandStoreTypes = {
 
   COMMAND_CHANGE_VOICE: {
     mutation: { audioKey: AudioKey; voice: Voice } & (
-      | { update: "StyleId" }
-      | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-      | { update: "AudioQuery"; query: AudioQuery }
+      | { update: "RollbackStyleId" }
+      | {
+          update: "AccentPhrases";
+          accentPhrases: AccentPhrase[];
+        }
+      | {
+          update: "AudioQuery";
+          query: AudioQuery;
+        }
     );
     action(payload: { audioKey: AudioKey; voice: Voice }): void;
   };
@@ -846,6 +860,10 @@ export type IndexStoreTypes = {
 
   GET_ORDERED_ALL_CHARACTER_INFOS: {
     getter: CharacterInfo[];
+  };
+
+  GET_ALL_VOICES: {
+    getter: Voice[];
   };
 
   GET_HOW_TO_USE_TEXT: {
@@ -1246,6 +1264,7 @@ export type UiStoreTypes = {
 export type PresetStoreState = {
   presetKeys: PresetKey[];
   presetItems: Record<PresetKey, Preset>;
+  defaultPresetKeys: Record<VoiceId, PresetKey>;
 };
 
 export type PresetStoreTypes = {
@@ -1257,6 +1276,12 @@ export type PresetStoreTypes = {
   SET_PRESET_KEYS: {
     mutation: {
       presetKeys: PresetKey[];
+    };
+  };
+  SET_DEFAULT_PRESET_MAP: {
+    action(payload: { defaultPresetKeys: Record<VoiceId, PresetKey> }): void;
+    mutation: {
+      defaultPresetKeys: Record<VoiceId, PresetKey>;
     };
   };
   HYDRATE_PRESET_STORE: {
@@ -1273,6 +1298,9 @@ export type PresetStoreTypes = {
   };
   ADD_PRESET: {
     action(payload: { presetData: Preset }): Promise<PresetKey>;
+  };
+  CREATE_ALL_DEFAULT_PRESET: {
+    action(): void;
   };
   UPDATE_PRESET: {
     action(payload: { presetData: Preset; presetKey: PresetKey }): void;

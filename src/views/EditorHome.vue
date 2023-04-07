@@ -383,18 +383,14 @@ const addAudioItem = async () => {
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
   let presetKey: PresetKey | undefined = undefined;
+  let baseAudioItem: AudioItem | undefined = undefined;
+
   if (prevAudioKey !== undefined) {
     voice = store.state.audioItems[prevAudioKey].voice;
     presetKey = store.state.audioItems[prevAudioKey].presetKey;
+    baseAudioItem = store.state.audioItems[prevAudioKey];
   }
-  let baseAudioItem: AudioItem | undefined = undefined;
-  if (store.state.inheritAudioInfo) {
-    baseAudioItem = prevAudioKey
-      ? store.state.audioItems[prevAudioKey]
-      : undefined;
-  }
-  //パラメータ引き継ぎがONの場合は話速等のパラメータを引き継いでテキスト欄を作成する
-  //パラメータ引き継ぎがOFFの場合、baseAudioItemがundefinedになっているのでパラメータ引き継ぎは行われない
+
   const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
     voice,
     presetKey,
@@ -404,7 +400,6 @@ const addAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem,
     prevAudioKey: activeAudioKey.value,
-    applyPreset: true,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };
@@ -419,7 +414,6 @@ const duplicateAudioItem = async () => {
   const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
     audioItem: cloneDeep(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
-    applyPreset: false,
   });
   audioCellRefs[newAudioKey].focusTextField();
 };
