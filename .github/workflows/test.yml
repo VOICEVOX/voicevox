@@ -48,7 +48,8 @@ jobs:
       - run: npm run markdownlint
       - run: npm run test:unit
 
-      - shell: bash
+      - name: Run npm run test:e2e
+        shell: bash
         run: |
           curl https://github.com/VOICEVOX/voicevox_engine/releases/download/0.14.4/voicevox_engine-windows-cpu-0.14.4.7z.001 -fOsSL
           7z x voicevox_engine-windows-cpu-0.14.4.7z.001
