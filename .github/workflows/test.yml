@@ -61,5 +61,4 @@ jobs:
           else
             npm run test:e2e
           fi
-          npm run test:e2e
       - run: npm run electron:build_pnever
