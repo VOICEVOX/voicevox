@@ -492,8 +492,7 @@ const userOrderCharacterInfosUnWatch = watch(
 
     if (!store.getters.USER_ORDERED_CHARACTER_INFOS) return;
 
-    const characterInfo = store.getters.USER_ORDERED_CHARACTER_INFOS[0];
-    const speakerId = characterInfo.metas.speakerUuid;
+    const speakerId = n[0];
     const defaultStyleId = store.state.defaultStyleIds.find(
       (styleId) => styleId.speakerUuid === speakerId
     );
