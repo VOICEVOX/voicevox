@@ -17,9 +17,8 @@
     <q-item-section side v-if="getMenuBarHotkey(menudata.label)">
       {{ getMenuBarHotkey(menudata.label) }}
     </q-item-section>
-    <q-separator vertical class="key-icon-separator" v-if="menudata.onClick" />
 
-    <q-item-section side class="cheviron-section">
+    <q-item-section side>
       <q-icon name="keyboard_arrow_right" />
     </q-item-section>
 
@@ -144,8 +143,5 @@ if (props.menudata.type === "root") {
 }
 .key-icon-separator {
   margin-left: 8px;
-}
-.cheviron-section:not(#dummy) {
-  padding-left: 0px;
 }
 </style>
