@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import AsyncLock from "async-lock";
 import fetch from "node-fetch";
 import log from "electron-log";
 import EngineManager from "./engineManager";
@@ -13,6 +14,7 @@ import { DownloadableLibrary } from "@/openapi";
 export class LibraryManager {
   engineManager: EngineManager;
   tempDir: string;
+  lock: AsyncLock;
 
   constructor({
     engineManager,
@@ -23,6 +25,7 @@ export class LibraryManager {
   }) {
     this.engineManager = engineManager;
     this.tempDir = tempDir;
+    this.lock = new AsyncLock();
   }
 
   async installLibrary(
@@ -31,17 +34,25 @@ export class LibraryManager {
     libraryInstallId: LibraryInstallId,
     onUpdate: (status: LibraryInstallStatus) => void
   ): Promise<void> {
-    log.log(`Installing library: ${library.name}, URL: ${library.downloadUrl}`);
-    const res = await fetch(library.downloadUrl);
-    if (!res.ok) {
-      log.error(`Failed to download library: Server returned ${res.status}`);
+    const engine = this.engineManager.fetchEngineInfo(engineId);
+    const prefix = `LIBRARY INSTALL ${libraryInstallId}: `;
+    log.log(
+      prefix +
+        `Started ${library.name}, Engine: ${engine.name}, URL: ${library.downloadUrl}`
+    );
+    const downloadRes = await fetch(library.downloadUrl);
+    if (!downloadRes.ok) {
+      log.error(
+        prefix +
+          `Failed to download library: Server returned ${downloadRes.status}`
+      );
       onUpdate({
         status: "error",
-        message: `ダウンロード先のサーバーが${res.status}エラーを返しました`,
+        message: `ダウンロード先のサーバーが${downloadRes.status}エラーを返しました`,
       });
       return;
-    } else if (res.body === null) {
-      log.error(`Failed to download library: No body`);
+    } else if (downloadRes.body === null) {
+      log.error(prefix + `Failed to download library: No body`);
       onUpdate({
         status: "error",
         message: `ダウンロード先のサーバーがライブラリを返しませんでした`,
@@ -49,9 +60,9 @@ export class LibraryManager {
       return;
     }
     const tempFilePath = path.join(this.tempDir, `vv-temp-${libraryInstallId}`);
-    log.log(`Writing to ${tempFilePath}`);
+    log.log(prefix + `Writing to ${tempFilePath}`);
 
-    const total = Number(res.headers.get("content-length"));
+    const total = Number(downloadRes.headers.get("content-length"));
     let downloaded = 0;
     onUpdate({
       status: "downloading",
@@ -59,44 +70,84 @@ export class LibraryManager {
       downloaded,
     });
     const tempFile = await fs.promises.open(tempFilePath, "w");
-    const progressInterval = total ? Math.floor(total / 100) : 1024 * 1024;
-    let lastProgress = 0;
-    res.body.on("data", (chunk) => {
-      downloaded += chunk.length;
-      onUpdate({
-        status: "downloading",
-        contentLength: total,
-        downloaded,
-      });
-      tempFile.write(chunk);
-      if (
-        Math.floor(downloaded) - Math.floor(lastProgress) >=
-        progressInterval
-      ) {
-        if (total) {
-          log.log(
-            `Downloaded ${downloaded}/${total} bytes (${(
-              (downloaded / total) *
-              100
-            ).toFixed(2)}%)`
-          );
-        } else {
-          log.log(
-            `Downloaded ${downloaded} bytes (content-length header is not set)`
-          );
+    try {
+      const progressInterval = total ? Math.floor(total / 100) : 1024 * 1024;
+      let lastProgress = 0;
+      downloadRes.body.on("data", (chunk) => {
+        downloaded += chunk.length;
+        onUpdate({
+          status: "downloading",
+          contentLength: total,
+          downloaded,
+        });
+        tempFile.write(chunk);
+        if (
+          Math.floor(downloaded) - Math.floor(lastProgress) >=
+          progressInterval
+        ) {
+          if (total) {
+            log.log(
+              prefix +
+                `Downloaded ${downloaded}/${total} bytes (${(
+                  (downloaded / total) *
+                  100
+                ).toFixed(0)}%)`
+            );
+          } else {
+            log.log(
+              prefix +
+                `Downloaded ${downloaded} bytes (content-length header is not set)`
+            );
+          }
+          lastProgress = downloaded;
         }
-        lastProgress = downloaded;
-      }
-    });
-    await new Promise((resolve) => {
-      if (!res.body) throw new Error("res.body is null");
-      res.body.on("end", resolve);
-    });
-    await tempFile.close();
-    log.log("Download complete");
+      });
+      await new Promise((resolve) => {
+        if (!downloadRes.body) throw new Error("res.body is null");
+        downloadRes.body.on("end", resolve);
+      });
+      await tempFile.close();
+      log.log("Download complete");
 
-    // 仮なので削除
-    await fs.promises.rm(tempFilePath);
+      // OpenAPIのクライアントでは、ファイルをアップロードするためのAPIがないので、
+      // node-fetchを使って直接アップロードする
+      const url =
+        engine.host.replace(/\/$/, "") + `/install_library/${library.uuid}`;
+      const bodyStream = fs.createReadStream(tempFilePath);
+
+      onUpdate({
+        status: "installing",
+      });
+
+      log.log(prefix + "Waiting for lock");
+      await this.lock.acquire(`${engineId}`, async () => {
+        log.log(prefix + "Installing library");
+        const installRes = await fetch(url, {
+          method: "POST",
+
+          body: bodyStream,
+        });
+        if (!installRes.ok) {
+          log.error(
+            prefix +
+              `Failed to install library: Server returned ${installRes.status}`
+          );
+          onUpdate({
+            status: "error",
+            message: `ライブラリのインストールに失敗しました。エラーコード: ${installRes.status}`,
+          });
+          return;
+        }
+        log.log(prefix + "Library installed");
+      });
+      onUpdate({
+        status: "done",
+      });
+    } finally {
+      await tempFile.close();
+      log.log(prefix + "Removing temp file");
+      await fs.promises.rm(tempFilePath);
+    }
   }
 }
 
