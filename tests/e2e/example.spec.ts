@@ -20,7 +20,7 @@ test.beforeAll(async () => {
 
   // キャッシュなどでテスト結果が変化しないように、appDataをテスト起動時に毎回消去する。
   // cf: https://www.electronjs.org/ja/docs/latest/api/app#appgetpathname
- const appDataMap: Partial<Record<NodeJS.Platform, string>> = {
+  const appDataMap: Partial<Record<NodeJS.Platform, string>> = {
     win32: process.env.APPDATA,
     darwin: "~/Library/Application Support",
     linux: process.env.XDG_CONFIG_HOME || "~/.config",
