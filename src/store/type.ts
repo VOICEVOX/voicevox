@@ -852,8 +852,14 @@ export type EngineStoreTypes = {
   };
 
   UPDATE_LIBRARY_INSTALL_STATUS: {
+    action(payload: {
+      libraryInstallId: LibraryInstallId;
+      status: LibraryInstallStatus;
+    }): void;
+  };
+  SET_LIBRARY_INSTALL_STATUS: {
     mutation: {
-      installId: LibraryInstallId;
+      libraryInstallId: LibraryInstallId;
       status: LibraryInstallStatus;
     };
   };

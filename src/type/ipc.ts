@@ -369,7 +369,7 @@ export type IpcSOData = {
     return: void;
   };
 
-  UPDATE_LIBRARY_INSTALLATION_STATUS: {
+  UPDATE_LIBRARY_INSTALL_STATUS: {
     args: [
       obj: { status: LibraryInstallStatus; libraryInstallId: LibraryInstallId }
     ];

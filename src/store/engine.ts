@@ -1,3 +1,4 @@
+import { toRaw } from "vue";
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
@@ -411,16 +412,21 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     action: async (_, { engineId, library }) => {
       return await window.electron.startInstallingLibrary({
         engineId,
-        library,
+        library: toRaw(library),
       });
     },
   },
 
   UPDATE_LIBRARY_INSTALL_STATUS: {
-    mutation: async (state, { installId, status }) => {
+    action: async ({ commit }, { libraryInstallId, status }) => {
+      commit("SET_LIBRARY_INSTALL_STATUS", { libraryInstallId, status });
+    },
+  },
+  SET_LIBRARY_INSTALL_STATUS: {
+    mutation: async (state, { libraryInstallId, status }) => {
       state.libraryInstallStatus = {
         ...state.libraryInstallStatus,
-        [installId]: status,
+        [libraryInstallId]: status,
       };
     },
   },

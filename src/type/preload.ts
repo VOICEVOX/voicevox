@@ -659,4 +659,8 @@ export type LibraryInstallStatus =
     }
   | {
       status: "done";
+    }
+  | {
+      status: "error";
+      message: string;
     };

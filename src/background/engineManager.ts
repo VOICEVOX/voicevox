@@ -419,6 +419,7 @@ export class EngineManager {
       log.info(
         `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`
       );
+      if (!engineProcess.pid) throw Error("engineProcess.pid is undefined");
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
         if (error != null) {

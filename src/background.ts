@@ -3,6 +3,7 @@
 import path from "path";
 
 import fs from "fs";
+import { randomUUID } from "crypto";
 import {
   app,
   protocol,
@@ -35,11 +36,14 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  LibraryInstallId,
+  LibraryInstallStatus,
 } from "./type/preload";
 
 import EngineManager from "./background/engineManager";
 import VvppManager, { isVvppFile } from "./background/vvppManager";
 import configMigration014 from "./background/configMigration014";
+import LibraryManager from "./background/libraryManager";
 import { ipcMainHandle, ipcMainSend } from "@/electron/ipc";
 
 type SingleInstanceLockData = {
@@ -202,6 +206,7 @@ const engineManager = new EngineManager({
   vvppEngineDir,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
+const libraryManager = new LibraryManager({ engineManager });
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -876,6 +881,22 @@ ipcMainHandle("JOIN_PATH", (_, { pathArray }) => {
 
 ipcMainHandle("READ_FILE", (_, { filePath }) => {
   return fs.promises.readFile(filePath);
+});
+
+ipcMainHandle("START_INSTALLING_LIBRARY", (_, { engineId, library }) => {
+  const libraryInstallId = LibraryInstallId(randomUUID());
+  libraryManager.installLibrary(
+    engineId,
+    library,
+    libraryInstallId,
+    (status: LibraryInstallStatus) => {
+      ipcMainSend(win, "UPDATE_LIBRARY_INSTALL_STATUS", {
+        libraryInstallId,
+        status,
+      });
+    }
+  );
+  return libraryInstallId;
 });
 
 // app callback
