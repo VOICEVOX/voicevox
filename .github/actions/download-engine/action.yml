@@ -1,0 +1,59 @@
+name: "Download VOICEVOX ENGINE"
+description: |
+  VOICEVOX ENGINEをダウンロードし、指定したディレクトリに展開する。
+inputs:
+  engine-version:
+    description: "VOICEVOX ENGINEのバージョン。latest、preview（デフォルト）、バージョン番号（例：0.7.2）で指定できる。"
+    required: false
+    default: "preview"
+  dest:
+    description: "VOICEVOX ENGINEを展開するディレクトリ。"
+    required: true
+
+outputs:
+  run_path:
+    description: "run.exe、またはrunのパス。"
+    value: ${{ steps.result.outputs.run_path }}
+  version:
+    description: "VOICEVOX ENGINEのバージョン。"
+    value: ${{ steps.result.outputs.version }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get version
+      shell: bash
+      run: |
+        curl -s https://api.github.com/repos/Hiroshiba/voicevox_engine/releases \
+            -H 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'content-type: application/json' > ${{ runner.temp }}/releases.json
+
+        if [ "${{ inputs.engine-version }}" = "latest" ]; then
+          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > ${{ runner.temp }}/target.json
+        elif [ "${{ inputs.engine-version }}" = "preview" ]; then
+          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > ${{ runner.temp }}/target.json
+        else
+          cat ${{ runner.temp }}/releases.json | jq -er '[.[] | select(.tag_name == "v${{ inputs.engine-version }}")][0]' > ${{ runner.temp }}/target.json
+        fi
+    - name: Download engine
+      shell: bash
+      run: |
+        OS="${{ runner.os }}"
+        cat ${{ runner.temp }}/target.json | jq -r '[.assets[] | select(.name | contains("${OS,,}-cpu") and endswith(".7z.txt"))][0]' > ${{ runner.temp }}/assets_txt.json
+        cat ${{ runner.temp }}/assets_txt.json | jq -r '.browser_download_url' | xargs curl -sSL > ${{ runner.temp }}/download_name.txt
+        parallel 'cat ${{ runner.temp }}/target.json | jq -r "[.assets[] | select(.name == \"{}\")][0].browser_download_url" | xargs curl -sSL > ${{ runner.temp }}/{.}' :::: ${{ runner.temp }}/download_name.txt
+        cat ${{ runner.temp }}/download_name.txt | sed -e 's|^|${{ runner.temp }}\/|' xargs cat > ${{ runner.temp }}/engine.7z
+    - name: Extract engine
+      shell: bash
+      run: |
+        7z x ${{ runner.temp }}/engine.7z -o${{ inputs.dest }}
+        mv ${{ inputs.dest }}/* ${{ inputs.engine-directory }}/
+    - name: Set output
+      id: result
+      shell: bash
+      run: |
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          echo run_path="${{ inputs.dest }}\run.exe" >> $GITHUB_OUTPUT
+        else
+          echo run_path="${{ inputs.dest }}/run" >> $GITHUB_OUTPUT
+        fi
+        cat ${{ runner.temp }}/target.json | jq -r '.tag_name' >> $GITHUB_OUTPUT
