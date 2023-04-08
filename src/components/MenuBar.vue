@@ -49,21 +49,24 @@ export type MenuItemBase<T extends string> = {
 export type MenuItemSeparator = MenuItemBase<"separator">;
 
 export type MenuItemRoot = MenuItemBase<"root"> & {
-  onClick: () => void;
+  onClick?: () => void;
   subMenu: MenuItemData[];
   icon?: string;
+  disabled?: boolean;
   disableWhenUiLocked: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
   onClick: () => void;
   icon?: string;
+  disabled?: boolean;
   disableWhenUiLocked: boolean;
 };
 
 export type MenuItemCheckbox = MenuItemBase<"checkbox"> & {
   checked: ComputedRef<boolean>;
   onClick: () => void;
+  disabled?: boolean;
   disableWhenUiLocked: boolean;
 };
 
@@ -299,6 +302,12 @@ const menudata = ref<MenuItemData[]>([
           importProject();
         },
         disableWhenUiLocked: true,
+      },
+      {
+        type: "root",
+        label: "最近使ったプロジェクト",
+        disableWhenUiLocked: true,
+        subMenu: [],
       },
     ],
   },
@@ -538,6 +547,52 @@ if (store.state.isMultiEngineOffMode) {
     disableWhenUiLocked: false,
   });
 }
+
+// 「最近開いたプロジェクト」の更新
+async function updateRecentProjects() {
+  const projectsMenu = menudata.value.find(
+    (x) => x.type === "root" && x.label === "ファイル"
+  ) as MenuItemRoot;
+  const recentProjectsMenu = projectsMenu.subMenu.find(
+    (x) => x.type === "root" && x.label === "最近使ったプロジェクト"
+  ) as MenuItemRoot;
+
+  const recentlyUsedProjects = await store.dispatch(
+    "GET_RECENTLY_USED_PROJECTS"
+  );
+  recentProjectsMenu.subMenu =
+    recentlyUsedProjects.length === 0
+      ? [
+          {
+            type: "button",
+            label: "最近使ったプロジェクトはありません",
+            onClick: () => {
+              // 何もしない
+            },
+            disabled: true,
+            disableWhenUiLocked: false,
+          },
+        ]
+      : recentlyUsedProjects.map(
+          (projectFilePath) =>
+            ({
+              type: "button",
+              label: projectFilePath,
+              onClick: () => {
+                store.dispatch("LOAD_PROJECT_FILE", {
+                  filePath: projectFilePath,
+                });
+              },
+              disableWhenUiLocked: false,
+            } as MenuItemData)
+        );
+}
+
+const projectFilePath = computed(() => store.state.projectFilePath);
+
+watch(projectFilePath, updateRecentProjects, {
+  immediate: true,
+});
 
 watch(uiLocked, () => {
   // UIのロックが解除された時に再びメニューが開かれてしまうのを防ぐ

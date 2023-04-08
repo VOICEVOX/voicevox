@@ -603,6 +603,7 @@ export const electronStoreSchema = z
       .passthrough()
       .default({}),
     registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
   })
   .passthrough();
 export type ElectronStoreType = z.infer<typeof electronStoreSchema>;
