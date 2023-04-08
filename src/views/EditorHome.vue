@@ -377,13 +377,6 @@ const activeAudioKey = computed<AudioKey | undefined>(
   () => store.getters.ACTIVE_AUDIO_KEY
 );
 const addAudioItem = async () => {
-  $q.notify({
-    message: "とーーーーーーすと",
-    type: "info",
-    textColor: "display",
-    timeout: 5000,
-  });
-
   const prevAudioKey = activeAudioKey.value;
   let voice: Voice | undefined = undefined;
   let presetKey: PresetKey | undefined = undefined;
@@ -558,7 +551,7 @@ onMounted(async () => {
     const engineName = store.state.engineInfos[engineId].name;
     if (!portInfo || !engineName) return;
     $q.notify({
-      message: `${portInfo.origin}番ポートが使用中であるため、${engineName} は ${portInfo.alt}番ポートで起動しました`,
+      message: `${portInfo.origin}番ポートが使用中であるため ${engineName} は、${portInfo.alt}番ポートで起動しました`,
       type: "info",
       textColor: "display",
       timeout: 5000,

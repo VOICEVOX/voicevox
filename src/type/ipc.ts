@@ -1,4 +1,3 @@
-import { AltPortInfo } from "@/store/type";
 import {
   AppInfos,
   ElectronStoreType,
@@ -13,6 +12,7 @@ import {
   EngineSetting,
   EngineId,
 } from "@/type/preload";
+import { AltPortInfo } from "@/store/type";
 
 /**
  * invoke, handle

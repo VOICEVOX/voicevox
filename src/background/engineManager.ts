@@ -21,7 +21,7 @@ import {
   engineIdSchema,
   minimumEngineManifestSchema,
 } from "@/type/preload";
-import { AltPortInfo as AltPortInfo } from "@/store/type";
+import { AltPortInfo } from "@/store/type";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
