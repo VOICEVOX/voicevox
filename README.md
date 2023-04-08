@@ -72,7 +72,7 @@ npm run test:unit
 npm run test:e2e
 ```
 
-## テスト：監視モード
+### 監視モード
 
 ```bash
 npm run test-watch:unit
