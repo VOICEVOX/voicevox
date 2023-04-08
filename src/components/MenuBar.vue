@@ -541,11 +541,11 @@ async function updateRecentProjects() {
     (x) => x.type === "root" && x.label === "最近使ったプロジェクト"
   ) as MenuItemRoot;
 
-  const recentlyOpenedProjects = await store.dispatch(
+  const recentlyUsedProjects = await store.dispatch(
     "GET_RECENTLY_USED_PROJECTS"
   );
   recentProjectsMenu.subMenu =
-    recentlyOpenedProjects.length === 0
+    recentlyUsedProjects.length === 0
       ? [
           {
             type: "button",
@@ -557,7 +557,7 @@ async function updateRecentProjects() {
             disableWhenUiLocked: false,
           },
         ]
-      : recentlyOpenedProjects.map(
+      : recentlyUsedProjects.map(
           (projectFilePath) =>
             ({
               type: "button",
