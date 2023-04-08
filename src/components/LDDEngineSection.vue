@@ -191,7 +191,6 @@ const props =
   }>();
 const emit =
   defineEmits<{
-    (e: "update:selectedLibrary", library: BrandedDownloadableLibrary): void;
     (e: "update:isInstallingLibrary", isInstallingLibrary: boolean): void;
     (e: "update:portraitUri", portraitUri: string): void;
   }>();
@@ -546,7 +545,7 @@ const installLibrary = (library: DownloadableLibrary) => {
   selectLibrary(LibraryId(library.uuid));
   stop();
   setTimeout(() => {
-    emit("update:isInstallingLibrary", true);
+    emit("update:isInstallingLibrary", false);
   }, 10000);
 };
 </script>
