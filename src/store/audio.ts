@@ -1019,7 +1019,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     mutation(state, { audioKey }: { audioKey: AudioKey }) {
       const audioItem = state.audioItems[audioKey];
 
-      if (!audioItem || !audioItem.presetKey) return;
+      if (!audioItem.presetKey) return;
 
       const presetItem = state.presetItems[audioItem.presetKey];
       const newAudioItem = applyAudioPresetToAudioItem(audioItem, presetItem);
