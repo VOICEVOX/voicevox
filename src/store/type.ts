@@ -998,7 +998,7 @@ export type SettingStoreState = {
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
   editorFont: EditorFontType;
-  showLineNumber: boolean;
+  showTextLineNumber: boolean;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSetting;
   splitTextWhenPaste: SplitTextWhenPasteType;
@@ -1037,9 +1037,9 @@ export type SettingStoreTypes = {
     action(payload: { editorFont: EditorFontType }): void;
   };
 
-  SET_SHOW_LINE_NUMBER: {
-    mutation: { showLineNumber: boolean };
-    action(payload: { showLineNumber: boolean }): void;
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation: { showTextLineNumber: boolean };
+    action(payload: { showTextLineNumber: boolean }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

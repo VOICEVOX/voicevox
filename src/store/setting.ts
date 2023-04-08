@@ -40,7 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
-  showLineNumber: false,
+  showTextLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -83,8 +83,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       }
 
-      dispatch("SET_SHOW_LINE_NUMBER", {
-        showLineNumber: await window.electron.getSetting("showLineNumber"),
+      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber: await window.electron.getSetting(
+          "showTextLineNumber"
+        ),
       });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
@@ -257,13 +259,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_SHOW_LINE_NUMBER: {
-    mutation(state, { showLineNumber }) {
-      state.showLineNumber = showLineNumber;
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation(state, { showTextLineNumber }) {
+      state.showTextLineNumber = showTextLineNumber;
     },
-    action({ commit }, { showLineNumber }) {
-      window.electron.setSetting("showLineNumber", showLineNumber);
-      commit("SET_SHOW_LINE_NUMBER", { showLineNumber });
+    action({ commit }, { showTextLineNumber }) {
+      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
+      commit("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber,
+      });
     },
   },
 

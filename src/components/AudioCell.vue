@@ -10,9 +10,9 @@
     <div
       class="line-number"
       :class="{ active: isActiveAudioCell }"
-      v-if="showLineNumbers"
+      v-if="showTextLineNumber"
     >
-      {{ lineNumberIndex }}
+      {{ textLineNumberIndex }}
     </div>
     <character-button
       :character-infos="userOrderedCharacterInfos"
@@ -194,13 +194,13 @@ const pasteOnAudioCell = async (event: ClipboardEvent) => {
 };
 
 // 行番号を表示するかどうか
-const showLineNumbers = computed(() => store.state.showLineNumber);
+const showTextLineNumber = computed(() => store.state.showTextLineNumber);
 // 行番号
-const lineNumberIndex = computed(() => {
-  return audioKeys.value.indexOf(props.audioKey) + 1;
-});
+const textLineNumberIndex = computed(
+  () => audioKeys.value.indexOf(props.audioKey) + 1
+);
 // 行番号の幅: 2桁はデフォで入るように, 3桁以上は1remずつ広げる
-const lineNumberWidth = computed(() => {
+const textLineNumberWidth = computed(() => {
   const indexDigits = String(audioKeys.value.length).length;
   if (indexDigits <= 2) return "1.5rem";
   return `${indexDigits - 0.5}rem`;
@@ -297,7 +297,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
 
   .line-number {
     height: 2rem;
-    width: v-bind(lineNumberWidth);
+    width: v-bind(textLineNumberWidth);
     line-height: 2rem;
     margin-right: -0.3rem;
     opacity: 0.6;
