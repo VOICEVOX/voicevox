@@ -32,7 +32,7 @@
 
       <q-drawer
         bordered
-        show-if-above
+        v-if="portraitUri"
         :model-value="true"
         :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
         :breakpoint="0"
