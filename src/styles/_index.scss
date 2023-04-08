@@ -232,3 +232,16 @@ img {
 .bg-toolbar-button-display {
   background: colors.$toolbar-button-display;
 }
+
+.text-toast {
+  color: colors.$display;
+}
+
+.bg-toast {
+  background: rgba(colors.$primary-light-rgb, 0.4);
+}
+
+.text-on-toast {
+  color: colors.$on-toast;
+  font-weight: bold;
+}

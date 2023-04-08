@@ -46,8 +46,9 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   },
 
   GET_ALT_PORT_INFO: {
-    getter: () => async (engineId) =>
-      (await window.electron.getAltPortInfo())[engineId],
+    async action() {
+      return await window.electron.getAltPortInfo();
+    },
   },
 
   SET_ENGINE_INFOS: {

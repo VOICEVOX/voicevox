@@ -263,8 +263,8 @@ export class EngineManager {
 
       // 代替ポートの情報
       this.altPortInfo[engineId] = {
-        origin: parseInt(engineInfoUrl.port),
-        alt: altPort,
+        from: parseInt(engineInfoUrl.port),
+        to: altPort,
       };
 
       // 代替ポートを設定

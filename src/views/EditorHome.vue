@@ -546,15 +546,32 @@ onMounted(async () => {
   isCompletedInitialStartup.value = true;
 
   // 代替ポートをトースト通知する
+  if (!store.state.confirmedTips.noticeAltPortInfo) return;
+  const altPortInfo = await store.dispatch("GET_ALT_PORT_INFO");
   for (const engineId of store.state.engineIds) {
-    const portInfo = await store.getters.GET_ALT_PORT_INFO(engineId);
     const engineName = store.state.engineInfos[engineId].name;
-    if (!portInfo || !engineName) return;
+    const altPort = altPortInfo[engineId];
+
+    if (!altPort) return;
     $q.notify({
-      message: `${portInfo.origin}番ポートが使用中であるため ${engineName} は、${portInfo.alt}番ポートで起動しました`,
-      type: "info",
-      textColor: "display",
+      message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+      color: "toast",
+      textColor: "toast",
+      icon: "compare_arrows",
       timeout: 5000,
+      actions: [
+        {
+          label: "今後この通知をしない",
+          color: "on-toast",
+          handler: () =>
+            store.dispatch("SET_CONFIRMED_TIPS", {
+              confirmedTips: {
+                ...store.state.confirmedTips,
+                noticeAltPortInfo: false,
+              },
+            }),
+        },
+      ],
     });
   }
 });

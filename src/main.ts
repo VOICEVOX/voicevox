@@ -33,7 +33,6 @@ createApp(App)
         primary: "#a5d4ad",
         secondary: "#212121",
         negative: "var(--color-warning)",
-        info: "rgba(var(--color-primary-rgb), 0.4)",
       },
     },
     iconSet,

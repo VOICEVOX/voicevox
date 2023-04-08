@@ -44,6 +44,8 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
   --color-splitter: var(--color-primary);
   --color-splitter-rgb: var(--color-primary-rgb);
+
+  --color-on-toast: rgba(var(--color-display-rgb), 0.6);
 }
 
 :root[is-dark-theme="true"] {
@@ -58,6 +60,8 @@ $active-point-hover-rgb: var(--color-active-point-hover-rgb);
 
   --color-splitter: var(--color-surface);
   --color-splitter-rgb: var(--color-surface-rgb);
+
+  --color-on-toast: var(--color-primary);
 }
 
 $toolbar: var(--color-toolbar);
@@ -74,3 +78,5 @@ $splitter-rgb: var(--color-splitter-rgb);
 
 $warning: var(--color-warning);
 $warning-rgb: var(--color-warning-rgb);
+
+$on-toast: var(--color-on-toast);

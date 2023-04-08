@@ -496,6 +496,7 @@ export type SplitterPosition = z.infer<typeof splitterPositionSchema>;
 
 export type ConfirmedTips = {
   tweakableSliderByScroll: boolean;
+  noticeAltPortInfo: boolean;
 };
 
 export const electronStoreSchema = z
@@ -584,6 +585,7 @@ export const electronStoreSchema = z
     confirmedTips: z
       .object({
         tweakableSliderByScroll: z.boolean().default(false),
+        noticeAltPortInfo: z.boolean().default(true),
       })
       .passthrough()
       .default({}),

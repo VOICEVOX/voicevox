@@ -134,6 +134,7 @@ describe("store/vuex.js test", () => {
         },
         confirmedTips: {
           tweakableSliderByScroll: false,
+          noticeAltPortInfo: true,
         },
         progress: -1,
         defaultPresetKeys: {},
@@ -248,5 +249,7 @@ describe("store/vuex.js test", () => {
     );
     assert.propertyVal(store.state.splitterPosition, "audioInfoPaneWidth", 20);
     assert.propertyVal(store.state.splitterPosition, "portraitPaneWidth", 50);
+    assert.equal(store.state.confirmedTips.tweakableSliderByScroll, false);
+    assert.equal(store.state.confirmedTips.noticeAltPortInfo, true);
   });
 });
