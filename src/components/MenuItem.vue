@@ -141,7 +141,4 @@ if (props.menudata.type === "root") {
   height: 24px;
   border-radius: 2px;
 }
-.key-icon-separator {
-  margin-left: 8px;
-}
 </style>
