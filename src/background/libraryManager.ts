@@ -75,9 +75,10 @@ export class LibraryManager {
       ) {
         if (total) {
           log.log(
-            `Downloaded ${downloaded}/${total} bytes (${
-              (downloaded / total) * 100
-            }%)`
+            `Downloaded ${downloaded}/${total} bytes (${(
+              (downloaded / total) *
+              100
+            ).toFixed(2)}%)`
           );
         } else {
           log.log(
