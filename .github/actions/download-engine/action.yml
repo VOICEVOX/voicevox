@@ -24,7 +24,7 @@ runs:
       shell: bash
       run: |
         curl -s https://api.github.com/repos/Hiroshiba/voicevox_engine/releases \
-            -H 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H 'authorization: Bearer ${{ github.token }}' \
             -H 'content-type: application/json' > ${{ runner.temp }}/releases.json
 
         if [ "${{ inputs.engine-version }}" = "latest" ]; then
