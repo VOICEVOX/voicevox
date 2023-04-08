@@ -384,6 +384,26 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
     ),
   },
+
+  GET_RECENTLY_USED_PROJECTS: {
+    async action() {
+      return await window.electron.getSetting("recentlyUsedProjects");
+    },
+  },
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    async action({ dispatch }, { filePath }) {
+      const recentlyUsedProjects = await dispatch("GET_RECENTLY_USED_PROJECTS");
+      const newRecentlyUsedProjects = [
+        filePath,
+        ...recentlyUsedProjects.filter((value) => value != filePath),
+      ].slice(0, 10);
+      await window.electron.setSetting(
+        "recentlyUsedProjects",
+        newRecentlyUsedProjects
+      );
+    },
+  },
 });
 
 export const setHotkeyFunctions = (
