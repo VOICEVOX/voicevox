@@ -27,6 +27,14 @@ export const libraryIdSchema = z.string().brand<"LibraryId">();
 export type LibraryId = z.infer<typeof libraryIdSchema>;
 export const LibraryId = (id: string): LibraryId => libraryIdSchema.parse(id);
 
+export const libraryInstallIdSchema = z
+  .string()
+  .uuid()
+  .brand<"LibraryInstallId">();
+export type LibraryInstallId = z.infer<typeof libraryInstallIdSchema>;
+export const LibraryInstallId = (id: string): LibraryInstallId =>
+  libraryInstallIdSchema.parse(id);
+
 export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
@@ -224,10 +232,10 @@ export interface Sandbox {
   installVvppEngine(path: string): Promise<boolean>;
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
-  startLibraryInstall(obj: {
-    engineId: string;
+  startInstallingLibrary(obj: {
+    engineId: EngineId;
     library: DownloadableLibrary;
-  }): Promise<void>;
+  }): Promise<LibraryInstallId>;
   restartApp(obj: { isMultiEngineOffMode: boolean }): void;
 }
 
@@ -629,21 +637,6 @@ export type EngineDirValidationResult =
 
 export type VvppFilePathValidationResult = "ok" | "fileNotFound";
 
-export type LibraryInstallationState =
-  | {
-      status: "idle";
-    }
-  | {
-      status: "installing";
-      progress: number;
-    }
-  | {
-      state: "success";
-    }
-  | {
-      state: "error";
-    };
-
 // base: Electron.MessageBoxReturnValue
 // FIXME: MessageBoxUIの戻り値として使用したい値が決まったら書き換える
 export interface MessageBoxReturnValue {
@@ -652,3 +645,18 @@ export interface MessageBoxReturnValue {
 }
 
 export const SandboxKey = "electron" as const;
+export type LibraryInstallStatus =
+  | {
+      status: "pending";
+    }
+  | {
+      status: "downloading";
+      contentLength: number;
+      downloaded: number;
+    }
+  | {
+      status: "installing";
+    }
+  | {
+      status: "done";
+    };

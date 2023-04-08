@@ -6,10 +6,8 @@ import type { EngineId, EngineInfo } from "@/type/preload";
 
 export const engineStoreState: EngineStoreState = {
   engineStates: {},
-  libraryInstallationState: {
-    status: "idle",
-  },
   engineSupportedDevices: {},
+  libraryInstallStatus: {},
 };
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
@@ -406,6 +404,24 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       const supportedDevices = state.engineSupportedDevices[engineId];
 
       return supportedDevices?.cuda || supportedDevices?.dml;
+    },
+  },
+
+  START_INSTALLING_LIBRARY: {
+    action: async (_, { engineId, library }) => {
+      return await window.electron.startInstallingLibrary({
+        engineId,
+        library,
+      });
+    },
+  },
+
+  UPDATE_LIBRARY_INSTALL_STATUS: {
+    mutation: async (state, { installId, status }) => {
+      state.libraryInstallStatus = {
+        ...state.libraryInstallStatus,
+        [installId]: status,
+      };
     },
   },
 });

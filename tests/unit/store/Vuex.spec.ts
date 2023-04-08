@@ -54,9 +54,7 @@ describe("store/vuex.js test", () => {
         isMaximized: false,
         isMultiEngineOffMode: false,
         savedLastCommandUnixMillisec: null,
-        libraryInstallationState: {
-          status: "idle",
-        },
+        libraryInstallStatus: {},
         savingSetting: {
           fileEncoding: "UTF-8",
           fileNamePattern: "",

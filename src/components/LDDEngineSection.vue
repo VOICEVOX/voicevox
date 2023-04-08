@@ -172,7 +172,13 @@ import semver from "semver";
 import { useStore } from "@/store";
 import { DownloadableLibrary, LibrarySpeaker, StyleInfo } from "@/openapi";
 import { base64ImageToUri } from "@/helpers/imageHelper";
-import { EngineId, LibraryId, SpeakerId, StyleId } from "@/type/preload";
+import {
+  EngineId,
+  LibraryId,
+  LibraryInstallId,
+  SpeakerId,
+  StyleId,
+} from "@/type/preload";
 
 type BrandedDownloadableLibrary = DownloadableLibrary & {
   uuid: LibraryId;
@@ -201,6 +207,8 @@ const engineManifests = computed(() => store.state.engineManifests);
 
 const downloadableLibraries = ref<BrandedDownloadableLibrary[]>([]);
 const installedLibraries = ref<BrandedDownloadableLibrary[]>([]);
+
+const libraryInstallId = ref<LibraryInstallId | undefined>(undefined);
 
 const downloadableLibrariesMap = computed(() => {
   const downloadableSpeakersMap: Record<string, BrandedDownloadableLibrary> =
@@ -539,14 +547,16 @@ const rollStyleIndex = (
   togglePlayOrStop(libraryId, speakerUuid, styleId, 0);
 };
 
-const installLibrary = (library: DownloadableLibrary) => {
+const installLibrary = async (library: DownloadableLibrary) => {
   emit("update:isInstallingLibrary", true);
 
   selectLibrary(LibraryId(library.uuid));
   stop();
-  setTimeout(() => {
-    emit("update:isInstallingLibrary", false);
-  }, 10000);
+  libraryInstallId.value = await store.dispatch("START_INSTALLING_LIBRARY", {
+    engineId: props.engineId,
+    library,
+  });
+  emit("update:isInstallingLibrary", false);
 };
 </script>
 

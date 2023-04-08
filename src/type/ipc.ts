@@ -9,11 +9,12 @@ import {
   ToolbarSetting,
   UpdateInfo,
   WriteFileErrorResult,
-  LibraryInstallationState,
   NativeThemeType,
   EngineSetting,
   EngineId,
   MessageBoxReturnValue,
+  LibraryInstallStatus,
+  LibraryInstallId,
 } from "@/type/preload";
 
 /**
@@ -308,9 +309,9 @@ export type IpcIHData = {
     return: ArrayBuffer;
   };
 
-  START_LIBRARY_INSTALL: {
-    args: [obj: { engineId: string; library: DownloadableLibrary }];
-    return: void;
+  START_INSTALLING_LIBRARY: {
+    args: [obj: { library: DownloadableLibrary; engineId: EngineId }];
+    return: LibraryInstallId;
   };
 };
 
@@ -368,8 +369,10 @@ export type IpcSOData = {
     return: void;
   };
 
-  UPDATE_LIBRARY_INSTALLATION_STATE: {
-    args: [obj: { state: LibraryInstallationState }];
+  UPDATE_LIBRARY_INSTALLATION_STATUS: {
+    args: [
+      obj: { status: LibraryInstallStatus; libraryInstallId: LibraryInstallId }
+    ];
     return: void;
   };
 };

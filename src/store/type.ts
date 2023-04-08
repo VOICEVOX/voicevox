@@ -16,6 +16,7 @@ import {
   SupportedDevicesInfo,
   UserDictWord,
   MorphableTargetInfo,
+  DownloadableLibrary,
 } from "@/openapi";
 import {
   CharacterInfo,
@@ -39,7 +40,6 @@ import {
   SplitterPosition,
   ConfirmedTips,
   EngineDirValidationResult,
-  LibraryInstallationState,
   EditorFontType,
   EngineSettings,
   MorphableTargetInfoTable,
@@ -51,6 +51,8 @@ import {
   StyleId,
   AudioKey,
   PresetKey,
+  LibraryInstallStatus,
+  LibraryInstallId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
@@ -730,9 +732,9 @@ export type CommandStoreTypes = {
  */
 
 export type EngineStoreState = {
-  libraryInstallationState: LibraryInstallationState;
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
+  libraryInstallStatus: Record<EngineId, LibraryInstallStatus>;
 };
 
 export type EngineStoreTypes = {
@@ -840,6 +842,20 @@ export type EngineStoreTypes = {
 
   ENGINE_CAN_USE_GPU: {
     getter: (engineId: EngineId) => boolean;
+  };
+
+  START_INSTALLING_LIBRARY: {
+    action(payload: {
+      engineId: EngineId;
+      library: DownloadableLibrary;
+    }): Promise<LibraryInstallId>;
+  };
+
+  UPDATE_LIBRARY_INSTALL_STATUS: {
+    mutation: {
+      installId: LibraryInstallId;
+      status: LibraryInstallStatus;
+    };
   };
 };
 

@@ -58,9 +58,9 @@ export const ipcMessageReceiver: Plugin = {
     );
 
     window.electron.onReceivedIPCMsg(
-      "UPDATE_LIBRARY_INSTALLATION_STATE",
-      (_, { state }) => {
-        console.log("TODO: UPDATE_LIBRARY_INSTALLATION_STATE", state);
+      "UPDATE_LIBRARY_INSTALLATION_STATUS",
+      (_, { status }) => {
+        console.log("TODO: UPDATE_LIBRARY_INSTALLATION_STATE", status);
       }
     );
   },
