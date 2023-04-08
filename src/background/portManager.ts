@@ -64,16 +64,15 @@ export class PortManager {
       shell: true,
     }).toString();
 
-    // windows
     if (isWindows) {
       stdout = this.stdout2processId(stdout)?.toString() ?? "";
     }
 
-    // bash
     if (!stdout || !stdout.length) {
       this.portLog("Assignable; Nobody uses this port!");
       return undefined;
     }
+
     this.portWarn(`Nonassignable; pid=${stdout} uses this port!`);
     return parseInt(stdout);
   }
@@ -81,13 +80,11 @@ export class PortManager {
   async getProcessNameFromPid(pid: number): Promise<string> {
     this.portLog(`Getting process name from pid=${pid}...`);
     const exec = isWindows
-      ? // TODO: `TCPポートの除外範囲` というものがあって, そこに該当しているかを確認する
-        {
+      ? {
           cmd: "wmic",
           args: ["process", "where", `"ProcessID=${pid}"`, "get", "name"],
         }
-      : // TODO: MacOS だとroot権限が必要かも？  場合によって, 代替コマンド `ss` や `fuser` を使うかも
-        {
+      : {
           cmd: "ps",
           args: ["-p", pid.toString(), "-o", "comm="],
         };
@@ -107,7 +104,6 @@ export class PortManager {
     }
 
     this.portLog(`Found process name: ${stdout}`);
-
     return stdout.trim();
   }
 
@@ -118,7 +114,10 @@ export class PortManager {
    */
   async findAltPort(): Promise<number | undefined> {
     this.portLog(`Find another assignable port from ${this.port}...`);
-    const altPortMax = 50100;
+
+    // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
+    let altPortMax = this.port + 100;
+    if (altPortMax > 65535) altPortMax = 65535;
 
     for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
       this.portLog(`Trying whether port ${altPort} is assignable...`);

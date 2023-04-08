@@ -252,7 +252,7 @@ export class EngineManager {
 
       // 代替ポートが見つからないとき
       if (!altPort) {
-        log.warn(`ENGINE ${engineId}: No Alternative Port Found`);
+        log.error(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,
           `${engineInfoUrl.port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`
