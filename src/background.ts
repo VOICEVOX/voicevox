@@ -206,7 +206,10 @@ const engineManager = new EngineManager({
   vvppEngineDir,
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
-const libraryManager = new LibraryManager({ engineManager });
+const libraryManager = new LibraryManager({
+  engineManager,
+  tempDir: app.getPath("temp"),
+});
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
