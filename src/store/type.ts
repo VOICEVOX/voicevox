@@ -1074,6 +1074,14 @@ export type SettingStoreTypes = {
   CHANGE_USE_GPU: {
     action(payload: { useGpu: boolean; engineId: EngineId }): Promise<void>;
   };
+
+  GET_RECENTLY_USED_PROJECTS: {
+    action(): Promise<string[]>;
+  };
+
+  APPEND_RECENTLY_USED_PROJECT: {
+    action(payload: { filePath: string }): Promise<void>;
+  };
 };
 
 /*
