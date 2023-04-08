@@ -359,11 +359,6 @@ export type AudioStoreTypes = {
     };
   };
 
-  APPLY_AUDIO_PRESET_TO_AUDIO_ITEM: {
-    mutation: { audioItem: AudioItem };
-    action(payload: { audioItem: AudioItem }): void;
-  };
-
   APPLY_AUDIO_PRESET: {
     mutation: { audioKey: AudioKey };
   };
@@ -1263,6 +1258,9 @@ export type PresetStoreState = {
 };
 
 export type PresetStoreTypes = {
+  DEFAULT_PRESET_KEY_SETS: {
+    getter: Set<PresetKey>;
+  };
   SET_PRESET_ITEMS: {
     mutation: {
       presetItems: Record<PresetKey, Preset>;
