@@ -59,6 +59,8 @@ export class LibraryManager {
       downloaded,
     });
     const tempFile = await fs.promises.open(tempFilePath, "w");
+    const progressInterval = total ? Math.floor(total / 100) : 1024 * 1024;
+    let lastProgress = 0;
     res.body.on("data", (chunk) => {
       downloaded += chunk.length;
       onUpdate({
@@ -67,9 +69,23 @@ export class LibraryManager {
         downloaded,
       });
       tempFile.write(chunk);
-      log.log(
-        `Downloaded ${downloaded}/${total} (${(downloaded / total) * 100}%)`
-      );
+      if (
+        Math.floor(downloaded) - Math.floor(lastProgress) >=
+        progressInterval
+      ) {
+        if (total) {
+          log.log(
+            `Downloaded ${downloaded}/${total} bytes (${
+              (downloaded / total) * 100
+            }%)`
+          );
+        } else {
+          log.log(
+            `Downloaded ${downloaded} bytes (content-length header is not set)`
+          );
+        }
+        lastProgress = downloaded;
+      }
     });
     await new Promise((resolve) => {
       if (!res.body) throw new Error("res.body is null");
