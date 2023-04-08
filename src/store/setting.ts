@@ -40,6 +40,7 @@ export const settingStoreState: SettingStoreState = {
     availableThemes: [],
   },
   editorFont: "default",
+  showTextLineNumber: false,
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
     enablePreset: false,
@@ -81,6 +82,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      dispatch("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber: await window.electron.getSetting(
+          "showTextLineNumber"
+        ),
+      });
 
       dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
         acceptRetrieveTelemetry: await window.electron.getSetting(
@@ -249,6 +256,18 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ commit }, { editorFont }) {
       window.electron.setSetting("editorFont", editorFont);
       commit("SET_EDITOR_FONT", { editorFont });
+    },
+  },
+
+  SET_SHOW_TEXT_LINE_NUMBER: {
+    mutation(state, { showTextLineNumber }) {
+      state.showTextLineNumber = showTextLineNumber;
+    },
+    action({ commit }, { showTextLineNumber }) {
+      window.electron.setSetting("showTextLineNumber", showTextLineNumber);
+      commit("SET_SHOW_TEXT_LINE_NUMBER", {
+        showTextLineNumber,
+      });
     },
   },
 
