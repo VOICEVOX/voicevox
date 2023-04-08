@@ -116,8 +116,7 @@ export class PortManager {
     this.portLog(`Find another assignable port from ${this.port}...`);
 
     // エンジン指定のポート + 100番までを探索  エフェメラルポートの範囲の最大は超えないようにする
-    let altPortMax = this.port + 100;
-    if (altPortMax > 65535) altPortMax = 65535;
+    const altPortMax = Math.min(this.port + 100, 65535);
 
     for (let altPort = this.port + 1; altPort <= altPortMax; altPort++) {
       this.portLog(`Trying whether port ${altPort} is assignable...`);
