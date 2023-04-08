@@ -325,7 +325,7 @@ watch(
     }
     fetchStatus.value = "fetching";
     (async () => {
-      const [brandedDownloadableLibraies, brandedInstalledLibraries] =
+      const [brandedDownloadableLibraries, brandedInstalledLibraries] =
         await store
           .dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
             engineId: props.engineId,
@@ -353,7 +353,7 @@ watch(
               }))
             )
           );
-      downloadableLibraries.value = brandedDownloadableLibraies;
+      downloadableLibraries.value = brandedDownloadableLibraries;
       installedLibraries.value = brandedInstalledLibraries;
 
       const libraries = downloadableLibraries.value || [];
