@@ -107,7 +107,7 @@ export class LibraryManager {
         downloadRes.body.on("end", resolve);
       });
       await tempFile.close();
-      log.log("Download complete");
+      log.log(prefix + "Download complete");
 
       // OpenAPIのクライアントでは、ファイルをアップロードするためのAPIがないので、
       // node-fetchを使って直接アップロードする
