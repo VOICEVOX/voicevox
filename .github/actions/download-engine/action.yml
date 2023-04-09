@@ -52,7 +52,7 @@ runs:
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
         for i in $(cat $TEMPDIR/download_name.txt); do
           URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
-          echo "Download url: $URL"
+          echo "Download url: $URL, dest: $TEMPDIR/$i"
           curl -sSL $URL -o $TEMPDIR/$i &
         done
         for job in `jobs -p`; do
