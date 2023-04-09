@@ -27,7 +27,7 @@ runs:
         echo TEMPDIR=$TEMPDIR >> $GITHUB_ENV
         mkdir -p $TEMPDIR
 
-        DEST=$(echo '$DEST' | sed -e 's_\\_/_g')
+        DEST=$(echo '${{ inputs.dest }}' | sed -e 's_\\_/_g')
         echo DEST=$DEST >> $GITHUB_ENV
 
     - name: Get version
