@@ -69,7 +69,7 @@ export class LibraryManager {
       contentLength: total,
       downloaded,
     });
-    const tempFile = await fs.promises.open(tempFilePath, "w");
+    const tempFile = fs.createWriteStream(tempFilePath);
     try {
       const progressInterval = 1024 * 1024;
       let lastProgress = 0;
@@ -106,7 +106,7 @@ export class LibraryManager {
         if (!downloadRes.body) throw new Error("res.body is null");
         downloadRes.body.on("end", resolve);
       });
-      await tempFile.close();
+      tempFile.close();
       log.log(prefix + "Download complete");
 
       // OpenAPIのクライアントでは、ファイルをアップロードするためのAPIがないので、
@@ -153,7 +153,7 @@ export class LibraryManager {
     } finally {
       await tempFile.close();
       log.log(prefix + "Removing temp file");
-      await fs.promises.rm(tempFilePath);
+      // await fs.promises.rm(tempFilePath);
     }
   }
 }
