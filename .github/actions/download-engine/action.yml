@@ -3,7 +3,7 @@ description: |
   VOICEVOX ENGINEをダウンロードし、指定したディレクトリに展開する。
 inputs:
   version:
-    description: "VOICEVOX ENGINEのバージョン。latest（デフォルト）、preview、バージョン番号（例：0.14.4）で指定できる。"
+    description: "VOICEVOX ENGINEのバージョン。latest（デフォルト）、prerelease-latest、バージョン番号（例：0.14.4）で指定できる。"
     required: false
     default: "latest"
   dest:
@@ -43,7 +43,7 @@ runs:
 
         if [ "${{ inputs.version }}" = "latest" ]; then
           cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > $TEMPDIR/target.json
-        elif [ "${{ inputs.version }}" = "preview" ]; then
+        elif [ "${{ inputs.version }}" = "prerelease-latest" ]; then
           cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > $TEMPDIR/target.json
         else
           cat $TEMPDIR/releases.json | jq -er '[.[] | select(.tag_name == "${{ inputs.version }}")][0]' > $TEMPDIR/target.json
