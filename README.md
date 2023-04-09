@@ -1,5 +1,10 @@
 # VOICEVOX
 
+[![releases](https://img.shields.io/github/v/release/VOICEVOX/voicevox_engine?label=Release)](https://github.com/VOICEVOX/voicevox/releases)
+[![build](https://github.com/VOICEVOX/voicevox/actions/workflows/build.yml/badge.svg)](https://github.com/VOICEVOX/voicevox/actions/workflows/build.yml)
+[![test](https://github.com/VOICEVOX/voicevox/actions/workflows/test.yml/badge.svg)](https://github.com/VOICEVOX/voicevox/actions/workflows/test.yml)
+[![Discord](https://img.shields.io/discord/879570910208733277?color=5865f2&label=&logo=discord&logoColor=ffffff)](https://discord.gg/WMwWetrzuh)
+
 [VOICEVOX](https://voicevox.hiroshiba.jp/) のエディターです。
 
 （エンジンは [VOICEVOX ENGINE](https://github.com/VOICEVOX/voicevox_engine/) 、
@@ -17,6 +22,8 @@ VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用�
 
 Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
 Issue 側で取り組み始めたことを伝えるか、最初に Draft プルリクエストを作成してください。
+
+[VOICEVOX 非公式 Discord サーバー](https://discord.gg/WMwWetrzuh)にて、開発の議論や雑談を行っています。気軽にご参加ください。
 
 ### デザインガイドライン
 
