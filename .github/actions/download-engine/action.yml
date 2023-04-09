@@ -58,12 +58,15 @@ runs:
           TARGET="${{ inputs.target }}"
         fi
 
+        # リリース情報からファイル一覧のtxtを取得
         cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("'$TARGET'") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
         LIST_URL=$(cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url')
         echo "7z.txt url: $LIST_URL"
         echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
+
+        # ファイル一覧のtxtにあるファイルをダウンロード
         for i in $(cat $TEMPDIR/download_name.txt); do
           URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
           echo "Download url: $URL, dest: $TEMPDIR/$i"
@@ -72,9 +75,12 @@ runs:
         for job in `jobs -p`; do
           wait $job
         done
+
+        # 一時ディレクトリに展開してから、本体（windows-cpuなどの中）を取り出す
         7z x -y -o$TEMPDIR/tmp-extract $TEMPDIR/$(head -1 $TEMPDIR/download_name.txt)
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
+
         echo "::group::ll $DEST"
         ls -al $DEST
         echo "::endgroup::"
